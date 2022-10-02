@@ -8,6 +8,7 @@ project (chipollino)
 
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
+	src/objects/Integer.cpp
     src/main.cpp
 )
 
@@ -19,4 +20,5 @@ add_executable(chipollino ${SOURCES})
 target_include_directories(chipollino
     PRIVATE
         ${PROJECT_SOURCE_DIR}/include
+		${PROJECT_SOURCE_DIR}/include/objects
 )
