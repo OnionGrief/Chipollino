@@ -2,18 +2,32 @@
 #include "BaseObject.h"
 #include <string>
 #include <vector>
+using namespace std;
+
+struct State{
+	int index;
+	bool is_terminal;
+	string identifier;
+	vector<vector<int>> transitions;
+	State();
+	State(int index, bool is_terminal, string identifier, vector<vector<int>> transitions);
+};
 
 class FiniteAutomat: public BaseObject {
 private:
 	int number_of_states = 0;
 	bool is_deterministic = 0;
 	int initial_state = 0;
-	std::vector<char> alphabet;
-	std::vector<bool> is_terminal;
-	std::vector<std::vector<std::vector<int>>> transition_matrix;
-	std::vector<std::string> state_identifiers; //нужны для проверки на равенство
+	vector<char> alphabet;
+	vector<State> states;
+	//vector<vector<Regex>> 
 public:
 	FiniteAutomat();
-	FiniteAutomat(bool _is_deterministic, int _initial_state, std::vector<char> alphabet, std::vector<bool> _is_terminal, std::vector<std::vector<std::vector<int>>> _transition_matrix);
-	std::string to_txt() override;
+	FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic = false);
+	State& get_transition(int i, int j, int k);
+	string to_txt() override;
+	FiniteAutomat determinize(const FiniteAutomat& other);
+	FiniteAutomat rem_eps(const FiniteAutomat& other);
+	FiniteAutomat minimize(const FiniteAutomat& other);
+	// и тд
 };
