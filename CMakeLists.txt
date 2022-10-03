@@ -11,7 +11,7 @@ set(SOURCES
 	src/objects/FiniteAutomat.cpp
 	src/objects/Integer.cpp
     src/main.cpp
-)
+		src/objects/arden.cpp include/objects/arden.h)
 
 # Add an executable with the above sources
 add_executable(chipollino ${SOURCES})
