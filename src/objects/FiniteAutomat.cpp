@@ -22,9 +22,10 @@ string FiniteAutomat::to_txt() {
 	stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\tdummy -> " << states[initial_state].identifier << "\n";
 	for(int i = 0; i < number_of_states; i++) {
-		for(int j = 0; j < alphabet.size(); j++) {
+		for(int j = 0; j <= alphabet.size(); j++) {
+			string letter = (j == 0) ? "eps" : string(1, alphabet[j-1]);
 			for(int k = 0; k < states[i].transitions[j].size(); k++){
-				ss << "\t" << states[i].identifier << " -> " << this->get_transition(i, j, k).identifier << " [label = \"" << alphabet[j] << "\"]\n";
+				ss << "\t" << states[i].identifier << " -> " << this->get_transition(i, j, k).identifier << " [label = \"" << letter << "\"]\n";
 			}
 		}
 	}
