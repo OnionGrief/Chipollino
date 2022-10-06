@@ -46,13 +46,13 @@ class Regex : BaseObject {
 private:
 	vector<Lexem> lexems;
 	// Turns string into lexem vector
-	parse_string(string);
+	void parse_string(string);
 
 	// Root of regexp
 	Term* root;
 public:
 	Regex();
-	Regex(stirng);
+	Regex(string);
 	string to_txt() override;
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
