@@ -18,7 +18,7 @@ struct Lexem {
 	Type type = error;
 	char symbol = 0;
 
-	Lexem(Type type, char symbol = 0) : (type(type), symbol(symbol));
+	Lexem(Type type = error, char symbol = 0);
 };
 
 struct Term {
