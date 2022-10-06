@@ -31,7 +31,7 @@ struct Term {
 	// Unary:
 		star,
 	// Terminal:
-		symbol
+		symb
 	};
 
 	Type type = error;
@@ -39,7 +39,7 @@ struct Term {
 	Term* term_l = nullptr;
 	Term* term_r = nullptr;
 
-	Term(Type type, Lexem symbol)
+	Term(Type type, Lexem symbol);
 };
 
 class Regex : BaseObject {
@@ -56,4 +56,4 @@ public:
 	string to_txt() override;
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
-}
+};
