@@ -10,6 +10,7 @@ project (chipollino)
 set(SOURCES
 	src/objects/FiniteAutomat.cpp
 	src/objects/Integer.cpp
+	src/objects/Regex.cpp
     src/main.cpp
 )
 
