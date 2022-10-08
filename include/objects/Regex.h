@@ -15,7 +15,7 @@ struct Lexem {
 		star, // *
 		symb, // alphabet symbol
 	};
-	
+
 	Type type = error;
 	char symbol = 0;
 
@@ -25,14 +25,14 @@ struct Lexem {
 class Regex : BaseObject {
 private:
 	enum Type {
-	// Error
+		// Error
 		error,
-	// Binary:
+		// Binary:
 		alt,
 		conc,
-	// Unary:
+		// Unary:
 		star,
-	// Terminal:
+		// Terminal:
 		symb
 	};
 
@@ -49,9 +49,7 @@ private:
 	Regex* scan_alt(vector<Lexem>, int, int);
 	Regex* scan_symb(vector<Lexem>, int, int);
 	Regex* scan_par(vector<Lexem>, int, int);
-	// Root of regexp
-	//Regex* root;
-	
+
 public:
 	Regex();
 	Regex(string);
