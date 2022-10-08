@@ -4,7 +4,7 @@
 #include <vector>
 using namespace std;
 
-struct State{
+struct State {
 	int index;
 	bool is_terminal;
 	string identifier;
@@ -13,14 +13,14 @@ struct State{
 	State(int index, bool is_terminal, string identifier, vector<vector<int>> transitions);
 };
 
-class FiniteAutomat: public BaseObject {
+class FiniteAutomat : public BaseObject {
 private:
 	int number_of_states = 0;
 	bool is_deterministic = 0;
 	int initial_state = 0;
 	vector<char> alphabet;
 	vector<State> states;
-	//vector<vector<Regex>> 
+
 public:
 	FiniteAutomat();
 	FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic = false);
