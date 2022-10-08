@@ -38,6 +38,7 @@ private:
 
 	Type type = error;
 	Lexem symbol;
+	Regex* term_p = nullptr;
 	Regex* term_l = nullptr;
 	Regex* term_r = nullptr;
 	// Turns string into lexem vector
