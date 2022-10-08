@@ -55,7 +55,7 @@ public:
 	Regex();
 	Regex(string);
 	string to_txt() override;
-	void preOrderTravers(Regex*);
+	void pre_order_travers();
 	void clear();
 	Regex* copy();
 	// TODO: there may be some *to-automat* methods

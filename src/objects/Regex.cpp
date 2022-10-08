@@ -33,6 +33,9 @@ vector<Lexem> Regex::parse_string(string str) {
 			}
 			else {
 				lexem.type = Lexem::error;
+				lexems = {};
+				lexems.push_back(lexem);
+				return lexems;
 			}
 			break;
 		}
@@ -67,12 +70,12 @@ Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
         if (lexems[i].type == Lexem::parR) { //RIGHT_BRACKET
             b_o--;
         }
-        if (lexems[i].type == Lexem::conc and b_o == 0) {
+        if (lexems[i].type == Lexem::conc && b_o == 0) {
             
             l = expr(lexems, index_start, i);
             r = expr(lexems, i+1, index_end);
 
-			if (l->type == Regex::error and r->type == Regex::error) { //Проверка на адекватность)
+			if (l->type == Regex::error && r->type == Regex::error) { //Проверка на адекватность)
 				return p;
 			}
 
@@ -99,7 +102,7 @@ Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
         if (lexems[i].type == Lexem::parR) { //RIGHT_BRACKET
             b_o--;
         }
-        if (lexems[i].type == Lexem::star and b_o == 0) {
+        if (lexems[i].type == Lexem::star && b_o == 0) {
             
             l = expr(lexems, index_start, i);
 
@@ -131,12 +134,12 @@ Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
         if (lexems[i].type == Lexem::parR) { //RIGHT_BRACKET
             b_o--;
         }
-        if (lexems[i].type == Lexem::alt and b_o == 0) {
+        if (lexems[i].type == Lexem::alt && b_o == 0) {
             
             l = expr(lexems, index_start, i);
             r = expr(lexems, i+1, index_end);
 
-			if (l->type == Regex::error and r->type == Regex::error) { //Проверка на адекватность)
+			if (l->type == Regex::error && r->type == Regex::error) { //Проверка на адекватность)
 				return p;
 			}
 
@@ -190,26 +193,26 @@ Regex* Regex::expr(vector<Lexem> lexems, int index_start, int index_end) {
 	if (!p) {
 		p = scan_par(lexems, index_start, index_end);
 	}
+	if (!p) {
+		p = new Regex;
+		p->type = Regex::error;
+	}
+	
 	return p;
 }
 Regex::Regex(){}
 
 Regex::Regex(string str) {
 	vector<Lexem> l;
-	Regex* root;
 	l = parse_string(str);
-	root = expr(l, 0, l.size());
-	if (root == NULL) {
-		cout << "ERROR\n";
-		return;
-	}
-	term_l = root->term_l;
-	term_r = root->term_r;
-	symbol = root->symbol;
-	type = root->type;
+	Regex* root = expr(l, 0, l.size());
+	*this = *root;
 	delete root;
-	//preOrderTravers(root);
+	if (this->type == Regex::error) {
+		cout << l.size() <<" ERROR\n";
+	}
 }
+
 Regex* Regex::copy() {
 		Regex* c = new Regex();
 		c->type = type;
@@ -230,19 +233,19 @@ void Regex::clear() {
 		}
 		if (term_r != nullptr) {
 			term_r->clear();
-			delete term_r;
+			delete term_r;	
 		}
 	}
 
-void Regex::preOrderTravers(Regex* root) {
-    if (root) {
-		if (root->symbol.symbol) {
-        	cout << root->symbol.symbol << " ";
+void Regex::pre_order_travers() {
+    if (this) {
+		if (this->symbol.symbol) {
+        	cout << this->symbol.symbol << " ";
 		} else {
-			cout << root->type << " ";
+			cout << this->type << " ";
 		}
-        preOrderTravers(root->term_l);
-        preOrderTravers(root->term_r);
+		this->term_l->pre_order_travers();
+		this->term_r->pre_order_travers();
     }
 }
 
