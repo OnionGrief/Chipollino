@@ -2,15 +2,20 @@
 #include "BaseObject.h"
 #include <string>
 #include <vector>
+#include <map>
+#include <stack>
+#include <iostream>
 using namespace std;
 
 struct State {
 	int index;
+    vector<int> label;
+    string identifier;
 	bool is_terminal;
-	string identifier;
-	vector<vector<int>> transitions;
+	map<char,vector<int> > transitions;
 	State();
-	State(int index, bool is_terminal, string identifier, vector<vector<int>> transitions);
+	State(int index, vector<int> label, string identifier, bool is_terminal, map<char,vector<int> > transitions);
+    void set_transition(int, char);
 };
 
 class FiniteAutomat : public BaseObject {
@@ -24,10 +29,10 @@ private:
 public:
 	FiniteAutomat();
 	FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic = false);
-	State& get_transition(int i, int j, int k);
 	string to_txt() override;
-	FiniteAutomat determinize(const FiniteAutomat& other);
-	FiniteAutomat rem_eps(const FiniteAutomat& other);
-	FiniteAutomat minimize(const FiniteAutomat& other);
+    vector<int> closure(vector<int>);
+	FiniteAutomat determinize();
+	FiniteAutomat rem_eps();
+	FiniteAutomat minimize();
 	// и тд
 };
