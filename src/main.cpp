@@ -10,6 +10,7 @@ int main() {
 	r.pre_order_travers();
 	r.clear();
 
+	//determinize testing
 	vector<State> states;
 	for (int i = 0; i < 5; i++) {
 		State s = {i, {i}, "", false, map<char, vector <int> >()};
@@ -31,4 +32,24 @@ int main() {
 	FiniteAutomat NDM(0, {'a', 'b', 'c'}, states, false);
 	FiniteAutomat DM = NDM.determinize();
 	cout << DM.to_txt();
+
+	//rem_eps testing
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {i, {i}, "", false, map<char, vector <int> >()};
+		states1.push_back(s);
+	}
+
+	states1[0].set_transition(0, '0');
+	states1[0].set_transition(1, '\0');
+	states1[1].set_transition(1, '1');
+	states1[1].set_transition(2, '\0');
+	states1[2].set_transition(2, '0');
+	states1[2].set_transition(2, '1');
+
+	states1[2].is_terminal = true;
+
+	FiniteAutomat NDM1(0, {'0', '1'}, states1, false);
+	FiniteAutomat ENDM1 = NDM1.rem_eps();
+	cout << ENDM1.to_txt();
 }
