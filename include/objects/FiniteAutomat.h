@@ -9,13 +9,13 @@ using namespace std;
 
 struct State {
 	int index;
-    vector<int> label;
-    string identifier;
+	vector<int> label;
+	string identifier;
 	bool is_terminal;
 	map<char,vector<int> > transitions;
 	State();
 	State(int index, vector<int> label, string identifier, bool is_terminal, map<char,vector<int> > transitions);
-    void set_transition(int, char);
+	void set_transition(int, char);
 };
 
 class FiniteAutomat : public BaseObject {
@@ -30,7 +30,7 @@ public:
 	FiniteAutomat();
 	FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic = false);
 	string to_txt() override;
-    vector<int> closure(vector<int>);
+	vector<int> closure(vector<int>);
 	FiniteAutomat determinize();
 	FiniteAutomat rem_eps();
 	FiniteAutomat minimize();
