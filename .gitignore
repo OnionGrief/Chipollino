@@ -1,3 +1,8 @@
 build/
 .vscode/
 .vs/
+<<<<<<< HEAD
+/CMakeSettings.json
+=======
+/enc_temp_folder/
+>>>>>>> de672522c18c6645a821e89a53efc980c9190891
