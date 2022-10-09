@@ -57,6 +57,7 @@ public:
 	void pre_order_travers();
 	void clear();
 	Regex* copy();
+	bool is_error();
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 };
