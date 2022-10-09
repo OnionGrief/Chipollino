@@ -11,11 +11,8 @@ project (chipollino)
 set(SOURCES
 	src/objects/FiniteAutomat.cpp
 	src/objects/Integer.cpp
-<<<<<<< HEAD
     src/Interpreter.cpp
-=======
 	src/objects/Regex.cpp
->>>>>>> main
     src/main.cpp
 )
 
