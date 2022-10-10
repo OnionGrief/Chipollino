@@ -52,4 +52,39 @@ int main() {
 	FiniteAutomat NDM1(0, {'0', '1'}, states1, false);
 	FiniteAutomat ENDM1 = NDM1.rem_eps();
 	cout << ENDM1.to_txt();
+
+	//intersection testing
+	vector<State> states2;
+	for (int i = 0; i < 3; i++) {
+		State s = {i, {i}, "", false, map<char, vector <int> >()};
+		states2.push_back(s);
+	}
+	vector<State> states3;
+	for (int i = 0; i < 3; i++) {
+		State s = {i, {i}, "", false, map<char, vector <int> >()};
+		states3.push_back(s);
+	}
+
+	states2[0].set_transition(0, 'b');
+	states2[0].set_transition(1, 'a');
+	states2[1].set_transition(1, 'b');
+	states2[1].set_transition(2, 'a');
+	states2[2].set_transition(2, 'a');
+	states2[2].set_transition(2, 'b');
+
+	states2[1].is_terminal = true;
+
+	states3[0].set_transition(0, 'a');
+	states3[0].set_transition(1, 'b');
+	states3[1].set_transition(1, 'a');
+	states3[1].set_transition(2, 'b');
+	states3[2].set_transition(2, 'a');
+	states3[2].set_transition(2, 'b');
+
+	states3[1].is_terminal = true;
+
+	FiniteAutomat NDM2 = FiniteAutomat(0, {'a', 'b'}, states2, false);
+	FiniteAutomat NDM3 = FiniteAutomat(0, {'a', 'b'}, states3, false);
+	FiniteAutomat NDM4 = NDM2.intersection(NDM3);
+	cout << NDM4.to_txt();
 }

@@ -146,7 +146,7 @@ FiniteAutomat FiniteAutomat::determinize(){
 
 //eps-замыкание
 FiniteAutomat FiniteAutomat::rem_eps() {
-	FiniteAutomat ENDM =FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic), NDM;
+	FiniteAutomat ENDM = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic), NDM;
 
 	NDM.states = ENDM.states;
 	for (int i = 0; i < NDM.states.size(); i++) {
@@ -187,3 +187,32 @@ FiniteAutomat FiniteAutomat::rem_eps() {
 	NDM.is_deterministic = false;
 	return NDM;
 }
+
+//пересечение детерминированных автоматов (получается автомат, распознающий слова пересечения языков L1 и L2)
+FiniteAutomat FiniteAutomat::intersection(FiniteAutomat DM2) {
+	FiniteAutomat DM1 = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic);
+	FiniteAutomat DM = FiniteAutomat();
+	DM.initial_state = 0;
+	DM.alphabet = DM1.alphabet;
+	int counter = 0;
+	for (int i = 0; i < DM1.states.size(); i++) {
+		for (int j = 0; j < DM2.states.size(); j++) {
+			DM.states.push_back({ counter, {i, j}, DM1.states[i].identifier + DM2.states[j].identifier,
+								 DM1.states[i].is_terminal && DM2.states[j].is_terminal, map<char, vector<int> >() } );
+			counter++;
+		}
+	}
+
+	for (int i = 0; i < DM.states.size(); i++) {
+		for (int j = 0; j < DM.alphabet.size(); j++) {
+			DM.states[i].transitions[alphabet[j]].push_back(
+					DM1.states[DM.states[i].label[0]].transitions[alphabet[j]][0] * 3 +
+					DM2.states[DM.states[i].label[1]].transitions[alphabet[j]][0]
+					);
+		}
+	}
+	DM.number_of_states = DM.states.size();
+	DM.is_deterministic = true;
+	return DM;
+}
+
