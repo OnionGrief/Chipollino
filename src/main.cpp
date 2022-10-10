@@ -53,7 +53,7 @@ int main() {
 	FiniteAutomat ENDM1 = NDM1.rem_eps();
 	cout << ENDM1.to_txt();
 
-	//intersection testing
+	//intersection & union testing
 	vector<State> states2;
 	for (int i = 0; i < 3; i++) {
 		State s = {i, {i}, "", false, map<char, vector <int> >()};
@@ -86,5 +86,7 @@ int main() {
 	FiniteAutomat NDM2 = FiniteAutomat(0, {'a', 'b'}, states2, false);
 	FiniteAutomat NDM3 = FiniteAutomat(0, {'a', 'b'}, states3, false);
 	FiniteAutomat NDM4 = NDM2.intersection(NDM3);
+	FiniteAutomat NDM5 = NDM2.uunion(NDM3);
 	cout << NDM4.to_txt();
+	cout << NDM5.to_txt();
 }
