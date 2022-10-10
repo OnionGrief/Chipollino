@@ -38,6 +38,6 @@ public:
 	FiniteAutomat intersection(FiniteAutomat);
 	FiniteAutomat uunion(FiniteAutomat);
 	FiniteAutomat difference(FiniteAutomat);
-	FiniteAutomat complement(FiniteAutomat);
+	FiniteAutomat complement();
 	// и тд
 };

@@ -198,7 +198,8 @@ FiniteAutomat FiniteAutomat::intersection(FiniteAutomat DM2) {
 	for (int i = 0; i < DM1.states.size(); i++) {
 		for (int j = 0; j < DM2.states.size(); j++) {
 			DM.states.push_back({ counter, {i, j}, DM1.states[i].identifier + DM2.states[j].identifier,
-								  DM1.states[i].is_terminal && DM2.states[j].is_terminal, map<char, vector<int> >() });
+								  DM1.states[i].is_terminal && DM2.states[j].is_terminal,
+								  map<char, vector<int> >() });
 			counter++;
 		}
 	}
@@ -225,7 +226,8 @@ FiniteAutomat FiniteAutomat::uunion(FiniteAutomat DM2) {
 	for (int i = 0; i < DM1.states.size(); i++) {
 		for (int j = 0; j < DM2.states.size(); j++) {
 			DM.states.push_back({ counter, {i, j}, DM1.states[i].identifier + DM2.states[j].identifier,
-								  DM1.states[i].is_terminal || DM2.states[j].is_terminal, map<char, vector<int> >() });
+								  DM1.states[i].is_terminal || DM2.states[j].is_terminal,
+								  map<char, vector<int> >() });
 			counter++;
 		}
 	}
@@ -267,5 +269,14 @@ FiniteAutomat FiniteAutomat::difference(FiniteAutomat DM2) {
 	}
 	DM.number_of_states = DM.states.size();
 	DM.is_deterministic = true;
+	return DM;
+}
+
+//дополнение ДКА (получается автомат, распознающий язык L' = Σ* - L)
+FiniteAutomat FiniteAutomat::complement() {
+	FiniteAutomat DM = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic);
+	for (int i = 0; i < DM.number_of_states; i++) {
+		DM.states[i].is_terminal = not(DM.states[i].is_terminal);
+	}
 	return DM;
 }
