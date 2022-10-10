@@ -83,10 +83,14 @@ int main() {
 
 	states3[1].is_terminal = true;
 
-	FiniteAutomat NDM2 = FiniteAutomat(0, {'a', 'b'}, states2, false);
-	FiniteAutomat NDM3 = FiniteAutomat(0, {'a', 'b'}, states3, false);
-	FiniteAutomat NDM4 = NDM2.intersection(NDM3);
-	FiniteAutomat NDM5 = NDM2.uunion(NDM3);
-	cout << NDM4.to_txt();
-	cout << NDM5.to_txt();
+	FiniteAutomat DM1 = FiniteAutomat(0, {'a', 'b'}, states2, false);
+	FiniteAutomat DM2 = FiniteAutomat(0, {'a', 'b'}, states3, false);
+
+	FiniteAutomat DM3 = DM1.intersection(DM2);
+	FiniteAutomat DM4 = DM1.uunion(DM2);
+	FiniteAutomat DM5 = DM1.difference(DM2);
+
+	cout << DM3.to_txt();
+	cout << DM4.to_txt();
+	cout << DM5.to_txt();
 }

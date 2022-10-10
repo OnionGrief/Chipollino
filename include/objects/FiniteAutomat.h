@@ -37,6 +37,7 @@ public:
 	FiniteAutomat minimize();
 	FiniteAutomat intersection(FiniteAutomat);
 	FiniteAutomat uunion(FiniteAutomat);
+	FiniteAutomat difference(FiniteAutomat);
 	FiniteAutomat complement(FiniteAutomat);
 	// и тд
 };
