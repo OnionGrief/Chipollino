@@ -59,4 +59,5 @@ public:
 	Regex* copy();
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
+	friend bool equiv(Regex* r1, Regex* r2);
 };

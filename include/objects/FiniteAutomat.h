@@ -26,8 +26,11 @@ public:
 	FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic = false);
 	State& get_transition(int i, int j, int k);
 	string to_txt() override;
-	FiniteAutomat determinize(const FiniteAutomat& other);
-	FiniteAutomat rem_eps(const FiniteAutomat& other);
-	FiniteAutomat minimize(const FiniteAutomat& other);
+	FiniteAutomat determinize();
+	FiniteAutomat rem_eps();
+	FiniteAutomat minimize();
+	FiniteAutomat merge_bisimilar();
 	// и тд
+	friend bool equiv(FiniteAutomat& r1, FiniteAutomat& r2);
+	friend bool bisimilar(FiniteAutomat& r1, FiniteAutomat& r2);
 };
