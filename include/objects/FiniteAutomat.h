@@ -42,11 +42,11 @@ public:
 	// минимизация ДКА
 	FiniteAutomat minimize();
 	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения языков L1 и L2)
-	static FiniteAutomat intersection(FiniteAutomat, FiniteAutomat);
+	static FiniteAutomat intersection(const FiniteAutomat&, const FiniteAutomat&);
 	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия языков L1 и L2)
-	static FiniteAutomat uunion(FiniteAutomat, FiniteAutomat);
+	static FiniteAutomat uunion(const FiniteAutomat&, const FiniteAutomat&);
 	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1 и L2)
-	FiniteAutomat difference(FiniteAutomat);
+	FiniteAutomat difference(const FiniteAutomat&);
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	FiniteAutomat complement();
 	// и тд

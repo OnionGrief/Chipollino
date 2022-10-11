@@ -179,7 +179,7 @@ FiniteAutomat FiniteAutomat::remove_eps() {
 	return ndm;
 }
 
-FiniteAutomat FiniteAutomat::intersection(FiniteAutomat dm1, FiniteAutomat dm2) {
+FiniteAutomat FiniteAutomat::intersection(const FiniteAutomat& dm1, const FiniteAutomat& dm2) {
 	FiniteAutomat dm = FiniteAutomat();
 	dm.initial_state = 0;
 	dm.alphabet = dm1.alphabet;
@@ -196,15 +196,15 @@ FiniteAutomat FiniteAutomat::intersection(FiniteAutomat dm1, FiniteAutomat dm2) 
 	for (auto& state : dm.states) {
 		for (char ch : dm.alphabet) {
 			state.transitions[ch].push_back(
-					dm1.states[state.label[0]].transitions[ch][0] * 3 +
-					dm2.states[state.label[1]].transitions[ch][0]);
+					dm1.states[state.label[0]].transitions.at(ch)[0] * 3 +
+					dm2.states[state.label[1]].transitions.at(ch)[0]);
 		}
 	}
 	dm.is_deterministic = true;
 	return dm;
 }
 
-FiniteAutomat FiniteAutomat::uunion(FiniteAutomat dm1, FiniteAutomat dm2) {
+FiniteAutomat FiniteAutomat::uunion(const FiniteAutomat& dm1, const FiniteAutomat& dm2) {
 	FiniteAutomat dm = FiniteAutomat();
 	dm.initial_state = 0;
 	dm.alphabet = dm1.alphabet;
@@ -221,15 +221,15 @@ FiniteAutomat FiniteAutomat::uunion(FiniteAutomat dm1, FiniteAutomat dm2) {
 	for (auto& state : dm.states) {
 		for (char ch : dm.alphabet) {
 			state.transitions[ch].push_back(
-					dm1.states[state.label[0]].transitions[ch][0] * 3 +
-					dm2.states[state.label[1]].transitions[ch][0]);
+					dm1.states[state.label[0]].transitions.at(ch)[0] * 3 +
+					dm2.states[state.label[1]].transitions.at(ch)[0]);
 		}
 	}
 	dm.is_deterministic = true;
 	return dm;
 }
 
-FiniteAutomat FiniteAutomat::difference(FiniteAutomat dm2) {
+FiniteAutomat FiniteAutomat::difference(const FiniteAutomat& dm2) {
 	FiniteAutomat dm1 = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
 	FiniteAutomat dm = FiniteAutomat();
 	dm.initial_state = 0;
@@ -247,8 +247,8 @@ FiniteAutomat FiniteAutomat::difference(FiniteAutomat dm2) {
 	for (auto& state : dm.states) {
 		for (char ch : dm.alphabet) {
 			state.transitions[ch].push_back(
-					dm1.states[state.label[0]].transitions[ch][0] * 3 +
-					dm2.states[state.label[1]].transitions[ch][0]);
+					dm1.states[state.label[0]].transitions.at(ch)[0] * 3 +
+					dm2.states[state.label[1]].transitions.at(ch)[0]);
 		}
 	}
 	dm.is_deterministic = true;
