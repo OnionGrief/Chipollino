@@ -28,18 +28,15 @@ string FiniteAutomat::to_txt() {
 	ss << "dummy -> " << states[initial_state].index << "\n";
 
 	for (int i = 0; i < number_of_states; i++) {
-		for (int j = 0; j < alphabet.size(); j++) {
-			for (auto elem : states[i].transitions[alphabet[j]]) {
-				ss << "\t" << states[i].index << " -> "
-				<< elem
-				<< " [label = \"" << string(1, alphabet[j]) << "\"]\n";
+			for (auto elem: states[i].transitions) {
+				for (int transition: elem.second) {
+					ss << "\t" << states[i].index << " -> " << transition;
+					if(elem.first == '\0')
+						ss  << " [label = \"" << "eps" << "\"]\n" ;
+					else
+						ss  << " [label = \"" << elem.first << "\"]\n" ;
+				}
 			}
-		}
-		for (auto elem : states[i].transitions['\0']) {
-			ss << "\t" << states[i].index << " -> "
-			<< elem
-			<< " [label = \"" << "eps" << "\"]\n";
-		}
 	}
 
 	ss << "}\n";
@@ -152,7 +149,6 @@ FiniteAutomat FiniteAutomat::determinize(){
 //eps-замыкание
 FiniteAutomat FiniteAutomat::rem_eps() {
 	FiniteAutomat ENDM = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic), NDM;
-
 	NDM.states = ENDM.states;
 	for (auto& state : NDM.states) {
 		state.transitions = map<char,vector<int> >();
@@ -193,8 +189,7 @@ FiniteAutomat FiniteAutomat::rem_eps() {
 }
 
 //пересечение детерминированных автоматов (получается автомат, распознающий слова пересечения языков L1 и L2)
-FiniteAutomat FiniteAutomat::intersection(FiniteAutomat DM2) {
-	FiniteAutomat DM1 = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic);
+FiniteAutomat FiniteAutomat::intersection(FiniteAutomat DM1, FiniteAutomat DM2) {
 	FiniteAutomat DM = FiniteAutomat();
 	DM.initial_state = 0;
 	DM.alphabet = DM1.alphabet;
@@ -221,8 +216,7 @@ FiniteAutomat FiniteAutomat::intersection(FiniteAutomat DM2) {
 }
 
 //объединение детерминированных автоматов (получается автомат, распознающий слова объединенеия языков L1 и L2)
-FiniteAutomat FiniteAutomat::uunion(FiniteAutomat DM2) {
-	FiniteAutomat DM1 = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic);
+FiniteAutomat FiniteAutomat::uunion(FiniteAutomat DM1, FiniteAutomat DM2) {
 	FiniteAutomat DM = FiniteAutomat();
 	DM.initial_state = 0;
 	DM.alphabet = DM1.alphabet;

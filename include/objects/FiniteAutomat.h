@@ -35,8 +35,8 @@ public:
 	FiniteAutomat determinize();
 	FiniteAutomat rem_eps();
 	FiniteAutomat minimize();
-	FiniteAutomat intersection(FiniteAutomat);
-	FiniteAutomat uunion(FiniteAutomat);
+	static FiniteAutomat intersection(FiniteAutomat, FiniteAutomat);
+	static FiniteAutomat uunion(FiniteAutomat, FiniteAutomat);
 	FiniteAutomat difference(FiniteAutomat);
 	FiniteAutomat complement();
 	// и тд

@@ -86,8 +86,8 @@ int main() {
 	FiniteAutomat DM1 = FiniteAutomat(0, {'a', 'b'}, states2, false);
 	FiniteAutomat DM2 = FiniteAutomat(0, {'a', 'b'}, states3, false);
 
-	FiniteAutomat DM3 = DM1.intersection(DM2);
-	FiniteAutomat DM4 = DM1.uunion(DM2);
+	FiniteAutomat DM3 = FiniteAutomat::intersection(DM1, DM2);
+	FiniteAutomat DM4 = FiniteAutomat::uunion(DM1, DM2);
 	FiniteAutomat DM5 = DM1.difference(DM2);
 	FiniteAutomat DM6 = DM.complement();
 
@@ -95,4 +95,5 @@ int main() {
 	cout << DM4.to_txt();
 	cout << DM5.to_txt();
 	cout << DM6.to_txt();
+	cout << NDM.to_txt();
 }
