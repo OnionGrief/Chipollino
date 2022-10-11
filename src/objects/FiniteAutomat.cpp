@@ -5,7 +5,7 @@ using namespace std;
 
 State::State() : index(0), is_terminal(false), identifier("") {}
 
-State::State(int index, vector<int> label, string identifier, bool is_terminal, map<char, vector<int> > transitions)
+State::State(int index, vector<int> label, string identifier, bool is_terminal, map<char, vector<int>> transitions)
 	: index(index), label(label), identifier(identifier), is_terminal(is_terminal), transitions(transitions) {}
 
 void State::set_transition(int to, char symbol) {
@@ -27,15 +27,15 @@ string FiniteAutomat::to_txt() {
 	ss << "dummy -> " << states[initial_state].index << "\n";
 
 	for (int i = 0; i < states.size(); i++) {
-			for (auto elem: states[i].transitions) {
-				for (int transition: elem.second) {
-					ss << "\t" << states[i].index << " -> " << transition;
-					if(elem.first == '\0')
-						ss  << " [label = \"" << "eps" << "\"]\n" ;
-					else
-						ss  << " [label = \"" << elem.first << "\"]\n" ;
-				}
+		for (auto elem: states[i].transitions) {
+			for (int transition: elem.second) {
+				ss << "\t" << states[i].index << " -> " << transition;
+				if(elem.first == '\0')
+					ss  << " [label = \"" << "eps" << "\"]\n" ;
+				else
+					ss  << " [label = \"" << elem.first << "\"]\n" ;
 			}
+		}
 	}
 
 	ss << "}\n";
@@ -43,20 +43,20 @@ string FiniteAutomat::to_txt() {
 }
 
 //обход автомата в глубину по eps-переходам
-void dfs(vector<State> states, int index, vector<int>* C){
-	if (find(C->begin(), C->end(), index) == C->end()) {
-		C->push_back(index);
+void dfs(vector<State> states, int index, vector<int>* c){
+	if (find(c->begin(), c->end(), index) == c->end()) {
+		c->push_back(index);
 		for (int i = 0; i < states[index].transitions['\0'].size(); i++) {
-			dfs(states, states[index].transitions['\0'][i], C);
+			dfs(states, states[index].transitions['\0'][i], c);
 		}
 	}
 }
 
-//поиск множества состояний НКА, достижимых из множества состояний x по eps-переходам
 vector<int> FiniteAutomat::closure(vector<int> x){
-	vector<int> C;
-	for(int i = 0; i < x.size(); i++) dfs(states, x[i], &C);
-	return C;
+	vector<int> c;
+	for(int i = 0; i < x.size(); i++)
+		dfs(states, x[i], &c);
+	return c;
 }
 
 //проверка меток на равенство
@@ -68,21 +68,18 @@ bool belong(State q, State u) {
 	return true;
 }
 
-//НКА -> ДКА
 FiniteAutomat FiniteAutomat::determinize(){
-	FiniteAutomat NDM(this->initial_state, this->alphabet, this->states, this->is_deterministic), DM;
+	FiniteAutomat ndm(initial_state, alphabet, states, is_deterministic), dm;
 	vector<int> x = {0};
-	vector<int> q0 = NDM.closure(x);
+	vector<int> q0 = ndm.closure(x);
 
-	//инициализация начального состояния
-	vector<int> label;
-	for (int i : q0) { label.push_back(i); }
+	vector<int> label = q0;
 	sort(label.begin(), label.end());
-	State new_initial_state = { 0, label, NDM.states[NDM.initial_state].identifier, false, map<char, vector<int> >() };
-	DM.states.push_back(new_initial_state);
-	DM.initial_state = 0;
+	State new_initial_state = { 0, label, ndm.states[ndm.initial_state].identifier, false, map<char, vector<int>>() };
+	dm.states.push_back(new_initial_state);
+	dm.initial_state = 0;
 
-	stack<vector <int> > s1;
+	stack<vector<int>> s1;
 	stack<int> s2;
 	s1.push(q0);
 	s2.push(0);
@@ -92,34 +89,32 @@ FiniteAutomat FiniteAutomat::determinize(){
 		int index = s2.top();
 		s1.pop();
 		s2.pop();
-		State q = DM.states[index];
+		State q = dm.states[index];
 
 		for (int i : z) {
-			if (NDM.states[i].is_terminal) {
-				DM.states[index].is_terminal = true;
+			if (ndm.states[i].is_terminal) {
+				dm.states[index].is_terminal = true;
 				break;
 			}
 		}
 
 		vector <int> new_x;
-		for (char ch : NDM.alphabet) {
+		for (char ch : ndm.alphabet) {
 			new_x.clear();
 			for (int j : z) {
-				for (int k : NDM.states[j].transitions[ch]) {
+				for (int k : ndm.states[j].transitions[ch]) {
 					new_x.push_back(k);
 				}
 			}
 
-			vector<int> z1 = NDM.closure(new_x);
-			vector<int> new_label;
-			for (int j : z1) { new_label.push_back(j); }
+			vector<int> z1 = ndm.closure(new_x);
+			vector<int> new_label = z1;
 			sort(new_label.begin(), new_label.end());
 
-			//доработать с идентификаторами
-			State q1 = { -1, new_label, "", false, map<char, vector<int> >() };
+			State q1 = { -1, new_label, "", false, map<char, vector<int>>() };
 			bool accessory_flag = false;
 
-			for (auto&  state : DM.states) {
+			for (auto&  state : dm.states) {
 				if (belong(q1, state)) {
 					index = state.index;
 					accessory_flag = true;
@@ -128,147 +123,142 @@ FiniteAutomat FiniteAutomat::determinize(){
 			}
 
 			if (!accessory_flag) index = -1;
-			if (index != -1) q1 = DM.states[index];
+			if (index != -1) q1 = dm.states[index];
 			else {
-				index = DM.states.size();
+				index = dm.states.size();
 				q1.index = index;
-				DM.states.push_back(q1);
+				dm.states.push_back(q1);
 				s1.push(z1);
 				s2.push(index);
 			}
-			DM.states[q.index].transitions[ch].push_back(q1.index);
+			dm.states[q.index].transitions[ch].push_back(q1.index);
 		}
 	}
-	DM.alphabet = NDM.alphabet;
-	DM.is_deterministic = true;
-	return DM;
+	dm.alphabet = ndm.alphabet;
+	dm.is_deterministic = true;
+	return dm;
 }
 
-//eps-замыкание
-FiniteAutomat FiniteAutomat::rem_eps() {
-	FiniteAutomat ENDM = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic), NDM;
-	NDM.states = ENDM.states;
-	for (auto& state : NDM.states) {
-		state.transitions = map<char,vector<int> >();
+FiniteAutomat FiniteAutomat::remove_eps() {
+	FiniteAutomat endm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomat ndm = FiniteAutomat();
+	ndm.states = endm.states;
+
+	for (auto& state : ndm.states) {
+		state.transitions = map<char, vector<int>>();
 	}
 
-	for (int i = 0; i < ENDM.states.size(); i++) {
-		//для каждого состояния находим множество состояний, достижимых из данного по eps-переходам
-		vector<int> state = {ENDM.states[i].index};
-		vector<int> q = ENDM.closure(state);
-		//смотрим, куда каждое переходит по символам алфавита
-		vector<vector<int> > x;
-		for (char ch : ENDM.alphabet) {
+	for (int i = 0; i < endm.states.size(); i++) {
+		vector<int> state = {endm.states[i].index};
+		vector<int> q = endm.closure(state);
+		vector<vector<int>> x;
+		for (char ch : endm.alphabet) {
 			x.clear();
 			for (int k : q) {
-				x.push_back(ENDM.states[k].transitions[ch]);
+				x.push_back(endm.states[k].transitions[ch]);
 			}
 			vector<int> q1;
 			set<int> x1;
 			for (auto& k : x) {
-				q1 = ENDM.closure(k);
+				q1 = endm.closure(k);
 				for (int& m : q1) {
 					x1.insert(m);
 				}
 			}
 			for (auto elem : x1) {
-				if (NDM.states[elem].is_terminal) {
-					NDM.states[i].is_terminal = true;
+				if (ndm.states[elem].is_terminal) {
+					ndm.states[i].is_terminal = true;
 				}
-				NDM.states[i].transitions[ch].push_back(elem);
+				ndm.states[i].transitions[ch].push_back(elem);
 			}
 		}
 	}
-	NDM.initial_state = ENDM.initial_state;
-	NDM.alphabet = ENDM.alphabet;
-	NDM.is_deterministic = false;
-	return NDM;
+	ndm.initial_state = endm.initial_state;
+	ndm.alphabet = endm.alphabet;
+	ndm.is_deterministic = false;
+	return ndm;
 }
 
-//пересечение детерминированных автоматов (получается автомат, распознающий слова пересечения языков L1 и L2)
-FiniteAutomat FiniteAutomat::intersection(FiniteAutomat DM1, FiniteAutomat DM2) {
-	FiniteAutomat DM = FiniteAutomat();
-	DM.initial_state = 0;
-	DM.alphabet = DM1.alphabet;
+FiniteAutomat FiniteAutomat::intersection(FiniteAutomat dm1, FiniteAutomat dm2) {
+	FiniteAutomat dm = FiniteAutomat();
+	dm.initial_state = 0;
+	dm.alphabet = dm1.alphabet;
 	int counter = 0;
-	for (auto& state1 : DM1.states) {
-		for (auto& state2 : DM2.states) {
-			DM.states.push_back({ counter, {state1.index, state2.index}, state1.identifier + state2.identifier,
+	for (auto& state1 : dm1.states) {
+		for (auto& state2 : dm2.states) {
+			dm.states.push_back({ counter, {state1.index, state2.index}, state1.identifier + state2.identifier,
 								  state1.is_terminal && state2.is_terminal,
-								  map<char, vector<int> >() });
+								  map<char, vector<int>>() });
 			counter++;
 		}
 	}
 
-	for (auto& state : DM.states) {
-		for (char ch : DM.alphabet) {
+	for (auto& state : dm.states) {
+		for (char ch : dm.alphabet) {
 			state.transitions[ch].push_back(
-					DM1.states[state.label[0]].transitions[ch][0] * 3 +
-					DM2.states[state.label[1]].transitions[ch][0]);
+					dm1.states[state.label[0]].transitions[ch][0] * 3 +
+					dm2.states[state.label[1]].transitions[ch][0]);
 		}
 	}
-	DM.is_deterministic = true;
-	return DM;
+	dm.is_deterministic = true;
+	return dm;
 }
 
-//объединение детерминированных автоматов (получается автомат, распознающий слова объединенеия языков L1 и L2)
-FiniteAutomat FiniteAutomat::uunion(FiniteAutomat DM1, FiniteAutomat DM2) {
-	FiniteAutomat DM = FiniteAutomat();
-	DM.initial_state = 0;
-	DM.alphabet = DM1.alphabet;
+FiniteAutomat FiniteAutomat::uunion(FiniteAutomat dm1, FiniteAutomat dm2) {
+	FiniteAutomat dm = FiniteAutomat();
+	dm.initial_state = 0;
+	dm.alphabet = dm1.alphabet;
 	int counter = 0;
-	for (auto& state1 : DM1.states) {
-		for (auto& state2 : DM2.states) {
-			DM.states.push_back({ counter, {state1.index, state2.index}, state1.identifier + state2.identifier,
+	for (auto& state1 : dm1.states) {
+		for (auto& state2 : dm2.states) {
+			dm.states.push_back({ counter, {state1.index, state2.index}, state1.identifier + state2.identifier,
 								  state1.is_terminal || state2.is_terminal,
-								  map<char, vector<int> >() });
+								  map<char, vector<int>>() });
 			counter++;
 		}
 	}
 
-	for (auto& state : DM.states) {
-		for (char ch : DM.alphabet) {
+	for (auto& state : dm.states) {
+		for (char ch : dm.alphabet) {
 			state.transitions[ch].push_back(
-					DM1.states[state.label[0]].transitions[ch][0] * 3 +
-					DM2.states[state.label[1]].transitions[ch][0]);
+					dm1.states[state.label[0]].transitions[ch][0] * 3 +
+					dm2.states[state.label[1]].transitions[ch][0]);
 		}
 	}
-	DM.is_deterministic = true;
-	return DM;
+	dm.is_deterministic = true;
+	return dm;
 }
 
-//разность детерминированных автоматов (получается автомат, распознающий слова разности языков L1 и L2)
-FiniteAutomat FiniteAutomat::difference(FiniteAutomat DM2) {
-	FiniteAutomat DM1 = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic);
-	FiniteAutomat DM = FiniteAutomat();
-	DM.initial_state = 0;
-	DM.alphabet = DM1.alphabet;
+FiniteAutomat FiniteAutomat::difference(FiniteAutomat dm2) {
+	FiniteAutomat dm1 = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomat dm = FiniteAutomat();
+	dm.initial_state = 0;
+	dm.alphabet = dm1.alphabet;
 	int counter = 0;
-	for (auto& state1 : DM1.states) {
-		for (auto& state2 : DM2.states) {
-			DM.states.push_back({ counter, {state1.index, state2.index}, state1.identifier + state2.identifier,
+	for (auto& state1 : dm1.states) {
+		for (auto& state2 : dm2.states) {
+			dm.states.push_back({ counter, {state1.index, state2.index}, state1.identifier + state2.identifier,
 								  state1.is_terminal && !state2.is_terminal,
-								  map<char, vector<int> >() });
+								  map<char, vector<int>>() });
 			counter++;
 		}
 	}
 
-	for (auto& state : DM.states) {
-		for (char ch : DM.alphabet) {
+	for (auto& state : dm.states) {
+		for (char ch : dm.alphabet) {
 			state.transitions[ch].push_back(
-					DM1.states[state.label[0]].transitions[ch][0] * 3 +
-					DM2.states[state.label[1]].transitions[ch][0]);
+					dm1.states[state.label[0]].transitions[ch][0] * 3 +
+					dm2.states[state.label[1]].transitions[ch][0]);
 		}
 	}
-	DM.is_deterministic = true;
-	return DM;
+	dm.is_deterministic = true;
+	return dm;
 }
 
-//дополнение ДКА (получается автомат, распознающий язык L' = Σ* - L)
 FiniteAutomat FiniteAutomat::complement() {
-	FiniteAutomat DM = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic);
-	for (int i = 0; i < DM.states.size(); i++) {
-		DM.states[i].is_terminal = !DM.states[i].is_terminal;
+	FiniteAutomat dm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	for (int i = 0; i < dm.states.size(); i++) {
+		dm.states[i].is_terminal = !dm.states[i].is_terminal;
 	}
-	return DM;
+	return dm;
 }

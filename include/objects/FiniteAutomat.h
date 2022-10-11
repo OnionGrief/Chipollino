@@ -10,12 +10,14 @@ using namespace std;
 
 struct State {
 	int index;
+	// используется для объединения состояний в процессе работы алгоритмов преобразования автоматов
+	// возможно для визуализации
 	vector<int> label;
 	string identifier;
 	bool is_terminal;
-	map<char,vector<int> > transitions;
+	map<char, vector<int>> transitions;
 	State();
-	State(int index, vector<int> label, string identifier, bool is_terminal, map<char,vector<int> > transitions);
+	State(int index, vector<int> label, string identifier, bool is_terminal, map<char, vector<int>> transitions);
 	void set_transition(int, char);
 };
 
@@ -29,14 +31,23 @@ private:
 public:
 	FiniteAutomat();
 	FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic = false);
+	// визуализация автомата
 	string to_txt() override;
+	// поиск множества состояний НКА, достижимых из множества состояний по eps-переходам
 	vector<int> closure(vector<int>);
+	// детерминизация ДКА
 	FiniteAutomat determinize();
-	FiniteAutomat rem_eps();
+	// построение eps-замыкания
+	FiniteAutomat remove_eps();
+	// минимизация ДКА
 	FiniteAutomat minimize();
+	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения языков L1 и L2)
 	static FiniteAutomat intersection(FiniteAutomat, FiniteAutomat);
+	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия языков L1 и L2)
 	static FiniteAutomat uunion(FiniteAutomat, FiniteAutomat);
+	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1 и L2)
 	FiniteAutomat difference(FiniteAutomat);
+	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	FiniteAutomat complement();
 	// и тд
 };
