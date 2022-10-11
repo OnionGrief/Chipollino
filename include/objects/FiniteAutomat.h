@@ -21,7 +21,6 @@ struct State {
 
 class FiniteAutomat : public BaseObject {
 private:
-	int number_of_states = 0;
 	bool is_deterministic = 0;
 	int initial_state = 0;
 	vector<char> alphabet;

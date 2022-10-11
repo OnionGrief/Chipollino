@@ -1,5 +1,6 @@
 #include "FiniteAutomat.h"
 #include <sstream>
+#include <algorithm>
 using namespace std;
 
 State::State() : index(0), is_terminal(false), identifier("") {}
@@ -14,9 +15,7 @@ void State::set_transition(int to, char symbol) {
 FiniteAutomat::FiniteAutomat() { }
 
 FiniteAutomat::FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic)
-	: initial_state(initial_state), alphabet(alphabet), states(states), is_deterministic(is_deterministic) {
-	number_of_states = (int)states.size();
-}
+	: initial_state(initial_state), alphabet(alphabet), states(states), is_deterministic(is_deterministic) {}
 
 string FiniteAutomat::to_txt() {
 	stringstream ss;
@@ -27,7 +26,7 @@ string FiniteAutomat::to_txt() {
 	}
 	ss << "dummy -> " << states[initial_state].index << "\n";
 
-	for (int i = 0; i < number_of_states; i++) {
+	for (int i = 0; i < states.size(); i++) {
 		for (int j = 0; j < alphabet.size(); j++) {
 			for (auto elem : states[i].transitions[alphabet[j]]) {
 				ss << "\t" << states[i].index << " -> "
@@ -91,7 +90,7 @@ FiniteAutomat FiniteAutomat::determinize(){
 	s1.push(q0);
 	s2.push(0);
 
-	while (not s1.empty()) {
+	while (!s1.empty()) {
 		vector<int> z = s1.top();
 		int index = s2.top();
 		s1.pop();
@@ -143,7 +142,6 @@ FiniteAutomat FiniteAutomat::determinize(){
 			DM.states[q.index].transitions[ch].push_back(q1.index);
 		}
 	}
-	DM.number_of_states = DM.states.size();
 	DM.alphabet = NDM.alphabet;
 	DM.is_deterministic = true;
 	return DM;
@@ -185,7 +183,6 @@ FiniteAutomat FiniteAutomat::rem_eps() {
 			}
 		}
 	}
-	NDM.number_of_states = NDM.states.size();
 	NDM.initial_state = ENDM.initial_state;
 	NDM.alphabet = ENDM.alphabet;
 	NDM.is_deterministic = false;
@@ -215,7 +212,6 @@ FiniteAutomat FiniteAutomat::intersection(FiniteAutomat DM2) {
 					DM2.states[state.label[1]].transitions[ch][0]);
 		}
 	}
-	DM.number_of_states = DM.states.size();
 	DM.is_deterministic = true;
 	return DM;
 }
@@ -243,7 +239,6 @@ FiniteAutomat FiniteAutomat::uunion(FiniteAutomat DM2) {
 					DM2.states[state.label[1]].transitions[ch][0]);
 		}
 	}
-	DM.number_of_states = DM.states.size();
 	DM.is_deterministic = true;
 	return DM;
 }
@@ -258,7 +253,7 @@ FiniteAutomat FiniteAutomat::difference(FiniteAutomat DM2) {
 	for (auto& state1 : DM1.states) {
 		for (auto& state2 : DM2.states) {
 			DM.states.push_back({ counter, {state1.index, state2.index}, state1.identifier + state2.identifier,
-								  state1.is_terminal && not(state2.is_terminal),
+								  state1.is_terminal && !state2.is_terminal,
 								  map<char, vector<int> >() });
 			counter++;
 		}
@@ -271,7 +266,6 @@ FiniteAutomat FiniteAutomat::difference(FiniteAutomat DM2) {
 					DM2.states[state.label[1]].transitions[ch][0]);
 		}
 	}
-	DM.number_of_states = DM.states.size();
 	DM.is_deterministic = true;
 	return DM;
 }
@@ -279,8 +273,8 @@ FiniteAutomat FiniteAutomat::difference(FiniteAutomat DM2) {
 //дополнение ДКА (получается автомат, распознающий язык L' = Σ* - L)
 FiniteAutomat FiniteAutomat::complement() {
 	FiniteAutomat DM = FiniteAutomat(this->initial_state, this->alphabet, this->states, this->is_deterministic);
-	for (int i = 0; i < DM.number_of_states; i++) {
-		DM.states[i].is_terminal = not(DM.states[i].is_terminal);
+	for (int i = 0; i < DM.states.size(); i++) {
+		DM.states[i].is_terminal = !DM.states[i].is_terminal;
 	}
 	return DM;
 }
