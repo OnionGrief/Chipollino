@@ -30,7 +30,7 @@ public:
 	FiniteAutomat rem_eps();
 	FiniteAutomat minimize();
 	FiniteAutomat merge_bisimilar();
+	static bool equiv(const FiniteAutomat&, const FiniteAutomat&);
+	static bool bisimilar(const FiniteAutomat&, const FiniteAutomat&);
 	// и тд
-	friend bool equiv(FiniteAutomat& r1, FiniteAutomat& r2);
-	friend bool bisimilar(FiniteAutomat& r1, FiniteAutomat& r2);
 };
