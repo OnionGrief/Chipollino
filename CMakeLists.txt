@@ -13,10 +13,10 @@ set(SOURCES
 	src/objects/Integer.cpp
 	src/objects/Regex.cpp
     src/main.cpp
-)
+ "src/TypeChecker.cpp")
 
 # Add an executable with the above sources
-add_executable(chipollino ${SOURCES})
+add_executable(chipollino ${SOURCES} "src/TypeChecker.cpp")
 
 # Set the directories that should be included in the build command for this target
 # when running g++ these will be included as -I/directory/path/
