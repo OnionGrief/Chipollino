@@ -263,9 +263,9 @@ bool equiv(Regex* r1, Regex* r2) {
 	if(r1 == nullptr && r2 == nullptr) return true;
 	if(r1 == nullptr || r2 == nullptr) return true;
 	int r1_value, r2_value;
-	if (r1->symbol.symbol) r1_value = (int)r1->symbol.symbol;
+	if (r1->value.symbol) r1_value = (int)r1->value.symbol;
 	else r1_value = r1->type;
-	if (r2->symbol.symbol) r2_value = (int)r2->symbol.symbol;
+	if (r2->value.symbol) r2_value = (int)r2->value.symbol;
 	else r2_value = r2->type;
 
 	if(r1_value != r2_value) return false;

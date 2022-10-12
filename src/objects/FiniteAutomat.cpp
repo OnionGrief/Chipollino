@@ -390,9 +390,13 @@ vector<vector<vector<Item*>>> fa_to_grammar(const vector<State>& states, const v
 	terminals.push_back(&fa_items[ind]);
 
 	for(int i = 0; i < states.size(); i++){
-		for (int j = 0; j <= alphabet.size(); j++) {
-			for (int k = 0; k < states[i].transitions[j].size(); k++)
-				rules[i].push_back({terminals[j], nonterminals[states[i].transitions[j][k]]});
+		int terminal_ind = 1; 
+		for(auto elem : states[i].transitions){
+			// учитываю, что символы алфавита отсорчены
+			if(elem.first == '\0') terminal_ind = 0;
+			for(int j = 0; j < elem.second.size(); j++)
+				rules[i].push_back({terminals[terminal_ind], nonterminals[elem.second[j]]});
+			terminal_ind++;
 		}
 		if(states[i].is_terminal)
 			rules[i].push_back({terminals[0]});
@@ -440,26 +444,26 @@ bool FiniteAutomat::bisimilar(const FiniteAutomat& fa1, const FiniteAutomat& fa2
 
 	if(fa1_bisimilarNonterminals.size() != fa2_bisimilarNonterminals.size()) return false;
 
-	vector<Item*> fa12_nonterminals(fa1_bisimilarNonterminals);
-	fa12_nonterminals.insert(fa12_nonterminals.end(), fa2_bisimilarNonterminals.begin(), fa2_bisimilarNonterminals.end());
-	vector<vector<vector<Item*>>> fa12_rules(fa1_bisimilarRules);
-	fa12_rules.insert(fa12_rules.end(), fa2_bisimilarRules.begin(), fa2_bisimilarRules.end());
+	vector<Item*> nonterminals(fa1_bisimilarNonterminals);
+	nonterminals.insert(nonterminals.end(), fa2_bisimilarNonterminals.begin(), fa2_bisimilarNonterminals.end());
+	vector<vector<vector<Item*>>> rules(fa1_bisimilarRules);
+	rules.insert(rules.end(), fa2_bisimilarRules.begin(), fa2_bisimilarRules.end());
 
-	/*for(int i = 0; i < fa12_nonterminals.size(); i++){
-		cout << *fa12_nonterminals[i] << ": ";
-		for(int j = 0; j < fa12_rules[i].size(); j++){
-			for(int k = 0; k < fa12_rules[i][j].size(); k++){
-				cout << *fa12_rules[i][j][k];
+	/*for(int i = 0; i < nonterminals.size(); i++){
+		cout << *nonterminals[i] << ": ";
+		for(int j = 0; j < rules[i].size(); j++){
+			for(int k = 0; k < rules[i][j].size(); k++){
+				cout << *rules[i][j][k];
 			}
 			cout << " ";
 		}
 		cout << endl;
 	}*/
 
-	vector<Item*> fa12_bisimilarNonterminals;
-	vector<vector<vector<Item*>>> fa12_bisimilarRules = get_bisimilar_grammar(fa12_rules, fa12_nonterminals, fa12_bisimilarNonterminals);
+	vector<Item*> bisimilarNonterminals;
+	vector<vector<vector<Item*>>> bisimilarRules = get_bisimilar_grammar(rules, nonterminals, bisimilarNonterminals);
 
-	if(fa1_bisimilarNonterminals.size() != fa12_bisimilarNonterminals.size()) return false;
+	if(fa1_bisimilarNonterminals.size() != bisimilarNonterminals.size()) return false;
 
 	return true;
 }
