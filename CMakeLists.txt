@@ -2,6 +2,7 @@
 # To find the cmake version run
 # $ cmake --version
 cmake_minimum_required(VERSION 3.5)
+set (CMAKE_CXX_STANDARD 17)
 
 # Set the project name
 project (chipollino)
@@ -10,6 +11,7 @@ project (chipollino)
 set(SOURCES
 	src/objects/FiniteAutomat.cpp
 	src/objects/Integer.cpp
+	src/objects/Regex.cpp
     src/main.cpp
 )
 
