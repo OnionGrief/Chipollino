@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseObject.h"
+#include "FiniteAutomat.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -57,6 +58,7 @@ public:
 	void pre_order_travers();
 	void clear();
 	Regex* copy();
+	FiniteAutomat to_tompson(int);
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 };

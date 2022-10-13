@@ -8,6 +8,8 @@
 #include <iostream>
 using namespace std;
 
+class Regex;
+
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов преобразования автоматов
@@ -27,7 +29,7 @@ private:
 	int initial_state = 0;
 	vector<char> alphabet;
 	vector<State> states;
-
+	int max_index;
 public:
 	FiniteAutomat();
 	FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic = false);
@@ -50,4 +52,5 @@ public:
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	FiniteAutomat complement();
 	// и тд
+	friend class Regex;
 };
