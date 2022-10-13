@@ -8,7 +8,8 @@
 #include <iostream>
 using namespace std;
 
-struct State {
+struct State
+{
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов преобразования автоматов
 	// возможно для визуализации
@@ -21,7 +22,8 @@ struct State {
 	void set_transition(int, char);
 };
 
-class FiniteAutomat : public BaseObject {
+class FiniteAutomat : public BaseObject
+{
 private:
 	bool is_deterministic = 0;
 	int initial_state = 0;
@@ -42,12 +44,18 @@ public:
 	// минимизация ДКА
 	FiniteAutomat minimize();
 	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения языков L1 и L2)
-	static FiniteAutomat intersection(const FiniteAutomat&, const FiniteAutomat&);
+	static FiniteAutomat intersection(const FiniteAutomat &, const FiniteAutomat &);
 	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия языков L1 и L2)
-	static FiniteAutomat uunion(const FiniteAutomat&, const FiniteAutomat&);
+	static FiniteAutomat uunion(const FiniteAutomat &, const FiniteAutomat &);
 	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1 и L2)
-	FiniteAutomat difference(const FiniteAutomat&);
+	FiniteAutomat difference(const FiniteAutomat &);
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	FiniteAutomat complement();
+	// получение алфавита
+	vector<char> get_alphabet();
+	// получаем кол-во состояний
+	int get_states_size();
+	//получаем состояние
+	State get_state(int i);
 	// и тд
 };
