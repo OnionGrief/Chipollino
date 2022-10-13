@@ -234,3 +234,17 @@ vector<TermDouble> TransformationMonoid::getEqualenseClassesVWV(Term w) {
     }
     return out;
 }
+//Вернет -1 если не синхронизирован или номер состояния с которым
+//синхронизирован
+int TransformationMonoid::isSynchronized(Term w) {
+    if (w.perehods.size() == 0) {
+        return -1;
+    }
+    int sost = w.perehods[0].second;
+    for (int i = 1; i < w.perehods.size(); i++) {
+        if (w.perehods[i].second != sost) {
+            return -1;
+        }
+    }
+    return sost;
+}

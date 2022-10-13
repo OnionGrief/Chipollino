@@ -33,9 +33,9 @@ int main() {
     TransformationMonoid a(&NDM);
     vector<Term> cur = a.getEqualenseClasses();
 
-    Term test = cur[0];
-
-    cout << test.name << "\n";
-    a.getEqualenseClassesVWV(test);
-    //   cout << NDM.to_txt();
+    Term test = cur[3];
+    cout << test.name << " ";
+    cout << a.isSynchronized(test);
+    // a.getEqualenseClassesVWV(test);
+    //    cout << NDM.to_txt();
 }

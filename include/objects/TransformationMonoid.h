@@ -37,5 +37,6 @@ class TransformationMonoid : public BaseObject {
     string getEqualenseClassesTxt();
     string getRewritingRulesTxt();
     string to_txt() override;
+    int isSynchronized(Term w);
     // и тд
 };
