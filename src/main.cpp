@@ -1,5 +1,4 @@
 #include <iostream>
-#include <Regex.h>
 #include "Example.h"
 using namespace std;
 
