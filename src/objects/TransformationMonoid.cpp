@@ -49,7 +49,7 @@ string wasTerm(vector<Term> allTerms, vector<Perehod> curperehod) {
     return "";
 }
 TransformationMonoid::TransformationMonoid(){};
-TransformationMonoid::TransformationMonoid(FiniteAutomat *in) {
+TransformationMonoid::TransformationMonoid(FiniteAutomat* in) {
     Automat = in;
     for (int i = 1; i <= 3; i++) {
         vector<string> various = get_comb_alphabet(i, Automat->get_alphabet());
@@ -103,4 +103,32 @@ TransformationMonoid::TransformationMonoid(FiniteAutomat *in) {
         }
     }
 }
-string TransformationMonoid::to_txt() { cout << Automat->to_txt(); }
+string TransformationMonoid::to_txt() { return Automat->to_txt(); }
+
+vector<Term> TransformationMonoid::getEqualenseClasses() { return Terms; }
+
+map<string, vector<string>> TransformationMonoid::getRewritingRules() {
+    return Rules;
+}
+
+string TransformationMonoid::getEqualenseClassesTxt() {
+    stringstream ss;
+    for (int i = 0; i < Terms.size(); i++) {
+        ss << "Term " << Terms[i].name << " in language " << Terms[i].isFinal
+           << "\n";
+        for (int j = 0; j < Terms[i].perehods.size(); j++) {
+            ss << Terms[i].perehods[j].first << " -> "
+               << Terms[i].perehods[j].second << "\n";
+        }
+    }
+    return ss.str();
+}
+string TransformationMonoid::getRewritingRulesTxt() {
+    stringstream ss;
+    for (auto& item : Rules) {
+        for (int i = 0; i < item.second.size(); i++) {
+            ss << item.first << " -> " << item.second[i] << "\n";
+        }
+    }
+    return ss.str();
+}
