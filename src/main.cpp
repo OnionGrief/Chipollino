@@ -4,8 +4,12 @@ using namespace std;
 
 int main() {
 	cout << "Chipollino :-)\n";
-	string reg = "((((a*c)))|(bd|q))";
-	Regex r(reg);
+	string reg = "((a|b)*c)";
+	Regex r;
+	if (r.from_string(reg)) {
+		cout << "ERROR\n";
+		return 0;
+	}
 	r.pre_order_travers();
 	r.clear();
 }
