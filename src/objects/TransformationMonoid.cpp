@@ -52,14 +52,47 @@ string was_Term(vector<Term> allTerms, vector<Transition> curTransition) {
 
 TransformationMonoid::TransformationMonoid(){};
 
+//переписывание терма
+string Rewriting(string in, map<string, vector<string>> rules) {
+	if (in.size() < 3) {
+		return in;
+	}
+	string out = "";
+	bool cond = true;
+	for (int i = 0; i < in.size() - 1; i++) {
+		string temp = "";
+		temp += in[i];
+		temp += in[i + 1];
+		if ((rules.count(temp)) && (rules.at(temp)[0] != temp)) {
+			cond = false;
+			out += rules.at(temp)[0];
+		} else {
+			if (i != 0) {
+				out += temp[1];
+			} else {
+				out += temp[0];
+			}
+		}
+	}
+	if (cond) {
+		out = in;
+	} else {
+		out = Rewriting(out, rules);
+	}
+	return out;
+}
+
 TransformationMonoid::TransformationMonoid(FiniteAutomat *in) {
 	automat = in;
 	for (int i = 1; i <= 3; i++) {
 		vector<string> various = get_comb_alphabet(i, automat->get_alphabet());
 		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
 		{
+
 			Term current;
-			current.name = various[j];
+			current.name = Rewriting(various[j], rules);
+			//вставить переписывание слова
+
 			for (int t = 0; t < automat->get_states_size(); t++) //Для	всех	состояний
 			{
 				//	cout	<<	current.name	<<	"	";
@@ -99,7 +132,9 @@ TransformationMonoid::TransformationMonoid(FiniteAutomat *in) {
 				//<<	current.isFinal	<<	"\n";
 				terms.push_back(current);
 			} else {
-				rules[eqv].push_back(current.name);
+				if (!rules.count(current.name) && current.name != eqv) {
+					rules[current.name].push_back(eqv);
+				}
 				//	cout	<<	current.name	<<	"->"	<<
 				// eqv	<<	"\n";
 			}
