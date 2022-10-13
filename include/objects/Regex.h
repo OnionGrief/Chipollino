@@ -37,7 +37,7 @@ private:
 	};
 
 	Type type = error;
-	Lexem symbol;
+	Lexem value;
 	Regex* term_p = nullptr;
 	Regex* term_l = nullptr;
 	Regex* term_r = nullptr;

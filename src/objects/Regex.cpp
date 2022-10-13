@@ -83,7 +83,7 @@ Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
 			r->term_p = p;
 			p->term_l = l;
 			p->term_r = r;
-			p->symbol = lexems[i];
+			p->value = lexems[i];
 			p->type = Regex::conc;
 			return p;
 		}
@@ -114,7 +114,7 @@ Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
 			p->term_l = l;
 
 			p->term_r = nullptr;
-			p->symbol = lexems[i];
+			p->value = lexems[i];
 			p->type = Regex::star;
 			return p;
 		}
@@ -147,7 +147,7 @@ Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
 			p->term_l = l;
 			p->term_r = r;
 
-			p->symbol = lexems[i];
+			p->value = lexems[i];
 			p->type = Regex::alt;
 			return p;
 		}
@@ -161,7 +161,7 @@ Regex* Regex::scan_symb(vector<Lexem> lexems, int index_start, int index_end) {
 		return p;
 	}
 	p = new Regex;
-	p->symbol = lexems[index_start];
+	p->value = lexems[index_start];
 	p->type = Regex::symb;
 	return p;
 }
@@ -204,8 +204,12 @@ Regex::Regex(string str) {
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
 	*this = *root;
-	term_l->term_p = this;
-	term_r->term_p = this;
+	if (term_l != nullptr) {
+		term_l->term_p = this;
+	}
+	if (term_r != nullptr) {
+		term_r->term_p = this;
+	}
 	delete root;
 	if (type == Regex::error) {
 		cout << l.size() << " ERROR\n";
@@ -215,7 +219,7 @@ Regex::Regex(string str) {
 Regex* Regex::copy() {
 	Regex* c = new Regex();
 	c->type = type;
-	c->symbol = symbol;
+	c->value = value;
 	if (/*type != regex_cell_state::epsilon && У нас нет лексемы пустоты*/
 		type != Regex::symb) {
 		c->term_l = term_l->copy();
@@ -241,8 +245,8 @@ void Regex::clear() {
 }
 
 void Regex::pre_order_travers() {
-	if (symbol.symbol) {
-		cout << symbol.symbol << " ";
+	if (value.symbol) {
+		cout << value.symbol << " ";
 	}
 	else {
 		cout << type << " ";
