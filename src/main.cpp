@@ -36,6 +36,6 @@ int main() {
     Term test = cur[0];
 
     cout << test.name << "\n";
-    a.getEqualenseClassesVW(test);
+    a.getEqualenseClassesVWV(test);
     //   cout << NDM.to_txt();
 }

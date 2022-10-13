@@ -193,3 +193,44 @@ vector<Term> TransformationMonoid::getEqualenseClassesWV(Term w) {
     }
     return out;
 }
+vector<TermDouble> TransformationMonoid::getEqualenseClassesVWV(Term w) {
+    vector<TermDouble> out;
+    for (int i1 = 0; i1 < Terms.size(); i1++) {
+        for (int i2 = 0; i2 < Terms.size(); i2++) {
+            vector<Perehod> perehods;
+
+            for (int j1 = 0; j1 < Terms[i1].perehods.size(); j1++) {
+                for (int j2 = 0; j2 < Terms[i1].perehods.size(); j2++) {
+                    for (int k = 0; k < w.perehods.size(); k++) {
+                        if ((Terms[i1].perehods[j1].second ==
+                             w.perehods[k].first) &&
+                            (w.perehods[k].second ==
+                             Terms[i2].perehods[j2].first)) {
+                            Perehod temp;
+                            temp.first = Terms[i1].perehods[j1].first;
+                            temp.second = Terms[i2].perehods[j2].second;
+                            perehods.push_back(temp);
+                        }
+                    }
+                }
+            }
+            if (perehods.size() > 0) {
+                bool cond = true;
+                for (int j = 0; j < perehods.size(); j++) {
+                    if (!Automat->get_state(perehods[j].second).is_terminal) {
+                        cond = false;
+                    }
+                }
+                if (cond) {
+                    TermDouble temp1;
+                    temp1.first = Terms[i1];
+                    temp1.second = Terms[i2];
+                    out.push_back(temp1);
+                    cout << temp1.first.name << " " << temp1.second.name
+                         << "\n";
+                }
+            }
+        }
+    }
+    return out;
+}

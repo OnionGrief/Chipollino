@@ -6,6 +6,7 @@
 #include "BaseObject.h"
 #include "FiniteAutomat.h"
 using namespace std;
+
 struct Perehod {
     int first;
     int second;
@@ -14,6 +15,10 @@ struct Term {
     bool isFinal = false;
     string name;
     vector<Perehod> perehods;
+};
+struct TermDouble {
+    Term first;
+    Term second;
 };
 class TransformationMonoid : public BaseObject {
    private:
@@ -27,7 +32,7 @@ class TransformationMonoid : public BaseObject {
 
     vector<Term> getEqualenseClassesVW(Term w);
     vector<Term> getEqualenseClassesWV(Term w);
-    vector<Term> getEqualenseClassesVWV(Term w);
+    vector<TermDouble> getEqualenseClassesVWV(Term w);
     map<string, vector<string>> getRewritingRules();
     string getEqualenseClassesTxt();
     string getRewritingRulesTxt();
