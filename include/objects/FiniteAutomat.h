@@ -52,7 +52,7 @@ public:
 	// объединение эквивалентных по бисимуляции состояний
 	FiniteAutomat merge_bisimilar();
 	// проверка автоматов на эквивалентность
-	static bool equiv(const FiniteAutomat&, const FiniteAutomat&);
+	static bool equivalent(const FiniteAutomat&, const FiniteAutomat&);
 	// проверка автоматов на равентсво(буквальное)
 	static bool equal(const FiniteAutomat&, const FiniteAutomat&);
 	// проверка автоматов на бисимилярность

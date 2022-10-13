@@ -576,7 +576,7 @@ vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(const vector<State>& 
 }
 
 
-bool FiniteAutomat::equiv(const FiniteAutomat& fa1, const FiniteAutomat& fa2){
+bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2){
 	if(fa1.states.size() != fa2.states.size()) return false;
 
 	vector<GrammarItem> fa1_items;
@@ -643,7 +643,7 @@ bool FiniteAutomat::equiv(const FiniteAutomat& fa1, const FiniteAutomat& fa2){
 	return true;
 }
 
-bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2){
+bool FiniteAutomat::equivalent(const FiniteAutomat& fa1, const FiniteAutomat& fa2){
 	return false;
 }
 

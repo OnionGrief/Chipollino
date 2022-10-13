@@ -11,4 +11,6 @@ class Example {
 public:
 	// Пример построения regex из строки
 	static void regex_parsing();
+	static void fa_equal_check();
+	static void fa_bisimilar_check();
 };
