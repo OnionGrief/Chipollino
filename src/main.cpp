@@ -31,11 +31,11 @@ int main() {
 
     FiniteAutomat NDM(0, {'a', 'b', 'c'}, states, false);
     TransformationMonoid a(&NDM);
-    vector<Term> cur = a.getEqualenseClasses();
+    vector<Term> cur = a.get_Equalence_Classes();
 
     Term test = cur[3];
     cout << test.name << " ";
-    cout << a.isSynchronized(test);
+    cout << a.is_Synchronized(test);
     // a.getEqualenseClassesVWV(test);
     //    cout << NDM.to_txt();
 }
