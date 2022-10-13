@@ -24,6 +24,10 @@ class TransformationMonoid : public BaseObject {
     TransformationMonoid();
     TransformationMonoid(FiniteAutomat *in);
     vector<Term> getEqualenseClasses();
+
+    vector<Term> getEqualenseClassesVW(Term w);
+    vector<Term> getEqualenseClassesWV(Term w);
+    vector<Term> getEqualenseClassesVWV(Term w);
     map<string, vector<string>> getRewritingRules();
     string getEqualenseClassesTxt();
     string getRewritingRulesTxt();

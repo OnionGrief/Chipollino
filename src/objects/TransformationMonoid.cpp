@@ -132,3 +132,64 @@ string TransformationMonoid::getRewritingRulesTxt() {
     }
     return ss.str();
 }
+
+vector<Term> TransformationMonoid::getEqualenseClassesVW(Term w) {
+    vector<Term> out;
+    for (int i = 0; i < Terms.size(); i++) {
+        vector<Perehod> perehods;
+
+        for (int j = 0; j < Terms[i].perehods.size(); j++) {
+            for (int k = 0; k < w.perehods.size(); k++) {
+                if (Terms[i].perehods[j].second == w.perehods[k].first) {
+                    Perehod temp;
+                    temp.first = Terms[i].perehods[j].first;
+                    temp.second = w.perehods[k].second;
+                    perehods.push_back(temp);
+                }
+            }
+        }
+        if (perehods.size() > 0) {
+            bool cond = true;
+            for (int j = 0; j < perehods.size(); j++) {
+                if (!Automat->get_state(perehods[j].second).is_terminal) {
+                    cond = false;
+                }
+            }
+            if (cond) {
+                out.push_back(Terms[i]);
+                cout << Terms[i].name << " ";
+            }
+        }
+    }
+    return out;
+}
+vector<Term> TransformationMonoid::getEqualenseClassesWV(Term w) {
+    vector<Term> out;
+    for (int i = 0; i < Terms.size(); i++) {
+        vector<Perehod> perehods;
+
+        for (int j = 0; j < Terms[i].perehods.size(); j++) {
+            for (int k = 0; k < w.perehods.size(); k++) {
+                if (Terms[i].perehods[j].first == w.perehods[k].second) {
+                    Perehod temp;
+                    temp.first = w.perehods[k].first;
+                    temp.second = Terms[i].perehods[j].second;
+                    perehods.push_back(temp);
+                }
+            }
+        }
+        if (perehods.size() > 0) {
+            bool cond = true;
+            for (int j = 0; j < perehods.size(); j++) {
+                if (!Automat->get_state(perehods[j].second).is_terminal) {
+                    cond = false;
+                }
+            }
+            if (cond) {
+                out.push_back(Terms[i]);
+                cout << Terms[i].name << " ";
+            }
+        }
+    }
+    return out;
+}

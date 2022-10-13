@@ -31,6 +31,11 @@ int main() {
 
     FiniteAutomat NDM(0, {'a', 'b', 'c'}, states, false);
     TransformationMonoid a(&NDM);
-    cout << a.getRewritingRulesTxt();
-    // cout << NDM.to_txt();
+    vector<Term> cur = a.getEqualenseClasses();
+
+    Term test = cur[0];
+
+    cout << test.name << "\n";
+    a.getEqualenseClassesVW(test);
+    //   cout << NDM.to_txt();
 }
