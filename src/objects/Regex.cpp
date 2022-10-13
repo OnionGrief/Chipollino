@@ -259,7 +259,7 @@ string Regex::to_txt() {
 	return string();
 }
 
-bool equiv(Regex* r1, Regex* r2) {
+bool Regex::equiv(Regex* r1, Regex* r2) {
 	if(r1 == nullptr && r2 == nullptr) return true;
 	if(r1 == nullptr || r2 == nullptr) return true;
 	int r1_value, r2_value;

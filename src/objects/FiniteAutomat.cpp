@@ -265,138 +265,142 @@ FiniteAutomat FiniteAutomat::complement() {
 
 //bisimilar
 
-struct Item{
+struct GrammarItem{
 	enum Type {
 		terminal,
 		nonterminal
 	};
 	Type type;
 	int state_number, class_number;
+	int automaton_characteristic; // у первого автомата +1, у второго -1. при проверке классов сумма = 0
 	string term_name;
-	Item() : type(terminal), state_number(-1), class_number(-1),  term_name("") {}
-	Item(Type type, int state_number, int class_number) : type(type), state_number(state_number), class_number(class_number) {}
-	Item(Type type, string term_name) : type(type), term_name(term_name) {}
-	bool operator!=(const Item& other) {
+	GrammarItem() : type(terminal), state_number(-1), class_number(-1),  term_name("") {}
+	GrammarItem(Type type, int state_number, int class_number) : type(type), state_number(state_number), class_number(class_number) {}
+	GrammarItem(Type type, string term_name) : type(type), term_name(term_name) {}
+	bool operator!=(const GrammarItem& other) {
 		return type != other.type || state_number != other.state_number ||
 		class_number != other.class_number || term_name != other.term_name;
 	}
-	void operator=(const Item& other) {
+	void operator=(const GrammarItem& other) {
 		type = other.type;
 		state_number = other.state_number;
 		class_number = other.class_number;
 		term_name = other.term_name;
 	}
 };
-ostream& operator<<(ostream &os, const Item& item) {
-	if(item.type == Item::terminal) return os << item.term_name;
+ostream& operator<<(ostream &os, const GrammarItem& item) {
+	if(item.type == GrammarItem::terminal) return os << "" << item.term_name;
 		else return os << "S" << item.state_number;
 }
 
 
-void updateClasses(set<int>& checker, map<set<string>, vector<Item*>>& classesCheckMap) {
+void update_classes(set<int>& checker, map<set<string>, vector<GrammarItem*>>& classes_check_map) {
 	int classNum = 0;
 	checker.clear();
-	for(auto elem : classesCheckMap) {
+	for(auto elem : classes_check_map) {
 		checker.insert(elem.second[0]->state_number);
-		for(Item* nont : elem.second){
+		for(GrammarItem* nont : elem.second){
 			nont->class_number = classNum;
 		}
 		classNum++;
 	}
 }
 
-void checkClasses(vector<vector<vector<Item*>>>& rules, map<set<string>, vector<Item*>>& classesCheckMap, vector<Item*>& nonterminals) {
-	classesCheckMap.clear();
+void check_classes(vector<vector<vector<GrammarItem*>>>& rules, map<set<string>, vector<GrammarItem*>>& classes_check_map, vector<GrammarItem*>& nonterminals) {
+	classes_check_map.clear();
 	for(int i = 0; i < nonterminals.size(); i++){
 		set<string> tempRules;
-		for(vector<Item*> rule : rules[i]){
+		for(vector<GrammarItem*> rule : rules[i]){
 			string newRule;
 
-			for(Item* t : rule){
-				if(t->type == Item::terminal) newRule += t->term_name;
+			for(GrammarItem* t : rule){
+				if(t->type == GrammarItem::terminal) newRule += t->term_name;
 				else newRule += to_string(t->class_number);
 			}
 
 			tempRules.insert(newRule);
 		}
-		classesCheckMap[tempRules].push_back(nonterminals[i]);
+		classes_check_map[tempRules].push_back(nonterminals[i]);
 	}
 }
 
-vector<vector<vector<Item*>>> get_bisimilar_grammar(vector<vector<vector<Item*>>>& rules, vector<Item*>& nonterminals, vector<Item*>& bisimilarNonterminals){
-	map<set<string>, vector<Item*>> classesCheckMap;
+vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(vector<vector<vector<GrammarItem*>>>& rules,
+	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& bisimilar_nonterminals)
+{
+	map<set<string>, vector<GrammarItem*>> classes_check_map;
 	set<int> checker;
 	//checker
 	while(true) {
 		set<int> temp = checker;
-		checkClasses(rules, classesCheckMap, nonterminals);
-		updateClasses(checker, classesCheckMap);
+		check_classes(rules, classes_check_map, nonterminals);
+		update_classes(checker, classes_check_map);
 		if(checker == temp) break;
 	}
 	//output
-	/*for(auto & elem : classesCheckMap) {
+	/*for(auto & elem : classes_check_map) {
 		cout << "{";
 		for(int i = 0; i < elem.second.size() - 1; i++)  cout << *elem.second[i] << ",";
 		cout << *elem.second[elem.second.size() - 1] << "}";
 	}
 	cout << endl;*/
-	map<int, Item*> classToNonterm;
-	for(auto elem : classesCheckMap)
+	map<int, GrammarItem*> classToNonterm;
+	for(auto elem : classes_check_map)
 		classToNonterm[elem.second[0]->class_number] = elem.second[0];
 
-	vector<vector<vector<Item*>>> bisimilarRules;
-	for(auto elem : classesCheckMap) {
-		Item* curNonterm = elem.second[0];
-		vector<vector<Item*>> tempRules;
-		for (vector<Item*> rule: rules[curNonterm->state_number]) {
-			vector<Item*> tempRule;
-			for (Item* item: rule) {
-				if (item->type == Item::nonterminal) {
+	vector<vector<vector<GrammarItem*>>> bisimilar_rules;
+	for(auto elem : classes_check_map) {
+		GrammarItem* curNonterm = elem.second[0];
+		vector<vector<GrammarItem*>> tempRules;
+		for (vector<GrammarItem*> rule: rules[curNonterm->state_number]) {
+			vector<GrammarItem*> tempRule;
+			for (GrammarItem* item: rule) {
+				if (item->type == GrammarItem::nonterminal) {
 					tempRule.push_back(classToNonterm[item->class_number]);
 				}else tempRule.push_back(item);
 			}
 			tempRules.push_back(tempRule);
 		}
-		bisimilarNonterminals.push_back(curNonterm);
-		bisimilarRules.push_back(tempRules);
-		/*for (vector<Item*> rule: tempRules) {
+		bisimilar_nonterminals.push_back(curNonterm);
+		bisimilar_rules.push_back(tempRules);
+		/*for (vector<GrammarItem*> rule: tempRules) {
 			cout << *curNonterm << " -> ";
-			for (Item* item: rule) cout << *item << " ";
+			for (GrammarItem* item: rule) cout << *item << " ";
 			cout << endl;
 		}*/
 	}
 	
-	return bisimilarRules;
+	return bisimilar_rules;
 }
 
-vector<vector<vector<Item*>>> fa_to_grammar(const vector<State>& states, const vector<char>& alphabet, int initial_state, vector<Item>& fa_items, vector<Item*>& nonterminals, vector<Item*>& terminals) {
-	vector<vector<vector<Item*>>> rules (states.size());
+vector<vector<vector<GrammarItem*>>> fa_to_grammar(const vector<State>& states, const vector<char>& alphabet, int initial_state,
+	vector<GrammarItem>& fa_items, vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals)
+{
+	vector<vector<vector<GrammarItem*>>> rules (states.size());
 	fa_items.resize(states.size() + alphabet.size() + 2);
 	int ind = 0;
 	while(ind < states.size()){
-		fa_items[ind] = Item(Item::nonterminal, ind, 0);
+		fa_items[ind] = GrammarItem(GrammarItem::nonterminal, ind, 0);
 		nonterminals.push_back(&fa_items[ind]);
 		ind++;
 	}
-	fa_items[ind]=(Item(Item::terminal, "eps"));
+	map<char, int> terminal_index;
+	fa_items[ind]=(GrammarItem(GrammarItem::terminal, "eps"));
 	terminals.push_back(&fa_items[ind]);
+	terminal_index['\0'] = 0;
 	ind++;
 	for(int i = 0; i < alphabet.size(); i++) {
-		fa_items[ind]=(Item(Item::terminal, string(1, alphabet[i])));
+		fa_items[ind]=(GrammarItem(GrammarItem::terminal, string(1, alphabet[i])));
 		terminals.push_back(&fa_items[ind]);
+		terminal_index[alphabet[i]] = i+1;
 		ind++;
 	}
-	fa_items[ind]=(Item(Item::terminal, "init"));
+	fa_items[ind]=(GrammarItem(GrammarItem::terminal, "init"));
 	terminals.push_back(&fa_items[ind]);
 
 	for(int i = 0; i < states.size(); i++){
-		int terminal_ind = 1; 
 		for(auto elem : states[i].transitions){
-			// учитываю, что символы алфавита отсорчены
-			if(elem.first == '\0') terminal_ind = 0;
 			for(int j = 0; j < elem.second.size(); j++)
-				rules[i].push_back({terminals[terminal_ind], nonterminals[elem.second[j]]});
-			terminal_ind++;
+				rules[i].push_back({terminals[terminal_index[elem.first]], nonterminals[elem.second[j]]});
 		}
 		if(states[i].is_terminal)
 			rules[i].push_back({terminals[0]});
@@ -407,67 +411,239 @@ vector<vector<vector<Item*>>> fa_to_grammar(const vector<State>& states, const v
 }
 
 FiniteAutomat FiniteAutomat::merge_bisimilar() {
-	vector<Item> fa_items;
-	vector<Item*> nonterminals;
-	vector<Item*> terminals;
+	vector<GrammarItem> fa_items;
+	vector<GrammarItem*> nonterminals;
+	vector<GrammarItem*> terminals;
 
-	vector<vector<vector<Item*>>> rules = fa_to_grammar(this->states, this->alphabet, this->initial_state, fa_items, nonterminals, terminals);
+	vector<vector<vector<GrammarItem*>>> rules = fa_to_grammar(this->states, this->alphabet, this->initial_state, fa_items, nonterminals, terminals);
 
+	vector<GrammarItem*> bisimilar_nonterminals;
+	vector<vector<vector<GrammarItem*>>> bisimilar_rules = get_bisimilar_grammar(rules, nonterminals, bisimilar_nonterminals);
 
-	vector<Item*> bisimilarNonterminals;
-	vector<vector<vector<Item*>>> bisimilarRules = get_bisimilar_grammar(rules, nonterminals, bisimilarNonterminals);
-
+	// порождение автомата
 
 	return FiniteAutomat();
 }
 
 bool FiniteAutomat::bisimilar(const FiniteAutomat& fa1, const FiniteAutomat& fa2){
-	vector<Item> fa1_items;
-	vector<Item*> fa1_nonterminals;
-	vector<Item*> fa1_terminals;
-	vector<vector<vector<Item*>>> fa1_rules = fa_to_grammar(fa1.states, fa1.alphabet, fa1.initial_state, fa1_items, fa1_nonterminals, fa1_terminals);
+	vector<GrammarItem> fa1_items;
+	vector<GrammarItem*> fa1_nonterminals;
+	vector<GrammarItem*> fa1_terminals;
+	vector<vector<vector<GrammarItem*>>> fa1_rules = fa_to_grammar(fa1.states, fa1.alphabet, fa1.initial_state, fa1_items, fa1_nonterminals, fa1_terminals);
 
-	
-	vector<Item> fa2_items;
-	vector<Item*> fa2_nonterminals;
-	vector<Item*> fa2_terminals;
-	vector<vector<vector<Item*>>> fa2_rules = fa_to_grammar(fa2.states, fa2.alphabet, fa2.initial_state, fa2_items, fa2_nonterminals, fa2_terminals);
+	vector<GrammarItem> fa2_items;
+	vector<GrammarItem*> fa2_nonterminals;
+	vector<GrammarItem*> fa2_terminals;
+	vector<vector<vector<GrammarItem*>>> fa2_rules = fa_to_grammar(fa2.states, fa2.alphabet, fa2.initial_state, fa2_items, fa2_nonterminals, fa2_terminals);
 
 	if(fa1_terminals.size() != fa2_terminals.size()) return false;
 	for(int i = 0; i < fa1_terminals.size(); i++) if(*fa1_terminals[i] != *fa2_terminals[i]) return false;
 
-	vector<Item*> fa1_bisimilarNonterminals;
-	vector<vector<vector<Item*>>> fa1_bisimilarRules = get_bisimilar_grammar(fa1_rules, fa1_nonterminals, fa1_bisimilarNonterminals);
+	vector<GrammarItem*> fa1_bisimilar_nonterminals;
+	vector<vector<vector<GrammarItem*>>> fa1_bisimilar_rules = get_bisimilar_grammar(fa1_rules, fa1_nonterminals, fa1_bisimilar_nonterminals);
 
-	vector<Item*> fa2_bisimilarNonterminals;
-	vector<vector<vector<Item*>>> fa2_bisimilarRules = get_bisimilar_grammar(fa2_rules, fa2_nonterminals, fa2_bisimilarNonterminals);
+	vector<GrammarItem*> fa2_bisimilar_nonterminals;
+	vector<vector<vector<GrammarItem*>>> fa2_bisimilar_rules = get_bisimilar_grammar(fa2_rules, fa2_nonterminals, fa2_bisimilar_nonterminals);
 
-	if(fa1_bisimilarNonterminals.size() != fa2_bisimilarNonterminals.size()) return false;
+	if(fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size()) return false;
 
-	vector<Item*> nonterminals(fa1_bisimilarNonterminals);
-	nonterminals.insert(nonterminals.end(), fa2_bisimilarNonterminals.begin(), fa2_bisimilarNonterminals.end());
-	vector<vector<vector<Item*>>> rules(fa1_bisimilarRules);
-	rules.insert(rules.end(), fa2_bisimilarRules.begin(), fa2_bisimilarRules.end());
+	vector<GrammarItem*> nonterminals(fa1_bisimilar_nonterminals);
+	nonterminals.insert(nonterminals.end(), fa2_bisimilar_nonterminals.begin(), fa2_bisimilar_nonterminals.end());
+	vector<vector<vector<GrammarItem*>>> rules(fa1_bisimilar_rules);
+	rules.insert(rules.end(), fa2_bisimilar_rules.begin(), fa2_bisimilar_rules.end());
 
-	/*for(int i = 0; i < nonterminals.size(); i++){
-		cout << *nonterminals[i] << ": ";
-		for(int j = 0; j < rules[i].size(); j++){
-			for(int k = 0; k < rules[i][j].size(); k++){
-				cout << *rules[i][j][k];
-			}
-			cout << " ";
-		}
-		cout << endl;
-	}*/
+	vector<GrammarItem*> bisimilar_nonterminals;
+	vector<vector<vector<GrammarItem*>>> bisimilar_rules = get_bisimilar_grammar(rules, nonterminals, bisimilar_nonterminals);
 
-	vector<Item*> bisimilarNonterminals;
-	vector<vector<vector<Item*>>> bisimilarRules = get_bisimilar_grammar(rules, nonterminals, bisimilarNonterminals);
-
-	if(fa1_bisimilarNonterminals.size() != bisimilarNonterminals.size()) return false;
+	if(fa1_bisimilar_nonterminals.size() != bisimilar_nonterminals.size()) return false;
 
 	return true;
 }
 
-bool FiniteAutomat::equiv(const FiniteAutomat& r1, const FiniteAutomat& r2){
+void update_bijective_Classes(set<int>& checker, map<multiset<string>, vector<GrammarItem*>>& classes_check_map) {
+	int classNum = 0;
+	checker.clear();
+	for(auto elem : classes_check_map) {
+		checker.insert(elem.second[0]->state_number);
+		for(GrammarItem* nont : elem.second){
+			nont->class_number = classNum;
+		}
+		classNum++;
+	}
+}
+
+void check_bijective_classes(vector<vector<vector<GrammarItem*>>>& rules, map<multiset<string>, vector<GrammarItem*>>& classes_check_map, vector<GrammarItem*>& nonterminals) {
+	classes_check_map.clear();
+	for(int i = 0; i < nonterminals.size(); i++){
+		multiset<string> tempRules;
+		for(vector<GrammarItem*> rule : rules[i]){
+			string newRule;
+
+			for(GrammarItem* t : rule){
+				if(t->type == GrammarItem::terminal) newRule += t->term_name;
+				else newRule += to_string(t->class_number);
+			}
+
+			tempRules.insert(newRule);
+		}
+		classes_check_map[tempRules].push_back(nonterminals[i]);
+	}
+}
+
+vector<vector<vector<GrammarItem*>>> get_bijective_bibisimilar_grammar(vector<vector<vector<GrammarItem*>>>& rules, vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& bisimilar_nonterminals, int& classes_num){
+	map<multiset<string>, vector<GrammarItem*>> classes_check_map;
+	set<int> checker;
+	//checker
+	while(true) {
+		set<int> temp = checker;
+		check_bijective_classes(rules, classes_check_map, nonterminals);
+		update_bijective_Classes(checker, classes_check_map);
+		if(checker == temp) break;
+	}
+	//output
+	/*for(auto & elem : classes_check_map) {
+		cout << "{";
+		for(int i = 0; i < elem.second.size() - 1; i++)  cout << *elem.second[i] << ",";
+		cout << *elem.second[elem.second.size() - 1] << "}";
+	}
+	cout << endl;*/
+	map<int, GrammarItem*> classToNonterm;
+	for(auto elem : classes_check_map)
+		classToNonterm[elem.second[0]->class_number] = elem.second[0];
+
+	vector<vector<vector<GrammarItem*>>> bisimilar_rules;
+	for(auto elem : classes_check_map) {
+		GrammarItem* curNonterm = elem.second[0];
+		vector<vector<GrammarItem*>> tempRules;
+		for (vector<GrammarItem*> rule: rules[curNonterm->state_number]) {
+			vector<GrammarItem*> tempRule;
+			for (GrammarItem* item: rule) {
+				if (item->type == GrammarItem::nonterminal) {
+					tempRule.push_back(classToNonterm[item->class_number]);
+				}else tempRule.push_back(item);
+			}
+			tempRules.push_back(tempRule);
+		}
+		bisimilar_nonterminals.push_back(curNonterm);
+		bisimilar_rules.push_back(tempRules);
+	}
+
+	classes_num = classes_check_map.size();
+	
+	return bisimilar_rules;
+}
+
+vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(const vector<State>& states, int initial_state,
+	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>>& fa_items, vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals)
+{
+	fa_items.resize(states.size());
+	int ind = 0;
+	for(int i = 0; i < states.size(); i++){
+		fa_items[i].first = GrammarItem(GrammarItem::terminal, to_string(i));
+		terminals.push_back(&fa_items[i].first);
+		for(auto elem : states[i].transitions){
+			vector<GrammarItem>& item_vec = fa_items[i].second[elem.first];
+			item_vec.resize(elem.second.size());
+			for(int j = 0; j < elem.second.size(); j++){
+				item_vec[j] = (GrammarItem(GrammarItem::nonterminal, ind, 0));
+				nonterminals.push_back(&item_vec[j]);
+				ind++;
+			}
+		}
+	}
+	
+	vector<vector<vector<GrammarItem*>>> rules (nonterminals.size());
+
+	ind = 0;
+	for(int i = 0; i < states.size(); i++){
+		for(auto elem : states[i].transitions){
+			for(int j = 0; j < elem.second.size(); j++){
+				int transInd = elem.second[j]; // индекс состояния, в которое идет переход
+				// смотрим все переходы из этого состояния
+				for(auto transition_elem : states[transInd].transitions){
+					for(int k = 0; k < transition_elem.second.size(); k++){
+						int nonterm_ind = fa_items[transInd].second[transition_elem.first][k].state_number;
+						rules[ind].push_back({terminals[transInd], nonterminals[nonterm_ind]});
+						//cout << *nonterminals[ind] << " -> " << *terminals[transInd] << " " << *nonterminals[nonterm_ind] << endl;
+					}
+				}
+				ind++;
+			}
+		}
+	}
+
+	return rules;
+}
+
+
+bool FiniteAutomat::equiv(const FiniteAutomat& fa1, const FiniteAutomat& fa2){
+	if(fa1.states.size() != fa2.states.size()) return false;
+
+	vector<GrammarItem> fa1_items;
+	vector<GrammarItem*> fa1_nonterminals;
+	vector<GrammarItem*> fa1_terminals;
+	vector<vector<vector<GrammarItem*>>> fa1_rules = fa_to_grammar(fa1.states, fa1.alphabet, fa1.initial_state, fa1_items, fa1_nonterminals, fa1_terminals);
+
+	vector<GrammarItem> fa2_items;
+	vector<GrammarItem*> fa2_nonterminals;
+	vector<GrammarItem*> fa2_terminals;
+	vector<vector<vector<GrammarItem*>>> fa2_rules = fa_to_grammar(fa2.states, fa2.alphabet, fa2.initial_state, fa2_items, fa2_nonterminals, fa2_terminals);
+
+	if(fa1_terminals.size() != fa2_terminals.size()) return false;
+	for(int i = 0; i < fa1_terminals.size(); i++) if(*fa1_terminals[i] != *fa2_terminals[i]) return false;
+
+	vector<GrammarItem*> nonterminals(fa1_nonterminals);
+	nonterminals.insert(nonterminals.end(), fa2_nonterminals.begin(), fa2_nonterminals.end());
+	vector<vector<vector<GrammarItem*>>> rules(fa1_rules);
+	rules.insert(rules.end(), fa2_rules.begin(), fa2_rules.end());
+
+	vector<GrammarItem*> bisimilar_nonterminals;
+	int classes_num;
+	vector<vector<vector<GrammarItem*>>> bisimilar_rules = get_bijective_bibisimilar_grammar(rules, nonterminals, bisimilar_nonterminals, classes_num);
+
+	vector<int> classes (classes_num, 0);
+
+	for(auto t : fa1_nonterminals) classes[t->class_number]++;
+	for(auto t : fa2_nonterminals) classes[t->class_number]--;
+
+	for(auto t : classes)
+		if(t != 0) return false;
+		
+	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>> transitions1_items;
+	vector<GrammarItem*> transitions1_nonterminals;
+	vector<GrammarItem*> transitions1_terminals;
+	vector<vector<vector<GrammarItem*>>> transitions1_rules = tansitions_to_grammar(fa1.states, fa1.initial_state, transitions1_items, transitions1_nonterminals, transitions1_terminals);
+
+	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>> transitions2_items;
+	vector<GrammarItem*> transitions2_nonterminals;
+	vector<GrammarItem*> transitions2_terminals;
+	vector<vector<vector<GrammarItem*>>> transitions2_rules = tansitions_to_grammar(fa2.states, fa2.initial_state, transitions2_items, transitions2_nonterminals, transitions2_terminals);
+
+	if(transitions1_terminals.size() != transitions2_terminals.size()) return false;
+	if(transitions1_nonterminals.size() != transitions2_nonterminals.size()) return false;
+	//for(int i = 0; i < fa1_terminals.size(); i++) if(*fa1_terminals[i] != *fa2_terminals[i]) return false;
+
+	vector<GrammarItem*> transitions_nonterminals(transitions1_nonterminals);
+	transitions_nonterminals.insert(transitions_nonterminals.end(), transitions2_nonterminals.begin(), transitions2_nonterminals.end());
+	vector<vector<vector<GrammarItem*>>> transitions_rules(transitions1_rules);
+	transitions_rules.insert(transitions_rules.end(), transitions2_rules.begin(), transitions2_rules.end());
+
+	vector<GrammarItem*> transitions_bisimilar_nonterminals;
+	vector<vector<vector<GrammarItem*>>> transitions_bisimilar_rules = get_bijective_bibisimilar_grammar(transitions_rules, transitions_nonterminals, transitions_bisimilar_nonterminals, classes_num);
+
+	classes.clear();
+	classes.resize(classes_num, 0);
+
+	for(auto t : transitions1_nonterminals) classes[t->class_number]++;
+	for(auto t : transitions2_nonterminals) classes[t->class_number]--;
+
+	for(auto t : classes)
+		if(t != 0) return false;
+
+	return true;
+}
+
+bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2){
 	return false;
 }
+

@@ -53,6 +53,8 @@ public:
 	FiniteAutomat merge_bisimilar();
 	// проверка автоматов на эквивалентность
 	static bool equiv(const FiniteAutomat&, const FiniteAutomat&);
+	// проверка автоматов на равентсво(буквальное)
+	static bool equal(const FiniteAutomat&, const FiniteAutomat&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomat&, const FiniteAutomat&);
 	// и тд
