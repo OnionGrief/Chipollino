@@ -73,10 +73,16 @@ void RegexGenerator::generate_simple_regex() { //<simple-regex> ::= <lbr><regex-
 		else
 			generate_regex();
 		res_str += ')';
-		if (v2) res_str += '*';
+		if (v2 && star_num > 0) {
+			res_str += '*';
+			star_num--;
+		}
 	} else {
 		res_str += rand_symb();
-		if (rand() % 2) res_str += '*';
+		if (rand() % 2 && star_num > 0) {
+			res_str += '*';
+			star_num--;
+		}
 		regex_length--;
 	}
 };
@@ -87,10 +93,16 @@ void RegexGenerator::generate_simple_regex1() { //<simple-regex1> ::= <lbr><rege
 		res_str += '(';
 		generate_regex1();
 		res_str += ')';
-		if (rand() % 2) res_str += '*';
+		if (rand() % 2 && star_num > 0) {
+			res_str += '*';
+			star_num--;
+		}
 	} else {
 		res_str += rand_symb();
-		if (rand() % 2) res_str += '*';
+		if (rand() % 2 && star_num > 0) {
+			res_str += '*';
+			star_num--;
+		}
 		regex_length--;
 	}
 };
