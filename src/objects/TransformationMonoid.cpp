@@ -315,5 +315,10 @@ int TransformationMonoid::is_Synchronized(Term w) {
 	}
 	return sost;
 }
+
+//Вернет число классов эквивалентности
+int TransformationMonoid::classCard() {
+	return terms.size();
+}
 //В психиатрической больнице люди по настоящему заботятся о своём здоровье. Они переходят с электронных сигарет на
 //воображаемые.

@@ -38,5 +38,6 @@ class TransformationMonoid : public BaseObject {
 	string get_Rewriting_Rules_Txt();
 	string to_txt() override;
 	int is_Synchronized(Term w);
+	int classCard();
 	// и тд
 };
