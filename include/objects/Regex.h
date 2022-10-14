@@ -1,8 +1,8 @@
 #pragma once
 #include "BaseObject.h"
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 using namespace std;
 
 struct Lexem {
@@ -23,7 +23,7 @@ struct Lexem {
 };
 
 class Regex : BaseObject {
-private:
+  private:
 	enum Type {
 		// Error
 		error,
@@ -50,7 +50,7 @@ private:
 	Regex* scan_symb(vector<Lexem>, int, int);
 	Regex* scan_par(vector<Lexem>, int, int);
 
-public:
+  public:
 	Regex();
 	Regex(string);
 	string to_txt() override;
