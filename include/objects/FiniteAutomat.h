@@ -54,5 +54,7 @@ public:
 	static bool equal(const FiniteAutomat&, const FiniteAutomat&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomat&, const FiniteAutomat&);
+	// проверка автоматов на вложенность (аргумент вложен в this) 
+	bool subset(const FiniteAutomat&);
 	// и тд
 };
