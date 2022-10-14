@@ -326,6 +326,19 @@ Term TransformationMonoid::Class_Length() {
 	return terms[terms.size() - 1];
 }
 
+//Вычисление
+int TransformationMonoid::size_MyhillNerode() {
+	int sum = 0;
+	for (int i = 0; i < equivalence_class_table.size(); i++) {
+		for (int j = 0; j < equivalence_class_table[i].size(); j++) {
+			if (equivalence_class_table[i][j]) {
+				sum++;
+			}
+		}
+	}
+	return sum;
+}
+
 //Вычисление Минимальности (1 если минимальный)
 bool TransformationMonoid::is_minimality() {
 	map<string, int> data; //храним ссылку на Терм (быстрее и проще искать)
