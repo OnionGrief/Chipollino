@@ -6,4 +6,5 @@ PointerAlignment: Left
 AllowShortIfStatementsOnASingleLine: WithoutElse
 SpaceBeforeParens: ControlStatements
 AllowShortFunctionsOnASingleLine: Empty
+AlignAfterOpenBracket: Align
 ColumnLimit: 80
