@@ -53,7 +53,7 @@ string was_Term(vector<Term> allTerms, vector<Transition> curTransition) {
 TransformationMonoid::TransformationMonoid(){};
 
 //переписывание терма
-string Rewriting(string in, map<string, vector<string>> rules) {
+string rewriting(string in, map<string, vector<string>> rules) {
 	if (in.size() < 3) {
 		return in;
 	}
@@ -77,7 +77,7 @@ string Rewriting(string in, map<string, vector<string>> rules) {
 	if (cond) {
 		out = in;
 	} else {
-		out = Rewriting(out, rules);
+		out = rewriting(out, rules);
 	}
 	return out;
 }
@@ -90,7 +90,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomat *in) {
 		{
 
 			Term current;
-			current.name = Rewriting(various[j], rules);
+			current.name = rewriting(various[j], rules);
 			//вставить переписывание слова
 
 			for (int t = 0; t < automat->get_states_size(); t++) //Для	всех	состояний
@@ -122,6 +122,9 @@ TransformationMonoid::TransformationMonoid(FiniteAutomat *in) {
 						   //Эквивалентных классах
 			{
 				bool cond = true;
+				if (current.Transitions.size() != automat->get_states_size()) {
+					cond = false;
+				}
 				for (int i = 0; i < current.Transitions.size(); i++) {
 					if (!automat->get_state(current.Transitions[i].second).is_terminal) {
 						cond = false;
@@ -192,14 +195,19 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_VW(Term w) {
 		}
 		if (Transitions.size() > 0) {
 			bool cond = true;
-			for (int j = 0; j < Transitions.size(); j++) {
-				if (!automat->get_state(Transitions[j].second).is_terminal) {
-					cond = false;
+			if (Transitions.size() != automat->get_states_size()) {
+				cond = false;
+			} else {
+				for (int j = 0; j < Transitions.size(); j++) {
+					// cout << "\n t " << Transitions[j].first << " " << Transitions[j].second << "\n";
+					if (!automat->get_state(Transitions[j].second).is_terminal) {
+						cond = false;
+					}
 				}
 			}
 			if (cond) {
 				out.push_back(terms[i]);
-				cout << terms[i].name << "	";
+				// cout << terms[i].name << "	";
 			}
 		}
 	}
@@ -223,18 +231,30 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_WV(Term w) {
 		}
 		if (Transitions.size() > 0) {
 			bool cond = true;
-			for (int j = 0; j < Transitions.size(); j++) {
-				if (!automat->get_state(Transitions[j].second).is_terminal) {
-					cond = false;
+			if (Transitions.size() != automat->get_states_size()) {
+				cond = false;
+			} else {
+				for (int j = 0; j < Transitions.size(); j++) {
+					if (!automat->get_state(Transitions[j].second).is_terminal) {
+						cond = false;
+					}
 				}
 			}
 			if (cond) {
 				out.push_back(terms[i]);
-				cout << terms[i].name << "	";
+				// cout << terms[i].name << "	";
 			}
 		}
 	}
 	return out;
+}
+bool wasTransition(vector<Transition> mas, Transition b) {
+	for (int i = 0; i < mas.size(); i++) {
+		if ((mas[i].first == b.first) && (mas[i].second == b.second)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
@@ -250,16 +270,23 @@ vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
 							Transition temp;
 							temp.first = terms[i1].Transitions[j1].first;
 							temp.second = terms[i2].Transitions[j2].second;
-							Transitions.push_back(temp);
+							if (!wasTransition(Transitions, temp)) {
+								Transitions.push_back(temp);
+							}
 						}
 					}
 				}
 			}
 			if (Transitions.size() > 0) {
 				bool cond = true;
-				for (int j = 0; j < Transitions.size(); j++) {
-					if (!automat->get_state(Transitions[j].second).is_terminal) {
-						cond = false;
+				if (Transitions.size() != automat->get_states_size()) {
+					cond = false;
+				} else {
+					for (int j = 0; j < Transitions.size(); j++) {
+						// cout << "\n t " << Transitions[j].first << " " << Transitions[j].second << "\n";
+						if (!automat->get_state(Transitions[j].second).is_terminal) {
+							cond = false;
+						}
 					}
 				}
 				if (cond) {
@@ -267,7 +294,6 @@ vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
 					temp1.first = terms[i1];
 					temp1.second = terms[i2];
 					out.push_back(temp1);
-					cout << temp1.first.name << "	" << temp1.second.name << "\n";
 				}
 			}
 		}
