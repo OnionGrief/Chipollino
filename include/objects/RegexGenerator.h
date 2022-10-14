@@ -10,15 +10,16 @@ using namespace std;
 class RegexGenerator : BaseObject {
   private:
 	vector<char> alphabet;
-	vector<string> terms;
 	int regex_length = 0;
 	int star_num = 0;
+	int star_nesting = 0; //вложенность
+	int cur_nesting = 0;
 	Regex res_regex;
 	string res_str = "";
 
   public:
 	RegexGenerator();
-	RegexGenerator(vector<char>, int, int);
+	RegexGenerator(vector<char>, int, int, int);
 	string to_txt() override;
 
 	char rand_symb();
