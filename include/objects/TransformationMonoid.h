@@ -39,5 +39,6 @@ class TransformationMonoid : public BaseObject {
 	string to_txt() override;
 	int is_Synchronized(Term w);
 	int classCard();
+	Term ClassLength();
 	// и тд
 };

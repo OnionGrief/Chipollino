@@ -28,12 +28,13 @@ int main() {
 	FiniteAutomat NDM(0, {'a', 'b', 'c'}, states, false);
 	// cout << NDM.to_txt();
 	TransformationMonoid a(&NDM);
-	// cout << a.get_Equalence_Classes_Txt();
+	cout << a.get_Equalence_Classes_Txt();
+	cout << a.ClassLength().name;
 	// cout << a.get_Equalence_Classes_Txt(); /*
-	vector<Term> cur = a.get_Equalence_Classes();
+	/*vector<Term> cur = a.get_Equalence_Classes();
 	cout << cur[1].name << "\n";
 	vector<TermDouble> temp = a.get_Equalence_Classes_VWV(cur[1]);
 	for (int i = 0; i < temp.size(); i++) {
 		cout << temp[i].first.name << " " << temp[i].second.name << "\n";
-	}
+	}*/
 }

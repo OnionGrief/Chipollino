@@ -320,5 +320,10 @@ int TransformationMonoid::is_Synchronized(Term w) {
 int TransformationMonoid::classCard() {
 	return terms.size();
 }
+
+//Вернет самое длинное слово в классе
+Term TransformationMonoid::ClassLength() {
+	return terms[terms.size() - 1];
+}
 //В психиатрической больнице люди по настоящему заботятся о своём здоровье. Они переходят с электронных сигарет на
 //воображаемые.
