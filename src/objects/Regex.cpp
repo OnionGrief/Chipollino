@@ -480,7 +480,6 @@ int Regex::L() {
 	case Regex::alt:
 		l = term_l->L();
 		r = term_r->L();
-		//l.insert(l.end(), r.begin(), r.end());
 		return l+r;
 	case Regex::conc:
 		l = term_l->L();
@@ -490,7 +489,6 @@ int Regex::L() {
 		}
 		return 0;
 	case Regex::star:
-		//l = {'E'}; 
 		return 1;
 	default:
 		return 0;
@@ -505,29 +503,12 @@ vector<Lexem>* Regex::first_state() {
 		l = term_l->first_state();
 		r = term_r->first_state();
 		l->insert(l->end(), r->begin(), r->end());
-		//new
-
-		//
 		return l;
 	case Regex::star:
 		l = term_l->first_state();
-		//new
-
-		//if (term_p != nullptr && term_p->type != Regex::star && term_p->term_r != this) {
-			
-		//	r = term_p->term_r->first_state();
-		//	l->insert(l->end(), r->begin(), r->end());
-		//}
-		//cout << l->size() << "\n";
-		
-
-		//
 		return l;
 	case Regex::conc:
 		l = term_l->first_state();
-		//r = term_r->term_p->first_state();
-		//l.insert(l.end(), r.begin(), r.end());
-		//new
 		if (term_l->L() != 0) {
 			r = term_r->first_state();
 			l->insert(l->end(), r->begin(), r->end());
@@ -622,114 +603,18 @@ map<int, vector<int>> Regex::pairs() {
 		for(auto& it : r) {
     		l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
 		}
-		//l.insert(r.begin(), r.end());
 		return l;
 	default:
 		break;
 	}
-	//list = new vector<Lexem>;
 	return {};
 }
-
-/*
-vector<Lexem>* Regex::end_state() {
-	vector<Lexem>* l; 
-	vector<Lexem>* r;
-	switch (type)
-	{
-	case Regex::alt:
-		l = term_l->end_state();
-		r = term_r->end_state();
-		l->insert(l->end(), r->begin(), r->end());
-		return l;
-	case Regex::star:
-		l = term_l->end_state();
-		if (term_p != nullptr && term_p->type != Regex::star && term_p->term_l != this) {
-			r = term_p->term_l->end_state();
-			l->insert(l->end(), r->begin(), r->end());
-		}
-		
-		return l;
-	case Regex::conc:
-		r = term_r->end_state();
-		//r = term_r->term_p->first_state();
-		//l.insert(l.end(), r.begin(), r.end());
-		return r;
-	default:
-		l = new vector<Lexem>;
-		l->push_back(value);
-		return l;
-	}
-}*/
-
-//vector<Lexem>* Regex::pairs() {
-//	vector<Lexem>* list;
-//	vector<Lexem>* first;
-//	if (!term_p) {
-//		list = new vector<Lexem>;
-//		return list;
-//	}
-//	switch (term_p->type)
-//	{
-//	case Regex::alt:
-//		list = term_p->pairs();
-//		return list;
-//	case Regex::star:
-//		/* code */
-//	//	cout << "Test " << term_p->term_p->type << "\n";
-//		first = term_p->pairs();//term_p->first_state(); //!!!!!
-//		list = term_p->first_state();
-//	//	cout << first->size();
-//		first->insert(first->end(), list->begin(), list->end());
-//		return first;
-//	case Regex::conc:
-		
-//		if (term_p->term_r != this) {
-//			first = term_p->term_r->first_state();
-//		} else {
-//			first = new vector<Lexem>;
-//		}
-//		return first;
-//	default:
-//		break;
-//	}
-//	list = new vector<Lexem>;
-//	return list;
-//}
-
-//vector<Lexem>* Regex::pairs() {
-//	vector<Lexem>* list;
-//	vector<Lexem>* first;
-
-//	switch (type)
-//	{
-//	case Regex::alt:
-//		term_l->pairs();
-//		term_r->pairs();
-//		return;
-//	case Regex::star:
-		
-//		return first;
-//	case Regex::conc:
-		
-//		if (term_p->term_r != this) {
-//			first = term_p->term_r->first_state();
-//		} else {
-//			first = new vector<Lexem>;
-//		}
-//		return first;
-//	default:
-//		break;
-//	}
-//	list = new vector<Lexem>;
-//	return list;
-//}
 
 vector<Regex*> Regex::pre_order_travers_vect() {
 	vector<Regex*> r;
 	vector<Regex*> ret;
 	if (value.symbol) {
-		r = {};//new vector<Regex>;
+		r = {};
 		r.push_back(this);
 		return r;
 	}
