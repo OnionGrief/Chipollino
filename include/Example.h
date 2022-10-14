@@ -1,6 +1,6 @@
 #include "FiniteAutomat.h"
-#include "RegexGenerator.h"
 #include "Regex.h"
+#include "RegexGenerator.h"
 #include <iostream>
 
 /*

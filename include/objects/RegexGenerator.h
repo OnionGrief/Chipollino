@@ -1,21 +1,30 @@
 #pragma once
 #include "BaseObject.h"
+#include "Regex.h"
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 
 using namespace std;
 
 class RegexGenerator : BaseObject {
-private:
+  private:
 	vector<char> alphabet;
+	vector<string> terms;
 	int regex_length = 0;
 	int star_num = 0;
+	Regex res_regex;
+	string res_str;
 
-public:
+  public:
 	RegexGenerator();
 	RegexGenerator(vector<char>, int, int);
 	string to_txt() override;
 
 	char rand_symb();
+	void generate_regex();
+	void generate_regex1(); // without epsilon
+	void generate_n_alt_regex();
+	void generate_conc_regex();
+	void generate_simple_regex();
 };

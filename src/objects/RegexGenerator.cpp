@@ -2,19 +2,67 @@
 
 RegexGenerator::RegexGenerator() {}
 
-RegexGenerator::RegexGenerator (vector<char> alphabet, int regex_length, int star_num) 
-	: alphabet(alphabet), regex_length(regex_length), star_num(star_num) {
-	cout << rand_symb();
-	int max_alt_num = (regex_length - 1) / 2;
-	int alt_num = rand() % max_alt_num;
-	cout << max_alt_num;
+RegexGenerator::RegexGenerator(vector<char> alphabet, int regex_length, int star_num) : alphabet(alphabet), regex_length(regex_length), star_num(star_num) {
+	generate_regex1();
+	cout << res_str << "\n";
 }
 
-char RegexGenerator::rand_symb()
-{
+void RegexGenerator::generate_regex() { //<regex> ::= <n-alt-regex> <alt> <regex-without-eps> | <conc-regex> | Ğ¿ÑƒÑÑ‚Ğ¾
+	int v = rand() % 3;
+	if (v == 0) {
+		generate_n_alt_regex();
+		res_str += '|';
+		generate_regex1();
+	} else if (v == 1) {
+		generate_conc_regex();
+	}
+};
+
+void RegexGenerator::generate_regex1() { //<regex-without-eps> ::= <n-alt-regex> <alt> <regex-without-eps> | <conc-regex1>
+	int v = rand() % 2;
+	if (v == 0) {
+		generate_n_alt_regex();
+		res_str += '|';
+		generate_regex1();
+	} else {
+		generate_conc_regex();
+	}
+};
+
+void RegexGenerator::generate_n_alt_regex() { //<n-alt-regex> ::=  <conc-regex> | Ğ¿ÑƒÑÑ‚Ğ¾
+	int v = rand() % 2;
+	if (v == 0) {
+		generate_conc_regex();
+	}
+};
+
+void RegexGenerator::generate_conc_regex() { //<conc-regex> ::= <simple-regex> | <simple-regex><conc-regex>
+	int v = rand() % 2;
+	if (v == 0) {
+		generate_simple_regex();
+	} else {
+		generate_simple_regex();
+		generate_conc_regex();
+	}
+};
+
+void RegexGenerator::generate_simple_regex() { //<simple-regex> ::= <lbr><regex><rbr><unary>? | Ğ±ÑƒĞºĞ²Ğ° <unary>?
+	int v = rand() % 2;
+	if (v == 0) {
+		res_str += '(';
+		generate_regex();
+		res_str += ')';
+		if (rand() % 2) res_str += '*';
+	} else {
+		res_str += rand_symb();
+		if (rand() % 2) res_str += '*';
+	}
+};
+
+char RegexGenerator::rand_symb() {
 	return alphabet[rand() % alphabet.size()];
 }
 
 string RegexGenerator::to_txt() {
-	return "òóò ìîã áûòü àíåêäîò";
+	return "Ñ‚ÑƒÑ‚ Ğ¼Ğ¾Ğ³ Ğ±Ñ‹Ñ‚ÑŒ Ğ°Ğ½ĞµĞºĞ´Ğ¾Ñ‚";
 }
