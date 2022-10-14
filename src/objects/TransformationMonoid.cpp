@@ -326,7 +326,7 @@ Term TransformationMonoid::Class_Length() {
 	return terms[terms.size() - 1];
 }
 
-//Вычисление Минимальности
+//Вычисление Минимальности (1 если минимальный)
 bool TransformationMonoid::is_minimality() {
 	map<string, int> data; //храним ссылку на Терм (быстрее и проще искать)
 	for (int i = 0; i < terms.size(); i++) {
@@ -338,16 +338,24 @@ bool TransformationMonoid::is_minimality() {
 	}
 	for (int i = 0; i < terms.size(); i++) {
 		if (terms[i].isFinal) {
-			equivalence_class_table[i + 1][0] = true;
+			equivalence_class_table[0][i + 1] = true;
 		}
 	}
 	for (int i = 0; i < terms.size(); i++) {
 		vector<Term> cur = this->get_Equalence_Classes_VW(terms[i]);
 		for (int j = 0; j < cur.size(); j++) {
-			equivalence_class_table[data.at(cur[j].name) + 1][i + 1] = true;
+			equivalence_class_table[i + 1][data.at(cur[j].name) + 1] = true;
 		}
 	}
-	return false;
+	map<vector<bool>, bool> wasvec;
+	int counter = 0;
+	for (int i = 0; i < equivalence_class_table.size(); i++) {
+		if (!wasvec.count(equivalence_class_table[i])) {
+			wasvec[equivalence_class_table[i]] = true;
+			counter++;
+		}
+	}
+	return (log2(terms.size()) + 1) <= counter;
 }
 
 string TransformationMonoid::to_Txt_MyhillNerode() {
@@ -365,7 +373,7 @@ string TransformationMonoid::to_Txt_MyhillNerode() {
 			ss << terms[i - 1].name << string(4 - terms[i - 1].name.size(), ' ');
 		}
 		for (int j = 0; j < equivalence_class_table[0].size(); j++) { //вывод матрицы
-			ss << equivalence_class_table[i][j] << "   ";
+			ss << equivalence_class_table[j][i] << "   ";
 		}
 		ss << "\n";
 	}
