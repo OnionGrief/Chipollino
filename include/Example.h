@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Regex.h"
 #include "FiniteAutomat.h"
+#include "RegexGenerator.h"
 
 /* 
 Это статический класс, где вы можете писать примеры 
@@ -11,4 +12,5 @@ class Example {
 public:
 	// Пример построения regex из строки
 	static void regex_parsing();
+	static void regex_generating();
 };
