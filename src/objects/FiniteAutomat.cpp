@@ -285,9 +285,7 @@ FiniteAutomat FiniteAutomat::complement() {
 	}
 	return dm;
 }
-
-// bisimilar
-
+// структуры и функции для работы с грамматикой
 struct GrammarItem {
 	enum Type {
 		terminal,
@@ -296,12 +294,15 @@ struct GrammarItem {
 	Type type;
 	int state_number, class_number;
 	string term_name;
-	GrammarItem() : type(terminal), state_number(-1), class_number(-1), term_name("") {}
+	GrammarItem()
+		: type(terminal), state_number(-1), class_number(-1), term_name("") {}
 	GrammarItem(Type type, int state_number, int class_number)
 		: type(type), state_number(state_number), class_number(class_number) {}
-	GrammarItem(Type type, string term_name) : type(type), term_name(term_name) {}
+	GrammarItem(Type type, string term_name)
+		: type(type), term_name(term_name) {}
 	bool operator!=(const GrammarItem& other) {
-		return type != other.type || state_number != other.state_number || class_number != other.class_number ||
+		return type != other.type || state_number != other.state_number ||
+			   class_number != other.class_number ||
 			   term_name != other.term_name;
 	}
 	void operator=(const GrammarItem& other) {
@@ -311,14 +312,16 @@ struct GrammarItem {
 		term_name = other.term_name;
 	}
 };
+// для отладки
 ostream& operator<<(ostream& os, const GrammarItem& item) {
 	if (item.type == GrammarItem::terminal)
-		return os << "" << item.term_name;
+		return os << item.term_name;
 	else
 		return os << "S" << item.state_number;
 }
 
-void update_classes(set<int>& checker, map<set<string>, vector<GrammarItem*>>& classes_check_map) {
+void update_classes(set<int>& checker,
+					map<set<string>, vector<GrammarItem*>>& classes_check_map) {
 	int classNum = 0;
 	checker.clear();
 	for (auto elem : classes_check_map) {
@@ -331,7 +334,8 @@ void update_classes(set<int>& checker, map<set<string>, vector<GrammarItem*>>& c
 }
 
 void check_classes(vector<vector<vector<GrammarItem*>>>& rules,
-				   map<set<string>, vector<GrammarItem*>>& classes_check_map, vector<GrammarItem*>& nonterminals) {
+				   map<set<string>, vector<GrammarItem*>>& classes_check_map,
+				   vector<GrammarItem*>& nonterminals) {
 	classes_check_map.clear();
 	for (int i = 0; i < nonterminals.size(); i++) {
 		set<string> tempRules;
@@ -351,9 +355,10 @@ void check_classes(vector<vector<vector<GrammarItem*>>>& rules,
 	}
 }
 
-vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(vector<vector<vector<GrammarItem*>>>& rules,
-														   vector<GrammarItem*>& nonterminals,
-														   vector<GrammarItem*>& bisimilar_nonterminals) {
+vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
+	vector<vector<vector<GrammarItem*>>>& rules,
+	vector<GrammarItem*>& nonterminals,
+	vector<GrammarItem*>& bisimilar_nonterminals) {
 	map<set<string>, vector<GrammarItem*>> classes_check_map;
 	set<int> checker;
 	// checker
@@ -367,7 +372,6 @@ vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(vector<vector<vector<
 	map<int, GrammarItem*> classToNonterm;
 	for (auto elem : classes_check_map)
 		classToNonterm[elem.second[0]->class_number] = elem.second[0];
-
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules;
 	for (auto elem : classes_check_map) {
 		GrammarItem* curNonterm = elem.second[0];
@@ -388,11 +392,11 @@ vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(vector<vector<vector<
 
 	return bisimilar_rules;
 }
-
-vector<vector<vector<GrammarItem*>>> fa_to_grammar(const vector<State>& states, const vector<char>& alphabet,
-												   int initial_state, vector<GrammarItem>& fa_items,
-												   vector<GrammarItem*>& nonterminals,
-												   vector<GrammarItem*>& terminals) {
+// преобразование конечного автомата в грамматику
+vector<vector<vector<GrammarItem*>>> fa_to_grammar(
+	const vector<State>& states, const vector<char>& alphabet,
+	int initial_state, vector<GrammarItem>& fa_items,
+	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
 	vector<vector<vector<GrammarItem*>>> rules(states.size());
 	fa_items.resize(states.size() + alphabet.size() + 2);
 	int ind = 0;
@@ -407,7 +411,8 @@ vector<vector<vector<GrammarItem*>>> fa_to_grammar(const vector<State>& states, 
 	terminal_index['\0'] = 0;
 	ind++;
 	for (int i = 0; i < alphabet.size(); i++) {
-		fa_items[ind] = (GrammarItem(GrammarItem::terminal, string(1, alphabet[i])));
+		fa_items[ind] =
+			(GrammarItem(GrammarItem::terminal, string(1, alphabet[i])));
 		terminals.push_back(&fa_items[ind]);
 		terminal_index[alphabet[i]] = i + 1;
 		ind++;
@@ -418,7 +423,8 @@ vector<vector<vector<GrammarItem*>>> fa_to_grammar(const vector<State>& states, 
 	for (int i = 0; i < states.size(); i++) {
 		for (auto elem : states[i].transitions) {
 			for (int j = 0; j < elem.second.size(); j++)
-				rules[i].push_back({terminals[terminal_index[elem.first]], nonterminals[elem.second[j]]});
+				rules[i].push_back({terminals[terminal_index[elem.first]],
+									nonterminals[elem.second[j]]});
 		}
 		if (states[i].is_terminal) rules[i].push_back({terminals[0]});
 	}
@@ -432,8 +438,8 @@ FiniteAutomat FiniteAutomat::merge_bisimilar() {
 	vector<GrammarItem*> nonterminals;
 	vector<GrammarItem*> terminals;
 
-	vector<vector<vector<GrammarItem*>>> rules =
-		fa_to_grammar(states, alphabet, initial_state, fa_items, nonterminals, terminals);
+	vector<vector<vector<GrammarItem*>>> rules = fa_to_grammar(
+		states, alphabet, initial_state, fa_items, nonterminals, terminals);
 
 	vector<GrammarItem*> bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
@@ -442,18 +448,23 @@ FiniteAutomat FiniteAutomat::merge_bisimilar() {
 	vector<State> states;
 	map<int, int> new_state_number;
 	for (int i = 0; i < bisimilar_nonterminals.size(); i++) {
-		states.push_back({i, {i}, to_string(i), false, map<char, vector<int>>()});
+		states.push_back(
+			{i, {i}, to_string(i), false, map<char, vector<int>>()});
 		new_state_number[bisimilar_nonterminals[i]->state_number] = i;
 	}
 	int initial_state = 0;
 	for (int i = 0; i < bisimilar_nonterminals.size(); i++) {
 		for (vector<GrammarItem*> rule : bisimilar_rules[i]) {
-			if (rule.size() == 1) { // особый случай терминального и начального состояния
+			if (rule.size() ==
+				1) { // особый случай терминального и начального состояния
 				if (rule[0]->term_name == "\0") states[i].is_terminal = true;
 				if (rule[0]->term_name == "init") initial_state = i;
 				continue;
-			} else if (rule.size() == 2) { // случай Н -> Т Н (устанавливаем переход)
-				states[i].set_transition(new_state_number[rule[1]->state_number], rule[0]->term_name[0]);
+			} else if (rule.size() ==
+					   2) { // случай Н -> Т Н (устанавливаем переход)
+				states[i].set_transition(
+					new_state_number[rule[1]->state_number],
+					rule[0]->term_name[0]);
 				continue;
 			}
 		}
@@ -462,19 +473,22 @@ FiniteAutomat FiniteAutomat::merge_bisimilar() {
 	return FiniteAutomat(initial_state, alphabet, states, is_deterministic);
 }
 
-bool FiniteAutomat::bisimilar(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
+bool FiniteAutomat::bisimilar(const FiniteAutomat& fa1,
+							  const FiniteAutomat& fa2) {
 	// грамматики из автоматов
 	vector<GrammarItem> fa1_items;
 	vector<GrammarItem*> fa1_nonterminals;
 	vector<GrammarItem*> fa1_terminals;
 	vector<vector<vector<GrammarItem*>>> fa1_rules =
-		fa_to_grammar(fa1.states, fa1.alphabet, fa1.initial_state, fa1_items, fa1_nonterminals, fa1_terminals);
+		fa_to_grammar(fa1.states, fa1.alphabet, fa1.initial_state, fa1_items,
+					  fa1_nonterminals, fa1_terminals);
 
 	vector<GrammarItem> fa2_items;
 	vector<GrammarItem*> fa2_nonterminals;
 	vector<GrammarItem*> fa2_terminals;
 	vector<vector<vector<GrammarItem*>>> fa2_rules =
-		fa_to_grammar(fa2.states, fa2.alphabet, fa2.initial_state, fa2_items, fa2_nonterminals, fa2_terminals);
+		fa_to_grammar(fa2.states, fa2.alphabet, fa2.initial_state, fa2_items,
+					  fa2_nonterminals, fa2_terminals);
 
 	if (fa1_terminals.size() != fa2_terminals.size()) return false;
 	for (int i = 0; i < fa1_terminals.size(); i++)
@@ -482,29 +496,36 @@ bool FiniteAutomat::bisimilar(const FiniteAutomat& fa1, const FiniteAutomat& fa2
 	// сначала получаем бисимилярные грамматики из данных автоматов
 	vector<GrammarItem*> fa1_bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> fa1_bisimilar_rules =
-		get_bisimilar_grammar(fa1_rules, fa1_nonterminals, fa1_bisimilar_nonterminals);
+		get_bisimilar_grammar(fa1_rules, fa1_nonterminals,
+							  fa1_bisimilar_nonterminals);
 
 	vector<GrammarItem*> fa2_bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> fa2_bisimilar_rules =
-		get_bisimilar_grammar(fa2_rules, fa2_nonterminals, fa2_bisimilar_nonterminals);
-
-	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size()) return false;
+		get_bisimilar_grammar(fa2_rules, fa2_nonterminals,
+							  fa2_bisimilar_nonterminals);
+	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size())
+		return false;
 	// из объединения полученных ранее получаем итоговую
 	vector<GrammarItem*> nonterminals(fa1_bisimilar_nonterminals);
-	nonterminals.insert(nonterminals.end(), fa2_bisimilar_nonterminals.begin(), fa2_bisimilar_nonterminals.end());
+	nonterminals.insert(nonterminals.end(), fa2_bisimilar_nonterminals.begin(),
+						fa2_bisimilar_nonterminals.end());
 	vector<vector<vector<GrammarItem*>>> rules(fa1_bisimilar_rules);
-	rules.insert(rules.end(), fa2_bisimilar_rules.begin(), fa2_bisimilar_rules.end());
+	rules.insert(rules.end(), fa2_bisimilar_rules.begin(),
+				 fa2_bisimilar_rules.end());
 
 	vector<GrammarItem*> bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
 		get_bisimilar_grammar(rules, nonterminals, bisimilar_nonterminals);
 
-	if (fa1_bisimilar_nonterminals.size() != bisimilar_nonterminals.size()) return false;
+	if (fa1_bisimilar_nonterminals.size() != bisimilar_nonterminals.size())
+		return false;
 
 	return true;
 }
 
-void update_bijective_Classes(set<int>& checker, map<multiset<string>, vector<GrammarItem*>>& classes_check_map) {
+void update_bijective_Classes(
+	set<int>& checker,
+	map<multiset<string>, vector<GrammarItem*>>& classes_check_map) {
 	int classNum = 0;
 	checker.clear();
 	for (auto elem : classes_check_map) {
@@ -516,9 +537,10 @@ void update_bijective_Classes(set<int>& checker, map<multiset<string>, vector<Gr
 	}
 }
 
-void check_bijective_classes(vector<vector<vector<GrammarItem*>>>& rules,
-							 map<multiset<string>, vector<GrammarItem*>>& classes_check_map,
-							 vector<GrammarItem*>& nonterminals) {
+void check_bijective_classes(
+	vector<vector<vector<GrammarItem*>>>& rules,
+	map<multiset<string>, vector<GrammarItem*>>& classes_check_map,
+	vector<GrammarItem*>& nonterminals) {
 	classes_check_map.clear();
 	for (int i = 0; i < nonterminals.size(); i++) {
 		multiset<string> tempRules;
@@ -538,9 +560,10 @@ void check_bijective_classes(vector<vector<vector<GrammarItem*>>>& rules,
 	}
 }
 
-vector<vector<vector<GrammarItem*>>> get_bijective_bibisimilar_grammar(vector<vector<vector<GrammarItem*>>>& rules,
-																	   vector<GrammarItem*>& nonterminals,
-																	   vector<GrammarItem*>& bisimilar_nonterminals) {
+vector<vector<vector<GrammarItem*>>> get_bijective_bibisimilar_grammar(
+	vector<vector<vector<GrammarItem*>>>& rules,
+	vector<GrammarItem*>& nonterminals,
+	vector<GrammarItem*>& bisimilar_nonterminals) {
 	map<multiset<string>, vector<GrammarItem*>> classes_check_map;
 	set<int> checker;
 	// checker
@@ -575,9 +598,10 @@ vector<vector<vector<GrammarItem*>>> get_bijective_bibisimilar_grammar(vector<ve
 
 	return bisimilar_rules;
 }
-
+// преобразование переходов автомата в грамматику (переход -> состояние переход)
 vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
-	const vector<State>& states, int initial_state, vector<pair<GrammarItem, map<char, vector<GrammarItem>>>>& fa_items,
+	const vector<State>& states, int initial_state,
+	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>>& fa_items,
 	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
 	// fa_items вектор пар <терминал (состояние), map нетерминалов (переходов)>
 	fa_items.resize(states.size());
@@ -597,17 +621,20 @@ vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
 	}
 
 	vector<vector<vector<GrammarItem*>>> rules(nonterminals.size());
-
 	ind = 0;
 	for (int i = 0; i < states.size(); i++) {
 		for (auto elem : states[i].transitions) {
 			for (int j = 0; j < elem.second.size(); j++) {
-				int transInd = elem.second[j]; // индекс состояния, в которое идет переход
+				int transInd =
+					elem.second[j]; // индекс состояния, в которое идет переход
 				// смотрим все переходы из этого состояния
 				for (auto transition_elem : states[transInd].transitions) {
 					for (int k = 0; k < transition_elem.second.size(); k++) {
-						int nonterm_ind = fa_items[transInd].second[transition_elem.first][k].state_number;
-						rules[ind].push_back({terminals[transInd], nonterminals[nonterm_ind]});
+						int nonterm_ind = fa_items[transInd]
+											  .second[transition_elem.first][k]
+											  .state_number;
+						rules[ind].push_back(
+							{terminals[transInd], nonterminals[nonterm_ind]});
 					}
 				}
 				ind++;
@@ -626,41 +653,52 @@ bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
 	vector<GrammarItem*> fa1_nonterminals;
 	vector<GrammarItem*> fa1_terminals;
 	vector<vector<vector<GrammarItem*>>> fa1_rules =
-		fa_to_grammar(fa1.states, fa1.alphabet, fa1.initial_state, fa1_items, fa1_nonterminals, fa1_terminals);
+		fa_to_grammar(fa1.states, fa1.alphabet, fa1.initial_state, fa1_items,
+					  fa1_nonterminals, fa1_terminals);
 
 	vector<GrammarItem> fa2_items;
 	vector<GrammarItem*> fa2_nonterminals;
 	vector<GrammarItem*> fa2_terminals;
 	vector<vector<vector<GrammarItem*>>> fa2_rules =
-		fa_to_grammar(fa2.states, fa2.alphabet, fa2.initial_state, fa2_items, fa2_nonterminals, fa2_terminals);
+		fa_to_grammar(fa2.states, fa2.alphabet, fa2.initial_state, fa2_items,
+					  fa2_nonterminals, fa2_terminals);
 	// проверка на равенство букв переходов
 	if (fa1_terminals.size() != fa2_terminals.size()) return false;
 	for (int i = 0; i < fa1_terminals.size(); i++)
 		if (*fa1_terminals[i] != *fa2_terminals[i]) return false;
 	// грамматики из переходов
-	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>> transitions1_items;
+	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>>
+		transitions1_items;
 	vector<GrammarItem*> transitions1_nonterminals;
 	vector<GrammarItem*> transitions1_terminals;
-	vector<vector<vector<GrammarItem*>>> transitions1_rules = tansitions_to_grammar(
-		fa1.states, fa1.initial_state, transitions1_items, transitions1_nonterminals, transitions1_terminals);
+	vector<vector<vector<GrammarItem*>>> transitions1_rules =
+		tansitions_to_grammar(fa1.states, fa1.initial_state, transitions1_items,
+							  transitions1_nonterminals,
+							  transitions1_terminals);
 
-	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>> transitions2_items;
+	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>>
+		transitions2_items;
 	vector<GrammarItem*> transitions2_nonterminals;
 	vector<GrammarItem*> transitions2_terminals;
-	vector<vector<vector<GrammarItem*>>> transitions2_rules = tansitions_to_grammar(
-		fa2.states, fa2.initial_state, transitions2_items, transitions2_nonterminals, transitions2_terminals);
+	vector<vector<vector<GrammarItem*>>> transitions2_rules =
+		tansitions_to_grammar(fa2.states, fa2.initial_state, transitions2_items,
+							  transitions2_nonterminals,
+							  transitions2_terminals);
 	// проверка равенства количества переходов
-	if (transitions1_nonterminals.size() != transitions2_nonterminals.size()) return false;
+	if (transitions1_nonterminals.size() != transitions2_nonterminals.size())
+		return false;
 	// for(int i = 0; i < fa1_terminals.size(); i++) if(*fa1_terminals[i] !=
 	// *fa2_terminals[i]) return false; биективная бисимуляция состояний
 	vector<GrammarItem*> nonterminals(fa1_nonterminals);
-	nonterminals.insert(nonterminals.end(), fa2_nonterminals.begin(), fa2_nonterminals.end());
+	nonterminals.insert(nonterminals.end(), fa2_nonterminals.begin(),
+						fa2_nonterminals.end());
 	vector<vector<vector<GrammarItem*>>> rules(fa1_rules);
 	rules.insert(rules.end(), fa2_rules.begin(), fa2_rules.end());
 
 	vector<GrammarItem*> bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
-		get_bijective_bibisimilar_grammar(rules, nonterminals, bisimilar_nonterminals);
+		get_bijective_bibisimilar_grammar(rules, nonterminals,
+										  bisimilar_nonterminals);
 
 	vector<int> classes(bisimilar_nonterminals.size(), 0);
 	for (auto t : fa1_nonterminals)
@@ -671,14 +709,19 @@ bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
 		if (t != 0) return false;
 	// биективная бисимуляция переходов
 	vector<GrammarItem*> transitions_nonterminals(transitions1_nonterminals);
-	transitions_nonterminals.insert(transitions_nonterminals.end(), transitions2_nonterminals.begin(),
+	transitions_nonterminals.insert(transitions_nonterminals.end(),
+									transitions2_nonterminals.begin(),
 									transitions2_nonterminals.end());
 	vector<vector<vector<GrammarItem*>>> transitions_rules(transitions1_rules);
-	transitions_rules.insert(transitions_rules.end(), transitions2_rules.begin(), transitions2_rules.end());
+	transitions_rules.insert(transitions_rules.end(),
+							 transitions2_rules.begin(),
+							 transitions2_rules.end());
 
 	vector<GrammarItem*> transitions_bisimilar_nonterminals;
-	vector<vector<vector<GrammarItem*>>> transitions_bisimilar_rules = get_bijective_bibisimilar_grammar(
-		transitions_rules, transitions_nonterminals, transitions_bisimilar_nonterminals);
+	vector<vector<vector<GrammarItem*>>> transitions_bisimilar_rules =
+		get_bijective_bibisimilar_grammar(transitions_rules,
+										  transitions_nonterminals,
+										  transitions_bisimilar_nonterminals);
 
 	classes.clear();
 	classes.resize(bisimilar_nonterminals.size(), 0);
@@ -692,7 +735,8 @@ bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
 	return true;
 }
 
-bool FiniteAutomat::equivalent(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
+bool FiniteAutomat::equivalent(const FiniteAutomat& fa1,
+							   const FiniteAutomat& fa2) {
 	return false;
 }
 
