@@ -26,6 +26,8 @@ class TransformationMonoid : public BaseObject {
 	FiniteAutomat *automat;			   //Ссылка на автомат
 	vector<Term> terms;				   //Эквивалентные классы
 	map<string, vector<string>> rules; //Правила переписывания
+	vector<vector<bool>> equivalence_class_table;
+
   public:
 	TransformationMonoid();
 	TransformationMonoid(FiniteAutomat *in);
@@ -38,7 +40,10 @@ class TransformationMonoid : public BaseObject {
 	string get_Rewriting_Rules_Txt();
 	string to_txt() override;
 	int is_Synchronized(Term w);
-	int classCard();
-	Term ClassLength();
+	int class_Card();
+	Term Class_Length();
+	bool is_minimality();
+	int size_MyhillNerode();
+	string to_Txt_MyhillNerode();
 	// и тд
 };

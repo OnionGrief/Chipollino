@@ -82,7 +82,7 @@ string rewriting(string in, map<string, vector<string>> rules) {
 	return out;
 }
 
-TransformationMonoid::TransformationMonoid(FiniteAutomat *in) {
+TransformationMonoid::TransformationMonoid(FiniteAutomat* in) {
 	automat = in;
 	for (int i = 1; i <= 3; i++) {
 		vector<string> various = get_comb_alphabet(i, automat->get_alphabet());
@@ -170,7 +170,7 @@ string TransformationMonoid::get_Equalence_Classes_Txt() {
 
 string TransformationMonoid::get_Rewriting_Rules_Txt() {
 	stringstream ss;
-	for (auto &item : rules) {
+	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
 			ss << item.first << "	->	" << item.second[i] << "\n";
 		}
@@ -317,13 +317,60 @@ int TransformationMonoid::is_Synchronized(Term w) {
 }
 
 //Вернет число классов эквивалентности
-int TransformationMonoid::classCard() {
+int TransformationMonoid::class_Card() {
 	return terms.size();
 }
 
 //Вернет самое длинное слово в классе
-Term TransformationMonoid::ClassLength() {
+Term TransformationMonoid::Class_Length() {
 	return terms[terms.size() - 1];
+}
+
+//Вычисление Минимальности
+bool TransformationMonoid::is_minimality() {
+	map<string, int> data; //храним ссылку на Терм (быстрее и проще искать)
+	for (int i = 0; i < terms.size(); i++) {
+		data[terms[i].name] = i;
+	}
+	for (int i = 0; i <= terms.size(); i++) { //заполняем матрицу нулями
+		vector<bool> vector_first(terms.size() + 1);
+		equivalence_class_table.push_back(vector_first);
+	}
+	for (int i = 0; i < terms.size(); i++) {
+		if (terms[i].isFinal) {
+			equivalence_class_table[i + 1][0] = true;
+		}
+	}
+	for (int i = 0; i < terms.size(); i++) {
+		vector<Term> cur = this->get_Equalence_Classes_VW(terms[i]);
+		for (int j = 0; j < cur.size(); j++) {
+			equivalence_class_table[data.at(cur[j].name) + 1][i + 1] = true;
+		}
+	}
+	return false;
+}
+
+string TransformationMonoid::to_Txt_MyhillNerode() {
+
+	stringstream ss;
+	ss << "    e   ";
+	for (int i = 0; i < terms.size(); i++) {
+		ss << terms[i].name << string(4 - terms[i].name.size(), ' ');
+	}
+	ss << "\n";
+	for (int i = 0; i < equivalence_class_table.size(); i++) { //вывод матрицы
+		if (i == 0) {
+			ss << "e   ";
+		} else {
+			ss << terms[i - 1].name << string(4 - terms[i - 1].name.size(), ' ');
+		}
+		for (int j = 0; j < equivalence_class_table[0].size(); j++) { //вывод матрицы
+			ss << equivalence_class_table[i][j] << "   ";
+		}
+		ss << "\n";
+	}
+
+	return ss.str();
 }
 //В психиатрической больнице люди по настоящему заботятся о своём здоровье. Они переходят с электронных сигарет на
 //воображаемые.

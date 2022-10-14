@@ -29,7 +29,8 @@ int main() {
 	// cout << NDM.to_txt();
 	TransformationMonoid a(&NDM);
 	cout << a.get_Equalence_Classes_Txt();
-	cout << a.ClassLength().name;
+	cout << a.is_minimality() << "\n";
+	cout << a.to_Txt_MyhillNerode();
 	// cout << a.get_Equalence_Classes_Txt(); /*
 	/*vector<Term> cur = a.get_Equalence_Classes();
 	cout << cur[1].name << "\n";
