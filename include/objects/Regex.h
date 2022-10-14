@@ -19,8 +19,8 @@ struct Lexem {
 
 	Type type = error;
 	char symbol = 0;
-
-	Lexem(Type type = error, char symbol = 0);
+	int number = 0;
+	Lexem(Type type = error, char symbol = 0, int number = 0);
 };
 
 class Regex : BaseObject {
@@ -59,6 +59,13 @@ public:
 	void clear();
 	Regex* copy();
 	FiniteAutomat to_tompson(int);
+	FiniteAutomat to_glushkov();
+	vector<Lexem>* first_state();
+	int L();
+	vector<Lexem>* end_state();
+	map<int, vector<int>> pairs();
+	vector<Regex*> pre_order_travers_vect();
+	bool is_term(int, vector<Lexem>);
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 };

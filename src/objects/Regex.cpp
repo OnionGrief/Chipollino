@@ -1,7 +1,7 @@
 #include "Regex.h"
 #include <set>
-Lexem::Lexem(Type type, char symbol)
-	: type(type), symbol(symbol) {}
+Lexem::Lexem(Type type, char symbol, int number)
+	: type(type), symbol(symbol), number(number){}
 
 vector<Lexem> Regex::parse_string(string str) {
 	vector<Lexem> lexems;
@@ -471,4 +471,330 @@ FiniteAutomat Regex::to_tompson(int max_index) {
 		return a;
 	}
 	return FiniteAutomat();
+}
+int Regex::L() {
+	int l;
+	int r;
+	switch (type)
+	{
+	case Regex::alt:
+		l = term_l->L();
+		r = term_r->L();
+		//l.insert(l.end(), r.begin(), r.end());
+		return l+r;
+	case Regex::conc:
+		l = term_l->L();
+		r = term_r->L();
+		if (l != 0 and r != 0) {
+			return 1;
+		}
+		return 0;
+	case Regex::star:
+		//l = {'E'}; 
+		return 1;
+	default:
+		return 0;
+	}
+}
+vector<Lexem>* Regex::first_state() {
+	vector<Lexem>* l; 
+	vector<Lexem>* r;
+	switch (type)
+	{
+	case Regex::alt:
+		l = term_l->first_state();
+		r = term_r->first_state();
+		l->insert(l->end(), r->begin(), r->end());
+		//new
+
+		//
+		return l;
+	case Regex::star:
+		l = term_l->first_state();
+		//new
+
+		//if (term_p != nullptr && term_p->type != Regex::star && term_p->term_r != this) {
+			
+		//	r = term_p->term_r->first_state();
+		//	l->insert(l->end(), r->begin(), r->end());
+		//}
+		//cout << l->size() << "\n";
+		
+
+		//
+		return l;
+	case Regex::conc:
+		l = term_l->first_state();
+		//r = term_r->term_p->first_state();
+		//l.insert(l.end(), r.begin(), r.end());
+		//new
+		if (term_l->L() != 0) {
+			r = term_r->first_state();
+			l->insert(l->end(), r->begin(), r->end());
+		}
+		//
+		return l;
+	default:
+		l = new vector<Lexem>;
+		l->push_back(value);
+		return l;
+	}
+}
+
+vector<Lexem>* Regex::end_state() {
+	vector<Lexem>* l; 
+	vector<Lexem>* r;
+	switch (type)
+	{
+	case Regex::alt:
+		l = term_l->end_state();
+		r = term_r->end_state();
+		l->insert(l->end(), r->begin(), r->end());
+		return l;
+	case Regex::star:
+		l = term_l->end_state();
+		return l;
+	case Regex::conc:
+		l = term_r->end_state();
+		if (term_r->L() != 0) {
+			
+			r = term_l->end_state();
+			l->insert(l->end(), r->begin(), r->end());
+		}
+		return l;
+	default:
+		l = new vector<Lexem>;
+		l->push_back(value);
+		return l;
+	}
+}
+
+
+map<int, vector<int>> Regex::pairs() {
+	map<int, vector<int>> l;
+	map<int, vector<int>> r;
+	map<int, vector<int>> p;
+	vector<Lexem>* rs;
+	vector<Lexem>* ps; 
+	switch (type)
+	{
+	case Regex::alt:
+		l = term_l->pairs();
+		r = term_r->pairs();
+		for(auto& it : r) {
+    		l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
+		}
+		return l;
+	case Regex::star:
+		l = term_l->pairs();
+		rs = term_l->end_state();
+		ps = term_l->first_state();
+		for (size_t i = 0; i < rs->size(); i++)
+		{
+			for (size_t j = 0; j < ps->size(); j++)
+			{
+				r[(*rs)[i].number].push_back((*ps)[j].number);
+			}
+			
+		}
+		for(auto& it : r) {
+    		l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
+		}
+		return l;
+	case Regex::conc:
+		l = term_l -> pairs();
+		r = term_r -> pairs();
+		for(auto& it : r) {
+    		l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
+		}
+		r = {};
+		rs = term_l->end_state();
+		ps = term_r->first_state();
+
+		for (size_t i = 0; i < rs->size(); i++)
+		{
+			for (size_t j = 0; j < ps->size(); j++)
+			{	
+				r[(*rs)[i].number].push_back((*ps)[j].number);
+			}
+			
+		}
+		for(auto& it : r) {
+    		l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
+		}
+		//l.insert(r.begin(), r.end());
+		return l;
+	default:
+		break;
+	}
+	//list = new vector<Lexem>;
+	return {};
+}
+
+/*
+vector<Lexem>* Regex::end_state() {
+	vector<Lexem>* l; 
+	vector<Lexem>* r;
+	switch (type)
+	{
+	case Regex::alt:
+		l = term_l->end_state();
+		r = term_r->end_state();
+		l->insert(l->end(), r->begin(), r->end());
+		return l;
+	case Regex::star:
+		l = term_l->end_state();
+		if (term_p != nullptr && term_p->type != Regex::star && term_p->term_l != this) {
+			r = term_p->term_l->end_state();
+			l->insert(l->end(), r->begin(), r->end());
+		}
+		
+		return l;
+	case Regex::conc:
+		r = term_r->end_state();
+		//r = term_r->term_p->first_state();
+		//l.insert(l.end(), r.begin(), r.end());
+		return r;
+	default:
+		l = new vector<Lexem>;
+		l->push_back(value);
+		return l;
+	}
+}*/
+
+//vector<Lexem>* Regex::pairs() {
+//	vector<Lexem>* list;
+//	vector<Lexem>* first;
+//	if (!term_p) {
+//		list = new vector<Lexem>;
+//		return list;
+//	}
+//	switch (term_p->type)
+//	{
+//	case Regex::alt:
+//		list = term_p->pairs();
+//		return list;
+//	case Regex::star:
+//		/* code */
+//	//	cout << "Test " << term_p->term_p->type << "\n";
+//		first = term_p->pairs();//term_p->first_state(); //!!!!!
+//		list = term_p->first_state();
+//	//	cout << first->size();
+//		first->insert(first->end(), list->begin(), list->end());
+//		return first;
+//	case Regex::conc:
+		
+//		if (term_p->term_r != this) {
+//			first = term_p->term_r->first_state();
+//		} else {
+//			first = new vector<Lexem>;
+//		}
+//		return first;
+//	default:
+//		break;
+//	}
+//	list = new vector<Lexem>;
+//	return list;
+//}
+
+//vector<Lexem>* Regex::pairs() {
+//	vector<Lexem>* list;
+//	vector<Lexem>* first;
+
+//	switch (type)
+//	{
+//	case Regex::alt:
+//		term_l->pairs();
+//		term_r->pairs();
+//		return;
+//	case Regex::star:
+		
+//		return first;
+//	case Regex::conc:
+		
+//		if (term_p->term_r != this) {
+//			first = term_p->term_r->first_state();
+//		} else {
+//			first = new vector<Lexem>;
+//		}
+//		return first;
+//	default:
+//		break;
+//	}
+//	list = new vector<Lexem>;
+//	return list;
+//}
+
+vector<Regex*> Regex::pre_order_travers_vect() {
+	vector<Regex*> r;
+	vector<Regex*> ret;
+	if (value.symbol) {
+		r = {};//new vector<Regex>;
+		r.push_back(this);
+		return r;
+	}
+	r = {};
+	if (term_l) {
+		ret = term_l->pre_order_travers_vect();
+		r.insert(r.end(), ret.begin(), ret.end());
+	}
+	if (term_r) {
+		ret = term_r->pre_order_travers_vect();
+		r.insert(r.end(), ret.begin(), ret.end());
+	}
+	return r;
+}
+bool Regex::is_term(int number, vector<Lexem> list) {
+	for (size_t i = 0; i < list.size(); i++) {
+		if (list[i].number == number) {
+			return true;
+		}
+	}
+	return false;
+	
+}
+FiniteAutomat Regex::to_glushkov() {
+	
+	vector<Regex*> list = this->pre_order_travers_vect();
+	for (size_t i = 0; i < list.size(); i++)
+	{
+		list[i]->value.number = i;
+	}
+	vector<Lexem>* first = this->first_state();
+	vector<Lexem>* end = this->end_state();
+	map<int, vector<int>> p = this->pairs();
+
+	int index = 0;
+	vector<char> alph;
+	vector<State> st;
+	set<char> alfas;
+	for (size_t i = 0; i < list.size(); i++)
+	{
+		alph.push_back(list[i]->value.symbol);
+	}
+	
+	alfas = set( alph.begin(), alph.end() );
+	alph.assign( alfas.begin(), alfas.end() );
+	map<char, vector<int>> tr;
+	for (size_t i = 0; i < first->size(); i++)
+	{
+		tr[(*first)[i].symbol].push_back((*first)[i].number + 1);
+	}
+	
+	first;
+	st.push_back(State(0, {}, "S", false, tr));
+
+	for (size_t i = 0; i < list.size(); i++)
+	{
+		Lexem elem = list[i]->value;
+		tr = {};
+
+		for (size_t j = 0; j < p[elem.number].size(); j++)
+		{	
+			tr[list[p[elem.number][j]]->value.symbol].push_back(p[elem.number][j]+1);
+		}
+		string s = elem.symbol + to_string(i+1);
+		st.push_back(State(i+1, {}, s, is_term(elem.number, (*end)), tr));	
+	}
+	return FiniteAutomat(0, alph, st, false);
 }
