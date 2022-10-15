@@ -10,6 +10,10 @@ void Example::regex_parsing() {
 void Example::regex_generating() {
 	RegexGenerator r1(8, 0, 0, 3); 
 	RegexGenerator r3(20, 2, 5, 3);
+	RegexGenerator r31(20, 2, 5, 3);
+	RegexGenerator r33(20, 2, 5, 3);
+	RegexGenerator r34(20, 2, 5, 3);
+	RegexGenerator r32(20, 2, 5, 3);
 	RegexGenerator r4(20, 0, 2, 3);
 	RegexGenerator r5(20, 100, 3, 3);
 	RegexGenerator r6(20, 100, 3, 2);

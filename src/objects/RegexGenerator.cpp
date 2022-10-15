@@ -4,6 +4,7 @@ RegexGenerator::RegexGenerator() {}
 
 RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting, int alphabet_size)
 	: regex_length(regex_length), star_num(star_num), star_nesting(star_nesting), alphabet_size(alphabet_size) {
+
 	if (regex_length < 1) return;
 	for (char i = 'a'; i <= 'a' + alphabet_size && i <= 'z'; i++) {
 		alphabet.push_back(i);
@@ -67,24 +68,41 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <lbr><regex
 
 		bool new_nesting = false;
 		if (cur_nesting == 0) new_nesting = true;
-		int v2 = rand() % 2; // будет ли *
-		if (v2 && star_num > 0 && cur_nesting < star_nesting) {
+
+		int v2;
+		if (star_num) {
+			int star_chance = regex_length / star_num; //вероятность выпадения звезды при 2 звездах на 20 букв = 1/10
+			if (star_chance < 2) star_chance = 2;
+			v2 = rand() % star_chance; // будет ли *
+		} else
+			v2 = 1;
+
+		if (!v2 && star_num > 0 && cur_nesting < star_nesting) {
 			star_num--;
 			cur_nesting++;
 		} else
-			v2 = 0;
+			v2 = 1;
 
 		res_str += '(';
 		generate_regex();
 		res_str += ')';
 		all_alts_are_eps = prev_eps_counter;
 
-		if (v2) res_str += '*';
+		if (!v2) res_str += '*';
 		if (new_nesting) cur_nesting = 0;
 	} else {
 		all_alts_are_eps = false;
 		res_str += rand_symb();
-		if (rand() % 2 && star_num > 0 && cur_nesting < star_nesting) {
+
+		int v2;
+		if (star_num) {
+			int star_chance = regex_length / star_num;
+			if (star_chance < 2) star_chance = 2;
+			v2 = rand() % star_chance;
+		} else
+			v2 = 1;
+
+		if (!v2 && star_num > 0 && cur_nesting < star_nesting) {
 			res_str += '*';
 			star_num--;
 			if (cur_nesting > 0) cur_nesting++;
