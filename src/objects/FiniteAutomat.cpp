@@ -601,13 +601,15 @@ vector<vector<vector<GrammarItem*>>> get_bijective_bibisimilar_grammar(
 // преобразование переходов автомата в грамматику (переход -> состояние переход)
 vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
 	const vector<State>& states, int initial_state,
+	const vector<GrammarItem*>& fa_nonterminals,
 	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>>& fa_items,
 	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
 	// fa_items вектор пар <терминал (состояние), map нетерминалов (переходов)>
 	fa_items.resize(states.size());
 	int ind = 0;
 	for (int i = 0; i < states.size(); i++) {
-		fa_items[i].first = GrammarItem(GrammarItem::terminal, to_string(i));
+		fa_items[i].first = GrammarItem(
+			GrammarItem::terminal, to_string(fa_nonterminals[i]->class_number));
 		terminals.push_back(&fa_items[i].first);
 		for (auto elem : states[i].transitions) {
 			vector<GrammarItem>& item_vec = fa_items[i].second[elem.first];
@@ -672,8 +674,8 @@ bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
 	vector<GrammarItem*> transitions1_nonterminals;
 	vector<GrammarItem*> transitions1_terminals;
 	vector<vector<vector<GrammarItem*>>> transitions1_rules =
-		tansitions_to_grammar(fa1.states, fa1.initial_state, transitions1_items,
-							  transitions1_nonterminals,
+		tansitions_to_grammar(fa1.states, fa1.initial_state, fa1_nonterminals,
+							  transitions1_items, transitions1_nonterminals,
 							  transitions1_terminals);
 
 	vector<pair<GrammarItem, map<char, vector<GrammarItem>>>>
@@ -681,8 +683,8 @@ bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
 	vector<GrammarItem*> transitions2_nonterminals;
 	vector<GrammarItem*> transitions2_terminals;
 	vector<vector<vector<GrammarItem*>>> transitions2_rules =
-		tansitions_to_grammar(fa2.states, fa2.initial_state, transitions2_items,
-							  transitions2_nonterminals,
+		tansitions_to_grammar(fa2.states, fa2.initial_state, fa2_nonterminals,
+							  transitions2_items, transitions2_nonterminals,
 							  transitions2_terminals);
 	// проверка равенства количества переходов
 	if (transitions1_nonterminals.size() != transitions2_nonterminals.size())
