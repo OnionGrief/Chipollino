@@ -10,6 +10,7 @@ using namespace std;
 class RegexGenerator : BaseObject {
   private:
 	vector<char> alphabet;
+	int alphabet_size = 1;
 	int regex_length = 0;
 	int star_num = 0;
 	int star_nesting = 0; //вложенность
@@ -20,7 +21,8 @@ class RegexGenerator : BaseObject {
 
   public:
 	RegexGenerator();
-	RegexGenerator(vector<char>, int, int, int);
+	RegexGenerator(int, int, int);
+	RegexGenerator(int, int, int, int);
 	string to_txt() override;
 
 	char rand_symb();
