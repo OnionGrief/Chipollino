@@ -5,35 +5,27 @@ RegexGenerator::RegexGenerator() {}
 RegexGenerator::RegexGenerator(vector<char> alphabet, int regex_length, int star_num, int star_nesting)
 	: alphabet(alphabet), regex_length(regex_length), star_num(star_num), star_nesting(star_nesting) {
 	if (regex_length < 1) return;
-	generate_regex1();
+	all_alts_are_eps = true;
+	generate_regex(); // не порождает пустое слово, но так и задумано
 	cout << res_str << " " << regex_length << "\n";
 }
 
-void RegexGenerator::generate_regex() { // <regex> ::= <n-alt-regex> <alt> <regex-without-eps> | <conc-regex> | пусто
-	int v = rand() % 3;					// выбираем какую из 3х альтернатив использовать
+void RegexGenerator::generate_regex() { // <regex> ::= <n-alt-regex> <alt> <regex> | <conc-regex> | пусто
+	int v;
+	if (all_alts_are_eps) //если нет ни одного не пустого слова то оно не допустимо
+		v = rand() % 2;
+	else
+		v = rand() % 3; // выбираем какую из 3х альтернатив использовать
+
 	if (regex_length < 1) return;
 	if (v == 0) {
 		if (regex_length > 1) generate_n_alt_regex();
 		if (regex_length < 1) return;
 		res_str += '|';
-		generate_regex1();
+		generate_regex();
 	} else if (v == 1) {
 		generate_conc_regex();
 	}
-};
-
-void RegexGenerator::generate_regex1() { // <regex-without-eps> ::= <n-alt-regex> <alt> <regex-without-eps> | <conc-regex1>
-	int v = rand() % 2;
-	// if (regex_length < 1) return;
-	if (v == 0) {
-		if (regex_length > 1) generate_n_alt_regex();
-		if (regex_length < 1) return;
-		res_str += '|';
-		generate_regex1();
-	} else {
-		generate_conc_regex1();
-	}
-	// cout << res_str << " " << regex_length << "\n";
 };
 
 void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex> | пусто
@@ -53,23 +45,16 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex> 
 		generate_conc_regex();
 	}
 };
-void RegexGenerator::generate_conc_regex1() { // <conc-regex1> ::= <simple-regex1> | <simple-regex><conc-regex1>
-	int v = rand() % 2;
-	if (v == 0) {
-		generate_simple_regex1();
-	} else {
-		generate_simple_regex();
-		if (regex_length < 1) return;
-		generate_conc_regex1();
-	}
-};
 
-void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <lbr><regex-without-eps><rbr><unary> | <lbr><regex><rbr> | буква <unary>?
+void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <lbr><regex-without-eps><rbr><unary>? | буква <unary>?
 	int v = rand() % 2;
 	if (v == 0) {
+		bool prev_eps_counter = all_alts_are_eps;
+		all_alts_are_eps = true; // новый контроллер эпсилонов
+
 		bool new_nesting = false;
 		if (cur_nesting == 0) new_nesting = true;
-		int v2 = rand() % 2; //будет ли *
+		int v2 = rand() % 2; // будет ли *
 		if (v2 && star_num > 0 && cur_nesting < star_nesting) {
 			star_num--;
 			cur_nesting++;
@@ -77,44 +62,14 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <lbr><regex
 			v2 = 0;
 
 		res_str += '(';
-		if (v2)
-			generate_regex1();
-		else
-			generate_regex();
+		generate_regex();
 		res_str += ')';
+		all_alts_are_eps = prev_eps_counter;
 
 		if (v2) res_str += '*';
 		if (new_nesting) cur_nesting = 0;
 	} else {
-		res_str += rand_symb();
-		if (rand() % 2 && star_num > 0 && cur_nesting < star_nesting) {
-			res_str += '*';
-			star_num--;
-			if (cur_nesting > 0) cur_nesting++;
-		}
-		regex_length--;
-	}
-};
-
-void RegexGenerator::generate_simple_regex1() { // <simple-regex1> ::= <lbr><regex-without-eps><rbr><unary>? | буква <unary>?
-	int v = rand() % 2;
-	if (v == 0) {
-		bool new_nesting = false;
-		if (cur_nesting == 0) new_nesting = true;
-		int v2 = rand() % 2; //будет ли *
-		if (v2 && star_num > 0 && cur_nesting < star_nesting) {
-			star_num--;
-			cur_nesting++;
-		} else
-			v2 = 0;
-
-		res_str += '(';
-		generate_regex1();
-		res_str += ')';
-
-		if (v2) res_str += '*';
-		if (new_nesting) cur_nesting = 0;
-	} else {
+		all_alts_are_eps = false;
 		res_str += rand_symb();
 		if (rand() % 2 && star_num > 0 && cur_nesting < star_nesting) {
 			res_str += '*';
@@ -134,17 +89,13 @@ string RegexGenerator::to_txt() {
 }
 
 /*
-MY GRAMMAR:
-<regex> ::= <n-alt-regex> <alt> <regex-without-eps> | <conc-regex> | пусто
-<regex-without-eps> ::= <n-alt-regex> <alt> <regex-without-eps> | <conc-regex1>
+GRAMMAR:
+<regex> ::= <n-alt-regex> <alt> <regex> | <conc-regex> | пусто
 <n-alt-regex> ::=  <conc-regex> | пусто
 <conc-regex> ::= <simple-regex> | <simple-regex><conc-regex>
-<conc-regex1> ::= <simple-regex1> | <simple-regex><conc-regex1>
-<simple-regex> ::= <lbr><regex-without-eps><rbr><unary> | <lbr><regex><rbr> | буква <unary>?
-<simple-regex1> ::= <lbr><regex-without-eps><rbr><unary>? | буква <unary>?
+<simple-regex> ::= <lbr><regex><rbr><unary>? | буква <unary>?
 <alt> ::= '|'
 <lbr> ::= '('
 <rbr> ::= ')'
 <unary> ::= '*'
-порождает не все возможные: обязывает в конце последовательности альтернатив и конкатенаций иметь непустое слово
 */

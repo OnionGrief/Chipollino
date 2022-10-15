@@ -14,6 +14,7 @@ class RegexGenerator : BaseObject {
 	int star_num = 0;
 	int star_nesting = 0; //вложенность
 	int cur_nesting = 0;
+	bool all_alts_are_eps = true;
 	Regex res_regex;
 	string res_str = "";
 
@@ -24,10 +25,7 @@ class RegexGenerator : BaseObject {
 
 	char rand_symb();
 	void generate_regex();
-	void generate_regex1(); // without epsilon
 	void generate_n_alt_regex();
 	void generate_conc_regex();
-	void generate_conc_regex1();
 	void generate_simple_regex();
-	void generate_simple_regex1();
 };
