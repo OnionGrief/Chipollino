@@ -6,6 +6,9 @@ RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
 	: regex_length(regex_length), star_num(star_num), star_nesting(star_nesting), alphabet_size(alphabet_size) {
 
 	if (regex_length < 1) return;
+	if (star_nesting < 0) star_nesting = 0;
+	if (star_num < 0) star_num = 0;
+	
 	for (char i = 'a'; i <= 'a' + alphabet_size && i <= 'z'; i++) {
 		alphabet.push_back(i);
 	}
@@ -43,8 +46,8 @@ void RegexGenerator::generate_regex() { // <regex> ::= <n-alt-regex> <alt> <rege
 };
 
 void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex> | пусто
-	int v = rand() % 2;
-	if (v == 0) {
+	int v = rand() % 4;						  // подкрутим вероятность выпадения пустого слова
+	if (v) {
 		generate_conc_regex();
 	}
 };
@@ -66,13 +69,14 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <lbr><regex
 		bool prev_eps_counter = all_alts_are_eps;
 		all_alts_are_eps = true; // новый контроллер эпсилонов
 
-		bool new_nesting = false;
-		if (cur_nesting == 0) new_nesting = true;
-
 		int v2;
 		if (star_num) {
 			int star_chance = regex_length / star_num; //вероятность выпадения звезды при 2 звездах на 20 букв = 1/10
-			if (star_chance < 2) star_chance = 2;
+			if (regex_length > star_num)
+				star_chance += star_num / star_nesting; // попытка в зависимость вероятности выпадения звезды от max звездной высоты
+			else
+				star_chance += regex_length / star_nesting;
+			if (star_chance < 2) star_chance += 2;
 			v2 = rand() % star_chance; // будет ли *
 		} else
 			v2 = 1;
@@ -88,8 +92,10 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <lbr><regex
 		res_str += ')';
 		all_alts_are_eps = prev_eps_counter;
 
-		if (!v2) res_str += '*';
-		if (new_nesting) cur_nesting = 0;
+		if (!v2) {
+			res_str += '*';
+			cur_nesting--;
+		}
 	} else {
 		all_alts_are_eps = false;
 		res_str += rand_symb();
@@ -105,7 +111,6 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <lbr><regex
 		if (!v2 && star_num > 0 && cur_nesting < star_nesting) {
 			res_str += '*';
 			star_num--;
-			if (cur_nesting > 0) cur_nesting++;
 		}
 		regex_length--;
 	}
