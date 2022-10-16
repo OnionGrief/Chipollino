@@ -25,8 +25,6 @@ struct Lexem {
 class Regex : BaseObject {
   private:
 	enum Type {
-		// Error
-		//error,
 		// Epsilon
 		eps,
 		// Binary:
@@ -54,7 +52,6 @@ class Regex : BaseObject {
 
   public:
 	Regex();
-	//Regex(string);
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
