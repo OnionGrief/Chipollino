@@ -27,6 +27,8 @@ private:
 	enum Type {
 		// Error
 		//error,
+		// Epsilon
+		eps,
 		// Binary:
 		alt,
 		conc,
