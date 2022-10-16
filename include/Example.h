@@ -13,4 +13,5 @@ class Example {
 	// Пример построения regex из строки
 	static void regex_parsing();
 	static void regex_generating();
+	static void random_regex_parsing();
 };

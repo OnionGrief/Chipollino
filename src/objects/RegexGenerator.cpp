@@ -9,21 +9,22 @@ RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
 	if (star_nesting < 0) star_nesting = 0;
 	if (star_num < 0) star_num = 0;
 	
-	for (char i = 'a'; i <= 'a' + alphabet_size && i <= 'z'; i++) {
+	for (char i = 'a'; i < 'a' + alphabet_size && i <= 'z'; i++) {
 		alphabet.push_back(i);
 	}
-	for (char i = 'A'; i <= 'A' + alphabet_size - 26 && i <= 'Z'; i++) {
+	for (char i = 'A'; i < 'A' + alphabet_size - 26 && i <= 'Z'; i++) {
 		alphabet.push_back(i);
 	}
 	all_alts_are_eps = true;
 	generate_regex(); // не порождает пустое слово, но так и задумано
-	cout << res_str << " " << regex_length << "\n";
+	//cout << res_str << " " << regex_length << "\n";
 }
 
 RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting) 
 	: regex_length(regex_length), star_num(star_num), star_nesting(star_nesting) {
 	int max_alphabet_size = regex_length > 52 ? 52 : regex_length;
 	if (max_alphabet_size) alphabet_size = rand() % max_alphabet_size;
+	alphabet_size++;
 	RegexGenerator::RegexGenerator(regex_length, star_num, star_nesting, alphabet_size);
 }
 
