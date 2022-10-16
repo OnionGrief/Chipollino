@@ -2,9 +2,10 @@
 #include "BaseObject.h"
 #include <string>
 
-class Integer: public BaseObject {
-private:
+class Integer : public BaseObject {
+  private:
 	int value = 0;
-public:
+
+  public:
 	std::string to_txt() override;
 };

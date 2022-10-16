@@ -1,33 +1,60 @@
 #pragma once
 #include "BaseObject.h"
+#include <iostream>
+#include <map>
+#include <set>
+#include <stack>
 #include <string>
 #include <vector>
 using namespace std;
 
 struct State {
 	int index;
-	bool is_terminal;
+	// используется для объединения состояний в процессе работы алгоритмов
+	// преобразования автоматов возможно для визуализации
+	vector<int> label;
 	string identifier;
-	vector<vector<int>> transitions;
+	bool is_terminal;
+	map<char, vector<int>> transitions;
 	State();
-	State(int index, bool is_terminal, string identifier, vector<vector<int>> transitions);
+	State(int index, vector<int> label, string identifier, bool is_terminal,
+		  map<char, vector<int>> transitions);
+	void set_transition(int, char);
 };
 
 class FiniteAutomat : public BaseObject {
-private:
-	int number_of_states = 0;
+  private:
 	bool is_deterministic = 0;
 	int initial_state = 0;
 	vector<char> alphabet;
 	vector<State> states;
 
-public:
+  public:
 	FiniteAutomat();
-	FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic = false);
-	State& get_transition(int i, int j, int k);
+	FiniteAutomat(int initial_state, vector<char> alphabet,
+				  vector<State> states, bool is_deterministic = false);
+	// визуализация автомата
 	string to_txt() override;
-	FiniteAutomat determinize(const FiniteAutomat& other);
-	FiniteAutomat rem_eps(const FiniteAutomat& other);
-	FiniteAutomat minimize(const FiniteAutomat& other);
+	// поиск множества состояний НКА, достижимых из множества состояний по
+	// eps-переходам
+	vector<int> closure(vector<int>);
+	// детерминизация ДКА
+	FiniteAutomat determinize();
+	// построение eps-замыкания
+	FiniteAutomat remove_eps();
+	// минимизация ДКА
+	FiniteAutomat minimize();
+	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
+	// языков L1 и L2)
+	static FiniteAutomat intersection(const FiniteAutomat&,
+									  const FiniteAutomat&);
+	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия
+	// языков L1 и L2)
+	static FiniteAutomat uunion(const FiniteAutomat&, const FiniteAutomat&);
+	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
+	// и L2)
+	FiniteAutomat difference(const FiniteAutomat&);
+	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
+	FiniteAutomat complement();
 	// и тд
 };

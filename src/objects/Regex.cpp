@@ -1,7 +1,6 @@
 #include "Regex.h"
 
-Lexem::Lexem(Type type, char symbol)
-	: type(type), symbol(symbol) {}
+Lexem::Lexem(Type type, char symbol) : type(type), symbol(symbol) {}
 
 vector<Lexem> Regex::parse_string(string str) {
 	vector<Lexem> lexems;
@@ -30,8 +29,7 @@ vector<Lexem> Regex::parse_string(string str) {
 			if (is_symbol(c)) {
 				lexem.type = Lexem::symb;
 				lexem.symbol = c;
-			}
-			else {
+			} else {
 				lexem.type = Lexem::error;
 				lexems = {};
 				lexems.push_back(lexem);
@@ -40,17 +38,18 @@ vector<Lexem> Regex::parse_string(string str) {
 			break;
 		}
 
-		if (lexems.size() && (
-			// Lexem left
-			lexems.back().type == Lexem::symb ||
-			lexems.back().type == Lexem::star ||
-			lexems.back().type == Lexem::parR) && (
+		if (lexems.size() &&
+			(
+				// Lexem left
+				lexems.back().type == Lexem::symb ||
+				lexems.back().type == Lexem::star ||
+				lexems.back().type == Lexem::parR) &&
+			(
 				// Lexem right
-				lexem.type == Lexem::symb ||
-				lexem.type == Lexem::parL)) {
+				lexem.type == Lexem::symb || lexem.type == Lexem::parL)) {
 
 			// We place . between
-			lexems.push_back({ Lexem::conc });
+			lexems.push_back({Lexem::conc});
 		}
 
 		lexems.push_back(lexem);
@@ -61,8 +60,7 @@ vector<Lexem> Regex::parse_string(string str) {
 Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
 	Regex* p = nullptr;
 	int balance = 0;
-	for (int i = index_start; i < index_end; i++)
-	{
+	for (int i = index_start; i < index_end; i++) {
 		if (lexems[i].type == Lexem::parL) { // LEFT_BRACKET
 			balance++;
 		}
@@ -72,7 +70,6 @@ Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
 		if (lexems[i].type == Lexem::conc && balance == 0) {
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
-
 
 			if (l == nullptr || r == nullptr) { // Проверка на адекватность)
 				return p;
@@ -94,8 +91,7 @@ Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
 Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
 	Regex* p = nullptr;
 	int balance = 0;
-	for (int i = index_start; i < index_end; i++)
-	{
+	for (int i = index_start; i < index_end; i++) {
 		if (lexems[i].type == Lexem::parL) { // LEFT_BRACKET
 			balance++;
 		}
@@ -125,8 +121,7 @@ Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
 Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
 	Regex* p = nullptr;
 	int balance = 0;
-	for (int i = index_start; i < index_end; i++)
-	{
+	for (int i = index_start; i < index_end; i++) {
 		if (lexems[i].type == Lexem::parL) { // LEFT_BRACKET
 			balance++;
 		}
@@ -136,6 +131,7 @@ Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
 		if (lexems[i].type == Lexem::alt && balance == 0) {
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
+
 			if ((l == nullptr) || (r == nullptr)) { // Проверка на адекватность)
 				return nullptr;
 			}
@@ -156,7 +152,8 @@ Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
 
 Regex* Regex::scan_symb(vector<Lexem> lexems, int index_start, int index_end) {
 	Regex* p = nullptr;
-	if (lexems.size() <= (index_start) || lexems[index_start].type != Lexem::symb) {
+	if (lexems.size() <= (index_start) ||
+		lexems[index_start].type != Lexem::symb) {
 		return nullptr;
 	}
 	p = new Regex;
@@ -168,8 +165,9 @@ Regex* Regex::scan_symb(vector<Lexem> lexems, int index_start, int index_end) {
 Regex* Regex::scan_par(vector<Lexem> lexems, int index_start, int index_end) {
 	Regex* p = nullptr;
 
-	if (lexems.size() <= (index_end - 1) || (lexems[index_start].type != Lexem::parL ||
-		lexems[index_end - 1].type != Lexem::parR)) {
+	if (lexems.size() <= (index_end - 1) ||
+		(lexems[index_start].type != Lexem::parL ||
+		 lexems[index_end - 1].type != Lexem::parR)) {
 		return nullptr;
 	}
 	p = expr(lexems, index_start + 1, index_end - 1);
@@ -206,7 +204,7 @@ bool Regex::from_string(string str) {
 	}
 	if (term_r != nullptr) {
 		term_r->term_p = this;
-	}	
+	}
 	delete root;
 	return false;
 }
@@ -217,8 +215,7 @@ Regex* Regex::copy() {
 	c->value = value;
 	if (type != Type::eps && type != Regex::symb) {
 		c->term_l = term_l->copy();
-		if (type != Regex::conc)
-			c->term_r = term_r->copy();
+		if (type != Regex::conc) c->term_r = term_r->copy();
 	}
 	return c;
 }
@@ -237,8 +234,7 @@ void Regex::clear() {
 void Regex::pre_order_travers() {
 	if (value.symbol) {
 		cout << value.symbol << " ";
-	}
-	else {
+	} else {
 		cout << type << " ";
 	}
 	if (term_l) {
@@ -271,12 +267,10 @@ bool Regex::is_eps_possible() {
 }
 
 void Regex::get_prefix(int len, std::set<std::string>* prefs) {
-	std::set<std::string>* prefs1, * prefs2;
-	switch (type)
-	{
+	std::set<std::string>*prefs1, *prefs2;
+	switch (type) {
 	case Type::eps:
-		if (len == 0)
-			prefs->insert("");
+		if (len == 0) prefs->insert("");
 		return;
 	case Type::symb:
 		if (len == 1) {
@@ -340,7 +334,8 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) {
 	}
 }
 
-bool Regex::derevative_with_respect_to_sym(Regex* respected_sym, Regex* reg_e, Regex* result) {
+bool Regex::derevative_with_respect_to_sym(Regex* respected_sym, Regex* reg_e,
+										   Regex* result) {
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
 		std::cout << "Invalid input: unexpected regex instead of symbol\n";
 		return false;
@@ -365,34 +360,39 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym, Regex* reg_e, R
 	case Type::alt:
 		result = new Regex();
 		result->type = Type::alt;
-		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l, result->term_l);
-		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_r, result->term_r);
+		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+												 result->term_l);
+		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_r,
+												 result->term_r);
 		return answer;
 	case Type::conc:
 		subresult = new Regex();
 		subresult->type = Type::conc;
-		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l, subresult->term_l);
+		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+												 subresult->term_l);
 		subresult->term_r = reg_e->copy();
 		if (reg_e->term_l->is_eps_possible()) {
 			result = new Regex();
 			result->type = Type::alt;
 			result->term_l = subresult;
-			answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_r, result->term_r);
-		}
-		else {
+			answer &= derevative_with_respect_to_sym(
+				respected_sym, reg_e->term_r, result->term_r);
+		} else {
 			result = subresult;
 		}
 		return answer;
 	case Type::star:
 		result = new Regex();
 		result->type = Type::conc;
-		bool answer = derevative_with_respect_to_sym(respected_sym, reg_e->term_l, result->term_l);
+		bool answer = derevative_with_respect_to_sym(
+			respected_sym, reg_e->term_l, result->term_l);
 		result->term_r = reg_e->copy();
 		return answer;
 	}
 }
 
-bool Regex::derevative_with_respect_to_str(std::string str, Regex* reg_e, Regex* result) {
+bool Regex::derevative_with_respect_to_str(std::string str, Regex* reg_e,
+										   Regex* result) {
 	bool success = true;
 	auto cur = reg_e->copy();
 	Regex* next;
