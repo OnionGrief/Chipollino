@@ -1,39 +1,24 @@
 #include "FiniteAutomat.h"
 #include <sstream>
-using namespace std;
-
-State::State() : index(0), is_terminal(0), identifier("") {}
-
-State::State(int index, bool is_terminal, string identifier, vector<vector<int>> transitions)
-	: index(index), is_terminal(is_terminal), identifier(identifier), transitions(transitions) {}
 
 FiniteAutomat::FiniteAutomat() { }
-
-FiniteAutomat::FiniteAutomat(int initial_state, vector<char> alphabet, vector<State> states, bool is_deterministic)
-	: initial_state(initial_state), alphabet(alphabet), states(states), is_deterministic(is_deterministic) {
-	number_of_states = (int)states.size();
+	
+FiniteAutomat::FiniteAutomat(bool _is_deterministic, int _initial_state, std::vector<char> _alphabet, std::vector<bool> _is_terminal, std::vector<std::vector<std::vector<int>>> _transition_matrix)
+	:  is_deterministic(_is_deterministic), initial_state(_initial_state), alphabet(_alphabet), is_terminal(is_terminal), transition_matrix(_transition_matrix) {
+	number_of_states = (int)transition_matrix.size();
+	state_identifiers.resize(number_of_states, "");
 }
 
-State& FiniteAutomat::get_transition(int i, int j, int k) {
-	return states[states[i].transitions[j][k]];
-}
-
-string FiniteAutomat::to_txt() {
-	stringstream ss;
-	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\tdummy -> "
-		<< states[initial_state].identifier << "\n";
-
-	for (int i = 0; i < number_of_states; i++) {
-		for (int j = 0; j <= alphabet.size(); j++) {
-			string letter = (j == 0) ? "eps" : string(1, alphabet[j - 1]);
-			for (int k = 0; k < states[i].transitions[j].size(); k++) {
-				ss << "\t" << states[i].identifier << " -> "
-					<< this->get_transition(i, j, k).identifier
-					<< " [label = \"" << letter << "\"]\n";
+std::string FiniteAutomat::to_txt() {
+    std::stringstream ss;
+	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\tdummy -> " << initial_state << "\n";
+	for(int i = 0; i < number_of_states; i++) {
+		for(int j = 0; j < alphabet.size(); j++) {
+			for(int k = 0; k < transition_matrix[i][j].size(); k++){
+				ss << "\t" << i << " -> " << transition_matrix[i][j][k] << " [label = \"" << alphabet[j] << "\"]\n";
 			}
 		}
 	}
-
 	ss << "}";
 	return ss.str();
 }
