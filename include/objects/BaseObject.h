@@ -2,6 +2,6 @@
 #include <string>
 
 class BaseObject {
-public:
+  public:
 	virtual std::string to_txt() = 0;
 };

@@ -1,8 +1,8 @@
 #pragma once
 #include "BaseObject.h"
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 #include <set>
 using namespace std;
 
@@ -24,7 +24,7 @@ struct Lexem {
 };
 
 class Regex : BaseObject {
-private:
+  private:
 	enum Type {
 		// Error
 		//error,
