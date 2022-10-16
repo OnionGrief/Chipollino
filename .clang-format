@@ -1,0 +1,10 @@
+BasedOnStyle: Microsoft
+UseTab: Always
+TabWidth: 4
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+AllowShortIfStatementsOnASingleLine: WithoutElse
+SpaceBeforeParens: ControlStatements
+AllowShortFunctionsOnASingleLine: Empty
+AlignAfterOpenBracket: Align
+ColumnLimit: 80
