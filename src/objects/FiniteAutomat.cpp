@@ -284,6 +284,33 @@ FiniteAutomat FiniteAutomat::complement() {
 	return dm;
 }
 
+FiniteAutomat FiniteAutomat::reverse() {
+	FiniteAutomat endm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	for (auto& state : endm.states) {
+		state.index += 1;
+	}
+	endm.states.insert(endm.states.begin(), { 0, {0}, "", false, map<char, vector<int>>() });
+	endm.initial_state = 0;
+	for (int i = 1; i < endm.states.size(); i++) {
+		if (endm.states[i].is_terminal) {
+			endm.states[initial_state].transitions['\0'].push_back(endm.states[i].index);
+		}
+		endm.states[i].is_terminal = !endm.states[i].is_terminal;
+	}
+	vector<map<char, vector<int>>> new_transition_matrix(endm.states.size() - 1);
+	for (int i = 1; i < endm.states.size(); i++) {
+		for (auto& transition : endm.states[i].transitions) {
+			for (int elem : transition.second) {
+				new_transition_matrix[elem][transition.first].push_back(endm.states[i].index);
+			}
+		}
+	}
+	for (int i = 1; i < endm.states.size(); i++) {
+		endm.states[i].transitions = new_transition_matrix[i - 1];
+	}
+	return endm;
+}
+
 FiniteAutomat FiniteAutomat::add_trap_state() {
 	FiniteAutomat dm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
 	bool flag = true;

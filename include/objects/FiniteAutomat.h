@@ -56,6 +56,8 @@ class FiniteAutomat : public BaseObject {
 	FiniteAutomat difference(const FiniteAutomat&);
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	FiniteAutomat complement();
+	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
+	FiniteAutomat reverse();
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в себя)
 	FiniteAutomat add_trap_state();
 	// удаление ловушки
