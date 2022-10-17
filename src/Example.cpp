@@ -8,7 +8,7 @@ void Example::regex_parsing() {
 		return;
 	}
 	// r.from_string(reg);
-	r.pre_order_travers();
+	cout << r.to_txt();
 	// r.clear();
 	cout << "\n";
 	FiniteAutomat a;
