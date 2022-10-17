@@ -6,6 +6,7 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <optional>
 using namespace std;
 
 struct State {
@@ -24,7 +25,7 @@ struct State {
 
 class FiniteAutomat : public BaseObject {
   private:
-	bool is_deterministic = 0;
+	optional<bool> deterministic = nullopt;
 	int initial_state = 0;
 	vector<char> alphabet;
 	vector<State> states;
@@ -32,12 +33,14 @@ class FiniteAutomat : public BaseObject {
   public:
 	FiniteAutomat();
 	FiniteAutomat(int initial_state, vector<char> alphabet,
-				  vector<State> states, bool is_deterministic = false);
+				  vector<State> states, bool deterministic);
 	// визуализация автомата
 	string to_txt() override;
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам
 	vector<int> closure(vector<int>);
+	//
+	void is_deterministic();
 	// детерминизация ДКА
 	FiniteAutomat determinize();
 	// построение eps-замыкания
