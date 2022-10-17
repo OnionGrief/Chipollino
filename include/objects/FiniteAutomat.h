@@ -58,5 +58,7 @@ class FiniteAutomat : public BaseObject {
 	FiniteAutomat complement();
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в себя)
 	FiniteAutomat add_trap_state();
+	// удаление ловушки
+	FiniteAutomat remove_trap_state();
 	// и тд
 };

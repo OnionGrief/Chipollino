@@ -309,3 +309,41 @@ FiniteAutomat FiniteAutomat::add_trap_state() {
 	}
 	return dm;
 }
+
+FiniteAutomat FiniteAutomat::remove_trap_state() {
+	FiniteAutomat dm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	int count = dm.states.size();
+	for (int i = 0; i < count; i++) {
+		bool flag = false;
+		for (auto& transitions: dm.states[i].transitions) {
+			for (int transition: transitions.second) {
+				if (i == transition && !dm.states[i].is_terminal) {
+					flag = true;
+				}
+			}
+		}
+		if (flag) {
+			dm.states.erase(dm.states.begin() + i);
+			if (i != count - 1) {
+				for (int j = dm.states[i].index - 1; j < dm.states.size(); j++) {
+					dm.states[j].index -= 1;
+				}
+			}
+			for (int j = 0; j < dm.states.size(); j++) {
+				for (auto& transitions : dm.states[j].transitions) {
+					for (int k = 0; k < transitions.second.size(); k++) {
+						if (transitions.second[k] == i) {
+							transitions.second.erase(transitions.second.begin() + k);
+						}
+						if (transitions.second[k] > i) {
+							transitions.second[k] -= 1;
+						}
+					}
+				}
+			}
+			i--;
+			count--;
+		}
+	}
+	return dm;
+}
