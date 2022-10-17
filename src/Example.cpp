@@ -1,18 +1,24 @@
 #include "Example.h"
 
 void Example::regex_parsing() {
-	string reg = "(a|b)(a*|ba*|b*)*";
+	string reg = "a|";
 	Regex r;
-	r.from_string(reg);
+	if (!r.from_string(reg)) {
+		cout << "ERROR\n";
+		return;
+	}
+	// r.from_string(reg);
 	r.pre_order_travers();
 	// r.clear();
 	cout << "\n";
 	FiniteAutomat a;
 	FiniteAutomat b;
 	FiniteAutomat c;
+
 	cout << "to_tompson ------------------------------\n";
 	c = r.to_tompson(-1);
 	cout << c.to_txt();
+
 	cout << "to_glushkov ------------------------------\n";
 	// a = r.to_tompson(-1);
 	// cout << a.to_txt();

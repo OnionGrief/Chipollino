@@ -17,6 +17,7 @@ struct Lexem {
 		conc, // .
 		star, // *
 		symb, // alphabet symbol
+		eps,  // Epsilon
 	};
 
 	Type type = error;
@@ -51,6 +52,7 @@ class Regex : BaseObject {
 	Regex* scan_star(vector<Lexem>, int, int);
 	Regex* scan_alt(vector<Lexem>, int, int);
 	Regex* scan_symb(vector<Lexem>, int, int);
+	Regex* scan_eps(vector<Lexem>, int, int);
 	Regex* scan_par(vector<Lexem>, int, int);
 
   public:
