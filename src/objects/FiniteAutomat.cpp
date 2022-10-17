@@ -30,10 +30,10 @@ string FiniteAutomat::to_txt() {
 	}
 	ss << "dummy -> " << states[initial_state].index << "\n";
 
-	for (int i = 0; i < states.size(); i++) {
-		for (auto elem : states[i].transitions) {
+	for (auto & state : states) {
+		for (auto elem : state.transitions) {
 			for (int transition : elem.second) {
-				ss << "\t" << states[i].index << " -> " << transition;
+				ss << "\t" << state.index << " -> " << transition;
 				if (elem.first == '\0')
 					ss << " [label = \""
 					   << "eps"
@@ -75,7 +75,8 @@ bool belong(State q, State u) {
 }
 
 FiniteAutomat FiniteAutomat::determinize() {
-	FiniteAutomat ndm(initial_state, alphabet, states, is_deterministic), dm;
+	FiniteAutomat ndm(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomat dm = FiniteAutomat();
 	vector<int> x = {0};
 	vector<int> q0 = ndm.closure(x);
 
@@ -279,6 +280,32 @@ FiniteAutomat FiniteAutomat::complement() {
 		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
 	for (int i = 0; i < dm.states.size(); i++) {
 		dm.states[i].is_terminal = !dm.states[i].is_terminal;
+	}
+	return dm;
+}
+
+FiniteAutomat FiniteAutomat::add_trap_state() {
+	FiniteAutomat dm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	bool flag = true;
+	int count = dm.states.size();
+	for (int i = 0; i < count; i++) {
+		for (char ch : alphabet) {
+			if (!dm.states[i].transitions[ch].size()) {
+				if (flag) {
+					dm.states[i].set_transition(dm.states.size(), ch);
+					int size = dm.states.size();
+					dm.states.push_back({ size, {size}, "", false, map<char, vector<int>>() });
+				} else {
+					dm.states[i].set_transition(dm.states.size() - 1, ch);
+				}
+				flag = false;
+			}
+		}
+	}
+	if (!flag) {
+		for (char ch: alphabet) {
+			dm.states[dm.states.size() - 1].transitions[ch].push_back(dm.states.size() - 1);
+		}
 	}
 	return dm;
 }
