@@ -36,8 +36,8 @@ class FiniteAutomat : public BaseObject {
 	// визуализация автомата
 	string to_txt() override;
 	// поиск множества состояний НКА, достижимых из множества состояний по
-	// eps-переходам
-	vector<int> closure(vector<int>);
+	// eps-переходам (если флаг установлен в 1 - по всем переходам)
+	vector<int> closure(vector<int>, bool);
 	// детерминизация ДКА
 	FiniteAutomat determinize();
 	// построение eps-замыкания
