@@ -42,7 +42,7 @@ class FiniteAutomat : public BaseObject {
 	FiniteAutomat determinize();
 	// построение eps-замыкания
 	FiniteAutomat remove_eps();
-	// минимизация ДКА
+	// минимизация ДКА (по Майхиллу-Нероуда)
 	FiniteAutomat minimize();
 	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)

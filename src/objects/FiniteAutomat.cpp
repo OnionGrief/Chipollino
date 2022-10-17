@@ -149,6 +149,134 @@ FiniteAutomat FiniteAutomat::determinize() {
 	return dm;
 }
 
+FiniteAutomat FiniteAutomat::minimize() {
+	FiniteAutomat dm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	vector<bool> table(dm.states.size() * dm.states.size());
+	int counter = 1;
+	for (int i = 1; i < dm.states.size(); i++) {
+		for (int j = 0; j < counter; j++) {
+			if (dm.states[i].is_terminal ^ dm.states[j].is_terminal) {
+				table[i * dm.states.size() + j] = true;
+			}
+		}
+		counter++;
+	}
+
+	bool flag = true;
+	while (flag) {
+		counter = 1;
+		flag = false;
+		for (int i = 1; i < dm.states.size(); i++) {
+			for (int j = 0; j < counter; j++) {
+				if (!table[i * dm.states.size() + j]) {
+					for (char ch: alphabet) {
+						vector<int> to = {dm.states[i].transitions[ch][0], dm.states[j].transitions[ch][0]};
+						if (dm.states[i].transitions[ch][0] < dm.states[j].transitions[ch][0]) {
+							to.clear();
+							to = {dm.states[j].transitions[ch][0], dm.states[i].transitions[ch][0]};
+						}
+						if (table[states[i].transitions[ch][0] * dm.states.size() + states[j].transitions[ch][0]]) {
+							table[i * dm.states.size() + j] = true;
+							flag = true;
+						}
+					}
+				}
+			}
+			counter++;
+		}
+	}
+
+	vector<vector<int>> groups;
+	counter = 1;
+	for (int i = 1; i < dm.states.size(); i++) {
+		for (int j = 0; j < counter; j++) {
+			if (!table[i * dm.states.size() + j]) {
+				groups.push_back({i, j});
+			}
+		}
+		counter++;
+	}
+
+	counter = 1;
+	vector<bool> state_flags(dm.states.size());
+	for (int i = 0; i < groups.size(); i++) {
+		for (int j = 0; j < groups[i].size(); j++) {
+			state_flags[groups[i][j]] = true;
+		}
+		for (int j = counter; j < groups.size(); j++) {
+			bool in_first = false;
+			bool in_second = false;
+			if (find(groups[i].begin(), groups[i].end(), groups[j][0]) != groups[i].end()) {
+				in_first = true;
+			}
+			if (find(groups[i].begin(), groups[i].end(), groups[j][1]) != groups[i].end()) {
+				in_second = true;
+			}
+			if (in_first && in_second) {
+				groups.erase(groups.begin() + j);
+				i--;
+				counter--;
+				continue;
+			}
+			if (in_first) {
+				groups[i].push_back(groups[j][1]);
+				groups.erase(groups.begin() + j);
+				i--;
+				counter--;
+			}
+			if (in_second) {
+				groups[i].push_back(groups[j][0]);
+				groups.erase(groups.begin() + j);
+				i--;
+				counter--;
+			}
+		}
+		counter++;
+	}
+
+	vector<State> new_states;
+	int new_initial_state;
+	for (int i = 0; i < groups.size(); i++) {
+		flag = false;
+		for (int j = 0; j < groups[i].size(); j++) {
+			if (dm.states[groups[i][j]].is_terminal) {
+				flag = true;
+			}
+		}
+		sort(groups[i].begin(), groups[i].end());
+		new_states.push_back({ i, groups[i], "", flag, map<char, vector<int>>() });
+	}
+
+	for (int i = 0; i < state_flags.size(); i++) {
+		if (!state_flags[i]) {
+			int index = new_states.size();
+			new_states.push_back({ index, {dm.states[i].index}, "", dm.states[i].is_terminal, map<char, vector<int>>() });
+		}
+	}
+
+	for (int i = 0; i < new_states.size(); i++) {
+		for (int j = 0; j < new_states[i].label.size(); j++) {
+			for (char ch : alphabet) {
+				for (int transition : dm.states[new_states[i].label[j]].transitions[ch]) {
+					for (int k = 0; k < new_states.size(); k++) {
+						if (find(new_states[k].label.begin(), new_states[k].label.end(), transition) !=
+							new_states[k].label.end()) {
+							if (find(new_states[i].transitions[ch].begin(), new_states[i].transitions[ch].end(), k) ==
+								new_states[i].transitions[ch].end()) {
+								new_states[i].transitions[ch].push_back(k);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	dm.initial_state = 0;
+	dm.states = new_states;
+	return dm;
+}
+
+
 FiniteAutomat FiniteAutomat::remove_eps() {
 	FiniteAutomat endm =
 		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
