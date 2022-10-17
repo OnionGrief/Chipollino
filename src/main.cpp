@@ -1,4 +1,5 @@
 #include "Example.h"
+#include "arden.h"
 #include <iostream>
 using namespace std;
 
@@ -21,5 +22,9 @@ int main() {
 	states[2].is_terminal = true;
 
 	FiniteAutomat NDM(0, {'a', 'b'}, states, false);
-	cout << NDM.to_txt();
+	// cout << NDM.to_txt();
+	string reg = "((a|b)*c)";
+	Regex r;
+	r = nfa_to_regex(NDM);
+	// cout << r.to_txt();
 }

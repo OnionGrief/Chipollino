@@ -281,3 +281,12 @@ FiniteAutomat FiniteAutomat::complement() {
 	}
 	return dm;
 }
+vector<char> FiniteAutomat::get_alphabet() {
+	return alphabet;
+}
+int FiniteAutomat::get_states_size() {
+	return states.size();
+}
+State FiniteAutomat::get_state(int i) {
+	return states[i];
+}

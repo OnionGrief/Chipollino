@@ -57,5 +57,11 @@ class FiniteAutomat : public BaseObject {
 	FiniteAutomat difference(const FiniteAutomat&);
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	FiniteAutomat complement();
+	// получение алфавита
+	vector<char> get_alphabet();
+	// получаем кол-во состояний
+	int get_states_size();
+	//получаем состояние
+	State get_state(int i);
 	// и тд
 };

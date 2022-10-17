@@ -52,6 +52,7 @@ class Regex : BaseObject {
 
   public:
 	Regex();
+
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();

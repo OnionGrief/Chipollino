@@ -246,5 +246,29 @@ void Regex::pre_order_travers() {
 }
 
 string Regex::to_txt() {
-	return string();
+	string str1 = "", str2 = "";
+	if (term_l) {
+		str1 = term_l->to_txt();
+	}
+	if (term_r) {
+		str2 = term_r->to_txt();
+	}
+	string symb;
+	if (value.symbol) symb = value.symbol;
+	if (type == Type::alt) {
+		symb = '|';
+		if (term_p->type == Type::conc) {
+			str1 = "(" + str1;
+			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
+							   // конкатенации a(a|b)a
+		}
+	}
+	if (type == Type::star) {
+		symb = '*';
+		if (term_l->type != Type::symb)
+			str1 = "(" + str1 +
+				   ")"; // ставим скобки при итерации, если символов > 1
+	}
+
+	return str1 + symb + str2;
 }
