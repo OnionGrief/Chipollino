@@ -30,7 +30,7 @@ string FiniteAutomat::to_txt() {
 	}
 	ss << "dummy -> " << states[initial_state].index << "\n";
 
-	for (auto & state : states) {
+	for (auto& state : states) {
 		for (auto elem : state.transitions) {
 			for (int transition : elem.second) {
 				ss << "\t" << state.index << " -> " << transition;
@@ -49,18 +49,20 @@ string FiniteAutomat::to_txt() {
 }
 
 //обход автомата в глубину по eps-переходам
-void dfs(vector<State> states, vector<char> alphabet, int index, vector<int>* c, bool flag) {
+void dfs(vector<State> states, vector<char> alphabet, int index, vector<int>* c,
+		 bool flag) {
 	if (find(c->begin(), c->end(), index) == c->end()) {
 		c->push_back(index);
 		if (!flag) {
 			for (int i = 0; i < states[index].transitions['\0'].size(); i++) {
-				dfs(states, alphabet, states[index].transitions['\0'][i], c, flag);
+				dfs(states, alphabet, states[index].transitions['\0'][i], c,
+					flag);
 			}
-		}
-		else {
-			for (char ch: alphabet) {
+		} else {
+			for (char ch : alphabet) {
 				for (int i = 0; i < states[index].transitions[ch].size(); i++) {
-					dfs(states, alphabet, states[index].transitions[ch][i], c, flag);
+					dfs(states, alphabet, states[index].transitions[ch][i], c,
+						flag);
 				}
 			}
 		}
@@ -159,7 +161,8 @@ FiniteAutomat FiniteAutomat::determinize() {
 }
 
 FiniteAutomat FiniteAutomat::minimize() {
-	FiniteAutomat dm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomat dm =
+		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
 	vector<bool> table(dm.states.size() * dm.states.size());
 	int counter = 1;
 	for (int i = 1; i < dm.states.size(); i++) {
@@ -178,13 +181,18 @@ FiniteAutomat FiniteAutomat::minimize() {
 		for (int i = 1; i < dm.states.size(); i++) {
 			for (int j = 0; j < counter; j++) {
 				if (!table[i * dm.states.size() + j]) {
-					for (char ch: alphabet) {
-						vector<int> to = {dm.states[i].transitions[ch][0], dm.states[j].transitions[ch][0]};
-						if (dm.states[i].transitions[ch][0] < dm.states[j].transitions[ch][0]) {
+					for (char ch : alphabet) {
+						vector<int> to = {dm.states[i].transitions[ch][0],
+										  dm.states[j].transitions[ch][0]};
+						if (dm.states[i].transitions[ch][0] <
+							dm.states[j].transitions[ch][0]) {
 							to.clear();
-							to = {dm.states[j].transitions[ch][0], dm.states[i].transitions[ch][0]};
+							to = {dm.states[j].transitions[ch][0],
+								  dm.states[i].transitions[ch][0]};
 						}
-						if (table[states[i].transitions[ch][0] * dm.states.size() + states[j].transitions[ch][0]]) {
+						if (table[states[i].transitions[ch][0] *
+									  dm.states.size() +
+								  states[j].transitions[ch][0]]) {
 							table[i * dm.states.size() + j] = true;
 							flag = true;
 						}
@@ -215,10 +223,12 @@ FiniteAutomat FiniteAutomat::minimize() {
 		for (int j = counter; j < groups.size(); j++) {
 			bool in_first = false;
 			bool in_second = false;
-			if (find(groups[i].begin(), groups[i].end(), groups[j][0]) != groups[i].end()) {
+			if (find(groups[i].begin(), groups[i].end(), groups[j][0]) !=
+				groups[i].end()) {
 				in_first = true;
 			}
-			if (find(groups[i].begin(), groups[i].end(), groups[j][1]) != groups[i].end()) {
+			if (find(groups[i].begin(), groups[i].end(), groups[j][1]) !=
+				groups[i].end()) {
 				in_second = true;
 			}
 			if (in_first && in_second) {
@@ -253,24 +263,32 @@ FiniteAutomat FiniteAutomat::minimize() {
 			}
 		}
 		sort(groups[i].begin(), groups[i].end());
-		new_states.push_back({ i, groups[i], "", flag, map<char, vector<int>>() });
+		new_states.push_back(
+			{i, groups[i], "", flag, map<char, vector<int>>()});
 	}
 
 	for (int i = 0; i < state_flags.size(); i++) {
 		if (!state_flags[i]) {
 			int index = new_states.size();
-			new_states.push_back({ index, {dm.states[i].index}, "", dm.states[i].is_terminal, map<char, vector<int>>() });
+			new_states.push_back({index,
+								  {dm.states[i].index},
+								  "",
+								  dm.states[i].is_terminal,
+								  map<char, vector<int>>()});
 		}
 	}
 
 	for (int i = 0; i < new_states.size(); i++) {
 		for (int j = 0; j < new_states[i].label.size(); j++) {
 			for (char ch : alphabet) {
-				for (int transition : dm.states[new_states[i].label[j]].transitions[ch]) {
+				for (int transition :
+					 dm.states[new_states[i].label[j]].transitions[ch]) {
 					for (int k = 0; k < new_states.size(); k++) {
-						if (find(new_states[k].label.begin(), new_states[k].label.end(), transition) !=
-							new_states[k].label.end()) {
-							if (find(new_states[i].transitions[ch].begin(), new_states[i].transitions[ch].end(), k) ==
+						if (find(new_states[k].label.begin(),
+								 new_states[k].label.end(),
+								 transition) != new_states[k].label.end()) {
+							if (find(new_states[i].transitions[ch].begin(),
+									 new_states[i].transitions[ch].end(), k) ==
 								new_states[i].transitions[ch].end()) {
 								new_states[i].transitions[ch].push_back(k);
 							}
@@ -346,19 +364,21 @@ FiniteAutomat FiniteAutomat::intersection(const FiniteAutomat& dm1,
 	for (auto& state : dm.states) {
 		for (char ch : dm.alphabet) {
 			state.transitions[ch].push_back(
-				dm1.states[state.label[0]].transitions.at(ch)[0] * dm1.states.size() +
+				dm1.states[state.label[0]].transitions.at(ch)[0] *
+					dm1.states.size() +
 				dm2.states[state.label[1]].transitions.at(ch)[0]);
 		}
 	}
 
-	vector<int> z = dm.closure({ dm.initial_state }, true);
+	vector<int> z = dm.closure({dm.initial_state}, true);
 	int count = dm.states.size();
 	vector<State> states_copy = dm.states;
 	for (int i = 0; i < count; i++) {
 		if (find(z.begin(), z.end(), states_copy[i].index) == z.end()) {
 			if (i != count - 1) {
 				dm.states.erase(dm.states.begin() + i);
-				for (int j = dm.states[i].index - 1; j < dm.states.size(); j++) {
+				for (int j = dm.states[i].index - 1; j < dm.states.size();
+					 j++) {
 					dm.states[j].index -= 1;
 				}
 			}
@@ -366,7 +386,8 @@ FiniteAutomat FiniteAutomat::intersection(const FiniteAutomat& dm1,
 				for (auto& transitions : dm.states[j].transitions) {
 					for (int k = 0; k < transitions.second.size(); k++) {
 						if (transitions.second[k] == i && i != count - 1) {
-							transitions.second.erase(transitions.second.begin() + k);
+							transitions.second.erase(
+								transitions.second.begin() + k);
 						}
 						if (transitions.second[k] > i) {
 							transitions.second[k] -= 1;
@@ -401,19 +422,21 @@ FiniteAutomat FiniteAutomat::uunion(const FiniteAutomat& dm1,
 	for (auto& state : dm.states) {
 		for (char ch : dm.alphabet) {
 			state.transitions[ch].push_back(
-				dm1.states[state.label[0]].transitions.at(ch)[0] * dm1.states.size() +
+				dm1.states[state.label[0]].transitions.at(ch)[0] *
+					dm1.states.size() +
 				dm2.states[state.label[1]].transitions.at(ch)[0]);
 		}
 	}
 
-	vector<int> z = dm.closure({ dm.initial_state }, true);
+	vector<int> z = dm.closure({dm.initial_state}, true);
 	int count = dm.states.size();
 	vector<State> states_copy = dm.states;
 	for (int i = 0; i < count; i++) {
 		if (find(z.begin(), z.end(), states_copy[i].index) == z.end()) {
 			if (i != count - 1) {
 				dm.states.erase(dm.states.begin() + i);
-				for (int j = dm.states[i].index - 1; j < dm.states.size(); j++) {
+				for (int j = dm.states[i].index - 1; j < dm.states.size();
+					 j++) {
 					dm.states[j].index -= 1;
 				}
 			}
@@ -421,7 +444,8 @@ FiniteAutomat FiniteAutomat::uunion(const FiniteAutomat& dm1,
 				for (auto& transitions : dm.states[j].transitions) {
 					for (int k = 0; k < transitions.second.size(); k++) {
 						if (transitions.second[k] == i && i != count - 1) {
-							transitions.second.erase(transitions.second.begin() + k);
+							transitions.second.erase(
+								transitions.second.begin() + k);
 						}
 						if (transitions.second[k] > i) {
 							transitions.second[k] -= 1;
@@ -457,19 +481,21 @@ FiniteAutomat FiniteAutomat::difference(const FiniteAutomat& dm2) {
 	for (auto& state : dm.states) {
 		for (char ch : dm.alphabet) {
 			state.transitions[ch].push_back(
-				dm1.states[state.label[0]].transitions.at(ch)[0] * dm1.states.size() +
+				dm1.states[state.label[0]].transitions.at(ch)[0] *
+					dm1.states.size() +
 				dm2.states[state.label[1]].transitions.at(ch)[0]);
 		}
 	}
 
-	vector<int> z = dm.closure({ dm.initial_state }, true);
+	vector<int> z = dm.closure({dm.initial_state}, true);
 	int count = dm.states.size();
 	vector<State> states_copy = dm.states;
 	for (int i = 0; i < count; i++) {
 		if (find(z.begin(), z.end(), states_copy[i].index) == z.end()) {
 			if (i != count - 1) {
 				dm.states.erase(dm.states.begin() + i);
-				for (int j = dm.states[i].index - 1; j < dm.states.size(); j++) {
+				for (int j = dm.states[i].index - 1; j < dm.states.size();
+					 j++) {
 					dm.states[j].index -= 1;
 				}
 			}
@@ -477,7 +503,8 @@ FiniteAutomat FiniteAutomat::difference(const FiniteAutomat& dm2) {
 				for (auto& transitions : dm.states[j].transitions) {
 					for (int k = 0; k < transitions.second.size(); k++) {
 						if (transitions.second[k] == i && i != count - 1) {
-							transitions.second.erase(transitions.second.begin() + k);
+							transitions.second.erase(
+								transitions.second.begin() + k);
 						}
 						if (transitions.second[k] > i) {
 							transitions.second[k] -= 1;
@@ -502,23 +529,28 @@ FiniteAutomat FiniteAutomat::complement() {
 }
 
 FiniteAutomat FiniteAutomat::reverse() {
-	FiniteAutomat endm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomat endm =
+		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
 	for (auto& state : endm.states) {
 		state.index += 1;
 	}
-	endm.states.insert(endm.states.begin(), { 0, {0}, "", false, map<char, vector<int>>() });
+	endm.states.insert(endm.states.begin(),
+					   {0, {0}, "", false, map<char, vector<int>>()});
 	endm.initial_state = 0;
 	for (int i = 1; i < endm.states.size(); i++) {
 		if (endm.states[i].is_terminal) {
-			endm.states[initial_state].transitions['\0'].push_back(endm.states[i].index);
+			endm.states[initial_state].transitions['\0'].push_back(
+				endm.states[i].index);
 		}
 		endm.states[i].is_terminal = !endm.states[i].is_terminal;
 	}
-	vector<map<char, vector<int>>> new_transition_matrix(endm.states.size() - 1);
+	vector<map<char, vector<int>>> new_transition_matrix(endm.states.size() -
+														 1);
 	for (int i = 1; i < endm.states.size(); i++) {
 		for (auto& transition : endm.states[i].transitions) {
 			for (int elem : transition.second) {
-				new_transition_matrix[elem][transition.first].push_back(endm.states[i].index);
+				new_transition_matrix[elem][transition.first].push_back(
+					endm.states[i].index);
 			}
 		}
 	}
@@ -529,7 +561,8 @@ FiniteAutomat FiniteAutomat::reverse() {
 }
 
 FiniteAutomat FiniteAutomat::add_trap_state() {
-	FiniteAutomat dm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomat dm =
+		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
 	bool flag = true;
 	int count = dm.states.size();
 	for (int i = 0; i < count; i++) {
@@ -538,7 +571,8 @@ FiniteAutomat FiniteAutomat::add_trap_state() {
 				if (flag) {
 					dm.states[i].set_transition(dm.states.size(), ch);
 					int size = dm.states.size();
-					dm.states.push_back({ size, {size}, "", false, map<char, vector<int>>() });
+					dm.states.push_back(
+						{size, {size}, "", false, map<char, vector<int>>()});
 				} else {
 					dm.states[i].set_transition(dm.states.size() - 1, ch);
 				}
@@ -547,20 +581,22 @@ FiniteAutomat FiniteAutomat::add_trap_state() {
 		}
 	}
 	if (!flag) {
-		for (char ch: alphabet) {
-			dm.states[dm.states.size() - 1].transitions[ch].push_back(dm.states.size() - 1);
+		for (char ch : alphabet) {
+			dm.states[dm.states.size() - 1].transitions[ch].push_back(
+				dm.states.size() - 1);
 		}
 	}
 	return dm;
 }
 
 FiniteAutomat FiniteAutomat::remove_trap_state() {
-	FiniteAutomat dm = FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomat dm =
+		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
 	int count = dm.states.size();
 	for (int i = 0; i < count; i++) {
 		bool flag = false;
-		for (auto& transitions: dm.states[i].transitions) {
-			for (int transition: transitions.second) {
+		for (auto& transitions : dm.states[i].transitions) {
+			for (int transition : transitions.second) {
 				if (i == transition && !dm.states[i].is_terminal) {
 					flag = true;
 				}
@@ -569,7 +605,8 @@ FiniteAutomat FiniteAutomat::remove_trap_state() {
 		if (flag) {
 			dm.states.erase(dm.states.begin() + i);
 			if (i != count - 1) {
-				for (int j = dm.states[i].index - 1; j < dm.states.size(); j++) {
+				for (int j = dm.states[i].index - 1; j < dm.states.size();
+					 j++) {
 					dm.states[j].index -= 1;
 				}
 			}
@@ -577,7 +614,8 @@ FiniteAutomat FiniteAutomat::remove_trap_state() {
 				for (auto& transitions : dm.states[j].transitions) {
 					for (int k = 0; k < transitions.second.size(); k++) {
 						if (transitions.second[k] == i) {
-							transitions.second.erase(transitions.second.begin() + k);
+							transitions.second.erase(
+								transitions.second.begin() + k);
 						}
 						if (transitions.second[k] > i) {
 							transitions.second[k] -= 1;
