@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
