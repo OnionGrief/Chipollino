@@ -30,7 +30,7 @@ void Example::random_regex_parsing() {
 	for (int i = 0; i < 5; i++) {
 		RegexGenerator r6(8, 10, 3, 2);
 		string str = r6.to_txt();
-		cout <<"\n"<< str << "\n";
+		cout << "\n" << str << "\n";
 		Regex r;
 		r.from_string(str);
 		r.pre_order_travers();

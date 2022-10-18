@@ -1,14 +1,16 @@
 #include "RegexGenerator.h"
 
-RegexGenerator::RegexGenerator() {}
+RegexGenerator::RegexGenerator() {
+	RegexGenerator::RegexGenerator(8, 3, 2, 2);
+}
 
 RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting, int alphabet_size)
-	: regex_length(regex_length), star_num(star_num), star_nesting(star_nesting), alphabet_size(alphabet_size) {
+	: regex_length(regex_length), star_num(star_num), star_nesting(star_nesting) {
 
 	if (regex_length < 1) return;
 	if (star_nesting < 0) star_nesting = 0;
 	if (star_num < 0) star_num = 0;
-	
+
 	for (char i = 'a'; i < 'a' + alphabet_size && i <= 'z'; i++) {
 		alphabet.push_back(i);
 	}
@@ -17,12 +19,11 @@ RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
 	}
 	all_alts_are_eps = true;
 	generate_regex(); // не порождает пустое слово, но так и задумано
-	//cout << res_str << " " << regex_length << "\n";
 }
 
-RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting) 
-	: regex_length(regex_length), star_num(star_num), star_nesting(star_nesting) {
+RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting) : regex_length(regex_length), star_num(star_num), star_nesting(star_nesting) {
 	int max_alphabet_size = regex_length > 52 ? 52 : regex_length;
+	int alphabet_size = 0;
 	if (max_alphabet_size) alphabet_size = rand() % max_alphabet_size;
 	alphabet_size++;
 	RegexGenerator::RegexGenerator(regex_length, star_num, star_nesting, alphabet_size);
