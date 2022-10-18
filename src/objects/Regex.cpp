@@ -254,7 +254,7 @@ string Regex::to_txt() {
 	return string();
 }
 
-bool Regex::equiv(Regex* r1, Regex* r2) {
+bool Regex::equal(Regex* r1, Regex* r2) {
 	if(r1 == nullptr && r2 == nullptr) return true;
 	if(r1 == nullptr || r2 == nullptr) return true;
 	int r1_value, r2_value;
@@ -265,5 +265,5 @@ bool Regex::equiv(Regex* r1, Regex* r2) {
 
 	if(r1_value != r2_value) return false;
 
-	return equiv(r1->term_l, r2->term_l) && equiv(r1->term_r, r2->term_r) || equiv(r1->term_r, r2->term_l) && equiv(r1->term_l, r2->term_r);
+	return equal(r1->term_l, r2->term_l) && equal(r1->term_r, r2->term_r) || equal(r1->term_r, r2->term_l) && equal(r1->term_l, r2->term_r);
 }
