@@ -16,11 +16,13 @@ struct State {
 	vector<int> label;
 	string identifier;
 	bool is_terminal;
+	optional<bool> sink = nullopt;
 	map<char, vector<int>> transitions;
 	State();
 	State(int index, vector<int> label, string identifier, bool is_terminal,
 		  map<char, vector<int>> transitions);
 	void set_transition(int, char);
+	bool is_sink();
 };
 
 class FiniteAutomat : public BaseObject {
@@ -29,6 +31,7 @@ class FiniteAutomat : public BaseObject {
 	int initial_state = 0;
 	vector<char> alphabet;
 	vector<State> states;
+	optional<int> sink_number = nullopt;
 
   public:
 	FiniteAutomat();
@@ -41,6 +44,8 @@ class FiniteAutomat : public BaseObject {
 	vector<int> closure(vector<int>);
 	//
 	void is_deterministic();
+	//
+	void get_sink_number();
 	// детерминизация ДКА
 	FiniteAutomat determinize();
 	// построение eps-замыкания

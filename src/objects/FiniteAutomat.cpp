@@ -14,6 +14,20 @@ void State::set_transition(int to, char symbol) {
 	transitions[symbol].push_back(to);
 }
 
+bool State::is_sink() {
+	if (!is_terminal) {
+		for (auto elem : transitions) {
+			for (int i = 0; i < elem.second.size(); i++) {
+				if (elem.second[i] != index) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
 FiniteAutomat::FiniteAutomat() {}
 
 FiniteAutomat::FiniteAutomat(int initial_state, vector<char> alphabet,
@@ -56,6 +70,18 @@ void dfs(vector<State> states, int index, vector<int>* c) {
 			dfs(states, states[index].transitions['\0'][i], c);
 		}
 	}
+}
+
+
+void FiniteAutomat::get_sink_number() {
+	int temp = 0;
+	for (int i = 0; i < states.size(); i++) {
+		states[i].sink = states[i].is_sink();
+		if (states[i].sink) {
+			temp++;
+		}
+	}
+	sink_number = temp;
 }
 
 void FiniteAutomat::is_deterministic() {
