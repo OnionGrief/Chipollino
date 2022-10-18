@@ -57,6 +57,8 @@ class Regex : BaseObject {
 	void clear();
 	Regex* copy();
 	bool from_string(string);
+	// проверка регулярок на равентсво(буквальное)
+	static bool equal(Regex* r1, Regex* r2);
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 };
