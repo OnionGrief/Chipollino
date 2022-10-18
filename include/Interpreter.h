@@ -10,11 +10,10 @@ public:
 	
 	Interpreter() {
 		Lexer s;
-		//auto lexems = s.parse_string("MN1 = Glushkov ((ab)*|a)* !!");
 		auto lexems = s.load_file("test.txt");
 	}
 private:
-	
+
 	class Lexer {
 	public:
 		struct Lexem {
@@ -24,6 +23,7 @@ private:
 				doubleExclamation,
 				function,
 				id,
+				dot,
 				regex,
 				number,
 				predicate,
@@ -76,6 +76,7 @@ private:
 		Lexem scan_doubleExclamation();
 		Lexem scan_function();
 		Lexem scan_id();
+		Lexem scan_dot();
 		Lexem scan_regex();
 		Lexem scan_number();
 		Lexem scan_predicate();

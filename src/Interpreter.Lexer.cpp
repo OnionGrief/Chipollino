@@ -79,6 +79,13 @@ Interpreter::Lexer::Lexem Interpreter::Lexer::scan_id() {
 	return Lexem(Lexem::id, id_name);
 }
 
+Interpreter::Lexer::Lexem Interpreter::Lexer::scan_dot() {
+	if (scan_word(".")) {
+		return Lexem(Lexem::dot);
+	}
+	return Lexem(Lexem::error);
+}
+
 Interpreter::Lexer::Lexem Interpreter::Lexer::scan_regex() {
 	// TODO: сохранять regex куда-нибудь
 	input.save();
@@ -124,6 +131,7 @@ Interpreter::Lexer::Lexem Interpreter::Lexer::scan_test() {
 }
 
 Interpreter::Lexer::Lexem Interpreter::Lexer::scan_lexem() {
+	if (Lexem lex = scan_dot(); lex.type) { return lex; }
 	if (Lexem lex = scan_number(); lex.type) { return lex; }
 	if (Lexem lex = scan_equalSign(); lex.type) { return lex; }
 	if (Lexem lex = scan_doubleExclamation(); lex.type) { return lex; }
