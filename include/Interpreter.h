@@ -1,23 +1,102 @@
 #pragma once
 #include <fstream>
 #include <string>
+#include <variant>
 #include <set>
+#include <map>
 #include <deque>
 #include "Regex.h"
+#include "FiniteAutomat.h"
 
 class Interpreter {
 public:
-	
+
 	Interpreter() {
 		Lexer s;
 		auto lexems = s.load_file("test.txt");
 	}
 private:
+	// Перечисление типов объектов
+	enum class ObjectType {
+		NFA,      // недетерминированный КА
+		DFA,      // детерминированный КА
+		Regex,    // регулярное выражение
+		Int,      // целое число
+		Value,    // строковое значение
+		FileName, // имя файла для чтения
+		Boolean   // true/false
+	};
+
+	// Структуры объектов для хранения в интерпретаторе
+	template <ObjectType T, class V>
+	struct ObjectHolder {
+		V value;
+		ObjectType type() { return  T };
+	};
+
+	// Универсальный объект
+	using GeneralObject = variant<
+		ObjectHolder<ObjectType::NFA, FiniteAutomat>,
+		ObjectHolder<ObjectType::DFA, FiniteAutomat>,
+		ObjectHolder<ObjectType::Regex, Regex>,
+		ObjectHolder<ObjectType::Int, int>,
+		ObjectHolder<ObjectType::Value, string>,
+		ObjectHolder<ObjectType::FileName, string>,
+		ObjectHolder<ObjectType::Boolean, bool>
+	>;
+
+	// Тут хранятся объекты по их id
+	map<string, GeneralObject> objects;
+
+	// Функция, состоит из имени и сигнатуры
+	// Предикат - тоже функция, но на выходе boolean
+	struct Function {
+		// Имя функции
+		string name;
+		// Типы воходных аргументов
+		vector<ObjectType> input;
+		// Тип выходного аргументов
+		vector<ObjectType> output;
+	};
+	
+	// Применение функции к набору аргументов
+	GeneralObject apply_function(Function, vector<ObjectType>); // TODO
+
+	// Операция объявления
+	// [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
+	struct DecalarationOp {
+		// Идентификатор, в который запишется объект
+		string  id;
+		// Композиция функций
+		vector<Function> function_sequence;
+		// Параметры композиции функций (1 или более)
+		vector<GeneralObject> parameters;
+	};
+
+	// Специальная форма test
+	struct Test {
+		// Аргументы: 
+		// НКА или регулярное выражение;
+		variant<Regex, FiniteAutomat> sample;
+		// регулярное выражение без альтернатив(только с итерацией Клини) — 
+		// тестовый сет;
+		Regex test_set;
+		// натуральное число — шаг итерации в сете.
+		int iterations;
+	};
+
+	// Предикат [предикат] [объект]+
+	struct Predicate {
+		// Функция (предикат)
+		Function predicate;
+		// Параметры
+		vector<GeneralObject> parameters;
+	};
 
 	class Lexer {
 	public:
 		struct Lexem {
-			enum Type {
+			enum Type { // TODO добавить тип строки (для filename)
 				error,
 				equalSign,
 				doubleExclamation,
