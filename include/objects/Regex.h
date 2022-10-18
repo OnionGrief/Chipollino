@@ -25,8 +25,8 @@ struct Lexem {
 class Regex : BaseObject {
   private:
 	enum Type {
-		// Error
-		error,
+		// Epsilon
+		eps,
 		// Binary:
 		alt,
 		conc,
@@ -36,7 +36,7 @@ class Regex : BaseObject {
 		symb
 	};
 
-	Type type = error;
+	Type type;
 	Lexem value;
 	Regex* term_p = nullptr;
 	Regex* term_l = nullptr;
@@ -52,11 +52,13 @@ class Regex : BaseObject {
 
   public:
 	Regex();
-	Regex(string);
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
 	Regex* copy();
+	bool from_string(string);
+	// проверка регулярок на равентсво(буквальное)
+	static bool equal(Regex* r1, Regex* r2);
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 };

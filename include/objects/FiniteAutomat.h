@@ -63,5 +63,15 @@ class FiniteAutomat : public BaseObject {
 	FiniteAutomat add_trap_state();
 	// удаление ловушки
 	FiniteAutomat remove_trap_state();
+	// объединение эквивалентных по бисимуляции состояний
+	FiniteAutomat merge_bisimilar();
+	// проверка автоматов на эквивалентность
+	static bool equivalent(const FiniteAutomat&, const FiniteAutomat&); //TODO
+	// проверка автоматов на равентсво(буквальное)
+	static bool equal(const FiniteAutomat&, const FiniteAutomat&);
+	// проверка автоматов на бисимилярность
+	static bool bisimilar(const FiniteAutomat&, const FiniteAutomat&);
+	// проверка автоматов на вложенность (аргумент вложен в this) 
+	bool subset(const FiniteAutomat&); //TODO
 	// и тд
 };
