@@ -26,6 +26,11 @@ void Example::regex_generating() {
 	RegexGenerator r02(35, 7, 2);
 }
 
+void Example::tasks_generating() {
+	TasksGenerator TG;
+	cout << "\n" << TG.generate_task(3, 6, false, false);
+}
+
 void Example::random_regex_parsing() {
 	for (int i = 0; i < 5; i++) {
 		RegexGenerator r6(8, 10, 3, 2);

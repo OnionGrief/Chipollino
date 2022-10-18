@@ -1,6 +1,7 @@
 #include "FiniteAutomat.h"
 #include "Regex.h"
 #include "RegexGenerator.h"
+#include "TasksGenerator.h"
 #include <iostream>
 
 /*
@@ -14,4 +15,5 @@ class Example {
 	static void regex_parsing();
 	static void regex_generating();
 	static void random_regex_parsing();
+	static void tasks_generating();
 };
