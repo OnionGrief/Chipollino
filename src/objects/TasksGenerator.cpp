@@ -7,6 +7,7 @@ string TasksGenerator::generate_task(int opNum, int maxLength_,
 									 bool for_dinamic_Tpchkr_) {
 	res_str = "";
 	idNum = 0;
+	ids.clear();
 	maxLength = maxLength_;
 	for_static_Tpchkr = for_static_Tpchkr_;
 	for_dinamic_Tpchkr = for_dinamic_Tpchkr_;
@@ -73,6 +74,11 @@ string TasksGenerator::generate_declaration() {
 		func_str = func.name + '.' + func_str;
 	}
 
+	// запоминаем идентификатор N#
+	ids[prevOutput].push_back({idNum, prevOutput});
+	if (for_dinamic_Tpchkr && (prevOutput == "NFA" || prevOutput == "NFA"))
+		ids["NFA-DFA"].push_back({idNum, prevOutput});
+
 	str += func_str;
 
 	if (rand() % 2 && funcNum > 0) str += " !!";
@@ -83,7 +89,12 @@ function TasksGenerator::generate_next_func(string prevOutput) {
 	function str;
 	if (for_static_Tpchkr)
 		str = rand_func();
-	else {
+	else if (for_dinamic_Tpchkr && (prevOutput == "NFA" || prevOutput == "NFA")) {
+        vector<function> possible_functions = funcInput["NFA-DFA"];
+		str = possible_functions[rand() % possible_functions.size()];
+		if (str.output == "Int")
+			str = generate_next_func(prevOutput); // исправить
+    } else {
 		vector<function> possible_functions = funcInput[prevOutput];
 		str = possible_functions[rand() % possible_functions.size()];
 		if (str.output == "Int")
@@ -95,7 +106,10 @@ function TasksGenerator::generate_next_func(string prevOutput) {
 void TasksGenerator::distribute_functions() {
 	for (int i = 0; i < functions.size(); i++) {
 		if (functions[i].input.size() == 1) {
-			funcInput[functions[i].input[0]].push_back(functions[i]);
+			string input_type = functions[i].input[0];
+			funcInput[input_type].push_back(functions[i]);
+			if (input_type == "NFA" || input_type == "DFA")
+				funcInput["NFA-DFA"].push_back(functions[i]);
 		}
 	}
 }
