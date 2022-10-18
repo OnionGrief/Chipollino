@@ -139,18 +139,25 @@ Interpreter::Lexer::Lexem::Lexem(Type type, string value) : type(type), value(va
 
 Interpreter::Lexer::Lexem::Lexem(int num) : num(num), type(number) {}
 
-Interpreter::Lexer::Lexer() {
+Interpreter::Lexer::Lexer() {}
 
-}
-
-void Interpreter::Lexer::load_file(string path) {
+vector<vector<Interpreter::Lexer::Lexem>> Interpreter::Lexer::load_file(string path) {
+	ifstream input_file(path);
+	// —юда будем записывать строки из лексем
+	vector<vector<Lexem>> lexem_lines = {};
+	string str = "";
+	while (getline(input_file, str)) {
+		lexem_lines.push_back(parse_string(str));
+	}
+	return lexem_lines;
 }
 
 vector<Interpreter::Lexer::Lexem> Interpreter::Lexer::parse_string(string str) {
 	input.str = str;
+	input.pos = 0;
 	vector<Lexem> lexems;
 	while (!eof()) {
-		auto lexem = scan_lexem();
+ 		auto lexem = scan_lexem();
 		lexems.push_back(lexem);
 	}
 	return lexems;

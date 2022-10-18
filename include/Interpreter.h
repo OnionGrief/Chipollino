@@ -10,7 +10,8 @@ public:
 	
 	Interpreter() {
 		Lexer s;
-		auto lexems = s.parse_string("MN1 = Glushkov ((ab)*|a)* !!");
+		//auto lexems = s.parse_string("MN1 = Glushkov ((ab)*|a)* !!");
+		auto lexems = s.load_file("test.txt");
 	}
 private:
 	
@@ -40,9 +41,8 @@ private:
 		};
 
 		Lexer();
-		void load_file(string path);
+		vector<vector<Lexem>> load_file(string path);
 		// Возвращает лексемы, разбитые по строчкам
-		vector<vector<Lexem>> get_lexems();
 		// Бьёт строку на лексемы (без перевода строки)
 		vector<Lexem> parse_string(string);
 	private:
