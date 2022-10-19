@@ -33,5 +33,5 @@ int main() {
 	// Regex t;
 	//  t.regex_union(h, h);
 	//   r = nfa_to_regex(NDM);
-	cout << r.to_txt();
+	cout << h.to_txt();
 }
