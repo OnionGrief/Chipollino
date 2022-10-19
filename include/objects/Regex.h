@@ -27,8 +27,6 @@ struct Lexem {
 class Regex : BaseObject {
   private:
 	enum Type {
-		// Error
-		//error,
 		// Epsilon
 		eps,
 		// Binary:
@@ -59,12 +57,13 @@ class Regex : BaseObject {
 
 public:
 	Regex();
-	//Regex(string);
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
 	Regex* copy();
 	bool from_string(string);
+	// проверка регулярок на равентсво(буквальное)
+	static bool equal(Regex* r1, Regex* r2);
 
 	bool derevative_with_respect_to_sym(Regex* respected_sym, Regex* reg_e, Regex* result);
 	bool derevative_with_respect_to_str(std::string str, Regex* reg_e, Regex* result);
