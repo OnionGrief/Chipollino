@@ -406,13 +406,40 @@ bool Regex::derevative_with_respect_to_str(std::string str, Regex* reg_e, Regex*
 	return success;
 }
 
-void Regex::pump_lenght(Regex* reg_e) {
-	for (int i = 0; i < 5; i++) {
+int Regex::pump_length(Regex* reg_e) {
+	std::map<std::string, bool> checked_prefixes;
+	for (int i = 0; i < 10; i++) {
 		std::set<std::string> prefs;
 		reg_e->get_prefix(i, &prefs);
-		std::cout << i << "-prefix:\n";
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
-			std::cout << "   " << *it << "\n";
+			bool was = false;
+			for (int j = 0; j < it->size(); j++) {
+				if (checked_prefixes[it->substr(0, j)]) {
+					was = true;
+					break;
+				}
+			}
+			if (was) continue;
+			for (int j = 0; j < it->size(); j++) {
+				for (int k = j + 1; k < it->size(); k++) {
+					Regex pumping;
+					std::string pumped_prefix;
+					pumped_prefix += it->substr(0, j);
+					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
+					pumped_prefix += it->substr(j, it->size() - k);
+					pumping.type = Type::conc;
+					pumping.term_l = new Regex;
+					pumping.term_l->from_string(pumped_prefix);
+					pumping.term_r = new Regex;
+					derevative_with_respect_to_str(*it, reg_e,
+												   pumping.term_r);
+					if (true) { // TODO: check if pumping language belongs reg_e language 
+						checked_prefixes[*it] = true;
+						return i;
+					}
+				}
+			}
 		}
 	}
+	return -1;
 }

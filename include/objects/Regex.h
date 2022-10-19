@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 using namespace std;
 
 struct Lexem {
@@ -67,7 +68,7 @@ public:
 
 	bool derevative_with_respect_to_sym(Regex* respected_sym, Regex* reg_e, Regex* result);
 	bool derevative_with_respect_to_str(std::string str, Regex* reg_e, Regex* result);
-	void pump_lenght(Regex* reg_e);
+	int pump_length(Regex* reg_e);
 
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
