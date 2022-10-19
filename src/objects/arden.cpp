@@ -65,9 +65,8 @@ Regex nfa_to_regex(FiniteAutomat in) {
 	for (int i = data.size() - 1; i >= 0; i--) {
 		sort(data[i].begin(), data[i].end(), compare);
 		data[i] = arden_minimize(data[i]);
+		vector<expression_arden> tempdata;
 		for (int j = 0; j < data[i].size(); j++) {
-			cout << data[i][j].condition << "-"
-				 << data[i][j].temp_regex.to_txt() << " kk\n";
 			if (data[i][j].condition > i) {
 				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
 
@@ -77,17 +76,19 @@ Regex nfa_to_regex(FiniteAutomat in) {
 								  data[i][j].temp_regex);
 					temp.temp_regex = r;
 					temp.condition = data[data[i][j].condition][k].condition;
-					cout << data[data[i][j].condition][k].temp_regex.to_txt()
-						 << "+" << data[i][j].temp_regex.to_txt() << "+"
-						 << r.to_txt() << "\n";
+					// cout << r.to_txt() << "\n";
+					tempdata.push_back(temp);
 				}
+			} else {
+				tempdata.push_back(data[i][j]);
 			}
 		}
-		for (int j = 0; j < data[i].size(); j++) {
+		for (int j = 0; j < tempdata.size(); j++) {
 
-			/*	cout << data[i][j].condition << "-"
-					 << data[i][j].temp_regex.to_txt() << " ";*/
+			cout << tempdata[j].condition << "-"
+				 << tempdata[j].temp_regex.to_txt() << " ";
 		}
+		data[i] = tempdata;
 		cout << "\n";
 	}
 	Regex f;

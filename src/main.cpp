@@ -27,11 +27,6 @@ int main() {
 	// cout << NDM.to_txt();
 	string reg = "((a|b)*c)";
 	Regex r;
-	r.from_string(reg);
-	Regex h;
-	h.regex_union(r, r);
-	// Regex t;
-	//  t.regex_union(h, h);
-	//   r = nfa_to_regex(NDM);
-	cout << h.to_txt();
+	r = nfa_to_regex(NDM);
+	// cout << r.to_txt();
 }
