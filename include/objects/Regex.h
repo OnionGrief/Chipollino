@@ -58,6 +58,8 @@ class Regex : BaseObject {
 	void clear();
 	Regex* copy();
 	bool from_string(string);
+
+	void regex_union(Regex a, Regex b);
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 };

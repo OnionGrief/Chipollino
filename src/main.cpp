@@ -15,6 +15,8 @@ int main() {
 
 	states[1].set_transition(1, 'b');
 	states[1].set_transition(2, 'a');
+
+	states[1].set_transition(2, 'b');
 	states[1].set_transition(0, 'b');
 
 	states[2].set_transition(1, 'b');
@@ -25,6 +27,7 @@ int main() {
 	// cout << NDM.to_txt();
 	string reg = "((a|b)*c)";
 	Regex r;
+	r.from_string(reg);
 	r = nfa_to_regex(NDM);
-	// cout << r.to_txt();
+	// cout << t.to_txt();
 }

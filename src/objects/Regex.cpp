@@ -207,7 +207,11 @@ bool Regex::from_string(string str) {
 	delete root;
 	return false;
 }
-
+void Regex::regex_union(Regex a, Regex b) {
+	type = Type::conc;
+	term_l = a.copy();
+	term_r = b.copy();
+}
 Regex* Regex::copy() {
 	Regex* c = new Regex();
 	c->type = type;
