@@ -52,11 +52,12 @@ class TasksGenerator : BaseObject {
 		{"MergeBisim", {"NFA"}, "NFA"},
 		{"PumpLength", {"Regex"}, "Int"},
 		{"ClassLength", {"DFA"}, "Int"},
-		{"KSubSet", {"Int", "NFA"}, "NFA"},
-		{"Normalize", {"Regex", "FileName"}, "Regex"}, // fileName
+		//{"KSubSet", {"Int", "NFA"}, "NFA"}, // пока не используется, исправить
+		//если будет
+		//{"Normalize", {"Regex", "FileName"}, "Regex"}, // fileName
 		{"States", {"NFA"}, "Int"},
 		{"ClassCard", {"DFA"}, "Int"},
-		{"Ambiguity", {"NFA"}, "Value"}, // value???
+		//{"Ambiguity", {"NFA"}, "Value"}, // value???
 		{"Width", {"NFA"}, "Int"},
 		{"MyhillNerode", {"DFA"}, "Int"},
 		{"Simplify", {"Regex"}, "Regex"}};
@@ -66,7 +67,7 @@ class TasksGenerator : BaseObject {
 	};
 
 	void distribute_functions();
-    function generate_next_func(string);
+	function generate_next_func(string, int);
 
   public:
 	TasksGenerator();

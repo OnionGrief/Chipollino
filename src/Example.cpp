@@ -22,7 +22,9 @@ void Example::regex_generating() {
 
 void Example::tasks_generating() {
 	TasksGenerator TG;
-	cout << "\n" << TG.generate_task(3, 6, false, false);
+	cout << "\n" << TG.generate_task(10, 6, false, false);
+	cout << "\n" << TG.generate_task(3, 6, true, false);
+	cout << "\n" << TG.generate_task(5, 6, false, true);
 }
 
 void Example::random_regex_parsing() {
