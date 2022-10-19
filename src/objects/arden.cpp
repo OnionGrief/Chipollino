@@ -66,8 +66,27 @@ Regex nfa_to_regex(FiniteAutomat in) {
 		sort(data[i].begin(), data[i].end(), compare);
 		data[i] = arden_minimize(data[i]);
 		for (int j = 0; j < data[i].size(); j++) {
-			cout << data[i][j].condition << " "
-				 << data[i][j].temp_regex.to_txt() << " ";
+			cout << data[i][j].condition << "-"
+				 << data[i][j].temp_regex.to_txt() << " kk\n";
+			if (data[i][j].condition > i) {
+				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
+
+					expression_arden temp;
+					Regex r;
+					r.regex_union(data[data[i][j].condition][k].temp_regex,
+								  data[i][j].temp_regex);
+					temp.temp_regex = r;
+					temp.condition = data[data[i][j].condition][k].condition;
+					cout << data[data[i][j].condition][k].temp_regex.to_txt()
+						 << "+" << data[i][j].temp_regex.to_txt() << "+"
+						 << r.to_txt() << "\n";
+				}
+			}
+		}
+		for (int j = 0; j < data[i].size(); j++) {
+
+			/*	cout << data[i][j].condition << "-"
+					 << data[i][j].temp_regex.to_txt() << " ";*/
 		}
 		cout << "\n";
 	}
