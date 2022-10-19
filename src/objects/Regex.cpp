@@ -216,10 +216,11 @@ Regex* Regex::copy() {
 	Regex* c = new Regex();
 	c->type = type;
 	c->value = value;
-	if (/*type != regex_cell_state::epsilon && У нас нет лексемы пустоты*/
-		type != Regex::symb) {
+	if (type != Regex::eps && type != Regex::symb) {
 		c->term_l = term_l->copy();
-		if (type != Regex::conc) c->term_r = term_r->copy();
+		if (type != Regex::star) {
+			c->term_r = term_r->copy();
+		}
 	}
 	return c;
 }
@@ -257,6 +258,7 @@ string Regex::to_txt() {
 	if (term_r) {
 		str2 = term_r->to_txt();
 	}
+
 	string symb;
 	if (value.symbol) symb = value.symbol;
 	if (type == Type::alt) {
