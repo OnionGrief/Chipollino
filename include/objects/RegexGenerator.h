@@ -1,6 +1,6 @@
 #pragma once
 #include "BaseObject.h"
-#include "Regex.h"
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -19,6 +19,7 @@ class RegexGenerator : BaseObject {
 	void generate_n_alt_regex();
 	void generate_conc_regex();
 	void generate_simple_regex();
+	int generate_alphabet(int);
 
   public:
 	RegexGenerator();

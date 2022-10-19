@@ -1,7 +1,6 @@
 #include "RegexGenerator.h"
 
-RegexGenerator::RegexGenerator() {
-	RegexGenerator::RegexGenerator(8, 3, 2, 2);
+RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {
 }
 
 RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting, int alphabet_size)
@@ -21,12 +20,15 @@ RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
 	generate_regex(); // не порождает пустое слово, но так и задумано
 }
 
-RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting) : regex_length(regex_length), star_num(star_num), star_nesting(star_nesting) {
+RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting) 
+	: RegexGenerator::RegexGenerator(regex_length, star_num, star_nesting, generate_alphabet(regex_length)) {
+}
+
+int RegexGenerator::generate_alphabet(int regex_length) {
 	int max_alphabet_size = regex_length > 52 ? 52 : regex_length;
 	int alphabet_size = 0;
 	if (max_alphabet_size) alphabet_size = rand() % max_alphabet_size;
-	alphabet_size++;
-	RegexGenerator::RegexGenerator(regex_length, star_num, star_nesting, alphabet_size);
+	return alphabet_size + 1;
 }
 
 void RegexGenerator::generate_regex() { // <regex> ::= <n-alt-regex> <alt> <regex> | <conc-regex> | пусто
