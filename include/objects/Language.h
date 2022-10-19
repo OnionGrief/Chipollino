@@ -5,9 +5,11 @@
 #include <vector>
 using namespace std;
 
+using alphabet_symbol = char;
+
 class Language {
   private:
-	vector<string> alphabet;
+	vector<alphabet_symbol> alphabet;
 	optional<int> pump_length;
 	optional<FiniteAutomat> min_dfa;
 	// классы эквивалентности в минимального дка
@@ -15,11 +17,11 @@ class Language {
 	// аппроксимации минимальных НКА и регулярок
   public:
 	Language();
-	Language(vector<string> alphabet);
+	Language(vector<alphabet_symbol> alphabet);
 	// string to_txt();
-	const vector<string>& get_alphabet();
+	const vector<alphabet_symbol>& get_alphabet();
 	int get_alphabet_size();
-	string get_alphabet_letter(int);
+	alphabet_symbol get_alphabet_symbol(int);
 	void set_pump_length(int);
 	const optional<int>& get_pump_length();
 	void set_min_dfa(FiniteAutomat);

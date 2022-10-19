@@ -1,10 +1,17 @@
 #include "Language.h"
 
+alphabet_symbol epsilon() {
+	return '\0';
+}
+bool is_epsilon(alphabet_symbol as) {
+	return as == epsilon();
+}
+
 Language::Language() {}
 
-Language::Language(vector<string> alphabet) : alphabet(alphabet) {}
+Language::Language(vector<alphabet_symbol> alphabet) : alphabet(alphabet) {}
 
-const vector<string>& Language::get_alphabet() {
+const vector<alphabet_symbol>& Language::get_alphabet() {
 	return alphabet;
 }
 
@@ -12,7 +19,7 @@ int Language::get_alphabet_size() {
 	return alphabet.size();
 }
 
-string Language::get_alphabet_letter(int ind) {
+alphabet_symbol Language::get_alphabet_symbol(int ind) {
 	return alphabet[ind];
 }
 
