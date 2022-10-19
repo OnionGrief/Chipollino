@@ -742,6 +742,34 @@ bool FiniteAutomat::equivalent(const FiniteAutomat& fa1,
 	return false;
 }
 
+bool FiniteAutomat::semdet() {
+	std::map<int, bool> was;
+	std::function<std::optional<std::string>(int, int, map<int, bool>&)> get_prefix;
+	get_prefix = [=](int state_beg, int state_end, map<int, bool> &was)
+					-> std::optional<std::string> {
+		std::optional<std::string> ans;
+		if (state_beg == state_end) {
+			ans = "";
+			return ans;
+		}
+		auto trans = &states[state_beg].transitions;
+		for (auto it = trans->begin(); it != trans->end(); it++) {
+			for (int i = 0; i < it->second.size(); i++) {
+				if (!was[it->second[i]]) {
+					was[it->second[i]] = true;
+					std::optional<std::string> res =
+						get_prefix(it->second[i], state_end, was);
+					if (res.has_value()) {
+						ans = string(1, it->first) + res.value();
+					}
+					return ans;
+				}
+			}
+		}
+		return ans;
+	};
+}
+
 bool FiniteAutomat::subset(const FiniteAutomat& fa) {
 	/*FiniteAutomat fa_instersection(FiniteAutomat::intersection(*this, fa));
 	cout << fa_instersection.to_txt() << endl;*/

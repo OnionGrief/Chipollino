@@ -6,6 +6,8 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <optional>
+#include <functional>
 using namespace std;
 
 struct State {
@@ -28,7 +30,6 @@ class FiniteAutomat : public BaseObject {
 	int initial_state = 0;
 	vector<char> alphabet;
 	vector<State> states;
-
   public:
 	FiniteAutomat();
 	FiniteAutomat(int initial_state, vector<char> alphabet,
@@ -64,6 +65,8 @@ class FiniteAutomat : public BaseObject {
 	static bool equal(const FiniteAutomat&, const FiniteAutomat&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomat&, const FiniteAutomat&);
+	// проверка НКА на семантический детерминизм
+	bool semdet();
 	// проверка автоматов на вложенность (аргумент вложен в this) 
 	bool subset(const FiniteAutomat&); //TODO
 	// и тд
