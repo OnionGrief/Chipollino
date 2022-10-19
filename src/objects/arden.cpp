@@ -93,3 +93,4 @@ Regex nfa_to_regex(FiniteAutomat in) {
 	Regex f;
 	return f;
 }
+//На нефтеперерабатывающем заводе один мужик зажигалкой нашёл утечку газа.
