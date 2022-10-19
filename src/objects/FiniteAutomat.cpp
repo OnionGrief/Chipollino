@@ -34,9 +34,9 @@ string FiniteAutomat::to_txt() {
 	ss << "dummy -> " << states[initial_state].index << "\n";
 
 	for (int i = 0; i < states.size(); i++) {
-		for (const auto& elem: states[i].transitions) {
+		for (const auto& elem : states[i].transitions) {
 			for (int transition : elem.second) {
-				ss << "\t" << state.index << " -> " << transition;
+				ss << "\t" << states[i].index << " -> " << transition;
 				if (elem.first == '\0')
 					ss << " [label = \""
 					   << "eps"
@@ -632,6 +632,42 @@ FiniteAutomat FiniteAutomat::remove_trap_state() {
 	return dm;
 }
 
+FiniteAutomat FiniteAutomat::merge_equivalent_classes(vector<int> classes) {
+	map<int, int> class_to_index; // нужен для подсчета количества классов
+	for (int i = 0; i < classes.size(); i++)
+		class_to_index[classes[i]] = i;
+	// индексы состояний в новом автомате соответсвуют номеру класса
+	// эквивалентности
+	vector<State> new_states;
+	for (int i = 0; i < class_to_index.size(); i++) {
+		State s = {i, {i}, to_string(i), false, map<char, vector<int>>()};
+		new_states.push_back(s);
+	}
+
+	for (int i = 0; i < states.size(); i++) {
+		int from = classes[i];
+		for (const auto& elem : states[i].transitions) {
+			for (int transition : elem.second) {
+				int to = classes[transition];
+				auto it = new_states[from].transitions.find(elem.first);
+				if (it == new_states[from].transitions.end()) {
+					new_states[from].transitions[elem.first].push_back(to);
+				} else {
+					if (find(it->second.begin(), it->second.end(), to) ==
+						it->second.end())
+						it->second.push_back(to);
+				}
+			}
+		}
+	}
+
+	for (const auto& elem : class_to_index)
+		if (states[elem.second].is_terminal)
+			new_states[elem.first].is_terminal = true;
+
+	return FiniteAutomat(classes[initial_state], alphabet, new_states,
+						 is_deterministic);
+}
 // структуры и функции для работы с грамматикой
 struct GrammarItem {
 	enum Type {
@@ -639,22 +675,22 @@ struct GrammarItem {
 		nonterminal
 	};
 	Type type;
-	int state_number, class_number;
+	int state_index, class_number;
 	string term_name;
 	GrammarItem()
-		: type(terminal), state_number(-1), class_number(-1), term_name("") {}
-	GrammarItem(Type type, int state_number, int class_number)
-		: type(type), state_number(state_number), class_number(class_number) {}
+		: type(terminal), state_index(-1), class_number(-1), term_name("") {}
+	GrammarItem(Type type, int state_index, int class_number)
+		: type(type), state_index(state_index), class_number(class_number) {}
 	GrammarItem(Type type, string term_name)
 		: type(type), term_name(term_name) {}
 	bool operator!=(const GrammarItem& other) {
-		return type != other.type || state_number != other.state_number ||
+		return type != other.type || state_index != other.state_index ||
 			   class_number != other.class_number ||
 			   term_name != other.term_name;
 	}
 	void operator=(const GrammarItem& other) {
 		type = other.type;
-		state_number = other.state_number;
+		state_index = other.state_index;
 		class_number = other.class_number;
 		term_name = other.term_name;
 	}
@@ -664,7 +700,7 @@ ostream& operator<<(ostream& os, const GrammarItem& item) {
 	if (item.type == GrammarItem::terminal)
 		return os << item.term_name;
 	else
-		return os << "S" << item.state_number;
+		return os << "S" << item.state_index;
 }
 // обновляю значение class_number для каждого нетерминала
 void update_classes(set<int>& checker,
@@ -672,7 +708,7 @@ void update_classes(set<int>& checker,
 	int classNum = 0;
 	checker.clear();
 	for (const auto& elem : classes_check_map) {
-		checker.insert(elem.second[0]->state_number);
+		checker.insert(elem.second[0]->state_index);
 		for (GrammarItem* nont : elem.second) {
 			nont->class_number = classNum;
 		}
@@ -723,7 +759,7 @@ vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
 	for (const auto& elem : classes_check_map) {
 		GrammarItem* curNonterm = elem.second[0];
 		vector<vector<GrammarItem*>> temp_rules;
-		for (vector<GrammarItem*> rule : rules[curNonterm->state_number]) {
+		for (vector<GrammarItem*> rule : rules[curNonterm->state_index]) {
 			vector<GrammarItem*> tempRule;
 			for (GrammarItem* item : rule) {
 				if (item->type == GrammarItem::nonterminal) {
@@ -792,32 +828,10 @@ FiniteAutomat FiniteAutomat::merge_bisimilar() {
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
 		get_bisimilar_grammar(rules, nonterminals, bisimilar_nonterminals);
 	// порождение автомата
-	vector<State> states;
-	map<int, int> new_state_number;
-	for (int i = 0; i < bisimilar_nonterminals.size(); i++) {
-		states.push_back(
-			{i, {i}, to_string(i), false, map<char, vector<int>>()});
-		new_state_number[bisimilar_nonterminals[i]->state_number] = i;
-	}
-	int initial_state = 0;
-	for (int i = 0; i < bisimilar_nonterminals.size(); i++) {
-		for (vector<GrammarItem*> rule : bisimilar_rules[i]) {
-			if (rule.size() ==
-				1) { // особый случай терминального и начального состояния
-				if (rule[0]->term_name == "\0") states[i].is_terminal = true;
-				if (rule[0]->term_name == "init") initial_state = i;
-				continue;
-			} else if (rule.size() ==
-					   2) { // случай Н -> Т Н (устанавливаем переход)
-				states[i].set_transition(
-					new_state_number[rule[1]->state_number],
-					rule[0]->term_name[0]);
-				continue;
-			}
-		}
-	}
-
-	return FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	vector<int> classes;
+	for (const auto& nont : nonterminals)
+		classes.push_back(nont->class_number);
+	return merge_equivalent_classes(classes);
 }
 
 bool FiniteAutomat::bisimilar(const FiniteAutomat& fa1,
@@ -876,14 +890,15 @@ void update_bijective_Classes(
 	int classNum = 0;
 	checker.clear();
 	for (const auto& elem : classes_check_map) {
-		checker.insert(elem.second[0]->state_number);
+		checker.insert(elem.second[0]->state_index);
 		for (GrammarItem* nont : elem.second) {
 			nont->class_number = classNum;
 		}
 		classNum++;
 	}
 }
-// работает аналогично check_classes, только в случае (A->a1 B->a1 B->a1) A и B будут иметь разные классы
+// работает аналогично check_classes, только в случае (A->a1 B->a1 B->a1)
+// A и B будут иметь разные классы
 void check_bijective_classes(
 	vector<vector<vector<GrammarItem*>>>& rules,
 	map<multiset<string>, vector<GrammarItem*>>& classes_check_map,
@@ -929,7 +944,7 @@ vector<vector<vector<GrammarItem*>>> get_bijective_bibisimilar_grammar(
 	for (const auto& elem : classes_check_map) {
 		GrammarItem* curNonterm = elem.second[0];
 		vector<vector<GrammarItem*>> temp_rules;
-		for (vector<GrammarItem*> rule : rules[curNonterm->state_number]) {
+		for (vector<GrammarItem*> rule : rules[curNonterm->state_index]) {
 			vector<GrammarItem*> tempRule;
 			for (GrammarItem* item : rule) {
 				if (item->type == GrammarItem::nonterminal) {
@@ -974,14 +989,14 @@ vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
 	for (int i = 0; i < states.size(); i++) {
 		for (const auto& elem : states[i].transitions) {
 			for (int j = 0; j < elem.second.size(); j++) {
-				int transInd =
-					elem.second[j]; // индекс состояния, в которое идет переход
+				// индекс состояния, в которое идет переход
+				int transInd = elem.second[j];
 				// смотрим все переходы из этого состояния
 				for (auto transition_elem : states[transInd].transitions) {
 					for (int k = 0; k < transition_elem.second.size(); k++) {
 						int nonterm_ind = fa_items[transInd]
 											  .second[transition_elem.first][k]
-											  .state_number;
+											  .state_index;
 						rules[ind].push_back(
 							{terminals[transInd], nonterminals[nonterm_ind]});
 					}
