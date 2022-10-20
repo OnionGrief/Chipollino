@@ -1,4 +1,4 @@
-#include "FiniteAutomat.h"
+#include "FiniteAutomaton.h"
 #include "Regex.h"
 #include "RegexGenerator.h"
 #include <iostream>
@@ -11,6 +11,10 @@
 class Example {
   public:
 	// Пример построения regex из строки
+	static void determinize();
+	static void remove_eps();
+	static void minimize();
+	static void intersection();
 	static void regex_parsing();
 	static void regex_generating();
 	static void random_regex_parsing();
