@@ -97,11 +97,15 @@ FiniteAutomat FiniteAutomat::determinize() {
 
 	vector<int> label = q0;
 	sort(label.begin(), label.end());
-	State new_initial_state = {0, label,
-							   nfa.states[nfa.initial_state].identifier, false,
+	dfa.initial_state = 0;
+	string new_identifier;
+	for (auto elem : label) {
+		new_identifier +=
+			(new_identifier.empty() ? "" : ", ") + nfa.states[elem].identifier;
+	}
+	State new_initial_state = {0, label, new_identifier, false,
 							   map<char, vector<int>>()};
 	dfa.states.push_back(new_initial_state);
-	dfa.initial_state = 0;
 
 	stack<vector<int>> s1;
 	stack<int> s2;
@@ -277,10 +281,6 @@ FiniteAutomat FiniteAutomat::minimize() {
 			classes[groups[i][j]] = i;
 		}
 	}
-
-	for (int i = 0; i < classes.size(); i++)
-		cout << classes[i] << " ";
-	cout << endl;
 
 	FiniteAutomat minimized_dfa = dfa.merge_equivalent_classes(classes);
 	return minimized_dfa;
