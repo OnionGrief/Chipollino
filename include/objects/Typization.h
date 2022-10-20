@@ -3,6 +3,7 @@
 #include <set>
 #include <map>
 #include <deque>
+#include <optional>
 #include "Regex.h"
 #include "FiniteAutomat.h"
 

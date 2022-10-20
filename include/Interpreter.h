@@ -25,7 +25,6 @@ private:
 	// Тут хранятся объекты по их id
 	map<string, GeneralObject> objects;
 
-
 	// Операция объявления
 	// [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
 	struct Decalaration {
@@ -59,6 +58,23 @@ private:
 
 	// Общий вид опрерации
 	using GeneralOperation = variant<Decalaration, Test, Predicate>;
+
+	// Считывание операции из набора лексем
+	Decalaration scan_declaration(vector<Lexem>); // TODO
+	Test scan_test(vector<Lexem>); // TODO
+	Predicate scan_predicate(vector<Lexem>); // TODO
+	GeneralOperation scan_operation(vector<Lexem>); // TODO
+
+	// Построение последовательности функций по их названиям
+	optional<vector<Function>> build_function_sequence(vector<string> function_names); // TODO
+
+	// Множество всех функций; TODO: инициализировать его в конструкторе Interpreter()
+	set<Function> functions; // TODO: определить operator< для Function
+	// Так предлагается сделать мапинг между названиями функций и сигнатурами
+	// разумеется, генерировать эту мапу можно при инициализации
+	map<string, vector<Function>> names_to_functions;
+	// Заполнение мапы names_to_functions по сету functions
+	void generate_function_mapping(); // TODO
 
 	class Lexer {
 	public:
