@@ -31,9 +31,8 @@ bool State::is_sink() {
 FiniteAutomat::FiniteAutomat() {}
 
 FiniteAutomat::FiniteAutomat(int initial_state, vector<char> alphabet,
-							 vector<State> states, bool deterministic)
-	: initial_state(initial_state), alphabet(alphabet), states(states),
-	  deterministic(deterministic) {}
+							 vector<State> states)
+	: initial_state(initial_state), alphabet(alphabet), states(states) {}
 
 string FiniteAutomat::to_txt() {
 	stringstream ss;
@@ -84,23 +83,18 @@ void FiniteAutomat::get_sink_number() {
 	sink_number = temp;
 }
 
-void FiniteAutomat::is_deterministic() {
-	optional<bool> temp = nullopt;
+bool FiniteAutomat::is_deterministic() {
 	for (int i = 0; i < states.size(); i++) {
 		for (auto elem : states[i].transitions) {
 			if (elem.first == '\0') {
-				temp = false;
+				return false;
 			}
 			if (elem.second.size() > 1) {
-				temp = false;
+				return false;
 			}
 		}
 	}
-	if (temp != nullopt) {
-		deterministic = temp;
-	} else {
-		deterministic = true;
-	}
+	return true;
 }
 
 vector<int> FiniteAutomat::closure(vector<int> x) {
@@ -120,7 +114,7 @@ bool belong(State q, State u) {
 }
 
 FiniteAutomat FiniteAutomat::determinize() {
-	FiniteAutomat ndm(initial_state, alphabet, states, deterministic), dm;
+	FiniteAutomat ndm(initial_state, alphabet, states), dm;
 	vector<int> x = {0};
 	vector<int> q0 = ndm.closure(x);
 
@@ -189,13 +183,12 @@ FiniteAutomat FiniteAutomat::determinize() {
 		}
 	}
 	dm.alphabet = ndm.alphabet;
-	dm.deterministic = true;
 	return dm;
 }
 
 FiniteAutomat FiniteAutomat::remove_eps() {
 	FiniteAutomat endm =
-		FiniteAutomat(initial_state, alphabet, states, deterministic);
+		FiniteAutomat(initial_state, alphabet, states);
 	FiniteAutomat ndm = FiniteAutomat();
 	ndm.states = endm.states;
 
@@ -230,7 +223,6 @@ FiniteAutomat FiniteAutomat::remove_eps() {
 	}
 	ndm.initial_state = endm.initial_state;
 	ndm.alphabet = endm.alphabet;
-	ndm.deterministic = false;
 	return ndm;
 }
 
@@ -258,7 +250,6 @@ FiniteAutomat FiniteAutomat::intersection(const FiniteAutomat& dm1,
 				dm2.states[state.label[1]].transitions.at(ch)[0]);
 		}
 	}
-	dm.deterministic = true;
 	return dm;
 }
 
@@ -286,13 +277,12 @@ FiniteAutomat FiniteAutomat::uunion(const FiniteAutomat& dm1,
 				dm2.states[state.label[1]].transitions.at(ch)[0]);
 		}
 	}
-	dm.deterministic = true;
 	return dm;
 }
 
 FiniteAutomat FiniteAutomat::difference(const FiniteAutomat& dm2) {
 	FiniteAutomat dm1 =
-		FiniteAutomat(initial_state, alphabet, states, deterministic);
+		FiniteAutomat(initial_state, alphabet, states);
 	FiniteAutomat dm = FiniteAutomat();
 	dm.initial_state = 0;
 	dm.alphabet = dm1.alphabet;
@@ -315,13 +305,12 @@ FiniteAutomat FiniteAutomat::difference(const FiniteAutomat& dm2) {
 				dm2.states[state.label[1]].transitions.at(ch)[0]);
 		}
 	}
-	dm.deterministic = true;
 	return dm;
 }
 
 FiniteAutomat FiniteAutomat::complement() {
 	FiniteAutomat dm =
-		FiniteAutomat(initial_state, alphabet, states, deterministic);
+		FiniteAutomat(initial_state, alphabet, states);
 	for (int i = 0; i < dm.states.size(); i++) {
 		dm.states[i].is_terminal = !dm.states[i].is_terminal;
 	}

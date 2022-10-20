@@ -27,7 +27,6 @@ struct State {
 
 class FiniteAutomat : public BaseObject {
   private:
-	optional<bool> deterministic = nullopt;
 	int initial_state = 0;
 	vector<char> alphabet;
 	vector<State> states;
@@ -36,14 +35,14 @@ class FiniteAutomat : public BaseObject {
   public:
 	FiniteAutomat();
 	FiniteAutomat(int initial_state, vector<char> alphabet,
-				  vector<State> states, bool deterministic);
+				  vector<State> states);
 	// визуализация автомата
 	string to_txt() override;
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам
 	vector<int> closure(vector<int>);
 	//
-	void is_deterministic();
+	bool is_deterministic();
 	//
 	void get_sink_number();
 	// детерминизация ДКА
