@@ -52,14 +52,16 @@ string TasksGenerator::generate_declaration() {
 		string input_type = first_func.input[0];
 		while (
 			(!for_static_Tpchkr &&
-			 !((input_type == "DFA" || input_type == "NFA") &&
-			   ids.count("NFA-DFA")) &&
+			 !(input_type == "DFA" && ids.count("NFA-DFA") &&
+			   for_dinamic_Tpchkr) &&
 			 ((input_type == "DFA" && !ids.count("DFA")) ||
-			  (input_type == "NFA") && !ids.count("NFA"))) ||
+			  (input_type == "NFA") &&
+				  !(ids.count("NFA") || ids.count("DFA")))) ||
 			(first_func.output == "Int" && !for_static_Tpchkr && funcNum > 1)) {
 			first_func = rand_func();
 			input_type = first_func.input[0];
 		} //проверить работает ли
+
 
 		func_str += first_func.name;
 
@@ -94,7 +96,8 @@ string TasksGenerator::generate_declaration() {
 				if (first_func.input[i] == "NFA" ||
 					first_func.input[i] == "DFA") {
 					string id_type = first_func.input[i];
-					if (for_dinamic_Tpchkr) id_type = "NFA-DFA";
+					if (for_dinamic_Tpchkr || id_type == "NFA")
+						id_type = "NFA-DFA";
 					vector<id> possible_ids = ids[id_type];
 					int rand_num = rand() % possible_ids.size();
 					id rand_id = possible_ids[rand_num];
@@ -125,7 +128,7 @@ string TasksGenerator::generate_declaration() {
 
 	// запоминаем идентификатор N#
 	ids[prevOutput].push_back({idNum, prevOutput});
-	if (for_dinamic_Tpchkr && (prevOutput == "NFA" || prevOutput == "NFA"))
+	if (prevOutput == "DFA" || prevOutput == "NFA")
 		ids["NFA-DFA"].push_back({idNum, prevOutput});
 
 	if (rand() % 2 && funcNum > 0) str += " !!";
@@ -137,8 +140,8 @@ function TasksGenerator::generate_next_func(string prevOutput, int funcNum) {
 	function str;
 	if (for_static_Tpchkr)
 		str = rand_func();
-	else if (for_dinamic_Tpchkr &&
-			 (prevOutput == "NFA" || prevOutput == "NFA")) {
+	else if ((for_dinamic_Tpchkr && prevOutput == "NFA") ||
+			 prevOutput == "DFA") {
 		vector<function> possible_functions = funcInput["NFA-DFA"];
 		str = possible_functions[rand() % possible_functions.size()];
 		if (str.output == "Int" && funcNum != 0)
