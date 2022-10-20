@@ -12,20 +12,11 @@ int main() {
 
 	states[0].set_transition(0, 'a');
 	states[0].set_transition(1, 'a');
-
 	states[1].set_transition(1, 'b');
 	states[1].set_transition(2, 'a');
-
 	states[1].set_transition(0, 'b');
-
 	states[2].set_transition(1, 'b');
-
 	states[2].is_terminal = true;
-
 	FiniteAutomat NDM(0, {'a', 'b'}, states, false);
-	// cout << NDM.to_txt();
-	string reg = "((a|b)*c)";
-	Regex r;
-	r = nfa_to_regex(NDM);
-	// cout << r.to_txt();
+	cout << nfa_to_regex(NDM).to_txt();
 }
