@@ -231,6 +231,47 @@ void Regex::clear() {
 	}
 }
 
+void Regex::normalize_regex(string file) {
+	struct Rules {
+		Regex from;
+		Regex to;
+	};
+	vector<Rules> allRules;
+	string line;
+	std::ifstream in(file);
+	if (in.is_open()) {
+		while (getline(in, line)) {
+			std::cout << line << std::endl;
+			string v1, v2;
+			int ind = -1;
+			for (char c : line) {
+				if (c == '=') {
+					ind = v1.size();
+					continue;
+				}
+				if (c != ' ') {
+					if (ind == -1) {
+						v1 += c;
+					} else {
+						v2 += c;
+					}
+				}
+			}
+			if (v1 == "" || v2 == "") {
+				cout << "error";
+				return;
+			}
+			Regex a, b;
+			a.from_string(v1);
+			b.from_string(v2);
+			Rules temp = {a, b};
+			allRules.push_back(temp);
+		}
+	}
+	in.close();
+	cout << allRules.size();
+}
+
 void Regex::pre_order_travers() {
 	if (value.symbol) {
 		cout << value.symbol << " ";

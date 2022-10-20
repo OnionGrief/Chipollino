@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseObject.h"
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -55,6 +56,7 @@ class Regex : BaseObject {
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
+	void normalize_regex(string file);
 	Regex* copy();
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
