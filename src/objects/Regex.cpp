@@ -71,8 +71,7 @@ Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
 
-			if (l->type == Regex::error &&
-				r->type == Regex::error) { // Проверка на адекватность)
+			if (l == nullptr || r == nullptr) { // Проверка на адекватность)
 				return p;
 			}
 
@@ -86,7 +85,7 @@ Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
 			return p;
 		}
 	}
-	return p;
+	return nullptr;
 }
 
 Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
@@ -102,7 +101,7 @@ Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
 		if (lexems[i].type == Lexem::star && balance == 0) {
 			Regex* l = expr(lexems, index_start, i);
 
-			if (l->type == Regex::error) {
+			if (l == nullptr) {
 				return p;
 			}
 
@@ -116,7 +115,7 @@ Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
 			return p;
 		}
 	}
-	return p;
+	return nullptr;
 }
 
 Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
@@ -132,10 +131,8 @@ Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
 		if (lexems[i].type == Lexem::alt && balance == 0) {
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
-
-			if (l->type == Regex::error &&
-				r->type == Regex::error) { // Проверка на адекватность)
-				return p;
+			if ((l == nullptr) || (r == nullptr)) { // Проверка на адекватность)
+				return nullptr;
 			}
 
 			p = new Regex;
@@ -149,13 +146,14 @@ Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
 			return p;
 		}
 	}
-	return p;
+	return nullptr;
 }
 
 Regex* Regex::scan_symb(vector<Lexem> lexems, int index_start, int index_end) {
 	Regex* p = nullptr;
-	if (lexems[index_start].type != Lexem::symb) {
-		return p;
+	if (lexems.size() <= (index_start) ||
+		lexems[index_start].type != Lexem::symb) {
+		return nullptr;
 	}
 	p = new Regex;
 	p->value = lexems[index_start];
@@ -166,9 +164,10 @@ Regex* Regex::scan_symb(vector<Lexem> lexems, int index_start, int index_end) {
 Regex* Regex::scan_par(vector<Lexem> lexems, int index_start, int index_end) {
 	Regex* p = nullptr;
 
-	if (lexems[index_start].type != Lexem::parL ||
-		lexems[index_end - 1].type != Lexem::parR) {
-		return p;
+	if (lexems.size() <= (index_end - 1) ||
+		(lexems[index_start].type != Lexem::parL ||
+		 lexems[index_end - 1].type != Lexem::parR)) {
+		return nullptr;
 	}
 	p = expr(lexems, index_start + 1, index_end - 1);
 	return p;
@@ -188,18 +187,16 @@ Regex* Regex::expr(vector<Lexem> lexems, int index_start, int index_end) {
 	if (!p) {
 		p = scan_par(lexems, index_start, index_end);
 	}
-	if (!p) {
-		p = new Regex;
-		p->type = Regex::error;
-	}
-
 	return p;
 }
 Regex::Regex() {}
 
-Regex::Regex(string str) {
+bool Regex::from_string(string str) {
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
+	if (root == nullptr) {
+		return true;
+	}
 	*this = *root;
 	if (term_l != nullptr) {
 		term_l->term_p = this;
@@ -208,9 +205,7 @@ Regex::Regex(string str) {
 		term_r->term_p = this;
 	}
 	delete root;
-	if (type == Regex::error) {
-		cout << l.size() << " ERROR\n";
-	}
+	return false;
 }
 
 Regex* Regex::copy() {
@@ -255,15 +250,20 @@ string Regex::to_txt() {
 }
 
 bool Regex::equal(Regex* r1, Regex* r2) {
-	if(r1 == nullptr && r2 == nullptr) return true;
-	if(r1 == nullptr || r2 == nullptr) return true;
+	if (r1 == nullptr && r2 == nullptr) return true;
+	if (r1 == nullptr || r2 == nullptr) return true;
 	int r1_value, r2_value;
-	if (r1->value.symbol) r1_value = (int)r1->value.symbol;
-	else r1_value = r1->type;
-	if (r2->value.symbol) r2_value = (int)r2->value.symbol;
-	else r2_value = r2->type;
+	if (r1->value.symbol)
+		r1_value = (int)r1->value.symbol;
+	else
+		r1_value = r1->type;
+	if (r2->value.symbol)
+		r2_value = (int)r2->value.symbol;
+	else
+		r2_value = r2->type;
 
-	if(r1_value != r2_value) return false;
+	if (r1_value != r2_value) return false;
 
-	return equal(r1->term_l, r2->term_l) && equal(r1->term_r, r2->term_r) || equal(r1->term_r, r2->term_l) && equal(r1->term_l, r2->term_r);
+	return equal(r1->term_l, r2->term_l) && equal(r1->term_r, r2->term_r) ||
+		   equal(r1->term_r, r2->term_l) && equal(r1->term_l, r2->term_r);
 }
