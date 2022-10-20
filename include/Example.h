@@ -1,5 +1,6 @@
 #include "FiniteAutomat.h"
 #include "Regex.h"
+#include "arden.h"
 #include <iostream>
 /*
 Это статический класс, где вы можете писать примеры использования функций и,
@@ -8,4 +9,5 @@ class Example {
   public:
 	//Пример построения regex из строки
 	static void regex_parsing();
+	static void arden_test();
 };
