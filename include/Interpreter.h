@@ -6,7 +6,10 @@
 #include <map>
 #include <deque>
 #include "Regex.h"
+#include "Typization.h"
 #include "FiniteAutomat.h"
+
+using namespace Typization;
 
 class Interpreter {
 public:
@@ -16,55 +19,16 @@ public:
 		auto lexems = s.load_file("test.txt");
 	}
 private:
-	// Перечисление типов объектов
-	enum class ObjectType {
-		NFA,      // недетерминированный КА
-		DFA,      // детерминированный КА
-		Regex,    // регулярное выражение
-		Int,      // целое число
-		Value,    // строковое значение
-		FileName, // имя файла для чтения
-		Boolean   // true/false
-	};
-
-	// Структуры объектов для хранения в интерпретаторе
-	template <ObjectType T, class V>
-	struct ObjectHolder {
-		V value;
-		ObjectType type() { return  T };
-	};
-
-	// Универсальный объект
-	using GeneralObject = variant<
-		ObjectHolder<ObjectType::NFA, FiniteAutomat>,
-		ObjectHolder<ObjectType::DFA, FiniteAutomat>,
-		ObjectHolder<ObjectType::Regex, Regex>,
-		ObjectHolder<ObjectType::Int, int>,
-		ObjectHolder<ObjectType::Value, string>,
-		ObjectHolder<ObjectType::FileName, string>,
-		ObjectHolder<ObjectType::Boolean, bool>
-	>;
+	// Применение функции к набору аргументов
+	GeneralObject apply_function(Function, vector<ObjectType>); // TODO
 
 	// Тут хранятся объекты по их id
 	map<string, GeneralObject> objects;
 
-	// Функция, состоит из имени и сигнатуры
-	// Предикат - тоже функция, но на выходе boolean
-	struct Function {
-		// Имя функции
-		string name;
-		// Типы воходных аргументов
-		vector<ObjectType> input;
-		// Тип выходного аргументов
-		vector<ObjectType> output;
-	};
-	
-	// Применение функции к набору аргументов
-	GeneralObject apply_function(Function, vector<ObjectType>); // TODO
 
 	// Операция объявления
 	// [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
-	struct DecalarationOp {
+	struct Decalaration {
 		// Идентификатор, в который запишется объект
 		string  id;
 		// Композиция функций
@@ -92,6 +56,9 @@ private:
 		// Параметры
 		vector<GeneralObject> parameters;
 	};
+
+	// Общий вид опрерации
+	using GeneralOperation = variant<Decalaration, Test, Predicate>;
 
 	class Lexer {
 	public:
