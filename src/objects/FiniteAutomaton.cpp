@@ -25,6 +25,12 @@ FiniteAutomaton::FiniteAutomaton(int initial_state, Language* language,
 	: initial_state(initial_state), language(language), states(states),
 	  is_deterministic(is_deterministic) {}
 
+FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
+	: initial_state(other.initial_state), language(other.language),
+	  states(other.states), is_deterministic(other.is_deterministic) {
+	cout << "Copying..." << endl;
+}
+
 string FiniteAutomaton::to_txt() {
 	stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
