@@ -34,7 +34,7 @@ string FiniteAutomat::to_txt() {
 	ss << "dummy -> " << states[initial_state].index << "\n";
 
 	for (int i = 0; i < states.size(); i++) {
-		for (const auto& elem: states[i].transitions) {
+		for (const auto& elem : states[i].transitions) {
 			for (int transition : elem.second) {
 				ss << "\t" << states[i].index << " -> " << transition;
 				if (elem.first == '\0')
@@ -513,6 +513,9 @@ bool FiniteAutomat::bisimilar(const FiniteAutomat& fa1,
 	rules.insert(rules.end(), fa2_bisimilar_rules.begin(),
 				 fa2_bisimilar_rules.end());
 
+	for (GrammarItem* nont : nonterminals)
+		nont->class_number = 0; // сбрасываю номера классов
+
 	vector<GrammarItem*> bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
 		get_bisimilar_grammar(rules, nonterminals, bisimilar_nonterminals);
@@ -536,7 +539,8 @@ void update_bijective_Classes(
 		classNum++;
 	}
 }
-// работает аналогично check_classes, только в случае (A->a1 B->a1 B->a1) A и B будут иметь разные классы
+// работает аналогично check_classes, только в случае (A->a1 B->a1 B->a1) A и B
+// будут иметь разные классы
 void check_bijective_classes(
 	vector<vector<vector<GrammarItem*>>>& rules,
 	map<multiset<string>, vector<GrammarItem*>>& classes_check_map,
@@ -690,13 +694,15 @@ bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
 	if (transitions1_nonterminals.size() != transitions2_nonterminals.size())
 		return false;
 	// for(int i = 0; i < fa1_terminals.size(); i++) if(*fa1_terminals[i] !=
-	// *fa2_terminals[i]) return false; биективная бисимуляция состояний
+	// *fa2_terminals[i]) return false;
+	// биективная бисимуляция состояний
 	vector<GrammarItem*> nonterminals(fa1_nonterminals);
 	nonterminals.insert(nonterminals.end(), fa2_nonterminals.begin(),
 						fa2_nonterminals.end());
 	vector<vector<vector<GrammarItem*>>> rules(fa1_rules);
 	rules.insert(rules.end(), fa2_rules.begin(), fa2_rules.end());
-
+	for (GrammarItem* nont : nonterminals)
+		nont->class_number = 0; // сбрасываю номера классов
 	vector<GrammarItem*> bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
 		get_bijective_bibisimilar_grammar(rules, nonterminals,
@@ -718,7 +724,8 @@ bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
 	transitions_rules.insert(transitions_rules.end(),
 							 transitions2_rules.begin(),
 							 transitions2_rules.end());
-
+	for (GrammarItem* nont : transitions_nonterminals)
+		nont->class_number = 0; // сбрасываю номера классов
 	vector<GrammarItem*> transitions_bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> transitions_bisimilar_rules =
 		get_bijective_bibisimilar_grammar(transitions_rules,
