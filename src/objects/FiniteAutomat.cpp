@@ -34,7 +34,7 @@ string FiniteAutomat::to_txt() {
 	ss << "dummy -> " << states[initial_state].index << "\n";
 
 	for (int i = 0; i < states.size(); i++) {
-		for (const auto& elem: states[i].transitions) {
+		for (const auto& elem : states[i].transitions) {
 			for (int transition : elem.second) {
 				ss << "\t" << states[i].index << " -> " << transition;
 				if (elem.first == '\0')
@@ -287,10 +287,7 @@ FiniteAutomat FiniteAutomat::complement() {
 }
 // структуры и функции для работы с грамматикой
 struct GrammarItem {
-	enum Type {
-		terminal,
-		nonterminal
-	};
+	enum Type { terminal, nonterminal };
 	Type type;
 	int state_number, class_number;
 	string term_name;
@@ -536,7 +533,8 @@ void update_bijective_Classes(
 		classNum++;
 	}
 }
-// работает аналогично check_classes, только в случае (A->a1 B->a1 B->a1) A и B будут иметь разные классы
+// работает аналогично check_classes, только в случае (A->a1 B->a1 B->a1) A и B
+// будут иметь разные классы
 void check_bijective_classes(
 	vector<vector<vector<GrammarItem*>>>& rules,
 	map<multiset<string>, vector<GrammarItem*>>& classes_check_map,
