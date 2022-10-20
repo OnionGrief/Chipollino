@@ -1,14 +1,16 @@
 #pragma once
 #include "BaseObject.h"
 #include <iostream>
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-#include <map>
+#include <optional>
 using namespace std;
 
 struct Lexem {
-	enum Type {
+	enum Type
+	{
 		error,
 		parL, // (
 		parR, // )
@@ -26,7 +28,8 @@ struct Lexem {
 
 class Regex : BaseObject {
   private:
-	enum Type {
+	enum Type
+	{
 		// Epsilon
 		eps,
 		// Binary:
@@ -52,22 +55,35 @@ class Regex : BaseObject {
 	Regex* scan_symb(vector<Lexem>, int, int);
 	Regex* scan_par(vector<Lexem>, int, int);
 
+	// Принадлежит ли эпсилон языку регулярки
 	bool is_eps_possible();
-	void get_prefix(int len, std::set<std::string>* prefs);
+	// Множество префиксов длины len
+	void get_prefix(int len, std::set<std::string>* prefs) const;
+	// Производная по символу
+	bool derevative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
+										Regex* result) const;
+	// Производная по префиксу
+	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
+										Regex* result) const;
 
-public:
+  public:
 	Regex();
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
-	Regex* copy();
+	~Regex();
+	Regex* copy() const;
+	Regex(const Regex&);
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(Regex* r1, Regex* r2);
 
-	bool derevative_with_respect_to_sym(Regex* respected_sym, Regex* reg_e, Regex* result);
-	bool derevative_with_respect_to_str(std::string str, Regex* reg_e, Regex* result);
-	int pump_length(Regex* reg_e);
+	// Производная по символу
+	std::optional<Regex> symbol_derevative(const Regex &respected_sym) const;
+	// Производная по префиксу
+	std::optional<Regex> prefix_derevative(std::string respected_str) const;
+	// Длина накачки
+	int pump_length() const;
 
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc

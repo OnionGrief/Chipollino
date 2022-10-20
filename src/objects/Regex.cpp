@@ -208,16 +208,21 @@ bool Regex::from_string(string str) {
 	return false;
 }
 
-Regex* Regex::copy() {
+Regex* Regex::copy() const {
 	Regex* c = new Regex();
 	c->type = type;
 	c->value = value;
-	if (type != Type::eps && type != Regex::symb) {
+	if (type != Regex::eps && type != Regex::symb) {
 		c->term_l = term_l->copy();
-		if (type != Regex::conc) c->term_r = term_r->copy();
+		if (type != Regex::star) c->term_r = term_r->copy();
 	}
 	return c;
 }
+
+Regex::Regex(const Regex& reg)
+	: type(reg.type), value(reg.value),
+	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
+	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
 
 void Regex::clear() {
 	if (term_l != nullptr) {
@@ -228,6 +233,10 @@ void Regex::clear() {
 		term_r->clear();
 		delete term_r;
 	}
+}
+
+Regex::~Regex() {
+	clear();
 }
 
 void Regex::pre_order_travers() {
@@ -265,7 +274,7 @@ bool Regex::is_eps_possible() {
 	}
 }
 
-void Regex::get_prefix(int len, std::set<std::string>* prefs) {
+void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 	std::set<std::string>* prefs1, * prefs2;
 	switch (type)
 	{
@@ -335,7 +344,7 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) {
 	}
 }
 
-bool Regex::derevative_with_respect_to_sym(Regex* respected_sym, Regex* reg_e, Regex* result) {
+bool Regex::derevative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e, Regex* result) const{
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
 		std::cout << "Invalid input: unexpected regex instead of symbol\n";
 		return false;
@@ -387,7 +396,7 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym, Regex* reg_e, R
 	}
 }
 
-bool Regex::derevative_with_respect_to_str(std::string str, Regex* reg_e, Regex* result) {
+bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e, Regex* result) const {
 	bool success = true;
 	auto cur = reg_e->copy();
 	Regex* next;
@@ -407,11 +416,36 @@ bool Regex::derevative_with_respect_to_str(std::string str, Regex* reg_e, Regex*
 	return success;
 }
 
-int Regex::pump_length(Regex* reg_e) {
+// Производная по символу
+std::optional<Regex> Regex::symbol_derevative(const Regex& respected_sym) const{
+	auto rs = respected_sym.copy();
+	Regex* result = new Regex;
+	std::optional<Regex> ans;
+	if (derevative_with_respect_to_sym(rs, this, result))
+		ans = *result;
+	else
+		ans = nullopt;
+	delete rs;
+	delete result;
+	return ans;
+}
+// Производная по префиксу
+std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
+	Regex* result = new Regex;
+	std::optional<Regex> ans;
+	if (derevative_with_respect_to_str(respected_str, this, result))
+		ans = *result;
+	else
+		ans = nullopt;
+	delete result;
+	return ans;
+}
+// Длина накачки
+int Regex::pump_length() const {
 	std::map<std::string, bool> checked_prefixes;
 	for (int i = 0; i < 10; i++) {
 		std::set<std::string> prefs;
-		reg_e->get_prefix(i, &prefs);
+		get_prefix(i, &prefs);
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
 			bool was = false;
 			for (int j = 0; j < it->size(); j++) {
@@ -432,7 +466,7 @@ int Regex::pump_length(Regex* reg_e) {
 					pumping.term_l = new Regex;
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
-					derevative_with_respect_to_str(*it, reg_e,
+					derevative_with_respect_to_str(*it, this,
 												   pumping.term_r);
 					if (true) { // TODO: check if pumping language belongs reg_e language 
 						checked_prefixes[*it] = true;
