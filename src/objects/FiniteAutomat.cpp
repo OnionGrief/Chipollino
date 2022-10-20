@@ -768,6 +768,33 @@ bool FiniteAutomat::semdet() {
 		}
 		return ans;
 	};
+	std::vector<int> final_states;
+	for (int i = 0; i < states.size(); i++) {
+		if (states[i].is_terminal) final_states.push_back(i);
+	}
+	bool semdet_state = true;
+	for (int i = 0; i < states.size(); i++) {
+		auto prefix = get_prefix(0, i, was);
+		was.clear();
+		if (!prefix.has_value()) continue;
+		// Получение языка из производной регулярки автомата по префиксу:
+		//		this -> regex (arden?)
+		//		derevative = regex.prefix_derevative(prefix)
+		//		derevative -> language
+		// Парсинг полученного языка на языки состояний,
+		// т.е. языки которые ведут к конкретному финальному состоянию:
+		//		language -> state_language[]
+		// Проверка существования языка состояния, включающего в себя все остальные:
+		// bool answer = true;
+		// for (int i = 0; i < state_langueage[].size(); i++) {
+		//		for (int j = 0; j < i; j++) {
+		//			answer &= state_language[i].contains(state_language[j]);
+		//		}
+		// } 
+		// semdet_state &= answer
+		//
+	}
+	return semdet_state;
 }
 
 bool FiniteAutomat::subset(const FiniteAutomat& fa) {
