@@ -90,8 +90,7 @@ Interpreter::Lexer::Lexem Interpreter::Lexer::scan_regex() {
 	// TODO: сохранять regex куда-нибудь
 	input.save();
 	string word = scan_until_space();
-	auto regex = Regex(word);
-	if (regex.is_error()) {
+	if (Regex().from_string(word)) {
 		input.restore();
 		return Lexem(Lexem::error);
 	}

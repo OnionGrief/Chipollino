@@ -220,10 +220,6 @@ Regex* Regex::copy() {
 	return c;
 }
 
-bool Regex::is_error() {
-	return type == error;
-}
-
 void Regex::clear() {
 	if (term_l != nullptr) {
 		term_l->clear();
