@@ -72,8 +72,8 @@ Interpreter::Lexer::Lexem Interpreter::Lexer::scan_function() {
 }
 
 Interpreter::Lexer::Lexem Interpreter::Lexer::scan_id() {
-	// TODO: сделать проверки на корректность имени, чтобы не
-	// начиналось с цифры, не было коллизий с именами функций
+	// TODO: СЃРґРµР»Р°С‚СЊ РїСЂРѕРІРµСЂРєРё РЅР° РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚СЊ РёРјРµРЅРё, С‡С‚РѕР±С‹ РЅРµ
+	// РЅР°С‡РёРЅР°Р»РѕСЃСЊ СЃ С†РёС„СЂС‹, РЅРµ Р±С‹Р»Рѕ РєРѕР»Р»РёР·РёР№ СЃ РёРјРµРЅР°РјРё С„СѓРЅРєС†РёР№
 	string id_name = scan_until_space();
 	cout << "ID " << id_name << "\n";
 	return Lexem(Lexem::id, id_name);
@@ -87,7 +87,7 @@ Interpreter::Lexer::Lexem Interpreter::Lexer::scan_dot() {
 }
 
 Interpreter::Lexer::Lexem Interpreter::Lexer::scan_regex() {
-	// TODO: сохранять regex куда-нибудь
+	// TODO: СЃРѕС…СЂР°РЅСЏС‚СЊ regex РєСѓРґР°-РЅРёР±СѓРґСЊ
 	input.save();
 	string word = scan_until_space();
 	if (Regex().from_string(word)) {
@@ -150,7 +150,7 @@ Interpreter::Lexer::Lexer() {}
 
 vector<vector<Interpreter::Lexer::Lexem>> Interpreter::Lexer::load_file(string path) {
 	ifstream input_file(path);
-	// Сюда будем записывать строки из лексем
+	// РЎСЋРґР° Р±СѓРґРµРј Р·Р°РїРёСЃС‹РІР°С‚СЊ СЃС‚СЂРѕРєРё РёР· Р»РµРєСЃРµРј
 	vector<vector<Lexem>> lexem_lines = {};
 	string str = "";
 	while (getline(input_file, str)) {
