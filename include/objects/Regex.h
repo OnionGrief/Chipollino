@@ -1,8 +1,8 @@
 #pragma once
 #include "BaseObject.h"
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 using namespace std;
 
 struct Lexem {
@@ -23,10 +23,10 @@ struct Lexem {
 };
 
 class Regex : BaseObject {
-private:
+  private:
 	enum Type {
-		// Error
-		error,
+		// Epsilon
+		eps,
 		// Binary:
 		alt,
 		conc,
@@ -36,7 +36,7 @@ private:
 		symb
 	};
 
-	Type type = error;
+	Type type;
 	Lexem value;
 	Regex* term_p = nullptr;
 	Regex* term_l = nullptr;
@@ -50,14 +50,15 @@ private:
 	Regex* scan_symb(vector<Lexem>, int, int);
 	Regex* scan_par(vector<Lexem>, int, int);
 
-public:
+  public:
 	Regex();
-	Regex(string);
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
 	Regex* copy();
-	bool is_error();
+	bool from_string(string);
+	// проверка регулярок на равентсво(буквальное)
+	static bool equal(Regex* r1, Regex* r2);
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 };

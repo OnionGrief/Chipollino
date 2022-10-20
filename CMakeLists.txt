@@ -13,6 +13,7 @@ set(SOURCES
 	src/objects/Integer.cpp
     src/Interpreter.Lexer.cpp
 	src/objects/Regex.cpp
+	src/Example.cpp
     src/main.cpp
 )
 
