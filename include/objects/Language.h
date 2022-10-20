@@ -6,6 +6,8 @@
 using namespace std;
 
 using alphabet_symbol = char;
+alphabet_symbol epsilon();
+bool is_epsilon(alphabet_symbol as);
 
 class Language {
   private:
