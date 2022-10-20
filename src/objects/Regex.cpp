@@ -91,7 +91,8 @@ vector<Lexem> Regex::parse_string(string str) {
 	return lexems;
 }
 
-Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
+Regex* Regex::scan_conc(const vector<Lexem>& lexems, int index_start,
+						int index_end) {
 	Regex* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
@@ -123,7 +124,8 @@ Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
 	return nullptr;
 }
 
-Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
+Regex* Regex::scan_star(const vector<Lexem>& lexems, int index_start,
+						int index_end) {
 	Regex* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
@@ -153,7 +155,8 @@ Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
 	return nullptr;
 }
 
-Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
+Regex* Regex::scan_alt(const vector<Lexem>& lexems, int index_start,
+					   int index_end) {
 	Regex* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
@@ -187,7 +190,8 @@ Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
 	return nullptr;
 }
 
-Regex* Regex::scan_symb(vector<Lexem> lexems, int index_start, int index_end) {
+Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
+						int index_end) {
 	Regex* p = nullptr;
 	if (lexems.size() <= (index_start) ||
 		lexems[index_start].type != Lexem::symb) {
@@ -199,7 +203,8 @@ Regex* Regex::scan_symb(vector<Lexem> lexems, int index_start, int index_end) {
 	return p;
 }
 
-Regex* Regex::scan_eps(vector<Lexem> lexems, int index_start, int index_end) {
+Regex* Regex::scan_eps(const vector<Lexem>& lexems, int index_start,
+					   int index_end) {
 	Regex* p = nullptr;
 	// cout << lexems[index_start].type << "\n";
 	if (lexems.size() <= (index_start) ||
@@ -212,7 +217,8 @@ Regex* Regex::scan_eps(vector<Lexem> lexems, int index_start, int index_end) {
 	return p;
 }
 
-Regex* Regex::scan_par(vector<Lexem> lexems, int index_start, int index_end) {
+Regex* Regex::scan_par(const vector<Lexem>& lexems, int index_start,
+					   int index_end) {
 	Regex* p = nullptr;
 
 	if (lexems.size() <= (index_end - 1) ||
@@ -223,7 +229,8 @@ Regex* Regex::scan_par(vector<Lexem> lexems, int index_start, int index_end) {
 	p = expr(lexems, index_start + 1, index_end - 1);
 	return p;
 }
-Regex* Regex::expr(vector<Lexem> lexems, int index_start, int index_end) {
+Regex* Regex::expr(const vector<Lexem>& lexems, int index_start,
+				   int index_end) {
 	Regex* p;
 	p = scan_alt(lexems, index_start, index_end);
 	if (!p) {
