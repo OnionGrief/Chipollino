@@ -1,4 +1,4 @@
-#include "FiniteAutomat.h"
+#include "FiniteAutomaton.h"
 #include <algorithm>
 #include <iostream>
 #include <set>
@@ -17,14 +17,14 @@ void State::set_transition(int to, char symbol) {
 	transitions[symbol].push_back(to);
 }
 
-FiniteAutomat::FiniteAutomat() {}
+FiniteAutomaton::FiniteAutomaton() {}
 
-FiniteAutomat::FiniteAutomat(int initial_state, vector<char> alphabet,
+FiniteAutomaton::FiniteAutomaton(int initial_state, vector<char> alphabet,
 							 vector<State> states, bool is_deterministic)
 	: initial_state(initial_state), alphabet(alphabet), states(states),
 	  is_deterministic(is_deterministic) {}
 
-string FiniteAutomat::to_txt() {
+string FiniteAutomaton::to_txt() {
 	stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
 	for (int i = 0; i < states.size(); i++) {
@@ -72,7 +72,7 @@ void dfs(vector<State> states, vector<char> alphabet, int index,
 	}
 }
 
-vector<int> FiniteAutomat::closure(const vector<int>& indices,
+vector<int> FiniteAutomaton::closure(const vector<int>& indices,
 								   bool use_epsilons_only) {
 	vector<int> reachable;
 	for (int i = 0; i < indices.size(); i++)
@@ -89,9 +89,9 @@ bool belong(State q, State u) {
 	return true;
 }
 
-FiniteAutomat FiniteAutomat::determinize() {
-	FiniteAutomat nfa(initial_state, alphabet, states, is_deterministic);
-	FiniteAutomat dfa = FiniteAutomat();
+FiniteAutomaton FiniteAutomaton::determinize() {
+	FiniteAutomaton nfa(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomaton dfa = FiniteAutomaton();
 	vector<int> x = {0};
 	vector<int> q0 = nfa.closure(x, true);
 
@@ -174,10 +174,10 @@ FiniteAutomat FiniteAutomat::determinize() {
 	return dfa;
 }
 
-FiniteAutomat FiniteAutomat::minimize() {
-	FiniteAutomat nfa =
-		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
-	FiniteAutomat dfa = nfa.determinize();
+FiniteAutomaton FiniteAutomaton::minimize() {
+	FiniteAutomaton nfa =
+		FiniteAutomaton(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomaton dfa = nfa.determinize();
 	vector<bool> table(dfa.states.size() * dfa.states.size());
 	int counter = 1;
 	for (int i = 1; i < dfa.states.size(); i++) {
@@ -282,14 +282,14 @@ FiniteAutomat FiniteAutomat::minimize() {
 		}
 	}
 
-	FiniteAutomat minimized_dfa = dfa.merge_equivalent_classes(classes);
+	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
 	return minimized_dfa;
 }
 
-FiniteAutomat FiniteAutomat::remove_eps() {
-	FiniteAutomat enfa =
-		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
-	FiniteAutomat nfa = FiniteAutomat();
+FiniteAutomaton FiniteAutomaton::remove_eps() {
+	FiniteAutomaton enfa =
+		FiniteAutomaton(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomaton nfa = FiniteAutomaton();
 	nfa.states = enfa.states;
 
 	for (auto& state : nfa.states) {
@@ -327,9 +327,9 @@ FiniteAutomat FiniteAutomat::remove_eps() {
 	return nfa;
 }
 
-FiniteAutomat FiniteAutomat::intersection(const FiniteAutomat& dfa1,
-										  const FiniteAutomat& dfa2) {
-	FiniteAutomat new_dfa = FiniteAutomat();
+FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
+										  const FiniteAutomaton& dfa2) {
+	FiniteAutomaton new_dfa = FiniteAutomaton();
 	new_dfa.initial_state = 0;
 	new_dfa.alphabet = dfa1.alphabet;
 	int counter = 0;
@@ -357,9 +357,9 @@ FiniteAutomat FiniteAutomat::intersection(const FiniteAutomat& dfa1,
 	return new_dfa.determinize();
 }
 
-FiniteAutomat FiniteAutomat::uunion(const FiniteAutomat& dfa1,
-									const FiniteAutomat& dfa2) {
-	FiniteAutomat new_dfa = FiniteAutomat();
+FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
+									const FiniteAutomaton& dfa2) {
+	FiniteAutomaton new_dfa = FiniteAutomaton();
 	new_dfa.initial_state = 0;
 	new_dfa.alphabet = dfa1.alphabet;
 	int counter = 0;
@@ -386,10 +386,10 @@ FiniteAutomat FiniteAutomat::uunion(const FiniteAutomat& dfa1,
 	return new_dfa.determinize();
 }
 
-FiniteAutomat FiniteAutomat::difference(const FiniteAutomat& dfa2) {
-	FiniteAutomat dfa1 =
-		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
-	FiniteAutomat new_dfa = FiniteAutomat();
+FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2) {
+	FiniteAutomaton dfa1 =
+		FiniteAutomaton(initial_state, alphabet, states, is_deterministic);
+	FiniteAutomaton new_dfa = FiniteAutomaton();
 	new_dfa.initial_state = 0;
 	new_dfa.alphabet = dfa1.alphabet;
 	int counter = 0;
@@ -416,17 +416,17 @@ FiniteAutomat FiniteAutomat::difference(const FiniteAutomat& dfa2) {
 	return new_dfa.determinize();
 }
 
-FiniteAutomat FiniteAutomat::complement() {
-	FiniteAutomat dfa =
-		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+FiniteAutomaton FiniteAutomaton::complement() {
+	FiniteAutomaton dfa =
+		FiniteAutomaton(initial_state, alphabet, states, is_deterministic);
 	for (int i = 0; i < dfa.states.size(); i++) {
 		dfa.states[i].is_terminal = !dfa.states[i].is_terminal;
 	}
 	return dfa;
 }
-FiniteAutomat FiniteAutomat::reverse() {
-	FiniteAutomat enfa =
-		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+FiniteAutomaton FiniteAutomaton::reverse() {
+	FiniteAutomaton enfa =
+		FiniteAutomaton(initial_state, alphabet, states, is_deterministic);
 	for (auto& state : enfa.states) {
 		state.index += 1;
 	}
@@ -456,9 +456,9 @@ FiniteAutomat FiniteAutomat::reverse() {
 	return enfa;
 }
 
-FiniteAutomat FiniteAutomat::add_trap_state() {
-	FiniteAutomat dfa =
-		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+FiniteAutomaton FiniteAutomaton::add_trap_state() {
+	FiniteAutomaton dfa =
+		FiniteAutomaton(initial_state, alphabet, states, is_deterministic);
 	bool flag = true;
 	int count = dfa.states.size();
 	for (int i = 0; i < count; i++) {
@@ -485,9 +485,9 @@ FiniteAutomat FiniteAutomat::add_trap_state() {
 	return dfa;
 }
 
-FiniteAutomat FiniteAutomat::remove_trap_state() {
-	FiniteAutomat dfa =
-		FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+FiniteAutomaton FiniteAutomaton::remove_trap_state() {
+	FiniteAutomaton dfa =
+		FiniteAutomaton(initial_state, alphabet, states, is_deterministic);
 	int count = dfa.states.size();
 	for (int i = 0; i < count; i++) {
 		bool flag = false;
@@ -526,7 +526,7 @@ FiniteAutomat FiniteAutomat::remove_trap_state() {
 	return dfa;
 }
 
-FiniteAutomat FiniteAutomat::merge_equivalent_classes(vector<int> classes) {
+FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(vector<int> classes) {
 	map<int, vector<int>>
 		class_to_index; // нужен для подсчета количества классов
 	for (int i = 0; i < classes.size(); i++)
@@ -564,7 +564,7 @@ FiniteAutomat FiniteAutomat::merge_equivalent_classes(vector<int> classes) {
 		if (states[elem.second[0]].is_terminal)
 			new_states[elem.first].is_terminal = true;
 
-	return FiniteAutomat(classes[initial_state], alphabet, new_states,
+	return FiniteAutomaton(classes[initial_state], alphabet, new_states,
 						 is_deterministic);
 }
 // структуры и функции для работы с грамматикой
@@ -715,7 +715,7 @@ vector<vector<vector<GrammarItem*>>> fa_to_grammar(
 	return rules;
 }
 
-FiniteAutomat FiniteAutomat::merge_bisimilar() {
+FiniteAutomaton FiniteAutomaton::merge_bisimilar() {
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
 	vector<GrammarItem*> terminals;
@@ -756,11 +756,11 @@ FiniteAutomat FiniteAutomat::merge_bisimilar() {
 		}
 	}
 
-	return FiniteAutomat(initial_state, alphabet, states, is_deterministic);
+	return FiniteAutomaton(initial_state, alphabet, states, is_deterministic);
 }
 
-bool FiniteAutomat::bisimilar(const FiniteAutomat& fa1,
-							  const FiniteAutomat& fa2) {
+bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
+							  const FiniteAutomaton& fa2) {
 	// грамматики из автоматов
 	vector<GrammarItem> fa1_items;
 	vector<GrammarItem*> fa1_nonterminals;
@@ -934,7 +934,7 @@ vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
 	return rules;
 }
 
-bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
+bool FiniteAutomaton::equal(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 	// проверка равенства количества состояний
 	if (fa1.states.size() != fa2.states.size()) return false;
 	// грамматики из состояний автоматов
@@ -1024,13 +1024,13 @@ bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
 	return true;
 }
 
-bool FiniteAutomat::equivalent(const FiniteAutomat& fa1,
-							   const FiniteAutomat& fa2) {
+bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
+							   const FiniteAutomaton& fa2) {
 	return false;
 }
 
-bool FiniteAutomat::subset(const FiniteAutomat& fa) {
-	/*FiniteAutomat fa_instersection(FiniteAutomat::intersection(*this, fa));
+bool FiniteAutomaton::subset(const FiniteAutomaton& fa) {
+	/*FiniteAutomaton fa_instersection(FiniteAutomaton::intersection(*this, fa));
 	cout << fa_instersection.to_txt() << endl;*/
 	return false;
 }

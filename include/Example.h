@@ -1,4 +1,4 @@
-#include "FiniteAutomat.h"
+#include "FiniteAutomaton.h"
 #include "Regex.h"
 #include <iostream>
 
