@@ -32,7 +32,7 @@ class FiniteAutomaton : public BaseObject {
   public:
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, vector<char> alphabet,
-				  vector<State> states, bool is_deterministic = false);
+					vector<State> states, bool is_deterministic = false);
 	// визуализация автомата
 	string to_txt() override;
 	// поиск множества состояний НКА, достижимых из множества состояний по
@@ -47,10 +47,11 @@ class FiniteAutomaton : public BaseObject {
 	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&,
-									  const FiniteAutomaton&);
+										const FiniteAutomaton&);
 	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия
 	// языков L1 и L2)
-	static FiniteAutomaton uunion(const FiniteAutomaton&, const FiniteAutomaton&);
+	static FiniteAutomaton uunion(const FiniteAutomaton&,
+								  const FiniteAutomaton&);
 	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
 	FiniteAutomaton difference(const FiniteAutomaton&);
@@ -69,12 +70,13 @@ class FiniteAutomaton : public BaseObject {
 	// объединение эквивалентных по бисимуляции состояний
 	FiniteAutomaton merge_bisimilar();
 	// проверка автоматов на эквивалентность
-	static bool equivalent(const FiniteAutomaton&, const FiniteAutomaton&); // TODO
+	static bool equivalent(const FiniteAutomaton&,
+						   const FiniteAutomaton&); // TODO
 	// проверка автоматов на равентсво(буквальное)
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на вложенность (аргумент вложен в this)
 	bool subset(const FiniteAutomaton&); // TODO
-									   // и тд
+										 // и тд
 };

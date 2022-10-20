@@ -20,7 +20,7 @@ void State::set_transition(int to, char symbol) {
 FiniteAutomaton::FiniteAutomaton() {}
 
 FiniteAutomaton::FiniteAutomaton(int initial_state, vector<char> alphabet,
-							 vector<State> states, bool is_deterministic)
+								 vector<State> states, bool is_deterministic)
 	: initial_state(initial_state), alphabet(alphabet), states(states),
 	  is_deterministic(is_deterministic) {}
 
@@ -73,7 +73,7 @@ void dfs(vector<State> states, vector<char> alphabet, int index,
 }
 
 vector<int> FiniteAutomaton::closure(const vector<int>& indices,
-								   bool use_epsilons_only) {
+									 bool use_epsilons_only) {
 	vector<int> reachable;
 	for (int i = 0; i < indices.size(); i++)
 		dfs(states, alphabet, indices[i], reachable, use_epsilons_only);
@@ -328,7 +328,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps() {
 }
 
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
-										  const FiniteAutomaton& dfa2) {
+											  const FiniteAutomaton& dfa2) {
 	FiniteAutomaton new_dfa = FiniteAutomaton();
 	new_dfa.initial_state = 0;
 	new_dfa.alphabet = dfa1.alphabet;
@@ -358,7 +358,7 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
 }
 
 FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
-									const FiniteAutomaton& dfa2) {
+										const FiniteAutomaton& dfa2) {
 	FiniteAutomaton new_dfa = FiniteAutomaton();
 	new_dfa.initial_state = 0;
 	new_dfa.alphabet = dfa1.alphabet;
@@ -565,14 +565,11 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(vector<int> classes) {
 			new_states[elem.first].is_terminal = true;
 
 	return FiniteAutomaton(classes[initial_state], alphabet, new_states,
-						 is_deterministic);
+						   is_deterministic);
 }
 // структуры и функции для работы с грамматикой
 struct GrammarItem {
-	enum Type {
-		terminal,
-		nonterminal
-	};
+	enum Type { terminal, nonterminal };
 	Type type;
 	int state_index, class_number;
 	string term_name;
@@ -760,7 +757,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() {
 }
 
 bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
-							  const FiniteAutomaton& fa2) {
+								const FiniteAutomaton& fa2) {
 	// грамматики из автоматов
 	vector<GrammarItem> fa1_items;
 	vector<GrammarItem*> fa1_nonterminals;
@@ -934,7 +931,8 @@ vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
 	return rules;
 }
 
-bool FiniteAutomaton::equal(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
+bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
+							const FiniteAutomaton& fa2) {
 	// проверка равенства количества состояний
 	if (fa1.states.size() != fa2.states.size()) return false;
 	// грамматики из состояний автоматов
@@ -1025,12 +1023,12 @@ bool FiniteAutomaton::equal(const FiniteAutomaton& fa1, const FiniteAutomaton& f
 }
 
 bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
-							   const FiniteAutomaton& fa2) {
+								 const FiniteAutomaton& fa2) {
 	return false;
 }
 
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa) {
-	/*FiniteAutomaton fa_instersection(FiniteAutomaton::intersection(*this, fa));
-	cout << fa_instersection.to_txt() << endl;*/
+	/*FiniteAutomaton fa_instersection(FiniteAutomaton::intersection(*this,
+	fa)); cout << fa_instersection.to_txt() << endl;*/
 	return false;
 }
