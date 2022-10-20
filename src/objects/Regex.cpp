@@ -275,12 +275,10 @@ bool Regex::is_eps_possible() {
 }
 
 void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
-	std::set<std::string>* prefs1, * prefs2;
-	switch (type)
-	{
+	std::set<std::string>*prefs1, *prefs2;
+	switch (type) {
 	case Type::eps:
-		if (len == 0)
-			prefs->insert("");
+		if (len == 0) prefs->insert("");
 		return;
 	case Type::symb:
 		if (len == 1) {
@@ -344,7 +342,9 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 	}
 }
 
-bool Regex::derevative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e, Regex* result) const{
+bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
+										   const Regex* reg_e,
+										   Regex* result) const {
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
 		std::cout << "Invalid input: unexpected regex instead of symbol\n";
 		return false;
@@ -369,34 +369,39 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 	case Type::alt:
 		result = new Regex();
 		result->type = Type::alt;
-		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l, result->term_l);
-		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_r, result->term_r);
+		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+												 result->term_l);
+		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_r,
+												 result->term_r);
 		return answer;
 	case Type::conc:
 		subresult = new Regex();
 		subresult->type = Type::conc;
-		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l, subresult->term_l);
+		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+												 subresult->term_l);
 		subresult->term_r = reg_e->copy();
 		if (reg_e->term_l->is_eps_possible()) {
 			result = new Regex();
 			result->type = Type::alt;
 			result->term_l = subresult;
-			answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_r, result->term_r);
-		}
-		else {
+			answer &= derevative_with_respect_to_sym(
+				respected_sym, reg_e->term_r, result->term_r);
+		} else {
 			result = subresult;
 		}
 		return answer;
 	case Type::star:
 		result = new Regex();
 		result->type = Type::conc;
-		bool answer = derevative_with_respect_to_sym(respected_sym, reg_e->term_l, result->term_l);
+		bool answer = derevative_with_respect_to_sym(
+			respected_sym, reg_e->term_l, result->term_l);
 		result->term_r = reg_e->copy();
 		return answer;
 	}
 }
 
-bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e, Regex* result) const {
+bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
+										   Regex* result) const {
 	bool success = true;
 	auto cur = reg_e->copy();
 	Regex* next;
@@ -417,7 +422,8 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e, 
 }
 
 // Производная по символу
-std::optional<Regex> Regex::symbol_derevative(const Regex& respected_sym) const{
+std::optional<Regex> Regex::symbol_derevative(
+	const Regex& respected_sym) const {
 	auto rs = respected_sym.copy();
 	Regex* result = new Regex;
 	std::optional<Regex> ans;
@@ -466,9 +472,9 @@ int Regex::pump_length() const {
 					pumping.term_l = new Regex;
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
-					derevative_with_respect_to_str(*it, this,
-												   pumping.term_r);
-					if (true) { // TODO: check if pumping language belongs reg_e language 
+					derevative_with_respect_to_str(*it, this, pumping.term_r);
+					if (true) { // TODO: check if pumping language belongs reg_e
+								// language
 						checked_prefixes[*it] = true;
 						return i;
 					}
@@ -480,15 +486,20 @@ int Regex::pump_length() const {
 }
 
 bool Regex::equal(Regex* r1, Regex* r2) {
-	if(r1 == nullptr && r2 == nullptr) return true;
-	if(r1 == nullptr || r2 == nullptr) return true;
+	if (r1 == nullptr && r2 == nullptr) return true;
+	if (r1 == nullptr || r2 == nullptr) return true;
 	int r1_value, r2_value;
-	if (r1->value.symbol) r1_value = (int)r1->value.symbol;
-	else r1_value = r1->type;
-	if (r2->value.symbol) r2_value = (int)r2->value.symbol;
-	else r2_value = r2->type;
+	if (r1->value.symbol)
+		r1_value = (int)r1->value.symbol;
+	else
+		r1_value = r1->type;
+	if (r2->value.symbol)
+		r2_value = (int)r2->value.symbol;
+	else
+		r2_value = r2->type;
 
-	if(r1_value != r2_value) return false;
+	if (r1_value != r2_value) return false;
 
-	return equal(r1->term_l, r2->term_l) && equal(r1->term_r, r2->term_r) || equal(r1->term_r, r2->term_l) && equal(r1->term_l, r2->term_r);
+	return equal(r1->term_l, r2->term_l) && equal(r1->term_r, r2->term_r) ||
+		   equal(r1->term_r, r2->term_l) && equal(r1->term_l, r2->term_r);
 }

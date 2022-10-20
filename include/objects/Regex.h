@@ -2,15 +2,14 @@
 #include "BaseObject.h"
 #include <iostream>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
-#include <optional>
 using namespace std;
 
 struct Lexem {
-	enum Type
-	{
+	enum Type {
 		error,
 		parL, // (
 		parR, // )
@@ -28,8 +27,7 @@ struct Lexem {
 
 class Regex : BaseObject {
   private:
-	enum Type
-	{
+	enum Type {
 		// Epsilon
 		eps,
 		// Binary:
@@ -60,7 +58,8 @@ class Regex : BaseObject {
 	// Множество префиксов длины len
 	void get_prefix(int len, std::set<std::string>* prefs) const;
 	// Производная по символу
-	bool derevative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
+	bool derevative_with_respect_to_sym(Regex* respected_sym,
+										const Regex* reg_e,
 										Regex* result) const;
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
@@ -79,7 +78,7 @@ class Regex : BaseObject {
 	static bool equal(Regex* r1, Regex* r2);
 
 	// Производная по символу
-	std::optional<Regex> symbol_derevative(const Regex &respected_sym) const;
+	std::optional<Regex> symbol_derevative(const Regex& respected_sym) const;
 	// Производная по префиксу
 	std::optional<Regex> prefix_derevative(std::string respected_str) const;
 	// Длина накачки
