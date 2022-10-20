@@ -8,6 +8,7 @@ bool compare(expression_arden a, expression_arden b) {
 
 vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 	vector<expression_arden> out;
+
 	for (int i = 0; i < in.size(); i++) {
 		int j = i + 1;
 		bool cond = false;
@@ -28,12 +29,46 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		out.push_back(in[i]);
 		if (cond) {
 
-			i = j;
+			i = j - 1;
 		}
-	} /*
-	 for (int i = 0; i < out.size(); i++) {
-		 cout << out[i].temp_regex.to_txt();
-	 }*/
+	}
+
+	return out;
+}
+
+vector<expression_arden> arden(vector<expression_arden> in, int index) {
+	vector<expression_arden> out;
+	int indexcur = -1;
+	for (int i = 0; (i < in.size() && indexcur == -1); i++) {
+		if (in[i].condition == index) {
+			indexcur = i;
+		}
+	}
+	if (indexcur == -1) {
+		return in;
+	}
+	if (in.size() < 2) {
+		Regex r;
+		r.regex_star(in[0].temp_regex);
+		expression_arden temp;
+		temp.temp_regex = r;
+		temp.condition = -1;
+		out.push_back(temp);
+		return out;
+	}
+	for (int i = 0; i < in.size(); i++) {
+		if (i != indexcur) {
+			Regex r;
+			r.regex_star(in[indexcur].temp_regex);
+			Regex k;
+			k.regex_union(in[i].temp_regex, r);
+			expression_arden temp;
+			temp.temp_regex = k;
+			temp.condition = in[i].condition;
+			out.push_back(temp);
+		}
+	}
+	// cout << "arden";
 	return out;
 }
 Regex nfa_to_regex(FiniteAutomat in) {
@@ -63,8 +98,7 @@ Regex nfa_to_regex(FiniteAutomat in) {
 	}
 	//сортируем
 	for (int i = data.size() - 1; i >= 0; i--) {
-		sort(data[i].begin(), data[i].end(), compare);
-		data[i] = arden_minimize(data[i]);
+
 		vector<expression_arden> tempdata;
 		for (int j = 0; j < data[i].size(); j++) {
 			if (data[i][j].condition > i) {
@@ -76,19 +110,26 @@ Regex nfa_to_regex(FiniteAutomat in) {
 								  data[i][j].temp_regex);
 					temp.temp_regex = r;
 					temp.condition = data[data[i][j].condition][k].condition;
-					// cout << r.to_txt() << "\n";
 					tempdata.push_back(temp);
 				}
 			} else {
 				tempdata.push_back(data[i][j]);
 			}
 		}
-		for (int j = 0; j < tempdata.size(); j++) {
 
-			cout << tempdata[j].condition << "-"
-				 << tempdata[j].temp_regex.to_txt() << " ";
-		}
+		sort(data[i].begin(), data[i].end(), compare);
 		data[i] = tempdata;
+		data[i] = arden_minimize(data[i]);
+
+		data[i] = arden(data[i], i);
+
+		cout << "\n";
+		for (int j = 0; j < data[i].size(); j++) {
+
+			cout << data[i][j].condition << "-"
+				 << data[i][j].temp_regex.to_txt() << " ";
+		}
+
 		cout << "\n";
 	}
 	Regex f;

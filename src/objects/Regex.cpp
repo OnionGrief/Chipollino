@@ -212,6 +212,10 @@ void Regex::regex_union(Regex a, Regex b) {
 	term_l = a.copy();
 	term_r = b.copy();
 }
+void Regex::regex_star(Regex a) {
+	type = Type::star;
+	term_l = a.copy();
+}
 Regex* Regex::copy() {
 	Regex* c = new Regex();
 	c->type = type;
