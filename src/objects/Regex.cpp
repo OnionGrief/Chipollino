@@ -1,4 +1,5 @@
 #include "Regex.h"
+#include <set>
 
 Lexem::Lexem(Type type, char symbol) : type(type), symbol(symbol) {}
 
@@ -52,8 +53,41 @@ vector<Lexem> Regex::parse_string(string str) {
 			lexems.push_back({Lexem::conc});
 		}
 
+		if (lexems.size() &&
+			((lexems.back().type == Lexem::parL &&
+			  (lexem.type == Lexem::parR || lexem.type == Lexem::alt)) ||
+			 (lexems.back().type == Lexem::alt && lexem.type == Lexem::parR))) {
+			//  We place eps between
+			lexems.push_back({Lexem::eps});
+		}
+
 		lexems.push_back(lexem);
 	}
+
+	if (lexems.size() && lexems[0].type == Lexem::alt) {
+		lexems.insert(lexems.begin(), {Lexem::eps});
+	}
+
+	if (lexems.back().type == Lexem::alt) {
+		lexems.push_back({Lexem::eps});
+	}
+
+	int balance = 0;
+	for (size_t i = 0; i < lexems.size(); i++) {
+		if (lexems[i].type == Lexem::parL) {
+			balance++;
+		}
+		if (lexems[i].type == Lexem::parR) {
+			balance--;
+		}
+	}
+
+	if (balance != 0) {
+		lexems = {};
+		lexems.push_back({Lexem::error});
+		return lexems;
+	}
+
 	return lexems;
 }
 
@@ -71,7 +105,8 @@ Regex* Regex::scan_conc(vector<Lexem> lexems, int index_start, int index_end) {
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
 
-			if (l == nullptr || r == nullptr) { // Проверка на адекватность)
+			if (l == nullptr || r == nullptr || r->type == Regex::eps ||
+				l->type == Regex::eps) { // Проверка на адекватность)
 				return p;
 			}
 
@@ -101,7 +136,7 @@ Regex* Regex::scan_star(vector<Lexem> lexems, int index_start, int index_end) {
 		if (lexems[i].type == Lexem::star && balance == 0) {
 			Regex* l = expr(lexems, index_start, i);
 
-			if (l == nullptr) {
+			if (l == nullptr || l->type == Regex::eps) {
 				return p;
 			}
 
@@ -131,8 +166,10 @@ Regex* Regex::scan_alt(vector<Lexem> lexems, int index_start, int index_end) {
 		if (lexems[i].type == Lexem::alt && balance == 0) {
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
-
-			if ((l == nullptr) || (r == nullptr)) { // Проверка на адекватность)
+			// cout << l->type << " " << r->type << "\n";
+			if (((l == nullptr) || (r == nullptr)) ||
+				(l->type == Regex::eps &&
+				 r->type == Regex::eps)) { // Проверка на адекватность)
 				return nullptr;
 			}
 
@@ -162,6 +199,19 @@ Regex* Regex::scan_symb(vector<Lexem> lexems, int index_start, int index_end) {
 	return p;
 }
 
+Regex* Regex::scan_eps(vector<Lexem> lexems, int index_start, int index_end) {
+	Regex* p = nullptr;
+	// cout << lexems[index_start].type << "\n";
+	if (lexems.size() <= (index_start) ||
+		lexems[index_start].type != Lexem::eps) {
+		return nullptr;
+	}
+	p = new Regex;
+	p->value = lexems[index_start];
+	p->type = Regex::eps;
+	return p;
+}
+
 Regex* Regex::scan_par(vector<Lexem> lexems, int index_start, int index_end) {
 	Regex* p = nullptr;
 
@@ -186,6 +236,9 @@ Regex* Regex::expr(vector<Lexem> lexems, int index_start, int index_end) {
 		p = scan_symb(lexems, index_start, index_end);
 	}
 	if (!p) {
+		p = scan_eps(lexems, index_start, index_end);
+	}
+	if (!p) {
 		p = scan_par(lexems, index_start, index_end);
 	}
 	return p;
@@ -195,8 +248,8 @@ Regex::Regex() {}
 bool Regex::from_string(string str) {
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
-	if (root == nullptr) {
-		return true;
+	if (root == nullptr || root->type == eps) {
+		return false;
 	}
 	*this = *root;
 	if (term_l != nullptr) {
@@ -206,7 +259,7 @@ bool Regex::from_string(string str) {
 		term_r->term_p = this;
 	}
 	delete root;
-	return false;
+	return true;
 }
 
 Regex* Regex::copy() {
