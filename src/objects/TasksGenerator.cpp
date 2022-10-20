@@ -24,17 +24,47 @@ string TasksGenerator::generate_task(int opNum, int maxLength_,
 
 string TasksGenerator::generate_op() {
 	string str = "";
-	int op = rand() % 3;
-	op = 0; // пока что
+	int op = rand() % 5; // на объявление - вероятность 3 / 5;
+						 // на test и предикаты 1 / 5
 	if (op == 0) {
+		str = "t/f";
+	} else if (op == 1) {
+		str = generate_test();
+	} else {
 		str = generate_declaration();
 	}
-	if (op == 1) {
-		str = "Test";
+	return str;
+}
+
+string TasksGenerator::generate_predicate() {
+	string str = "";
+	return str;
+}
+
+string TasksGenerator::generate_test() {
+	string str = "";
+	str += "Test ";
+
+	if (rand() % 2 && ids.count("NFA-DFA")) {
+		vector<id> possible_ids = ids["NFA-DFA"];
+		id rand_id = possible_ids[rand() % possible_ids.size()];
+		str += "N" + to_string(rand_id.num);
+	} else if (rand() % 2 && ids.count("Regex")) {
+		vector<id> possible_ids = ids["Regex"];
+		id rand_id = possible_ids[rand() % possible_ids.size()];
+		str += "N" + to_string(rand_id.num);
+	} else {
+		RegexGenerator rand_regex;
+		str += rand_regex.to_txt();
 	}
-	if (op == 2) {
-		str = "t/f";
-	}
+
+	// regex без альтернатив... надо наверно сделать
+	RegexGenerator rand_regex;
+	str += " " + rand_regex.to_txt();
+
+	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
+	str += " " + to_string(rand_num);
+
 	return str;
 }
 
@@ -61,7 +91,6 @@ string TasksGenerator::generate_declaration() {
 			first_func = rand_func();
 			input_type = first_func.input[0];
 		} //проверить работает ли
-
 
 		func_str += first_func.name;
 

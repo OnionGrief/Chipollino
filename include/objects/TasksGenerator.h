@@ -76,6 +76,8 @@ class TasksGenerator : BaseObject {
 	string generate_task(int, int, bool, bool);
 	string generate_op();
 	string generate_declaration();
+	string generate_predicate();
+	string generate_test();
 	function rand_func();
 };
 
