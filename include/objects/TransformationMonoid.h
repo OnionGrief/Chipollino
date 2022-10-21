@@ -31,14 +31,15 @@ class TransformationMonoid : public BaseObject {
 
   public:
 	TransformationMonoid();
-	TransformationMonoid(FiniteAutomaton* in);
+	TransformationMonoid(FiniteAutomaton* in,
+						 int transferlen); //Автомат и макс длина перехода
 	vector<Term> get_Equalence_Classes();
 	vector<Term> get_Equalence_Classes_VW(Term w);
 	vector<Term> get_Equalence_Classes_WV(Term w);
 	vector<TermDouble> get_Equalence_Classes_VWV(Term w);
 	map<string, vector<string>> get_Rewriting_Rules();
-	string get_Equalence_Classes_Txt();
-	string get_Rewriting_Rules_Txt();
+	string get_Equalence_Classes_Txt(); //вывод эквивалентных классов
+	string get_Rewriting_Rules_Txt(); //вывод правил переписывания
 	string to_txt() override;
 	int is_Synchronized(Term w);
 	int class_Card();

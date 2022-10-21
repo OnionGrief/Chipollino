@@ -59,38 +59,43 @@ string rewriting(string in, map<string, vector<string>> rules) {
 	}
 	string out = "";
 	bool cond = true;
-	for (int i = 0; i < in.size() - 1; i++) {
-		string temp = "";
-		temp += in[i];
-		temp += in[i + 1];
-		if ((rules.count(temp)) && (rules.at(temp)[0] != temp)) {
-			cond = false;
-			out += rules.at(temp)[0];
-		} else {
-			if (i != 0) {
-				out += temp[1];
-			} else {
-				out += temp[0];
+	for (int k = 2; cond && (k < in.size()); k++) {
+		for (int i = 0; cond && (i < in.size() - k + 1); i++) {
+			string temp = "";
+			for (int y = 0; y < k; y++) {
+				temp += in[i + y];
+			}
+			cout << temp << " ";
+			if ((rules.count(temp)) && (rules.at(temp)[0] != temp)) {
+				cond = false;
+				cout << "rulesat " << rules.at(temp)[0] << "\n";
+				// out += rules.at(temp)[0];
 			}
 		}
 	}
+
 	if (cond) {
 		out = in;
 	} else {
 		out = rewriting(out, rules);
 	}
-	return out;
+	return "";
 }
 
-TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
+TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
+										   int transferlen) {
 	automat = in;
-	for (int i = 1; i <= 3; i++) {
+	for (int i = 1; i <= transferlen; i++) {
 		vector<string> various = get_comb_alphabet(i, automat->get_alphabet());
 		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
 		{
 
 			Term current;
+			cout << various[j] << " 1 \n";
 			current.name = rewriting(various[j], rules);
+
+			cout << current.name << " 2 \n";
+
 			//вставить переписывание слова
 
 			for (int t = 0; t < automat->get_states_size();
@@ -139,6 +144,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 				terms.push_back(current);
 			} else {
 				if (!rules.count(current.name) && current.name != eqv) {
+					cout << current.name << " dad\n";
 					rules[current.name].push_back(eqv);
 				}
 				//	cout	<<	current.name	<<	"->"	<<
