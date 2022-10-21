@@ -1,14 +1,21 @@
-#include "FiniteAutomat.h"
+#include "FiniteAutomaton.h"
 #include "Regex.h"
 #include <iostream>
 
 /*
-Это статический класс, где вы можете писать примеры
-использования функций и, соответственно, их тестить.
-Чтобы оставлять чистым main
+Р­С‚Рѕ СЃС‚Р°С‚РёС‡РµСЃРєРёР№ РєР»Р°СЃСЃ, РіРґРµ РІС‹ РјРѕР¶РµС‚Рµ РїРёСЃР°С‚СЊ РїСЂРёРјРµСЂС‹
+РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ С„СѓРЅРєС†РёР№ Рё, СЃРѕРѕС‚РІРµС‚СЃС‚РІРµРЅРЅРѕ, РёС… С‚РµСЃС‚РёС‚СЊ.
+Р§С‚РѕР±С‹ РѕСЃС‚Р°РІР»СЏС‚СЊ С‡РёСЃС‚С‹Рј main
 */
 class Example {
   public:
-	// Пример построения regex из строки
+	// РџСЂРёРјРµСЂ РїРѕСЃС‚СЂРѕРµРЅРёСЏ regex РёР· СЃС‚СЂРѕРєРё
+	static void determinize();
+	static void remove_eps();
+	static void minimize();
+	static void intersection();
 	static void regex_parsing();
+	static void fa_equal_check();
+	static void fa_bisimilar_check();
+	static void fa_merge_bisimilar();
 };
