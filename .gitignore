@@ -3,3 +3,4 @@ build/
 .vs/
 /CMakeSettings.json
 /enc_temp_folder/
+resources/
