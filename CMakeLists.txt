@@ -13,6 +13,7 @@ set(SOURCES
 	src/objects/Integer.cpp
 	src/objects/Regex.cpp
 	src/objects/Language.cpp
+	src/AlphabetSymbol.cpp
 	src/Example.cpp
     src/main.cpp
 )

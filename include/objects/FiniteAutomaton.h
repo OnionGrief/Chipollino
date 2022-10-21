@@ -1,4 +1,5 @@
 #pragma once
+#include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include <iostream>
 #include <map>
@@ -9,7 +10,6 @@
 using namespace std;
 
 class Language;
-using alphabet_symbol = char;
 
 struct State {
 	int index;

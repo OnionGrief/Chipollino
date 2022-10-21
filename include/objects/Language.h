@@ -1,23 +1,18 @@
 #pragma once
+#include "AlphabetSymbol.h"
 #include "FiniteAutomaton.h"
 #include "Regex.h"
 #include <optional>
 #include <vector>
-using namespace std;
-
-using alphabet_symbol = char;
-alphabet_symbol epsilon();
-bool is_epsilon(alphabet_symbol);
-string to_string(alphabet_symbol);
 
 class Language {
   private:
 	vector<alphabet_symbol> alphabet;
 	optional<int> pump_length;
 	optional<FiniteAutomaton> min_dfa;
-	// классы эквивалентности в минимального дка
-	// синтаксический моноид
-	// аппроксимации минимальных НКА и регулярок
+	// классы эквивалентности в минимального дка TODO
+	// синтаксический моноид TODO
+	// аппроксимации минимальных НКА и регулярок TODO
   public:
 	Language();
 	Language(vector<alphabet_symbol> alphabet);
