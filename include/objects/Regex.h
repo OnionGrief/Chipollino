@@ -1,4 +1,5 @@
 #pragma once
+#include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
 #include <algorithm>
@@ -10,6 +11,8 @@
 #include <vector>
 
 using namespace std;
+
+class Language;
 
 struct Lexem {
 	enum Type {
@@ -42,7 +45,7 @@ class Regex : BaseObject {
 		// Terminal:
 		symb
 	};
-
+	Language* language = nullptr;
 	Type type;
 	Lexem value;
 	Regex* term_p = nullptr;
@@ -75,9 +78,9 @@ class Regex : BaseObject {
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
-	FiniteAutomat to_tompson(int);
-	FiniteAutomat to_glushkov();
-	FiniteAutomat to_ilieyu();
+	FiniteAutomaton to_tompson(int);
+	FiniteAutomaton to_glushkov();
+	FiniteAutomaton to_ilieyu();
 	vector<Lexem>* first_state();
 	int L();
 	vector<Lexem>* end_state();

@@ -343,16 +343,16 @@ string Regex::to_txt() {
 	return str1 + symb + str2;
 }
 
-FiniteAutomat Regex::to_tompson(int max_index) {
-	string str;		 //идентификатор состояния
-	FiniteAutomat a; // новый автомат
+FiniteAutomaton Regex::to_tompson(int max_index) {
+	string str;		   //идентификатор состояния
+	FiniteAutomaton a; // новый автомат
 	vector<State> s = {}; //вектор состояний нового автомата
-	vector<char> alfa = {}; //алфавит новго автомата
-	map<char, vector<int>> m, p, map_l, map_r; // словари автоматов
+	vector<alphabet_symbol> alfa = {}; //алфавит новго автомата
+	map<alphabet_symbol, vector<int>> m, p, map_l, map_r; // словари автоматов
 	vector<int> trans; // новые транзишены
 	int offset; // сдвиг для старых индексов состояний в новом автомате
-	FiniteAutomat al; // левый автомат относительно операции
-	FiniteAutomat ar; // левый автомат относительно операции
+	FiniteAutomaton al; // левый автомат относительно операции
+	FiniteAutomaton ar; // левый автомат относительно операции
 	set<char> alfas; // множество алфавита для удаления дубликатов в нем
 	switch (type) {
 	case Regex::alt: // |
@@ -417,7 +417,7 @@ FiniteAutomat Regex::to_tompson(int max_index) {
 		alfas = set(alfa.begin(), alfa.end());
 		alfa.assign(alfas.begin(), alfas.end());
 
-		a = FiniteAutomat(0, alfa, s, false);
+		a = FiniteAutomaton(0, alfa, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	case Regex::conc: // .
@@ -488,7 +488,7 @@ FiniteAutomat Regex::to_tompson(int max_index) {
 		alfas = set(alfa.begin(), alfa.end());
 		alfa.assign(alfas.begin(), alfas.end());
 
-		a = FiniteAutomat(0, alfa, s, false);
+		a = FiniteAutomaton(0, alfa, s, false);
 		a.max_index = max_index;
 		return a;
 	case Regex::star: // *
@@ -529,7 +529,7 @@ FiniteAutomat Regex::to_tompson(int max_index) {
 		alfa.assign(alfas.begin(), alfas.end());
 		// alfa.erase( unique( alfa.begin(), alfa.end() ), alfa.end() );
 
-		a = FiniteAutomat(0, alfa, s, false);
+		a = FiniteAutomaton(0, alfa, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	case Regex::eps:
@@ -540,7 +540,7 @@ FiniteAutomat Regex::to_tompson(int max_index) {
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
-		a = FiniteAutomat(0, {}, s, false);
+		a = FiniteAutomaton(0, {}, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	default:
@@ -552,11 +552,11 @@ FiniteAutomat Regex::to_tompson(int max_index) {
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
-		a = FiniteAutomat(0, {value.symbol}, s, false);
+		a = FiniteAutomaton(0, {value.symbol}, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	}
-	return FiniteAutomat();
+	return FiniteAutomaton();
 }
 int Regex::L() {
 	int l;
@@ -724,7 +724,7 @@ bool Regex::is_term(int number, vector<Lexem> list) {
 	}
 	return false;
 }
-FiniteAutomat Regex::to_glushkov() {
+FiniteAutomaton Regex::to_glushkov() {
 
 	vector<Regex*> list = this->pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
@@ -767,11 +767,11 @@ FiniteAutomat Regex::to_glushkov() {
 		string s = elem.symbol + to_string(i + 1);
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
 	}
-	return FiniteAutomat(0, alph, st, false);
+	return FiniteAutomaton(0, alph, st, false);
 }
 
-FiniteAutomat Regex::to_ilieyu() {
-	FiniteAutomat glushkov = this->to_glushkov();
+FiniteAutomaton Regex::to_ilieyu() {
+	FiniteAutomaton glushkov = this->to_glushkov();
 	vector<State> states = glushkov.states;
 	vector<int> follow;
 	for (size_t i = 0; i < states.size(); i++) {
@@ -833,7 +833,7 @@ FiniteAutomat Regex::to_ilieyu() {
 		new_states[i].index = i;
 	}
 
-	return FiniteAutomat(0, glushkov.alphabet, new_states, false);
+	return FiniteAutomaton(0, glushkov.alphabet, new_states, false);
 }
 bool Regex::is_eps_possible() {
 	switch (type) {

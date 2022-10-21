@@ -9,6 +9,8 @@
 #include <vector>
 using namespace std;
 
+class Regex;
+
 class Language;
 
 struct State {
@@ -31,6 +33,7 @@ class FiniteAutomaton : public BaseObject {
 	Language* language = nullptr;
 	vector<State> states;
 	bool is_deterministic = 0;
+	int max_index = 0;
 
   public:
 	FiniteAutomaton();
@@ -83,4 +86,5 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на вложенность (аргумент вложен в this)
 	bool subset(const FiniteAutomaton&); // TODO
 										 // и тд
+	friend class Regex;
 };
