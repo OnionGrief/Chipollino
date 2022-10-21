@@ -22,7 +22,7 @@ struct State {
 	void set_transition(int, char);
 };
 
-class FiniteAutomat : public BaseObject {
+class FiniteAutomaton : public BaseObject {
   private:
 	bool is_deterministic = 0;
 	int initial_state = 0;
@@ -30,41 +30,53 @@ class FiniteAutomat : public BaseObject {
 	vector<State> states;
 
   public:
-	FiniteAutomat();
-	FiniteAutomat(int initial_state, vector<char> alphabet,
-				  vector<State> states, bool is_deterministic = false);
+	FiniteAutomaton();
+	FiniteAutomaton(int initial_state, vector<char> alphabet,
+					vector<State> states, bool is_deterministic = false);
 	// визуализация автомата
 	string to_txt() override;
 	// поиск множества состояний НКА, достижимых из множества состояний по
-	// eps-переходам
-	vector<int> closure(vector<int>);
+	// eps-переходам (если флаг установлен в 0 - по всем переходам)
+	vector<int> closure(const vector<int>&, bool);
 	// детерминизация ДКА
-	FiniteAutomat determinize();
+	FiniteAutomaton determinize();
 	// построение eps-замыкания
-	FiniteAutomat remove_eps();
-	// минимизация ДКА
-	FiniteAutomat minimize();
+	FiniteAutomaton remove_eps();
+	// минимизация ДКА (по Майхиллу-Нероуда)
+	FiniteAutomaton minimize();
 	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
-	static FiniteAutomat intersection(const FiniteAutomat&,
-									  const FiniteAutomat&);
+	static FiniteAutomaton intersection(const FiniteAutomaton&,
+										const FiniteAutomaton&);
 	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия
 	// языков L1 и L2)
-	static FiniteAutomat uunion(const FiniteAutomat&, const FiniteAutomat&);
+	static FiniteAutomaton uunion(const FiniteAutomaton&,
+								  const FiniteAutomaton&);
 	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
-	FiniteAutomat difference(const FiniteAutomat&);
+	FiniteAutomaton difference(const FiniteAutomaton&);
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
-	FiniteAutomat complement();
+	FiniteAutomaton complement();
+	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
+	FiniteAutomaton reverse();
+	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
+	// себя)
+	FiniteAutomaton add_trap_state();
+	// удаление ловушки
+	FiniteAutomaton remove_trap_state();
+	// объединение эквивалентных классов (принимает на вход вектор размера
+	// states.size()) [i] элемент хранит номер класса [i] состояния
+	FiniteAutomaton merge_equivalent_classes(vector<int>);
 	// объединение эквивалентных по бисимуляции состояний
-	FiniteAutomat merge_bisimilar();
+	FiniteAutomaton merge_bisimilar();
 	// проверка автоматов на эквивалентность
-	static bool equivalent(const FiniteAutomat&, const FiniteAutomat&); // TODO
+	static bool equivalent(const FiniteAutomaton&,
+						   const FiniteAutomaton&); // TODO
 	// проверка автоматов на равентсво(буквальное)
-	static bool equal(const FiniteAutomat&, const FiniteAutomat&);
+	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на бисимилярность
-	static bool bisimilar(const FiniteAutomat&, const FiniteAutomat&);
+	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на вложенность (аргумент вложен в this)
-	bool subset(const FiniteAutomat&); // TODO
-	// и тд
+	bool subset(const FiniteAutomaton&); // TODO
+										 // и тд
 };
