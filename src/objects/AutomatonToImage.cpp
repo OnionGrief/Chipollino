@@ -2,10 +2,19 @@
 #include <iostream>
 using namespace std;
 
-void AutomatToImage::to_image(string automat){
-    string s = "echo";
-    string end = "| dot -Tpng > ../../resources/image/output.png";
-    s += automat;
-    s += end;
-    system(s.c_str());
+AutomatonToImage::AutomatonToImage() {}
+
+AutomatonToImage::~AutomatonToImage() {}
+
+void AutomatonToImage::to_image(string automat){
+    char cmd[1024];
+    sprintf(cmd, "dot -Tpng \"./../resources/input.dot\" > ./../resources/output.png && del \"./../resources/input.dot\"");
+    FILE * fo;
+    fo = fopen("./../resources/input.dot", "wt");
+    fprintf(fo, automat.c_str());
+    fclose(fo);
+    system(cmd);
+    
 }
+
+string AutomatonToImage::to_txt() {}

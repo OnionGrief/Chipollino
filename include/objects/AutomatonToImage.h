@@ -3,7 +3,10 @@
 #include <string>
 using namespace std;
 
-class AutomatToImage: public BaseObject {
+class AutomatonToImage: public BaseObject {
 public:
+	AutomatonToImage();
+	~AutomatonToImage();
 	void to_image(string automat);
+	string to_txt();
 };
