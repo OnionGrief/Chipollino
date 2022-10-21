@@ -212,6 +212,11 @@ void Regex::regex_union(Regex a, Regex b) {
 	term_l = a.copy();
 	term_r = b.copy();
 }
+void Regex::regex_alt(Regex a, Regex b) {
+	type = Type::alt;
+	term_l = a.copy();
+	term_r = b.copy();
+}
 void Regex::regex_star(Regex a) {
 	type = Type::star;
 	term_l = a.copy();
@@ -266,7 +271,7 @@ string Regex::to_txt() {
 	string symb;
 	if (value.symbol) symb = value.symbol;
 	if (type == Type::eps) {
-		return "eps";
+		return "";
 	}
 	if (type == Type::alt) {
 		symb = '|';
@@ -284,4 +289,7 @@ string Regex::to_txt() {
 	}
 
 	return str1 + symb + str2;
+}
+void Regex::regex_eps() {
+	type = Type::eps;
 }

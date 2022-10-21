@@ -61,7 +61,11 @@ class Regex : BaseObject {
 
 	void regex_union(Regex a, Regex b);
 
+	void regex_alt(Regex a, Regex b);
+
 	void regex_star(Regex a);
+
+	void regex_eps();
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 };

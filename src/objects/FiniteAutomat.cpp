@@ -290,3 +290,7 @@ int FiniteAutomat::get_states_size() {
 State FiniteAutomat::get_state(int i) {
 	return states[i];
 }
+
+int FiniteAutomat::get_initial() {
+	return initial_state;
+}

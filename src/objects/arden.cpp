@@ -72,17 +72,26 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	return out;
 }
 Regex nfa_to_regex(FiniteAutomat in) {
-	int endstate = -1;
+	vector<int> endstate;
 	vector<vector<expression_arden>> data;
 	vector<char> alphabet = in.get_alphabet();
+
 	for (int i = 0; i < in.get_states_size(); i++) {
 		vector<expression_arden> temp;
 		data.push_back(temp);
 	}
+	Regex r;
+	expression_arden temp;
+	temp.condition = -1;
+	string str = "";
+	r.regex_eps();
+	cout << r.to_txt();
+	temp.temp_regex = r;
+	data[in.get_initial()].push_back(temp);
 	for (int i = 0; i < in.get_states_size(); i++) {
 		State a = in.get_state(i);
 		if (a.is_terminal) {
-			endstate = i;
+			endstate.push_back(i);
 		}
 		for (int j = 0; j < alphabet.size(); j++) {
 			if (a.transitions[alphabet[j]].size()) {
@@ -126,13 +135,15 @@ Regex nfa_to_regex(FiniteAutomat in) {
 		data[i] = arden_minimize(data[i]);
 
 		data[i] = arden(data[i], i);
-
-		/*for (int j = 0; j < data[i].size(); j++) {
+		cout << i << " ";
+		for (int j = 0; j < data[i].size(); j++) {
 
 			cout << data[i][j].condition << "-"
 				 << data[i][j].temp_regex.to_txt() << " ";
-		}*/
+		}
+		cout << "\n";
 	}
+
 	if (data[0].size() > 1) {
 		cout << "error";
 		Regex f;
@@ -155,10 +166,21 @@ Regex nfa_to_regex(FiniteAutomat in) {
 				 << data[i][j].temp_regex.to_txt() << " \n";*/
 		}
 	}
-	if (endstate == -1) {
+	if (endstate.size() == 0) {
 		Regex f;
 		return f;
 	}
-	return data[endstate][0].temp_regex;
+	if (endstate.size() < 2) {
+		return data[endstate[0]][0].temp_regex;
+	}
+	Regex r1;
+	r1.regex_alt(data[endstate[0]][0].temp_regex,
+				 data[endstate[1]][0].temp_regex);
+	for (int i = 2; i < endstate.size(); i++) {
+		Regex temp;
+		temp.regex_alt(r1, data[endstate[i]][0].temp_regex);
+		r1 = temp;
+	}
+	return r1;
 }
 //На нефтеперерабатывающем заводе один мужик зажигалкой нашёл утечку газа.

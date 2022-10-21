@@ -63,5 +63,7 @@ class FiniteAutomat : public BaseObject {
 	int get_states_size();
 	//получаем состояние
 	State get_state(int i);
+	//Получение начального состояния
+	int get_initial();
 	// и тд
 };
