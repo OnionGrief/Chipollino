@@ -16,10 +16,12 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		while ((j < in.size()) && in[i].condition == in[j].condition) {
 
 			cond = true;
-			Regex r;
+			Regex r, s1, s2;
 
 			// cout << in[j].temp_regex.to_txt() << in[i].temp_regex.to_txt();
-			r.regex_union(in[i].temp_regex, in[j].temp_regex);
+			s1.regex_star(in[i].temp_regex); //если бага то тут)
+			s2.regex_star(in[j].temp_regex);
+			r.regex_union(s1, s2);
 			in[i].temp_regex = r;
 
 			j++;
@@ -135,13 +137,13 @@ Regex nfa_to_regex(FiniteAutomat in) {
 		data[i] = arden_minimize(data[i]);
 
 		data[i] = arden(data[i], i);
-		cout << i << " ";
+		/*cout << i << " ";
 		for (int j = 0; j < data[i].size(); j++) {
 
 			cout << data[i][j].condition << "-"
 				 << data[i][j].temp_regex.to_txt() << " ";
 		}
-		cout << "\n";
+		cout << "\n";*/
 	}
 
 	if (data[0].size() > 1) {
