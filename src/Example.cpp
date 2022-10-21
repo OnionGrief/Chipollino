@@ -127,17 +127,19 @@ void Example::intersection() {
 void Example::regex_parsing() {
 	string reg = "((a|)*c)";
 	Regex r;
+
 	if (!r.from_string(reg)) {
 		cout << "ERROR\n";
 		return;
 	}
+	cout << "Test\n";
 	// r.from_string(reg);
 	cout << r.to_txt();
 	// r.clear();
 	cout << "\n";
-	FiniteAutomat a;
-	FiniteAutomat b;
-	FiniteAutomat c;
+	FiniteAutomaton a;
+	FiniteAutomaton b;
+	FiniteAutomaton c;
 
 	cout << "to_tompson ------------------------------\n";
 	c = r.to_tompson(-1);

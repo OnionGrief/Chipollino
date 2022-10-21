@@ -119,6 +119,15 @@ Regex* Regex::scan_conc(const vector<Lexem>& lexems, int index_start,
 			p->term_r = r;
 			p->value = lexems[i];
 			p->type = Regex::conc;
+
+			Language* ls;
+			set<alphabet_symbol> s = l->language->alphabet;
+			s.insert(r->language->alphabet.begin(),
+					 r->language->alphabet.end());
+			ls = new Language(s);
+
+			p->language = ls;
+
 			return p;
 		}
 	}
@@ -150,6 +159,13 @@ Regex* Regex::scan_star(const vector<Lexem>& lexems, int index_start,
 			p->term_r = nullptr;
 			p->value = lexems[i];
 			p->type = Regex::star;
+
+			Language* ls;
+			set<alphabet_symbol> s = l->language->alphabet;
+			ls = new Language(s);
+
+			p->language = ls;
+
 			return p;
 		}
 	}
@@ -185,6 +201,15 @@ Regex* Regex::scan_alt(const vector<Lexem>& lexems, int index_start,
 
 			p->value = lexems[i];
 			p->type = Regex::alt;
+
+			Language* ls;
+			set<alphabet_symbol> s = l->language->alphabet;
+			s.insert(r->language->alphabet.begin(),
+					 r->language->alphabet.end());
+			ls = new Language(s);
+
+			p->language = ls;
+
 			return p;
 		}
 	}
@@ -201,6 +226,13 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	p = new Regex;
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
+
+	Language* l;
+	vector<alphabet_symbol> v = {lexems[index_start].symbol};
+	set<alphabet_symbol> s(v.begin(), v.end());
+	l = new Language(s);
+
+	p->language = l;
 	return p;
 }
 
@@ -215,6 +247,12 @@ Regex* Regex::scan_eps(const vector<Lexem>& lexems, int index_start,
 	p = new Regex;
 	p->value = lexems[index_start];
 	p->type = Regex::eps;
+
+	Language* l;
+	set<alphabet_symbol> s;
+	l = new Language(s);
+
+	p->language = l;
 	return p;
 }
 
@@ -256,6 +294,7 @@ Regex::Regex() {}
 bool Regex::from_string(string str) {
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
+
 	if (root == nullptr || root->type == eps) {
 		return false;
 	}
@@ -266,7 +305,8 @@ bool Regex::from_string(string str) {
 	if (term_r != nullptr) {
 		term_r->term_p = this;
 	}
-	delete root;
+	cout << "Test\n";
+	// delete root;
 	return true;
 }
 
@@ -417,7 +457,7 @@ FiniteAutomaton Regex::to_tompson(int max_index) {
 		alfas = set(alfa.begin(), alfa.end());
 		alfa.assign(alfas.begin(), alfas.end());
 
-		a = FiniteAutomaton(0, alfa, s, false);
+		a = FiniteAutomaton(0, language, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	case Regex::conc: // .
@@ -488,7 +528,7 @@ FiniteAutomaton Regex::to_tompson(int max_index) {
 		alfas = set(alfa.begin(), alfa.end());
 		alfa.assign(alfas.begin(), alfas.end());
 
-		a = FiniteAutomaton(0, alfa, s, false);
+		a = FiniteAutomaton(0, language, s, false);
 		a.max_index = max_index;
 		return a;
 	case Regex::star: // *
@@ -529,7 +569,7 @@ FiniteAutomaton Regex::to_tompson(int max_index) {
 		alfa.assign(alfas.begin(), alfas.end());
 		// alfa.erase( unique( alfa.begin(), alfa.end() ), alfa.end() );
 
-		a = FiniteAutomaton(0, alfa, s, false);
+		a = FiniteAutomaton(0, language, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	case Regex::eps:
@@ -540,7 +580,7 @@ FiniteAutomaton Regex::to_tompson(int max_index) {
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
-		a = FiniteAutomaton(0, {}, s, false);
+		a = FiniteAutomaton(0, language, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	default:
@@ -552,7 +592,7 @@ FiniteAutomaton Regex::to_tompson(int max_index) {
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
-		a = FiniteAutomaton(0, {value.symbol}, s, false);
+		a = FiniteAutomaton(0, language, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	}
@@ -767,7 +807,7 @@ FiniteAutomaton Regex::to_glushkov() {
 		string s = elem.symbol + to_string(i + 1);
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
 	}
-	return FiniteAutomaton(0, alph, st, false);
+	return FiniteAutomaton(0, language, st, false);
 }
 
 FiniteAutomaton Regex::to_ilieyu() {
@@ -833,7 +873,7 @@ FiniteAutomaton Regex::to_ilieyu() {
 		new_states[i].index = i;
 	}
 
-	return FiniteAutomaton(0, glushkov.alphabet, new_states, false);
+	return FiniteAutomaton(0, glushkov.language, new_states, false);
 }
 bool Regex::is_eps_possible() {
 	switch (type) {
