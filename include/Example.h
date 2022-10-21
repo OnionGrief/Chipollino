@@ -1,6 +1,7 @@
 #include "FiniteAutomaton.h"
 #include "Language.h"
 #include "Regex.h"
+#include "TransformationMonoid.h"
 #include <iostream>
 
 /*
@@ -19,4 +20,5 @@ class Example {
 	static void fa_equal_check();
 	static void fa_bisimilar_check();
 	static void fa_merge_bisimilar();
+	static void transformation_monoid_example();
 };

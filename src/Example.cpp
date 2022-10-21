@@ -249,3 +249,37 @@ void Example::fa_merge_bisimilar() {
 
 	cout << fa2.to_txt();
 }
+void Example::transformation_monoid_example() {
+	vector<State> states;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+		states.push_back(s);
+	}
+	states[0].set_transition(1, 'a');
+	states[0].set_transition(0, 'b');
+
+	states[1].set_transition(1, 'a');
+	states[1].set_transition(2, 'b');
+	states[1].set_transition(1, 'c');
+
+	states[2].set_transition(1, 'a');
+	states[2].set_transition(2, 'b');
+	states[2].set_transition(2, 'c');
+
+	states[2].is_terminal = true;
+	Language l1({'a', 'b', 'c'});
+	FiniteAutomaton fa1(0, &l1, states, false);
+
+	cout << fa1.to_txt();
+	TransformationMonoid a(&fa1);
+// cout << a.get_Equalence_Classes_Txt();
+// cout << a.is_minimality() << "\n";
+// cout << a.to_Txt_MyhillNerode();
+//  cout << a.get_Equalence_Classes_Txt(); /*
+	/*vector<Term> cur = a.get_Equalence_Classes();
+	cout << cur[1].name << "\n";
+	vector<TermDouble> temp = a.get_Equalence_Classes_VWV(cur[1]);
+	for (int i = 0; i < temp.size(); i++) {
+		cout << temp[i].first.name << " " << temp[i].second.name << "\n";
+	}*/}

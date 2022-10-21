@@ -1051,3 +1051,14 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) {
 	fa)); cout << fa_instersection.to_txt() << endl;*/
 	return false;
 }
+
+vector<alphabet_symbol> FiniteAutomaton::get_alphabet() {
+	return language->get_alphabet();
+}
+
+int FiniteAutomaton::get_states_size() {
+	return states.size();
+}
+State FiniteAutomaton::get_state(int i) {
+	return states[i];
+}

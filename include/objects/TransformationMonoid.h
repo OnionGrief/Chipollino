@@ -1,6 +1,6 @@
 #pragma once
 #include "BaseObject.h"
-#include "FiniteAutomat.h"
+#include "FiniteAutomaton.h"
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -24,14 +24,14 @@ struct TermDouble {
 };
 class TransformationMonoid : public BaseObject {
   private:
-	FiniteAutomat* automat;			   //Ссылка на автомат
+	FiniteAutomaton* automat;		   //Ссылка на автомат
 	vector<Term> terms;				   //Эквивалентные классы
 	map<string, vector<string>> rules; //Правила переписывания
 	vector<vector<bool>> equivalence_class_table;
 
   public:
 	TransformationMonoid();
-	TransformationMonoid(FiniteAutomat* in);
+	TransformationMonoid(FiniteAutomaton* in);
 	vector<Term> get_Equalence_Classes();
 	vector<Term> get_Equalence_Classes_VW(Term w);
 	vector<Term> get_Equalence_Classes_WV(Term w);

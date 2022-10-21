@@ -81,6 +81,12 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на вложенность (аргумент вложен в this)
-	bool subset(const FiniteAutomaton&); // TODO
-										 // и тд
+	bool subset(const FiniteAutomaton&);
+	// получаем кол-во состояний
+	int get_states_size();
+	//получаем состояние
+	State get_state(int i);
+	//получаем алфавит
+	vector<alphabet_symbol> get_alphabet(); // TODO
+											// и тд
 };
