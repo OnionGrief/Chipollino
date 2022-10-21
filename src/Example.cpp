@@ -109,3 +109,37 @@ void Example::fa_merge_bisimilar() {
 
 	cout << fa2.to_txt();
 }
+
+void Example::fa_equivalent_check() {
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {i, {i}, to_string(i), false, map<char, vector<int>>()};
+		states1.push_back(s);
+	}
+	states1[0].set_transition(0, 'c');
+	states1[0].set_transition(1, 'd');
+	states1[1].set_transition(2, 'c');
+	states1[1].set_transition(0, 'd');
+	states1[2].set_transition(1, 'c');
+	states1[2].set_transition(2, 'd');
+	states1[0].is_terminal = true;
+	FiniteAutomat fa1(0, {'c', 'd'}, states1, false);
+
+	vector<State> states2;
+	for (int i = 0; i < 4; i++) {
+		State s = {i, {i}, to_string(i), false, map<char, vector<int>>()};
+		states2.push_back(s);
+	}
+	states2[0].set_transition(0, 'c');
+	states2[0].set_transition(1, 'd');
+	states2[1].set_transition(2, 'c');
+	states2[1].set_transition(0, 'd');
+	states2[2].set_transition(3, 'c');
+	states2[2].set_transition(2, 'd');
+	states2[3].set_transition(2, 'c');
+	states2[3].set_transition(0, 'd');
+	states2[0].is_terminal = true;
+	FiniteAutomat fa2(0, {'c', 'd'}, states2, false);
+
+	cout << FiniteAutomat::equivalent(fa1, fa2);
+}

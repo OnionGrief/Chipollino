@@ -744,9 +744,8 @@ bool FiniteAutomat::equal(const FiniteAutomat& fa1, const FiniteAutomat& fa2) {
 	return true;
 }
 
-bool FiniteAutomat::equivalent(const FiniteAutomat& fa1,
-							   const FiniteAutomat& fa2) {
-	return false;
+bool FiniteAutomat::equivalent(FiniteAutomat& fa1, FiniteAutomat& fa2) {
+	return equal(fa1.minimize(), fa2.minimize());
 }
 
 bool FiniteAutomat::subset(const FiniteAutomat& fa) {
