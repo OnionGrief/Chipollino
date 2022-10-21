@@ -1,4 +1,5 @@
 #include "FiniteAutomaton.h"
+#include "Language.h"
 #include "Regex.h"
 #include <iostream>
 
