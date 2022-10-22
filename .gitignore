@@ -3,4 +3,10 @@ build/
 .vs/
 /CMakeSettings.json
 /enc_temp_folder/
-resources/
+resources/images/
+resources/report.aux
+resources/report.fdb_latexmk
+resources/report.fls
+resources/report.log
+resources/report.pdf
+resources/report.synctex.gz

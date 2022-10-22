@@ -7,6 +7,6 @@ class AutomatonToImage: public BaseObject {
 public:
 	AutomatonToImage();
 	~AutomatonToImage();
-	void to_image(string automat);
+	void to_image(string automat, string name);
 	string to_txt();
 };

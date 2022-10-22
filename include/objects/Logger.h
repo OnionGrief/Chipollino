@@ -1,18 +1,21 @@
 #pragma once
 #include "BaseObject.h"
+#include "AutomatonToImage.h"
 #include <string>
-#include <iostream>
 using namespace std;
 
 class Logger: public BaseObject {
 public:
 	Logger();
-	Logger(int);
+	~Logger();
+	void init();
 	// начало шага, передается название
 	void init_step(string step_name);
 	// добавление записи
-	void log();
+	void log(string text, string fa1, string fa2);
 	// завершение шага
 	void finish_step();
-	// string to_txt();
+	// завершение записи в файл
+	void finish();
+	string to_txt();
 };
