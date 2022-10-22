@@ -73,13 +73,14 @@ class Regex : BaseObject {
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex* result) const;
+	FiniteAutomaton* get_tompson(int);
 
   public:
 	Regex();
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
-	FiniteAutomaton to_tompson(int);
+	FiniteAutomaton to_tompson();
 	FiniteAutomaton to_glushkov();
 	FiniteAutomaton to_ilieyu();
 	vector<Lexem>* first_state();

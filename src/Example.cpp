@@ -125,16 +125,19 @@ void Example::intersection() {
 }
 
 void Example::regex_parsing() {
-	string reg = "((a|)*c)";
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	// regl = "ab";
 	Regex r;
 
-	if (!r.from_string(reg)) {
+	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
 		return;
 	}
 	cout << "Test\n";
 	// r.from_string(reg);
-	cout << r.to_txt();
+	// cout << r.to_txt();
 	// r.clear();
 	cout << "\n";
 	FiniteAutomaton a;
@@ -142,7 +145,8 @@ void Example::regex_parsing() {
 	FiniteAutomaton c;
 
 	cout << "to_tompson ------------------------------\n";
-	c = r.to_tompson(-1);
+	c = r.to_tompson(); // to_tompson(-1);
+	c = c.minimize();
 	cout << c.to_txt();
 
 	cout << "to_glushkov ------------------------------\n";
@@ -153,8 +157,9 @@ void Example::regex_parsing() {
 	cout << a.to_txt();
 	cout << "to_ilieyu  ------------------------------\n";
 	b = r.to_ilieyu();
-
 	cout << b.to_txt();
+	cout << FiniteAutomaton::equivalent(b.minimize(), a.minimize()) << "\n";
+
 	r.pre_order_travers(); // eps в выводе 0
 	r.clear();
 }

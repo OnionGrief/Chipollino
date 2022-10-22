@@ -33,9 +33,9 @@ class FiniteAutomaton : public BaseObject {
 	Language* language = nullptr;
 	vector<State> states;
 	bool is_deterministic = 0;
-	int max_index = 0;
 
   public:
+	int max_index;
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, Language* language, vector<State> states,
 					bool is_deterministic = false);
