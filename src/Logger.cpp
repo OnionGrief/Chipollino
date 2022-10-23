@@ -8,9 +8,6 @@ Logger::Logger() {}
 Logger::~Logger() {}
 
 void Logger::init() {
-	char cmd[1024];
-    sprintf(cmd, "mkdir \"./../resources/images\"");
-    system(cmd);
 	ofstream out;
 	out.open("./../resources/report.tex", ofstream::trunc);
 	if (out.is_open()) {
@@ -70,5 +67,8 @@ void Logger::finish() {
 	if (out.is_open()) {
 		out << "\\end{document}" << endl;
 	}
-	out.close(); 
+	out.close();
+	char cmd[1024];
+    sprintf(cmd, "pdflatex \"./../resources/report.tex\"");
+    system(cmd); 
 }
