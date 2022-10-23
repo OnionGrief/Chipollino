@@ -622,6 +622,8 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 FiniteAutomaton Regex::to_tompson() {
 	FiniteAutomaton a;
 	a = get_tompson(-1);
+	delete a.language;
+	a.language = language;
 	return a;
 }
 
