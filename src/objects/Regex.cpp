@@ -295,7 +295,7 @@ bool Regex::from_string(string str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	language = new Language(alphabet);
+	language->alphabet = alphabet;
 	cout << "Test3\n";
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();

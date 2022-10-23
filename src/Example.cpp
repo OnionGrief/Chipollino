@@ -129,7 +129,9 @@ void Example::regex_parsing() {
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
 	regl = regl + regr;
 	regl = "abc"; //"bbb*(aaa*bbb*)*";
-	Regex r;
+	Language* lang;
+	lang = new Language();
+	Regex r(lang);
 	cout << "Test1\n";
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
@@ -165,6 +167,7 @@ void Example::regex_parsing() {
 	// FiniteAutomaton fa1 = r.to_glushkov();
 	// cout << "\n" << fa1.to_txt();
 	// r.clear();
+	delete lang;
 }
 
 void Example::fa_bisimilar_check() {
