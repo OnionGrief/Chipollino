@@ -120,14 +120,9 @@ Regex* Regex::scan_conc(const vector<Lexem>& lexems, int index_start,
 			p->value = lexems[i];
 			p->type = Regex::conc;
 
-			Language* ls;
-			set<alphabet_symbol> s = l->language->alphabet;
-			s.insert(r->language->alphabet.begin(),
-					 r->language->alphabet.end());
-			ls = new Language(s);
-
-			p->language = ls;
-
+			set<alphabet_symbol> s = l->alphabet;
+			s.insert(r->alphabet.begin(), r->alphabet.end());
+			p->alphabet = s;
 			return p;
 		}
 	}
@@ -160,12 +155,8 @@ Regex* Regex::scan_star(const vector<Lexem>& lexems, int index_start,
 			p->value = lexems[i];
 			p->type = Regex::star;
 
-			Language* ls;
-			set<alphabet_symbol> s = l->language->alphabet;
-			ls = new Language(s);
-
-			p->language = ls;
-
+			set<alphabet_symbol> s = l->alphabet;
+			p->alphabet = s;
 			return p;
 		}
 	}
@@ -202,14 +193,10 @@ Regex* Regex::scan_alt(const vector<Lexem>& lexems, int index_start,
 			p->value = lexems[i];
 			p->type = Regex::alt;
 
-			Language* ls;
-			set<alphabet_symbol> s = l->language->alphabet;
-			s.insert(r->language->alphabet.begin(),
-					 r->language->alphabet.end());
-			ls = new Language(s);
+			set<alphabet_symbol> s = l->alphabet;
+			s.insert(r->alphabet.begin(), r->alphabet.end());
 
-			p->language = ls;
-
+			p->alphabet = s;
 			return p;
 		}
 	}
@@ -227,12 +214,10 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
 
-	Language* l;
 	vector<alphabet_symbol> v = {lexems[index_start].symbol};
 	set<alphabet_symbol> s(v.begin(), v.end());
-	l = new Language(s);
 
-	p->language = l;
+	p->alphabet = s;
 	p->term_l = nullptr;
 	p->term_r = nullptr;
 	return p;
@@ -250,11 +235,10 @@ Regex* Regex::scan_eps(const vector<Lexem>& lexems, int index_start,
 	p->value = lexems[index_start];
 	p->type = Regex::eps;
 
-	Language* l;
 	set<alphabet_symbol> s;
-	l = new Language(s);
+	// l = new Language(s);
 
-	p->language = l;
+	p->alphabet = s;
 	p->term_l = nullptr;
 	p->term_r = nullptr;
 	return p;
@@ -295,6 +279,10 @@ Regex* Regex::expr(const vector<Lexem>& lexems, int index_start,
 }
 Regex::Regex() {}
 
+Regex::Regex(Language* l) {
+	language = l;
+}
+
 bool Regex::from_string(string str) {
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
@@ -306,7 +294,8 @@ bool Regex::from_string(string str) {
 	//*this = *(root->copy());
 	value = root->value;
 	type = root->type;
-	language = root->language;
+	alphabet = root->alphabet;
+	language = new Language(alphabet);
 	cout << "Test3\n";
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
@@ -340,7 +329,7 @@ Regex* Regex::copy() const {
 
 Regex::Regex(const Regex& reg)
 	: type(reg.type), value(reg.value), term_p(reg.term_p),
-	  language(reg.language),
+	  language(reg.language), alphabet(reg.alphabet),
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
 	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
 
@@ -354,11 +343,11 @@ void Regex::clear() {
 		// term_r->clear();
 		delete term_r;
 	}
-	delete language;
+	// delete language;
 }
 
 Regex::~Regex() {
-	// clear();
+	clear();
 }
 
 void Regex::pre_order_travers() {
@@ -415,6 +404,7 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 	FiniteAutomaton al; // левый автомат относительно операции
 	FiniteAutomaton ar; // левый автомат относительно операции
 	set<char> alfas; // множество алфавита для удаления дубликатов в нем
+	Language* alp;
 	switch (type) {
 	case Regex::alt: // |
 
@@ -478,8 +468,11 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 		alfas = set(alfa.begin(), alfa.end());
 		alfa.assign(alfas.begin(), alfas.end());
 
-		a = FiniteAutomaton(0, language, s, false);
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
 		a.max_index = max_index + 2;
+		delete al.language;
+		delete ar.language;
 		return a;
 	case Regex::conc: // .
 		al = term_l->get_tompson(max_index);
@@ -549,8 +542,11 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 		alfas = set(alfa.begin(), alfa.end());
 		alfa.assign(alfas.begin(), alfas.end());
 
-		a = FiniteAutomaton(0, language, s, false);
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
 		a.max_index = max_index;
+		delete al.language;
+		delete ar.language;
 		return a;
 	case Regex::star: // *
 		al = term_l->get_tompson(max_index);
@@ -590,8 +586,10 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 		alfa.assign(alfas.begin(), alfas.end());
 		// alfa.erase( unique( alfa.begin(), alfa.end() ), alfa.end() );
 
-		a = FiniteAutomaton(0, language, s, false);
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
 		a.max_index = max_index + 2;
+		delete al.language;
 		return a;
 	case Regex::eps:
 		str = "q" + to_string(max_index + 1);
@@ -601,7 +599,8 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
-		a = FiniteAutomaton(0, language, s, false);
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	default:
@@ -612,7 +611,8 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
-		a = FiniteAutomaton(0, language, s, false);
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
 		a.max_index = max_index + 2;
 		return a;
 	}

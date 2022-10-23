@@ -47,6 +47,7 @@ class Regex : BaseObject {
 		symb
 	};
 	Language* language = nullptr;
+	set<alphabet_symbol> alphabet;
 	Type type;
 	Lexem value;
 	Regex* term_p = nullptr;
@@ -77,6 +78,7 @@ class Regex : BaseObject {
 
   public:
 	Regex();
+	Regex(Language*);
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
