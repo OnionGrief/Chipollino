@@ -6,5 +6,5 @@ class AutomatonToImage {
 public:
 	AutomatonToImage();
 	~AutomatonToImage();
-	static void to_image(string automat, string name);
+	static void to_image(string automat, int name);
 };
