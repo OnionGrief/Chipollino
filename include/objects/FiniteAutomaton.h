@@ -1,4 +1,5 @@
 #pragma once
+#include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include <iostream>
 #include <map>
@@ -8,6 +9,8 @@
 #include <vector>
 using namespace std;
 
+class Language;
+
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
@@ -15,24 +18,25 @@ struct State {
 	vector<int> label;
 	string identifier;
 	bool is_terminal;
-	map<char, vector<int>> transitions;
+	map<alphabet_symbol, vector<int>> transitions;
 	State();
 	State(int index, vector<int> label, string identifier, bool is_terminal,
-		  map<char, vector<int>> transitions);
-	void set_transition(int, char);
+		  map<alphabet_symbol, vector<int>> transitions);
+	void set_transition(int, alphabet_symbol);
 };
 
 class FiniteAutomaton : public BaseObject {
   private:
-	bool is_deterministic = 0;
 	int initial_state = 0;
-	vector<char> alphabet;
+	Language* language = nullptr;
 	vector<State> states;
+	bool is_deterministic = 0;
 
   public:
 	FiniteAutomaton();
-	FiniteAutomaton(int initial_state, vector<char> alphabet,
-					vector<State> states, bool is_deterministic = false);
+	FiniteAutomaton(int initial_state, Language* language, vector<State> states,
+					bool is_deterministic = false);
+	FiniteAutomaton(const FiniteAutomaton& other);
 	// визуализация автомата
 	string to_txt() override;
 	// поиск множества состояний НКА, достижимых из множества состояний по
@@ -56,9 +60,9 @@ class FiniteAutomaton : public BaseObject {
 	// и L2)
 	FiniteAutomaton difference(const FiniteAutomaton&);
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
-	FiniteAutomaton complement();
+	FiniteAutomaton complement(Language*); // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
-	FiniteAutomaton reverse();
+	FiniteAutomaton reverse(Language*); // меняет язык
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
 	// себя)
 	FiniteAutomaton add_trap_state();
