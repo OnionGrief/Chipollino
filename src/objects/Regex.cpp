@@ -298,15 +298,20 @@ bool Regex::from_string(string str) {
 	if (root == nullptr || root->type == eps) {
 		return false;
 	}
-	*this = *root;
-	if (term_l != nullptr) {
+
+	//*this = *(root->copy());
+	cout << "Test3\n";
+	if (root->term_l != nullptr) {
+		term_l = root->term_l;
 		term_l->term_p = this;
 	}
-	if (term_r != nullptr) {
+	cout << "Test4\n";
+	if (root->term_r != nullptr) {
+		term_r = root->term_r;
 		term_r->term_p = this;
 	}
-	cout << "Test\n";
-	// delete root;
+	cout << "Test5\n";
+	delete root;
 	return true;
 }
 
@@ -314,25 +319,31 @@ Regex* Regex::copy() const {
 	Regex* c = new Regex();
 	c->type = type;
 	c->value = value;
+	c->language = language;
 	if (type != Regex::eps && type != Regex::symb) {
 		c->term_l = term_l->copy();
-		if (type != Regex::star) c->term_r = term_r->copy();
+		c->term_l->term_p = c;
+		if (type != Regex::star) {
+			c->term_r = term_r->copy();
+			c->term_r->term_p = c;
+		}
 	}
 	return c;
 }
 
 Regex::Regex(const Regex& reg)
-	: type(reg.type), value(reg.value),
+	: type(reg.type), value(reg.value), term_p(reg.term_p),
+	  language(reg.language),
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
 	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
 
 void Regex::clear() {
 	if (term_l != nullptr) {
-		term_l->clear();
+		// term_l->clear();
 		delete term_l;
 	}
 	if (term_r != nullptr) {
-		term_r->clear();
+		// term_r->clear();
 		delete term_r;
 	}
 	delete language;
