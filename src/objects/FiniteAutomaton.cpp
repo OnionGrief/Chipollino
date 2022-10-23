@@ -27,7 +27,8 @@ FiniteAutomaton::FiniteAutomaton(int initial_state, Language* language,
 
 FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 	: initial_state(other.initial_state), language(other.language),
-	  states(other.states), is_deterministic(other.is_deterministic) {}
+	  states(other.states), is_deterministic(other.is_deterministic),
+	  max_index(other.max_index) {}
 
 string FiniteAutomaton::to_txt() {
 	stringstream ss;

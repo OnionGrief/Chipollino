@@ -384,31 +384,31 @@ string Regex::to_txt() {
 	return str1 + symb + str2;
 }
 
-FiniteAutomaton* Regex::get_tompson(int max_index) {
-	string str;			//идентификатор состояния
-	FiniteAutomaton* a; // новый автомат
+FiniteAutomaton Regex::get_tompson(int max_index) {
+	string str;		   //идентификатор состояния
+	FiniteAutomaton a; // новый автомат
 	vector<State> s = {}; //вектор состояний нового автомата
 	vector<alphabet_symbol> alfa = {}; //алфавит новго автомата
 	map<alphabet_symbol, vector<int>> m, p, map_l, map_r; // словари автоматов
 	vector<int> trans; // новые транзишены
 	int offset; // сдвиг для старых индексов состояний в новом автомате
-	FiniteAutomaton* al; // левый автомат относительно операции
-	FiniteAutomaton* ar; // левый автомат относительно операции
+	FiniteAutomaton al; // левый автомат относительно операции
+	FiniteAutomaton ar; // левый автомат относительно операции
 	set<char> alfas; // множество алфавита для удаления дубликатов в нем
 	switch (type) {
 	case Regex::alt: // |
 
 		al = term_l->get_tompson(max_index);
-		ar = term_r->get_tompson(al->max_index);
-		max_index = ar->max_index;
+		ar = term_r->get_tompson(al.max_index);
+		max_index = ar.max_index;
 
 		str = "q" + to_string(max_index + 1);
-		m['\0'] = {1, int(al->states.size()) + 1};
+		m['\0'] = {1, int(al.states.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
-		for (size_t i = 0; i < al->states.size(); i++) {
+		for (size_t i = 0; i < al.states.size(); i++) {
 			State test;
-			test = al->states[i];
+			test = al.states[i];
 			for (auto el : test.transitions) {
 				char elem = el.first; // al->alphabet[i];
 				if (elem != '\0') {
@@ -422,16 +422,16 @@ FiniteAutomaton* Regex::get_tompson(int max_index) {
 			}
 
 			if (test.is_terminal) {
-				map_l['\0'] = {int(al->states.size() + ar->states.size()) + 1};
+				map_l['\0'] = {int(al.states.size() + ar.states.size()) + 1};
 			}
-			s.push_back(State(al->states[i].index + 1, {},
-							  al->states[i].identifier, false, map_l));
+			s.push_back(State(al.states[i].index + 1, {},
+							  al.states[i].identifier, false, map_l));
 			map_l = {};
 		}
 		offset = s.size();
-		for (size_t i = 0; i < ar->states.size(); i++) {
+		for (size_t i = 0; i < ar.states.size(); i++) {
 			State test;
-			test = ar->states[i];
+			test = ar.states[i];
 			for (auto el : test.transitions) {
 				char elem = el.first;
 				if (elem != '\0') {
@@ -444,33 +444,31 @@ FiniteAutomaton* Regex::get_tompson(int max_index) {
 				map_r[elem] = trans;
 			}
 			if (test.is_terminal) {
-				map_r['\0'] = {offset + int(ar->states.size())};
+				map_r['\0'] = {offset + int(ar.states.size())};
 			}
 
-			s.push_back(State(ar->states[i].index + offset, {},
-							  ar->states[i].identifier, false, map_r));
+			s.push_back(State(ar.states[i].index + offset, {},
+							  ar.states[i].identifier, false, map_r));
 			map_r = {};
 		}
 
 		str = "q" + to_string(max_index + 2);
-		s.push_back(State(int(al->states.size() + ar->states.size()) + 1, {},
-						  str, true, p));
+		s.push_back(State(int(al.states.size() + ar.states.size()) + 1, {}, str,
+						  true, p));
 		alfas = set(alfa.begin(), alfa.end());
 		alfa.assign(alfas.begin(), alfas.end());
 
-		a = new FiniteAutomaton(0, language, s, false);
-		a->max_index = max_index + 2;
-		delete al;
-		delete ar;
+		a = FiniteAutomaton(0, language, s, false);
+		a.max_index = max_index + 2;
 		return a;
 	case Regex::conc: // .
 		al = term_l->get_tompson(max_index);
-		ar = term_r->get_tompson(al->max_index);
-		max_index = ar->max_index;
+		ar = term_r->get_tompson(al.max_index);
+		max_index = ar.max_index;
 
-		for (size_t i = 0; i < al->states.size(); i++) {
+		for (size_t i = 0; i < al.states.size(); i++) {
 			State test;
-			test = al->states[i];
+			test = al.states[i];
 			for (auto el : test.transitions) {
 				char elem = el.first; // al->alphabet[i];
 				if (elem != '\0') {
@@ -484,7 +482,7 @@ FiniteAutomaton* Regex::get_tompson(int max_index) {
 			}
 
 			if (test.is_terminal) {
-				State test_r = ar->states[0];
+				State test_r = ar.states[0];
 				for (auto el : test_r.transitions) {
 					char elem = el.first; // al->alphabet[i];
 					if (elem != '\0') {
@@ -494,21 +492,21 @@ FiniteAutomaton* Regex::get_tompson(int max_index) {
 						 j++) {
 						// trans.push_back(test.transitions[elem][j] + 1);
 						map_l[elem].push_back(test_r.transitions[elem][j] +
-											  al->states.size() - 1);
+											  al.states.size() - 1);
 					}
 					// map_l[elem] = trans;
 				}
 			}
 			// cout << al->states[i].identifier << " " << al->states[i].index
 			// <<"\n";
-			s.push_back(State(al->states[i].index, {}, al->states[i].identifier,
+			s.push_back(State(al.states[i].index, {}, al.states[i].identifier,
 							  false, map_l));
 			map_l = {};
 		}
 		offset = s.size();
-		for (size_t i = 1; i < ar->states.size(); i++) {
+		for (size_t i = 1; i < ar.states.size(); i++) {
 			State test;
-			test = ar->states[i];
+			test = ar.states[i];
 			for (auto el : test.transitions) {
 				char elem = el.first; // al->alphabet[i];
 				if (elem != '\0') {
@@ -522,8 +520,8 @@ FiniteAutomaton* Regex::get_tompson(int max_index) {
 				map_r[elem] = trans;
 			}
 
-			s.push_back(State(ar->states[i].index + offset - 1, {},
-							  ar->states[i].identifier, test.is_terminal,
+			s.push_back(State(ar.states[i].index + offset - 1, {},
+							  ar.states[i].identifier, test.is_terminal,
 							  map_r));
 			map_r = {};
 		}
@@ -531,22 +529,20 @@ FiniteAutomaton* Regex::get_tompson(int max_index) {
 		alfas = set(alfa.begin(), alfa.end());
 		alfa.assign(alfas.begin(), alfas.end());
 
-		a = new FiniteAutomaton(0, language, s, false);
-		a->max_index = max_index;
-		delete al;
-		delete ar;
+		a = FiniteAutomaton(0, language, s, false);
+		a.max_index = max_index;
 		return a;
 	case Regex::star: // *
 		al = term_l->get_tompson(max_index);
-		max_index = al->max_index;
+		max_index = al.max_index;
 
 		str = "q" + to_string(max_index + 1);
-		m['\0'] = {1, int(al->states.size()) + 1};
+		m['\0'] = {1, int(al.states.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
-		for (size_t i = 0; i < al->states.size(); i++) {
+		for (size_t i = 0; i < al.states.size(); i++) {
 			State test;
-			test = al->states[i];
+			test = al.states[i];
 			for (auto el : test.transitions) {
 				char elem = el.first; // al->alphabet[i];
 				if (elem != '\0') {
@@ -560,23 +556,22 @@ FiniteAutomaton* Regex::get_tompson(int max_index) {
 			}
 
 			if (test.is_terminal) {
-				map_l['\0'] = {1, int(al->states.size()) + 1};
+				map_l['\0'] = {1, int(al.states.size()) + 1};
 			}
-			s.push_back(State(al->states[i].index + 1, {},
-							  al->states[i].identifier, false, map_l));
+			s.push_back(State(al.states[i].index + 1, {},
+							  al.states[i].identifier, false, map_l));
 			map_l = {};
 		}
 		offset = s.size();
 
 		str = "q" + to_string(max_index + 2);
-		s.push_back(State(int(al->states.size()) + 1, {}, str, true, p));
+		s.push_back(State(int(al.states.size()) + 1, {}, str, true, p));
 		alfas = set(alfa.begin(), alfa.end());
 		alfa.assign(alfas.begin(), alfas.end());
 		// alfa.erase( unique( alfa.begin(), alfa.end() ), alfa.end() );
 
-		a = new FiniteAutomaton(0, language, s, false);
-		a->max_index = max_index + 2;
-		delete al;
+		a = FiniteAutomaton(0, language, s, false);
+		a.max_index = max_index + 2;
 		return a;
 	case Regex::eps:
 		str = "q" + to_string(max_index + 1);
@@ -586,8 +581,8 @@ FiniteAutomaton* Regex::get_tompson(int max_index) {
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
-		a = new FiniteAutomaton(0, language, s, false);
-		a->max_index = max_index + 2;
+		a = FiniteAutomaton(0, language, s, false);
+		a.max_index = max_index + 2;
 		return a;
 	default:
 
@@ -598,17 +593,17 @@ FiniteAutomaton* Regex::get_tompson(int max_index) {
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
-		a = new FiniteAutomaton(0, language, s, false);
-		a->max_index = max_index + 2;
+		a = FiniteAutomaton(0, language, s, false);
+		a.max_index = max_index + 2;
 		return a;
 	}
-	return nullptr; //&FiniteAutomaton();
+	return FiniteAutomaton();
 }
 
 FiniteAutomaton Regex::to_tompson() {
-	FiniteAutomaton* a;
+	FiniteAutomaton a;
 	a = get_tompson(-1);
-	return *a;
+	return a;
 }
 
 int Regex::L() {
