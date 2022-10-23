@@ -366,9 +366,10 @@ string Regex::to_txt() {
 	}
 	string symb;
 	if (value.symbol) symb = value.symbol;
+	if (type == Type::eps) symb = "";
 	if (type == Type::alt) {
 		symb = '|';
-		if (term_p->type == Type::conc) {
+		if (term_p != nullptr && term_p->type == Type::conc) {
 			str1 = "(" + str1;
 			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
 							   // конкатенации a(a|b)a

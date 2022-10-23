@@ -137,7 +137,7 @@ void Example::regex_parsing() {
 	}
 	cout << "Test\n";
 	// r.from_string(reg);
-	// cout << r.to_txt();
+	cout << r.to_txt();
 	// r.clear();
 	cout << "\n";
 	FiniteAutomaton a;
