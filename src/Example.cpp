@@ -304,7 +304,7 @@ void Example::step() {
 
 	string f2 = fa2.to_txt();
 	string s = "merge\\_bisimilar";
-	// Logger::init();
+	Logger::init();
 	Logger::init_step(s);
 	Logger::log("Kомментарий", f1, f2);
 	Logger::finish_step();

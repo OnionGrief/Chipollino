@@ -11,6 +11,22 @@ void Logger::init() {
 	char cmd[1024];
     sprintf(cmd, "mkdir \"./../resources/images\"");
     system(cmd);
+	ofstream out;
+	out.open("./../resources/report.tex", ofstream::trunc);
+	if (out.is_open()) {
+		out << "\\documentclass[14pt, russion]{article}" << endl;
+		out << "\\usepackage[utf8]{inputenc}" << endl;
+		out << "\\usepackage[russian]{babel}" << endl;
+		out << "\\title{Отчет}" << endl;
+		out << "\\author{Чироллино}" << endl;
+		out << "\\date{Москва, 2022}" << endl;
+		out << "\\usepackage{graphicx}" << endl;
+		out << "\\graphicspath{ {images/} }" << endl;
+		out << "\\begin{document}" << endl;
+		out << "\\maketitle" << endl;
+		out << "\\newpage" << endl;
+	}
+	out.close(); 
 }
 
 void Logger::init_step(string step_name) {
