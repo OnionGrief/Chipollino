@@ -233,6 +233,8 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	l = new Language(s);
 
 	p->language = l;
+	p->term_l = nullptr;
+	p->term_r = nullptr;
 	return p;
 }
 
@@ -253,6 +255,8 @@ Regex* Regex::scan_eps(const vector<Lexem>& lexems, int index_start,
 	l = new Language(s);
 
 	p->language = l;
+	p->term_l = nullptr;
+	p->term_r = nullptr;
 	return p;
 }
 
@@ -300,14 +304,17 @@ bool Regex::from_string(string str) {
 	}
 
 	//*this = *(root->copy());
+	value = root->value;
+	type = root->type;
+	language = root->language;
 	cout << "Test3\n";
 	if (root->term_l != nullptr) {
-		term_l = root->term_l;
+		term_l = root->term_l->copy();
 		term_l->term_p = this;
 	}
 	cout << "Test4\n";
 	if (root->term_r != nullptr) {
-		term_r = root->term_r;
+		term_r = root->term_r->copy();
 		term_r->term_p = this;
 	}
 	cout << "Test5\n";
@@ -340,6 +347,7 @@ Regex::Regex(const Regex& reg)
 void Regex::clear() {
 	if (term_l != nullptr) {
 		// term_l->clear();
+		cout << term_l;
 		delete term_l;
 	}
 	if (term_r != nullptr) {
@@ -350,7 +358,7 @@ void Regex::clear() {
 }
 
 Regex::~Regex() {
-	clear();
+	// clear();
 }
 
 void Regex::pre_order_travers() {
@@ -599,7 +607,6 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 	default:
 
 		str = "q" + to_string(max_index + 1);
-
 		m[value.symbol] = {1};
 		s.push_back(State(0, {}, str, false, m));
 		str = "q" + to_string(max_index + 2);

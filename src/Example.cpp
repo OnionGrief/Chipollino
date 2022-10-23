@@ -137,14 +137,15 @@ void Example::regex_parsing() {
 	}
 	cout << "Test2\n";
 	// r.from_string(reg);
-	// cout << r.to_txt();
-	// cout << "\n";
+	// cout << r.to_txt() << "\n";
+	r.pre_order_travers(); // eps в выводе 0
+						   // cout << "\n";
 
 	// FiniteAutomaton a;
 	// FiniteAutomaton b;
 	FiniteAutomaton c;
 
-	// cout << "to_tompson ------------------------------\n";
+	cout << "to_tompson ------------------------------\n";
 	c = r.to_tompson(); // to_tompson(-1);
 	// c = c.minimize();
 	cout << c.to_txt();
@@ -163,7 +164,7 @@ void Example::regex_parsing() {
 	// r.pre_order_travers(); // eps в выводе 0
 	// FiniteAutomaton fa1 = r.to_glushkov();
 	// cout << "\n" << fa1.to_txt();
-	r.clear();
+	// r.clear();
 }
 
 void Example::fa_bisimilar_check() {
