@@ -56,5 +56,3 @@ void Logger::finish() {
 	}
 	out.close(); 
 }
-
-string Logger::to_txt() {}

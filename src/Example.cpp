@@ -251,9 +251,9 @@ void Example::to_image() {
 
 	string s2 = fa2.to_txt();
 	
-	AutomatonToImage a;
-	a.to_image(s1, "1");
-	a.to_image(s2, "2");
+	// AutomatonToImage a;
+	AutomatonToImage::to_image(s1, "1");
+	AutomatonToImage::to_image(s2, "2");
 }
 
 void Example::step() {
@@ -279,11 +279,11 @@ void Example::step() {
 	FiniteAutomaton fa2 = fa1.merge_bisimilar();
 
 	string f2 = fa2.to_txt();
-	Logger l;
+	// Logger l;
 	string s = "merge\\_bisimilar";
-	// l.init();
-	l.init_step(s);
-	l.log("Kомментарий", f1, f2);
-	l.finish_step();
-	l.finish();
+	// Logger::init();
+	Logger::init_step(s);
+	Logger::log("Kомментарий", f1, f2);
+	Logger::finish_step();
+	Logger::finish();
 }

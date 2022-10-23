@@ -9,12 +9,12 @@ project (chipollino)
 
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
-	src/objects/AutomatonToImage.cpp
 	src/objects/FiniteAutomaton.cpp
 	src/objects/Integer.cpp
-	src/objects/Logger.cpp
 	src/objects/Regex.cpp
+	src/AutomatonToImage.cpp
 	src/Example.cpp
+	src/Logger.cpp
     src/main.cpp
 )
 
