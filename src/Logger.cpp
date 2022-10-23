@@ -15,7 +15,7 @@ void Logger::init() {
 		out << "\\usepackage[utf8]{inputenc}" << endl;
 		out << "\\usepackage[russian]{babel}" << endl;
 		out << "\\title{Отчет}" << endl;
-		out << "\\author{Чироллино}" << endl;
+		out << "\\author{Чиполлино}" << endl;
 		out << "\\date{Москва, 2022}" << endl;
 		out << "\\usepackage{graphicx}" << endl;
 		out << "\\graphicspath{ {images/} }" << endl;
@@ -34,21 +34,26 @@ void Logger::init_step(string step_name) {
 	out.close(); 
 }
 
+Logger l;
 void Logger::log(string text, string fa1, string fa2) {
 	ofstream out("./../resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + "\n" << endl;
 		if (fa1 != "") {
-			AutomatonToImage a;
-			a.to_image(fa1, "1");
+			l.i += 1;
+			AutomatonToImage::to_image(fa1, l.i);
 			out << "Автомат до преобразования\n" << endl;
-			out << "\\includegraphics{output1.png}\n" << endl;
+			char si[256];
+    		sprintf(si, "\\includegraphics{output%d.png}\n", l.i);
+			out << si << endl;
 		}
 		if (fa2 != "") {
-			AutomatonToImage a;
-			a.to_image(fa2, "2");
+			l.i += 1;
+			AutomatonToImage::to_image(fa2, l.i);
 			out << "Автомат после преобразования\n" << endl;
-			out << "\\includegraphics{output2.png}\n" << endl;
+			char si[256];
+    		sprintf(si, "\\includegraphics{output%d.png}\n", l.i);
+			out << si << endl;
 		}
 	}
 	out.close();
