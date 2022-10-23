@@ -128,45 +128,30 @@ void Example::regex_parsing() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
 	regl = regl + regr;
-	regl = "abc"; //"bbb*(aaa*bbb*)*";
+	// regl = "abc"; //"bbb*(aaa*bbb*)*";
 	Language* lang;
 	lang = new Language();
 	Regex r(lang);
-	cout << "Test1\n";
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
 		return;
 	}
-	cout << "Test2\n";
-	// r.from_string(reg);
-	// cout << r.to_txt() << "\n";
-	r.pre_order_travers(); // eps в выводе 0
-						   // cout << "\n";
 
-	// FiniteAutomaton a;
-	// FiniteAutomaton b;
+	FiniteAutomaton a;
+	FiniteAutomaton b;
 	FiniteAutomaton c;
 
 	cout << "to_tompson ------------------------------\n";
 	c = r.to_tompson(); // to_tompson(-1);
-	// c = c.minimize();
 	cout << c.to_txt();
 
-	// cout << "to_glushkov ------------------------------\n";
-	//// a = r.to_tompson(-1);
-	//// cout << a.to_txt();
-	// a = r.to_glushkov();
+	cout << "to_glushkov ------------------------------\n";
+	a = r.to_glushkov();
+	cout << a.to_txt();
+	cout << "to_ilieyu  ------------------------------\n";
+	b = r.to_ilieyu();
+	cout << b.to_txt();
 
-	// cout << a.to_txt();
-	// cout << "to_ilieyu  ------------------------------\n";
-	// b = r.to_ilieyu();
-	// cout << b.to_txt();
-	// cout << FiniteAutomaton::equivalent(b.minimize(), a.minimize()) << "\n";
-
-	// r.pre_order_travers(); // eps в выводе 0
-	// FiniteAutomaton fa1 = r.to_glushkov();
-	// cout << "\n" << fa1.to_txt();
-	// r.clear();
 	delete lang;
 }
 

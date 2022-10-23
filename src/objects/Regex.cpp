@@ -296,17 +296,14 @@ bool Regex::from_string(string str) {
 	type = root->type;
 	alphabet = root->alphabet;
 	language->alphabet = alphabet;
-	cout << "Test3\n";
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 		term_l->term_p = this;
 	}
-	cout << "Test4\n";
 	if (root->term_r != nullptr) {
 		term_r = root->term_r->copy();
 		term_r->term_p = this;
 	}
-	cout << "Test5\n";
 	delete root;
 	return true;
 }
@@ -336,7 +333,6 @@ Regex::Regex(const Regex& reg)
 void Regex::clear() {
 	if (term_l != nullptr) {
 		// term_l->clear();
-		cout << term_l;
 		delete term_l;
 	}
 	if (term_r != nullptr) {
@@ -658,6 +654,7 @@ vector<Lexem>* Regex::first_state() {
 		l = term_l->first_state();
 		r = term_r->first_state();
 		l->insert(l->end(), r->begin(), r->end());
+		delete r;
 		return l;
 	case Regex::star:
 		l = term_l->first_state();
@@ -667,6 +664,7 @@ vector<Lexem>* Regex::first_state() {
 		if (term_l->L() != 0) {
 			r = term_r->first_state();
 			l->insert(l->end(), r->begin(), r->end());
+			delete r;
 		}
 		//
 		return l;
@@ -688,6 +686,7 @@ vector<Lexem>* Regex::end_state() {
 		l = term_l->end_state();
 		r = term_r->end_state();
 		l->insert(l->end(), r->begin(), r->end());
+		delete r;
 		return l;
 	case Regex::star:
 		l = term_l->end_state();
@@ -698,6 +697,7 @@ vector<Lexem>* Regex::end_state() {
 
 			r = term_l->end_state();
 			l->insert(l->end(), r->begin(), r->end());
+			delete r;
 		}
 		return l;
 	case Regex::eps:
@@ -738,6 +738,8 @@ map<int, vector<int>> Regex::pairs() {
 			l[it.first].insert(l[it.first].end(), it.second.begin(),
 							   it.second.end());
 		}
+		delete rs;
+		delete ps;
 		return l;
 	case Regex::conc:
 		l = term_l->pairs();
@@ -759,6 +761,8 @@ map<int, vector<int>> Regex::pairs() {
 			l[it.first].insert(l[it.first].end(), it.second.begin(),
 							   it.second.end());
 		}
+		delete rs;
+		delete ps;
 		return l;
 	default:
 		break;
@@ -836,6 +840,8 @@ FiniteAutomaton Regex::to_glushkov() {
 		string s = elem.symbol + to_string(i + 1);
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
 	}
+	delete first;
+	delete end;
 	return FiniteAutomaton(0, language, st, false);
 }
 
