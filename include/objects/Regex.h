@@ -17,6 +17,7 @@ struct Lexem {
 		conc, // .
 		star, // *
 		symb, // alphabet symbol
+		eps,  // Epsilon
 	};
 
 	Type type = error;
@@ -46,12 +47,13 @@ class Regex : BaseObject {
 	Regex* term_r = nullptr;
 	// Turns string into lexem vector
 	vector<Lexem> parse_string(string);
-	Regex* expr(vector<Lexem>, int, int);
-	Regex* scan_conc(vector<Lexem>, int, int);
-	Regex* scan_star(vector<Lexem>, int, int);
-	Regex* scan_alt(vector<Lexem>, int, int);
-	Regex* scan_symb(vector<Lexem>, int, int);
-	Regex* scan_par(vector<Lexem>, int, int);
+	Regex* expr(const vector<Lexem>&, int, int);
+	Regex* scan_conc(const vector<Lexem>&, int, int);
+	Regex* scan_star(const vector<Lexem>&, int, int);
+	Regex* scan_alt(const vector<Lexem>&, int, int);
+	Regex* scan_symb(const vector<Lexem>&, int, int);
+	Regex* scan_eps(const vector<Lexem>&, int, int);
+	Regex* scan_par(const vector<Lexem>&, int, int);
 
 	// Принадлежит ли эпсилон языку регулярки
 	bool is_eps_possible();

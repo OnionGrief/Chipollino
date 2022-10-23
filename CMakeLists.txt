@@ -12,6 +12,8 @@ set(SOURCES
 	src/objects/FiniteAutomaton.cpp
 	src/objects/Integer.cpp
 	src/objects/Regex.cpp
+	src/objects/Language.cpp
+	src/AlphabetSymbol.cpp
 	src/AutomatonToImage.cpp
 	src/Example.cpp
 	src/Logger.cpp
