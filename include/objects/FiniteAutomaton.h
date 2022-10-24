@@ -19,10 +19,10 @@ struct State {
 	vector<int> label;
 	string identifier;
 	bool is_terminal;
-	map<alphabet_symbol, vector<int>> transitions;
+	map<alphabet_symbol, set<int>> transitions;
 	State();
 	State(int index, vector<int> label, string identifier, bool is_terminal,
-		  map<alphabet_symbol, vector<int>> transitions);
+		  map<alphabet_symbol, set<int>> transitions);
 	void set_transition(int, alphabet_symbol);
 };
 
@@ -36,7 +36,7 @@ class FiniteAutomaton : public BaseObject {
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
-	vector<int> closure(const vector<int>&, bool) const;
+	vector<int> closure(const set<int>&, bool) const;
 
   public:
 	FiniteAutomaton();

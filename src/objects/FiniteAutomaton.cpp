@@ -10,12 +10,12 @@ using namespace std;
 State::State() : index(0), is_terminal(false), identifier("") {}
 
 State::State(int index, vector<int> label, string identifier, bool is_terminal,
-			 map<alphabet_symbol, vector<int>> transitions)
+			 map<alphabet_symbol, set<int>> transitions)
 	: index(index), label(label), identifier(identifier),
 	  is_terminal(is_terminal), transitions(transitions) {}
 
 void State::set_transition(int to, alphabet_symbol symbol) {
-	transitions[symbol].push_back(to);
+	transitions[symbol].insert(to);
 }
 
 FiniteAutomaton::FiniteAutomaton() {}
@@ -42,8 +42,8 @@ string FiniteAutomaton::to_txt() const {
 
 	for (const auto& state : states) {
 		for (const auto& elem : state.transitions) {
-			for (int transition : elem.second) {
-				ss << "\t" << state.index << " -> " << transition
+			for (int transition_to : elem.second) {
+				ss << "\t" << state.index << " -> " << transition_to
 				   << " [label = \"" << to_string(elem.first) << "\"]\n";
 			}
 		}
@@ -59,28 +59,26 @@ void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
 	if (find(reachable.begin(), reachable.end(), index) == reachable.end()) {
 		reachable.push_back(index);
 		if (use_epsilons_only) {
-			for (int i = 0; i < states[index].transitions[epsilon()].size();
-				 i++) {
-				dfs(states, alphabet, states[index].transitions[epsilon()][i],
-					reachable, use_epsilons_only);
+			for (int transition_to : states[index].transitions[epsilon()]) {
+				dfs(states, alphabet, transition_to, reachable,
+					use_epsilons_only);
 			}
 		} else {
 			for (alphabet_symbol symb : alphabet) {
-				for (int i = 0; i < states[index].transitions[symb].size();
-					 i++) {
-					dfs(states, alphabet, states[index].transitions[symb][i],
-						reachable, use_epsilons_only);
+				for (int transition_to : states[index].transitions[symb]) {
+					dfs(states, alphabet, transition_to, reachable,
+						use_epsilons_only);
 				}
 			}
 		}
 	}
 }
 
-vector<int> FiniteAutomaton::closure(const vector<int>& indices,
+vector<int> FiniteAutomaton::closure(const set<int>& indices,
 									 bool use_epsilons_only) const {
 	vector<int> reachable;
-	for (int i = 0; i < indices.size(); i++)
-		dfs(states, language->get_alphabet(), indices[i], reachable,
+	for (int index : indices)
+		dfs(states, language->get_alphabet(), index, reachable,
 			use_epsilons_only);
 	return reachable;
 }
@@ -96,8 +94,7 @@ bool belong(State q, State u) {
 
 FiniteAutomaton FiniteAutomaton::determinize() const {
 	FiniteAutomaton dfa = FiniteAutomaton();
-	vector<int> x = {0};
-	vector<int> q0 = closure(x, true);
+	vector<int> q0 = closure({0}, true);
 
 	vector<int> label = q0;
 	sort(label.begin(), label.end());
@@ -108,7 +105,7 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 			(new_identifier.empty() ? "" : ", ") + states[elem].identifier;
 	}
 	State new_initial_state = {0, label, new_identifier, false,
-							   map<alphabet_symbol, vector<int>>()};
+							   map<alphabet_symbol, set<int>>()};
 	dfa.states.push_back(new_initial_state);
 
 	stack<vector<int>> s1;
@@ -130,14 +127,14 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 			}
 		}
 
-		vector<int> new_x;
+		set<int> new_x;
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			new_x.clear();
 			for (int j : z) {
 				auto transitions_by_symbol = states[j].transitions.find(symb);
 				if (transitions_by_symbol != states[j].transitions.end())
 					for (int k : transitions_by_symbol->second) {
-						new_x.push_back(k);
+						new_x.insert(k);
 					}
 			}
 
@@ -151,7 +148,7 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 			}
 
 			State q1 = {-1, new_label, new_identifier, false,
-						map<alphabet_symbol, vector<int>>()};
+						map<alphabet_symbol, set<int>>()};
 			bool accessory_flag = false;
 
 			for (auto& state : dfa.states) {
@@ -172,7 +169,7 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 				s1.push(z1);
 				s2.push(index);
 			}
-			dfa.states[q.index].transitions[symb].push_back(q1.index);
+			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
 	dfa.language = language;
@@ -201,12 +198,13 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 			for (int j = 0; j < counter; j++) {
 				if (!table[i * dfa.states.size() + j]) {
 					for (alphabet_symbol symb : language->get_alphabet()) {
-						vector<int> to = {dfa.states[i].transitions[symb][0],
-										  dfa.states[j].transitions[symb][0]};
-						if (dfa.states[i].transitions[symb][0] <
-							dfa.states[j].transitions[symb][0]) {
-							to = {dfa.states[j].transitions[symb][0],
-								  dfa.states[i].transitions[symb][0]};
+						vector<int> to = {
+							*dfa.states[i].transitions[symb].begin(),
+							*dfa.states[j].transitions[symb].begin()};
+						if (*dfa.states[i].transitions[symb].begin() <
+							*dfa.states[j].transitions[symb].begin()) {
+							to = {*dfa.states[j].transitions[symb].begin(),
+								  *dfa.states[i].transitions[symb].begin()};
 						}
 						if (table[to[0] * dfa.states.size() + to[1]]) {
 							table[i * dfa.states.size() + j] = true;
@@ -295,13 +293,12 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 	new_nfa.states = states;
 
 	for (auto& state : new_nfa.states) {
-		state.transitions = map<alphabet_symbol, vector<int>>();
+		state.transitions = map<alphabet_symbol, set<int>>();
 	}
 
 	for (int i = 0; i < states.size(); i++) {
-		vector<int> state = {states[i].index};
-		vector<int> q = closure(state, true);
-		vector<vector<int>> x;
+		vector<int> q = closure({states[i].index}, true);
+		vector<set<int>> x;
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			x.clear();
 			for (int k : q) {
@@ -321,7 +318,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 				if (new_nfa.states[elem].is_terminal) {
 					new_nfa.states[i].is_terminal = true;
 				}
-				new_nfa.states[i].transitions[symb].push_back(elem);
+				new_nfa.states[i].transitions[symb].insert(elem);
 			}
 		}
 	}
@@ -344,20 +341,19 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
 				 {state1.index, state2.index},
 				 state1.identifier + "&" + state2.identifier,
 				 state1.is_terminal && state2.is_terminal,
-				 map<alphabet_symbol, vector<int>>()});
+				 map<alphabet_symbol, set<int>>()});
 			counter++;
 		}
 	}
 
 	for (auto& state : new_dfa.states) {
 		for (alphabet_symbol symb : new_dfa.language->get_alphabet()) {
-			state.transitions[symb].push_back(
-				dfa1.states[state.label[0]].transitions.at(symb)[0] *
+			state.transitions[symb].insert(
+				*dfa1.states[state.label[0]].transitions.at(symb).begin() *
 					dfa1.states.size() +
-				dfa2.states[state.label[1]].transitions.at(symb)[0]);
+				*dfa2.states[state.label[1]].transitions.at(symb).begin());
 		}
 	}
-
 	return new_dfa.determinize();
 }
 
@@ -373,17 +369,17 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
 									  {state1.index, state2.index},
 									  state1.identifier + state2.identifier,
 									  state1.is_terminal || state2.is_terminal,
-									  map<alphabet_symbol, vector<int>>()});
+									  map<alphabet_symbol, set<int>>()});
 			counter++;
 		}
 	}
 
 	for (auto& state : new_dfa.states) {
 		for (alphabet_symbol symb : new_dfa.language->get_alphabet()) {
-			state.transitions[symb].push_back(
-				dfa1.states[state.label[0]].transitions.at(symb)[0] *
+			state.transitions[symb].insert(
+				*dfa1.states[state.label[0]].transitions.at(symb).begin() *
 					dfa1.states.size() +
-				dfa2.states[state.label[1]].transitions.at(symb)[0]);
+				*dfa2.states[state.label[1]].transitions.at(symb).begin());
 		}
 	}
 
@@ -401,16 +397,17 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2) const {
 									  {state1.index, state2.index},
 									  state1.identifier + state2.identifier,
 									  state1.is_terminal && !state2.is_terminal,
-									  map<alphabet_symbol, vector<int>>()});
+									  map<alphabet_symbol, set<int>>()});
 			counter++;
 		}
 	}
 
 	for (auto& state : new_dfa.states) {
 		for (alphabet_symbol symb : new_dfa.language->get_alphabet()) {
-			state.transitions[symb].push_back(
-				states[state.label[0]].transitions.at(symb)[0] * states.size() +
-				dfa2.states[state.label[1]].transitions.at(symb)[0]);
+			state.transitions[symb].insert(
+				*states[state.label[0]].transitions.at(symb).begin() *
+					states.size() +
+				*dfa2.states[state.label[1]].transitions.at(symb).begin());
 		}
 	}
 
@@ -433,23 +430,22 @@ FiniteAutomaton FiniteAutomaton::reverse(Language* _language) const {
 	for (auto& state : enfa.states) {
 		state.index += 1;
 	}
-	enfa.states.insert(
-		enfa.states.begin(),
-		{0, {0}, "", false, map<alphabet_symbol, vector<int>>()});
+	enfa.states.insert(enfa.states.begin(),
+					   {0, {0}, "", false, map<alphabet_symbol, set<int>>()});
 	enfa.initial_state = 0;
 	for (int i = 1; i < enfa.states.size(); i++) {
 		if (enfa.states[i].is_terminal) {
-			enfa.states[initial_state].transitions[epsilon()].push_back(
+			enfa.states[initial_state].transitions[epsilon()].insert(
 				enfa.states[i].index);
 		}
 		enfa.states[i].is_terminal = !enfa.states[i].is_terminal;
 	}
-	vector<map<alphabet_symbol, vector<int>>> new_transition_matrix(
+	vector<map<alphabet_symbol, set<int>>> new_transition_matrix(
 		enfa.states.size() - 1);
 	for (int i = 1; i < enfa.states.size(); i++) {
 		for (auto& transition : enfa.states[i].transitions) {
 			for (int elem : transition.second) {
-				new_transition_matrix[elem][transition.first].push_back(
+				new_transition_matrix[elem][transition.first].insert(
 					enfa.states[i].index);
 			}
 		}
@@ -476,7 +472,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 						 {size},
 						 "",
 						 false,
-						 map<alphabet_symbol, vector<int>>()});
+						 map<alphabet_symbol, set<int>>()});
 				} else {
 					new_dfa.states[i].set_transition(new_dfa.states.size() - 1,
 													 symb);
@@ -487,22 +483,21 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 	}
 	if (!flag) {
 		for (alphabet_symbol symb : language->get_alphabet()) {
-			new_dfa.states[new_dfa.states.size() - 1]
-				.transitions[symb]
-				.push_back(new_dfa.states.size() - 1);
+			new_dfa.states[new_dfa.states.size() - 1].transitions[symb].insert(
+				new_dfa.states.size() - 1);
 		}
 	}
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
-	FiniteAutomaton new_dfa(*this);
+	/*FiniteAutomaton new_dfa(*this);
 	int count = new_dfa.states.size();
 	for (int i = 0; i < count; i++) {
 		bool flag = false;
 		for (auto& transitions : new_dfa.states[i].transitions) {
-			for (int transition : transitions.second) {
-				if (i == transition && !new_dfa.states[i].is_terminal) {
+			for (int transition_to : transitions.second) {
+				if (i == transition_to && !new_dfa.states[i].is_terminal) {
 					flag = true;
 				}
 			}
@@ -517,12 +512,11 @@ FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 			}
 			for (int j = 0; j < new_dfa.states.size(); j++) {
 				for (auto& transitions : new_dfa.states[j].transitions) {
-					for (int k = 0; k < transitions.second.size(); k++) {
-						if (transitions.second[k] == i) {
-							transitions.second.erase(
-								transitions.second.begin() + k);
+					for (int transition_to : transitions.second) {
+						if (transition_to == i) {
+							transitions.second.erase(transition_to);
 						}
-						if (transitions.second[k] > i) {
+						if (transition_to > i) {
 							transitions.second[k] -= 1;
 						}
 					}
@@ -532,7 +526,8 @@ FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 			count--;
 		}
 	}
-	return new_dfa;
+	return new_dfa;*/
+	return FiniteAutomaton();
 }
 
 FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
@@ -550,23 +545,16 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 			new_identifier +=
 				(new_identifier.empty() ? "" : ", ") + states[index].identifier;
 		State s = {
-			i, {i}, new_identifier, false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, new_identifier, false, map<alphabet_symbol, set<int>>()};
 		new_states.push_back(s);
 	}
 
 	for (int i = 0; i < states.size(); i++) {
 		int from = classes[i];
 		for (const auto& elem : states[i].transitions) {
-			for (int transition : elem.second) {
-				int to = classes[transition];
-				auto it = new_states[from].transitions.find(elem.first);
-				if (it == new_states[from].transitions.end()) {
-					new_states[from].transitions[elem.first].push_back(to);
-				} else {
-					if (find(it->second.begin(), it->second.end(), to) ==
-						it->second.end())
-						it->second.push_back(to);
-				}
+			for (int transition_to : elem.second) {
+				int to = classes[transition_to];
+				new_states[from].transitions[elem.first].insert(to);
 			}
 		}
 	}
@@ -715,9 +703,9 @@ vector<vector<vector<GrammarItem*>>> fa_to_grammar(
 
 	for (int i = 0; i < states.size(); i++) {
 		for (const auto& elem : states[i].transitions) {
-			for (int j = 0; j < elem.second.size(); j++)
+			for (int transition_to : elem.second)
 				rules[i].push_back({terminals[terminal_index[elem.first]],
-									nonterminals[elem.second[j]]});
+									nonterminals[transition_to]});
 		}
 		if (states[i].is_terminal) rules[i].push_back({terminals[0]});
 	}
@@ -755,7 +743,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 	map<int, int> new_state_number;
 	for (int i = 0; i < bisimilar_nonterminals.size(); i++) {
 		states.push_back(
-			{i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()});
+			{i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()});
 		new_state_number[bisimilar_nonterminals[i]->state_index] = i;
 	}
 	int initial_state = 0;
@@ -937,17 +925,15 @@ vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
 	ind = 0;
 	for (int i = 0; i < states.size(); i++) {
 		for (const auto& elem : states[i].transitions) {
-			for (int j = 0; j < elem.second.size(); j++) {
-				// индекс состояния, в которое идет переход
-				int transInd = elem.second[j];
+			for (int transition_to : elem.second) {
 				// смотрим все переходы из этого состояния
-				for (auto transition_elem : states[transInd].transitions) {
+				for (auto transition_elem : states[transition_to].transitions) {
 					for (int k = 0; k < transition_elem.second.size(); k++) {
-						int nonterm_ind = fa_items[transInd]
+						int nonterm_ind = fa_items[transition_to]
 											  .second[transition_elem.first][k]
 											  .state_index;
-						rules[ind].push_back(
-							{terminals[transInd], nonterminals[nonterm_ind]});
+						rules[ind].push_back({terminals[transition_to],
+											  nonterminals[nonterm_ind]});
 					}
 				}
 				ind++;
@@ -1057,7 +1043,8 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 }
 
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
-	/*FiniteAutomat fa_instersection(FiniteAutomat::intersection(*this, fa));
-	cout << fa_instersection.to_txt() << endl;*/
-	return false;
+	FiniteAutomaton dfa1 = determinize();
+	FiniteAutomaton dfa2 = fa.determinize();
+	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
+	return equal(dfa_instersection.minimize(), dfa2); // TODO
 }

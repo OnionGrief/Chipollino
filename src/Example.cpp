@@ -4,7 +4,7 @@ void Example::determinize() {
 	vector<State> states;
 	for (int i = 0; i < 6; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -33,7 +33,7 @@ void Example::remove_eps() {
 	vector<State> states;
 	for (int i = 0; i < 3; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -55,7 +55,7 @@ void Example::minimize() {
 	vector<State> states;
 	for (int i = 0; i < 8; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -88,13 +88,13 @@ void Example::intersection() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	vector<State> states2;
 	for (int i = 0; i < 3; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 
@@ -159,7 +159,7 @@ void Example::fa_bisimilar_check() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, 'a');
@@ -178,7 +178,7 @@ void Example::fa_bisimilar_check() {
 	vector<State> states2;
 	for (int i = 0; i < 2; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 	states2[0].set_transition(1, 'a');
@@ -198,7 +198,7 @@ void Example::fa_equal_check() {
 	vector<State> states1;
 	for (int i = 0; i < 4; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, 'a');
@@ -212,7 +212,7 @@ void Example::fa_equal_check() {
 	vector<State> states2;
 	for (int i = 0; i < 4; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 	states2[0].set_transition(1, 'a');
@@ -226,7 +226,7 @@ void Example::fa_equal_check() {
 	vector<State> states3;
 	for (int i = 0; i < 4; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states3.push_back(s);
 	}
 	states3[3].set_transition(2, 'a');
@@ -247,7 +247,7 @@ void Example::fa_merge_bisimilar() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
 		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, vector<int>>()};
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, 'a');
@@ -273,7 +273,8 @@ void Example::fa_merge_bisimilar() {
 void Example::fa_equivalent_check() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<char, vector<int>>()};
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(0, 'c');
@@ -288,7 +289,8 @@ void Example::fa_equivalent_check() {
 
 	vector<State> states2;
 	for (int i = 0; i < 4; i++) {
-		State s = {i, {i}, to_string(i), false, map<char, vector<int>>()};
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 	states2[0].set_transition(0, 'c');
