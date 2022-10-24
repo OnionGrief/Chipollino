@@ -232,11 +232,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	}
 
 	counter = 1;
-	vector<bool> state_flags(dfa.states.size());
-	for (int i = 0; i < groups.size(); i++) {
-		for (int j = 0; j < groups[i].size(); j++) {
-			state_flags[groups[i][j]] = true;
-		}
+	for (int i = 0; i >= 0 && i < groups.size(); i++) {
 		for (int j = counter; j < groups.size(); j++) {
 			bool in_first = false;
 			bool in_second = false;
@@ -336,12 +332,15 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
 	int counter = 0;
 	for (auto& state1 : dfa1.states) {
 		for (auto& state2 : dfa2.states) {
-			new_dfa.states.push_back(
-				{counter,
-				 {state1.index, state2.index},
-				 state1.identifier + "&" + state2.identifier,
-				 state1.is_terminal && state2.is_terminal,
-				 map<alphabet_symbol, set<int>>()});
+			string new_identifier;
+			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
+			new_identifier +=
+				(state2.identifier.empty() ? "" : ", " + state2.identifier);
+			new_dfa.states.push_back({counter,
+									  {state1.index, state2.index},
+									  new_identifier,
+									  state1.is_terminal && state2.is_terminal,
+									  map<alphabet_symbol, set<int>>()});
 			counter++;
 		}
 	}
@@ -365,9 +364,13 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
 	int counter = 0;
 	for (auto& state1 : dfa1.states) {
 		for (auto& state2 : dfa2.states) {
+			string new_identifier;
+			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
+			new_identifier +=
+				(state2.identifier.empty() ? "" : ", " + state2.identifier);
 			new_dfa.states.push_back({counter,
 									  {state1.index, state2.index},
-									  state1.identifier + state2.identifier,
+									  new_identifier,
 									  state1.is_terminal || state2.is_terminal,
 									  map<alphabet_symbol, set<int>>()});
 			counter++;
@@ -393,9 +396,13 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2) const {
 	int counter = 0;
 	for (auto& state1 : states) {
 		for (auto& state2 : dfa2.states) {
+			string new_identifier;
+			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
+			new_identifier +=
+				(state2.identifier.empty() ? "" : ", " + state2.identifier);
 			new_dfa.states.push_back({counter,
 									  {state1.index, state2.index},
-									  state1.identifier + state2.identifier,
+									  new_identifier,
 									  state1.is_terminal && !state2.is_terminal,
 									  map<alphabet_symbol, set<int>>()});
 			counter++;
@@ -430,8 +437,9 @@ FiniteAutomaton FiniteAutomaton::reverse(Language* _language) const {
 	for (auto& state : enfa.states) {
 		state.index += 1;
 	}
-	enfa.states.insert(enfa.states.begin(),
-					   {0, {0}, "", false, map<alphabet_symbol, set<int>>()});
+	enfa.states.insert(
+		enfa.states.begin(),
+		{0, {0}, to_string(0), false, map<alphabet_symbol, set<int>>()});
 	enfa.initial_state = 0;
 	for (int i = 1; i < enfa.states.size(); i++) {
 		if (enfa.states[i].is_terminal) {
@@ -470,7 +478,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 					new_dfa.states.push_back(
 						{size,
 						 {size},
-						 "",
+						 to_string(size),
 						 false,
 						 map<alphabet_symbol, set<int>>()});
 				} else {
@@ -493,7 +501,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 	/*FiniteAutomaton new_dfa(*this);
 	int count = new_dfa.states.size();
-	for (int i = 0; i < count; i++) {
+	for (int i = 0; i >= 0 && i < count; i++) {
 		bool flag = false;
 		for (auto& transitions : new_dfa.states[i].transitions) {
 			for (int transition_to : transitions.second) {
@@ -510,7 +518,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 					new_dfa.states[j].index -= 1;
 				}
 			}
-			for (int j = 0; j < new_dfa.states.size(); j++) {
+			for (int j = 0; i >= 0 && j < new_dfa.states.size(); j++) {
 				for (auto& transitions : new_dfa.states[j].transitions) {
 					for (int transition_to : transitions.second) {
 						if (transition_to == i) {
