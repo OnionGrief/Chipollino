@@ -234,11 +234,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	}
 
 	counter = 1;
-	vector<bool> state_flags(dfa.states.size());
-	for (int i = 0; i < groups.size(); i++) {
-		for (int j = 0; j < groups[i].size(); j++) {
-			state_flags[groups[i][j]] = true;
-		}
+	for (int i = 0; i >= 0 && i < groups.size(); i++) {
 		for (int j = counter; j < groups.size(); j++) {
 			bool in_first = false;
 			bool in_second = false;
@@ -339,12 +335,15 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
 	int counter = 0;
 	for (auto& state1 : dfa1.states) {
 		for (auto& state2 : dfa2.states) {
-			new_dfa.states.push_back(
-				{counter,
-				 {state1.index, state2.index},
-				 state1.identifier + "&" + state2.identifier,
-				 state1.is_terminal && state2.is_terminal,
-				 map<alphabet_symbol, vector<int>>()});
+			string new_identifier;
+			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
+			new_identifier +=
+				(state2.identifier.empty() ? "" : ", " + state2.identifier);
+			new_dfa.states.push_back({counter,
+									  {state1.index, state2.index},
+									  new_identifier,
+									  state1.is_terminal && state2.is_terminal,
+									  map<alphabet_symbol, vector<int>>()});
 			counter++;
 		}
 	}
@@ -353,7 +352,7 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
 		for (alphabet_symbol symb : new_dfa.language->get_alphabet()) {
 			state.transitions[symb].push_back(
 				dfa1.states[state.label[0]].transitions.at(symb)[0] *
-					dfa1.states.size() +
+					dfa2.states.size() +
 				dfa2.states[state.label[1]].transitions.at(symb)[0]);
 		}
 	}
@@ -369,9 +368,13 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
 	int counter = 0;
 	for (auto& state1 : dfa1.states) {
 		for (auto& state2 : dfa2.states) {
+			string new_identifier;
+			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
+			new_identifier +=
+				(state2.identifier.empty() ? "" : ", " + state2.identifier);
 			new_dfa.states.push_back({counter,
 									  {state1.index, state2.index},
-									  state1.identifier + state2.identifier,
+									  new_identifier,
 									  state1.is_terminal || state2.is_terminal,
 									  map<alphabet_symbol, vector<int>>()});
 			counter++;
@@ -382,7 +385,7 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
 		for (alphabet_symbol symb : new_dfa.language->get_alphabet()) {
 			state.transitions[symb].push_back(
 				dfa1.states[state.label[0]].transitions.at(symb)[0] *
-					dfa1.states.size() +
+					dfa2.states.size() +
 				dfa2.states[state.label[1]].transitions.at(symb)[0]);
 		}
 	}
@@ -397,9 +400,13 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2) const {
 	int counter = 0;
 	for (auto& state1 : states) {
 		for (auto& state2 : dfa2.states) {
+			string new_identifier;
+			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
+			new_identifier +=
+				(state2.identifier.empty() ? "" : ", " + state2.identifier);
 			new_dfa.states.push_back({counter,
 									  {state1.index, state2.index},
-									  state1.identifier + state2.identifier,
+									  new_identifier,
 									  state1.is_terminal && !state2.is_terminal,
 									  map<alphabet_symbol, vector<int>>()});
 			counter++;
@@ -409,7 +416,8 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2) const {
 	for (auto& state : new_dfa.states) {
 		for (alphabet_symbol symb : new_dfa.language->get_alphabet()) {
 			state.transitions[symb].push_back(
-				states[state.label[0]].transitions.at(symb)[0] * states.size() +
+				states[state.label[0]].transitions.at(symb)[0] *
+					dfa2.states.size() +
 				dfa2.states[state.label[1]].transitions.at(symb)[0]);
 		}
 	}
@@ -435,7 +443,7 @@ FiniteAutomaton FiniteAutomaton::reverse(Language* _language) const {
 	}
 	enfa.states.insert(
 		enfa.states.begin(),
-		{0, {0}, "", false, map<alphabet_symbol, vector<int>>()});
+		{0, {0}, to_string(0), false, map<alphabet_symbol, vector<int>>()});
 	enfa.initial_state = 0;
 	for (int i = 1; i < enfa.states.size(); i++) {
 		if (enfa.states[i].is_terminal) {
@@ -474,7 +482,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 					new_dfa.states.push_back(
 						{size,
 						 {size},
-						 "",
+						 to_string(size),
 						 false,
 						 map<alphabet_symbol, vector<int>>()});
 				} else {
@@ -498,7 +506,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 	FiniteAutomaton new_dfa(*this);
 	int count = new_dfa.states.size();
-	for (int i = 0; i < count; i++) {
+	for (int i = 0; i >= 0 && i < count; i++) {
 		bool flag = false;
 		for (auto& transitions : new_dfa.states[i].transitions) {
 			for (int transition : transitions.second) {
@@ -515,7 +523,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 					new_dfa.states[j].index -= 1;
 				}
 			}
-			for (int j = 0; j < new_dfa.states.size(); j++) {
+			for (int j = 0; i >= 0 && j < new_dfa.states.size(); j++) {
 				for (auto& transitions : new_dfa.states[j].transitions) {
 					for (int k = 0; k < transitions.second.size(); k++) {
 						if (transitions.second[k] == i) {
