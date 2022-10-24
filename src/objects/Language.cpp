@@ -2,22 +2,18 @@
 
 Language::Language() {}
 
-Language::Language(vector<alphabet_symbol> alphabet) : alphabet(alphabet) {}
+Language::Language(set<alphabet_symbol> alphabet) : alphabet(alphabet) {}
 
-void Language::set_alphabet(vector<alphabet_symbol> _alphabet) {
+void Language::set_alphabet(set<alphabet_symbol> _alphabet) {
 	alphabet = _alphabet;
 }
 
-const vector<alphabet_symbol>& Language::get_alphabet() {
+const set<alphabet_symbol>& Language::get_alphabet() {
 	return alphabet;
 }
 
 int Language::get_alphabet_size() {
 	return alphabet.size();
-}
-
-alphabet_symbol Language::get_alphabet_symbol(int ind) {
-	return alphabet[ind];
 }
 
 void Language::set_pump_length(int pump_length_value) {

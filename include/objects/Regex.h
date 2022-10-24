@@ -1,12 +1,18 @@
 #pragma once
+#include "AlphabetSymbol.h"
 #include "BaseObject.h"
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <optional>
 #include <set>
 #include <string>
 #include <vector>
+
 using namespace std;
+
+class Language;
+class FiniteAutomaton;
 
 struct Lexem {
 	enum Type {
@@ -22,8 +28,8 @@ struct Lexem {
 
 	Type type = error;
 	char symbol = 0;
-
-	Lexem(Type type = error, char symbol = 0);
+	int number = 0;
+	Lexem(Type type = error, char symbol = 0, int number = 0);
 };
 
 class Regex : BaseObject {
@@ -39,7 +45,8 @@ class Regex : BaseObject {
 		// Terminal:
 		symb
 	};
-
+	Language* language = nullptr;
+	set<alphabet_symbol> alphabet;
 	Type type;
 	Lexem value;
 	Regex* term_p = nullptr;
@@ -66,15 +73,30 @@ class Regex : BaseObject {
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex* result) const;
+	FiniteAutomaton get_tompson(int);
+
+	vector<Lexem>* first_state(); // начальные состояния для to_glushkov
+	int L(); //проверяет, входит ли eps в дерево regex
+	vector<Lexem>* end_state(); // конечные состояния для to_glushkov
+	map<int, vector<int>> pairs();
+	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex
+	bool is_term(
+		int, const vector<Lexem>&); // возвращает true, если состояние конечно
 
   public:
 	Regex();
+	Regex(Language*);
 	string to_txt() override;
 	void pre_order_travers();
 	void clear();
+	FiniteAutomaton to_tompson();
+	FiniteAutomaton to_glushkov();
+	FiniteAutomaton to_ilieyu();
+
 	~Regex();
 	Regex* copy() const;
 	Regex(const Regex&);
+
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(Regex* r1, Regex* r2);

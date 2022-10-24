@@ -125,14 +125,34 @@ void Example::intersection() {
 }
 
 void Example::regex_parsing() {
-	string reg = "((a|)*c)";
-	Regex r;
-	if (!r.from_string(reg)) {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	// regl = "abc"; //"bbb*(aaa*bbb*)*";
+	Language* lang;
+	lang = new Language();
+	Regex r(lang);
+	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
 		return;
 	}
-	r.pre_order_travers(); // eps в выводе 0
-	r.clear();
+
+	FiniteAutomaton a;
+	FiniteAutomaton b;
+	FiniteAutomaton c;
+
+	cout << "to_tompson ------------------------------\n";
+	c = r.to_tompson(); // to_tompson(-1);
+	cout << c.to_txt();
+
+	cout << "to_glushkov ------------------------------\n";
+	a = r.to_glushkov();
+	cout << a.to_txt();
+	cout << "to_ilieyu  ------------------------------\n";
+	b = r.to_ilieyu();
+	cout << b.to_txt();
+
+	delete lang;
 }
 
 void Example::fa_bisimilar_check() {

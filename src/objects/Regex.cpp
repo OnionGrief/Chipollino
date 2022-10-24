@@ -1,7 +1,10 @@
 #include "Regex.h"
+#include "FiniteAutomaton.h"
+#include "Language.h"
 #include <set>
 
-Lexem::Lexem(Type type, char symbol) : type(type), symbol(symbol) {}
+Lexem::Lexem(Type type, char symbol, int number)
+	: type(type), symbol(symbol), number(number) {}
 
 vector<Lexem> Regex::parse_string(string str) {
 	vector<Lexem> lexems;
@@ -118,6 +121,10 @@ Regex* Regex::scan_conc(const vector<Lexem>& lexems, int index_start,
 			p->term_r = r;
 			p->value = lexems[i];
 			p->type = Regex::conc;
+
+			set<alphabet_symbol> s = l->alphabet;
+			s.insert(r->alphabet.begin(), r->alphabet.end());
+			p->alphabet = s;
 			return p;
 		}
 	}
@@ -149,6 +156,9 @@ Regex* Regex::scan_star(const vector<Lexem>& lexems, int index_start,
 			p->term_r = nullptr;
 			p->value = lexems[i];
 			p->type = Regex::star;
+
+			set<alphabet_symbol> s = l->alphabet;
+			p->alphabet = s;
 			return p;
 		}
 	}
@@ -184,6 +194,11 @@ Regex* Regex::scan_alt(const vector<Lexem>& lexems, int index_start,
 
 			p->value = lexems[i];
 			p->type = Regex::alt;
+
+			set<alphabet_symbol> s = l->alphabet;
+			s.insert(r->alphabet.begin(), r->alphabet.end());
+
+			p->alphabet = s;
 			return p;
 		}
 	}
@@ -200,6 +215,13 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	p = new Regex;
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
+
+	vector<alphabet_symbol> v = {lexems[index_start].symbol};
+	set<alphabet_symbol> s(v.begin(), v.end());
+
+	p->alphabet = s;
+	p->term_l = nullptr;
+	p->term_r = nullptr;
 	return p;
 }
 
@@ -214,6 +236,13 @@ Regex* Regex::scan_eps(const vector<Lexem>& lexems, int index_start,
 	p = new Regex;
 	p->value = lexems[index_start];
 	p->type = Regex::eps;
+
+	set<alphabet_symbol> s;
+	// l = new Language(s);
+
+	p->alphabet = s;
+	p->term_l = nullptr;
+	p->term_r = nullptr;
 	return p;
 }
 
@@ -252,17 +281,29 @@ Regex* Regex::expr(const vector<Lexem>& lexems, int index_start,
 }
 Regex::Regex() {}
 
+Regex::Regex(Language* l) {
+	language = l;
+}
+
 bool Regex::from_string(string str) {
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
+
 	if (root == nullptr || root->type == eps) {
 		return false;
 	}
-	*this = *root;
-	if (term_l != nullptr) {
+
+	//*this = *(root->copy());
+	value = root->value;
+	type = root->type;
+	alphabet = root->alphabet;
+	language->set_alphabet(alphabet);
+	if (root->term_l != nullptr) {
+		term_l = root->term_l->copy();
 		term_l->term_p = this;
 	}
-	if (term_r != nullptr) {
+	if (root->term_r != nullptr) {
+		term_r = root->term_r->copy();
 		term_r->term_p = this;
 	}
 	delete root;
@@ -273,27 +314,34 @@ Regex* Regex::copy() const {
 	Regex* c = new Regex();
 	c->type = type;
 	c->value = value;
+	c->language = language;
 	if (type != Regex::eps && type != Regex::symb) {
 		c->term_l = term_l->copy();
-		if (type != Regex::star) c->term_r = term_r->copy();
+		c->term_l->term_p = c;
+		if (type != Regex::star) {
+			c->term_r = term_r->copy();
+			c->term_r->term_p = c;
+		}
 	}
 	return c;
 }
 
 Regex::Regex(const Regex& reg)
-	: type(reg.type), value(reg.value),
+	: type(reg.type), value(reg.value), term_p(reg.term_p),
+	  language(reg.language), alphabet(reg.alphabet),
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
 	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
 
 void Regex::clear() {
 	if (term_l != nullptr) {
-		term_l->clear();
+		// term_l->clear();
 		delete term_l;
 	}
 	if (term_r != nullptr) {
-		term_r->clear();
+		// term_r->clear();
 		delete term_r;
 	}
+	// delete language;
 }
 
 Regex::~Regex() {
@@ -315,9 +363,519 @@ void Regex::pre_order_travers() {
 }
 
 string Regex::to_txt() {
-	return string();
+	string str1 = "", str2 = "";
+	if (term_l) {
+		str1 = term_l->to_txt();
+	}
+	if (term_r) {
+		str2 = term_r->to_txt();
+	}
+	string symb;
+	if (value.symbol) symb = value.symbol;
+	if (type == Type::eps) symb = "";
+	if (type == Type::alt) {
+		symb = '|';
+		if (term_p != nullptr && term_p->type == Type::conc) {
+			str1 = "(" + str1;
+			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
+							   // конкатенации a(a|b)a
+		}
+	}
+	if (type == Type::star) {
+		symb = '*';
+		if (term_l->type != Type::symb)
+			str1 = "(" + str1 +
+				   ")"; // ставим скобки при итерации, если символов > 1
+	}
+
+	return str1 + symb + str2;
 }
 
+FiniteAutomaton Regex::get_tompson(int max_index) {
+	string str;		   //идентификатор состояния
+	FiniteAutomaton a; // новый автомат
+	vector<State> s = {}; //вектор состояний нового автомата
+	map<alphabet_symbol, vector<int>> m, p, map_l, map_r; // словари автоматов
+	vector<int> trans; // новые транзишены
+	int offset; // сдвиг для старых индексов состояний в новом автомате
+	FiniteAutomaton al; // левый автомат относительно операции
+	FiniteAutomaton ar; // правый автомат относительно операции
+	Language* alp; // Новый язык для автомата
+	switch (type) {
+	case Regex::alt: // |
+
+		al = term_l->get_tompson(max_index);
+		ar = term_r->get_tompson(al.max_index);
+		max_index = ar.max_index;
+
+		str = "q" + to_string(max_index + 1);
+		m['\0'] = {1, int(al.states.size()) + 1};
+		s.push_back(State(0, {}, str, false, m));
+
+		for (size_t i = 0; i < al.states.size(); i++) {
+			State test;
+			test = al.states[i];
+			for (auto el : test.transitions) {
+				alphabet_symbol elem = el.first; // al->alphabet[i];
+				trans = {};
+				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
+					trans.push_back(test.transitions[elem][j] + 1);
+				}
+				map_l[elem] = trans;
+			}
+
+			if (test.is_terminal) {
+				map_l['\0'] = {int(al.states.size() + ar.states.size()) + 1};
+			}
+			s.push_back(State(al.states[i].index + 1, {},
+							  al.states[i].identifier, false, map_l));
+			map_l = {};
+		}
+		offset = s.size();
+		for (size_t i = 0; i < ar.states.size(); i++) {
+			State test;
+			test = ar.states[i];
+			for (auto el : test.transitions) {
+				alphabet_symbol elem = el.first;
+				trans = {};
+				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
+					trans.push_back(test.transitions[elem][j] + offset);
+				}
+				map_r[elem] = trans;
+			}
+			if (test.is_terminal) {
+				map_r['\0'] = {offset + int(ar.states.size())};
+			}
+
+			s.push_back(State(ar.states[i].index + offset, {},
+							  ar.states[i].identifier, false, map_r));
+			map_r = {};
+		}
+
+		str = "q" + to_string(max_index + 2);
+		s.push_back(State(int(al.states.size() + ar.states.size()) + 1, {}, str,
+						  true, p));
+
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
+		a.max_index = max_index + 2;
+		delete al.language;
+		delete ar.language;
+		return a;
+	case Regex::conc: // .
+		al = term_l->get_tompson(max_index);
+		ar = term_r->get_tompson(al.max_index);
+		max_index = ar.max_index;
+
+		for (size_t i = 0; i < al.states.size(); i++) {
+			State test;
+			test = al.states[i];
+			for (auto el : test.transitions) {
+				alphabet_symbol elem = el.first; // al->alphabet[i];
+				trans = {};
+				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
+					trans.push_back(test.transitions[elem][j]);
+				}
+				map_l[elem] = trans;
+			}
+
+			if (test.is_terminal) {
+				State test_r = ar.states[0];
+				for (auto el : test_r.transitions) {
+					alphabet_symbol elem = el.first; // al->alphabet[i];
+					for (size_t j = 0; j < test_r.transitions[elem].size();
+						 j++) {
+						// trans.push_back(test.transitions[elem][j] + 1);
+						map_l[elem].push_back(test_r.transitions[elem][j] +
+											  al.states.size() - 1);
+					}
+					// map_l[elem] = trans;
+				}
+			}
+			// cout << al->states[i].identifier << " " << al->states[i].index
+			// <<"\n";
+			s.push_back(State(al.states[i].index, {}, al.states[i].identifier,
+							  false, map_l));
+			map_l = {};
+		}
+		offset = s.size();
+		for (size_t i = 1; i < ar.states.size(); i++) {
+			State test;
+			test = ar.states[i];
+			for (auto el : test.transitions) {
+				alphabet_symbol elem = el.first; // al->alphabet[i];
+				trans = {};
+				// alfa.push_back(elem);
+				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
+					trans.push_back(test.transitions[elem][j] + offset - 1);
+				}
+				map_r[elem] = trans;
+			}
+
+			s.push_back(State(ar.states[i].index + offset - 1, {},
+							  ar.states[i].identifier, test.is_terminal,
+							  map_r));
+			map_r = {};
+		}
+
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
+		a.max_index = max_index;
+		delete al.language;
+		delete ar.language;
+		return a;
+	case Regex::star: // *
+		al = term_l->get_tompson(max_index);
+		max_index = al.max_index;
+
+		str = "q" + to_string(max_index + 1);
+		m['\0'] = {1, int(al.states.size()) + 1};
+		s.push_back(State(0, {}, str, false, m));
+
+		for (size_t i = 0; i < al.states.size(); i++) {
+			State test;
+			test = al.states[i];
+			for (auto el : test.transitions) {
+				alphabet_symbol elem = el.first; // al->alphabet[i];
+				trans = {};
+				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
+					trans.push_back(test.transitions[elem][j] + 1);
+				}
+				map_l[elem] = trans;
+			}
+
+			if (test.is_terminal) {
+				map_l['\0'] = {1, int(al.states.size()) + 1};
+			}
+			s.push_back(State(al.states[i].index + 1, {},
+							  al.states[i].identifier, false, map_l));
+			map_l = {};
+		}
+		offset = s.size();
+
+		str = "q" + to_string(max_index + 2);
+		s.push_back(State(int(al.states.size()) + 1, {}, str, true, p));
+
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
+		a.max_index = max_index + 2;
+		delete al.language;
+		return a;
+	case Regex::eps:
+		str = "q" + to_string(max_index + 1);
+
+		m['\0'] = {1};
+		s.push_back(State(0, {}, str, false, m));
+		str = "q" + to_string(max_index + 2);
+		s.push_back(State(1, {}, str, true, p));
+
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
+		a.max_index = max_index + 2;
+		return a;
+	default:
+
+		str = "q" + to_string(max_index + 1);
+		m[value.symbol] = {1};
+		s.push_back(State(0, {}, str, false, m));
+		str = "q" + to_string(max_index + 2);
+		s.push_back(State(1, {}, str, true, p));
+
+		alp = new Language(alphabet);
+		a = FiniteAutomaton(0, alp, s, false);
+		a.max_index = max_index + 2;
+		return a;
+	}
+	return FiniteAutomaton();
+}
+
+FiniteAutomaton Regex::to_tompson() {
+	FiniteAutomaton a;
+	a = get_tompson(-1);
+	delete a.language;
+	a.language = language;
+	return a;
+}
+
+int Regex::L() {
+	int l;
+	int r;
+	switch (type) {
+	case Regex::alt:
+		l = term_l->L();
+		r = term_r->L();
+		return l + r;
+	case Regex::conc:
+		l = term_l->L();
+		r = term_r->L();
+		if (l != 0 && r != 0) {
+			return 1;
+		}
+		return 0;
+	case Regex::star:
+		return 1;
+	case Regex::eps:
+		return 1;
+	default:
+		return 0;
+	}
+}
+vector<Lexem>* Regex::first_state() {
+	vector<Lexem>* l;
+	vector<Lexem>* r;
+	switch (type) {
+	case Regex::alt:
+		l = term_l->first_state();
+		r = term_r->first_state();
+		l->insert(l->end(), r->begin(), r->end());
+		delete r;
+		return l;
+	case Regex::star:
+		l = term_l->first_state();
+		return l;
+	case Regex::conc:
+		l = term_l->first_state();
+		if (term_l->L() != 0) {
+			r = term_r->first_state();
+			l->insert(l->end(), r->begin(), r->end());
+			delete r;
+		}
+		//
+		return l;
+	case Regex::eps:
+		l = new vector<Lexem>;
+		return l;
+	default:
+		l = new vector<Lexem>;
+		l->push_back(value);
+		return l;
+	}
+}
+
+vector<Lexem>* Regex::end_state() {
+	vector<Lexem>* l;
+	vector<Lexem>* r;
+	switch (type) {
+	case Regex::alt:
+		l = term_l->end_state();
+		r = term_r->end_state();
+		l->insert(l->end(), r->begin(), r->end());
+		delete r;
+		return l;
+	case Regex::star:
+		l = term_l->end_state();
+		return l;
+	case Regex::conc:
+		l = term_r->end_state();
+		if (term_r->L() != 0) {
+
+			r = term_l->end_state();
+			l->insert(l->end(), r->begin(), r->end());
+			delete r;
+		}
+		return l;
+	case Regex::eps:
+		l = new vector<Lexem>;
+		return l;
+	default:
+		l = new vector<Lexem>;
+		l->push_back(value);
+		return l;
+	}
+}
+
+map<int, vector<int>> Regex::pairs() {
+	map<int, vector<int>> l;
+	map<int, vector<int>> r;
+	map<int, vector<int>> p;
+	vector<Lexem>* rs;
+	vector<Lexem>* ps;
+	switch (type) {
+	case Regex::alt:
+		l = term_l->pairs();
+		r = term_r->pairs();
+		for (auto& it : r) {
+			l[it.first].insert(l[it.first].end(), it.second.begin(),
+							   it.second.end());
+		}
+		return l;
+	case Regex::star:
+		l = term_l->pairs();
+		rs = term_l->end_state();
+		ps = term_l->first_state();
+		for (size_t i = 0; i < rs->size(); i++) {
+			for (size_t j = 0; j < ps->size(); j++) {
+				r[(*rs)[i].number].push_back((*ps)[j].number);
+			}
+		}
+		for (auto& it : r) {
+			l[it.first].insert(l[it.first].end(), it.second.begin(),
+							   it.second.end());
+		}
+		delete rs;
+		delete ps;
+		return l;
+	case Regex::conc:
+		l = term_l->pairs();
+		r = term_r->pairs();
+		for (auto& it : r) {
+			l[it.first].insert(l[it.first].end(), it.second.begin(),
+							   it.second.end());
+		}
+		r = {};
+		rs = term_l->end_state();
+		ps = term_r->first_state();
+
+		for (size_t i = 0; i < rs->size(); i++) {
+			for (size_t j = 0; j < ps->size(); j++) {
+				r[(*rs)[i].number].push_back((*ps)[j].number);
+			}
+		}
+		for (auto& it : r) {
+			l[it.first].insert(l[it.first].end(), it.second.begin(),
+							   it.second.end());
+		}
+		delete rs;
+		delete ps;
+		return l;
+	default:
+		break;
+	}
+	return {};
+}
+
+vector<Regex*> Regex::pre_order_travers_vect() {
+	vector<Regex*> r;
+	vector<Regex*> ret;
+	if (value.symbol) {
+		r = {};
+		r.push_back(this);
+		return r;
+	}
+	r = {};
+	if (term_l) {
+		ret = term_l->pre_order_travers_vect();
+		r.insert(r.end(), ret.begin(), ret.end());
+	}
+	if (term_r) {
+		ret = term_r->pre_order_travers_vect();
+		r.insert(r.end(), ret.begin(), ret.end());
+	}
+	return r;
+}
+bool Regex::is_term(int number, const vector<Lexem>& list) {
+	for (size_t i = 0; i < list.size(); i++) {
+		if (list[i].number == number) {
+			return true;
+		}
+	}
+	return false;
+}
+FiniteAutomaton Regex::to_glushkov() {
+
+	vector<Regex*> list = this->pre_order_travers_vect();
+	for (size_t i = 0; i < list.size(); i++) {
+		list[i]->value.number = i;
+	}
+	vector<Lexem>* first = this->first_state(); // Множество начальных состояний
+	vector<Lexem>* end = this->end_state(); // Множество конечных состояний
+	map<int, vector<int>> p =
+		this->pairs(); // Множество возможных пар состояний
+	vector<State> st; // Список состояний в автомате
+	map<alphabet_symbol, vector<int>>
+		tr; // мап для переходов в каждом состоянии
+
+	for (size_t i = 0; i < first->size(); i++) {
+		tr[(*first)[i].symbol].push_back((*first)[i].number + 1);
+	}
+
+	st.push_back(State(0, {}, "S", false, tr));
+
+	for (size_t i = 0; i < list.size(); i++) {
+		Lexem elem = list[i]->value;
+		tr = {};
+
+		for (size_t j = 0; j < p[elem.number].size(); j++) {
+			tr[list[p[elem.number][j]]->value.symbol].push_back(
+				p[elem.number][j] + 1);
+			set<int> s(tr[list[p[elem.number][j]]->value.symbol].begin(),
+					   tr[list[p[elem.number][j]]->value.symbol].end());
+			tr[list[p[elem.number][j]]->value.symbol].assign(s.begin(),
+															 s.end());
+		}
+		string s = elem.symbol + to_string(i + 1);
+		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
+	}
+	delete first;
+	delete end;
+	return FiniteAutomaton(0, language, st, false);
+}
+
+FiniteAutomaton Regex::to_ilieyu() {
+	FiniteAutomaton glushkov = this->to_glushkov();
+	vector<State> states = glushkov.states;
+	vector<int> follow;
+	for (size_t i = 0; i < states.size(); i++) {
+		State st1 = states[i];
+		map<char, vector<int>> map1 = st1.transitions;
+		for (size_t j = i + 1; j < states.size(); j++) {
+			State st2 = states[j];
+			map<char, vector<int>> map2 = st2.transitions;
+			bool flag = true;
+			if (i == j || map2.size() != map1.size()) {
+				continue;
+			}
+
+			for (auto& it1 : map1) {
+				vector<int> v1 = it1.second;
+				vector<int> v2 = map2[it1.first];
+				sort(v1.begin(), v1.end());
+				sort(v2.begin(), v2.end());
+				if (v1 != v2 /*equal(v1.begin(), v1.end(), v2.begin())*/) {
+					flag = false;
+					break;
+				}
+			}
+			if (flag) {
+				follow.push_back(j);
+				states[i].label.push_back(j);
+			}
+		}
+	}
+	vector<State> new_states;
+	for (size_t i = 0; i < states.size(); i++) {
+		if (find(follow.begin(), follow.end(), states[i].index) ==
+			follow.end()) {
+			new_states.push_back(states[i]);
+		}
+	}
+
+	for (size_t i = 0; i < new_states.size(); i++) {
+		State v1 = new_states[i];
+		map<char, vector<int>> old_map = v1.transitions;
+		map<char, vector<int>> new_map;
+		for (auto& it1 : old_map) {
+			vector<int> v1 = it1.second;
+			for (size_t j = 0; j < v1.size(); j++) {
+				for (size_t k = 0; k < new_states.size(); k++) {
+					if (find(new_states[k].label.begin(),
+							 new_states[k].label.end(),
+							 v1[j]) != new_states[k].label.end() ||
+						v1[j] == new_states[k].index) {
+						new_map[it1.first].push_back(k);
+					}
+				}
+			}
+		}
+		new_states[i].transitions = new_map;
+	}
+
+	for (size_t i = 0; i < new_states.size(); i++) {
+		new_states[i].index = i;
+	}
+
+	return FiniteAutomaton(0, glushkov.language, new_states, false);
+}
 bool Regex::is_eps_possible() {
 	switch (type) {
 	case Type::eps:

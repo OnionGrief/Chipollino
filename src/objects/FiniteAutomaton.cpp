@@ -27,7 +27,8 @@ FiniteAutomaton::FiniteAutomaton(int initial_state, Language* language,
 
 FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 	: initial_state(other.initial_state), language(other.language),
-	  states(other.states), is_deterministic(other.is_deterministic) {}
+	  states(other.states), is_deterministic(other.is_deterministic),
+	  max_index(other.max_index) {}
 
 string FiniteAutomaton::to_txt() {
 	stringstream ss;
@@ -53,8 +54,8 @@ string FiniteAutomaton::to_txt() {
 }
 
 //обход автомата в глубину
-void dfs(vector<State> states, const vector<alphabet_symbol>& alphabet,
-		 int index, vector<int>& reachable, bool use_epsilons_only) {
+void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
+		 vector<int>& reachable, bool use_epsilons_only) {
 	if (find(reachable.begin(), reachable.end(), index) == reachable.end()) {
 		reachable.push_back(index);
 		if (use_epsilons_only) {
@@ -681,7 +682,7 @@ vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
 }
 // преобразование конечного автомата в грамматику
 vector<vector<vector<GrammarItem*>>> fa_to_grammar(
-	const vector<State>& states, const vector<alphabet_symbol>& alphabet,
+	const vector<State>& states, const set<alphabet_symbol>& alphabet,
 	int initial_state, vector<GrammarItem>& fa_items,
 	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
 	vector<vector<vector<GrammarItem*>>> rules(states.size());
@@ -697,11 +698,10 @@ vector<vector<vector<GrammarItem*>>> fa_to_grammar(
 	terminals.push_back(&fa_items[ind]);
 	terminal_index[epsilon()] = 0;
 	ind++;
-	for (int i = 0; i < alphabet.size(); i++) {
-		fa_items[ind] =
-			(GrammarItem(GrammarItem::terminal, to_string(alphabet[i])));
+	for (alphabet_symbol symb : alphabet) {
+		fa_items[ind] = (GrammarItem(GrammarItem::terminal, to_string(symb)));
 		terminals.push_back(&fa_items[ind]);
-		terminal_index[alphabet[i]] = i + 1;
+		terminal_index[symb] = ind - nonterminals.size();
 		ind++;
 	}
 	fa_items[ind] = (GrammarItem(GrammarItem::terminal,
