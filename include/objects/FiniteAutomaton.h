@@ -38,6 +38,12 @@ class FiniteAutomaton : public BaseObject {
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	vector<int> closure(const vector<int>&, bool) const;
 
+	enum AmbiguityValue {
+		exponentially_ambiguous,
+		unambigious,
+		polynomially_ambigious
+	};
+
   public:
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, Language* language, vector<State> states,
@@ -86,5 +92,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на вложенность (аргумент вложен в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
+	// определяет меру неоднозначности
+	AmbiguityValue ambiguity() const;
 	friend class Regex;
 };

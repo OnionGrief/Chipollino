@@ -1057,3 +1057,35 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	cout << fa_instersection.to_txt() << endl;*/
 	return false;
 }
+
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
+	int s = states.size(); // число состояний КА
+	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
+	for (int i = 0; i < s; i++)
+		for (const auto& elem : states[i].transitions)
+			for (int transition : elem.second)
+				adjacency_matrix[i][transition]++;
+	/*for (auto vec : adjacency_matrix) {
+		for (auto t : vec)
+			cout << t << " ";
+		cout << endl;
+	}*/
+
+	vector<int> paths_number(s * s); // число путей длины i в автомате
+
+	cout << endl;
+	vector<vector<int>> d(s * s + 1, vector<int>(s));
+	d[0][0] = 1;
+	for (int k = 1; k < s * s + 1; k++) {
+		for (int v = 0; v < s; v++) {
+			for (int i = 0; i < s; i++) {
+				d[k][v] += adjacency_matrix[i][v] * d[k - 1][i];
+			}
+			if (states[v].is_terminal) paths_number[k - 1] += d[k][v];
+			// cout << d[k][v] << " ";
+		}
+		cout << paths_number[k - 1] << " ";
+	}
+	cout << endl;
+	return FiniteAutomaton::exponentially_ambiguous;
+}
