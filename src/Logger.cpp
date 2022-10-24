@@ -9,7 +9,7 @@ Logger::~Logger() {}
 
 void Logger::init() {
 	ofstream out;
-	out.open("./../resources/report.tex", ofstream::trunc);
+	out.open("./resources/report.tex", ofstream::trunc);
 	if (out.is_open()) {
 		out << "\\documentclass[14pt, russion]{article}" << endl;
 		out << "\\usepackage[utf8]{inputenc}" << endl;
@@ -27,7 +27,7 @@ void Logger::init() {
 }
 
 void Logger::init_step(string step_name) {
-	ofstream out("./../resources/report.tex", ios::app);
+	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << step_name + "\n" << endl;
 	}
@@ -36,7 +36,7 @@ void Logger::init_step(string step_name) {
 
 Logger l;
 void Logger::log(string text, string fa1, string fa2) {
-	ofstream out("./../resources/report.tex", ios::app);
+	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + "\n" << endl;
 		if (fa1 != "") {
@@ -44,7 +44,7 @@ void Logger::log(string text, string fa1, string fa2) {
 			AutomatonToImage::to_image(fa1, l.i);
 			out << "Автомат до преобразования\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics{./../resources/output%d.png}\n", l.i);
+    		sprintf(si, "\\includegraphics{./resources/output%d.png}\n", l.i);
 			out << si << endl;
 		}
 		if (fa2 != "") {
@@ -52,7 +52,7 @@ void Logger::log(string text, string fa1, string fa2) {
 			AutomatonToImage::to_image(fa2, l.i);
 			out << "Автомат после преобразования\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics{./../resources/output%d.png}\n", l.i);
+    		sprintf(si, "\\includegraphics{./resources/output%d.png}\n", l.i);
 			out << si << endl;
 		}
 	}
@@ -60,7 +60,7 @@ void Logger::log(string text, string fa1, string fa2) {
 }
 
 void Logger::finish_step() {
-	ofstream out("./../resources/report.tex", ios::app);
+	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << "\\newpage\n" << endl;
 	}
@@ -68,12 +68,12 @@ void Logger::finish_step() {
 }
 
 void Logger::finish() {
-	ofstream out("./../resources/report.tex", ios::app);
+	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << "\\end{document}" << endl;
 	}
 	out.close();
 	char cmd[1024];
-    sprintf(cmd, "pdflatex \"./../resources/report.tex\"");
+    sprintf(cmd, "pdflatex \"./resources/report.tex\"");
     system(cmd); 
 }
