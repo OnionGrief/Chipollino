@@ -175,7 +175,7 @@ void Example::parsing_nca() {
 	cout << "to_tompson ------------------------------\n";
 	c = r.to_ilieyu(); // to_tompson(-1);
 	cout << c.to_txt();
-	cout << c.parsing_to_nca("aaaaaaaaaaaaaaaaaaabccccc")
+	cout << c.parsing_by_nca("aaaaaaaaaaaaaaaaaaabccccc")
 		 << endl; // true если распознал слово
 	delete lang;
 }

@@ -1076,7 +1076,7 @@ bool FiniteAutomaton::parsing_nca(string s, State state) {
 	return false;
 }
 
-bool FiniteAutomaton::parsing_to_nca(const string& s) {
+bool FiniteAutomaton::parsing_by_nca(const string& s) {
 	State state = states[0];
 	return parsing_nca(s, state);
 }
