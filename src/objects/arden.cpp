@@ -21,8 +21,8 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 			// cout << in[j].temp_regex.to_txt() << in[i].temp_regex.to_txt();
 			s1.regex_star(in[i].temp_regex); //если бага то тут)
 			s2.regex_star(in[j].temp_regex);
-			r.regex_union(s1, s2);
-			in[i].temp_regex = r;
+			r.regex_union(s1.copy(), s2.copy());
+			in[i].temp_regex = r.copy();
 
 			j++;
 		}
@@ -53,7 +53,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 		Regex r;
 		r.regex_star(in[0].temp_regex);
 		expression_arden temp;
-		temp.temp_regex = r;
+		temp.temp_regex = r.copy();
 		temp.condition = -1;
 		out.push_back(temp);
 		return out;
@@ -63,9 +63,9 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			Regex r;
 			r.regex_star(in[indexcur].temp_regex);
 			Regex k;
-			k.regex_union(in[i].temp_regex, r);
+			k.regex_union(in[i].temp_regex, r.copy());
 			expression_arden temp;
-			temp.temp_regex = k;
+			temp.temp_regex = k.copy();
 			temp.condition = in[i].condition;
 			out.push_back(temp);
 		}
@@ -73,39 +73,42 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	// cout << "arden";
 	return out;
 }
-Regex nfa_to_regex(FiniteAutomat in) {
+Regex nfa_to_regex(FiniteAutomaton in) {
 	vector<int> endstate;
 	vector<vector<expression_arden>> data;
-	vector<char> alphabet = in.get_alphabet();
+	set<char> alphabet = in.get_alphabet();
 
 	for (int i = 0; i < in.get_states_size(); i++) {
 		vector<expression_arden> temp;
 		data.push_back(temp);
 	}
-	Regex r;
+	Regex r(in.get_language());
 	expression_arden temp;
 	temp.condition = -1;
 	string str = "";
 	r.regex_eps();
 	cout << r.to_txt();
-	temp.temp_regex = r;
+	temp.temp_regex = r.copy();
 	data[in.get_initial()].push_back(temp);
 	for (int i = 0; i < in.get_states_size(); i++) {
 		State a = in.get_state(i);
 		if (a.is_terminal) {
 			endstate.push_back(i);
 		}
-		for (int j = 0; j < alphabet.size(); j++) {
-			if (a.transitions[alphabet[j]].size()) {
-				vector<int> trans = a.transitions.at(alphabet[j]);
+		for (set<alphabet_symbol>::iterator it = alphabet.begin();
+			 it != alphabet.end(); it++) {
+			//}
+			// for (int j = 0; j < alphabet.size(); j++) {
+			if (a.transitions[*it].size()) {
+				vector<int> trans = a.transitions.at(*it);
 				for (int m = 0; m < trans.size(); m++) {
-					Regex r;
+					Regex r(in.get_language());
 					expression_arden temp;
 					temp.condition = i;
 					string str = "";
-					str += alphabet[j];
+					str += *it;
 					r.from_string(str);
-					temp.temp_regex = r;
+					temp.temp_regex = r.copy();
 					data[trans[m]].push_back(temp);
 				}
 			}
@@ -120,10 +123,10 @@ Regex nfa_to_regex(FiniteAutomat in) {
 				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
 
 					expression_arden temp;
-					Regex r;
+					Regex r(in.get_language());
 					r.regex_union(data[data[i][j].condition][k].temp_regex,
 								  data[i][j].temp_regex);
-					temp.temp_regex = r;
+					temp.temp_regex = r.copy();
 					temp.condition = data[data[i][j].condition][k].condition;
 					tempdata.push_back(temp);
 				}
@@ -158,7 +161,7 @@ Regex nfa_to_regex(FiniteAutomat in) {
 				r.regex_union(data[data[i][j].condition][0].temp_regex,
 							  data[i][j].temp_regex);
 				data[i][j].condition = -1;
-				data[i][j].temp_regex = r;
+				data[i][j].temp_regex = r.copy();
 			}
 		}
 		data[i] = arden_minimize(data[i]);
@@ -173,15 +176,15 @@ Regex nfa_to_regex(FiniteAutomat in) {
 		return f;
 	}
 	if (endstate.size() < 2) {
-		return data[endstate[0]][0].temp_regex;
+		return *data[endstate[0]][0].temp_regex;
 	}
-	Regex r1;
+	Regex r1(in.get_language());
 	r1.regex_alt(data[endstate[0]][0].temp_regex,
 				 data[endstate[1]][0].temp_regex);
 	for (int i = 2; i < endstate.size(); i++) {
-		Regex temp;
-		temp.regex_alt(r1, data[endstate[i]][0].temp_regex);
-		r1 = temp;
+		Regex temp(in.get_language());
+		temp.regex_alt(r1.copy(), data[endstate[i]][0].temp_regex);
+		r1 = *temp.copy();
 	}
 	return r1;
 }

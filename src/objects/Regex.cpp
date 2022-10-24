@@ -309,19 +309,22 @@ bool Regex::from_string(string str) {
 	delete root;
 	return true;
 }
-void Regex::regex_union(Regex a, Regex b) {
+void Regex::regex_union(Regex* a, Regex* b) {
 	type = Type::conc;
-	term_l = a.copy();
-	term_r = b.copy();
+	term_l = a->copy();
+	term_r = b->copy();
 }
-void Regex::regex_alt(Regex a, Regex b) {
+void Regex::regex_alt(Regex* a, Regex* b) {
 	type = Type::alt;
-	term_l = a.copy();
-	term_r = b.copy();
+	term_l = a->copy();
+	term_r = b->copy();
 }
-void Regex::regex_star(Regex a) {
+void Regex::regex_star(Regex* a) {
 	type = Type::star;
-	term_l = a.copy();
+	term_l = a->copy();
+}
+void Regex::regex_eps() {
+	type = Type::eps;
 }
 Regex* Regex::copy() const {
 	Regex* c = new Regex();
@@ -972,7 +975,7 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 		delete prefs2;
 		return;
 	}
-
+}
 bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 										   const Regex* reg_e,
 										   Regex* result) const {
@@ -980,12 +983,20 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 		std::cout << "Invalid input: unexpected regex instead of symbol\n";
 		return false;
 	}
-	if (type == Type::alt) {
-		symb = '|';
-		if ((term_p) && term_p->type == Type::conc) {
-			str1 = "(" + str1;
-			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
-							   // конкатенации a(a|b)a
+	if (respected_sym->type == Type::eps) {
+		result = reg_e->copy();
+		return true;
+	}
+	Regex* subresult;
+	bool answer = true;
+	switch (reg_e->type) {
+	case Type::eps:
+		result = new Regex();
+		return answer;
+	case Type::symb:
+		if (respected_sym->value.symbol != reg_e->value.symbol) {
+			std::cout << "Invalid input: symbol is not a prefix of regex\n";
+			return false;
 		}
 		result = new Regex();
 		return answer;
@@ -1040,6 +1051,9 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 			break;
 		}
 	}
+	result = next;
+	return success;
+}
 
 // Производная по символу
 std::optional<Regex> Regex::symbol_derevative(
@@ -1093,8 +1107,8 @@ int Regex::pump_length() const {
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
 					derevative_with_respect_to_str(*it, this, pumping.term_r);
-					if (true) { // TODO: check if pumping language belongs reg_e
-								// language
+					if (true) { // TODO: check if pumping language
+								// belongs reg_e language
 						checked_prefixes[*it] = true;
 						return i;
 					}
@@ -1122,7 +1136,4 @@ bool Regex::equal(Regex* r1, Regex* r2) {
 
 	return equal(r1->term_l, r2->term_l) && equal(r1->term_r, r2->term_r) ||
 		   equal(r1->term_r, r2->term_l) && equal(r1->term_l, r2->term_r);
-}
-void Regex::regex_eps() {
-	type = Type::eps;
 }

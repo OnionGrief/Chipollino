@@ -297,6 +297,9 @@ void Example::arden_test() {
 	states[2].is_terminal = true;
 	states[4].is_terminal = true;
 	states[5].is_terminal = true;
-	FiniteAutomat NDM(0, {'a', 'b'}, states, false);
-	cout << nfa_to_regex(NDM).to_txt() + "\n";
+
+	Language l1({'a', 'b'});
+	FiniteAutomaton NDM(0, &l1, states, false);
+	nfa_to_regex(NDM);
+	// cout << .to_txt() + "\n";
 }

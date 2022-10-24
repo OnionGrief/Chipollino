@@ -8,11 +8,6 @@
 #include <set>
 #include <string>
 #include <vector>
-<<<<<<<<< Temporary merge branch 1
-#include <iostream>
-#include <set>
-=========
->>>>>>>>> Temporary merge branch 2
 using namespace std;
 
 class Language;
@@ -111,11 +106,11 @@ class Regex : BaseObject {
 	std::optional<Regex> prefix_derevative(std::string respected_str) const;
 	// Длина накачки
 	int pump_length() const;
-	void regex_union(Regex a, Regex b);
+	void regex_union(Regex* a, Regex* b);
 
-	void regex_alt(Regex a, Regex b);
+	void regex_alt(Regex* a, Regex* b);
 
-	void regex_star(Regex a);
+	void regex_star(Regex* a);
 
 	void regex_eps();
 	// TODO: there may be some *to-automat* methods
