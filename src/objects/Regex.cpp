@@ -362,7 +362,7 @@ void Regex::pre_order_travers() {
 	}
 }
 
-string Regex::to_txt() {
+string Regex::to_txt() const {
 	string str1 = "", str2 = "";
 	if (term_l) {
 		str1 = term_l->to_txt();

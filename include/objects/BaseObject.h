@@ -3,5 +3,5 @@
 
 class BaseObject {
   public:
-	virtual std::string to_txt() = 0;
+	virtual std::string to_txt() const = 0;
 };

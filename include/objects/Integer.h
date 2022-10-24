@@ -7,5 +7,5 @@ class Integer : public BaseObject {
 	int value = 0;
 
   public:
-	std::string to_txt() override;
+	std::string to_txt() const override;
 };
