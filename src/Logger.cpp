@@ -44,7 +44,7 @@ void Logger::log(string text, string fa1, string fa2) {
 			AutomatonToImage::to_image(fa1, l.i);
 			out << "Автомат до преобразования\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics{output%d.png}\n", l.i);
+    		sprintf(si, "\\includegraphics{./../resources/output%d.png}\n", l.i);
 			out << si << endl;
 		}
 		if (fa2 != "") {
@@ -52,7 +52,7 @@ void Logger::log(string text, string fa1, string fa2) {
 			AutomatonToImage::to_image(fa2, l.i);
 			out << "Автомат после преобразования\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics{output%d.png}\n", l.i);
+    		sprintf(si, "\\includegraphics{./../resources/output%d.png}\n", l.i);
 			out << si << endl;
 		}
 	}
