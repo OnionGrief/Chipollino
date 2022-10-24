@@ -155,6 +155,31 @@ void Example::regex_parsing() {
 	delete lang;
 }
 
+void Example::parsing_nca() {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	regl = "a*bc*"; //"bbb*(aaa*bbb*)*";
+	Language* lang;
+	lang = new Language();
+	Regex r(lang);
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
+	}
+
+	FiniteAutomaton a;
+	FiniteAutomaton b;
+	FiniteAutomaton c;
+
+	cout << "to_tompson ------------------------------\n";
+	c = r.to_ilieyu(); // to_tompson(-1);
+	cout << c.to_txt();
+	cout << c.parsing_to_nca("aaaaaaaaaaaaaaaaaaabccccc")
+		 << endl; // true если распознал слово
+	delete lang;
+}
+
 void Example::fa_bisimilar_check() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {

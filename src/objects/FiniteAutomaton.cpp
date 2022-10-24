@@ -1051,3 +1051,32 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) {
 	fa)); cout << fa_instersection.to_txt() << endl;*/
 	return false;
 }
+bool FiniteAutomaton::parsing_nca(string s, State state) {
+	// cout << s << endl;
+	if (s.size() == 0 && state.is_terminal) {
+		return true;
+	}
+
+	if (s.size() == 0 && !state.is_terminal) {
+		return false;
+	}
+	alphabet_symbol elem = s[0];
+	vector<int> trans = state.transitions[elem];
+	vector<int> trans_eps = state.transitions['\0'];
+	for (size_t i = 0; i < trans.size(); i++) {
+		if (parsing_nca(s.substr(1), states[trans[i]])) {
+			return true;
+		}
+	}
+	for (size_t i = 0; i < trans_eps.size(); i++) {
+		if (parsing_nca(s, states[trans_eps[i]])) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool FiniteAutomaton::parsing_to_nca(const string& s) {
+	State state = states[0];
+	return parsing_nca(s, state);
+}
