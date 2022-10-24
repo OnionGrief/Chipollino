@@ -77,7 +77,7 @@ void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
 }
 
 vector<int> FiniteAutomaton::closure(const vector<int>& indices,
-									 bool use_epsilons_only) {
+									 bool use_epsilons_only) const {
 	vector<int> reachable;
 	for (int i = 0; i < indices.size(); i++)
 		dfs(states, language->get_alphabet(), indices[i], reachable,
@@ -94,7 +94,7 @@ bool belong(State q, State u) {
 	return true;
 }
 
-FiniteAutomaton FiniteAutomaton::determinize() {
+FiniteAutomaton FiniteAutomaton::determinize() const {
 	FiniteAutomaton dfa = FiniteAutomaton();
 	vector<int> x = {0};
 	vector<int> q0 = closure(x, true);
@@ -134,7 +134,7 @@ FiniteAutomaton FiniteAutomaton::determinize() {
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			new_x.clear();
 			for (int j : z) {
-				for (int k : states[j].transitions[symb]) {
+				for (int k : states[j].transitions.at(symb)) {
 					new_x.push_back(k);
 				}
 			}
@@ -178,7 +178,7 @@ FiniteAutomaton FiniteAutomaton::determinize() {
 	return dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::minimize() {
+FiniteAutomaton FiniteAutomaton::minimize() const {
 	FiniteAutomaton dfa = determinize();
 	vector<bool> table(dfa.states.size() * dfa.states.size());
 	int counter = 1;
@@ -288,7 +288,7 @@ FiniteAutomaton FiniteAutomaton::minimize() {
 	return minimized_dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::remove_eps() {
+FiniteAutomaton FiniteAutomaton::remove_eps() const {
 	FiniteAutomaton new_nfa;
 	new_nfa.states = states;
 
@@ -303,7 +303,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps() {
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			x.clear();
 			for (int k : q) {
-				x.push_back(states[k].transitions[symb]);
+				x.push_back(states[k].transitions.at(symb));
 			}
 			vector<int> q1;
 			set<int> x1;
@@ -386,7 +386,7 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
 	return new_dfa.determinize();
 }
 
-FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2) {
+FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2) const {
 	FiniteAutomaton new_dfa;
 	new_dfa.initial_state = 0;
 	new_dfa.language = language;
@@ -413,7 +413,7 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2) {
 	return new_dfa.determinize();
 }
 
-FiniteAutomaton FiniteAutomaton::complement(Language* _language) {
+FiniteAutomaton FiniteAutomaton::complement(Language* _language) const {
 	_language->set_alphabet(language->get_alphabet());
 	FiniteAutomaton new_dfa =
 		FiniteAutomaton(initial_state, _language, states, is_deterministic);
@@ -422,7 +422,7 @@ FiniteAutomaton FiniteAutomaton::complement(Language* _language) {
 	}
 	return new_dfa;
 }
-FiniteAutomaton FiniteAutomaton::reverse(Language* _language) {
+FiniteAutomaton FiniteAutomaton::reverse(Language* _language) const {
 	_language->set_alphabet(language->get_alphabet());
 	FiniteAutomaton enfa =
 		FiniteAutomaton(initial_state, _language, states, is_deterministic);
@@ -456,7 +456,7 @@ FiniteAutomaton FiniteAutomaton::reverse(Language* _language) {
 	return enfa;
 }
 
-FiniteAutomaton FiniteAutomaton::add_trap_state() {
+FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 	FiniteAutomaton new_dfa(*this);
 	bool flag = true;
 	int count = new_dfa.states.size();
@@ -491,7 +491,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() {
 	return new_dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::remove_trap_state() {
+FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 	FiniteAutomaton new_dfa(*this);
 	int count = new_dfa.states.size();
 	for (int i = 0; i < count; i++) {
@@ -531,7 +531,8 @@ FiniteAutomaton FiniteAutomaton::remove_trap_state() {
 	return new_dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(vector<int> classes) {
+FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
+	vector<int> classes) const {
 	map<int, vector<int>>
 		class_to_index; // нужен для подсчета количества классов
 	for (int i = 0; i < classes.size(); i++)
@@ -728,7 +729,7 @@ alphabet_symbol to_alphabet_symbol(string s) {
 	else
 		return s[0];
 }
-FiniteAutomaton FiniteAutomaton::merge_bisimilar() {
+FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
 	vector<GrammarItem*> terminals;
@@ -1051,7 +1052,7 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	return equal(fa1.minimize(), fa2.minimize());
 }
 
-bool FiniteAutomaton::subset(const FiniteAutomaton& fa) {
+bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	/*FiniteAutomat fa_instersection(FiniteAutomat::intersection(*this, fa));
 	cout << fa_instersection.to_txt() << endl;*/
 	return false;

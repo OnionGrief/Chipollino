@@ -36,7 +36,7 @@ class FiniteAutomaton : public BaseObject {
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
-	vector<int> closure(const vector<int>&, bool);
+	vector<int> closure(const vector<int>&, bool) const;
 
   public:
 	FiniteAutomaton();
@@ -46,11 +46,11 @@ class FiniteAutomaton : public BaseObject {
 	// визуализация автомата
 	string to_txt() override;
 	// детерминизация ДКА
-	FiniteAutomaton determinize();
+	FiniteAutomaton determinize() const;
 	// построение eps-замыкания
-	FiniteAutomaton remove_eps();
+	FiniteAutomaton remove_eps() const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize();
+	FiniteAutomaton minimize() const;
 	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&,
@@ -61,21 +61,21 @@ class FiniteAutomaton : public BaseObject {
 								  const FiniteAutomaton&);
 	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
-	FiniteAutomaton difference(const FiniteAutomaton&);
+	FiniteAutomaton difference(const FiniteAutomaton&) const;
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
-	FiniteAutomaton complement(Language*); // меняет язык
+	FiniteAutomaton complement(Language*) const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
-	FiniteAutomaton reverse(Language*); // меняет язык
+	FiniteAutomaton reverse(Language*) const; // меняет язык
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
 	// себя)
-	FiniteAutomaton add_trap_state();
+	FiniteAutomaton add_trap_state() const;
 	// удаление ловушки
-	FiniteAutomaton remove_trap_state();
+	FiniteAutomaton remove_trap_state() const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
 	// states.size()) [i] элемент хранит номер класса [i] состояния
-	FiniteAutomaton merge_equivalent_classes(vector<int>);
+	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
 	// объединение эквивалентных по бисимуляции состояний
-	FiniteAutomaton merge_bisimilar();
+	FiniteAutomaton merge_bisimilar() const;
 	// проверка автоматов на эквивалентность
 	static bool equivalent(const FiniteAutomaton&,
 						   const FiniteAutomaton&); // TODO
@@ -84,7 +84,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на вложенность (аргумент вложен в this)
-	bool subset(const FiniteAutomaton&); // TODO
-										 // и тд
+	bool subset(const FiniteAutomaton&) const; // TODO
+											   // и тд
 	friend class Regex;
 };

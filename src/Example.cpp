@@ -283,7 +283,8 @@ void Example::fa_equivalent_check() {
 	states1[2].set_transition(1, 'c');
 	states1[2].set_transition(2, 'd');
 	states1[0].is_terminal = true;
-	FiniteAutomat fa1(0, {'c', 'd'}, states1, false);
+	Language l1({'c', 'd'});
+	FiniteAutomaton fa1(0, &l1, states1, false);
 
 	vector<State> states2;
 	for (int i = 0; i < 4; i++) {
@@ -299,7 +300,8 @@ void Example::fa_equivalent_check() {
 	states2[3].set_transition(2, 'c');
 	states2[3].set_transition(0, 'd');
 	states2[0].is_terminal = true;
-	FiniteAutomat fa2(0, {'c', 'd'}, states2, false);
+	Language l2({'c', 'd'});
+	FiniteAutomaton fa2(0, &l2, states2, false);
 
-	cout << FiniteAutomat::equivalent(fa1, fa2);
+	cout << FiniteAutomaton::equivalent(fa1, fa2);
 }
