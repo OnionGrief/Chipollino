@@ -30,7 +30,7 @@ FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 	  states(other.states), is_deterministic(other.is_deterministic),
 	  max_index(other.max_index) {}
 
-string FiniteAutomaton::to_txt() {
+string FiniteAutomaton::to_txt() const {
 	stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
 	for (int i = 0; i < states.size(); i++) {
@@ -40,7 +40,7 @@ string FiniteAutomaton::to_txt() {
 	if (states.size() > initial_state)
 		ss << "dummy -> " << states[initial_state].index << "\n";
 
-	for (auto& state : states) {
+	for (const auto& state : states) {
 		for (const auto& elem : state.transitions) {
 			for (int transition : elem.second) {
 				ss << "\t" << state.index << " -> " << transition
@@ -134,9 +134,11 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			new_x.clear();
 			for (int j : z) {
-				for (int k : states[j].transitions.at(symb)) {
-					new_x.push_back(k);
-				}
+				auto transitions_by_symbol = states[j].transitions.find(symb);
+				if (transitions_by_symbol != states[j].transitions.end())
+					for (int k : transitions_by_symbol->second) {
+						new_x.push_back(k);
+					}
 			}
 
 			vector<int> z1 = closure(new_x, true);
@@ -303,7 +305,9 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			x.clear();
 			for (int k : q) {
-				x.push_back(states[k].transitions.at(symb));
+				auto transitions_by_symbol = states[k].transitions.find(symb);
+				if (transitions_by_symbol != states[k].transitions.end())
+					x.push_back(transitions_by_symbol->second);
 			}
 			vector<int> q1;
 			set<int> x1;

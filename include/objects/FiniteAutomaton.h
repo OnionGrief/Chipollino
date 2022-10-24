@@ -50,7 +50,7 @@ class FiniteAutomaton : public BaseObject {
 					bool is_deterministic = false);
 	FiniteAutomaton(const FiniteAutomaton& other);
 	// визуализация автомата
-	string to_txt() override;
+	string to_txt() const override;
 	// детерминизация ДКА
 	FiniteAutomaton determinize() const;
 	// построение eps-замыкания
@@ -78,7 +78,7 @@ class FiniteAutomaton : public BaseObject {
 	// удаление ловушки
 	FiniteAutomaton remove_trap_state() const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
-	// states.size()) [i] элемент хранит номер класса [i] состояния
+	// states.size()) i-й элемент хранит номер класса i-го состояния
 	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
 	// объединение эквивалентных по бисимуляции состояний
 	FiniteAutomaton merge_bisimilar() const;
