@@ -5,8 +5,6 @@
 #include <optional>
 #include <vector>
 
-class Regex;
-
 class Language {
   private:
 	set<alphabet_symbol> alphabet;
@@ -27,5 +25,4 @@ class Language {
 	void set_min_dfa(FiniteAutomaton);
 	const optional<FiniteAutomaton>& get_min_dfa();
 	// и тд
-	friend class Regex;
 };

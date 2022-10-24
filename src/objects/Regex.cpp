@@ -1,4 +1,6 @@
 #include "Regex.h"
+#include "FiniteAutomaton.h"
+#include "Language.h"
 #include <set>
 
 Lexem::Lexem(Type type, char symbol, int number)
@@ -295,7 +297,7 @@ bool Regex::from_string(string str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	language->alphabet = alphabet;
+	language->set_alphabet(alphabet);
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 		term_l->term_p = this;
@@ -393,14 +395,12 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 	string str;		   //идентификатор состояния
 	FiniteAutomaton a; // новый автомат
 	vector<State> s = {}; //вектор состояний нового автомата
-	vector<alphabet_symbol> alfa = {}; //алфавит новго автомата
 	map<alphabet_symbol, vector<int>> m, p, map_l, map_r; // словари автоматов
 	vector<int> trans; // новые транзишены
 	int offset; // сдвиг для старых индексов состояний в новом автомате
 	FiniteAutomaton al; // левый автомат относительно операции
-	FiniteAutomaton ar; // левый автомат относительно операции
-	set<char> alfas; // множество алфавита для удаления дубликатов в нем
-	Language* alp;
+	FiniteAutomaton ar; // правый автомат относительно операции
+	Language* alp; // Новый язык для автомата
 	switch (type) {
 	case Regex::alt: // |
 
@@ -416,10 +416,7 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 			State test;
 			test = al.states[i];
 			for (auto el : test.transitions) {
-				char elem = el.first; // al->alphabet[i];
-				if (elem != '\0') {
-					alfa.push_back(elem);
-				}
+				alphabet_symbol elem = el.first; // al->alphabet[i];
 				trans = {};
 				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
 					trans.push_back(test.transitions[elem][j] + 1);
@@ -439,10 +436,7 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 			State test;
 			test = ar.states[i];
 			for (auto el : test.transitions) {
-				char elem = el.first;
-				if (elem != '\0') {
-					alfa.push_back(elem);
-				}
+				alphabet_symbol elem = el.first;
 				trans = {};
 				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
 					trans.push_back(test.transitions[elem][j] + offset);
@@ -461,8 +455,6 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(int(al.states.size() + ar.states.size()) + 1, {}, str,
 						  true, p));
-		alfas = set(alfa.begin(), alfa.end());
-		alfa.assign(alfas.begin(), alfas.end());
 
 		alp = new Language(alphabet);
 		a = FiniteAutomaton(0, alp, s, false);
@@ -479,10 +471,7 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 			State test;
 			test = al.states[i];
 			for (auto el : test.transitions) {
-				char elem = el.first; // al->alphabet[i];
-				if (elem != '\0') {
-					alfa.push_back(elem);
-				}
+				alphabet_symbol elem = el.first; // al->alphabet[i];
 				trans = {};
 				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
 					trans.push_back(test.transitions[elem][j]);
@@ -493,10 +482,7 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 			if (test.is_terminal) {
 				State test_r = ar.states[0];
 				for (auto el : test_r.transitions) {
-					char elem = el.first; // al->alphabet[i];
-					if (elem != '\0') {
-						alfa.push_back(elem);
-					}
+					alphabet_symbol elem = el.first; // al->alphabet[i];
 					for (size_t j = 0; j < test_r.transitions[elem].size();
 						 j++) {
 						// trans.push_back(test.transitions[elem][j] + 1);
@@ -517,10 +503,7 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 			State test;
 			test = ar.states[i];
 			for (auto el : test.transitions) {
-				char elem = el.first; // al->alphabet[i];
-				if (elem != '\0') {
-					alfa.push_back(elem);
-				}
+				alphabet_symbol elem = el.first; // al->alphabet[i];
 				trans = {};
 				// alfa.push_back(elem);
 				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
@@ -534,9 +517,6 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 							  map_r));
 			map_r = {};
 		}
-
-		alfas = set(alfa.begin(), alfa.end());
-		alfa.assign(alfas.begin(), alfas.end());
 
 		alp = new Language(alphabet);
 		a = FiniteAutomaton(0, alp, s, false);
@@ -556,10 +536,7 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 			State test;
 			test = al.states[i];
 			for (auto el : test.transitions) {
-				char elem = el.first; // al->alphabet[i];
-				if (elem != '\0') {
-					alfa.push_back(elem);
-				}
+				alphabet_symbol elem = el.first; // al->alphabet[i];
 				trans = {};
 				for (size_t j = 0; j < test.transitions[elem].size(); j++) {
 					trans.push_back(test.transitions[elem][j] + 1);
@@ -578,9 +555,6 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(int(al.states.size()) + 1, {}, str, true, p));
-		alfas = set(alfa.begin(), alfa.end());
-		alfa.assign(alfas.begin(), alfas.end());
-		// alfa.erase( unique( alfa.begin(), alfa.end() ), alfa.end() );
 
 		alp = new Language(alphabet);
 		a = FiniteAutomaton(0, alp, s, false);
@@ -789,7 +763,7 @@ vector<Regex*> Regex::pre_order_travers_vect() {
 	}
 	return r;
 }
-bool Regex::is_term(int number, vector<Lexem> list) {
+bool Regex::is_term(int number, const vector<Lexem>& list) {
 	for (size_t i = 0; i < list.size(); i++) {
 		if (list[i].number == number) {
 			return true;
@@ -803,26 +777,18 @@ FiniteAutomaton Regex::to_glushkov() {
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = i;
 	}
-	vector<Lexem>* first = this->first_state();
-	vector<Lexem>* end = this->end_state();
-	map<int, vector<int>> p = this->pairs();
+	vector<Lexem>* first = this->first_state(); // Множество начальных состояний
+	vector<Lexem>* end = this->end_state(); // Множество конечных состояний
+	map<int, vector<int>> p =
+		this->pairs(); // Множество возможных пар состояний
+	vector<State> st; // Список состояний в автомате
+	map<alphabet_symbol, vector<int>>
+		tr; // мап для переходов в каждом состоянии
 
-	int index = 0;
-	vector<char> alph;
-	vector<State> st;
-	set<char> alfas;
-	for (size_t i = 0; i < list.size(); i++) {
-		alph.push_back(list[i]->value.symbol);
-	}
-
-	alfas = set(alph.begin(), alph.end());
-	alph.assign(alfas.begin(), alfas.end());
-	map<char, vector<int>> tr;
 	for (size_t i = 0; i < first->size(); i++) {
 		tr[(*first)[i].symbol].push_back((*first)[i].number + 1);
 	}
 
-	first;
 	st.push_back(State(0, {}, "S", false, tr));
 
 	for (size_t i = 0; i < list.size(); i++) {

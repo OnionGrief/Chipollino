@@ -1,8 +1,6 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
-#include "FiniteAutomaton.h"
-#include "Language.h"
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -14,6 +12,7 @@
 using namespace std;
 
 class Language;
+class FiniteAutomaton;
 
 struct Lexem {
 	enum Type {
@@ -76,6 +75,14 @@ class Regex : BaseObject {
 										Regex* result) const;
 	FiniteAutomaton get_tompson(int);
 
+	vector<Lexem>* first_state(); // начальные состояния для to_glushkov
+	int L(); //проверяет, входит ли eps в дерево regex
+	vector<Lexem>* end_state(); // конечные состояния для to_glushkov
+	map<int, vector<int>> pairs();
+	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex
+	bool is_term(
+		int, const vector<Lexem>&); // возвращает true, если состояние конечно
+
   public:
 	Regex();
 	Regex(Language*);
@@ -85,12 +92,7 @@ class Regex : BaseObject {
 	FiniteAutomaton to_tompson();
 	FiniteAutomaton to_glushkov();
 	FiniteAutomaton to_ilieyu();
-	vector<Lexem>* first_state();
-	int L();
-	vector<Lexem>* end_state();
-	map<int, vector<int>> pairs();
-	vector<Regex*> pre_order_travers_vect();
-	bool is_term(int, vector<Lexem>);
+
 	~Regex();
 	Regex* copy() const;
 	Regex(const Regex&);
