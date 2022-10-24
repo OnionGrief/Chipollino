@@ -4,5 +4,7 @@
 using namespace std;
 
 int main() {
-	Example::arden_test();
+	cout << "Chipollino :-)\n";
+	Example ex;
+	ex.regex_parsing();
 }
