@@ -443,17 +443,19 @@ FiniteAutomaton FiniteAutomaton::reverse(Language* _language) const {
 	for (auto& state : enfa.states) {
 		state.index += 1;
 	}
+	int old_initial_state = enfa.initial_state + 1;
 	enfa.states.insert(
 		enfa.states.begin(),
-		{0, {0}, to_string(0), false, map<alphabet_symbol, set<int>>()});
+		{0, {0}, "S", false, map<alphabet_symbol, set<int>>()});
 	enfa.initial_state = 0;
 	for (int i = 1; i < enfa.states.size(); i++) {
 		if (enfa.states[i].is_terminal) {
 			enfa.states[initial_state].transitions[epsilon()].insert(
 				enfa.states[i].index);
+			enfa.states[i].is_terminal = false;
 		}
-		enfa.states[i].is_terminal = !enfa.states[i].is_terminal;
 	}
+	enfa.states[old_initial_state].is_terminal = true;
 	vector<map<alphabet_symbol, set<int>>> new_transition_matrix(
 		enfa.states.size() - 1);
 	for (int i = 1; i < enfa.states.size(); i++) {
