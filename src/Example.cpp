@@ -205,7 +205,7 @@ void Example::fa_equal_check() {
 	}
 	states1[0].set_transition(1, 'b');
 	states1[0].set_transition(2, 'b');
-	states1[0].set_transition(5, 'с');
+	states1[0].set_transition(5, 'c');
 	states1[1].set_transition(3, 'a');
 	states1[1].set_transition(4, 'c');
 	states1[2].set_transition(4, 'a');
@@ -223,7 +223,7 @@ void Example::fa_equal_check() {
 	}
 	states2[0].set_transition(1, 'b');
 	states2[0].set_transition(2, 'b');
-	states2[0].set_transition(5, 'с');
+	states2[0].set_transition(5, 'c');
 	states2[1].set_transition(3, 'a');
 	states2[1].set_transition(3, 'c');
 	states2[2].set_transition(4, 'a');
@@ -241,7 +241,7 @@ void Example::fa_equal_check() {
 	}
 	states3[5].set_transition(4, 'b');
 	states3[5].set_transition(3, 'b');
-	states3[5].set_transition(0, 'с');
+	states3[5].set_transition(0, 'c');
 	states3[4].set_transition(2, 'a');
 	states3[4].set_transition(1, 'c');
 	states3[3].set_transition(1, 'a');

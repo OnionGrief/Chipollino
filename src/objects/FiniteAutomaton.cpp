@@ -1,4 +1,5 @@
 #include "FiniteAutomaton.h"
+#include "Grammar.h"
 #include "Language.h"
 #include <algorithm>
 #include <iostream>
@@ -9,7 +10,7 @@ using namespace std;
 
 State::State() : index(0), is_terminal(false), identifier("") {}
 
-State::State(int index, vector<int> label, string identifier, bool is_terminal,
+State::State(int index, set<int> label, string identifier, bool is_terminal,
 			 map<alphabet_symbol, set<int>> transitions)
 	: index(index), label(label), identifier(identifier),
 	  is_terminal(is_terminal), transitions(transitions) {}
@@ -55,9 +56,9 @@ string FiniteAutomaton::to_txt() const {
 
 //обход автомата в глубину
 void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
-		 vector<int>& reachable, bool use_epsilons_only) {
-	if (find(reachable.begin(), reachable.end(), index) == reachable.end()) {
-		reachable.push_back(index);
+		 set<int>& reachable, bool use_epsilons_only) {
+	if (reachable.find(index) == reachable.end()) {
+		reachable.insert(index);
 		if (use_epsilons_only) {
 			for (int transition_to : states[index].transitions[epsilon()]) {
 				dfs(states, alphabet, transition_to, reachable,
@@ -74,30 +75,20 @@ void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
 	}
 }
 
-vector<int> FiniteAutomaton::closure(const set<int>& indices,
-									 bool use_epsilons_only) const {
-	vector<int> reachable;
+set<int> FiniteAutomaton::closure(const set<int>& indices,
+								  bool use_epsilons_only) const {
+	set<int> reachable;
 	for (int index : indices)
 		dfs(states, language->get_alphabet(), index, reachable,
 			use_epsilons_only);
 	return reachable;
 }
 
-//проверка меток на равенство
-bool belong(State q, State u) {
-	if (q.label.size() != u.label.size()) return false;
-	for (int i = 0; i < q.label.size(); i++) {
-		if (q.label[i] != u.label[i]) return false;
-	}
-	return true;
-}
-
 FiniteAutomaton FiniteAutomaton::determinize() const {
 	FiniteAutomaton dfa = FiniteAutomaton();
-	vector<int> q0 = closure({0}, true);
+	set<int> q0 = closure({0}, true);
 
-	vector<int> label = q0;
-	sort(label.begin(), label.end());
+	set<int> label = q0;
 	dfa.initial_state = 0;
 	string new_identifier;
 	for (auto elem : label) {
@@ -108,13 +99,13 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 							   map<alphabet_symbol, set<int>>()};
 	dfa.states.push_back(new_initial_state);
 
-	stack<vector<int>> s1;
+	stack<set<int>> s1;
 	stack<int> s2;
 	s1.push(q0);
 	s2.push(0);
 
 	while (!s1.empty()) {
-		vector<int> z = s1.top();
+		set<int> z = s1.top();
 		int index = s2.top();
 		s1.pop();
 		s2.pop();
@@ -138,21 +129,19 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 					}
 			}
 
-			vector<int> z1 = closure(new_x, true);
-			vector<int> new_label = z1;
-			sort(new_label.begin(), new_label.end());
+			set<int> z1 = closure(new_x, true);
 			string new_identifier;
-			for (auto elem : new_label) {
+			for (auto elem : z1) {
 				new_identifier += (new_identifier.empty() ? "" : ", ") +
 								  states[elem].identifier;
 			}
 
-			State q1 = {-1, new_label, new_identifier, false,
+			State q1 = {-1, z1, new_identifier, false,
 						map<alphabet_symbol, set<int>>()};
 			bool accessory_flag = false;
 
-			for (auto& state : dfa.states) {
-				if (belong(q1, state)) {
+			for (const auto& state : dfa.states) {
+				if (q1.label == state.label) {
 					index = state.index;
 					accessory_flag = true;
 					break;
@@ -179,7 +168,8 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 
 FiniteAutomaton FiniteAutomaton::minimize() const {
 	const optional<FiniteAutomaton>& language_min_dfa = language->get_min_dfa();
-	if (language->get_min_dfa()) return *language_min_dfa;
+	if (language->get_min_dfa())
+		return *language_min_dfa; // Нужно решить, что делаем с идентификаторами
 	// минимизация
 	FiniteAutomaton dfa = determinize();
 	vector<bool> table(dfa.states.size() * dfa.states.size());
@@ -292,12 +282,11 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 	FiniteAutomaton new_nfa;
 	new_nfa.states = states;
 
-	for (auto& state : new_nfa.states) {
+	for (auto& state : new_nfa.states)
 		state.transitions = map<alphabet_symbol, set<int>>();
-	}
 
 	for (int i = 0; i < states.size(); i++) {
-		vector<int> q = closure({states[i].index}, true);
+		set<int> q = closure({states[i].index}, true);
 		vector<set<int>> x;
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			x.clear();
@@ -306,11 +295,11 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 				if (transitions_by_symbol != states[k].transitions.end())
 					x.push_back(transitions_by_symbol->second);
 			}
-			vector<int> q1;
+			set<int> q1;
 			set<int> x1;
-			for (auto& k : x) {
+			for (auto k : x) {
 				q1 = closure(k, true);
-				for (int& m : q1) {
+				for (int m : q1) {
 					x1.insert(m);
 				}
 			}
@@ -336,8 +325,9 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
 	new_dfa.initial_state = 0;
 	new_dfa.language = _language;
 	int counter = 0;
-	for (auto& state1 : dfa1.states) {
-		for (auto& state2 : dfa2.states) {
+	vector<pair<int, int>> state_pair; // пары индексов состояний
+	for (const auto& state1 : dfa1.states) {
+		for (const auto& state2 : dfa2.states) {
 			string new_identifier;
 			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
 			new_identifier +=
@@ -347,16 +337,19 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
 									  new_identifier,
 									  state1.is_terminal && state2.is_terminal,
 									  map<alphabet_symbol, set<int>>()});
+			state_pair.push_back({state1.index, state2.index});
 			counter++;
 		}
 	}
 
-	for (auto& state : new_dfa.states) {
+	for (int i = 0; i < new_dfa.states.size(); i++) {
 		for (alphabet_symbol symb : new_dfa.language->get_alphabet()) {
-			state.transitions[symb].insert(
-				*dfa1.states[state.label[0]].transitions.at(symb).begin() *
+			new_dfa.states[i].transitions[symb].insert(
+				*dfa1.states[state_pair[i].first].transitions.at(symb).begin() *
 					dfa2.states.size() +
-				*dfa2.states[state.label[1]].transitions.at(symb).begin());
+				*dfa2.states[state_pair[i].second]
+					 .transitions.at(symb)
+					 .begin());
 		}
 	}
 	return new_dfa.determinize();
@@ -370,8 +363,9 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
 	new_dfa.initial_state = 0;
 	new_dfa.language = _language;
 	int counter = 0;
-	for (auto& state1 : dfa1.states) {
-		for (auto& state2 : dfa2.states) {
+	vector<pair<int, int>> state_pair; // пары индексов состояний
+	for (const auto& state1 : dfa1.states) {
+		for (const auto& state2 : dfa2.states) {
 			string new_identifier;
 			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
 			new_identifier +=
@@ -381,16 +375,19 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
 									  new_identifier,
 									  state1.is_terminal || state2.is_terminal,
 									  map<alphabet_symbol, set<int>>()});
+			state_pair.push_back({state1.index, state2.index});
 			counter++;
 		}
 	}
 
-	for (auto& state : new_dfa.states) {
+	for (int i = 0; i < new_dfa.states.size(); i++) {
 		for (alphabet_symbol symb : new_dfa.language->get_alphabet()) {
-			state.transitions[symb].insert(
-				*dfa1.states[state.label[0]].transitions.at(symb).begin() *
+			new_dfa.states[i].transitions[symb].insert(
+				*dfa1.states[state_pair[i].first].transitions.at(symb).begin() *
 					dfa2.states.size() +
-				*dfa2.states[state.label[1]].transitions.at(symb).begin());
+				*dfa2.states[state_pair[i].second]
+					 .transitions.at(symb)
+					 .begin());
 		}
 	}
 
@@ -404,8 +401,9 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2,
 	new_dfa.initial_state = 0;
 	new_dfa.language = _language;
 	int counter = 0;
-	for (auto& state1 : states) {
-		for (auto& state2 : dfa2.states) {
+	vector<pair<int, int>> state_pair; // пары индексов состояний
+	for (const auto& state1 : states) {
+		for (const auto& state2 : dfa2.states) {
 			string new_identifier;
 			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
 			new_identifier +=
@@ -415,16 +413,19 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2,
 									  new_identifier,
 									  state1.is_terminal && !state2.is_terminal,
 									  map<alphabet_symbol, set<int>>()});
+			state_pair.push_back({state1.index, state2.index});
 			counter++;
 		}
 	}
 
-	for (auto& state : new_dfa.states) {
+	for (int i = 0; i < new_dfa.states.size(); i++) {
 		for (alphabet_symbol symb : new_dfa.language->get_alphabet()) {
-			state.transitions[symb].insert(
-				*states[state.label[0]].transitions.at(symb).begin() *
+			new_dfa.states[i].transitions[symb].insert(
+				*states[state_pair[i].first].transitions.at(symb).begin() *
 					dfa2.states.size() +
-				*dfa2.states[state.label[1]].transitions.at(symb).begin());
+				*dfa2.states[state_pair[i].second]
+					 .transitions.at(symb)
+					 .begin());
 		}
 	}
 
@@ -444,33 +445,31 @@ FiniteAutomaton FiniteAutomaton::reverse(Language* _language) const {
 	_language->set_alphabet(language->get_alphabet());
 	FiniteAutomaton enfa =
 		FiniteAutomaton(initial_state, _language, states, is_deterministic);
-	for (auto& state : enfa.states) {
-		state.index += 1;
-	}
-	int old_initial_state = enfa.initial_state + 1;
-	enfa.states.insert(enfa.states.begin(),
-					   {0, {0}, "S", false, map<alphabet_symbol, set<int>>()});
-	enfa.initial_state = 0;
-	for (int i = 1; i < enfa.states.size(); i++) {
+	enfa.initial_state = states.size();
+	enfa.states.push_back({enfa.initial_state,
+						   {enfa.initial_state},
+						   "RevS",
+						   false,
+						   map<alphabet_symbol, set<int>>()});
+	for (int i = 0; i < enfa.states.size() - 1; i++) {
 		if (enfa.states[i].is_terminal) {
-			enfa.states[initial_state].transitions[epsilon()].insert(
-				enfa.states[i].index);
+			enfa.states[enfa.initial_state].transitions[epsilon()].insert(i);
 			enfa.states[i].is_terminal = false;
 		}
 	}
-	enfa.states[old_initial_state].is_terminal = true;
+	enfa.states[initial_state].is_terminal = true;
 	vector<map<alphabet_symbol, set<int>>> new_transition_matrix(
 		enfa.states.size() - 1);
-	for (int i = 1; i < enfa.states.size(); i++) {
-		for (auto& transition : enfa.states[i].transitions) {
+	for (int i = 0; i < enfa.states.size() - 1; i++) {
+		for (const auto& transition : enfa.states[i].transitions) {
 			for (int elem : transition.second) {
 				new_transition_matrix[elem][transition.first].insert(
 					enfa.states[i].index);
 			}
 		}
 	}
-	for (int i = 1; i < enfa.states.size(); i++) {
-		enfa.states[i].transitions = new_transition_matrix[i - 1];
+	for (int i = 0; i < enfa.states.size() - 1; i++) {
+		enfa.states[i].transitions = new_transition_matrix[i];
 	}
 	return enfa;
 }
@@ -514,7 +513,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
 		bool flag = false;
-		for (auto& transitions : new_dfa.states[i].transitions) {
+		for (const auto& transitions : new_dfa.states[i].transitions) {
 			for (int transition_to : transitions.second) {
 				if (i == transition_to && !new_dfa.states[i].is_terminal) {
 					flag = true;
@@ -530,7 +529,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 				}
 			}
 			for (int j = 0; i >= 0 && j < new_dfa.states.size(); j++) {
-				for (auto& transitions : new_dfa.states[j].transitions) {
+				for (const auto& transitions : new_dfa.states[j].transitions) {
 					for (int transition_to : transitions.second) {
 						if (transition_to == i) {
 							transitions.second.erase(transition_to);
@@ -585,173 +584,7 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 	return FiniteAutomaton(classes[initial_state], language, new_states,
 						   is_deterministic);
 }
-// структуры и функции для работы с грамматикой
-struct GrammarItem {
-	enum Type {
-		terminal,
-		nonterminal
-	};
-	Type type;
-	int state_index, class_number;
-	string term_name;
-	GrammarItem()
-		: type(terminal), state_index(-1), class_number(-1), term_name("") {}
-	GrammarItem(Type type, int state_index, int class_number)
-		: type(type), state_index(state_index), class_number(class_number) {}
-	GrammarItem(Type type, string term_name)
-		: type(type), term_name(term_name) {}
-	bool operator!=(const GrammarItem& other) {
-		return type != other.type || state_index != other.state_index ||
-			   class_number != other.class_number ||
-			   term_name != other.term_name;
-	}
-	void operator=(const GrammarItem& other) {
-		type = other.type;
-		state_index = other.state_index;
-		class_number = other.class_number;
-		term_name = other.term_name;
-	}
-};
-// для отладки
-ostream& operator<<(ostream& os, const GrammarItem& item) {
-	if (item.type == GrammarItem::terminal) {
-		if (item.term_name == "\0") return os << "eps";
-		if (item.term_name == "\1") return os << "init";
-		return os << item.term_name;
-	} else
-		return os << "S" << item.state_index;
-}
-// обновляю значение class_number для каждого нетерминала
-void update_classes(set<int>& checker,
-					map<set<string>, vector<GrammarItem*>>& classes_check_map) {
-	int classNum = 0;
-	checker.clear();
-	for (const auto& elem : classes_check_map) {
-		checker.insert(elem.second[0]->state_index);
-		for (GrammarItem* nont : elem.second) {
-			nont->class_number = classNum;
-		}
-		classNum++;
-	}
-}
-// строю новые классы эквивалентности по терминальным формам
-void check_classes(vector<vector<vector<GrammarItem*>>>& rules,
-				   map<set<string>, vector<GrammarItem*>>& classes_check_map,
-				   vector<GrammarItem*>& nonterminals) {
-	classes_check_map.clear();
-	for (int i = 0; i < nonterminals.size(); i++) {
-		set<string> temp_rules;
-		for (vector<GrammarItem*> rule : rules[i]) {
-			string newRule;
 
-			for (GrammarItem* t : rule) {
-				if (t->type == GrammarItem::terminal)
-					newRule += t->term_name;
-				else
-					newRule += to_string(t->class_number);
-			}
-
-			temp_rules.insert(newRule);
-		}
-		classes_check_map[temp_rules].push_back(nonterminals[i]);
-	}
-}
-
-vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
-	vector<vector<vector<GrammarItem*>>>& rules,
-	vector<GrammarItem*>& nonterminals,
-	vector<GrammarItem*>& bisimilar_nonterminals) {
-	map<set<string>, vector<GrammarItem*>> classes_check_map;
-	set<int> checker;
-	// checker
-	while (true) {
-		set<int> temp = checker;
-		check_classes(rules, classes_check_map, nonterminals);
-		update_classes(checker, classes_check_map);
-		if (checker == temp) break;
-	}
-	/*for (auto& elem : classes_check_map) {
-		cout << "{";
-		for (int i = 0; i < elem.second.size() - 1; i++)
-			cout << *elem.second[i] << ",";
-		cout << *elem.second[elem.second.size() - 1] << "}";
-	}
-	cout << endl;*/
-	// формирование бисимилярной грамматики
-	map<int, GrammarItem*> class_to_nonterm;
-	for (const auto& elem : classes_check_map)
-		class_to_nonterm[elem.second[0]->class_number] = elem.second[0];
-	vector<vector<vector<GrammarItem*>>> bisimilar_rules;
-	for (const auto& elem : classes_check_map) {
-		GrammarItem* curNonterm = elem.second[0];
-		vector<vector<GrammarItem*>> temp_rules;
-		for (vector<GrammarItem*> rule : rules[curNonterm->state_index]) {
-			vector<GrammarItem*> tempRule;
-			for (GrammarItem* item : rule) {
-				if (item->type == GrammarItem::nonterminal) {
-					tempRule.push_back(class_to_nonterm[item->class_number]);
-				} else
-					tempRule.push_back(item);
-			}
-			temp_rules.push_back(tempRule);
-		}
-		bisimilar_nonterminals.push_back(curNonterm);
-		bisimilar_rules.push_back(temp_rules);
-	}
-
-	return bisimilar_rules;
-}
-// преобразование конечного автомата в грамматику
-// в векторе терминалов по 0му индексу лежит epsilon, по terminals.size()-1
-// лежит initial
-vector<vector<vector<GrammarItem*>>> fa_to_grammar(
-	const vector<State>& states, const set<alphabet_symbol>& alphabet,
-	int initial_state, vector<GrammarItem>& fa_items,
-	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
-	vector<vector<vector<GrammarItem*>>> rules(states.size());
-	fa_items.resize(states.size() + alphabet.size() + 2);
-	int item_ind = 0;
-	while (item_ind < states.size()) {
-		fa_items[item_ind] = GrammarItem(GrammarItem::nonterminal, item_ind, 0);
-		nonterminals.push_back(&fa_items[item_ind]);
-		item_ind++;
-	}
-	map<alphabet_symbol, int> terminal_index;
-	fa_items[item_ind] = (GrammarItem(GrammarItem::terminal, "\0"));
-	terminals.push_back(&fa_items[item_ind]);
-	terminal_index[epsilon()] = 0;
-	item_ind++;
-	for (alphabet_symbol symb : alphabet) {
-		fa_items[item_ind] =
-			(GrammarItem(GrammarItem::terminal, to_string(symb)));
-		terminals.push_back(&fa_items[item_ind]);
-		terminal_index[symb] = item_ind - nonterminals.size();
-		item_ind++;
-	}
-	fa_items[item_ind] = (GrammarItem(GrammarItem::terminal,
-									  "\1")); // обозначает начальное состояние
-	terminals.push_back(&fa_items[item_ind]);
-
-	for (int i = 0; i < states.size(); i++) {
-		for (const auto& elem : states[i].transitions) {
-			for (int transition_to : elem.second)
-				rules[i].push_back({terminals[terminal_index[elem.first]],
-									nonterminals[transition_to]});
-		}
-		if (states[i].is_terminal) rules[i].push_back({terminals[0]});
-	}
-	rules[initial_state].push_back({terminals[alphabet.size() + 1]});
-
-	return rules;
-}
-// имя терминала - строка (тк может представлять собой число)
-// нужно из имени получать alphabet_symbol
-alphabet_symbol to_alphabet_symbol(string s) {
-	if (s == "\0")
-		return epsilon();
-	else
-		return s[0];
-}
 FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
@@ -822,79 +655,7 @@ bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
 
 	return true;
 }
-// преобразование переходов автомата в грамматику (переход -> состояние переход)
-vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
-	const vector<State>& states, int initial_state,
-	const vector<GrammarItem*>& fa_nonterminals,
-	vector<pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>>&
-		fa_items,
-	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
-	// fa_items вектор пар <терминал (состояние), map нетерминалов (переходов)>
-	fa_items.resize(states.size());
-	int ind = 0;
-	for (int i = 0; i < states.size(); i++) {
-		// имя терминала - класс  эквивалентности состояния
-		fa_items[i].first = GrammarItem(
-			GrammarItem::terminal, to_string(fa_nonterminals[i]->class_number));
-		terminals.push_back(&fa_items[i].first);
-		for (const auto& elem : states[i].transitions) {
-			vector<GrammarItem>& item_vec = fa_items[i].second[elem.first];
-			item_vec.resize(elem.second.size());
-			for (int j = 0; j < elem.second.size(); j++) {
-				item_vec[j] = (GrammarItem(GrammarItem::nonterminal, ind, 0));
-				nonterminals.push_back(&item_vec[j]);
-				ind++;
-			}
-		}
-	}
 
-	vector<vector<vector<GrammarItem*>>> rules(nonterminals.size());
-	ind = 0;
-	for (int i = 0; i < states.size(); i++) {
-		for (const auto& elem : states[i].transitions) {
-			for (int transition_to : elem.second) {
-				// смотрим все переходы из состояния transition_to
-				for (auto transition_elem : states[transition_to].transitions) {
-					for (int k = 0; k < transition_elem.second.size(); k++) {
-						int nonterm_ind = fa_items[transition_to]
-											  .second[transition_elem.first][k]
-											  .state_index;
-						rules[ind].push_back({terminals[transition_to],
-											  nonterminals[nonterm_ind]});
-					}
-				}
-				if (states[transition_to].is_terminal)
-					rules[ind].push_back(
-						{terminals[transition_to]}); // переход в финальное
-													 // состояние
-				ind++;
-			}
-		}
-	}
-
-	return rules;
-}
-// построение обратной грамматики
-vector<vector<vector<GrammarItem*>>> get_reverse_grammar(
-	vector<vector<vector<GrammarItem*>>>& rules,
-	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
-	vector<vector<vector<GrammarItem*>>> reverse_rules(rules.size());
-	for (int i = 0; i < rules.size(); i++) {
-		for (int j = 0; j < rules[i].size(); j++) {
-			if (rules[i][j].size() == 1) {
-				if (rules[i][j][0]->term_name == "\1")
-					reverse_rules[i].push_back({terminals[0]});
-				if (rules[i][j][0]->term_name == "\0")
-					reverse_rules[i].push_back(
-						{terminals[terminals.size() - 1]});
-			} else {
-				reverse_rules[rules[i][j][1]->state_index].push_back(
-					{rules[i][j][0], nonterminals[i]});
-			}
-		}
-	}
-	return reverse_rules;
-}
 bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
 							const FiniteAutomaton& fa2) {
 	// проверка равенства количества состояний

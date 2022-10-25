@@ -830,7 +830,7 @@ FiniteAutomaton Regex::to_ilieyu() {
 			}
 			if (flag) {
 				follow.push_back(j);
-				states[i].label.push_back(j);
+				states[i].label.insert(j);
 			}
 		}
 	}
@@ -850,9 +850,8 @@ FiniteAutomaton Regex::to_ilieyu() {
 			set<int> v1 = it1.second;
 			for (int transition_to : v1) {
 				for (size_t k = 0; k < new_states.size(); k++) {
-					if (find(new_states[k].label.begin(),
-							 new_states[k].label.end(),
-							 transition_to) != new_states[k].label.end() ||
+					if (new_states[k].label.find(transition_to) !=
+							new_states[k].label.end() ||
 						transition_to == new_states[k].index) {
 						new_map[it1.first].insert(k);
 					}

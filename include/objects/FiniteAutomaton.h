@@ -16,12 +16,12 @@ struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
 	// преобразования автоматов возможно для визуализации
-	vector<int> label;
+	set<int> label;
 	string identifier;
 	bool is_terminal;
 	map<alphabet_symbol, set<int>> transitions;
 	State();
-	State(int index, vector<int> label, string identifier, bool is_terminal,
+	State(int index, set<int> label, string identifier, bool is_terminal,
 		  map<alphabet_symbol, set<int>> transitions);
 	void set_transition(int, alphabet_symbol);
 };
@@ -36,7 +36,7 @@ class FiniteAutomaton : public BaseObject {
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
-	vector<int> closure(const set<int>&, bool) const;
+	set<int> closure(const set<int>&, bool) const;
 
   public:
 	FiniteAutomaton();
