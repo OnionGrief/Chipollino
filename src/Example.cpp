@@ -155,6 +155,21 @@ void Example::regex_parsing() {
 	delete lang;
 }
 
+void Example::parsing_by_regex() {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	regl = "(ab)*cd|(cd*)*"; //"bbb*(aaa*bbb*)*";
+	Language lang;
+	// lang = new Language();
+	Regex r(&lang);
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
+	}
+
+	cout << r.parsing_by_regex("cddddd") << endl;
+}
 void Example::fa_bisimilar_check() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {

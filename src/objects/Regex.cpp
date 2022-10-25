@@ -1122,3 +1122,147 @@ bool Regex::equal(Regex* r1, Regex* r2) {
 	return equal(r1->term_l, r2->term_l) && equal(r1->term_r, r2->term_r) ||
 		   equal(r1->term_r, r2->term_l) && equal(r1->term_l, r2->term_r);
 }
+
+vector<string> Regex::to_txt_list() {
+	// string str1 = "", str2 = "";
+	// if (term_l) {
+	//	str1 = term_l->to_txt();
+	// }
+	// if (term_r) {
+	//	str2 = term_r->to_txt();
+	// }
+	// string symb;
+	// if (value.symbol) symb = value.symbol;
+	// if (type == Type::eps) symb = "";
+	// if (type == Type::alt) {
+	//	symb = '|';
+	//	if (term_p != nullptr && term_p->type == Type::conc) {
+	//		str1 = "(" + str1;
+	//		str2 = str2 + ")"; // ставим скобки при альтернативах внутри
+	//						   // конкатенации a(a|b)a
+	//	}
+	// }
+	// if (type == Type::star) {
+	//	symb = '*';
+	//	if (term_l->type != Type::symb)
+	//		str1 = "(" + str1 +
+	//			   ")"; // ставим скобки при итерации, если символов > 1
+	// }
+
+	// return str1 + symb + str2;
+	vector<string> list;
+	vector<string> s1, s2;
+	if (term_l) {
+		s1 = term_l->to_txt_list();
+	}
+	if (term_r) {
+		s2 = term_r->to_txt_list();
+	}
+
+	string symb;
+	if (value.symbol) {
+		symb = value.symbol;
+		return {symb};
+	}
+	if (type == Type::eps) {
+		symb = "";
+		return {symb};
+	}
+	if (type == Regex::conc) {
+		for (size_t i = 0; i < s1.size(); i++) {
+			for (size_t j = 0; j < s2.size(); j++) {
+				list.push_back(s1[i] + s2[j]);
+			}
+		}
+	}
+	if (type == Type::alt) {
+		list.insert(list.end(), s1.begin(), s1.end());
+		list.insert(list.end(), s2.begin(), s2.end());
+	}
+	if (type == Type::star) {
+		symb = '*';
+		if (term_l->type != Type::symb && term_l->type != Regex::alt) {
+			for (size_t i = 0; i < s1.size(); i++) {
+				list.push_back("(" + s1[i] + ")*");
+			}
+		} else {
+			for (size_t i = 0; i < s1.size(); i++) {
+				list.push_back(s1[i] + "*");
+			}
+		}
+	}
+	return list;
+}
+int Regex::match(string regexp, string text) {
+
+	// if (regexp[0] == '^')
+	//     return matchhere(regexp+1, text);
+	// do {    /* must look even if string is empty */
+	//     if (matchhere(regexp, text))
+	//         return 1;
+	// } while (*text++ != '\0');
+	return matchhere(regexp, text);
+}
+
+/* matchhere: search for regexp at beginning of text */
+int Regex::matchhere(string regexp, string text) {
+	// if (regexp.size() == 0) return 1;
+	// cout << text.length() << " " << regexp.length() << " Test1\n";
+	if (regexp.length() == 0 && text.length() == 0) return 1;
+	if (regexp.length() == 0 && text.length() != 0) return 0;
+	if (regexp[0] == '(' || regexp[1] == '*') {
+		int balance = 1;
+		int index = 0;
+
+		for (size_t i = 1; i < regexp.length(); i++) {
+			if (regexp[i] == '(') {
+				balance++;
+			}
+			if (regexp[i] == ')') {
+				balance--;
+			}
+			if (balance == 0) {
+				index = i;
+				break;
+			}
+		}
+		if (regexp[1] == '*') {
+			return matchstar(regexp.substr(0, 1), regexp.substr(index + 2),
+							 text);
+		} else {
+			return matchstar(regexp.substr(1, index - 1),
+							 regexp.substr(index + 2),
+							 text); //(regexp[0], regexp + 2, text);
+		}
+	}
+
+	if (text.length() != 0 && (regexp[0] == text[0]))
+		return matchhere(regexp.substr(1), text.substr(1));
+	return 0;
+}
+
+/* matchstar: search for c*regexp at beginning of text */
+int Regex::matchstar(string c, string regexp, string text) {
+	// do { /* a * matches zero or more instances */
+	//	if (matchhere(regexp, text)) return 1;
+	// } while (text.size() != 0 && (*text++ == c || c == '.'));
+
+	if (matchhere(regexp, text) == 1) return 1;
+	// if (matchhere(c, text)) return 1;
+	while (text.length() != 0 && text.substr(0, c.length()) == c) {
+		text = text.substr(c.length());
+		cout << text << " " << regexp << " Test\n";
+		if (matchhere(regexp, text) == 1) return 1;
+	}
+
+	return 0;
+}
+
+bool Regex::parsing_by_regex(string s) {
+	vector<string> regexps = to_txt_list();
+	for (size_t i = 0; i < regexps.size(); i++) {
+		cout << "-------\n" << regexps[i] << endl;
+		if (match(regexps[i], s)) return true;
+	}
+	return false;
+}

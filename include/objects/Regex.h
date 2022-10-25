@@ -83,6 +83,11 @@ class Regex : BaseObject {
 	bool is_term(
 		int, const vector<Lexem>&); // возвращает true, если состояние конечно
 
+	int matchhere(string, string);
+	int matchstar(string, string, string);
+	int match(string, string);
+	vector<string> to_txt_list();
+
   public:
 	Regex();
 	Regex(Language*);
@@ -107,7 +112,7 @@ class Regex : BaseObject {
 	std::optional<Regex> prefix_derevative(std::string respected_str) const;
 	// Длина накачки
 	int pump_length() const;
-
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
+	bool parsing_by_regex(string);
 };
