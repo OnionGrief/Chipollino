@@ -178,6 +178,9 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 }
 
 FiniteAutomaton FiniteAutomaton::minimize() const {
+	const optional<FiniteAutomaton>& language_min_dfa = language->get_min_dfa();
+	if (language->get_min_dfa()) return *language_min_dfa;
+	// минимизация
 	FiniteAutomaton dfa = determinize();
 	vector<bool> table(dfa.states.size() * dfa.states.size());
 	int counter = 1;
@@ -279,8 +282,9 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 			classes[groups[i][j]] = i;
 		}
 	}
-
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
+	// кэширование
+	language->set_min_dfa(minimized_dfa);
 	return minimized_dfa;
 }
 
@@ -444,9 +448,8 @@ FiniteAutomaton FiniteAutomaton::reverse(Language* _language) const {
 		state.index += 1;
 	}
 	int old_initial_state = enfa.initial_state + 1;
-	enfa.states.insert(
-		enfa.states.begin(),
-		{0, {0}, "S", false, map<alphabet_symbol, set<int>>()});
+	enfa.states.insert(enfa.states.begin(),
+					   {0, {0}, "S", false, map<alphabet_symbol, set<int>>()});
 	enfa.initial_state = 0;
 	for (int i = 1; i < enfa.states.size(); i++) {
 		if (enfa.states[i].is_terminal) {
@@ -1060,5 +1063,5 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	FiniteAutomaton dfa2 = fa.determinize();
 	Language l;
 	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2, &l));
-	return equal(dfa_instersection.minimize(), dfa2); // TODO
+	return equivalent(dfa_instersection, dfa2); // TODO
 }

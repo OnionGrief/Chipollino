@@ -1118,3 +1118,12 @@ bool Regex::equal(Regex* r1, Regex* r2) {
 bool Regex::equivalent(Regex r1, Regex r2) {
 	return FiniteAutomaton::equivalent(r1.to_ilieyu(), r2.to_ilieyu());
 }
+// TODO нужно сделать методы Regex константными
+bool Regex::subset(const Regex& r) const {
+	/*FiniteAutomaton dfa1 = to_ilieyu().determinize();
+	FiniteAutomaton dfa2 = r.to_ilieyu().determinize();
+	Language l;
+	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2, &l));
+	return equivalent(dfa_instersection, dfa2);*/
+	return false;
+}

@@ -102,6 +102,8 @@ class Regex : BaseObject {
 	static bool equal(Regex*, Regex*);
 	// проверка регулярок на эквивалентность
 	static bool equivalent(Regex, Regex);
+	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
+	bool subset(const Regex&) const; // TODO
 
 	// Производная по символу
 	std::optional<Regex> symbol_derevative(const Regex& respected_sym) const;
