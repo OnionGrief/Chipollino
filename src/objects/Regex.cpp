@@ -796,9 +796,6 @@ FiniteAutomaton Regex::to_glushkov() {
 		for (size_t j = 0; j < p[elem.number].size(); j++) {
 			tr[list[p[elem.number][j]]->value.symbol].insert(p[elem.number][j] +
 															 1);
-			set<int> s(tr[list[p[elem.number][j]]->value.symbol].begin(),
-					   tr[list[p[elem.number][j]]->value.symbol].end());
-			tr[list[p[elem.number][j]]->value.symbol] = s;
 		}
 		string s = elem.symbol + to_string(i + 1);
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
