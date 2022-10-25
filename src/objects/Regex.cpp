@@ -963,73 +963,74 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 
 bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 										   const Regex* reg_e,
-										   Regex* result) const {
+										   Regex& result) const {
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
 		std::cout << "Invalid input: unexpected regex instead of symbol\n";
 		return false;
 	}
 	if (respected_sym->type == Type::eps) {
-		result = reg_e->copy();
+		result = *reg_e;
 		return true;
 	}
-	Regex* subresult;
+	Regex subresult;
 	bool answer = true;
 	switch (reg_e->type) {
 	case Type::eps:
-		result = new Regex();
+		if (respected_sym->type != Type::eps) return false;
+		result.type = Type::eps;
 		return answer;
 	case Type::symb:
 		if (respected_sym->value.symbol != reg_e->value.symbol) {
 			std::cout << "Invalid input: symbol is not a prefix of regex\n";
 			return false;
 		}
-		result = new Regex();
+		result.type = Type::eps;
 		return answer;
 	case Type::alt:
-		result = new Regex();
-		result->type = Type::alt;
+		result.type = Type::alt;
+		if (result.term_l == nullptr) result.term_l = new Regex();
+		if (result.term_r == nullptr) result.term_r = new Regex();
 		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
-												 result->term_l);
+												 *result.term_l);
 		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_r,
-												 result->term_r);
+												 *result.term_r);
 		return answer;
 	case Type::conc:
-		subresult = new Regex();
-		subresult->type = Type::conc;
+		subresult.type = Type::conc;
+		if (subresult.term_r == nullptr) subresult.term_r = new Regex();
 		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
-												 subresult->term_l);
-		subresult->term_r = reg_e->copy();
+												 *subresult.term_l);
+		subresult.term_r = reg_e->copy();
 		if (reg_e->term_l->is_eps_possible()) {
-			result = new Regex();
-			result->type = Type::alt;
-			result->term_l = subresult;
+			result.type = Type::alt;
+			result.term_l = subresult.copy();
+			if (result.term_r == nullptr) result.term_r = new Regex();
 			answer &= derevative_with_respect_to_sym(
-				respected_sym, reg_e->term_r, result->term_r);
+				respected_sym, reg_e->term_r, *result.term_r);
 		} else {
 			result = subresult;
 		}
 		return answer;
 	case Type::star:
-		result = new Regex();
-		result->type = Type::conc;
+		result.type = Type::conc;
+		if (result.term_l == nullptr) result.term_l = new Regex();
 		bool answer = derevative_with_respect_to_sym(
-			respected_sym, reg_e->term_l, result->term_l);
-		result->term_r = reg_e->copy();
+			respected_sym, reg_e->term_l, *result.term_l);
+		result.term_r = reg_e->copy();
 		return answer;
 	}
 }
 
 bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
-										   Regex* result) const {
+										   Regex& result) const {
 	bool success = true;
-	auto cur = reg_e->copy();
-	Regex* next;
+	Regex cur = *reg_e;
+	Regex next;
 	for (int i = 0; i < str.size(); i++) {
 		auto sym = new Regex();
 		sym->type = Type::symb;
 		sym->value.symbol = str[i];
-		success &= derevative_with_respect_to_sym(sym, cur, next);
-		delete cur;
+		success &= derevative_with_respect_to_sym(sym, &cur, next);
 		delete sym;
 		cur = next;
 		if (!success) {
@@ -1044,25 +1045,23 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 std::optional<Regex> Regex::symbol_derevative(
 	const Regex& respected_sym) const {
 	auto rs = respected_sym.copy();
-	Regex* result = new Regex;
+	Regex result;
 	std::optional<Regex> ans;
 	if (derevative_with_respect_to_sym(rs, this, result))
-		ans = *result;
+		ans = result;
 	else
 		ans = nullopt;
 	delete rs;
-	delete result;
 	return ans;
 }
 // Производная по префиксу
 std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
-	Regex* result = new Regex;
+	Regex result;
 	std::optional<Regex> ans;
 	if (derevative_with_respect_to_str(respected_str, this, result))
-		ans = *result;
+		ans = result;
 	else
 		ans = nullopt;
-	delete result;
 	return ans;
 }
 // Длина накачки
@@ -1091,7 +1090,7 @@ int Regex::pump_length() const {
 					pumping.term_l = new Regex;
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
-					derevative_with_respect_to_str(*it, this, pumping.term_r);
+					derevative_with_respect_to_str(*it, this, *pumping.term_r);
 					if (true) { // TODO: check if pumping language belongs reg_e
 								// language
 						checked_prefixes[*it] = true;
