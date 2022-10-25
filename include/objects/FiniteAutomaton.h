@@ -54,14 +54,17 @@ class FiniteAutomaton : public BaseObject {
 	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&,
-										const FiniteAutomaton&);
+										const FiniteAutomaton&,
+										Language*); // меняет язык
 	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия
 	// языков L1 и L2)
 	static FiniteAutomaton uunion(const FiniteAutomaton&,
-								  const FiniteAutomaton&);
+								  const FiniteAutomaton&,
+								  Language*); // меняет язык
 	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
-	FiniteAutomaton difference(const FiniteAutomaton&) const;
+	FiniteAutomaton difference(const FiniteAutomaton&,
+							   Language*) const; // меняет язык
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	FiniteAutomaton complement(Language*) const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)

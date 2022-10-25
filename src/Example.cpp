@@ -121,7 +121,9 @@ void Example::intersection() {
 	Language l2({'a', 'b'});
 	FiniteAutomaton dfa2 = FiniteAutomaton(0, &l2, states2, false);
 
-	cout << FiniteAutomaton::intersection(dfa1, dfa2).to_txt();
+	Language intersection_lang;
+	cout << FiniteAutomaton::intersection(dfa1, dfa2, &intersection_lang)
+				.to_txt();
 }
 
 void Example::regex_parsing() {
@@ -196,46 +198,58 @@ void Example::fa_bisimilar_check() {
 
 void Example::fa_equal_check() {
 	vector<State> states1;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 6; i++) {
 		State s = {
 			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
-	states1[0].set_transition(1, 'a');
-	states1[0].set_transition(1, 'a');
-	states1[0].set_transition(2, 'a');
-	states1[1].set_transition(3, 'b');
-	states1[2].set_transition(3, 'c');
+	states1[0].set_transition(1, 'b');
+	states1[0].set_transition(2, 'b');
+	states1[0].set_transition(5, 'с');
+	states1[1].set_transition(3, 'a');
+	states1[1].set_transition(4, 'c');
+	states1[2].set_transition(4, 'a');
+	states1[5].set_transition(4, 'a');
+	states1[3].is_terminal = true;
+	states1[4].is_terminal = true;
 	Language l1({'a', 'b', 'c'});
 	FiniteAutomaton fa1(0, &l1, states1, false);
 
 	vector<State> states2;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 6; i++) {
 		State s = {
 			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
-	states2[0].set_transition(1, 'a');
-	states2[0].set_transition(1, 'a');
-	states2[0].set_transition(2, 'a');
+	states2[0].set_transition(1, 'b');
+	states2[0].set_transition(2, 'b');
+	states2[0].set_transition(5, 'с');
+	states2[1].set_transition(3, 'a');
 	states2[1].set_transition(3, 'c');
-	states2[2].set_transition(3, 'b');
+	states2[2].set_transition(4, 'a');
+	states2[5].set_transition(4, 'a');
+	states2[3].is_terminal = true;
+	states2[4].is_terminal = true;
 	Language l2({'a', 'b', 'c'});
 	FiniteAutomaton fa2(0, &l2, states2, false);
 
 	vector<State> states3;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 6; i++) {
 		State s = {
 			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states3.push_back(s);
 	}
-	states3[3].set_transition(2, 'a');
-	states3[3].set_transition(2, 'a');
+	states3[5].set_transition(4, 'b');
+	states3[5].set_transition(3, 'b');
+	states3[5].set_transition(0, 'с');
+	states3[4].set_transition(2, 'a');
+	states3[4].set_transition(1, 'c');
 	states3[3].set_transition(1, 'a');
-	states3[2].set_transition(0, 'b');
-	states3[1].set_transition(0, 'c');
+	states3[0].set_transition(1, 'a');
+	states3[2].is_terminal = true;
+	states3[1].is_terminal = true;
 	Language l3({'a', 'b', 'c'});
-	FiniteAutomaton fa3(3, &l3, states3, false);
+	FiniteAutomaton fa3(5, &l3, states3, false);
 
 	cout << FiniteAutomaton::equal(fa1, fa1) << endl
 		 << FiniteAutomaton::equal(fa1, fa2) << endl
