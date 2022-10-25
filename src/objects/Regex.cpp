@@ -1114,3 +1114,7 @@ bool Regex::equal(Regex* r1, Regex* r2) {
 	return equal(r1->term_l, r2->term_l) && equal(r1->term_r, r2->term_r) ||
 		   equal(r1->term_r, r2->term_l) && equal(r1->term_l, r2->term_r);
 }
+
+bool Regex::equivalent(Regex r1, Regex r2) {
+	return FiniteAutomaton::equivalent(r1.to_ilieyu(), r2.to_ilieyu());
+}

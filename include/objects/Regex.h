@@ -99,7 +99,9 @@ class Regex : BaseObject {
 
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
-	static bool equal(Regex* r1, Regex* r2);
+	static bool equal(Regex*, Regex*);
+	// проверка регулярок на эквивалентность
+	static bool equivalent(Regex, Regex);
 
 	// Производная по символу
 	std::optional<Regex> symbol_derevative(const Regex& respected_sym) const;
