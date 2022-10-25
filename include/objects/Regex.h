@@ -69,10 +69,10 @@ class Regex : BaseObject {
 	// Производная по символу
 	bool derevative_with_respect_to_sym(Regex* respected_sym,
 										const Regex* reg_e,
-										Regex* result) const;
+										Regex& result) const;
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
-										Regex* result) const;
+										Regex& result) const;
 	FiniteAutomaton get_tompson(int);
 
 	vector<Lexem>* first_state(); // начальные состояния для to_glushkov
