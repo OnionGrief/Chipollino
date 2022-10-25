@@ -779,6 +779,7 @@ FiniteAutomaton Regex::to_glushkov() {
 	}
 	vector<Lexem>* first = this->first_state(); // Множество начальных состояний
 	vector<Lexem>* end = this->end_state(); // Множество конечных состояний
+	int eps_in = this->L();
 	map<int, vector<int>> p =
 		this->pairs(); // Множество возможных пар состояний
 	vector<State> st; // Список состояний в автомате
@@ -789,7 +790,11 @@ FiniteAutomaton Regex::to_glushkov() {
 		tr[(*first)[i].symbol].push_back((*first)[i].number + 1);
 	}
 
-	st.push_back(State(0, {}, "S", false, tr));
+	if (eps_in) {
+		st.push_back(State(0, {}, "S", true, tr));
+	} else {
+		st.push_back(State(0, {}, "S", false, tr));
+	}
 
 	for (size_t i = 0; i < list.size(); i++) {
 		Lexem elem = list[i]->value;
