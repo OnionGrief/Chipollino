@@ -279,10 +279,17 @@ Regex* Regex::expr(const vector<Lexem>& lexems, int index_start,
 	}
 	return p;
 }
-Regex::Regex() {}
+Regex::Regex() {
+    type = Regex::eps;
+	term_l = nullptr;
+	term_r = nullptr;
+}
 
 Regex::Regex(Language* l) {
 	language = l;
+	type = Regex::eps;
+	term_l = nullptr;
+	term_r = nullptr;
 }
 
 bool Regex::from_string(string str) {
@@ -297,7 +304,8 @@ bool Regex::from_string(string str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	language->set_alphabet(alphabet);
+	if (language != nullptr)
+	    language->set_alphabet(alphabet);
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 		term_l->term_p = this;
@@ -961,6 +969,35 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 	}
 }
 
+string Regex::to_str() const {
+	string str1 = "", str2 = "";
+	if (term_l) {
+		str1 = term_l->to_str();
+	}
+	if (term_r) {
+		str2 = term_r->to_str();
+	}
+	string symb;
+	if (value.symbol) symb = value.symbol;
+	if (type == Type::eps) symb = "";
+	if (type == Type::alt) {
+		symb = '|';
+		if (term_p != nullptr && term_p->type == Type::conc) {
+			str1 = "(" + str1;
+			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
+							   // конкатенации a(a|b)a
+		}
+	}
+	if (type == Type::star) {
+		symb = '*';
+		if (term_l->type != Type::symb)
+			str1 = "(" + str1 +
+				   ")"; // ставим скобки при итерации, если символов > 1
+	}
+
+	return str1 + symb + str2;
+}
+
 bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 										   const Regex* reg_e,
 										   Regex& result) const {
@@ -972,44 +1009,85 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 		result = *reg_e;
 		return true;
 	}
-	Regex subresult;
-	bool answer = true;
+	Regex subresult, subresult1;
+	bool answer = true, answer1, answer2;
+	//cout << "for " << reg_e->to_str() << " and sym " << respected_sym->to_str()
+	//	 << "\n"; 
 	switch (reg_e->type) {
 	case Type::eps:
 		if (respected_sym->type != Type::eps) return false;
 		result.type = Type::eps;
+		//cout << "answer is " << result.to_str() << "\n";
 		return answer;
 	case Type::symb:
 		if (respected_sym->value.symbol != reg_e->value.symbol) {
-			std::cout << "Invalid input: symbol is not a prefix of regex\n";
+			//std::cout << "Invalid input: symbol is not a prefix of regex\n";
+			//cout << " answer is " << result.to_str() << "\n";
 			return false;
 		}
 		result.type = Type::eps;
+		//cout << " answer is " << result.to_str()
+		//	 << "\n";
 		return answer;
 	case Type::alt:
-		result.type = Type::alt;
-		if (result.term_l == nullptr) result.term_l = new Regex();
-		if (result.term_r == nullptr) result.term_r = new Regex();
-		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
-												 *result.term_l);
-		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_r,
-												 *result.term_r);
+		answer1 = derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+												 subresult);
+		answer2 = derevative_with_respect_to_sym(respected_sym, reg_e->term_r,
+												 subresult1);
+		if (answer1 && answer2) {
+			result.type = Type::alt;
+			result.term_l = subresult.copy();
+			result.term_r = subresult1.copy();
+        }
+		if (!answer1 && !answer2) {
+			return false;
+		}
+		if (answer1) {
+			result = subresult;
+        }
+		if (answer2) {
+			result = subresult1;
+        }
+		//cout << " answer is " << result.to_str() << "\n";
 		return answer;
 	case Type::conc:
 		subresult.type = Type::conc;
-		if (subresult.term_r == nullptr) subresult.term_r = new Regex();
-		answer &= derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+		if (subresult.term_l == nullptr) subresult.term_l = new Regex();
+		answer1 = derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
 												 *subresult.term_l);
 		subresult.term_r = reg_e->copy();
 		if (reg_e->term_l->is_eps_possible()) {
-			result.type = Type::alt;
-			result.term_l = subresult.copy();
-			if (result.term_r == nullptr) result.term_r = new Regex();
-			answer &= derevative_with_respect_to_sym(
-				respected_sym, reg_e->term_r, *result.term_r);
+			answer2 = derevative_with_respect_to_sym(
+				respected_sym, reg_e->term_r, subresult1);
+			if (answer1 && answer2) {
+				result.type = Type::alt;
+				result.term_l = subresult.copy();
+				result.term_r = subresult1.copy();
+            }
+			if (answer1 && !answer2) {
+				result.type = subresult.type;
+				if (subresult.term_l != nullptr)
+					result.term_l = subresult.term_l->copy();
+				if (subresult.term_r != nullptr)
+					result.term_r = subresult.term_r->copy();
+            }
+			if (answer2 && !answer1) {
+				result.type = subresult1.type;
+				if (subresult1.term_l != nullptr)
+				    result.term_l = subresult1.term_l->copy();
+				if (subresult1.term_r != nullptr)
+				    result.term_r = subresult1.term_r->copy();
+            }
+			answer = answer1 | answer2;
 		} else {
-			result = subresult;
+			answer = answer1;
+			result.type = subresult.type;
+			if (subresult.term_l != nullptr)
+				result.term_l = subresult.term_l->copy();
+			if (subresult.term_r != nullptr)
+				result.term_r = subresult.term_r->copy();
 		}
+		//cout << " answer is " << result.to_str() << "\n";
 		return answer;
 	case Type::star:
 		result.type = Type::conc;
@@ -1017,6 +1095,7 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 		bool answer = derevative_with_respect_to_sym(
 			respected_sym, reg_e->term_l, *result.term_l);
 		result.term_r = reg_e->copy();
+		//cout << " answer is " << result.to_str() << "\n";
 		return answer;
 	}
 }
@@ -1038,6 +1117,7 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 		}
 	}
 	result = next;
+	cout << " answer is " << result.to_str();
 	return success;
 }
 

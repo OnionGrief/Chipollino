@@ -87,6 +87,7 @@ class Regex : BaseObject {
 	Regex();
 	Regex(Language*);
 	string to_txt() override;
+	string to_str() const;
 	void pre_order_travers();
 	void clear();
 	FiniteAutomaton to_tompson();
