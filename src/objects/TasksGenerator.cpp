@@ -39,7 +39,7 @@ string TasksGenerator::generate_op() {
 string TasksGenerator::generate_predicate() {
 	string str = "";
 
-	function predicate = rand_pred(); // не все может существовать
+	function predicate = rand_pred();
 	string input_type = predicate.input[0];
 	// да, не логично, но второй аргумент всегда повторяется,
 	// а значит можно забить на их проверку
@@ -54,8 +54,7 @@ string TasksGenerator::generate_predicate() {
 	}
 	str += predicate.name;
 
-	int objectsNum = predicate.input.size();
-	for (int i = 0; i < objectsNum; i++) {
+	for (int i = 0; i < predicate.input.size(); i++) {
 		if (for_static_Tpchkr) {
 			if (!(rand() % 4) && idNum > 1) {
 				int rand_id = rand() % idNum;
@@ -67,7 +66,7 @@ string TasksGenerator::generate_predicate() {
 		} else {
 			if (predicate.input[i] == "Regex") {
 				// сгенерировать регулярку или найти идентификатор
-				//если есть идентификаторы с типом Regex
+				// если есть идентификаторы с типом Regex
 				if (ids.count("Regex") && rand() % 2) {
 					vector<id> possible_ids = ids["Regex"];
 					id rand_id = possible_ids[rand() % possible_ids.size()];
@@ -109,9 +108,8 @@ string TasksGenerator::generate_test() {
 		str += rand_regex.to_txt();
 	}
 
-	// regex без альтернатив... надо наверно сделать
-	RegexGenerator rand_regex;
-	str += " " + rand_regex.to_txt();
+	str += " ";
+	str += "((ab)*a)*";
 
 	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
 	str += " " + to_string(rand_num);
@@ -147,8 +145,7 @@ string TasksGenerator::generate_declaration() {
 
 		func_str += first_func.name;
 
-		int objectsNum = first_func.input.size();
-		for (int i = 0; i < objectsNum; i++) {
+		for (int i = 0; i < first_func.input.size(); i++) {
 			if (for_static_Tpchkr) {
 				if (rand() % 2 && idNum > 1) {
 					int rand_id = rand() % idNum;
@@ -160,7 +157,7 @@ string TasksGenerator::generate_declaration() {
 			} else {
 				if (first_func.input[i] == "Regex") {
 					// сгенерировать регулярку или найти идентификатор
-					//если есть идентификаторы с типом Regex
+					// если есть идентификаторы с типом Regex
 					if (ids.count("Regex") && rand() % 2) {
 						vector<id> possible_ids = ids["Regex"];
 						id rand_id = possible_ids[rand() % possible_ids.size()];
@@ -212,7 +209,6 @@ string TasksGenerator::generate_declaration() {
 			}
 			vector<id> possible_ids = it->second;
 			id rand_id = possible_ids[rand() % possible_ids.size()];
-			// int rand_id = rand() % (idNum - 1) + 1;
 			str += "N" + to_string(rand_id.num);
 			prevOutput = id_output;
 		} else {
@@ -275,3 +271,9 @@ function TasksGenerator::rand_func() {
 function TasksGenerator::rand_pred() {
 	return predicates[rand() % predicates.size()];
 }
+
+/*
+– По радио сообщили о переходе на зимнее время, сказав, что «этой ночью, ровно в
+03:00 нужно перевести стрелку часов на один час назад, на 02:00».
+– У всех программистов эта ночь зависла в бесконечном цикле.
+*/
