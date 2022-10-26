@@ -57,13 +57,19 @@ class TasksGenerator : BaseObject {
 		//{"Normalize", {"Regex", "FileName"}, "Regex"}, // fileName
 		{"States", {"NFA"}, "Int"},
 		{"ClassCard", {"DFA"}, "Int"},
-		//{"Ambiguity", {"NFA"}, "Value"}, // value???
+		{"Ambiguity", {"NFA"}, "Value"},
 		{"Width", {"NFA"}, "Int"},
 		{"MyhillNerode", {"DFA"}, "Int"},
 		{"Simplify", {"Regex"}, "Regex"}};
 
-	vector<string> predicates = {
-		"Bisimilar", "Minimal", "Subset", "Equiv", "Minimal", "Equal", "SemDet",
+	vector<function> predicates = {
+		{"Bisimilar", {"NFA", "NFA"}, "Boolean"},
+		{"Minimal", {"DFA"}, "Boolean"},
+		{"Subset", {"Regex", "Regex"}, "Boolean"},
+		{"Equiv", {"NFA", "NFA"}, "Boolean"},
+		{"Minimal", {"NFA"}, "Boolean"},
+		{"Equal", {"NFA", "NFA"}, "Boolean"},
+		{"SemDet", {"NFA"}, "Boolean"},
 	};
 
 	void distribute_functions();
@@ -79,6 +85,7 @@ class TasksGenerator : BaseObject {
 	string generate_predicate();
 	string generate_test();
 	function rand_func();
+	function rand_pred();
 };
 
 // напоминание: убедиться, что интерпретатор + тайпчекер правильно обрабатывают

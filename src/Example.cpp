@@ -166,9 +166,10 @@ void Example::regex_generating() {
 
 void Example::tasks_generating() {
 	TasksGenerator TG;
-	cout << "\n" << TG.generate_task(10, 6, false, false);
-	cout << "\n" << TG.generate_task(3, 6, true, false);
-	cout << "\n" << TG.generate_task(5, 6, false, true);
+	cout << "\n" << TG.generate_task(10, 3, false, false); // корректные задачи
+	//cout << "\n" << TG.generate_task(15, 1, false, false);
+	cout << "\n" << TG.generate_task(3, 6, true, false); // для стат. тайпчека
+	cout << "\n" << TG.generate_task(5, 6, false, true); // для динам. тайпчека
 }
 
 void Example::random_regex_parsing() {
