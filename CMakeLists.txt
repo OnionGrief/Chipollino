@@ -13,7 +13,11 @@ set(SOURCES
 	src/objects/Integer.cpp
 	src/objects/Regex.cpp
 	src/objects/RegexGenerator.cpp
+	src/objects/Language.cpp
+	src/AlphabetSymbol.cpp
+	src/AutomatonToImage.cpp
 	src/Example.cpp
+	src/Logger.cpp
     src/main.cpp
 )
 
