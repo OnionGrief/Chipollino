@@ -45,7 +45,6 @@ class Regex : BaseObject {
 		// Terminal:
 		symb
 	};
-	Language* language = nullptr;
 	set<alphabet_symbol> alphabet;
 	Type type;
 	Lexem value;
@@ -85,7 +84,6 @@ class Regex : BaseObject {
 
   public:
 	Regex();
-	Regex(Language*);
 	string to_txt() const override;
 	void pre_order_travers();
 	void clear();

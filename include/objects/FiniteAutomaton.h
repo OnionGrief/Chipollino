@@ -29,9 +29,7 @@ struct State {
 class FiniteAutomaton : public BaseObject {
   private:
 	int initial_state = 0;
-	Language* language = nullptr;
 	vector<State> states;
-	bool is_deterministic = 0;
 	int max_index; // max индекс в автомате "q11" => 11
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
@@ -40,8 +38,10 @@ class FiniteAutomaton : public BaseObject {
 
   public:
 	FiniteAutomaton();
-	FiniteAutomaton(int initial_state, Language* language, vector<State> states,
-					bool is_deterministic = false);
+	FiniteAutomaton(int initial_state, vector<State> states,
+					shared_ptr<Language> language);
+	FiniteAutomaton(int initial_state, vector<State> states,
+					set<alphabet_symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 	// визуализация автомата
 	string to_txt() const override;
@@ -54,21 +54,18 @@ class FiniteAutomaton : public BaseObject {
 	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&,
-										const FiniteAutomaton&,
-										Language*); // меняет язык
+										const FiniteAutomaton&); // меняет язык
 	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия
 	// языков L1 и L2)
 	static FiniteAutomaton uunion(const FiniteAutomaton&,
-								  const FiniteAutomaton&,
-								  Language*); // меняет язык
+								  const FiniteAutomaton&); // меняет язык
 	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
-	FiniteAutomaton difference(const FiniteAutomaton&,
-							   Language*) const; // меняет язык
+	FiniteAutomaton difference(const FiniteAutomaton&) const; // меняет язык
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
-	FiniteAutomaton complement(Language*) const; // меняет язык
+	FiniteAutomaton complement() const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
-	FiniteAutomaton reverse(Language*) const; // меняет язык
+	FiniteAutomaton reverse() const; // меняет язык
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
 	// себя)
 	FiniteAutomaton add_trap_state() const;

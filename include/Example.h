@@ -20,4 +20,5 @@ class Example {
 	static void fa_bisimilar_check();
 	static void fa_merge_bisimilar();
 	static void fa_equivalent_check();
+	static void fa_subset_check();
 };

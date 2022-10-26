@@ -21,15 +21,17 @@ void State::set_transition(int to, alphabet_symbol symbol) {
 
 FiniteAutomaton::FiniteAutomaton() {}
 
-FiniteAutomaton::FiniteAutomaton(int initial_state, Language* language,
-								 vector<State> states, bool is_deterministic)
-	: initial_state(initial_state), language(language), states(states),
-	  is_deterministic(is_deterministic) {}
+FiniteAutomaton::FiniteAutomaton(int initial_state, vector<State> states,
+								 shared_ptr<Language> language)
+	: BaseObject(language), initial_state(initial_state), states(states) {}
+
+FiniteAutomaton::FiniteAutomaton(int initial_state, vector<State> states,
+								 set<alphabet_symbol> alphabet)
+	: BaseObject(alphabet), initial_state(initial_state), states(states) {}
 
 FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
-	: initial_state(other.initial_state), language(other.language),
-	  states(other.states), is_deterministic(other.is_deterministic),
-	  max_index(other.max_index) {}
+	: BaseObject(other.language), initial_state(other.initial_state),
+	  states(other.states), max_index(other.max_index) {}
 
 string FiniteAutomaton::to_txt() const {
 	stringstream ss;
@@ -85,11 +87,10 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 }
 
 FiniteAutomaton FiniteAutomaton::determinize() const {
-	FiniteAutomaton dfa = FiniteAutomaton();
+	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({0}, true);
 
 	set<int> label = q0;
-	dfa.initial_state = 0;
 	string new_identifier;
 	for (auto elem : label) {
 		new_identifier +=
@@ -161,8 +162,6 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
-	dfa.language = language;
-	dfa.is_deterministic = true;
 	return dfa;
 }
 
@@ -279,8 +278,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_eps() const {
-	FiniteAutomaton new_nfa;
-	new_nfa.states = states;
+	FiniteAutomaton new_nfa(initial_state, states, language);
 
 	for (auto& state : new_nfa.states)
 		state.transitions = map<alphabet_symbol, set<int>>();
@@ -311,19 +309,13 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 			}
 		}
 	}
-	new_nfa.initial_state = initial_state;
-	new_nfa.language = language;
-	new_nfa.is_deterministic = false;
 	return new_nfa;
 }
 
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
-											  const FiniteAutomaton& dfa2,
-											  Language* _language) {
-	_language->set_alphabet(dfa1.language->get_alphabet());
-	FiniteAutomaton new_dfa;
-	new_dfa.initial_state = 0;
-	new_dfa.language = _language;
+											  const FiniteAutomaton& dfa2) {
+	// передаю алфавит первого автомата в конструктор
+	FiniteAutomaton new_dfa(0, {}, dfa1.language->get_alphabet());
 	int counter = 0;
 	vector<pair<int, int>> state_pair; // пары индексов состояний
 	for (const auto& state1 : dfa1.states) {
@@ -356,12 +348,9 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& dfa1,
 }
 
 FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
-										const FiniteAutomaton& dfa2,
-										Language* _language) {
-	_language->set_alphabet(dfa1.language->get_alphabet());
-	FiniteAutomaton new_dfa;
-	new_dfa.initial_state = 0;
-	new_dfa.language = _language;
+										const FiniteAutomaton& dfa2) {
+	// передаю алфавит первого автомата в конструктор
+	FiniteAutomaton new_dfa(0, {}, dfa1.language->get_alphabet());
 	int counter = 0;
 	vector<pair<int, int>> state_pair; // пары индексов состояний
 	for (const auto& state1 : dfa1.states) {
@@ -394,12 +383,8 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& dfa1,
 	return new_dfa.determinize();
 }
 
-FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2,
-											Language* _language) const {
-	_language->set_alphabet(language->get_alphabet());
-	FiniteAutomaton new_dfa;
-	new_dfa.initial_state = 0;
-	new_dfa.language = _language;
+FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2) const {
+	FiniteAutomaton new_dfa(0, {}, language->get_alphabet());
 	int counter = 0;
 	vector<pair<int, int>> state_pair; // пары индексов состояний
 	for (const auto& state1 : states) {
@@ -432,20 +417,17 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& dfa2,
 	return new_dfa.determinize();
 }
 
-FiniteAutomaton FiniteAutomaton::complement(Language* _language) const {
-	_language->set_alphabet(language->get_alphabet());
+FiniteAutomaton FiniteAutomaton::complement() const {
 	FiniteAutomaton new_dfa =
-		FiniteAutomaton(initial_state, _language, states, is_deterministic);
+		FiniteAutomaton(initial_state, states, language->get_alphabet());
 	for (int i = 0; i < new_dfa.states.size(); i++) {
 		new_dfa.states[i].is_terminal = !new_dfa.states[i].is_terminal;
 	}
 	return new_dfa;
 }
-FiniteAutomaton FiniteAutomaton::reverse(Language* _language) const {
-	_language->set_alphabet(language->get_alphabet());
+FiniteAutomaton FiniteAutomaton::reverse() const {
 	FiniteAutomaton enfa =
-		FiniteAutomaton(initial_state, _language, states, is_deterministic);
-	enfa.initial_state = states.size();
+		FiniteAutomaton(states.size(), states, language->get_alphabet());
 	enfa.states.push_back({enfa.initial_state,
 						   {enfa.initial_state},
 						   "RevS",
@@ -581,8 +563,7 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 		if (states[elem.second[0]].is_terminal)
 			new_states[elem.first].is_terminal = true;
 
-	return FiniteAutomaton(classes[initial_state], language, new_states,
-						   is_deterministic);
+	return FiniteAutomaton(classes[initial_state], new_states, language);
 }
 
 FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
@@ -822,8 +803,7 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	FiniteAutomaton dfa1 = determinize();
 	FiniteAutomaton dfa2 = fa.determinize();
-	Language l;
-	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2, &l));
+	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
 	return equivalent(dfa_instersection, dfa2); // TODO
 }
 
