@@ -17,6 +17,43 @@ public:
 	Interpreter() {
 		Lexer s;
 		auto lexems = s.load_file("test.txt");
+		functions = {{"Thompson", {"Thompson", {"Regex"}, "NFA"}},
+			{"IlieYu", {"IlieYu", {"Regex"}, "NFA"}},
+			{"Antimirov", {"Antimirov", {"Regex"}, "NFA"}},
+			{"Arden", {"Arden", {"NFA"}, "Regex"}},
+			{"Glushkov", {"Glushkov", {"Regex"}, "NFA"}},
+			//преобразования внутри класса
+			{"Determinize", {"Determinize", {"NFA"}, "DFA"}},
+			{"RemEps", {"RemEps", {"NFA"}, "NFA"}},
+			{"Linearize", {"Linearize", {"Regex"}, "Regex"}},
+			{"Minimize", {"Minimize", {"NFA"}, "DFA"}},
+			{"Reverse", {"Reverse", {"NFA"}, "NFA"}},
+			{"Annote", {"Annote", {"NFA"}, "DFA"}},
+			{"DeLinearizeNFA", {"DeLinearize", {"NFA"}, "NFA"}},
+			{"DeLinearizeRegex", {"DeLinearize", {"Regex"}, "Regex"}},
+			{"Complement", {"Complement", {"DFA"}, "DFA"}},
+			{"DeAnnoteNFA", {"DeAnnote", {"NFA"}, "NFA"}},
+			{"DeAnnoteRegex", {"DeAnnote", {"Regex"}, "Regex"}},
+			{"MergeBisim", {"MergeBisim", {"NFA"}, "NFA"}},
+			//Многосортные функции
+			{"PumpLength", {"PumpLength", {"Regex"}, "Int"}},
+			{"ClassLength", {"ClassLength", {"DFA"}, "Int"}},
+			{"KSubSet", {"KSubSet", {"Int", "NFA"}, "NFA"}},
+			{"Normalize", {"Normalize", {"Regex", "FileName"}, "Regex"}},
+			{"States", {"States", {"NFA"}, "Int"}},
+			{"ClassCard", {"ClassCard", {"DFA"}, "Int"}},
+			{"Ambiguity", {"Ambiguity", {"NFA"}, "Value"}},
+			{"Width", {"Width", {"NFA"}, "Int"}},
+			{"MyhillNerode", {"MyhillNerode", {"DFA"}, "Int"}},
+			{"Simplify", {"Simplify", {"Regex"}, "Regex"}},
+			//Предикаты
+			{"Bisimilar", {"Bisimilar", {"NFA", "NFA"}, "Boolean"}},
+			{"Minimal", {"Minimal", {"DFA"}, "Boolean"}},
+			{"Subset", {"Subset", {"Regex", "Regex"}, "Boolean"}},
+			{"Equiv", {"Equiv", {"NFA", "NFA"}, "Boolean"}},
+			{"Minimal", {"Minimal", {"NFA"}, "Boolean"}},
+			{"Equal", {"Equal", {"NFA", "NFA"}, "Boolean"}},
+			{"SemDet", {"SemDet", {"NFA"}, "Boolean"}}};
 	}
 private:
 	// Применение функции к набору аргументов
@@ -69,7 +106,7 @@ private:
 	optional<vector<Function>> build_function_sequence(vector<string> function_names); // TODO
 
 	// Множество всех функций; TODO: инициализировать его в конструкторе Interpreter()
-	set<Function> functions; // TODO: определить operator< для Function
+	map<string, Function> functions; // TODO: определить operator< для Function
 	// Так предлагается сделать мапинг между названиями функций и сигнатурами
 	// разумеется, генерировать эту мапу можно при инициализации
 	map<string, vector<Function>> names_to_functions;
@@ -147,41 +184,5 @@ private:
 
 		// TODO: сделать класс хранения функции с входным и выходным типами
 		// где-то надо хранить map с названиями вместо этого set
-		set<string> functions = {
-			"Thompson",
-			"IlieYu",
-			"Antimirov",
-			"Arden",
-			"Glushkov",
-			"Determinize",
-			"RemEps",
-			"Linearize",
-			"Minimize",
-			"Reverse",
-			"Annote",
-			"DeLinearize",
-			"Complement",
-			"MergeBisim",
-			"PumpLength",
-			"ClassLength",
-			"KSubSet",
-			"Normalize",
-			"States",
-			"ClassCard",
-			"Ambiguity",
-			"Width",
-			"MyhillNerode",
-			"Simplify",
-		};
-
-		set<string> predicates = {
-			"Bisimilar",
-			"Minimal",
-			"Subset",
-			"Equiv",
-			"Minimal",
-			"Equal",
-			"SemDet",
-		};
 	};
 };
