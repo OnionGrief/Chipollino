@@ -280,7 +280,7 @@ Regex* Regex::expr(const vector<Lexem>& lexems, int index_start,
 	return p;
 }
 Regex::Regex() {
-    type = Regex::eps;
+	type = Regex::eps;
 	term_l = nullptr;
 	term_r = nullptr;
 }
@@ -304,8 +304,7 @@ bool Regex::from_string(string str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	if (language != nullptr)
-	    language->set_alphabet(alphabet);
+	if (language != nullptr) language->set_alphabet(alphabet);
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 		term_l->term_p = this;
@@ -1047,16 +1046,16 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 			result.type = Type::alt;
 			result.term_l = subresult.copy();
 			result.term_r = subresult1.copy();
-        }
+		}
 		if (!answer1 && !answer2) {
 			return false;
 		}
 		if (answer1) {
 			result = subresult;
-        }
+		}
 		if (answer2) {
 			result = subresult1;
-        }
+		}
 		return answer;
 	case Type::conc:
 		subresult.type = Type::conc;
@@ -1065,27 +1064,27 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 												 *subresult.term_l);
 		subresult.term_r = reg_e->copy();
 		if (reg_e->term_l->is_eps_possible()) {
-			answer2 = derevative_with_respect_to_sym(
-				respected_sym, reg_e->term_r, subresult1);
+			answer2 = derevative_with_respect_to_sym(respected_sym,
+													 reg_e->term_r, subresult1);
 			if (answer1 && answer2) {
 				result.type = Type::alt;
 				result.term_l = subresult.copy();
 				result.term_r = subresult1.copy();
-            }
+			}
 			if (answer1 && !answer2) {
 				result.type = subresult.type;
 				if (subresult.term_l != nullptr)
 					result.term_l = subresult.term_l->copy();
 				if (subresult.term_r != nullptr)
 					result.term_r = subresult.term_r->copy();
-            }
+			}
 			if (answer2 && !answer1) {
 				result.type = subresult1.type;
 				if (subresult1.term_l != nullptr)
-				    result.term_l = subresult1.term_l->copy();
+					result.term_l = subresult1.term_l->copy();
 				if (subresult1.term_r != nullptr)
-				    result.term_r = subresult1.term_r->copy();
-            }
+					result.term_r = subresult1.term_r->copy();
+			}
 			answer = answer1 | answer2;
 		} else {
 			answer = answer1;
