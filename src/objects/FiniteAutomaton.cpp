@@ -31,7 +31,7 @@ FiniteAutomaton::FiniteAutomaton(int initial_state, vector<State> states,
 
 FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 	: BaseObject(other.language), initial_state(other.initial_state),
-	  states(other.states), max_index(other.max_index) {}
+	  states(other.states) {}
 
 string FiniteAutomaton::to_txt() const {
 	stringstream ss;

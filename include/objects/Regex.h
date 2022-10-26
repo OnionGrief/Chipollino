@@ -13,6 +13,7 @@ using namespace std;
 
 class Language;
 class FiniteAutomaton;
+struct State;
 
 struct Lexem {
 	enum Type {
@@ -72,7 +73,7 @@ class Regex : BaseObject {
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex* result) const;
-	FiniteAutomaton get_tompson(int);
+	pair<vector<State>, int> get_tompson(int);
 
 	vector<Lexem>* first_state(); // начальные состояния для to_glushkov
 	int L(); //проверяет, входит ли eps в дерево regex

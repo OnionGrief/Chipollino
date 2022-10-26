@@ -30,7 +30,6 @@ class FiniteAutomaton : public BaseObject {
   private:
 	int initial_state = 0;
 	vector<State> states;
-	int max_index; // max индекс в автомате "q11" => 11
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
