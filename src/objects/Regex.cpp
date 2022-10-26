@@ -280,7 +280,7 @@ Regex* Regex::expr(const vector<Lexem>& lexems, int index_start,
 	return p;
 }
 Regex::Regex() {
-    type = Regex::eps;
+	type = Regex::eps;
 	term_l = nullptr;
 	term_r = nullptr;
 }
@@ -304,8 +304,7 @@ bool Regex::from_string(string str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	if (language != nullptr)
-	    language->set_alphabet(alphabet);
+	if (language != nullptr) language->set_alphabet(alphabet);
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 		term_l->term_p = this;
@@ -1031,45 +1030,45 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 			result.type = Type::alt;
 			result.term_l = subresult.copy();
 			result.term_r = subresult1.copy();
-        }
+		}
 		if (!answer1 && !answer2) {
 			return false;
 		}
 		if (answer1) {
 			result = subresult;
-        }
+		}
 		if (answer2) {
 			result = subresult1;
-        }
+		}
 		return answer;
 	case Type::conc:
 		subresult.type = Type::conc;
 		if (subresult.term_l == nullptr) subresult.term_l = new Regex();
 		answer1 = derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
 												 *subresult.term_l);
-		subresult.term_r = reg_e->copy();
+		subresult.term_r = reg_e->term_r->copy();
 		if (reg_e->term_l->is_eps_possible()) {
-			answer2 = derevative_with_respect_to_sym(
-				respected_sym, reg_e->term_r, subresult1);
+			answer2 = derevative_with_respect_to_sym(respected_sym,
+													 reg_e->term_r, subresult1);
 			if (answer1 && answer2) {
 				result.type = Type::alt;
 				result.term_l = subresult.copy();
 				result.term_r = subresult1.copy();
-            }
+			}
 			if (answer1 && !answer2) {
 				result.type = subresult.type;
 				if (subresult.term_l != nullptr)
 					result.term_l = subresult.term_l->copy();
 				if (subresult.term_r != nullptr)
 					result.term_r = subresult.term_r->copy();
-            }
+			}
 			if (answer2 && !answer1) {
 				result.type = subresult1.type;
 				if (subresult1.term_l != nullptr)
-				    result.term_l = subresult1.term_l->copy();
+					result.term_l = subresult1.term_l->copy();
 				if (subresult1.term_r != nullptr)
-				    result.term_r = subresult1.term_r->copy();
-            }
+					result.term_r = subresult1.term_r->copy();
+			}
 			answer = answer1 | answer2;
 		} else {
 			answer = answer1;
@@ -1086,6 +1085,84 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 		bool answer = derevative_with_respect_to_sym(
 			respected_sym, reg_e->term_l, *result.term_l);
 		result.term_r = reg_e->copy();
+		return answer;
+	}
+}
+
+bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
+    const Regex* reg_e,
+    vector<Regex>& result) const {
+	Regex cur_result;
+	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
+		std::cout << "Invalid input: unexpected regex instead of symbol\n";
+		return false;
+	}
+	if (respected_sym->type == Type::eps) {
+		cur_result = *reg_e;
+		result.push_back(cur_result);
+		return true;
+	}
+	Regex cur_subresult, cur_subresult1;
+	vector<Regex> subresult, subresult1;
+	bool answer = true, answer1, answer2;
+	switch (reg_e->type) {
+	case Type::eps:
+		if (respected_sym->type != Type::eps) return false;
+		cur_result.type = Type::eps;
+		result.push_back(cur_result);
+		return answer;
+	case Type::symb:
+		if (respected_sym->value.symbol != reg_e->value.symbol) {
+			return false;
+		}
+		cur_result.type = Type::eps;
+		result.push_back(cur_result);
+		return answer;
+	case Type::alt:
+		answer1 = partial_derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+												 subresult);
+		answer2 = partial_derevative_with_respect_to_sym(respected_sym, reg_e->term_r,
+												 subresult1);
+		for (int i = 0; i < subresult.size(); i++) {
+			result.push_back(subresult[i]);
+        }
+		for (int i = 0; i < subresult1.size(); i++) {
+			result.push_back(subresult1[i]);
+		}
+		answer = answer1 | answer2;
+		return answer;
+	case Type::conc:
+		cur_subresult.type = Type::conc;
+		answer1 = partial_derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+												 subresult);
+		cur_subresult.term_r = reg_e->term_r->copy();
+		for (int i = 0; i < subresult.size(); i++) {
+			cur_subresult.term_l = subresult[i].copy();
+			result.push_back(cur_subresult);
+			delete cur_subresult.term_l;
+        }
+		if (reg_e->term_l->is_eps_possible()) {
+			answer2 = partial_derevative_with_respect_to_sym(respected_sym,
+													 reg_e->term_r, subresult1);
+			for (int i = 0; i < subresult1.size(); i++) {
+				result.push_back(subresult1[i]);
+			}
+			answer = answer1 | answer2;
+		} else {
+			answer = answer1;
+		}
+		return answer;
+	case Type::star:
+		cur_result.type = Type::conc;
+		bool answer = partial_derevative_with_respect_to_sym(
+			respected_sym, reg_e->term_l, subresult);
+		cur_result.term_r = reg_e->copy();
+		for (int i = 0; i < subresult.size(); i++) {
+			cur_result.term_l = subresult[i].copy();
+			result.push_back(cur_result);
+			delete cur_result.term_l;
+        }
+		cur_result.clear();
 		return answer;
 	}
 }
@@ -1123,6 +1200,14 @@ std::optional<Regex> Regex::symbol_derevative(
 		ans = nullopt;
 	delete rs;
 	return ans;
+}
+// Частичная производная по символу
+void Regex::partial_symbol_derevative(const Regex& respected_sym,
+    vector<Regex>& result) const {
+	auto rs = respected_sym.copy();
+	partial_derevative_with_respect_to_sym(rs, this, result);
+	delete rs;
+	return;
 }
 // Производная по префиксу
 std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
