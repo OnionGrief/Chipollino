@@ -13,10 +13,10 @@ using namespace std;
 
 class Language;
 class FiniteAutomaton;
+struct State;
 
 struct Lexem {
-	enum Type
-	{
+	enum Type {
 		error,
 		parL, // (
 		parR, // )
@@ -35,8 +35,7 @@ struct Lexem {
 
 class Regex : BaseObject {
   private:
-	enum Type
-	{
+	enum Type {
 		// Epsilon
 		eps,
 		// Binary:
@@ -47,7 +46,6 @@ class Regex : BaseObject {
 		// Terminal:
 		symb
 	};
-	Language* language = nullptr;
 	set<alphabet_symbol> alphabet;
 	Type type;
 	Lexem value;
@@ -78,7 +76,7 @@ class Regex : BaseObject {
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const;
-	FiniteAutomaton get_tompson(int);
+	pair<vector<State>, int> get_tompson(int);
 
 	vector<Lexem>* first_state(); // начальные состояния для to_glushkov
 	int L(); //проверяет, входит ли eps в дерево regex
@@ -91,8 +89,7 @@ class Regex : BaseObject {
 
   public:
 	Regex();
-	Regex(Language*);
-	string to_txt() override;
+	string to_txt() const override;
 	void pre_order_travers();
 	void clear();
 	FiniteAutomaton to_tompson();
@@ -105,7 +102,11 @@ class Regex : BaseObject {
 
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
-	static bool equal(Regex* r1, Regex* r2);
+	static bool equal(Regex*, Regex*);
+	// проверка регулярок на эквивалентность
+	static bool equivalent(Regex, Regex);
+	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
+	bool subset(const Regex&) const; // TODO
 
 	// Производная по символу
 	std::optional<Regex> symbol_derevative(const Regex& respected_sym) const;
