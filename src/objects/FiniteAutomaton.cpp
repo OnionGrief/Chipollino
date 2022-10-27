@@ -801,8 +801,8 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 }
 
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
-	FiniteAutomaton dfa1 = determinize();
-	FiniteAutomaton dfa2 = fa.determinize();
+	FiniteAutomaton dfa1(determinize());
+	FiniteAutomaton dfa2(fa.determinize());
 	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
 	return equivalent(dfa_instersection, dfa2); // TODO
 }

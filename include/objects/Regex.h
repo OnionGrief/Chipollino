@@ -75,25 +75,27 @@ class Regex : BaseObject {
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const;
-	pair<vector<State>, int> get_tompson(int);
+	pair<vector<State>, int> get_tompson(int) const;
 
-	vector<Lexem>* first_state(); // начальные состояния для to_glushkov
-	int L(); //проверяет, входит ли eps в дерево regex
-	vector<Lexem>* end_state(); // конечные состояния для to_glushkov
-	map<int, vector<int>> pairs();
+	vector<Lexem>* first_state() const; // начальные состояния для to_glushkov
+	int L() const; //проверяет, входит ли eps в дерево regex
+	vector<Lexem>* end_state() const; // конечные состояния для to_glushkov
+	map<int, vector<int>> pairs() const;
 	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex
-	bool is_term(
-		int, const vector<Lexem>&); // возвращает true, если состояние конечно
+	bool is_term(int, const vector<Lexem>&)
+		const; // возвращает true, если состояние конечно
 	string to_str() const;
+	static bool equality_checker(const Regex*, const Regex*);
 
   public:
 	Regex();
 	string to_txt() const override;
-	void pre_order_travers();
+	void pre_order_travers() const;
 	void clear();
-	FiniteAutomaton to_tompson();
-	FiniteAutomaton to_glushkov();
-	FiniteAutomaton to_ilieyu();
+	FiniteAutomaton to_tompson() const;
+	FiniteAutomaton to_glushkov() const;
+	FiniteAutomaton to_ilieyu() const;
+	FiniteAutomaton to_antimirov();
 
 	~Regex();
 	Regex* copy() const;
@@ -101,9 +103,9 @@ class Regex : BaseObject {
 
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
-	static bool equal(Regex*, Regex*);
+	static bool equal(const Regex&, const Regex&);
 	// проверка регулярок на эквивалентность
-	static bool equivalent(Regex, Regex);
+	static bool equivalent(const Regex&, const Regex&);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const Regex&) const; // TODO
 
