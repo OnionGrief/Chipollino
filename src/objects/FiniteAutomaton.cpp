@@ -530,6 +530,34 @@ FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 	return FiniteAutomaton();
 }
 
+FiniteAutomaton FiniteAutomaton::annote() const {
+	set<alphabet_symbol> new_alphabet;
+	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, shared_ptr<Language>());
+	vector<map<alphabet_symbol, set<int>>> new_transitions(new_fa.states.size());
+	for (int i = 0; i < new_fa.states.size(); i++) {
+		for (const auto& elem : new_fa.states[i].transitions) {
+			if (elem.second.size() > 1) {
+				int counter = 1;
+				for (int transition_to : elem.second) {
+					alphabet_symbol new_symb = to_string(elem.first) + to_string(counter);
+					new_transitions[i][new_symb].insert(transition_to);
+					new_alphabet.insert(new_symb);
+					counter++;
+				}
+			}
+			else {
+				new_transitions[i][elem.first] = new_fa.states[i].transitions[elem.first];
+				new_alphabet.insert(elem.first);
+			}
+		}
+	}
+	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
+	for (int i = 0; i < new_transitions.size(); i++) {
+		new_fa.states[i].transitions = new_transitions[i];
+	}
+	return new_fa;
+}
+
 FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 	vector<int> classes) const {
 	map<int, vector<int>>
