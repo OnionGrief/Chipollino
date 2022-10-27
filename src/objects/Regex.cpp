@@ -286,6 +286,12 @@ Regex::Regex() {
 	term_r = nullptr;
 }
 
+Regex Regex::normalize_regex(const string& file) const {
+	Regex regex = *this;
+	regex.normalize_this_regex(file);
+	return regex;
+}
+
 bool Regex::from_string(string str) {
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
@@ -347,6 +353,85 @@ void Regex::clear() {
 
 Regex::~Regex() {
 	clear();
+}
+int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
+							  Regex* original) {
+	int cond = 0;
+	if (equal(replacing, *original)) {
+		Regex* temp = new Regex(replaced_by);
+		cond++;
+		if (original->term_p && original->term_p->term_l &&
+			original->term_p->term_l == original) {
+			temp->term_p = original->term_p;
+			original->term_p->term_l = temp;
+		} else {
+			if (original->term_p && original->term_p->term_r &&
+				original->term_p->term_r == original) {
+				temp->term_p = original->term_p;
+				original->term_p->term_r = temp;
+			}
+		}
+		delete original;
+	} else {
+		if (original->term_l) {
+			cond +=
+				search_replace_rec(replacing, replaced_by, original->term_l);
+		}
+		if (original->term_r) {
+			cond +=
+				search_replace_rec(replacing, replaced_by, original->term_r);
+		}
+	}
+	return cond;
+	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
+	//обоняния.
+}
+void Regex::normalize_this_regex(const string& file) {
+	struct Rules {
+		Regex from;
+		Regex to;
+	};
+	vector<Rules> all_rules;
+	string line;
+	std::ifstream in(file);
+	if (in.is_open()) {
+		while (getline(in, line)) {
+			string v1, v2;
+			int ind = -1;
+			for (char c : line) {
+				if (c == '=') {
+					ind = v1.size();
+					continue;
+				}
+				if (c != ' ') {
+					if (ind == -1) {
+						v1 += c;
+					} else {
+						v2 += c;
+					}
+				}
+			}
+			if (v1 == "" || v2 == "") {
+				cout << "error rewriting rules read from file";
+				return;
+			}
+			Regex a;
+			Regex b;
+
+			a.from_string(v1);
+			b.from_string(v2);
+			Rules temp = {a, b};
+			all_rules.push_back(temp);
+		}
+	}
+	in.close();
+	for (int i = 0; i < all_rules.size(); i++) {
+		int cond = 0;
+		cond += search_replace_rec(all_rules[i].from, all_rules[i].to, this);
+		if (cond != 0) {
+			i--;
+		}
+	}
 }
 
 void Regex::pre_order_travers() const {
@@ -482,8 +567,6 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 					// map_l[elem] = trans;
 				}
 			}
-			// cout << al->states[i].identifier << " " << al->states[i].index
-			// <<"\n";
 			s.push_back(State(al.first[i].index, {}, al.first[i].identifier,
 							  false, map_l));
 			map_l = {};
@@ -1205,8 +1288,8 @@ int Regex::pump_length() const {
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
 					derevative_with_respect_to_str(*it, this, *pumping.term_r);
-					if (true) { // TODO: check if pumping language belongs reg_e
-								// language
+					if (true) { // TODO: check if pumping language belongs
+								// reg_e language
 						checked_prefixes[*it] = true;
 						return i;
 					}

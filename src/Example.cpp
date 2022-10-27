@@ -402,3 +402,16 @@ void Example::step() {
 	Logger::finish_step();
 	Logger::finish();
 }
+void Example::normalize_regex() {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	// regl = "abc"; //"bbb*(aaa*bbb*)*";
+	Regex r;
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
+	}
+	r.normalize_regex("./../temp/Rules.txt");
+	cout << r.to_txt();
+}
