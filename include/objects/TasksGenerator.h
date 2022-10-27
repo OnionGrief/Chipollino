@@ -7,32 +7,36 @@
 
 using namespace std;
 
-struct function {
-	string name;
-	vector<string> input;
-	string output;
-};
+class TasksGenerator {
 
-struct id {
-	int num;
-	string type;
-};
+  public:
+	struct Function {
+		string name;
+		vector<string> input;
+		string output;
+	};
 
-class TasksGenerator : BaseObject {
+	struct Id {
+		int num;
+		string type;
+	};
+
   private:
 	string res_str = "";
-	int maxLength = 5; // максимальное кол-во функций подряд
-	int idNum = 0; // кол-во объявленных идентификаторов
+	int max_num_of_func_in_seq = 5; // максимальное кол-во функций в посл-ти
+	int id_num = 0; // кол-во объявленных идентификаторов
 	bool for_static_Tpchkr = false,
 		 for_dinamic_Tpchkr =
 			 false; //для статического тайпчекера - генерируем все функции
 					//подряд, для динамического - dfa = nfa, если оба false, то
 					//генерируем гарантированно правильные последовательности
 					//команд
-	map<string, vector<function>> funcInput;
-	map<string, vector<id>> ids; // поиск идентификатора по его типу
+	map<string, vector<Function>>
+		funcInput; // разделение функций (с единственным аргументом) по
+				   // принимаемым значениям
+	map<string, vector<Id>> ids; // поиск идентификатора по его типу
 
-	vector<function> functions = {
+	vector<Function> functions = {
 		{"Thompson", {"Regex"}, "NFA"},
 		{"IlieYu", {"Regex"}, "NFA"},
 		{"Antimirov", {"Regex"}, "NFA"},
@@ -52,6 +56,7 @@ class TasksGenerator : BaseObject {
 		{"MergeBisim", {"NFA"}, "NFA"},
 		{"PumpLength", {"Regex"}, "Int"},
 		{"ClassLength", {"DFA"}, "Int"},
+		// TODO:
 		//{"KSubSet", {"Int", "NFA"}, "NFA"}, // пока не используется, исправить
 		//если будет
 		//{"Normalize", {"Regex", "FileName"}, "Regex"}, // fileName
@@ -62,7 +67,7 @@ class TasksGenerator : BaseObject {
 		{"MyhillNerode", {"DFA"}, "Int"},
 		{"Simplify", {"Regex"}, "Regex"}};
 
-	vector<function> predicates = {
+	vector<Function> predicates = {
 		{"Bisimilar", {"NFA", "NFA"}, "Boolean"},
 		{"Minimal", {"DFA"}, "Boolean"},
 		{"Subset", {"Regex", "Regex"}, "Boolean"},
@@ -73,22 +78,31 @@ class TasksGenerator : BaseObject {
 	};
 
 	void distribute_functions();
-	function generate_next_func(string, int);
+	Function generate_next_func(string, int);
+	string generate_op();
+	Function rand_func();
+	Function rand_pred();
 
   public:
 	TasksGenerator();
-	string to_txt() override;
 
-	string generate_task(int, int, bool, bool);
-	string generate_op();
+	/* создает рандомный список операций, которые могут иметь один из трёх
+	видов: Объявление: [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
+	Специальная форма test
+	Предикат [предикат] [объект]+ */
+	string generate_task(int opNum, int max_num_of_func_in_seq_,
+						 bool for_static_Tpchkr_, bool for_dinamic_Tpchkr_);
+	/* генерирует объявление:
+	[идентификатор] = ([функция].)*[функция]? [объект]+ (!!)? */
 	string generate_declaration();
+	/* генерирует предикат */
 	string generate_predicate();
+	/* генерирует метод:
+	test (НКА | рег. выр-е, рег. выр-е без альтернатив, шаг итерации) */
 	string generate_test();
-	function rand_func();
-	function rand_pred();
 };
 
-// напоминание: убедиться, что интерпретатор + тайпчекер правильно обрабатывают
-// неверное кол-во элементов, случаи N1 = <regex>; N2 = N1;
+// TODO: убедиться, что интерпретатор + тайпчекер правильно обрабатывают
+// неверное кол-во элементов;
 // N3 = <object> <object>; N1 = Glushkov <object> <object>;
 // и несоотвествие типов
