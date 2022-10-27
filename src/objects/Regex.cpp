@@ -216,7 +216,7 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
 
-	vector<alphabet_symbol> v = {lexems[index_start].symbol};
+	vector<alphabet_symbol> v = {char_to_alphabet_symbol(lexems[index_start].symbol)};
 	set<alphabet_symbol> s(v.begin(), v.end());
 
 	p->alphabet = s;
@@ -408,7 +408,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) {
 		max_index = ar.second;
 
 		str = "q" + to_string(max_index + 1);
-		m['\0'] = {1, int(al.first.size()) + 1};
+		m[epsilon()] = {1, int(al.first.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
 		for (size_t i = 0; i < al.first.size(); i++) {
@@ -423,7 +423,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) {
 			}
 
 			if (test.is_terminal) {
-				map_l['\0'] = {int(al.first.size() + ar.first.size()) + 1};
+				map_l[epsilon()] = {int(al.first.size() + ar.first.size()) + 1};
 			}
 			s.push_back(State(al.first[i].index + 1, {}, al.first[i].identifier,
 							  false, map_l));
@@ -441,7 +441,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) {
 				map_r[elem] = trans;
 			}
 			if (test.is_terminal) {
-				map_r['\0'] = {offset + int(ar.first.size())};
+				map_r[epsilon()] = {offset + int(ar.first.size())};
 			}
 
 			s.push_back(State(ar.first[i].index + offset, {},
@@ -511,7 +511,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) {
 		max_index = al.second;
 
 		str = "q" + to_string(max_index + 1);
-		m['\0'] = {1, int(al.first.size()) + 1};
+		m[epsilon()] = {1, int(al.first.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
 		for (size_t i = 0; i < al.first.size(); i++) {
@@ -527,7 +527,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) {
 			}
 
 			if (test.is_terminal) {
-				map_l['\0'] = {1, int(al.first.size()) + 1};
+				map_l[epsilon()] = {1, int(al.first.size()) + 1};
 			}
 			s.push_back(State(al.first[i].index + 1, {}, al.first[i].identifier,
 							  false, map_l));
@@ -542,7 +542,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) {
 	case Regex::eps:
 		str = "q" + to_string(max_index + 1);
 
-		m['\0'] = {1};
+		m[epsilon()] = {1};
 		s.push_back(State(0, {}, str, false, m));
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
@@ -551,7 +551,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) {
 	default:
 
 		str = "q" + to_string(max_index + 1);
-		m[value.symbol] = {1};
+		m[char_to_alphabet_symbol(value.symbol)] = {1};
 		s.push_back(State(0, {}, str, false, m));
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
@@ -753,7 +753,7 @@ FiniteAutomaton Regex::to_glushkov() {
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
 
 	for (size_t i = 0; i < first->size(); i++) {
-		tr[(*first)[i].symbol].insert((*first)[i].number + 1);
+		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert((*first)[i].number + 1);
 	}
 
 	st.push_back(State(0, {}, "S", false, tr));
@@ -763,7 +763,7 @@ FiniteAutomaton Regex::to_glushkov() {
 		tr = {};
 
 		for (size_t j = 0; j < p[elem.number].size(); j++) {
-			tr[list[p[elem.number][j]]->value.symbol].insert(p[elem.number][j] +
+			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)].insert(p[elem.number][j] +
 															 1);
 		}
 		string s = elem.symbol + to_string(i + 1);

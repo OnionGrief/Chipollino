@@ -135,7 +135,7 @@ alphabet_symbol to_alphabet_symbol(string s) {
 	if (s == "\0")
 		return epsilon();
 	else
-		return s[0];
+		return s;
 }
 
 vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
