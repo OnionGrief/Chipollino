@@ -85,12 +85,12 @@ class Regex : BaseObject {
 	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex
 	bool is_term(
 		int, const vector<Lexem>&); // возвращает true, если состояние конечно
+	string to_str() const;
 
   public:
 	Regex();
 	Regex(Language*);
 	string to_txt() override;
-	string to_str() const;
 	void pre_order_travers();
 	void clear();
 	FiniteAutomaton to_tompson();
