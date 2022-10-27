@@ -39,7 +39,7 @@ optional<Interpreter::Decalaration> Interpreter::scan_declaration(
 			if (id_types.count(lexems[i].value)) {
 				argument_types.push_back(id_types[lexems[i].value]);
 			} else {
-				cout << "Unknown id";
+				cout << "Unknown id\n";
 				return nullopt;
 			}
 		} else if (lexems[i].type == Lexem::regex) {
@@ -54,13 +54,69 @@ optional<Interpreter::Decalaration> Interpreter::scan_declaration(
 		decl.show_result = true;
 	}
 
+	cout << "id\n";
+
 	if (auto seq = build_function_sequence(func_names, argument_types);
 		seq.has_value()) {
+
 		decl.function_sequence = *seq;
 		decl.parameters = arguments;
 		id_types[decl.id] =
 			(*seq).size() ? (*seq).back().output : argument_types[0];
 		return decl;
+	}
+	return nullopt;
+}
+
+optional<Interpreter::Predicate> Interpreter::scan_predicate(
+	vector<Lexem> lexems) {
+
+	Predicate pred;
+
+	// [предикат]
+	if (lexems[0].type != Lexem::predicate) {
+		return nullopt;
+	}
+	auto prdeicat_name = lexems[0].value;
+
+	// [объект]+
+	vector<ObjectType> argument_types;
+	vector<variant<string, GeneralObject>> arguments;
+	for (int i = 1; i < lexems.size(); i++) {
+		if (lexems[i].type == Lexem::id) {
+			if (id_types.count(lexems[i].value)) {
+				argument_types.push_back(id_types[lexems[i].value]);
+			} else {
+				cout << "Unknown id";
+				return nullopt;
+			}
+		} else if (lexems[i].type == Lexem::regex) {
+			arguments.push_back(ObjectRegex(lexems[i].reg));
+		} else if (lexems[i].type == Lexem::regex) {
+			arguments.push_back(ObjectRegex(lexems[i].reg));
+		}
+	}
+
+	cout << "pred\n";
+
+	if (auto seq = build_function_sequence({prdeicat_name}, argument_types);
+		seq.has_value()) {
+
+		pred.predicate = (*seq)[0];
+		pred.parameters = arguments;
+		return pred;
+	}
+	return optional<Predicate>();
+}
+
+optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
+	vector<Lexem> lexems) {
+
+	if (auto declaration = scan_declaration(lexems); declaration.has_value()) {
+		return declaration;
+	}
+	if (auto predicate = scan_predicate(lexems); predicate.has_value()) {
+		return predicate;
 	}
 	return nullopt;
 }

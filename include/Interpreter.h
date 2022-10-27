@@ -51,8 +51,8 @@ class Interpreter {
 	struct Predicate {
 		// Функция (предикат)
 		Function predicate;
-		// Параметры
-		vector<GeneralObject> parameters;
+		// Параметры (могут быть идентификаторами)
+		vector<variant<string, GeneralObject>> parameters;
 	};
 
 	// Общий вид опрерации
