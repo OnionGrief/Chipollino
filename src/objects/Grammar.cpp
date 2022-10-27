@@ -3,14 +3,14 @@
 ostream& operator<<(ostream& os, const GrammarItem& item) {
 	if (item.type == GrammarItem::terminal) {
 		if (item.term_name == "\0") return os << "eps";
-		if (item.term_name == "\1") return os << "init";
 		return os << item.term_name;
 	} else
 		return os << "S" << item.state_index;
 }
 
-void update_classes(set<int>& checker,
-					map<set<string>, vector<GrammarItem*>>& classes_check_map) {
+void Grammar::update_classes(
+	set<int>& checker,
+	map<set<string>, vector<GrammarItem*>>& classes_check_map) {
 	int classNum = 0;
 	checker.clear();
 	for (const auto& elem : classes_check_map) {
@@ -22,9 +22,10 @@ void update_classes(set<int>& checker,
 	}
 }
 
-void check_classes(vector<vector<vector<GrammarItem*>>>& rules,
-				   map<set<string>, vector<GrammarItem*>>& classes_check_map,
-				   vector<GrammarItem*>& nonterminals) {
+void Grammar::check_classes(
+	vector<vector<vector<GrammarItem*>>>& rules,
+	map<set<string>, vector<GrammarItem*>>& classes_check_map,
+	vector<GrammarItem*>& nonterminals) {
 	classes_check_map.clear();
 	for (int i = 0; i < nonterminals.size(); i++) {
 		set<string> temp_rules;
@@ -44,7 +45,7 @@ void check_classes(vector<vector<vector<GrammarItem*>>>& rules,
 	}
 }
 
-vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
+vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 	vector<vector<vector<GrammarItem*>>>& rules,
 	vector<GrammarItem*>& nonterminals,
 	vector<GrammarItem*>& bisimilar_nonterminals) {
@@ -89,10 +90,10 @@ vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
 	return bisimilar_rules;
 }
 
-vector<vector<vector<GrammarItem*>>> fa_to_grammar(
+vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
 	const vector<State>& states, const set<alphabet_symbol>& alphabet,
-	int initial_state, vector<GrammarItem>& fa_items,
-	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
+	vector<GrammarItem>& fa_items, vector<GrammarItem*>& nonterminals,
+	vector<GrammarItem*>& terminals) {
 	vector<vector<vector<GrammarItem*>>> rules(states.size());
 	fa_items.resize(states.size() + alphabet.size() + 2);
 	int item_ind = 0;
@@ -113,9 +114,6 @@ vector<vector<vector<GrammarItem*>>> fa_to_grammar(
 		terminal_index[symb] = item_ind - nonterminals.size();
 		item_ind++;
 	}
-	fa_items[item_ind] = (GrammarItem(GrammarItem::terminal,
-									  "\1")); // обозначает начальное состояние
-	terminals.push_back(&fa_items[item_ind]);
 
 	for (int i = 0; i < states.size(); i++) {
 		for (const auto& elem : states[i].transitions) {
@@ -125,7 +123,6 @@ vector<vector<vector<GrammarItem*>>> fa_to_grammar(
 		}
 		if (states[i].is_terminal) rules[i].push_back({terminals[0]});
 	}
-	rules[initial_state].push_back({terminals[alphabet.size() + 1]});
 
 	return rules;
 }
@@ -138,9 +135,8 @@ alphabet_symbol to_alphabet_symbol(string s) {
 		return s[0];
 }
 
-vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
-	const vector<State>& states, int initial_state,
-	const vector<GrammarItem*>& fa_nonterminals,
+vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
+	const vector<State>& states, const vector<GrammarItem*>& fa_nonterminals,
 	vector<pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>>&
 		fa_items,
 	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
@@ -190,23 +186,18 @@ vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
 	return rules;
 }
 
-vector<vector<vector<GrammarItem*>>> get_reverse_grammar(
+vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 	vector<vector<vector<GrammarItem*>>>& rules,
-	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
+	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
+	int initial_state) {
 	vector<vector<vector<GrammarItem*>>> reverse_rules(rules.size());
 	for (int i = 0; i < rules.size(); i++) {
 		for (int j = 0; j < rules[i].size(); j++) {
-			if (rules[i][j].size() == 1) {
-				if (rules[i][j][0]->term_name == "\1")
-					reverse_rules[i].push_back({terminals[0]});
-				if (rules[i][j][0]->term_name == "\0")
-					reverse_rules[i].push_back(
-						{terminals[terminals.size() - 1]});
-			} else {
+			if (rules[i][j].size() == 2)
 				reverse_rules[rules[i][j][1]->state_index].push_back(
 					{rules[i][j][0], nonterminals[i]});
-			}
 		}
 	}
+	reverse_rules[initial_state].push_back({terminals[0]});
 	return reverse_rules;
 }
