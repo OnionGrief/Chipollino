@@ -349,7 +349,7 @@ Regex::~Regex() {
 	clear();
 }
 
-void Regex::pre_order_travers() {
+void Regex::pre_order_travers() const {
 	if (value.symbol) {
 		cout << value.symbol << " ";
 	} else {
@@ -392,7 +392,7 @@ string Regex::to_txt() const {
 	return str1 + symb + str2;
 }
 // возвращает пару <вектор сотсояний, max_index>
-pair<vector<State>, int> Regex::get_tompson(int max_index) {
+pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 	string str;			  //идентификатор состояния
 	vector<State> s = {}; //вектор состояний нового автомата
 	map<alphabet_symbol, set<int>> m, p, map_l, map_r; // словари автоматов
@@ -562,11 +562,11 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) {
 	return {};
 }
 
-FiniteAutomaton Regex::to_tompson() {
+FiniteAutomaton Regex::to_tompson() const {
 	return FiniteAutomaton(0, get_tompson(-1).first, language);
 }
 
-int Regex::L() {
+int Regex::L() const {
 	int l;
 	int r;
 	switch (type) {
@@ -589,7 +589,7 @@ int Regex::L() {
 		return 0;
 	}
 }
-vector<Lexem>* Regex::first_state() {
+vector<Lexem>* Regex::first_state() const {
 	vector<Lexem>* l;
 	vector<Lexem>* r;
 	switch (type) {
@@ -621,7 +621,7 @@ vector<Lexem>* Regex::first_state() {
 	}
 }
 
-vector<Lexem>* Regex::end_state() {
+vector<Lexem>* Regex::end_state() const {
 	vector<Lexem>* l;
 	vector<Lexem>* r;
 	switch (type) {
@@ -653,7 +653,7 @@ vector<Lexem>* Regex::end_state() {
 	}
 }
 
-map<int, vector<int>> Regex::pairs() {
+map<int, vector<int>> Regex::pairs() const {
 	map<int, vector<int>> l;
 	map<int, vector<int>> r;
 	map<int, vector<int>> p;
@@ -732,7 +732,7 @@ vector<Regex*> Regex::pre_order_travers_vect() {
 	}
 	return r;
 }
-bool Regex::is_term(int number, const vector<Lexem>& list) {
+bool Regex::is_term(int number, const vector<Lexem>& list) const {
 	for (size_t i = 0; i < list.size(); i++) {
 		if (list[i].number == number) {
 			return true;
@@ -740,16 +740,17 @@ bool Regex::is_term(int number, const vector<Lexem>& list) {
 	}
 	return false;
 }
-FiniteAutomaton Regex::to_glushkov() {
+FiniteAutomaton Regex::to_glushkov() const {
 
-	vector<Regex*> list = this->pre_order_travers_vect();
+	Regex test(*this);
+	vector<Regex*> list = test.pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = i;
 	}
-	vector<Lexem>* first = this->first_state(); // Множество начальных состояний
-	vector<Lexem>* end = this->end_state(); // Множество конечных состояний
-	map<int, vector<int>> p =
-		this->pairs(); // Множество возможных пар состояний
+	vector<Lexem>* first = test.first_state(); // Множество начальных состояний
+	vector<Lexem>* end = test.end_state(); // Множество конечных состояний
+	int eps_in = test.L();
+	map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
 	vector<State> st; // Список состояний в автомате
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
 
@@ -757,7 +758,11 @@ FiniteAutomaton Regex::to_glushkov() {
 		tr[(*first)[i].symbol].insert((*first)[i].number + 1);
 	}
 
-	st.push_back(State(0, {}, "S", false, tr));
+	if (eps_in) {
+		st.push_back(State(0, {}, "S", true, tr));
+	} else {
+		st.push_back(State(0, {}, "S", false, tr));
+	}
 
 	for (size_t i = 0; i < list.size(); i++) {
 		Lexem elem = list[i]->value;
@@ -775,7 +780,7 @@ FiniteAutomaton Regex::to_glushkov() {
 	return FiniteAutomaton(0, st, language);
 }
 
-FiniteAutomaton Regex::to_ilieyu() {
+FiniteAutomaton Regex::to_ilieyu() const {
 	FiniteAutomaton glushkov = this->to_glushkov();
 	vector<State> states = glushkov.states;
 	vector<int> follow;
@@ -1212,7 +1217,7 @@ int Regex::pump_length() const {
 	return -1;
 }
 
-bool Regex::equal(Regex* r1, Regex* r2) {
+bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 	if (r1 == nullptr && r2 == nullptr) return true;
 	if (r1 == nullptr || r2 == nullptr) return true;
 	int r1_value, r2_value;
@@ -1227,19 +1232,44 @@ bool Regex::equal(Regex* r1, Regex* r2) {
 
 	if (r1_value != r2_value) return false;
 
-	return equal(r1->term_l, r2->term_l) && equal(r1->term_r, r2->term_r) ||
-		   equal(r1->term_r, r2->term_l) && equal(r1->term_l, r2->term_r);
+	return equality_checker(r1->term_l, r2->term_l) &&
+			   equality_checker(r1->term_r, r2->term_r) ||
+		   equality_checker(r1->term_r, r2->term_l) &&
+			   equality_checker(r1->term_l, r2->term_r);
 }
 
-bool Regex::equivalent(Regex r1, Regex r2) {
+bool Regex::equal(const Regex& r1, const Regex& r2) {
+	return equality_checker(&r1, &r2);
+}
+
+bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 	return FiniteAutomaton::equivalent(r1.to_ilieyu(), r2.to_ilieyu());
 }
-// TODO нужно сделать методы Regex константными
+
 bool Regex::subset(const Regex& r) const {
-	/*FiniteAutomaton dfa1 = to_ilieyu().determinize();
-	FiniteAutomaton dfa2 = r.to_ilieyu().determinize();
-	Language l;
-	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2, &l));
-	return equivalent(dfa_instersection, dfa2);*/
-	return false;
+	FiniteAutomaton dfa1(to_ilieyu().determinize());
+	FiniteAutomaton dfa2(r.to_ilieyu().determinize());
+	FiniteAutomaton dfa_instersection(
+		FiniteAutomaton::intersection(dfa1, dfa2));
+	return FiniteAutomaton::equivalent(dfa_instersection, dfa2);
+}
+
+FiniteAutomaton Regex::to_antimirov() {
+	vector<Regex> regs;
+
+	Regex r;
+	if (!r.from_string("b")) {
+		cout << "ERROR\n";
+		// return;
+	}
+
+	partial_symbol_derevative(r, regs);
+
+	cout << regs.size() << endl;
+
+	for (size_t i = 0; i < regs.size(); i++) {
+		cout << regs[i].to_txt() << endl;
+	}
+
+	return FiniteAutomaton();
 }
