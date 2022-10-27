@@ -348,8 +348,8 @@ void Regex::clear() {
 Regex::~Regex() {
 	clear();
 }
-int Regex::search_replace(const Regex& replacing, const Regex& replaced_by,
-						  Regex* original) {
+int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
+							  Regex* original) {
 	int cond = 0;
 	if (equal(replacing, *original)) {
 		Regex* temp = new Regex(replaced_by);
@@ -368,10 +368,12 @@ int Regex::search_replace(const Regex& replacing, const Regex& replaced_by,
 		delete original;
 	} else {
 		if (original->term_l) {
-			cond += search_replace(replacing, replaced_by, original->term_l);
+			cond +=
+				search_replace_rec(replacing, replaced_by, original->term_l);
 		}
 		if (original->term_r) {
-			cond += search_replace(replacing, replaced_by, original->term_r);
+			cond +=
+				search_replace_rec(replacing, replaced_by, original->term_r);
 		}
 	}
 	return cond;
@@ -419,7 +421,7 @@ void Regex::normalize_regex(const string& file) {
 	in.close();
 	for (int i = 0; i < all_rules.size(); i++) {
 		int cond = 0;
-		cond += search_replace(all_rules[i].from, all_rules[i].to, this);
+		cond += search_replace_rec(all_rules[i].from, all_rules[i].to, this);
 		if (cond != 0) {
 			i--;
 		}

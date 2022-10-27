@@ -88,6 +88,9 @@ class Regex : BaseObject {
 		const; // возвращает true, если состояние конечно
 	string to_str() const;
 	static bool equality_checker(const Regex*, const Regex*);
+	int search_replace_rec(
+		const Regex& replacing, const Regex& replaced_by,
+		Regex* original); //рекурсивный поиск заменяемого листа дерева
 
   public:
 	Regex();
@@ -103,9 +106,8 @@ class Regex : BaseObject {
 	Regex* copy() const;
 	Regex(const Regex&);
 
-	void normalize_regex(const string& file);
-	int search_replace(const Regex& replacing, const Regex& replaced_by,
-					   Regex* original);
+	void normalize_regex(
+		const string& file); //переписывание regex по пользовательским правилам
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);
