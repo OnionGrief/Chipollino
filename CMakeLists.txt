@@ -15,7 +15,9 @@ set(SOURCES
 	src/objects/Language.cpp
 	src/objects/Grammar.cpp
 	src/AlphabetSymbol.cpp
+	src/AutomatonToImage.cpp
 	src/Example.cpp
+	src/Logger.cpp
     src/main.cpp
 )
 
