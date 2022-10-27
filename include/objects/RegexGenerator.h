@@ -6,9 +6,9 @@
 
 using namespace std;
 
-class RegexGenerator : BaseObject {
+class RegexGenerator {
   private:
-	vector<char> alphabet;
+	vector<char> alphabet; //TODO: убрать алфавит
 	int regex_length = 0;
 	int star_num = 0;
 	int star_nesting = 0; //вложенность
@@ -20,12 +20,17 @@ class RegexGenerator : BaseObject {
 	void generate_conc_regex();
 	void generate_simple_regex();
 	int generate_alphabet(int);
+	char rand_symb();
 
   public:
 	RegexGenerator();
-	RegexGenerator(int, int, int);
-	RegexGenerator(int, int, int, int);
-	string to_txt() override;
-
-	char rand_symb();
+	/*сгенерировать регулярное выражение, параметрирозованное длиной, кол-вом
+	итераций Клини и звездной вложенностью*/
+	RegexGenerator(int regex_length, int star_num, int star_nesting);
+	/*сгенерировать регулярное выражение, параметрирозованное длиной, кол-вом
+	итераций Клини, звездной вложенностью и размером алфавита*/
+	RegexGenerator(int regex_length, int star_num, int star_nesting,
+				   int alphabet_size);
+	/*получить сгенерированное регулярное выражение*/
+	string to_txt();
 };
