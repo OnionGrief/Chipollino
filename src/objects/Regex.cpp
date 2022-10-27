@@ -286,6 +286,12 @@ Regex::Regex() {
 	term_r = nullptr;
 }
 
+Regex Regex::normalize_regex(const string& file) const {
+	Regex regex = *this;
+	regex.normalize_this_regex(file);
+	return regex;
+}
+
 bool Regex::from_string(string str) {
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
@@ -380,7 +386,7 @@ int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
 	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
 	//обоняния.
 }
-void Regex::normalize_regex(const string& file) {
+void Regex::normalize_this_regex(const string& file) {
 	struct Rules {
 		Regex from;
 		Regex to;
