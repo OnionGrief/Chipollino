@@ -1098,7 +1098,11 @@ bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
 		return false;
 	}
 	if (respected_sym->type == Type::eps) {
-		cur_result = *reg_e;
+		cur_result.type = reg_e->type;
+		if (reg_e->term_l != nullptr)
+		    cur_result.term_l = reg_e->term_l->copy();
+		if (reg_e->term_l)
+		    cur_result.term_r = reg_e->term_l->copy();
 		result.push_back(cur_result);
 		return true;
 	}
@@ -1107,10 +1111,7 @@ bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
 	bool answer = true, answer1, answer2;
 	switch (reg_e->type) {
 	case Type::eps:
-		if (respected_sym->type != Type::eps) return false;
-		cur_result.type = Type::eps;
-		result.push_back(cur_result);
-		return answer;
+		return false;
 	case Type::symb:
 		if (respected_sym->value.symbol != reg_e->value.symbol) {
 			return false;
@@ -1140,6 +1141,7 @@ bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
 			cur_subresult.term_l = subresult[i].copy();
 			result.push_back(cur_subresult);
 			delete cur_subresult.term_l;
+			cur_subresult.term_l = nullptr;
         }
 		if (reg_e->term_l->is_eps_possible()) {
 			answer2 = partial_derevative_with_respect_to_sym(respected_sym,
@@ -1161,6 +1163,7 @@ bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
 			cur_result.term_l = subresult[i].copy();
 			result.push_back(cur_result);
 			delete cur_result.term_l;
+			cur_result = nullptr;
         }
 		cur_result.clear();
 		return answer;
