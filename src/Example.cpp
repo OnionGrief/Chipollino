@@ -161,10 +161,35 @@ void Example::random_regex_parsing() {
 		string str = r1.to_txt();
 		cout << "\n" << str << "\n";
 		Regex r;
+		if (!r.from_string(str)) {
+			cout << "ERROR\n";
+			return;
+		}
 		r.from_string(str);
-		r.pre_order_travers();
-		r.clear();
+		cout << r.to_txt() << endl;
 	}
+}
+
+void Example::parser_error() {
+	cout<<"1:\n";
+	parsing_regex("|a||(aa|a)*");
+	cout<<"2:\n";
+	parsing_regex("|||(aa)*");
+	cout<<"3:\n";
+	parsing_regex("a||a*|aa");
+}
+
+void Example::parsing_regex(string str) {
+	cout << str<<endl;
+	Regex r;
+	if (!r.from_string(str)) {
+		cout << "ERROR\n";
+		return;
+	}
+	r.from_string(str);
+	cout << r.to_txt() << endl;
+	//r.pre_order_travers();
+	//cout<<endl;
 }
 
 void Example::fa_bisimilar_check() {
