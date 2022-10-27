@@ -23,4 +23,5 @@ class Example {
 	static void fa_merge_bisimilar();
 	static void to_image();
 	static void step();
+	static void step_interection();
 };

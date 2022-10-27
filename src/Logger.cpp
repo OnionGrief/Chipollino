@@ -18,7 +18,7 @@ void Logger::init() {
 		out << "\\author{Чиполлино}" << endl;
 		out << "\\date{Москва, 2022}" << endl;
 		out << "\\usepackage{graphicx}" << endl;
-		out << "\\graphicspath{ {images/} }" << endl;
+		out << "\\graphicspath{ {./resources/} }" << endl;
 		out << "\\begin{document}" << endl;
 		out << "\\maketitle" << endl;
 		out << "\\newpage" << endl;
@@ -34,25 +34,74 @@ void Logger::init_step(string step_name) {
 	out.close(); 
 }
 
-Logger l;
+// Logger l;
+void Logger::log(string text) {
+	ofstream out("./resources/report.tex", ios::app);
+	if (out.is_open()) {
+		out << text + "\n" <<endl;
+	}
+	out.close();
+}
+
+void Logger::log(string text, string val) {
+	ofstream out("./resources/report.tex", ios::app);
+	if (out.is_open()) {
+		out << text + ": ";
+		out << val + "\n" <<endl;
+	}
+	out.close();
+}
+
 void Logger::log(string text, string fa1, string fa2) {
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + "\n" << endl;
 		if (fa1 != "") {
-			l.i += 1;
-			AutomatonToImage::to_image(fa1, l.i);
+			i += 1;
+			AutomatonToImage::to_image(fa1, i);
 			out << "Автомат до преобразования\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics{./resources/output%d.png}\n", l.i);
+    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;
 		}
 		if (fa2 != "") {
-			l.i += 1;
-			AutomatonToImage::to_image(fa2, l.i);
+			i += 1;
+			AutomatonToImage::to_image(fa2, i);
 			out << "Автомат после преобразования\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics{./resources/output%d.png}\n", l.i);
+    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
+			out << si << endl;
+		}
+	}
+	out.close();
+}
+
+void Logger::log(string text, string fa1, string fa2, string fa3) {
+	ofstream out("./resources/report.tex", ios::app);
+	if (out.is_open()) {
+		// out << text + "\n" << endl;
+		if (fa1 != "") {
+			i += 1;
+			AutomatonToImage::to_image(fa1, i);
+			out << "Первый автомат\n" << endl;
+			char si[256];
+    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
+			out << si << endl;
+		}
+		if (fa2 != "") {
+			i += 1;
+			AutomatonToImage::to_image(fa2, i);
+			out << "Второй атомат\n" << endl;
+			char si[256];
+    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
+			out << si << endl;
+		}
+		if (fa3 != "") {
+			i += 1;
+			AutomatonToImage::to_image(fa3, i);
+			out << text + "\n" << endl;
+			char si[256];
+    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;
 		}
 	}
