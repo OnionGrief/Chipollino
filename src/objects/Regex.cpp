@@ -1089,9 +1089,8 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 	}
 }
 
-bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
-    const Regex* reg_e,
-    vector<Regex>& result) const {
+bool Regex::partial_derevative_with_respect_to_sym(
+	Regex* respected_sym, const Regex* reg_e, vector<Regex>& result) const {
 	Regex cur_result;
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
 		std::cout << "Invalid input: unexpected regex instead of symbol\n";
@@ -1099,10 +1098,8 @@ bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
 	}
 	if (respected_sym->type == Type::eps) {
 		cur_result.type = reg_e->type;
-		if (reg_e->term_l != nullptr)
-		    cur_result.term_l = reg_e->term_l->copy();
-		if (reg_e->term_l)
-		    cur_result.term_r = reg_e->term_l->copy();
+		if (reg_e->term_l != nullptr) cur_result.term_l = reg_e->term_l->copy();
+		if (reg_e->term_l) cur_result.term_r = reg_e->term_l->copy();
 		result.push_back(cur_result);
 		return true;
 	}
@@ -1120,13 +1117,13 @@ bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
 		result.push_back(cur_result);
 		return answer;
 	case Type::alt:
-		answer1 = partial_derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
-												 subresult);
-		answer2 = partial_derevative_with_respect_to_sym(respected_sym, reg_e->term_r,
-												 subresult1);
+		answer1 = partial_derevative_with_respect_to_sym(
+			respected_sym, reg_e->term_l, subresult);
+		answer2 = partial_derevative_with_respect_to_sym(
+			respected_sym, reg_e->term_r, subresult1);
 		for (int i = 0; i < subresult.size(); i++) {
 			result.push_back(subresult[i]);
-        }
+		}
 		for (int i = 0; i < subresult1.size(); i++) {
 			result.push_back(subresult1[i]);
 		}
@@ -1134,18 +1131,18 @@ bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
 		return answer;
 	case Type::conc:
 		cur_subresult.type = Type::conc;
-		answer1 = partial_derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
-												 subresult);
+		answer1 = partial_derevative_with_respect_to_sym(
+			respected_sym, reg_e->term_l, subresult);
 		cur_subresult.term_r = reg_e->term_r->copy();
 		for (int i = 0; i < subresult.size(); i++) {
 			cur_subresult.term_l = subresult[i].copy();
 			result.push_back(cur_subresult);
 			delete cur_subresult.term_l;
 			cur_subresult.term_l = nullptr;
-        }
+		}
 		if (reg_e->term_l->is_eps_possible()) {
-			answer2 = partial_derevative_with_respect_to_sym(respected_sym,
-													 reg_e->term_r, subresult1);
+			answer2 = partial_derevative_with_respect_to_sym(
+				respected_sym, reg_e->term_r, subresult1);
 			for (int i = 0; i < subresult1.size(); i++) {
 				result.push_back(subresult1[i]);
 			}
@@ -1164,7 +1161,7 @@ bool Regex::partial_derevative_with_respect_to_sym(Regex* respected_sym,
 			result.push_back(cur_result);
 			delete cur_result.term_l;
 			cur_result = nullptr;
-        }
+		}
 		cur_result.clear();
 		return answer;
 	}
@@ -1206,7 +1203,7 @@ std::optional<Regex> Regex::symbol_derevative(
 }
 // Частичная производная по символу
 void Regex::partial_symbol_derevative(const Regex& respected_sym,
-    vector<Regex>& result) const {
+									  vector<Regex>& result) const {
 	auto rs = respected_sym.copy();
 	partial_derevative_with_respect_to_sym(rs, this, result);
 	delete rs;

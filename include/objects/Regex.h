@@ -15,7 +15,8 @@ class Language;
 class FiniteAutomaton;
 
 struct Lexem {
-	enum Type {
+	enum Type
+	{
 		error,
 		parL, // (
 		parR, // )
@@ -34,7 +35,8 @@ struct Lexem {
 
 class Regex : BaseObject {
   private:
-	enum Type {
+	enum Type
+	{
 		// Epsilon
 		eps,
 		// Binary:
@@ -71,8 +73,8 @@ class Regex : BaseObject {
 										const Regex* reg_e,
 										Regex& result) const;
 	bool partial_derevative_with_respect_to_sym(Regex* respected_sym,
-										const Regex* reg_e,
-										vector<Regex>& result) const;
+												const Regex* reg_e,
+												vector<Regex>& result) const;
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const;
@@ -107,8 +109,9 @@ class Regex : BaseObject {
 
 	// Производная по символу
 	std::optional<Regex> symbol_derevative(const Regex& respected_sym) const;
-    // Частичная производная по символу
-	void partial_symbol_derevative(const Regex& respected_sym, vector<Regex>& result) const;
+	// Частичная производная по символу
+	void partial_symbol_derevative(const Regex& respected_sym,
+								   vector<Regex>& result) const;
 	// Производная по префиксу
 	std::optional<Regex> prefix_derevative(std::string respected_str) const;
 	// Длина накачки
@@ -118,9 +121,8 @@ class Regex : BaseObject {
 	// like to_glushkov, to_antimirov, etc
 };
 
-
 /*
-     Гуртовщики Мыши
+	 Гуртовщики Мыши
 
 		~~~~~~~~~~~~~~~
 
