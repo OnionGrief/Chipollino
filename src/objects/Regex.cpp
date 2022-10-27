@@ -372,6 +372,8 @@ void Regex::search_replace(Regex replacing, Regex replaced_by,
 	}
 	delete c;
 	return;
+	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
+	//обоняния.
 }
 void Regex::normalize_regex(string file) {
 	struct Rules {
