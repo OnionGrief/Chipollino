@@ -1,2 +1,2 @@
-aaab=b
-b=a
+bbb*aaa*=b
+ab=a

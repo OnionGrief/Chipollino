@@ -1,8 +1,8 @@
+#include "AutomatonToImage.h"
 #include "FiniteAutomaton.h"
 #include "Language.h"
-#include "Regex.h"
-#include "AutomatonToImage.h"
 #include "Logger.h"
+#include "Regex.h"
 #include <iostream>
 
 /*
@@ -23,4 +23,5 @@ class Example {
 	static void fa_merge_bisimilar();
 	static void to_image();
 	static void step();
+	static void normalize_regex();
 };

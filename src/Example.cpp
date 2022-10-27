@@ -294,7 +294,7 @@ void Example::to_image() {
 	FiniteAutomaton fa2 = fa1.merge_bisimilar();
 
 	string s2 = fa2.to_txt();
-	
+
 	AutomatonToImage::to_image(s1, 1);
 	AutomatonToImage::to_image(s2, 2);
 }
@@ -334,4 +334,20 @@ void Example::step() {
 	Logger::log("Kомментарий", f2, f3);
 	Logger::finish_step();
 	Logger::finish();
+}
+void Example::normalize_regex() {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	// regl = "abc"; //"bbb*(aaa*bbb*)*";
+	Language* lang;
+	lang = new Language();
+	Regex r(lang);
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
+	}
+	r.normalize_regex("./../Rules.txt");
+	cout << r.to_txt();
+	delete lang;
 }

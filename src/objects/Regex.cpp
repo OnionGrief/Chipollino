@@ -350,16 +350,17 @@ Regex::~Regex() {
 int Regex::search_replace(Regex replacing, Regex replaced_by, Regex* original) {
 	int cond = 0;
 	Regex* c = new Regex(replacing);
-	// cout << original->to_txt() << "\n";
 	if (equal(c, original)) {
 		Regex* temp = new Regex(replaced_by);
 		cond++;
 		if (original->term_p && original->term_p->term_l &&
 			original->term_p->term_l == original) {
+			temp->term_p = original->term_p;
 			original->term_p->term_l = temp;
 		} else {
 			if (original->term_p && original->term_p->term_r &&
 				original->term_p->term_r == original) {
+				temp->term_p = original->term_p;
 				original->term_p->term_r = temp;
 			}
 		}
@@ -389,7 +390,6 @@ void Regex::normalize_regex(string file) {
 	lang = new Language();
 	if (in.is_open()) {
 		while (getline(in, line)) {
-			std::cout << line << std::endl;
 			string v1, v2;
 			int ind = -1;
 			for (char c : line) {
@@ -406,14 +406,13 @@ void Regex::normalize_regex(string file) {
 				}
 			}
 			if (v1 == "" || v2 == "") {
-				cout << "error";
+				cout << "error rewriting rules read from file";
 				return;
 			}
 			Regex a(lang);
 			Regex b(lang);
 			a.from_string(v1);
 			b.from_string(v2);
-
 			Rules temp = {a, b};
 			allRules.push_back(temp);
 		}
@@ -421,7 +420,6 @@ void Regex::normalize_regex(string file) {
 	in.close();
 	for (int i = 0; i < allRules.size(); i++) {
 		int cond = 0;
-		// cout << this->to_txt() << "\n";
 		cond += search_replace(allRules[i].from, allRules[i].to, this);
 		if (cond != 0) {
 			i--;
