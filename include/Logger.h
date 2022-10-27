@@ -1,6 +1,5 @@
 #pragma once
 #include "AutomatonToImage.h"
-#include "Integer.h"
 #include <string>
 using namespace std;
 

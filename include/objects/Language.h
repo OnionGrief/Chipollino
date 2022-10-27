@@ -7,7 +7,7 @@
 
 class Language {
   private:
-	vector<alphabet_symbol> alphabet;
+	set<alphabet_symbol> alphabet;
 	optional<int> pump_length;
 	optional<FiniteAutomaton> min_dfa;
 	// классы эквивалентности в минимального дка TODO
@@ -15,12 +15,11 @@ class Language {
 	// аппроксимации минимальных НКА и регулярок TODO
   public:
 	Language();
-	Language(vector<alphabet_symbol> alphabet);
+	Language(set<alphabet_symbol> alphabet);
 	// string to_txt();
-	const vector<alphabet_symbol>& get_alphabet();
-	void set_alphabet(vector<alphabet_symbol>);
+	const set<alphabet_symbol>& get_alphabet();
+	void set_alphabet(set<alphabet_symbol>);
 	int get_alphabet_size();
-	alphabet_symbol get_alphabet_symbol(int);
 	void set_pump_length(int);
 	const optional<int>& get_pump_length();
 	void set_min_dfa(FiniteAutomaton);
