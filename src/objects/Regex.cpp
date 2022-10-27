@@ -347,7 +347,32 @@ void Regex::clear() {
 Regex::~Regex() {
 	clear();
 }
+void Regex::search_replace(Regex replacing, Regex replaced_by,
+						   Regex* original) {
+	Regex* c = new Regex(replacing);
 
+	if (equal(c, original)) {
+		Regex* temp = new Regex(replaced_by);
+		if (original->term_p && original->term_p->term_l &&
+			original->term_p->term_l == original) {
+			original->term_p->term_l = temp;
+		} else {
+			if (original->term_p && original->term_p->term_r == original) {
+				original->term_p->term_r = temp;
+			}
+		}
+		delete original;
+	} else {
+		if (original->term_l) {
+			search_replace(replacing, replaced_by, original->term_l);
+		}
+		if (term_r) {
+			search_replace(replacing, replaced_by, original->term_r);
+		}
+	}
+	delete c;
+	return;
+}
 void Regex::normalize_regex(string file) {
 	struct Rules {
 		Regex from;
@@ -356,6 +381,8 @@ void Regex::normalize_regex(string file) {
 	vector<Rules> allRules;
 	string line;
 	std::ifstream in(file);
+	Language* lang;
+	lang = new Language();
 	if (in.is_open()) {
 		while (getline(in, line)) {
 			std::cout << line << std::endl;
@@ -378,15 +405,20 @@ void Regex::normalize_regex(string file) {
 				cout << "error";
 				return;
 			}
-			Regex a, b;
+			Regex a(lang);
+			Regex b(lang);
 			a.from_string(v1);
 			b.from_string(v2);
+
 			Rules temp = {a, b};
 			allRules.push_back(temp);
 		}
 	}
 	in.close();
-	cout << allRules.size();
+	for (int i = 0; i < allRules.size(); i++) {
+		search_replace(allRules[i].from, allRules[i].to, this);
+	}
+	delete lang;
 }
 
 void Regex::pre_order_travers() {
@@ -436,7 +468,8 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 	string str;		   //идентификатор состояния
 	FiniteAutomaton a; // новый автомат
 	vector<State> s = {}; //вектор состояний нового автомата
-	map<alphabet_symbol, vector<int>> m, p, map_l, map_r; // словари автоматов
+	map<alphabet_symbol, vector<int>> m, p, map_l,
+		map_r;		   // словари автоматов
 	vector<int> trans; // новые транзишены
 	int offset; // сдвиг для старых индексов состояний в новом автомате
 	FiniteAutomaton al; // левый автомат относительно операции
@@ -533,7 +566,8 @@ FiniteAutomaton Regex::get_tompson(int max_index) {
 					// map_l[elem] = trans;
 				}
 			}
-			// cout << al->states[i].identifier << " " << al->states[i].index
+			// cout << al->states[i].identifier << " " <<
+			// al->states[i].index
 			// <<"\n";
 			s.push_back(State(al.states[i].index, {}, al.states[i].identifier,
 							  false, map_l));
@@ -1132,8 +1166,8 @@ int Regex::pump_length() const {
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
 					derevative_with_respect_to_str(*it, this, *pumping.term_r);
-					if (true) { // TODO: check if pumping language belongs reg_e
-								// language
+					if (true) { // TODO: check if pumping language belongs
+								// reg_e language
 						checked_prefixes[*it] = true;
 						return i;
 					}

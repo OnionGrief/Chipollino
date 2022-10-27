@@ -1,8 +1,8 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
-#include <fstream>
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <optional>
@@ -99,6 +99,7 @@ class Regex : BaseObject {
 	Regex(const Regex&);
 
 	void normalize_regex(string file);
+	void search_replace(Regex replacing, Regex replaced_by, Regex* original);
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(Regex* r1, Regex* r2);
