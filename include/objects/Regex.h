@@ -86,6 +86,7 @@ class Regex : BaseObject {
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
 	string to_str() const;
+	static bool equality_checker(const Regex*, const Regex*);
 
   public:
 	Regex();
@@ -103,9 +104,9 @@ class Regex : BaseObject {
 
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
-	static bool equal(Regex*, Regex*);
+	static bool equal(const Regex&, const Regex&);
 	// проверка регулярок на эквивалентность
-	static bool equivalent(Regex, Regex);
+	static bool equivalent(const Regex&, const Regex&);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const Regex&) const; // TODO
 
