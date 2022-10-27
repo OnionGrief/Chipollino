@@ -8,7 +8,7 @@ int main() {
 	Language* lang;
 	lang = new Language();
 	Regex r(lang);
-	string str = "(ab)*";
+	string str = "(aaaab)*";
 	r.from_string(str);
 	r.normalize_regex("./../Rules.txt");
 	cout << r.to_txt();

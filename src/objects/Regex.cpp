@@ -347,12 +347,13 @@ void Regex::clear() {
 Regex::~Regex() {
 	clear();
 }
-void Regex::search_replace(Regex replacing, Regex replaced_by,
-						   Regex* original) {
+int Regex::search_replace(Regex replacing, Regex replaced_by, Regex* original) {
+	int cond = 0;
 	Regex* c = new Regex(replacing);
 	// cout << original->to_txt() << "\n";
 	if (equal(c, original)) {
 		Regex* temp = new Regex(replaced_by);
+		cond++;
 		if (original->term_p && original->term_p->term_l &&
 			original->term_p->term_l == original) {
 			original->term_p->term_l = temp;
@@ -365,14 +366,14 @@ void Regex::search_replace(Regex replacing, Regex replaced_by,
 		delete original;
 	} else {
 		if (original->term_l) {
-			search_replace(replacing, replaced_by, original->term_l);
+			cond += search_replace(replacing, replaced_by, original->term_l);
 		}
 		if (original->term_r) {
-			search_replace(replacing, replaced_by, original->term_r);
+			cond += search_replace(replacing, replaced_by, original->term_r);
 		}
 	}
 	delete c;
-	return;
+	return cond;
 	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
 	//обоняния.
 }
@@ -419,8 +420,12 @@ void Regex::normalize_regex(string file) {
 	}
 	in.close();
 	for (int i = 0; i < allRules.size(); i++) {
-		cout << this->to_txt() << "\n";
-		search_replace(allRules[i].from, allRules[i].to, this);
+		int cond = 0;
+		// cout << this->to_txt() << "\n";
+		cond += search_replace(allRules[i].from, allRules[i].to, this);
+		if (cond != 0) {
+			i--;
+		}
 	}
 	delete lang;
 }
