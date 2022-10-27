@@ -37,10 +37,7 @@ bool Interpreter::Lexer::scan_word(string word) {
 string Interpreter::Lexer::scan_until_space() {
 	string acc = "";
 	skip_spaces();
-	while (
-		current_symbol() != ' ' &&
-		current_symbol() != '\n' &&
-		!eof()) {
+	while (current_symbol() != ' ' && current_symbol() != '\n' && !eof()) {
 
 		acc += current_symbol();
 		next_symbol();
@@ -48,21 +45,21 @@ string Interpreter::Lexer::scan_until_space() {
 	return acc;
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_equalSign() {
+Interpreter::Lexem Interpreter::Lexer::scan_equalSign() {
 	if (scan_word("=")) {
 		return Lexem(Lexem::equalSign);
 	}
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_doubleExclamation() {
+Interpreter::Lexem Interpreter::Lexer::scan_doubleExclamation() {
 	if (scan_word("!!")) {
 		return Lexem(Lexem::doubleExclamation);
 	}
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_function() {
+Interpreter::Lexem Interpreter::Lexer::scan_function() {
 	for (const auto& function : functions) {
 		if (scan_word(function)) {
 			return Lexem(Lexem::function, function);
@@ -71,7 +68,7 @@ Interpreter::Lexer::Lexem Interpreter::Lexer::scan_function() {
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_id() {
+Interpreter::Lexem Interpreter::Lexer::scan_id() {
 	// TODO: сделать проверки на корректность имени, чтобы не
 	// начиналось с цифры, не было коллизий с именами функций
 	string id_name = scan_until_space();
@@ -79,29 +76,29 @@ Interpreter::Lexer::Lexem Interpreter::Lexer::scan_id() {
 	return Lexem(Lexem::id, id_name);
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_dot() {
+Interpreter::Lexem Interpreter::Lexer::scan_dot() {
 	if (scan_word(".")) {
 		return Lexem(Lexem::dot);
 	}
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_regex() {
-	// TODO: сохранять regex куда-нибудь
+Interpreter::Lexem Interpreter::Lexer::scan_regex() {
 	input.save();
 	string word = scan_until_space();
-	if (Regex().from_string(word)) {
-		input.restore();
-		return Lexem(Lexem::error);
+	Regex regex;
+	if (!regex.from_string(word)) {
+		Lexem lex(Lexem::regex);
+		lex.reg = regex;
+		return lex;
 	}
-	return Lexem(Lexem::regex, word);
+	input.restore();
+	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_number() {
+Interpreter::Lexem Interpreter::Lexer::scan_number() {
 	int pos_prev = input.pos;
-	auto is_digit = [](char c) {
-		return c >= '0' && c <= '9';
-	};
+	auto is_digit = [](char c) { return c >= '0' && c <= '9'; };
 	string acc = "";
 	while (!eof() && is_digit(current_symbol())) {
 		acc += current_symbol();
@@ -113,7 +110,7 @@ Interpreter::Lexer::Lexem Interpreter::Lexer::scan_number() {
 	return Lexem(stoi(acc));
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_predicate() {
+Interpreter::Lexem Interpreter::Lexer::scan_predicate() {
 	for (const auto& predicate : predicates) {
 		if (scan_word(predicate)) {
 			return Lexem(Lexem::predicate, predicate);
@@ -122,33 +119,51 @@ Interpreter::Lexer::Lexem Interpreter::Lexer::scan_predicate() {
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_test() {
+Interpreter::Lexem Interpreter::Lexer::scan_test() {
 	if (scan_word("Test")) {
 		return Lexem(Lexem::test);
 	}
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexer::Lexem Interpreter::Lexer::scan_lexem() {
-	if (Lexem lex = scan_dot(); lex.type) { return lex; }
-	if (Lexem lex = scan_number(); lex.type) { return lex; }
-	if (Lexem lex = scan_equalSign(); lex.type) { return lex; }
-	if (Lexem lex = scan_doubleExclamation(); lex.type) { return lex; }
-	if (Lexem lex = scan_function(); lex.type) { return lex; }
-	if (Lexem lex = scan_predicate(); lex.type) { return lex; }
-	if (Lexem lex = scan_test(); lex.type) { return lex; }
-	if (Lexem lex = scan_regex(); lex.type) { return lex; }
-	if (Lexem lex = scan_id(); lex.type) { return lex; }
+Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
+	if (Lexem lex = scan_dot(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_number(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_equalSign(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_doubleExclamation(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_function(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_predicate(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_test(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_regex(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_id(); lex.type) {
+		return lex;
+	}
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexer::Lexem::Lexem(Type type, string value) : type(type), value(value) {}
+Interpreter::Lexem::Lexem(Type type, string value) : type(type), value(value) {}
 
-Interpreter::Lexer::Lexem::Lexem(int num) : num(num), type(number) {}
+Interpreter::Lexem::Lexem(int num) : num(num), type(number) {}
 
 Interpreter::Lexer::Lexer() {}
 
-vector<vector<Interpreter::Lexer::Lexem>> Interpreter::Lexer::load_file(string path) {
+vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
 	ifstream input_file(path);
 	// Сюда будем записывать строки из лексем
 	vector<vector<Lexem>> lexem_lines = {};
@@ -159,12 +174,12 @@ vector<vector<Interpreter::Lexer::Lexem>> Interpreter::Lexer::load_file(string p
 	return lexem_lines;
 }
 
-vector<Interpreter::Lexer::Lexem> Interpreter::Lexer::parse_string(string str) {
+vector<Interpreter::Lexem> Interpreter::Lexer::parse_string(string str) {
 	input.str = str;
 	input.pos = 0;
 	vector<Lexem> lexems;
 	while (!eof()) {
- 		auto lexem = scan_lexem();
+		auto lexem = scan_lexem();
 		lexems.push_back(lexem);
 	}
 	return lexems;

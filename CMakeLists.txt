@@ -12,6 +12,7 @@ set(SOURCES
 	src/objects/FiniteAutomat.cpp
 	src/objects/Integer.cpp
     src/Interpreter.Lexer.cpp
+    src/Interpreter.cpp
 	src/objects/Regex.cpp
 	src/Example.cpp
     src/main.cpp
