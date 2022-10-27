@@ -8,6 +8,7 @@ class Logger {
 private:
 	// счетчик картинок
 	inline static int i = 0;
+	inline static bool active = false;
 public:
 	Logger();
 	~Logger();

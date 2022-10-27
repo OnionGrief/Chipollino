@@ -12,6 +12,7 @@ void Logger::init() {
 	out.open("./resources/report.tex", ofstream::trunc);
 	if (out.is_open()) {
 		out << "\\documentclass[14pt, russion]{article}" << endl;
+		out << "\\usepackage[T2A]{fontenc}" << endl;
 		out << "\\usepackage[utf8]{inputenc}" << endl;
 		out << "\\usepackage[russian]{babel}" << endl;
 		out << "\\title{Отчет}" << endl;
@@ -34,8 +35,8 @@ void Logger::init_step(string step_name) {
 	out.close(); 
 }
 
-// Logger l;
 void Logger::log(string text) {
+	if (!active) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + "\n" <<endl;
@@ -44,6 +45,7 @@ void Logger::log(string text) {
 }
 
 void Logger::log(string text, string val) {
+	if (!active) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + ": ";
@@ -53,6 +55,7 @@ void Logger::log(string text, string val) {
 }
 
 void Logger::log(string text, string fa1, string fa2) {
+	if (!active) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + "\n" << endl;
@@ -77,6 +80,7 @@ void Logger::log(string text, string fa1, string fa2) {
 }
 
 void Logger::log(string text, string fa1, string fa2, string fa3) {
+	if (!active) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		// out << text + "\n" << endl;
