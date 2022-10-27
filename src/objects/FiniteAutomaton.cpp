@@ -428,21 +428,36 @@ FiniteAutomaton FiniteAutomaton::complement() const {
 FiniteAutomaton FiniteAutomaton::reverse() const {
 	FiniteAutomaton enfa =
 		FiniteAutomaton(states.size(), states, language->get_alphabet());
-	enfa.states.push_back({enfa.initial_state,
-						   {enfa.initial_state},
-						   "RevS",
-						   false,
-						   map<alphabet_symbol, set<int>>()});
-	for (int i = 0; i < enfa.states.size() - 1; i++) {
+	int final_states_counter = 0;
+	for (int i = 0; i < enfa.states.size(); i++) {
 		if (enfa.states[i].is_terminal) {
-			enfa.states[enfa.initial_state].transitions[epsilon()].insert(i);
+			final_states_counter++;
+		}
+	}
+	int final_states_flag = 0;
+	if (final_states_counter > 1) {
+		final_states_flag = 1;
+		enfa.states.push_back({enfa.initial_state,
+							   {enfa.initial_state},
+							   "RevS",
+							   false,
+							   map<alphabet_symbol, set<int>>()});
+	}
+	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
+		if (enfa.states[i].is_terminal) {
 			enfa.states[i].is_terminal = false;
+			if (final_states_counter > 1) {
+				enfa.states[enfa.initial_state].transitions[epsilon()].insert(
+					i);
+			} else {
+				enfa.initial_state = i;
+			}
 		}
 	}
 	enfa.states[initial_state].is_terminal = true;
 	vector<map<alphabet_symbol, set<int>>> new_transition_matrix(
-		enfa.states.size() - 1);
-	for (int i = 0; i < enfa.states.size() - 1; i++) {
+		enfa.states.size() - final_states_flag);
+	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
 		for (const auto& transition : enfa.states[i].transitions) {
 			for (int elem : transition.second) {
 				new_transition_matrix[elem][transition.first].insert(
@@ -450,7 +465,7 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 			}
 		}
 	}
-	for (int i = 0; i < enfa.states.size() - 1; i++) {
+	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
 		enfa.states[i].transitions = new_transition_matrix[i];
 	}
 	return enfa;
