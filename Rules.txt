@@ -1,2 +1,0 @@
-bbb*aaa*=b
-ab=a

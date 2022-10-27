@@ -103,8 +103,9 @@ class Regex : BaseObject {
 	Regex* copy() const;
 	Regex(const Regex&);
 
-	void normalize_regex(string file);
-	int search_replace(Regex replacing, Regex replaced_by, Regex* original);
+	void normalize_regex(const string& file);
+	int search_replace(const Regex& replacing, const Regex& replaced_by,
+					   Regex* original);
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);

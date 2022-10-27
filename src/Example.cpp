@@ -409,12 +409,12 @@ void Example::normalize_regex() {
 	// regl = "abc"; //"bbb*(aaa*bbb*)*";
 	Language* lang;
 	lang = new Language();
-	Regex r(lang);
+	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
 		return;
 	}
-	r.normalize_regex("./../Rules.txt");
+	r.normalize_regex("./../temp/Rules.txt");
 	cout << r.to_txt();
 	delete lang;
 }

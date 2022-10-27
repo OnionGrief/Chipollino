@@ -348,10 +348,10 @@ void Regex::clear() {
 Regex::~Regex() {
 	clear();
 }
-int Regex::search_replace(Regex replacing, Regex replaced_by, Regex* original) {
+int Regex::search_replace(const Regex& replacing, const Regex& replaced_by,
+						  Regex* original) {
 	int cond = 0;
-	Regex* c = new Regex(replacing);
-	if (equal(c, original)) {
+	if (equal(replacing, *original)) {
 		Regex* temp = new Regex(replaced_by);
 		cond++;
 		if (original->term_p && original->term_p->term_l &&
@@ -374,17 +374,16 @@ int Regex::search_replace(Regex replacing, Regex replaced_by, Regex* original) {
 			cond += search_replace(replacing, replaced_by, original->term_r);
 		}
 	}
-	delete c;
 	return cond;
 	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
 	//обоняния.
 }
-void Regex::normalize_regex(string file) {
+void Regex::normalize_regex(const string& file) {
 	struct Rules {
 		Regex from;
 		Regex to;
 	};
-	vector<Rules> allRules;
+	vector<Rules> all_rules;
 	string line;
 	std::ifstream in(file);
 	Language* lang;
@@ -410,18 +409,19 @@ void Regex::normalize_regex(string file) {
 				cout << "error rewriting rules read from file";
 				return;
 			}
-			Regex a(lang);
-			Regex b(lang);
+			Regex a;
+			Regex b;
+
 			a.from_string(v1);
 			b.from_string(v2);
 			Rules temp = {a, b};
-			allRules.push_back(temp);
+			all_rules.push_back(temp);
 		}
 	}
 	in.close();
-	for (int i = 0; i < allRules.size(); i++) {
+	for (int i = 0; i < all_rules.size(); i++) {
 		int cond = 0;
-		cond += search_replace(allRules[i].from, allRules[i].to, this);
+		cond += search_replace(all_rules[i].from, all_rules[i].to, this);
 		if (cond != 0) {
 			i--;
 		}
