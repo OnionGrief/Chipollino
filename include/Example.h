@@ -1,5 +1,7 @@
+#include "AutomatonToImage.h"
 #include "FiniteAutomaton.h"
 #include "Language.h"
+#include "Logger.h"
 #include "Regex.h"
 #include "AutomatonToImage.h"
 #include "Logger.h"
@@ -21,6 +23,8 @@ class Example {
 	static void fa_equal_check();
 	static void fa_bisimilar_check();
 	static void fa_merge_bisimilar();
+	static void fa_equivalent_check();
+	static void fa_subset_check();
 	static void arden_test();
 	static void to_image();
 	static void step();
