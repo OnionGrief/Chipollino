@@ -59,7 +59,8 @@ vector<Lexem> Regex::parse_string(string str) {
 		if (lexems.size() &&
 			((lexems.back().type == Lexem::parL &&
 			  (lexem.type == Lexem::parR || lexem.type == Lexem::alt)) ||
-			 (lexems.back().type == Lexem::alt && lexem.type == Lexem::parR))) {
+			 (lexems.back().type == Lexem::alt && lexem.type == Lexem::parR) ||
+			 (lexems.back().type == Lexem::alt && lexem.type == Lexem::alt))) {
 			//  We place eps between
 			lexems.push_back({Lexem::eps});
 		}
