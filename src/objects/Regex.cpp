@@ -350,14 +350,15 @@ Regex::~Regex() {
 void Regex::search_replace(Regex replacing, Regex replaced_by,
 						   Regex* original) {
 	Regex* c = new Regex(replacing);
-
+	// cout << original->to_txt() << "\n";
 	if (equal(c, original)) {
 		Regex* temp = new Regex(replaced_by);
 		if (original->term_p && original->term_p->term_l &&
 			original->term_p->term_l == original) {
 			original->term_p->term_l = temp;
 		} else {
-			if (original->term_p && original->term_p->term_r == original) {
+			if (original->term_p && original->term_p->term_r &&
+				original->term_p->term_r == original) {
 				original->term_p->term_r = temp;
 			}
 		}
@@ -366,7 +367,7 @@ void Regex::search_replace(Regex replacing, Regex replaced_by,
 		if (original->term_l) {
 			search_replace(replacing, replaced_by, original->term_l);
 		}
-		if (term_r) {
+		if (original->term_r) {
 			search_replace(replacing, replaced_by, original->term_r);
 		}
 	}
@@ -418,6 +419,7 @@ void Regex::normalize_regex(string file) {
 	}
 	in.close();
 	for (int i = 0; i < allRules.size(); i++) {
+		cout << this->to_txt() << "\n";
 		search_replace(allRules[i].from, allRules[i].to, this);
 	}
 	delete lang;
