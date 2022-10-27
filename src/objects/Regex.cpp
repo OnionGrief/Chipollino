@@ -560,7 +560,6 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 				}
 			}
 			// al->states[i].index
-			// <<"\n";
 			s.push_back(State(al.first[i].index, {}, al.first[i].identifier,
 							  false, map_l));
 			map_l = {};
