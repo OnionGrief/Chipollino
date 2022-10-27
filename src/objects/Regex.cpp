@@ -386,8 +386,6 @@ void Regex::normalize_regex(const string& file) {
 	vector<Rules> all_rules;
 	string line;
 	std::ifstream in(file);
-	Language* lang;
-	lang = new Language();
 	if (in.is_open()) {
 		while (getline(in, line)) {
 			string v1, v2;
@@ -426,7 +424,6 @@ void Regex::normalize_regex(const string& file) {
 			i--;
 		}
 	}
-	delete lang;
 }
 
 void Regex::pre_order_travers() const {

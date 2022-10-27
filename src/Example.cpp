@@ -407,8 +407,6 @@ void Example::normalize_regex() {
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
 	regl = regl + regr;
 	// regl = "abc"; //"bbb*(aaa*bbb*)*";
-	Language* lang;
-	lang = new Language();
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
@@ -416,5 +414,4 @@ void Example::normalize_regex() {
 	}
 	r.normalize_regex("./../temp/Rules.txt");
 	cout << r.to_txt();
-	delete lang;
 }
