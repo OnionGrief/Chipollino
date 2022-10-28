@@ -454,9 +454,11 @@ void Example::step_interection() {
 	string f2 = dfa2.to_txt();
 	string f3 = FiniteAutomaton::intersection(dfa1, dfa2).to_txt();
 	string s = "interection";
+	Logger::activate();
 	Logger::init();
 	Logger::init_step(s);
 	Logger::log("Пересечение автоматов", f1, f2, f3);
 	Logger::finish_step();
 	Logger::finish();
+	Logger::deactivate();
 }
