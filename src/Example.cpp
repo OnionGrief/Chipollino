@@ -419,33 +419,33 @@ void Example::normalize_regex() {
 void Example::arden_test() {
 	vector<State> states;
 	for (int i = 0; i < 8; i++) {
-		State s = {i, {i}, "", false, map<char, vector<int>>()};
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
-	states[0].set_transition(1, 'a');
-	states[0].set_transition(4, 'b');
-	states[1].set_transition(1, 'a');
-	states[1].set_transition(2, 'b');
-	states[2].set_transition(1, 'a');
-	states[2].set_transition(3, 'b');
-	states[3].set_transition(1, 'a');
-	states[3].set_transition(3, 'b');
-	states[4].set_transition(1, 'a');
-	states[4].set_transition(5, 'b');
-	states[5].set_transition(6, 'a');
-	states[5].set_transition(5, 'b');
-	states[6].set_transition(6, 'a');
-	states[6].set_transition(7, 'b');
-	states[7].set_transition(6, 'a');
-	states[7].set_transition(5, 'b');
+	states[0].set_transition(1, "a");
+	states[0].set_transition(4, "b");
+	states[1].set_transition(1, "a");
+	states[1].set_transition(2, "b");
+	states[2].set_transition(1, "a");
+	states[2].set_transition(3, "b");
+	states[3].set_transition(1, "a");
+	states[3].set_transition(3, "b");
+	states[4].set_transition(1, "a");
+	states[4].set_transition(5, "b");
+	states[5].set_transition(6, "a");
+	states[5].set_transition(5, "b");
+	states[6].set_transition(6, "a");
+	states[6].set_transition(7, "b");
+	states[7].set_transition(6, "a");
+	states[7].set_transition(5, "b");
 	states[0].is_terminal = true;
 	states[1].is_terminal = true;
 	states[2].is_terminal = true;
 	states[4].is_terminal = true;
 	states[5].is_terminal = true;
 
-	Language l1({'a', 'b'});
-	FiniteAutomaton NDM(0, &l1, states, false);
+	FiniteAutomaton NDM(0, states, {"a", "b"});
 	nfa_to_regex(NDM);
 	// cout << .to_txt() + "\n";
 }

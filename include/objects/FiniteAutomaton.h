@@ -91,16 +91,11 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
-	// проверка автоматов на вложенность (аргумент вложен в this)
-	bool subset(const FiniteAutomaton&);
-	// получаем кол-во состояний
 	int get_states_size();
 	//получаем состояние
 	State get_state(int i);
 	//начальное состояние
 	int get_initial();
-	//получаем язык
-	Language* get_language();
 	//получаем алфавит
 	set<alphabet_symbol> get_alphabet(); // TODO
 										 // и тд

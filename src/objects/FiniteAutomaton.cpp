@@ -905,10 +905,6 @@ int FiniteAutomaton::get_initial() {
 	return initial_state;
 }
 
-Language* FiniteAutomaton::get_language() {
-	return language;
-}
-
 /*
 Джун программист прибегает с проекта к своему ментору и кричит:
 — Меня отпустили с проекта пораньше!

@@ -76,16 +76,16 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 Regex nfa_to_regex(FiniteAutomaton in) {
 	vector<int> endstate;
 	vector<vector<expression_arden>> data;
-	set<char> alphabet = in.get_alphabet();
+	set<alphabet_symbol> alphabet = in.get_alphabet();
 
 	for (int i = 0; i < in.get_states_size(); i++) {
 		vector<expression_arden> temp;
 		data.push_back(temp);
 	}
-	Regex* r = new Regex(in.get_language());
+	Regex* r = new Regex;
 	// r->clear();
 	// delete r;
-	// Regex r(in.get_language());
+	// Regex r ;
 	expression_arden temp;
 	temp.condition = -1;
 	string str = "";
@@ -102,17 +102,19 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 			 it != alphabet.end(); it++) {
 			//}
 			// for (int j = 0; j < alphabet.size(); j++) {
+
 			if (a.transitions[*it].size()) {
-				vector<int> trans = a.transitions.at(*it);
-				for (int m = 0; m < trans.size(); m++) {
-					Regex* r = new Regex(in.get_language());
+				set<int> trans = a.transitions.at(*it);
+				for (set<int>::iterator itt = trans.begin(); itt != trans.end();
+					 itt++) {
+					Regex* r = new Regex;
 					expression_arden temp;
 					temp.condition = i;
 					string str = "";
 					str += *it;
 					r->from_string(str);
 					temp.temp_regex = r;
-					data[trans[m]].push_back(temp);
+					data[*itt].push_back(temp);
 				}
 			}
 		}
@@ -126,14 +128,14 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
 
 					expression_arden temp;
-					Regex* r = new Regex(in.get_language());
-					// Regex r(in.get_language());
-					// r->regex_union(data[data[i][j].condition][k].temp_regex,
-					//			   data[i][j].temp_regex);
+					Regex* r = new Regex;
+					// Regex r ;
+					r->regex_union(data[data[i][j].condition][k].temp_regex,
+								   data[i][j].temp_regex);
 					temp.temp_regex = r;
 
 					temp.condition = data[data[i][j].condition][k].condition;
-					delete temp.temp_regex;
+					// delete temp.temp_regex;
 					tempdata.push_back(temp);
 				}
 			} else {
@@ -144,15 +146,16 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 		// sort(data[i].begin(), data[i].end(), compare);
 		for (int o = 0; o < tempdata.size(); o++) {
 			if (tempdata[o].temp_regex) {
-
-				// delete tempdata[o].temp_regex;
+				cout << tempdata[o].temp_regex->to_txt() << "\n";
+				//	delete tempdata[o].temp_regex;
 			}
 		}
 		for (int o = 0; o < tempdata.size(); o++) {
+			// cout << tempdata[o].temp_regex->to_txt() << "\n";
 			//	data[i].push_back(tempdata[o]);
 		}
-		data[i] = tempdata;
-		//  data[i] = arden_minimize(data[i]);
+		// data[i] = tempdata;
+		//   data[i] = arden_minimize(data[i]);
 
 		// data[i] = arden(data[i], i);
 		/*cout << i << " ";
@@ -173,7 +176,7 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 	// 	for (int j = 0; j < data[i].size(); j++) {
 	// 		if (data[i][j].condition != -1) {
 
-	// 			Regex* r = new Regex(in.get_language());
+	// 			Regex* r = new Regex ;
 	// 			r->regex_union(data[data[i][j].condition][0].temp_regex,
 	// 						   data[i][j].temp_regex);
 	// 			data[i][j].condition = -1;
@@ -194,11 +197,11 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 	// if (endstate.size() < 2) {
 	// 	return *data[endstate[0]][0].temp_regex;
 	// }
-	// Regex* r1 = new Regex(in.get_language());
+	// Regex* r1 = new Regex ;
 	// r1->regex_alt(data[endstate[0]][0].temp_regex,
 	// 			  data[endstate[1]][0].temp_regex);
 	// for (int i = 2; i < endstate.size(); i++) {
-	// 	Regex temp(in.get_language());
+	// 	Regex temp ;
 	// 	temp.regex_alt(r1, data[endstate[i]][0].temp_regex);
 	// 	r1->clear();
 	// 	r1 = temp.copy();
