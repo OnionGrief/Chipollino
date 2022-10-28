@@ -423,6 +423,10 @@ void Example::normalize_regex() {
 	r.normalize_regex("./../temp/Rules.txt");
 	cout << r.to_txt();
 }
+
+void Example::tester() {
+	Tester::test("(a|ab)*", "((ab)*a)*", 2);
+}
 void Example::step_interection() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {

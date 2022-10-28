@@ -3,6 +3,7 @@
 #include "Language.h"
 #include "Logger.h"
 #include "Regex.h"
+#include "Tester.h"
 #include <iostream>
 
 /*
@@ -26,5 +27,6 @@ class Example {
 	static void to_image();
 	static void step();
 	static void normalize_regex();
+	static void tester();
 	static void step_interection();
 };
