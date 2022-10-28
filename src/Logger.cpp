@@ -63,22 +63,23 @@ void Logger::log(string text, string val) {
 	out.close();
 }
 
-void Logger::log(string text, string fa1, string fa2) {
+void Logger::log(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 	if (!active) return;
+	string f1 = fa1.to_txt();
+	string f2 = fa2.to_txt();
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
-		out << text + "\n" << endl;
-		if (fa1 != "") {
+		if (f1 != "") {
 			i += 1;
-			AutomatonToImage::to_image(fa1, i);
+			AutomatonToImage::to_image(f1, i);
 			out << "Автомат до преобразования\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;
 		}
-		if (fa2 != "") {
+		if (f2 != "") {
 			i += 1;
-			AutomatonToImage::to_image(fa2, i);
+			AutomatonToImage::to_image(f2, i);
 			out << "Автомат после преобразования\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
@@ -88,30 +89,33 @@ void Logger::log(string text, string fa1, string fa2) {
 	out.close();
 }
 
-void Logger::log(string text, string fa1, string fa2, string fa3) {
+void Logger::log(string text, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2, const FiniteAutomaton& fa3) {
 	if (!active) return;
+	string f1 = fa1.to_txt();
+	string f2 = fa2.to_txt();
+	string f3 = fa3.to_txt();
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		// out << text + "\n" << endl;
-		if (fa1 != "") {
+		if (f1 != "") {
 			i += 1;
-			AutomatonToImage::to_image(fa1, i);
+			AutomatonToImage::to_image(f1, i);
 			out << "Первый автомат\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;
 		}
-		if (fa2 != "") {
+		if (f2 != "") {
 			i += 1;
-			AutomatonToImage::to_image(fa2, i);
+			AutomatonToImage::to_image(f2, i);
 			out << "Второй атомат\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;
 		}
-		if (fa3 != "") {
+		if (f3 != "") {
 			i += 1;
-			AutomatonToImage::to_image(fa3, i);
+			AutomatonToImage::to_image(f3, i);
 			out << text + "\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);

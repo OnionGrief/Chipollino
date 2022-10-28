@@ -1,5 +1,6 @@
 #pragma once
 #include "AutomatonToImage.h"
+#include "FiniteAutomaton.h"
 #include <string>
 using namespace std;
 
@@ -20,8 +21,8 @@ public:
 	// добавление записи
 	static void log(string text);
 	static void log(string text, string val);
-	static void log(string text, string fa1, string fa2);
-	static void log(string text, string fa1, string fa2, string fa3);
+	static void log(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
+	static void log(string text, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2, const FiniteAutomaton& fa3);
 	// завершение шага
 	static void finish_step();
 	// завершение записи в файл

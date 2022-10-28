@@ -385,22 +385,24 @@ void Example::step() {
 	states1[2].is_terminal = true;
 	FiniteAutomaton fa1(1, states1, {"a", "b"});
 
-	string f1 = fa1.to_txt();
+	// string f1 = fa1.to_txt();
 
 	FiniteAutomaton fa2 = fa1.merge_bisimilar();
-	string f2 = fa2.to_txt();
+	// string f2 = fa2.to_txt();
 	FiniteAutomaton fa3 = fa2.remove_eps();
-	string f3 = fa3.to_txt();
+	// string f3 = fa3.to_txt();
 	string s = "merge\\_bisimilar";
+	Logger::activate();
 	Logger::init();
 	Logger::init_step(s);
-	Logger::log("Kомментарий", f1, f2);
+	Logger::log(fa1, fa2);
 	Logger::finish_step();
 	s = "remove\\_eps";
 	Logger::init_step(s);
-	Logger::log("Kомментарий", f2, f3);
+	Logger::log(fa2, fa3);
 	Logger::finish_step();
 	Logger::finish();
+	Logger::deactivate();
 }
 void Example::normalize_regex() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
@@ -450,14 +452,14 @@ void Example::step_interection() {
 	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b"});
 	FiniteAutomaton dfa2 = FiniteAutomaton(0, states2, {"a", "b"});
 
-	string f1 = dfa1.to_txt();
-	string f2 = dfa2.to_txt();
-	string f3 = FiniteAutomaton::intersection(dfa1, dfa2).to_txt();
+	// string f1 = dfa1.to_txt();
+	// string f2 = dfa2.to_txt();
+	FiniteAutomaton dfa3 = FiniteAutomaton::intersection(dfa1, dfa2);
 	string s = "interection";
 	Logger::activate();
 	Logger::init();
 	Logger::init_step(s);
-	Logger::log("Пересечение автоматов", f1, f2, f3);
+	Logger::log("Пересечение автоматов", dfa1, dfa2, dfa3);
 	Logger::finish_step();
 	Logger::finish();
 	Logger::deactivate();
