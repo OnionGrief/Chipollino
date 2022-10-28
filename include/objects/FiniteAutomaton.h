@@ -68,8 +68,8 @@ class FiniteAutomaton : public BaseObject {
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
 	// себя)
 	FiniteAutomaton add_trap_state() const;
-	// удаление ловушки
-	FiniteAutomaton remove_trap_state() const;
+	// удаление ловушек
+	FiniteAutomaton remove_trap_states() const;
 	// навешивание разметки на все буквы в автомате, стоящие на
 	// недетерминированных переходах (если ветвление содержит eps-переходы, то
 	// eps размечаются как буквы). ДКА не меняется

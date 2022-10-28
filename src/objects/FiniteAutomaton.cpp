@@ -61,12 +61,10 @@ void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
 		 set<int>& reachable, bool use_epsilons_only) {
 	if (reachable.find(index) == reachable.end()) {
 		reachable.insert(index);
-		if (use_epsilons_only) {
-			for (int transition_to : states[index].transitions[epsilon()]) {
-				dfs(states, alphabet, transition_to, reachable,
-					use_epsilons_only);
-			}
-		} else {
+		for (int transition_to : states[index].transitions[epsilon()]) {
+			dfs(states, alphabet, transition_to, reachable, use_epsilons_only);
+		}
+		if (!use_epsilons_only) {
 			for (alphabet_symbol symb : alphabet) {
 				for (int transition_to : states[index].transitions[symb]) {
 					dfs(states, alphabet, transition_to, reachable,
@@ -472,7 +470,7 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 }
 
 FiniteAutomaton FiniteAutomaton::add_trap_state() const {
-	FiniteAutomaton new_dfa(*this);
+	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
 	int count = new_dfa.states.size();
 	for (int i = 0; i < count; i++) {
@@ -485,7 +483,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 					new_dfa.states.push_back(
 						{size,
 						 {size},
-						 to_string(size),
+						 "TrapS",
 						 false,
 						 map<alphabet_symbol, set<int>>()});
 				} else {
@@ -505,44 +503,62 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 	return new_dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
-	/*FiniteAutomaton new_dfa(*this);
+FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
+	vector<map<alphabet_symbol, set<int>>> new_transitions;
+	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
-		bool flag = false;
-		for (const auto& transitions : new_dfa.states[i].transitions) {
-			for (int transition_to : transitions.second) {
-				if (i == transition_to && !new_dfa.states[i].is_terminal) {
-					flag = true;
+		bool is_trap_state = false;
+		set<int> reachable_states = new_dfa.closure({i}, false);
+		for (int j = 0; j < new_dfa.states.size(); j++) {
+			if (states[j].is_terminal) {
+				bool is_state_found = false;
+				for (auto elem : reachable_states) {
+					if (j == elem) {
+						is_state_found = true;
+					}
+				}
+				if (is_state_found) {
+					break;
+				} else {
+					is_trap_state = true;
 				}
 			}
 		}
-		if (flag) {
-			new_dfa.states.erase(new_dfa.states.begin() + i);
-			if (i != count - 1) {
-				for (int j = new_dfa.states[i].index - 1;
-					 j < new_dfa.states.size(); j++) {
-					new_dfa.states[j].index -= 1;
+		if (is_trap_state) {
+			vector<State> new_states;
+			for (int j = 0; j < new_dfa.states.size(); j++) {
+				if (j < i) {
+					new_states.push_back(new_dfa.states[j]);
+				}
+				if (j > i && i != count - 1) {
+					new_states.push_back({new_dfa.states[j].index - 1,
+										  new_dfa.states[j].label,
+										  new_dfa.states[j].identifier,
+										  new_dfa.states[j].is_terminal,
+										  new_dfa.states[j].transitions});
 				}
 			}
-			for (int j = 0; i >= 0 && j < new_dfa.states.size(); j++) {
-				for (const auto& transitions : new_dfa.states[j].transitions) {
-					for (int transition_to : transitions.second) {
-						if (transition_to == i) {
-							transitions.second.erase(transition_to);
+			new_dfa.states = new_states;
+			for (int j = 0; j < new_dfa.states.size(); j++) {
+				for (auto& transition : new_dfa.states[j].transitions) {
+					set<int> new_transition;
+					for (int transition_to : transition.second) {
+						if (transition_to < i) {
+							new_transition.insert(transition_to);
 						}
 						if (transition_to > i) {
-							transitions.second[k] -= 1;
+							new_transition.insert(transition_to - 1);
 						}
 					}
+					transition.second = new_transition;
 				}
 			}
 			i--;
 			count--;
 		}
 	}
-	return new_dfa;*/
-	return FiniteAutomaton();
+	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::annote() const {
