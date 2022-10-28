@@ -28,4 +28,5 @@ class Example {
 	static void arden_test();
 	static void to_image();
 	static void step();
+	static void normalize_regex();
 };
