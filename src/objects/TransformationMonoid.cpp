@@ -86,10 +86,9 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 										   int transferlen) {
 	automat = in;
 	for (int i = 1; i <= transferlen; i++) {
-		vector<string> various = get_comb_alphabet(i, automat->get_alphabet());
+		vector<string> various = get_comb_alphabet(i, in->get_state[0]._;
 		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
 		{
-
 			Term current;
 			cout << various[j] << " 1 \n";
 			current.name = rewriting(various[j], rules);
@@ -154,7 +153,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 	}
 }
 
-string TransformationMonoid::to_txt() {
+string TransformationMonoid::to_txt() const {
 	return automat->to_txt();
 }
 

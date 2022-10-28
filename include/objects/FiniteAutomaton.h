@@ -96,7 +96,4 @@ class FiniteAutomaton : public BaseObject {
 	int get_states_size();
 	//получаем состояние
 	State get_state(int i);
-	//получаем алфавит
-	vector<alphabet_symbol> get_alphabet(); // TODO
-											// и тд
 };

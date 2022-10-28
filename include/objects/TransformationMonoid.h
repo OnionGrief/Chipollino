@@ -40,7 +40,7 @@ class TransformationMonoid : public BaseObject {
 	map<string, vector<string>> get_Rewriting_Rules();
 	string get_Equalence_Classes_Txt(); //вывод эквивалентных классов
 	string get_Rewriting_Rules_Txt(); //вывод правил переписывания
-	string to_txt() override;
+	string to_txt() const override;
 	int is_Synchronized(Term w);
 	int class_Card();
 	Term Class_Length();

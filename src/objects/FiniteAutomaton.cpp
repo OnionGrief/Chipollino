@@ -892,10 +892,6 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	return equivalent(dfa_instersection, dfa2); // TODO
 }
 
-vector<alphabet_symbol> FiniteAutomaton::get_alphabet() {
-	return language->get_alphabet();
-}
-
 int FiniteAutomaton::get_states_size() {
 	return states.size();
 }

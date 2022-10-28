@@ -29,4 +29,9 @@ class Example {
 	static void fa_bisimilar_check();
 	static void fa_merge_bisimilar();
 	static void transformation_monoid_example();
+	static void normalize_regex();
+	static void step();
+	static void fa_equivalent_check();
+	static void fa_subset_check();
+	static void to_image();
 };
