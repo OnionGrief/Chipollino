@@ -1051,7 +1051,7 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) {
 	fa)); cout << fa_instersection.to_txt() << endl;*/
 	return false;
 }
-bool FiniteAutomaton::parsing_nca(string s, State state) {
+bool FiniteAutomaton::parsing_nca(string s, State state) const {
 	// cout << s << endl;
 	if (s.size() == 0 && state.is_terminal) {
 		return true;
@@ -1076,7 +1076,7 @@ bool FiniteAutomaton::parsing_nca(string s, State state) {
 	return false;
 }
 
-bool FiniteAutomaton::parsing_by_nca(const string& s) {
+bool FiniteAutomaton::parsing_by_nca(const string& s) const {
 	State state = states[0];
 	return parsing_nca(s, state);
 }

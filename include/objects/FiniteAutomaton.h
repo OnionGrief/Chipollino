@@ -34,7 +34,7 @@ class FiniteAutomaton : public BaseObject {
 	vector<State> states;
 	bool is_deterministic = 0;
 	int max_index; // max индекс в автомате "q11" => 11
-	bool parsing_nca(string, State); // парсинг слова в нка
+	bool parsing_nca(string, State) const; // парсинг слова в нка
 
   public:
 	FiniteAutomaton();
@@ -88,6 +88,6 @@ class FiniteAutomaton : public BaseObject {
 	bool subset(const FiniteAutomaton&); // TODO
 										 // и тд
 	// парсинг слова в нка
-	bool parsing_by_nca(const string&);
+	bool parsing_by_nca(const string&) const;
 	friend class Regex;
 };
