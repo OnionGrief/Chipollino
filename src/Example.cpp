@@ -129,6 +129,7 @@ void Example::regex_parsing() {
 		cout << "ERROR\n";
 		return;
 	}
+	cout << r.pump_length() << "\n";
 	/*
 	FiniteAutomaton a;
 	FiniteAutomaton b;

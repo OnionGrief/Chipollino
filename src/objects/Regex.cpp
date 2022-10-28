@@ -217,7 +217,8 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
 
-	vector<alphabet_symbol> v = {char_to_alphabet_symbol(lexems[index_start].symbol)};
+	vector<alphabet_symbol> v = {
+		char_to_alphabet_symbol(lexems[index_start].symbol)};
 	set<alphabet_symbol> s(v.begin(), v.end());
 
 	p->alphabet = s;
@@ -338,6 +339,35 @@ Regex::Regex(const Regex& reg)
 	  term_p(reg.term_p), alphabet(reg.alphabet),
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
 	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
+
+Regex& Regex::operator=(const Regex& reg) {
+	type = reg.type;
+	value = reg.value;
+	language = reg.language;
+	if (type != Regex::eps && type != Regex::symb) {
+		term_l = reg.term_l->copy();
+		term_l->term_p = this;
+		if (type != Regex::star) {
+			term_r = reg.term_r->copy();
+			term_r->term_p = this;
+		}
+	}
+	return *this;
+}
+
+void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
+	if (!alphabet.empty()) {
+		for (auto sym : alphabet) {
+			_alphabet.insert(sym);
+		}
+	}
+	if (term_l != nullptr) {
+		term_l->generate_alphabet(_alphabet);
+	}
+	if (term_r != nullptr) {
+		term_r->generate_alphabet(_alphabet);
+	}
+}
 
 void Regex::clear() {
 	if (term_l != nullptr) {
@@ -838,7 +868,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
 
 	for (size_t i = 0; i < first->size(); i++) {
-		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert((*first)[i].number + 1);
+		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert(
+			(*first)[i].number + 1);
 	}
 
 	if (eps_in) {
@@ -852,8 +883,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 		tr = {};
 
 		for (size_t j = 0; j < p[elem.number].size(); j++) {
-			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)].insert(p[elem.number][j] +
-															 1);
+			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)]
+				.insert(p[elem.number][j] + 1);
 		}
 		string s = elem.symbol + to_string(i + 1);
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
@@ -1008,35 +1039,6 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 		delete prefs2;
 		return;
 	}
-}
-
-string Regex::to_str() const {
-	string str1 = "", str2 = "";
-	if (term_l) {
-		str1 = term_l->to_str();
-	}
-	if (term_r) {
-		str2 = term_r->to_str();
-	}
-	string symb;
-	if (value.symbol) symb = value.symbol;
-	if (type == Type::eps) symb = "";
-	if (type == Type::alt) {
-		symb = '|';
-		if (term_p != nullptr && term_p->type == Type::conc) {
-			str1 = "(" + str1;
-			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
-							   // конкатенации a(a|b)a
-		}
-	}
-	if (type == Type::star) {
-		symb = '*';
-		if (term_l->type != Type::symb)
-			str1 = "(" + str1 +
-				   ")"; // ставим скобки при итерации, если символов > 1
-	}
-
-	return str1 + symb + str2;
 }
 
 bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
@@ -1225,7 +1227,7 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 		}
 	}
 	result = next;
-	cout << " answer is " << result.to_str();
+	//cout << " answer is " << result.to_txt();
 	return success;
 }
 
@@ -1287,8 +1289,9 @@ int Regex::pump_length() const {
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
 					derevative_with_respect_to_str(*it, this, *pumping.term_r);
-					if (true) { // TODO: check if pumping language belongs
-								// reg_e language
+					pumping.generate_alphabet(pumping.alphabet);
+					pumping.language = shared_ptr<Language>(new Language(pumping.alphabet));
+					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
 						return i;
 					}
