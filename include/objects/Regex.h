@@ -2,6 +2,7 @@
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <optional>
@@ -88,6 +89,11 @@ class Regex : BaseObject {
 	string to_str() const;
 	vector<vector<Regex>> get_antimirov(Regex, vector<Regex>);
 	static bool equality_checker(const Regex*, const Regex*);
+	int search_replace_rec(
+		const Regex& replacing, const Regex& replaced_by,
+		Regex* original); //рекурсивный поиск заменяемого листа дерева
+	void normalize_this_regex(
+		const string& file); //переписывание regex по пользовательским правилам
 
   public:
 	Regex();
@@ -103,6 +109,8 @@ class Regex : BaseObject {
 	Regex* copy() const;
 	Regex(const Regex&);
 
+	// Переписывание regex по пользовательским правилам
+	Regex normalize_regex(const string& file) const;
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);

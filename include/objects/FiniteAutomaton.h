@@ -70,6 +70,12 @@ class FiniteAutomaton : public BaseObject {
 	FiniteAutomaton add_trap_state() const;
 	// удаление ловушки
 	FiniteAutomaton remove_trap_state() const;
+	// навешивание разметки на все буквы в автомате, стоящие на
+	// недетерминированных переходах (если ветвление содержит eps-переходы, то
+	// eps размечаются как буквы). ДКА не меняется
+	FiniteAutomaton annote() const;
+	// снятие разметки с букв
+	FiniteAutomaton deannote() const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
 	// states.size()) i-й элемент хранит номер класса i-го состояния
 	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
