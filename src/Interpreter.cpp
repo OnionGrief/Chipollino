@@ -62,41 +62,97 @@ Interpreter::Interpreter() {
 
 optional<vector<Function>> Interpreter::build_function_sequence(
 	vector<string> function_names) {
-	vector<bool> neededfuncs(function_names.size(), true);
+    //0 - функцию надо исключить из последовательности
+    //1 - функция остается в последовательности
+    //2 - функция(Delinearize или DeAnnote) принимает на вход Regex
+	//3 - функция(Delinearize или DeAnnote) принимает на вход NFA
+	vector<int> neededfuncs(function_names.size(), 1);
 	for (int i = 1; i < function_names.size(); i++) {
 		string func = function_names[i];
 		string predfunc = function_names[i - 1];
 		// check on types
-		if (names_to_functions[func].size() == 1 ||
+		if (names_to_functions[func].size() == 1 &&
 			names_to_functions[predfunc].size() == 1) {
-			if (names_to_functions[func][0].input.size() == 1 &&
-				names_to_functions[predfunc][0].output !=
+			if (names_to_functions[func][0].input.size() == 1) {
+				if (names_to_functions[predfunc][0].output !=
 					names_to_functions[func][0].input[0]) {
-				vector<ObjectType> v = {ObjectType::NFA};
-				if (!(names_to_functions[predfunc][0].output ==
-						  ObjectType::DFA &&
-					  names_to_functions[func][0].input == v)) {
-					return nullopt;
-				} else {
-					if (predfunc == "Determinize" || predfunc == "Annote") {
-						if (func == "Determinize" || func == "Minimize" ||
-							func == "Annote") {
-							neededfuncs[i - 1] = false;
+					vector<ObjectType> v = {ObjectType::NFA};
+					if (!(names_to_functions[predfunc][0].output ==
+							  ObjectType::DFA &&
+						  names_to_functions[func][0].input == v)) {
+						return nullopt;
+					} else {
+						if (predfunc == "Determinize" || predfunc == "Annote") {
+							if (func == "Determinize" || func == "Minimize" ||
+								func == "Annote") {
+								neededfuncs[i - 1] = 0;
+							}
+						} else if (predfunc == "Minimize" &&
+								   func == "Minimize") {
+							neededfuncs[i - 1] = 0;
 						}
-					} else if (predfunc == "Minimize" && func == "Minimize") {
-						neededfuncs[i - 1] = false;
+					}
+				} else {
+					if (predfunc == func) {
+						if (predfunc != "Reverse" || predfunc != "Complement") {
+							neededfuncs[i - 1] = 0;
+						}
+					} else {
+						if (predfunc == "Linearize" &&
+							(func == "Glushkov" || func == "IlieYu")) {
+							neededfuncs[i - 1] = 0;
+						}
 					}
 				}
 			} else {
-				if (predfunc == func) {
-					if (predfunc != "Reverse" || predfunc != "Complement") {
-						neededfuncs[i - 1] = false;
+				return nullopt;
+            }
+		} else {
+			vector<ObjectType> r = {ObjectType::Regex};
+			vector<ObjectType> n = {ObjectType::NFA};
+			if (names_to_functions[predfunc].size() == 2 &&
+				names_to_functions[func].size() == 2){
+                if (predfunc != func){
+                    if (neededfuncs[i-1] > 1){
+						neededfuncs[i] = neededfuncs[i - 1];
+                    } else {
+						return nullopt;
+                    }
+                } else {
+					neededfuncs[i - 1] = 0;
+                }
+            } else if (names_to_functions[predfunc].size() == 2){
+				if (neededfuncs[i - 1] < 2) {
+					if (names_to_functions[func][0].input == r) {
+						neededfuncs[i - 1] = 2;
+					} else if (names_to_functions[func][0].input == n) {
+						neededfuncs[i - 1] = 3;
+					} else {
+						return nullopt;
 					}
 				} else {
-					//доработать
+					if (names_to_functions[func][0].input == r) {
+						if (neededfuncs[i - 1] != 2) {
+							return nullopt;
+                        }
+					} else if (names_to_functions[func][0].input == n) {
+						if (neededfuncs[i - 1] != 3) {
+							return nullopt;
+						}
+					} else {
+						return nullopt;
+					}
+                }
+            } else {
+				if (names_to_functions[predfunc][0].input == r) {
+					neededfuncs[i] = 2;
+				} else if (names_to_functions[predfunc][0].input == n) {
+					neededfuncs[i] = 3;
+				} else {
+					return nullopt;
 				}
-			}
-		}
+            }
+        }
 	}
 	optional<vector<Function>> finalfuncs = nullopt;
 	finalfuncs.emplace() = {};
