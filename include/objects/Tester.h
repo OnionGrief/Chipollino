@@ -1,8 +1,10 @@
 #pragma once
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
+#include "Regex.h"
 #include <iostream>
 #include <string>
+#include <time.h>
 #include <vector>
 
 using namespace std;
@@ -11,7 +13,7 @@ class Tester {
   public:
 	struct word {			// доступ извне Tester::word
 		int iterations_num; // сколько проведено итераций
-		long long time; // время парсинга в ms скорее всего
+		long long time; // время парсинга в секундах
 		bool is_belongs; // принадлежность языку
 	};
 
@@ -32,7 +34,11 @@ class Tester {
 	};
 
   private:
+	static void create_words();
+	static string get_iterated_word();
+
   public:
-	static void test(FiniteAutomaton language, string regex, int iteration_step);
+	static void test(FiniteAutomaton language, string regex,
+					 int iteration_step);
 	static void test(string language, string regex, int iteration_step);
 };

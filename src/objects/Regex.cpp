@@ -487,6 +487,32 @@ string Regex::to_txt() const {
 
 	return str1 + symb + str2;
 }
+
+// для метода test
+string Regex::get_iterated_word(int n) const {
+	string str = "";
+	if (term_l) {
+		if (type == Type::star) {
+			for (int i = 0; i < n; i++)
+				str += term_l->get_iterated_word(n);
+		} else
+			str += term_l->get_iterated_word(n);
+	}
+	if (term_r) {
+		str += term_r->get_iterated_word(n);
+	}
+	if (value.symbol) {
+		str += value.symbol;
+	}
+	if (type == Type::alt) {
+		cout << "ERROR: в метод test передано регулярное выражение с "
+			 << "альтернативами\n"; //по-хорошему тайпчекера запрячь,
+									//но не будем тревожить Сонечку
+		return "";
+	}
+	return str;
+}
+
 // возвращает пару <вектор сотсояний, max_index>
 pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 	string str;			  //идентификатор состояния
