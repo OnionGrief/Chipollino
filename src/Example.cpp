@@ -125,7 +125,7 @@ void Example::regex_parsing() {
 	regl = regl + regr;
 	// regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
 	Regex r;
-	if (!r.from_string(regl)) {
+	if (!r.from_string("(ab|b)*ba")) {
 		cout << "ERROR\n";
 		return;
 	}
@@ -145,11 +145,11 @@ void Example::regex_parsing() {
 	cout << "to_ilieyu  ------------------------------\n";
 	b = r.to_ilieyu();
 	cout << b.to_txt();
-
+*/
+	FiniteAutomaton d;
 	cout << "to_antimirov  ------------------------------\n";
-	// d = r.to_antimirov();
-	cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
-   */
+	d = r.to_antimirov();
+	// cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
 }
 
 void Example::fa_bisimilar_check() {

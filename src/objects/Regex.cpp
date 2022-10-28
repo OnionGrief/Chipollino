@@ -3,7 +3,7 @@
 #include "Language.h"
 #include <set>
 
-Lexem::Lexem(Type type, char symbol, int number)
+Lexem::Lexem(Type type, alphabet_symbol symbol, int number)
 	: type(type), symbol(symbol), number(number) {}
 
 vector<Lexem> Regex::parse_string(string str) {
@@ -349,7 +349,7 @@ Regex::~Regex() {
 }
 
 void Regex::pre_order_travers() const {
-	if (value.symbol) {
+	if (type == Regex::symb /*&& value.symbol*/) {
 		cout << value.symbol << " ";
 	} else {
 		cout << type << " ";
@@ -371,7 +371,7 @@ string Regex::to_txt() const {
 		str2 = term_r->to_txt();
 	}
 	string symb;
-	if (value.symbol) symb = value.symbol;
+	if (type == Type::symb /*value.symbol*/) symb = value.symbol;
 	if (type == Type::eps) symb = "";
 	if (type == Type::alt) {
 		symb = '|';
@@ -715,7 +715,7 @@ map<int, vector<int>> Regex::pairs() const {
 vector<Regex*> Regex::pre_order_travers_vect() {
 	vector<Regex*> r;
 	vector<Regex*> ret;
-	if (value.symbol) {
+	if (Regex::symb == type /*value.symbol*/) {
 		r = {};
 		r.push_back(this);
 		return r;
@@ -935,7 +935,7 @@ string Regex::to_str() const {
 		str2 = term_r->to_str();
 	}
 	string symb;
-	if (value.symbol) symb = value.symbol;
+	if (type == Type::symb /*value.symbol*/) symb = value.symbol;
 	if (type == Type::eps) symb = "";
 	if (type == Type::alt) {
 		symb = '|';
@@ -1120,7 +1120,7 @@ bool Regex::partial_derevative_with_respect_to_sym(
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
 		}
-		cur_result.clear();
+		// cur_result.clear();
 		return answer;
 	}
 }
@@ -1248,22 +1248,122 @@ bool Regex::subset(const Regex& r) const {
 	return false;
 }
 
+vector<vector<Regex>> Regex::get_antimirov(Regex r, vector<Regex> alph) {
+	vector<vector<Regex>> out;
+
+	for (vector<Regex>::iterator i = alph.begin(); i != alph.end(); i++) {
+		Regex symbol = *i;
+		vector<Regex> regs;
+		cout << symbol.to_txt() << endl;
+		r.partial_symbol_derevative(symbol, regs);
+		if (regs.size() == 1 && regs[0].type == Regex::eps) {
+			out.push_back({r, regs[0], symbol}); // push {Regx, Regex, symbol}
+			continue;							 // return out;
+		}
+		if (regs.size() == 0) {
+			// return out;
+			continue;
+		}
+		for (size_t j = 0; j < regs.size(); j++) {
+			auto v = get_antimirov(regs[j], alph);
+			out.insert(out.end(), v.begin(), v.end());
+			// out.push_back({r, regs[j], symbol});
+		}
+		for (size_t j = 0; j < regs.size(); j++) {
+			// get_antimirov(regs[j], alph);
+			out.push_back({r, regs[j], symbol});
+		}
+	}
+	return out;
+}
+
 FiniteAutomaton Regex::to_antimirov() {
-	vector<Regex> regs;
 
-	Regex r;
-	if (!r.from_string("b")) {
-		cout << "ERROR\n";
-		// return;
+	map<set<string>, set<string>> trans;
+	vector<Regex> states;
+	vector<Regex> alph_regex;
+	vector<vector<Regex>> out;
+	set<string> check;
+	for (set<alphabet_symbol>::iterator i = alphabet.begin();
+		 i != alphabet.end(); i++) {
+		string symbol = *i;
+		Regex r;
+		if (!r.from_string(symbol)) {
+			cout << "ERROR\n";
+			// return;
+		}
+		alph_regex.push_back(r);
+		// cout << symbol << endl;
 	}
 
-	partial_symbol_derevative(r, regs);
+	states.push_back(*this);
+	check.insert(to_txt());
+	for (size_t i = 0; i < states.size(); i++) {
+		Regex state = states[i];
+		for (vector<Regex>::iterator j = alph_regex.begin();
+			 j != alph_regex.end(); j++) {
+			vector<Regex> regs;
+			state.partial_symbol_derevative(*j, regs);
+			for (vector<Regex>::iterator k = regs.begin(); k != regs.end();
+				 k++) {
+				out.push_back({state, *k, *j});
+				if (check.find(k->to_txt()) == check.end()) {
+					states.push_back(*k);
 
-	cout << regs.size() << endl;
-
-	for (size_t i = 0; i < regs.size(); i++) {
-		cout << regs[i].to_txt() << endl;
+					check.insert(k->to_txt());
+				}
+			}
+		}
 	}
+
+	cout << states.size() << endl;
+	// Regex r;
+	// if (!r.from_string("b")) {
+	//	cout << "ERROR\n";
+	//	// return;
+	//}
+	//
+	// out = get_antimirov(*this, alph_regex);
+
+	// cout << regs.size() << endl;
+	/*
+	for (size_t i = 0; i < out.size(); i++) {
+		// cout << regs[i].to_txt() << endl;
+		//  regs[i].pre_order_travers();
+		cout << out[i][0].to_txt() << " ";
+		cout << out[i][1].to_txt() << " ";
+		cout << out[i][2].to_txt() << endl;
+	}*/
+	vector<string> name_states;
+	for (size_t i; i < states.size(); i++) {
+		name_states.push_back(states[i].to_txt());
+	}
+
+	vector<State> automat_state;
+	for (size_t i; i < name_states.size(); i++) {
+		string state = name_states[i];
+		map<alphabet_symbol, set<int>> transit;
+		for (size_t j = 0; j < out.size(); j++) {
+			// cout << regs[i].to_txt() << endl;
+			//  regs[i].pre_order_travers();
+			cout << out[j][0].to_txt() << " ";
+			cout << out[j][1].to_txt() << " ";
+			cout << out[j][2].to_txt() << endl;
+			if (out[j][0].to_txt() == state) {
+				auto n = find(name_states.begin(), name_states.end(),
+							  out[j][1].to_txt());
+				alphabet_symbol s = out[j][2].to_txt().c_str()[0];
+				transit[s].insert(n - name_states.begin());
+			}
+		}
+	}
+
+	// for (size_t i = 0; i < regs.size(); i++) {
+	//	cout << regs[i].to_txt() << endl;
+	// }
+
+	//{{Regx, Regex, symbol}, ...}
+	// symbol - Regex от а
 
 	return FiniteAutomaton();
 }
