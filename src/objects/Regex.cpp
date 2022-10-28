@@ -356,16 +356,14 @@ Regex& Regex::operator=(const Regex& reg) {
 }
 
 void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
-	if (!alphabet.empty()) {
-		for (auto sym : alphabet) {
-			_alphabet.insert(sym);
-		}
-	}
 	if (term_l != nullptr) {
-		term_l->generate_alphabet(_alphabet);
+		term_l->generate_alphabet(alphabet);
 	}
 	if (term_r != nullptr) {
-		term_r->generate_alphabet(_alphabet);
+		term_r->generate_alphabet(alphabet);
+	}
+	for (auto sym : alphabet) {
+		_alphabet.insert(sym);
 	}
 }
 
@@ -1332,8 +1330,13 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 }
 
 bool Regex::subset(const Regex& r) const {
-	FiniteAutomaton dfa1(to_ilieyu().determinize());
-	FiniteAutomaton dfa2(r.to_ilieyu().determinize());
+	auto fst = to_ilieyu();
+	auto scd = r.to_ilieyu();
+	cout << fst.to_txt() << "\n";
+	cout << scd.to_txt() << "\n";
+
+	FiniteAutomaton dfa1(fst.determinize());
+	FiniteAutomaton dfa2(scd.determinize());
 	FiniteAutomaton dfa_instersection(
 		FiniteAutomaton::intersection(dfa1, dfa2));
 	return FiniteAutomaton::equivalent(dfa_instersection, dfa2);
