@@ -3,6 +3,14 @@ build/
 .vs/
 /CMakeSettings.json
 /enc_temp_folder/
+.idea/
+
+cmake-build-debug/.cmake/api/v1/query/
+
+cmake-build-debug/.cmake/api/v1/reply/
+
+cmake-build-debug/
+
 resources/images/
 resources/report.aux
 resources/report.fdb_latexmk
@@ -10,3 +18,4 @@ resources/report.fls
 resources/report.log
 resources/report.pdf
 resources/report.synctex.gz
+temp/

@@ -1,11 +1,10 @@
 #pragma once
 #include "AutomatonToImage.h"
-#include "Integer.h"
 #include <string>
 using namespace std;
 
 class Logger {
-public:
+  public:
 	Logger();
 	~Logger();
 	// счетчик картинок
