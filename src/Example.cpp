@@ -170,7 +170,7 @@ void Example::parsing_nca() {
 	c = r.to_ilieyu(); // to_tompson(-1);
 	cout << c.to_txt();
 	cout << "Parsing: aaaaaaaaaaaaaaaaaaabccccc\n";
-	cout << c.parsing_by_nca("aaaaaaaaaaaaaaaaaaabccccc")
+	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc")
 		 << endl; // true если распознал слово
 }
 
