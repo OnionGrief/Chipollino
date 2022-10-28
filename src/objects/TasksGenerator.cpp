@@ -1,6 +1,8 @@
 #include "TasksGenerator.h"
 
-TasksGenerator::TasksGenerator() {}
+TasksGenerator::TasksGenerator() {
+	srand(time(nullptr));
+}
 
 string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 									 bool for_static_Tpchkr_,
