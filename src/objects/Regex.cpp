@@ -1204,7 +1204,6 @@ bool Regex::partial_derevative_with_respect_to_sym(
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
 		}
-		cur_result.clear();
 		return answer;
 	}
 }
