@@ -63,7 +63,7 @@ void Logger::log(string text, string val) {
 	out.close();
 }
 
-void Logger::log(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
+void Logger::log(string a1, string a2, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 	if (!active) return;
 	string f1 = fa1.to_txt();
 	string f2 = fa2.to_txt();
@@ -72,7 +72,7 @@ void Logger::log(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 		if (f1 != "") {
 			i += 1;
 			AutomatonToImage::to_image(f1, i);
-			out << "Автомат до преобразования\n" << endl;
+			out << a1 + "\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;
@@ -80,7 +80,7 @@ void Logger::log(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 		if (f2 != "") {
 			i += 1;
 			AutomatonToImage::to_image(f2, i);
-			out << "Автомат после преобразования\n" << endl;
+			out << a2 + "\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;
@@ -89,7 +89,7 @@ void Logger::log(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 	out.close();
 }
 
-void Logger::log(string text, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2, const FiniteAutomaton& fa3) {
+void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2, const FiniteAutomaton& fa3) {
 	if (!active) return;
 	string f1 = fa1.to_txt();
 	string f2 = fa2.to_txt();
@@ -100,7 +100,7 @@ void Logger::log(string text, const FiniteAutomaton& fa1, const FiniteAutomaton&
 		if (f1 != "") {
 			i += 1;
 			AutomatonToImage::to_image(f1, i);
-			out << "Первый автомат\n" << endl;
+			out << a1 + "\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;
@@ -108,7 +108,7 @@ void Logger::log(string text, const FiniteAutomaton& fa1, const FiniteAutomaton&
 		if (f2 != "") {
 			i += 1;
 			AutomatonToImage::to_image(f2, i);
-			out << "Второй атомат\n" << endl;
+			out << a2 + "\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;
@@ -116,7 +116,7 @@ void Logger::log(string text, const FiniteAutomaton& fa1, const FiniteAutomaton&
 		if (f3 != "") {
 			i += 1;
 			AutomatonToImage::to_image(f3, i);
-			out << text + "\n" << endl;
+			out << a3 + "\n" << endl;
 			char si[256];
     		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
 			out << si << endl;

@@ -21,8 +21,8 @@ public:
 	// добавление записи
 	static void log(string text);
 	static void log(string text, string val);
-	static void log(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
-	static void log(string text, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2, const FiniteAutomaton& fa3);
+	static void log(string a1, string a2, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
+	static void log(string a1, string a2, string a3, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2, const FiniteAutomaton& fa3);
 	// завершение шага
 	static void finish_step();
 	// завершение записи в файл
