@@ -8,11 +8,16 @@ class Logger {
 private:
 	// счетчик картинок
 	inline static int i = 0;
+	// флаг включения логгирования
 	inline static bool active = false;
+	// флаг пропуска шага
+	inline static bool skip = false;
 public:
 	Logger();
 	~Logger();
+	// установка флага логгирования
 	static void activate();
+	// сброс флага логгирования
 	static void deactivate();
 	// начало записи в файл
 	static void init();
@@ -27,4 +32,6 @@ public:
 	static void finish_step();
 	// завершение записи в файл
 	static void finish();
+	// пропуск шага
+	static void skip_next_step();
 };

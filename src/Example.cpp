@@ -397,6 +397,12 @@ void Example::step() {
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa1, fa2);
 	Logger::finish_step();
+	Logger::skip_next_step();
+	s = "skip";
+	Logger::activate();
+	Logger::init_step(s);
+	Logger::log("Автомат1", "Автомат2", fa1, fa1);
+	Logger::finish_step();
 	s = "remove\\_eps";
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa2, fa3);

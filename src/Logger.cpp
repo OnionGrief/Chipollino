@@ -37,6 +37,7 @@ void Logger::init() {
 
 void Logger::init_step(string step_name) {
 	if (!active) return;
+	if (skip) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << step_name + "\n" << endl;
@@ -46,6 +47,7 @@ void Logger::init_step(string step_name) {
 
 void Logger::log(string text) {
 	if (!active) return;
+	if (skip) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + "\n" <<endl;
@@ -55,6 +57,7 @@ void Logger::log(string text) {
 
 void Logger::log(string text, string val) {
 	if (!active) return;
+	if (skip) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + ": ";
@@ -65,6 +68,7 @@ void Logger::log(string text, string val) {
 
 void Logger::log(string a1, string a2, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 	if (!active) return;
+	if (skip) return;
 	string f1 = fa1.to_txt();
 	string f2 = fa2.to_txt();
 	ofstream out("./resources/report.tex", ios::app);
@@ -91,12 +95,12 @@ void Logger::log(string a1, string a2, const FiniteAutomaton& fa1, const FiniteA
 
 void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2, const FiniteAutomaton& fa3) {
 	if (!active) return;
+	if (skip) return;
 	string f1 = fa1.to_txt();
 	string f2 = fa2.to_txt();
 	string f3 = fa3.to_txt();
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
-		// out << text + "\n" << endl;
 		if (f1 != "") {
 			i += 1;
 			AutomatonToImage::to_image(f1, i);
@@ -126,6 +130,11 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1, co
 }
 
 void Logger::finish_step() {
+	if (!active) return;
+	if (skip) {
+		skip = false;
+		return;
+	}
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << "\\newpage\n" << endl;
@@ -142,4 +151,8 @@ void Logger::finish() {
 	char cmd[1024];
     sprintf(cmd, "pdflatex \"./resources/report.tex\"");
     system(cmd); 
+}
+
+void Logger::skip_next_step() {
+	skip = true;
 }
