@@ -157,10 +157,15 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	optional<vector<Function>> finalfuncs = nullopt;
 	finalfuncs.emplace() = {};
 	for (int i = 0; i < function_names.size(); i++) {
-		if (neededfuncs[i]) {
+		if (neededfuncs[i] > 0) {
 			//cout << function_names[i];
-			Function f = names_to_functions[function_names[i]][0];
-			finalfuncs.value().push_back(f);
+			if (neededfuncs[i] == 1 || neededfuncs[i] == 2) {
+				Function f = names_to_functions[function_names[i]][0];
+				finalfuncs.value().push_back(f);
+			} else {
+				Function f = names_to_functions[function_names[i]][1];
+				finalfuncs.value().push_back(f);
+            }
 		}
 	}
 	return finalfuncs;
