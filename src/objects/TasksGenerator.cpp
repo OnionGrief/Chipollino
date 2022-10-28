@@ -1,5 +1,4 @@
 #include "TasksGenerator.h"
-#include "RegexGenerator.h"
 
 TasksGenerator::TasksGenerator() {}
 
@@ -60,8 +59,7 @@ string TasksGenerator::generate_predicate() {
 				int rand_id = rand() % id_num + 1;
 				str += " N" + to_string(rand_id);
 			} else {
-				RegexGenerator rand_regex;
-				str += " " + rand_regex.to_txt();
+				str += " " + regex_generator.generate_regex();
 			}
 		} else {
 			if (predicate.input[i] == "Regex") {
@@ -72,8 +70,7 @@ string TasksGenerator::generate_predicate() {
 					Id rand_id = possible_ids[rand() % possible_ids.size()];
 					str += " N" + to_string(rand_id.num);
 				} else {
-					RegexGenerator rand_regex;
-					str += " " + rand_regex.to_txt();
+					str += " " + regex_generator.generate_regex();
 				}
 			}
 
@@ -104,8 +101,7 @@ string TasksGenerator::generate_test() {
 		Id rand_id = possible_ids[rand() % possible_ids.size()];
 		str += "N" + to_string(rand_id.num);
 	} else {
-		RegexGenerator rand_regex;
-		str += rand_regex.to_txt();
+		str += regex_generator.generate_regex();
 	}
 
 	str += " ";
@@ -122,7 +118,8 @@ string TasksGenerator::generate_declaration() {
 	string str = "";
 	id_num++;
 	str += "N" + to_string(id_num) + " = ";
-	int funcNum = max_num_of_func_in_seq > 0 ? rand() % (max_num_of_func_in_seq + 1) : 0;
+	int funcNum =
+		max_num_of_func_in_seq > 0 ? rand() % (max_num_of_func_in_seq + 1) : 0;
 
 	string prevOutput;
 	string func_str = "";
@@ -153,8 +150,7 @@ string TasksGenerator::generate_declaration() {
 					int rand_id = rand() % (id_num - 1) + 1;
 					func_str += " N" + to_string(rand_id);
 				} else {
-					RegexGenerator rand_regex;
-					func_str += " " + rand_regex.to_txt();
+					func_str += " " + regex_generator.generate_regex();
 				}
 			} else {
 
@@ -166,8 +162,7 @@ string TasksGenerator::generate_declaration() {
 						Id rand_id = possible_ids[rand() % possible_ids.size()];
 						func_str += " N" + to_string(rand_id.num);
 					} else {
-						RegexGenerator rand_regex;
-						func_str += " " + rand_regex.to_txt();
+						func_str += " " + regex_generator.generate_regex();
 					}
 				}
 
@@ -220,8 +215,7 @@ string TasksGenerator::generate_declaration() {
 			str += "N" + to_string(rand_id.num);
 			prevOutput = id_output;
 		} else {
-			RegexGenerator rand_regex;
-			str += rand_regex.to_txt();
+			str += regex_generator.generate_regex();
 			prevOutput = "Regex";
 		}
 	}
@@ -236,7 +230,8 @@ string TasksGenerator::generate_declaration() {
 	return str;
 }
 
-TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput, int funcNum) {
+TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput,
+															int funcNum) {
 	Function str;
 	if (for_static_Tpchkr)
 		str = rand_func();

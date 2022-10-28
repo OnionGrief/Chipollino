@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseObject.h"
 #include "Regex.h"
+#include "RegexGenerator.h"
 #include <map>
 #include <string>
 #include <vector>
@@ -22,6 +23,8 @@ class TasksGenerator {
 	};
 
   private:
+	RegexGenerator regex_generator;
+
 	string res_str = "";
 	int max_num_of_func_in_seq = 5; // максимальное кол-во функций в посл-ти
 	int id_num = 0; // кол-во объявленных идентификаторов
@@ -57,8 +60,8 @@ class TasksGenerator {
 		{"PumpLength", {"Regex"}, "Int"},
 		{"ClassLength", {"DFA"}, "Int"},
 		// TODO:
-		//{"KSubSet", {"Int", "NFA"}, "NFA"}, // пока не используется, исправить
-		//если будет
+		//{"KSubSet", {"Int", "NFA"}, "NFA"}, // пока
+		//не используется, исправить если будет
 		{"Normalize", {"Regex", "FileName"}, "Regex"},
 		{"States", {"NFA"}, "Int"},
 		{"ClassCard", {"DFA"}, "Int"},

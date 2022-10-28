@@ -8,8 +8,8 @@ using namespace std;
 
 class RegexGenerator {
   private:
-	vector<char> alphabet; //TODO: убрать алфавит
-	
+	vector<char> alphabet; // TODO: убрать алфавит
+
 	int regex_length = 0;
 	int star_num = 0;
 	int cur_regex_length = 0;
@@ -27,7 +27,7 @@ class RegexGenerator {
 
   public:
 	/*генератор регулярных выражений, со значениями по умолчанию:
-	8 - максимальная длина, 3 - максимальное кол-во звезд, 
+	8 - максимальная длина, 3 - максимальное кол-во звезд,
 	2 - максимальная звездная вложенность, 2 - число символов в алфавите*/
 	RegexGenerator();
 	/*генератор регулярных выражений, параметрирозованных длиной, кол-вом

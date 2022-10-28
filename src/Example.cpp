@@ -161,7 +161,7 @@ void Example::regex_generating() {
 void Example::tasks_generating() {
 	TasksGenerator TG;
 	cout << "\n" << TG.generate_task(10, 3, false, false); // корректные задачи
-	//cout << "\n" << TG.generate_task(15, 1, false, false);
+	// cout << "\n" << TG.generate_task(15, 1, false, false);
 	cout << "\n" << TG.generate_task(3, 6, true, false); // для стат. тайпчека
 	cout << "\n" << TG.generate_task(5, 6, false, true); // для динам. тайпчека
 }
@@ -181,7 +181,7 @@ void Example::random_regex_parsing() {
 }
 
 void Example::parsing_regex(string str) {
-	cout << str<<endl;
+	cout << str << endl;
 	Regex r;
 	if (!r.from_string(str)) {
 		cout << "ERROR\n";
@@ -189,8 +189,6 @@ void Example::parsing_regex(string str) {
 	}
 	r.from_string(str);
 	cout << r.to_txt() << endl;
-	//r.pre_order_travers();
-	//cout<<endl;
 }
 
 void Example::fa_bisimilar_check() {
