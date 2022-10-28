@@ -19,12 +19,12 @@ Interpreter::Interpreter() {
 		{"Reverse", {{"Reverse", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Annote", {{"Annote", {ObjectType::NFA}, ObjectType::DFA}}},
 		{"DeLinearize",
-		 {{"DeLinearize", {ObjectType::NFA}, ObjectType::NFA},
-		  {"DeLinearize", {ObjectType::Regex}, ObjectType::Regex}}},
+		 {{"DeLinearize", {ObjectType::Regex}, ObjectType::Regex},
+		  {"DeLinearize", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Complement", {{"Complement", {ObjectType::DFA}, ObjectType::DFA}}},
 		{"DeAnnote",
-		 {{"DeAnnote", {ObjectType::NFA}, ObjectType::NFA},
-		  {"DeAnnote", {ObjectType::Regex}, ObjectType::Regex}}},
+		 {{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
+		  {"DeAnnote", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
 		//Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
@@ -61,12 +61,27 @@ Interpreter::Interpreter() {
 }
 
 optional<vector<Function>> Interpreter::build_function_sequence(
-	vector<string> function_names) {
+	vector<string> function_names, vector<ObjectType> first_type) {
     //0 - функцию надо исключить из последовательности
     //1 - функция остается в последовательности
     //2 - функция(Delinearize или DeAnnote) принимает на вход Regex
 	//3 - функция(Delinearize или DeAnnote) принимает на вход NFA
 	vector<int> neededfuncs(function_names.size(), 1);
+    if (first_type == names_to_functions[function_names[0]][0].input){
+		if (names_to_functions[function_names[0]].size() == 2){
+			neededfuncs[0] = 2;
+        } else {
+			neededfuncs[0] = 1;
+        }
+    } else {
+		if (names_to_functions[function_names[0]].size() == 2){
+			if (first_type == names_to_functions[function_names[0]][1].input){
+				neededfuncs[0] = 3;
+            }
+        } else {
+			return nullopt;
+        }
+    }
 	for (int i = 1; i < function_names.size(); i++) {
 		string func = function_names[i];
 		string predfunc = function_names[i - 1];
