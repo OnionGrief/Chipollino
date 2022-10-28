@@ -428,21 +428,36 @@ FiniteAutomaton FiniteAutomaton::complement() const {
 FiniteAutomaton FiniteAutomaton::reverse() const {
 	FiniteAutomaton enfa =
 		FiniteAutomaton(states.size(), states, language->get_alphabet());
-	enfa.states.push_back({enfa.initial_state,
-						   {enfa.initial_state},
-						   "RevS",
-						   false,
-						   map<alphabet_symbol, set<int>>()});
-	for (int i = 0; i < enfa.states.size() - 1; i++) {
+	int final_states_counter = 0;
+	for (int i = 0; i < enfa.states.size(); i++) {
 		if (enfa.states[i].is_terminal) {
-			enfa.states[enfa.initial_state].transitions[epsilon()].insert(i);
+			final_states_counter++;
+		}
+	}
+	int final_states_flag = 0;
+	if (final_states_counter > 1) {
+		final_states_flag = 1;
+		enfa.states.push_back({enfa.initial_state,
+							   {enfa.initial_state},
+							   "RevS",
+							   false,
+							   map<alphabet_symbol, set<int>>()});
+	}
+	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
+		if (enfa.states[i].is_terminal) {
 			enfa.states[i].is_terminal = false;
+			if (final_states_counter > 1) {
+				enfa.states[enfa.initial_state].transitions[epsilon()].insert(
+					i);
+			} else {
+				enfa.initial_state = i;
+			}
 		}
 	}
 	enfa.states[initial_state].is_terminal = true;
 	vector<map<alphabet_symbol, set<int>>> new_transition_matrix(
-		enfa.states.size() - 1);
-	for (int i = 0; i < enfa.states.size() - 1; i++) {
+		enfa.states.size() - final_states_flag);
+	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
 		for (const auto& transition : enfa.states[i].transitions) {
 			for (int elem : transition.second) {
 				new_transition_matrix[elem][transition.first].insert(
@@ -450,7 +465,7 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 			}
 		}
 	}
-	for (int i = 0; i < enfa.states.size() - 1; i++) {
+	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
 		enfa.states[i].transitions = new_transition_matrix[i];
 	}
 	return enfa;
@@ -528,6 +543,66 @@ FiniteAutomaton FiniteAutomaton::remove_trap_state() const {
 	}
 	return new_dfa;*/
 	return FiniteAutomaton();
+}
+
+FiniteAutomaton FiniteAutomaton::annote() const {
+	set<alphabet_symbol> new_alphabet;
+	FiniteAutomaton new_fa =
+		FiniteAutomaton(initial_state, states, shared_ptr<Language>());
+	vector<map<alphabet_symbol, set<int>>> new_transitions(
+		new_fa.states.size());
+	for (int i = 0; i < new_fa.states.size(); i++) {
+		for (const auto& elem : new_fa.states[i].transitions) {
+			if (elem.second.size() > 1) {
+				int counter = 1;
+				for (int transition_to : elem.second) {
+					alphabet_symbol new_symb =
+						to_string(elem.first) + to_string(counter);
+					new_transitions[i][new_symb].insert(transition_to);
+					new_alphabet.insert(new_symb);
+					counter++;
+				}
+			} else {
+				new_transitions[i][elem.first] =
+					new_fa.states[i].transitions[elem.first];
+				new_alphabet.insert(elem.first);
+			}
+		}
+	}
+	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
+	for (int i = 0; i < new_transitions.size(); i++) {
+		new_fa.states[i].transitions = new_transitions[i];
+	}
+	return new_fa;
+}
+
+FiniteAutomaton FiniteAutomaton::deannote() const {
+	set<alphabet_symbol> new_alphabet;
+	FiniteAutomaton new_fa =
+		FiniteAutomaton(initial_state, states, shared_ptr<Language>());
+	vector<map<alphabet_symbol, set<int>>> new_transitions(
+		new_fa.states.size());
+	for (int i = 0; i < new_fa.states.size(); i++) {
+		for (const auto& elem : new_fa.states[i].transitions) {
+			if (elem.first.size() > 1 && elem.first != epsilon()) {
+				string str = to_string(elem.first);
+				str.pop_back();
+				new_alphabet.insert(str);
+				for (int transition_to : elem.second) {
+					new_transitions[i][str].insert(transition_to);
+				}
+			} else {
+				new_transitions[i][elem.first] =
+					new_fa.states[i].transitions[elem.first];
+				new_alphabet.insert(elem.first);
+			}
+		}
+	}
+	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
+	for (int i = 0; i < new_transitions.size(); i++) {
+		new_fa.states[i].transitions = new_transitions[i];
+	}
+	return new_fa;
 }
 
 FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
