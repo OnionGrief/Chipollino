@@ -17,7 +17,8 @@ enum class ObjectType {
 	Regex,	  // регулярное выражение
 	Int,	  // целое число
 	FileName, // имя файла для чтения
-	Boolean	  // true/false
+	Boolean,  // true/false
+    Value     // yes/no/ы
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -38,22 +39,26 @@ using ObjectFileName = ObjectHolder<ObjectType::FileName, string>;
 using ObjectBoolean = ObjectHolder<ObjectType::Boolean, bool>;
 
 // Универсальный объект
-using GeneralObject = variant<ObjectHolder<ObjectType::NFA, FiniteAutomat>,
-							  ObjectHolder<ObjectType::DFA, FiniteAutomat>,
-							  ObjectHolder<ObjectType::Regex, Regex>,
-							  ObjectHolder<ObjectType::Int, int>,
-							  ObjectHolder<ObjectType::FileName, string>,
-							  ObjectHolder<ObjectType::Boolean, bool>>;
+using GeneralObject = variant<
+	ObjectHolder<ObjectType::NFA, FiniteAutomat>,
+	ObjectHolder<ObjectType::DFA, FiniteAutomat>,
+	ObjectHolder<ObjectType::Regex, Regex>,
+	ObjectHolder<ObjectType::Int, int>,
+	ObjectHolder<ObjectType::FileName, string>,
+	ObjectHolder<ObjectType::Boolean, bool>,
+    ObjectHolder<ObjectType::Value, optional<bool>>
+>;
 
-// Функция, состоит из имени и сигнатуры
-// Предикат - тоже функция, но на выходе boolean
-struct Function {
-	// Имя функции
-	string name;
-	// Типы воходных аргументов
-	vector<ObjectType> input;
-	// Тип выходного аргумента
-	ObjectType output;
+	// Функция, состоит из имени и сигнатуры
+	// Предикат - тоже функция, но на выходе boolean
+	struct Function {
+		// Имя функции
+		string name;
+		// Типы воходных аргументов
+		vector<ObjectType> input;
+		// Тип выходного аргумента
+		ObjectType output;
+		Function() {};
+		Function(string name, vector<ObjectType> input, ObjectType output) : name(name), input(input), output(output){};
+	};
 };
-
-}; // namespace Typization

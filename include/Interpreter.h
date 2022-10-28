@@ -14,6 +14,7 @@ using namespace Typization;
 class Interpreter {
   public:
 	Interpreter();
+	void load_file(const string& filename);
 
   private:
 	// Применение функции к набору аргументов
@@ -67,6 +68,9 @@ class Interpreter {
 	optional<Test> scan_test(vector<Lexem>);				  // TODO
 	optional<Predicate> scan_predicate(vector<Lexem>);		  // TODO
 	optional<GeneralOperation> scan_operation(vector<Lexem>); // TODO
+
+    // Список опреаций для последовательного выполнения
+    vector<GeneralOperation> operations;
 
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(
