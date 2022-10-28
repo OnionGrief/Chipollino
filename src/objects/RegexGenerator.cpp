@@ -9,25 +9,25 @@ RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
 	if (regex_length < 1) return;
 	if (star_nesting < 0) star_nesting = 0;
 	if (star_num < 0) star_num = 0;
-	if (alphabet_size < 0) alphabet_size = 1;
+	if (alphabet_size < 1) alphabet_size = 1;
 
-	for (char i = 'a'; i <= 'a' + alphabet_size && i <= 'z'; i++) {
+	for (char i = 'a'; i < 'a' + alphabet_size && i <= 'z'; i++) {
 		alphabet.push_back(i);
 	}
-	for (char i = 'A'; i <= 'A' + alphabet_size - 26 && i <= 'Z'; i++) {
+	for (char i = 'A'; i < 'A' + alphabet_size - 26 && i <= 'Z'; i++) {
 		alphabet.push_back(i);
 	}
 }
 
-RegexGenerator::RegexGenerator(int cur_regex_length, int cur_star_num, int star_nesting) 
-	: RegexGenerator::RegexGenerator(cur_regex_length, cur_star_num, star_nesting, generate_alphabet(cur_regex_length)) {
+RegexGenerator::RegexGenerator(int regex_length, int cur_star_num, int star_nesting) 
+	: RegexGenerator::RegexGenerator(regex_length, cur_star_num, star_nesting, generate_alphabet(regex_length)) {
 }
 
-int RegexGenerator::generate_alphabet(int cur_regex_length) {
-	int max_alphabet_size = cur_regex_length > 52 ? 52 : cur_regex_length;
+int RegexGenerator::generate_alphabet(int regex_length) {
+	int max_alphabet_size = regex_length > 52 ? 52 : regex_length;
 	int alphabet_size = 0;
 	if (max_alphabet_size) alphabet_size = rand() % max_alphabet_size;
-	return alphabet_size;
+	return alphabet_size + 1;
 }
 
 string RegexGenerator::generate_regex() {
