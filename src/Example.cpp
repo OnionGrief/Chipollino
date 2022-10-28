@@ -153,36 +153,23 @@ void Example::regex_parsing() {
 }
 
 void Example::regex_generating() {
-	RegexGenerator r1(20, 100, 3, 3);
-	cout << r1.to_txt() << "\n";
-	RegexGenerator r0;
-	cout << r0.to_txt() << "\n";
-	RegexGenerator r2(9, 2, 2);
-	cout << r2.to_txt() << "\n";
+	cout << RegexGenerator(20, 100, 3, 3).generate_regex() << "\n";
+	cout << RegexGenerator().generate_regex() << "\n";
+	cout << RegexGenerator(9, 2, 2).generate_regex() << "\n";
 }
 
 void Example::random_regex_parsing() {
+	RegexGenerator r1(8, 10, 3, 2);
 	for (int i = 0; i < 5; i++) {
-		RegexGenerator r1(8, 10, 3, 2);
-		string str = r1.to_txt();
+		string str = r1.generate_regex();
 		cout << "\n" << str << "\n";
 		Regex r;
 		if (!r.from_string(str)) {
 			cout << "ERROR\n";
 			return;
 		}
-		r.from_string(str);
 		cout << r.to_txt() << endl;
 	}
-}
-
-void Example::parser_error() {
-	cout<<"1:\n";
-	parsing_regex("|a||(aa|a)*");
-	cout<<"2:\n";
-	parsing_regex("|||(aa)*");
-	cout<<"3:\n";
-	parsing_regex("a||a*|aa");
 }
 
 void Example::parsing_regex(string str) {
