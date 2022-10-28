@@ -74,8 +74,7 @@ class Interpreter {
 
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(
-		vector<string> function_names, vector<ObjectType>); // TODO
-
+		vector<string> function_names, vector<ObjectType> first_type); // TODO
 	// Множество всех функций; TODO: инициализировать его в конструкторе
 	// Interpreter()
 	set<Function> functions; // TODO: определить operator< для Function
@@ -83,7 +82,7 @@ class Interpreter {
 	// разумеется, генерировать эту мапу можно при инициализации
 	map<string, vector<Function>> names_to_functions;
 	// Заполнение мапы names_to_functions по сету functions
-	void generate_function_mapping(); // TODO
+	//void generate_function_mapping(); // TODO
 
 	struct Lexem {
 		enum Type { // TODO добавить тип строки (для filename)

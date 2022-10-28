@@ -20,12 +20,12 @@ Interpreter::Interpreter() {
 		{"Reverse", {{"Reverse", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Annote", {{"Annote", {ObjectType::NFA}, ObjectType::DFA}}},
 		{"DeLinearize",
-		 {{"DeLinearize", {ObjectType::NFA}, ObjectType::NFA},
-		  {"DeLinearize", {ObjectType::Regex}, ObjectType::Regex}}},
+		 {{"DeLinearize", {ObjectType::Regex}, ObjectType::Regex},
+		  {"DeLinearize", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Complement", {{"Complement", {ObjectType::DFA}, ObjectType::DFA}}},
 		{"DeAnnote",
-		 {{"DeAnnote", {ObjectType::NFA}, ObjectType::NFA},
-		  {"DeAnnote", {ObjectType::Regex}, ObjectType::Regex}}},
+		 {{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
+		  {"DeAnnote", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
 		//Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
@@ -73,39 +73,110 @@ void Interpreter::load_file(const string& filename) {
 }
 
 optional<vector<Function>> Interpreter::build_function_sequence(
-	vector<string> function_names, vector<ObjectType>) {
-	vector<bool> neededfuncs(function_names.size(), true);
+	vector<string> function_names, vector<ObjectType> first_type) {
+	// 0 - функцию надо исключить из последовательности
+	// 1 - функция остается в последовательности
+	// 2 - функция(Delinearize или DeAnnote) принимает на вход Regex
+	// 3 - функция(Delinearize или DeAnnote) принимает на вход NFA
+	vector<int> neededfuncs(function_names.size(), 1);
+	if (first_type == names_to_functions[function_names[0]][0].input) {
+		if (names_to_functions[function_names[0]].size() == 2) {
+			neededfuncs[0] = 2;
+		} else {
+			neededfuncs[0] = 1;
+		}
+	} else {
+		if (names_to_functions[function_names[0]].size() == 2) {
+			if (first_type == names_to_functions[function_names[0]][1].input) {
+				neededfuncs[0] = 3;
+			}
+		} else {
+			return nullopt;
+		}
+	}
 	for (int i = 1; i < function_names.size(); i++) {
 		string func = function_names[i];
 		string predfunc = function_names[i - 1];
 		// check on types
-		if (names_to_functions[func].size() == 1 ||
+		if (names_to_functions[func].size() == 1 &&
 			names_to_functions[predfunc].size() == 1) {
-			if (names_to_functions[func][0].input.size() == 1 &&
-				names_to_functions[predfunc][0].output !=
+			if (names_to_functions[func][0].input.size() == 1) {
+				if (names_to_functions[predfunc][0].output !=
 					names_to_functions[func][0].input[0]) {
-				vector<ObjectType> v = {ObjectType::NFA};
-				if (!(names_to_functions[predfunc][0].output ==
-						  ObjectType::DFA &&
-					  names_to_functions[func][0].input == v)) {
-					return nullopt;
-				} else {
-					if (predfunc == "Determinize" || predfunc == "Annote") {
-						if (func == "Determinize" || func == "Minimize" ||
-							func == "Annote") {
-							neededfuncs[i - 1] = false;
+					vector<ObjectType> v = {ObjectType::NFA};
+					if (!(names_to_functions[predfunc][0].output ==
+							  ObjectType::DFA &&
+						  names_to_functions[func][0].input == v)) {
+						return nullopt;
+					} else {
+						if (predfunc == "Determinize" || predfunc == "Annote") {
+							if (func == "Determinize" || func == "Minimize" ||
+								func == "Annote") {
+								neededfuncs[i - 1] = 0;
+							}
+						} else if (predfunc == "Minimize" &&
+								   func == "Minimize") {
+							neededfuncs[i - 1] = 0;
 						}
-					} else if (predfunc == "Minimize" && func == "Minimize") {
-						neededfuncs[i - 1] = false;
+					}
+				} else {
+					if (predfunc == func) {
+						if (predfunc != "Reverse" || predfunc != "Complement") {
+							neededfuncs[i - 1] = 0;
+						}
+					} else {
+						if (predfunc == "Linearize" &&
+							(func == "Glushkov" || func == "IlieYu")) {
+							neededfuncs[i - 1] = 0;
+						}
 					}
 				}
 			} else {
-				if (predfunc == func) {
-					if (predfunc != "Reverse" || predfunc != "Complement") {
-						neededfuncs[i - 1] = false;
+				return nullopt;
+			}
+		} else {
+			vector<ObjectType> r = {ObjectType::Regex};
+			vector<ObjectType> n = {ObjectType::NFA};
+			if (names_to_functions[predfunc].size() == 2 &&
+				names_to_functions[func].size() == 2) {
+				if (predfunc != func) {
+					if (neededfuncs[i - 1] > 1) {
+						neededfuncs[i] = neededfuncs[i - 1];
+					} else {
+						return nullopt;
 					}
 				} else {
-					//доработать
+					neededfuncs[i - 1] = 0;
+				}
+			} else if (names_to_functions[predfunc].size() == 2) {
+				if (neededfuncs[i - 1] < 2) {
+					if (names_to_functions[func][0].input == r) {
+						neededfuncs[i - 1] = 2;
+					} else if (names_to_functions[func][0].input == n) {
+						neededfuncs[i - 1] = 3;
+					} else {
+						return nullopt;
+					}
+				} else {
+					if (names_to_functions[func][0].input == r) {
+						if (neededfuncs[i - 1] != 2) {
+							return nullopt;
+						}
+					} else if (names_to_functions[func][0].input == n) {
+						if (neededfuncs[i - 1] != 3) {
+							return nullopt;
+						}
+					} else {
+						return nullopt;
+					}
+				}
+			} else {
+				if (names_to_functions[predfunc][0].input == r) {
+					neededfuncs[i] = 2;
+				} else if (names_to_functions[predfunc][0].input == n) {
+					neededfuncs[i] = 3;
+				} else {
+					return nullopt;
 				}
 			}
 		}
@@ -113,12 +184,18 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	optional<vector<Function>> finalfuncs = nullopt;
 	finalfuncs.emplace() = {};
 	for (int i = 0; i < function_names.size(); i++) {
-		if (neededfuncs[i]) {
+		if (neededfuncs[i] > 0) {
 			// cout << function_names[i];
-			Function f = names_to_functions[function_names[i]][0];
-			finalfuncs.value().push_back(f);
+			if (neededfuncs[i] == 1 || neededfuncs[i] == 2) {
+				Function f = names_to_functions[function_names[i]][0];
+				finalfuncs.value().push_back(f);
+			} else {
+				Function f = names_to_functions[function_names[i]][1];
+				finalfuncs.value().push_back(f);
+			}
 		}
 	}
+
 	return finalfuncs;
 }
 
@@ -159,14 +236,16 @@ optional<Interpreter::Decalaration> Interpreter::scan_declaration(
 		if (lexems[i].type == Lexem::id) {
 			if (id_types.count(lexems[i].value)) {
 				argument_types.push_back(id_types[lexems[i].value]);
+				arguments.push_back(lexems[i].value);
 			} else {
 				cout << "Unknown id\n";
 				return nullopt;
 			}
 		} else if (lexems[i].type == Lexem::regex) {
+			argument_types.push_back(ObjectType::Regex);
 			arguments.push_back(ObjectRegex(lexems[i].reg));
-		} else if (lexems[i].type == Lexem::regex) {
-			arguments.push_back(ObjectRegex(lexems[i].reg));
+		} else {
+			break;
 		}
 	}
 
