@@ -30,8 +30,7 @@ class FiniteAutomaton : public BaseObject {
   private:
 	int initial_state = 0;
 	vector<State> states;
-	bool is_deterministic = 0;
-	int max_index; // max индекс в автомате "q11" => 11
+
 	bool parsing_nca(string, State) const; // парсинг слова в нка
 
 	// поиск множества состояний НКА, достижимых из множества состояний по

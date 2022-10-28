@@ -129,7 +129,7 @@ void Example::regex_parsing() {
 		cout << "ERROR\n";
 		return;
 	}
-	/*
+
 	FiniteAutomaton a;
 	FiniteAutomaton b;
 	FiniteAutomaton c;
@@ -147,9 +147,8 @@ void Example::regex_parsing() {
 	cout << b.to_txt();
 
 	cout << "to_antimirov  ------------------------------\n";
-	// d = r.to_antimirov();
-	cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
-   */
+	d = r.to_antimirov();
+	cout << d.to_txt();
 }
 
 void Example::parsing_nca() {
