@@ -1,5 +1,5 @@
 #pragma once
-#include "FiniteAutomat.h"
+#include "FiniteAutomaton.h"
 #include "Regex.h"
 #include "Typization.h"
 #include <deque>
@@ -40,7 +40,7 @@ class Interpreter {
 	struct Test {
 		// Аргументы:
 		// НКА или регулярное выражение;
-		variant<Regex, FiniteAutomat> sample;
+		variant<Regex, FiniteAutomaton> sample;
 		// регулярное выражение без альтернатив(только с итерацией Клини) —
 		// тестовый сет;
 		Regex test_set;

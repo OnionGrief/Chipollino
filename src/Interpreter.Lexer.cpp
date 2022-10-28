@@ -87,9 +87,11 @@ Interpreter::Lexem Interpreter::Lexer::scan_regex() {
 	input.save();
 	string word = scan_until_space();
 	Regex regex;
-	if (!regex.from_string(word)) {
+	if (regex.from_string(word)) {
 		Lexem lex(Lexem::regex);
-		lex.reg = regex;
+		// TODO: это отвратительный костыль, надо использовать operator= как
+		// будет готов
+		lex.reg.from_string(word);
 		return lex;
 	}
 	input.restore();

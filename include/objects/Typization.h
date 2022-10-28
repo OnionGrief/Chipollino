@@ -1,5 +1,5 @@
 #pragma once
-#include "FiniteAutomat.h"
+#include "FiniteAutomaton.h"
 #include "Regex.h"
 #include <deque>
 #include <map>
@@ -18,7 +18,7 @@ enum class ObjectType {
 	Int,	  // целое число
 	FileName, // имя файла для чтения
 	Boolean,  // true/false
-    Value     // yes/no/ы
+	Value	  // yes/no/ы
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -31,34 +31,33 @@ template <ObjectType T, class V> struct ObjectHolder {
 	ObjectHolder(V value) : value(value){};
 };
 
-using ObjectNFA = ObjectHolder<ObjectType::NFA, FiniteAutomat>;
-using ObjectDFA = ObjectHolder<ObjectType::NFA, FiniteAutomat>;
+using ObjectNFA = ObjectHolder<ObjectType::NFA, FiniteAutomaton>;
+using ObjectDFA = ObjectHolder<ObjectType::NFA, FiniteAutomaton>;
 using ObjectRegex = ObjectHolder<ObjectType::Regex, Regex>;
 using ObjectInt = ObjectHolder<ObjectType::Int, int>;
 using ObjectFileName = ObjectHolder<ObjectType::FileName, string>;
 using ObjectBoolean = ObjectHolder<ObjectType::Boolean, bool>;
 
 // Универсальный объект
-using GeneralObject = variant<
-	ObjectHolder<ObjectType::NFA, FiniteAutomat>,
-	ObjectHolder<ObjectType::DFA, FiniteAutomat>,
-	ObjectHolder<ObjectType::Regex, Regex>,
-	ObjectHolder<ObjectType::Int, int>,
-	ObjectHolder<ObjectType::FileName, string>,
-	ObjectHolder<ObjectType::Boolean, bool>,
-    ObjectHolder<ObjectType::Value, optional<bool>>
->;
+using GeneralObject = variant<ObjectHolder<ObjectType::NFA, FiniteAutomaton>,
+							  ObjectHolder<ObjectType::DFA, FiniteAutomaton>,
+							  ObjectHolder<ObjectType::Regex, Regex>,
+							  ObjectHolder<ObjectType::Int, int>,
+							  ObjectHolder<ObjectType::FileName, string>,
+							  ObjectHolder<ObjectType::Boolean, bool>,
+							  ObjectHolder<ObjectType::Value, optional<bool>>>;
 
-	// Функция, состоит из имени и сигнатуры
-	// Предикат - тоже функция, но на выходе boolean
-	struct Function {
-		// Имя функции
-		string name;
-		// Типы воходных аргументов
-		vector<ObjectType> input;
-		// Тип выходного аргумента
-		ObjectType output;
-		Function() {};
-		Function(string name, vector<ObjectType> input, ObjectType output) : name(name), input(input), output(output){};
-	};
+// Функция, состоит из имени и сигнатуры
+// Предикат - тоже функция, но на выходе boolean
+struct Function {
+	// Имя функции
+	string name;
+	// Типы воходных аргументов
+	vector<ObjectType> input;
+	// Тип выходного аргумента
+	ObjectType output;
+	Function(){};
+	Function(string name, vector<ObjectType> input, ObjectType output)
+		: name(name), input(input), output(output){};
 };
+}; // namespace Typization
