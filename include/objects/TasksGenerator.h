@@ -59,7 +59,7 @@ class TasksGenerator {
 		// TODO:
 		//{"KSubSet", {"Int", "NFA"}, "NFA"}, // пока не используется, исправить
 		//если будет
-		//{"Normalize", {"Regex", "FileName"}, "Regex"}, // fileName
+		{"Normalize", {"Regex", "FileName"}, "Regex"},
 		{"States", {"NFA"}, "Int"},
 		{"ClassCard", {"DFA"}, "Int"},
 		{"Ambiguity", {"NFA"}, "Value"},

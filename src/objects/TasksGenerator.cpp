@@ -3,7 +3,7 @@
 
 TasksGenerator::TasksGenerator() {}
 
-string TasksGenerator::generate_task(int opNum, int max_num_of_func_in_seq_,
+string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 									 bool for_static_Tpchkr_,
 									 bool for_dinamic_Tpchkr_) {
 	res_str = "";
@@ -15,7 +15,7 @@ string TasksGenerator::generate_task(int opNum, int max_num_of_func_in_seq_,
 
 	distribute_functions();
 
-	for (int i = 0; i < opNum; i++) {
+	for (int i = 0; i < op_num; i++) {
 		res_str += generate_op() + "\n";
 	}
 
@@ -157,6 +157,7 @@ string TasksGenerator::generate_declaration() {
 					func_str += " " + rand_regex.to_txt();
 				}
 			} else {
+
 				if (first_func.input[i] == "Regex") {
 					// сгенерировать регулярку или найти идентификатор
 					// если есть идентификаторы с типом Regex
@@ -169,6 +170,7 @@ string TasksGenerator::generate_declaration() {
 						func_str += " " + rand_regex.to_txt();
 					}
 				}
+
 				if (first_func.input[i] == "Int") {
 					// сгенерировать число или найти идентификатор (так можно??)
 					// таких функций пока нет
@@ -185,6 +187,10 @@ string TasksGenerator::generate_declaration() {
 					int rand_num = rand() % possible_ids.size();
 					Id rand_id = possible_ids[rand_num];
 					func_str += " N" + to_string(rand_id.num);
+				}
+
+				if (first_func.input[i] == "FileName") {
+					func_str += " Rules";
 				}
 			}
 		}
