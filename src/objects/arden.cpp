@@ -16,19 +16,31 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		while ((j < in.size()) && in[i].condition == in[j].condition) {
 
 			cond = true;
-			Regex r, s1, s2;
+			// Regex r, s1, s2;
 
+			Regex* r = new Regex();
+
+			Regex* s1 = new Regex();
+
+			Regex* s2 = new Regex();
 			// cout << in[j].temp_regex.to_txt() << in[i].temp_regex.to_txt();
-			s1.regex_star(in[i].temp_regex); //если бага то тут)
-			s2.regex_star(in[j].temp_regex);
-			r.regex_union(s1.copy(), s2.copy());
-			in[i].temp_regex = r.copy();
+			s1->regex_star(in[i].temp_regex);
+			s2->regex_star(in[j].temp_regex);
+			r->regex_union(s1, s2);
+			delete in[i].temp_regex;
+			in[i].temp_regex = r;
+			// delete r;
+			delete s1;
+			delete s2;
 
 			j++;
 		}
 
 		// cout << in[i].temp_regex.to_txt() << " ";
-		out.push_back(in[i]);
+		// expression_arden temp;
+		// temp.temp_regex = in[i].temp_regex->copy();
+		// temp.condition = in[i].condition;
+		// out.push_back(temp);
 		if (cond) {
 
 			i = j - 1;
@@ -139,24 +151,41 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 					tempdata.push_back(temp);
 				}
 			} else {
-				tempdata.push_back(data[i][j]);
+				expression_arden temp;
+				Regex* r = new Regex(*data[i][j].temp_regex);
+				temp.temp_regex = r;
+				temp.condition = data[i][j].condition;
+				tempdata.push_back(temp);
 			}
 		}
 
-		// sort(data[i].begin(), data[i].end(), compare);
+		sort(data[i].begin(), data[i].end(), compare);
 		for (int o = 0; o < tempdata.size(); o++) {
 			if (tempdata[o].temp_regex) {
-				cout << tempdata[o].temp_regex->to_txt() << "\n";
-				//	delete tempdata[o].temp_regex;
+
+				// cout << tempdata[o].temp_regex->to_txt() << "\n";
 			}
+			// delete tempdata[o].temp_regex;
 		}
 		for (int o = 0; o < tempdata.size(); o++) {
 			// cout << tempdata[o].temp_regex->to_txt() << "\n";
-			//	data[i].push_back(tempdata[o]);
+			// data[i].push_back(tempdata[o]);
+			// delete tempdata[o].temp_regex;
 		}
-		// data[i] = tempdata;
-		//   data[i] = arden_minimize(data[i]);
-
+		for (int o = 0; o < data[i].size(); o++) {
+			delete data[i][o].temp_regex;
+		}
+		data[i] = tempdata;
+		for (int o = 0; o < data[i].size(); o++) {
+			//	delete data[i][o].temp_regex;
+		}
+		// data[i] = arden_minimize(data[i]);
+		tempdata = arden_minimize(data[i]);
+		for (int o = 0; o < tempdata.size(); o++) {
+			// cout << tempdata[o].temp_regex->to_txt() << "\n";
+			// data[i].push_back(tempdata[o]);
+			// delete tempdata[o].temp_regex;
+		}
 		// data[i] = arden(data[i], i);
 		/*cout << i << " ";
 		for (int j = 0; j < data[i].size(); j++) {
