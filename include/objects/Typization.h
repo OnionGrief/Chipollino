@@ -16,7 +16,8 @@ namespace Typization {
 		Regex,    // регулярное выражение
 		Int,      // целое число
 		FileName, // имя файла для чтения
-		Boolean   // true/false
+		Boolean,   // true/false
+        Value, // Optional <bool>
 	};
 
 	// Структуры объектов для хранения в интерпретаторе
@@ -35,7 +36,8 @@ namespace Typization {
 		ObjectHolder<ObjectType::Regex, Regex>,
 		ObjectHolder<ObjectType::Int, int>,
 		ObjectHolder<ObjectType::FileName, string>,
-		ObjectHolder<ObjectType::Boolean, bool>
+		ObjectHolder<ObjectType::Boolean, bool>,
+        ObjectHolder<ObjectType::Value, optional<bool>>
 	>;
 
 	// Функция, состоит из имени и сигнатуры
@@ -47,5 +49,6 @@ namespace Typization {
 		vector<ObjectType> input;
 		// Тип выходного аргумента
 		ObjectType output;
+		Function(string name, vector<ObjectType> input, ObjectType output) : name(name), input(input), output(output){};
 	};
 };

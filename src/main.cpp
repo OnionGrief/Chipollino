@@ -6,5 +6,5 @@ using namespace std;
 
 int main() {
 	cout << "Chipollino :-)\n";
-	Interpreter();
+	Interpreter in = Interpreter();
 }
