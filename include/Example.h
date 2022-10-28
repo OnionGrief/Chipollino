@@ -32,4 +32,5 @@ class Example {
 	static void fa_subset_check();
 	static void to_image();
 	static void step();
+	static void normalize_regex();
 };
