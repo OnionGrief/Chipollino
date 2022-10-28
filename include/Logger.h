@@ -11,6 +11,8 @@ private:
 public:
 	Logger();
 	~Logger();
+	static void activate();
+	static void deactivate();
 	// начало записи в файл
 	static void init();
 	// начало шага, передается название

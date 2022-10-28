@@ -7,6 +7,14 @@ Logger::Logger() {}
 
 Logger::~Logger() {}
 
+void Logger::activate() {
+	active = true;
+}
+
+void Logger::deactivate() {
+	active = false;
+}
+
 void Logger::init() {
 	ofstream out;
 	out.open("./resources/report.tex", ofstream::trunc);
@@ -28,6 +36,7 @@ void Logger::init() {
 }
 
 void Logger::init_step(string step_name) {
+	if (!active) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << step_name + "\n" << endl;
