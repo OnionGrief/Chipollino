@@ -87,6 +87,7 @@ class Regex : BaseObject {
 		const; // возвращает true, если состояние конечно
 	string to_str() const;
 	vector<vector<Regex>> get_antimirov(Regex, vector<Regex>);
+	static bool equality_checker(const Regex*, const Regex*);
 
   public:
 	Regex();
@@ -104,9 +105,9 @@ class Regex : BaseObject {
 
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
-	static bool equal(Regex*, Regex*);
+	static bool equal(const Regex&, const Regex&);
 	// проверка регулярок на эквивалентность
-	static bool equivalent(Regex, Regex);
+	static bool equivalent(const Regex&, const Regex&);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const Regex&) const; // TODO
 
