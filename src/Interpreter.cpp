@@ -150,6 +150,7 @@ optional<Interpreter::Decalaration> Interpreter::scan_declaration(
 			break;
 		}
 	}
+	reverse(func_names.begin(), func_names.end());
 
 	// [объект]+
 	vector<ObjectType> argument_types;
@@ -168,8 +169,6 @@ optional<Interpreter::Decalaration> Interpreter::scan_declaration(
 			arguments.push_back(ObjectRegex(lexems[i].reg));
 		}
 	}
-	reverse(argument_types.begin(), argument_types.end());
-	reverse(arguments.begin(), arguments.end());
 
 	// (!!)
 	if (i < lexems.size() && lexems[i].type == Lexem::doubleExclamation) {
@@ -218,8 +217,6 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 			arguments.push_back(ObjectRegex(lexems[i].reg));
 		}
 	}
-	reverse(argument_types.begin(), argument_types.end());
-	reverse(arguments.begin(), arguments.end());
 
 	cout << "pred\n";
 
