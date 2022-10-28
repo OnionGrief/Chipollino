@@ -1,8 +1,8 @@
 #include "Example.h"
-#include <Regex.h>
 #include <iostream>
 using namespace std;
 
 int main() {
+	Example::tester();
 	cout << "Chipollino :-)\n";
 }

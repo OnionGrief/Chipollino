@@ -415,3 +415,7 @@ void Example::normalize_regex() {
 	r.normalize_regex("./../temp/Rules.txt");
 	cout << r.to_txt();
 }
+
+void Example::tester() {
+	Tester::test("(a|ab)*", "((ab)*a)*", 2);
+}
