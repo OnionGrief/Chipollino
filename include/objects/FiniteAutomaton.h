@@ -16,27 +16,24 @@ struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
 	// преобразования автоматов возможно для визуализации
-	vector<int> label;
+	set<int> label;
 	string identifier;
 	bool is_terminal;
-	map<alphabet_symbol, vector<int>> transitions;
+	map<alphabet_symbol, set<int>> transitions;
 	State();
-	State(int index, vector<int> label, string identifier, bool is_terminal,
-		  map<alphabet_symbol, vector<int>> transitions);
+	State(int index, set<int> label, string identifier, bool is_terminal,
+		  map<alphabet_symbol, set<int>> transitions);
 	void set_transition(int, alphabet_symbol);
 };
 
 class FiniteAutomaton : public BaseObject {
   private:
 	int initial_state = 0;
-	Language* language = nullptr;
 	vector<State> states;
-	bool is_deterministic = 0;
-	int max_index; // max индекс в автомате "q11" => 11
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
-	vector<int> closure(const vector<int>&, bool) const;
+	set<int> closure(const set<int>&, bool) const;
 
 	enum AmbiguityValue {
 		exponentially_ambiguous,
@@ -46,8 +43,10 @@ class FiniteAutomaton : public BaseObject {
 
   public:
 	FiniteAutomaton();
-	FiniteAutomaton(int initial_state, Language* language, vector<State> states,
-					bool is_deterministic = false);
+	FiniteAutomaton(int initial_state, vector<State> states,
+					shared_ptr<Language> language);
+	FiniteAutomaton(int initial_state, vector<State> states,
+					set<alphabet_symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 	// визуализация автомата
 	string to_txt() const override;
@@ -60,23 +59,29 @@ class FiniteAutomaton : public BaseObject {
 	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&,
-										const FiniteAutomaton&);
+										const FiniteAutomaton&); // меняет язык
 	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия
 	// языков L1 и L2)
 	static FiniteAutomaton uunion(const FiniteAutomaton&,
-								  const FiniteAutomaton&);
+								  const FiniteAutomaton&); // меняет язык
 	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
-	FiniteAutomaton difference(const FiniteAutomaton&) const;
+	FiniteAutomaton difference(const FiniteAutomaton&) const; // меняет язык
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
-	FiniteAutomaton complement(Language*) const; // меняет язык
+	FiniteAutomaton complement() const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
-	FiniteAutomaton reverse(Language*) const; // меняет язык
+	FiniteAutomaton reverse() const; // меняет язык
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
 	// себя)
 	FiniteAutomaton add_trap_state() const;
 	// удаление ловушки
 	FiniteAutomaton remove_trap_state() const;
+	// навешивание разметки на все буквы в автомате, стоящие на
+	// недетерминированных переходах (если ветвление содержит eps-переходы, то
+	// eps размечаются как буквы). ДКА не меняется
+	FiniteAutomaton annote() const;
+	// снятие разметки с букв
+	FiniteAutomaton deannote() const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
 	// states.size()) i-й элемент хранит номер класса i-го состояния
 	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
@@ -89,7 +94,7 @@ class FiniteAutomaton : public BaseObject {
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
-	// проверка автоматов на вложенность (аргумент вложен в this)
+	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
 	// определяет меру неоднозначности
