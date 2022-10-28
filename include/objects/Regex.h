@@ -29,9 +29,9 @@ struct Lexem {
 	};
 
 	Type type = error;
-	alphabet_symbol symbol = 0;
+	char symbol = 0;
 	int number = 0;
-	Lexem(Type type = error, alphabet_symbol symbol = 0, int number = 0);
+	Lexem(Type type = error, char symbol = 0, int number = 0);
 };
 
 class Regex : BaseObject {
@@ -87,7 +87,6 @@ class Regex : BaseObject {
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
 	string to_str() const;
-	vector<vector<Regex>> get_antimirov(Regex, vector<Regex>);
 	static bool equality_checker(const Regex*, const Regex*);
 	int search_replace_rec(
 		const Regex& replacing, const Regex& replaced_by,
@@ -103,7 +102,7 @@ class Regex : BaseObject {
 	FiniteAutomaton to_tompson() const;
 	FiniteAutomaton to_glushkov() const;
 	FiniteAutomaton to_ilieyu() const;
-	FiniteAutomaton to_antimirov();
+	FiniteAutomaton to_antimirov() const;
 
 	~Regex();
 	Regex* copy() const;

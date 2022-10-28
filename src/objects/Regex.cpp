@@ -3,7 +3,7 @@
 #include "Language.h"
 #include <set>
 
-Lexem::Lexem(Type type, alphabet_symbol symbol, int number)
+Lexem::Lexem(Type type, char symbol, int number)
 	: type(type), symbol(symbol), number(number) {}
 
 vector<Lexem> Regex::parse_string(string str) {
@@ -217,7 +217,8 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
 
-	vector<alphabet_symbol> v = {char_to_alphabet_symbol(lexems[index_start].symbol)};
+	vector<alphabet_symbol> v = {
+		char_to_alphabet_symbol(lexems[index_start].symbol)};
 	set<alphabet_symbol> s(v.begin(), v.end());
 
 	p->alphabet = s;
@@ -838,7 +839,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
 
 	for (size_t i = 0; i < first->size(); i++) {
-		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert((*first)[i].number + 1);
+		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert(
+			(*first)[i].number + 1);
 	}
 
 	if (eps_in) {
@@ -852,8 +854,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 		tr = {};
 
 		for (size_t j = 0; j < p[elem.number].size(); j++) {
-			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)].insert(p[elem.number][j] +
-															 1);
+			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)]
+				.insert(p[elem.number][j] + 1);
 		}
 		string s = elem.symbol + to_string(i + 1);
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
@@ -1337,36 +1339,7 @@ bool Regex::subset(const Regex& r) const {
 	return FiniteAutomaton::equivalent(dfa_instersection, dfa2);
 }
 
-vector<vector<Regex>> Regex::get_antimirov(Regex r, vector<Regex> alph) {
-	vector<vector<Regex>> out;
-
-	for (vector<Regex>::iterator i = alph.begin(); i != alph.end(); i++) {
-		Regex symbol = *i;
-		vector<Regex> regs;
-		cout << symbol.to_txt() << endl;
-		r.partial_symbol_derevative(symbol, regs);
-		if (regs.size() == 1 && regs[0].type == Regex::eps) {
-			out.push_back({r, regs[0], symbol}); // push {Regx, Regex, symbol}
-			continue;							 // return out;
-		}
-		if (regs.size() == 0) {
-			// return out;
-			continue;
-		}
-		for (size_t j = 0; j < regs.size(); j++) {
-			auto v = get_antimirov(regs[j], alph);
-			out.insert(out.end(), v.begin(), v.end());
-			// out.push_back({r, regs[j], symbol});
-		}
-		for (size_t j = 0; j < regs.size(); j++) {
-			// get_antimirov(regs[j], alph);
-			out.push_back({r, regs[j], symbol});
-		}
-	}
-	return out;
-}
-
-FiniteAutomaton Regex::to_antimirov() {
+FiniteAutomaton Regex::to_antimirov() const {
 
 	map<set<string>, set<string>> trans;
 	vector<Regex> states;
@@ -1378,11 +1351,10 @@ FiniteAutomaton Regex::to_antimirov() {
 		string symbol = *i;
 		Regex r;
 		if (!r.from_string(symbol)) {
-			cout << "ERROR\n";
-			// return;
+			// cout << "ERROR\n";
+			//  return;
 		}
 		alph_regex.push_back(r);
-		// cout << symbol << endl;
 	}
 
 	states.push_back(*this);
@@ -1398,61 +1370,41 @@ FiniteAutomaton Regex::to_antimirov() {
 				out.push_back({state, *k, *j});
 				if (check.find(k->to_txt()) == check.end()) {
 					states.push_back(*k);
-
 					check.insert(k->to_txt());
 				}
 			}
 		}
 	}
 
-	cout << states.size() << endl;
-	// Regex r;
-	// if (!r.from_string("b")) {
-	//	cout << "ERROR\n";
-	//	// return;
-	//}
-	//
-	// out = get_antimirov(*this, alph_regex);
-
-	// cout << regs.size() << endl;
-	/*
-	for (size_t i = 0; i < out.size(); i++) {
-		// cout << regs[i].to_txt() << endl;
-		//  regs[i].pre_order_travers();
-		cout << out[i][0].to_txt() << " ";
-		cout << out[i][1].to_txt() << " ";
-		cout << out[i][2].to_txt() << endl;
-	}*/
 	vector<string> name_states;
+
 	for (size_t i; i < states.size(); i++) {
 		name_states.push_back(states[i].to_txt());
 	}
 
 	vector<State> automat_state;
+
 	for (size_t i; i < name_states.size(); i++) {
 		string state = name_states[i];
 		map<alphabet_symbol, set<int>> transit;
 		for (size_t j = 0; j < out.size(); j++) {
-			// cout << regs[i].to_txt() << endl;
-			//  regs[i].pre_order_travers();
-			cout << out[j][0].to_txt() << " ";
-			cout << out[j][1].to_txt() << " ";
-			cout << out[j][2].to_txt() << endl;
+			// cout << out[j][0].to_txt() << " ";
+			// cout << out[j][1].to_txt() << " ";
+			// cout << out[j][2].to_txt() << endl;
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
 							  out[j][1].to_txt());
-				alphabet_symbol s = out[j][2].to_txt().c_str()[0];
+				alphabet_symbol s = out[j][2].to_txt();
 				transit[s].insert(n - name_states.begin());
 			}
 		}
+
+		if ((state.size() == 0) || (states[i].L() == 1)) {
+			automat_state.push_back({int(i), {}, state, true, transit});
+		} else {
+			automat_state.push_back({int(i), {}, state, false, transit});
+		}
 	}
 
-	// for (size_t i = 0; i < regs.size(); i++) {
-	//	cout << regs[i].to_txt() << endl;
-	// }
-
-	//{{Regx, Regex, symbol}, ...}
-	// symbol - Regex от а
-
-	return FiniteAutomaton();
+	return FiniteAutomaton(0, automat_state, language);
 }
