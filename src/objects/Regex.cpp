@@ -1341,11 +1341,13 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 }
 
 bool Regex::subset(const Regex& r) const {
-	FiniteAutomaton dfa1(to_ilieyu().determinize());
-	FiniteAutomaton dfa2(r.to_ilieyu().determinize());
-	FiniteAutomaton dfa_instersection(
-		FiniteAutomaton::intersection(dfa1, dfa2));
-	return FiniteAutomaton::equivalent(dfa_instersection, dfa2);
+	FiniteAutomaton fa1(to_ilieyu());
+	FiniteAutomaton fa2(r.to_ilieyu());
+	FiniteAutomaton fa_instersection(FiniteAutomaton::intersection(fa1, fa2));
+	// автомат с перечесеченным алфавитом
+	FiniteAutomaton check_fa(fa2.initial_state, fa2.states,
+							 fa_instersection.language->get_alphabet());
+	return FiniteAutomaton::equivalent(fa_instersection, check_fa);
 }
 
 FiniteAutomaton Regex::to_antimirov() {
