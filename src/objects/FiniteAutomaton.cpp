@@ -503,7 +503,6 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 	bool flag = true;
 	int count = new_dfa.states.size();
 	for (int i = 0; i < count; i++) {
-
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			if (!new_dfa.states[i].transitions[symb].size()) {
 				if (flag) {
