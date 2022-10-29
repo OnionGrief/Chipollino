@@ -9,6 +9,7 @@ project (chipollino)
 
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
+	src/objects/TransformationMonoid.cpp
 	src/objects/BaseObject.cpp
 	src/objects/FiniteAutomaton.cpp
 	src/objects/Regex.cpp

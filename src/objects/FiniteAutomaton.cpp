@@ -459,8 +459,6 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 		}
 	}
 	new_dfa.language->set_alphabet(fa1.language->get_alphabet());
-	for (alphabet_symbol symb : fa1.language->get_alphabet())
-		cout << symb << " " << endl;
 	for (int i = 0; i < new_dfa.states.size(); i++) {
 		map<alphabet_symbol, set<int>> new_transitions;
 		for (alphabet_symbol symb : merged_alphabets) {
@@ -1005,6 +1003,16 @@ int FiniteAutomaton::states_number() const {
 	return states.size();
 }
 
+int FiniteAutomaton::get_states_size() {
+	return states.size();
+}
+State FiniteAutomaton::get_state(int i) {
+	return states[i];
+}
+
+const set<alphabet_symbol>& FiniteAutomaton::get_alphabet() {
+	return language->get_alphabet();
+}
 /*
 Джун программист прибегает с проекта к своему ментору и кричит:
 — Меня отпустили с проекта пораньше!
