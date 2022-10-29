@@ -1272,6 +1272,9 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 }
 // Длина накачки
 int Regex::pump_length() const {
+	if (language->get_pump_length()) {
+		return language->get_pump_length().value();
+	}
 	std::map<std::string, bool> checked_prefixes;
 	for (int i = 0;; i++) {
 		std::set<std::string> prefs;
@@ -1302,6 +1305,7 @@ int Regex::pump_length() const {
 						shared_ptr<Language>(new Language(pumping.alphabet));
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
+						language->set_pump_length(i);
 						/*cout << *it << "\n";
 						cout << pumped_prefix << " " << pumping.term_r->to_txt()
 							 << "\n";
