@@ -977,7 +977,6 @@ State FiniteAutomaton::get_state(int i) {
 }
 
 const set<alphabet_symbol>& FiniteAutomaton::get_alphabet() {
-
 	return language->get_alphabet();
 }
 /*
