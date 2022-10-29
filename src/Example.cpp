@@ -122,14 +122,14 @@ void Example::intersection() {
 void Example::regex_parsing() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
-	regl = regl + regr;
-	// regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
+	regl = "a|b|(((||)))";			 // regl + regr;
+	// egl = "a()a))";			  // regl + regr;
+	//  regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
 		return;
 	}
-	/*
 	FiniteAutomaton a;
 	FiniteAutomaton b;
 	FiniteAutomaton c;
@@ -147,9 +147,70 @@ void Example::regex_parsing() {
 	cout << b.to_txt();
 
 	cout << "to_antimirov  ------------------------------\n";
-	// d = r.to_antimirov();
-	cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
-   */
+	d = r.to_antimirov();
+	cout << d.to_txt();
+}
+
+void Example::parsing_nca() {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	regl = "a*bc*"; //"bbb*(aaa*bbb*)*";
+	Regex r;
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
+	}
+
+	FiniteAutomaton a;
+	FiniteAutomaton b;
+	FiniteAutomaton c;
+
+	cout << "to_tompson ------------------------------\n";
+	c = r.to_ilieyu(); // to_tompson(-1);
+	cout << c.to_txt();
+	cout << "Parsing: aaaaaaaaaaaaaaaaaaabccccc\n";
+	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc")
+		 << endl; // true если распознал слово
+}
+
+void Example::regex_generating() {
+	cout << RegexGenerator(20, 100, 3, 3).generate_regex() << "\n";
+	cout << RegexGenerator().generate_regex() << "\n";
+	cout << RegexGenerator(9, 2, 2).generate_regex() << "\n";
+}
+
+void Example::tasks_generating() {
+	TasksGenerator TG;
+	cout << "\n" << TG.generate_task(10, 3, false, false); // корректные задачи
+	// cout << "\n" << TG.generate_task(15, 1, false, false);
+	cout << "\n" << TG.generate_task(3, 6, true, false); // для стат. тайпчека
+	cout << "\n" << TG.generate_task(5, 6, false, true); // для динам. тайпчека
+}
+
+void Example::random_regex_parsing() {
+	RegexGenerator r1(8, 10, 3, 2);
+	for (int i = 0; i < 5; i++) {
+		string str = r1.generate_regex();
+		cout << "\n" << str << "\n";
+		Regex r;
+		if (!r.from_string(str)) {
+			cout << "ERROR\n";
+			return;
+		}
+		cout << r.to_txt() << endl;
+	}
+}
+
+void Example::parsing_regex(string str) {
+	cout << str << endl;
+	Regex r;
+	if (!r.from_string(str)) {
+		cout << "ERROR\n";
+		return;
+	}
+	r.from_string(str);
+	cout << r.to_txt() << endl;
 }
 
 void Example::fa_bisimilar_check() {
@@ -423,8 +484,29 @@ void Example::normalize_regex() {
 	cout << r.to_txt();
 }
 
+void Example::parsing_nca_error() {
+	Regex r;
+	//r.from_string("(ab|a)*");
+	r.from_string("a");
+	FiniteAutomaton dfa1 = r.to_tompson();
+	cout<<dfa1.parsing_by_nfa("a");
+
+
+	Regex r2;
+	r2.from_string("a*");
+	FiniteAutomaton dfa2 = r.to_tompson();
+	cout<<dfa2.parsing_by_nfa("a");
+}
+
 void Example::tester() {
-	Tester::test("(a|ab)*", "((ab)*a)*", 2);
+	Regex r;
+	r.from_string("(ab|a)*");
+	FiniteAutomaton dfa1 = r.to_tompson();
+	
+	//cout<<"test2";
+	Tester::test(dfa1, "((ab)*a)*", 1);
+	//Tester::test("(ab|a)*", "((ab)*a)*", 2);
+	//cout<<"test2";
 }
 
 void Example::step_interection() {
@@ -515,19 +597,18 @@ void Example::table() {
 	// string f2 = dfa2.to_txt();
 	FiniteAutomaton dfa3 = FiniteAutomaton::intersection(dfa1, dfa2);
 
-	vector<Tester::word> words;
-	for(int i=0; i<12;i++) {
-		words.push_back({
-			i, i*100, true
-		});
-	}
-	string s = "test";
+	// vector<Tester::word> words;
+	// for(int i=0; i<12;i++) {
+	// 	words.push_back({
+	// 		i, i*100, true
+	// 	});
+	// }
+	// string s = "test";
 	Logger::activate();
 	Logger::init();
-	Logger::init_step(s);
-	Logger::log("(a|ab)*", "((ab)*a)*", 2, words);
-	Logger::log(dfa3, "((ab)*a)*", 2, words, words);
-	Logger::finish_step();
+	// Logger::init_step(s);
+	tester();
+	// Logger::finish_step();
 	Logger::finish();
 	Logger::deactivate();
 }

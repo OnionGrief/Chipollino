@@ -1,19 +1,28 @@
 #pragma once
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
+#include "Regex.h"
+#include "Logger.h"
 #include <iostream>
+#include <regex>
 #include <string>
+#include <chrono>
 #include <vector>
 
 using namespace std;
+struct word {			// доступ извне Tester::word
+		int iterations_num; // сколько проведено итераций
+		long long time;		// время парсинга в секундах
+		bool is_belongs;	// принадлежность языку
+	};
 
 class Tester {
   public:
-	struct word {			// доступ извне Tester::word
-		int iterations_num; // сколько проведено итераций
-		long long time; // время парсинга в ms скорее всего
-		bool is_belongs; // принадлежность языку
-	};
+	// struct word {			// доступ извне Tester::word
+	// 	int iterations_num; // сколько проведено итераций
+	// 	long long time;		// время парсинга в секундах
+	// 	bool is_belongs;	// принадлежность языку
+	// };
 
 	struct tableRegex {
 		string r1; // язык, основанный на регулярке
@@ -32,7 +41,10 @@ class Tester {
 	};
 
   private:
+	static bool parsing_by_regex(string, string);
+
   public:
-	static void test(FiniteAutomaton language, string regex, int iteration_step);
+	static void test(FiniteAutomaton language, string regex,
+					 int iteration_step);
 	static void test(string language, string regex, int iteration_step);
 };

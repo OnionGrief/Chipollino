@@ -10,7 +10,7 @@ Lexem::Lexem(Type type, char symbol, int number)
 vector<Lexem> Regex::parse_string(string str) {
 	vector<Lexem> lexems;
 	lexems = {};
-
+	bool flag_alt = false;
 	auto is_symbol = [](char c) {
 		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
 	};
@@ -20,9 +20,16 @@ vector<Lexem> Regex::parse_string(string str) {
 		switch (c) {
 		case '(':
 			lexem.type = Lexem::parL;
+			flag_alt = true;
 			break;
 		case ')':
 			lexem.type = Lexem::parR;
+			if (lexems.back().type == Lexem::parL || flag_alt) {
+				lexem.type = Lexem::error;
+				lexems = {};
+				lexems.push_back(lexem);
+				return lexems;
+			}
 			break;
 		case '|':
 			lexem.type = Lexem::alt;
@@ -34,6 +41,7 @@ vector<Lexem> Regex::parse_string(string str) {
 			if (is_symbol(c)) {
 				lexem.type = Lexem::symb;
 				lexem.symbol = c;
+				flag_alt = false;
 			} else {
 				lexem.type = Lexem::error;
 				lexems = {};
@@ -113,6 +121,7 @@ Regex* Regex::scan_conc(const vector<Lexem>& lexems, int index_start,
 
 			if (l == nullptr || r == nullptr || r->type == Regex::eps ||
 				l->type == Regex::eps) { // Проверка на адекватность)
+				cout << "Test\n";
 				return p;
 			}
 
@@ -210,8 +219,9 @@ Regex* Regex::scan_alt(const vector<Lexem>& lexems, int index_start,
 Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 						int index_end) {
 	Regex* p = nullptr;
-	if (lexems.size() <= (index_start) ||
-		lexems[index_start].type != Lexem::symb) {
+	if ((lexems.size() <= index_start) ||
+		(lexems[index_start].type != Lexem::symb) ||
+		(index_end - index_start > 1)) {
 		return nullptr;
 	}
 	p = new Regex;
@@ -478,6 +488,32 @@ string Regex::to_txt() const {
 
 	return str1 + symb + str2;
 }
+
+// для метода test
+string Regex::get_iterated_word(int n) const {
+	string str = "";
+	if (term_l) {
+		if (type == Type::star) {
+			for (int i = 0; i < n; i++)
+				str += term_l->get_iterated_word(n);
+		} else
+			str += term_l->get_iterated_word(n);
+	}
+	if (term_r) {
+		str += term_r->get_iterated_word(n);
+	}
+	if (value.symbol) {
+		str += value.symbol;
+	}
+	if (type == Type::alt) {
+		cout << "ERROR: в метод test передано регулярное выражение с "
+			 << "альтернативами\n"; //по-хорошему тайпчекера запрячь,
+									//но не будем тревожить Сонечку
+		return "";
+	}
+	return str;
+}
+
 // возвращает пару <вектор сотсояний, max_index>
 pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 	string str;			  //идентификатор состояния
@@ -1207,7 +1243,6 @@ bool Regex::partial_derevative_with_respect_to_sym(
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
 		}
-		cur_result.clear();
 		return answer;
 	}
 }
