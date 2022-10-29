@@ -14,20 +14,26 @@ using namespace Typization;
 class Interpreter {
   public:
 	Interpreter();
+	// Загрузить программу из файла
 	void load_file(const string& filename);
+	// Выполнить все опреации
+	void run_all();
 
   private:
+	// Применение цепочки функций к набору аргументов
+	static GeneralObject apply_function_sequence(
+		const vector<Function>& functions, vector<GeneralObject> arguments);
+
 	// Применение функции к набору аргументов
-	GeneralObject apply_function(
-		const Function& function,
-		const vector<GeneralObject>& arguments); // TODO
+	static GeneralObject apply_function(const Function& function,
+										const vector<GeneralObject>& arguments);
 
 	// Тут хранятся объекты по их id
 	map<string, GeneralObject> objects;
 
 	// Операция объявления
 	// [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
-	struct Decalaration {
+	struct Declaration {
 		// Идентификатор, в который запишется объект
 		string id;
 		// Композиция функций
@@ -59,17 +65,23 @@ class Interpreter {
 	};
 
 	// Общий вид опрерации
-	using GeneralOperation = variant<Decalaration, Test, Predicate>;
+	using GeneralOperation = variant<Declaration, Test, Predicate>;
+
+	vector<GeneralObject> parameters_to_arguments(
+		const vector<variant<string, GeneralObject>>& parameters);
+	void run_declaration(const Declaration&);
+	void run_predicate(const Predicate&);
+	void run_operation(const GeneralOperation&);
 
 	struct Lexem;
 
 	// Типизация идентификаторов. Нужна для корректного составления опреаций
 	map<string, ObjectType> id_types;
 	// Считывание операции из набора лексем
-	optional<Decalaration> scan_declaration(vector<Lexem>);	  // TODO
-	optional<Test> scan_test(vector<Lexem>);				  // TODO
-	optional<Predicate> scan_predicate(vector<Lexem>);		  // TODO
-	optional<GeneralOperation> scan_operation(vector<Lexem>); // TODO
+	optional<Declaration> scan_declaration(vector<Lexem>);
+	optional<Test> scan_test(vector<Lexem>); // TODO
+	optional<Predicate> scan_predicate(vector<Lexem>);
+	optional<GeneralOperation> scan_operation(vector<Lexem>);
 
 	// Список опреаций для последовательного выполнения
 	vector<GeneralOperation> operations;

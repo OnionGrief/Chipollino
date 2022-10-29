@@ -9,4 +9,5 @@ int main() {
     ofstream f("im.here");
 	Interpreter interpreter;
 	interpreter.load_file("test.txt");
+	interpreter.run_all();
 }

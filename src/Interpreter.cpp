@@ -76,6 +76,22 @@ void Interpreter::load_file(const string& filename) {
 	}
 }
 
+void Interpreter::run_all() {
+	for (const auto& op : operations) {
+		run_operation(op);
+	}
+}
+
+GeneralObject Interpreter::apply_function_sequence(
+	const vector<Function>& functions, vector<GeneralObject> arguments) {
+
+	for (const auto& func : functions) {
+		arguments = {apply_function(func, arguments)};
+	}
+
+	return arguments[0];
+}
+
 GeneralObject Interpreter::apply_function(
 	const Function& function, const vector<GeneralObject>& arguments) {
 
@@ -222,10 +238,49 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	return finalfuncs;
 }
 
-optional<Interpreter::Decalaration> Interpreter::scan_declaration(
+vector<GeneralObject> Interpreter::parameters_to_arguments(
+	const vector<variant<string, GeneralObject>>& parameters) {
+
+	vector<GeneralObject> arguments;
+	for (const auto& p : parameters) {
+		if (holds_alternative<GeneralObject>(p)) {
+			arguments.push_back(get<GeneralObject>(p));
+		} else {
+			arguments.push_back(objects[get<string>(p)]);
+		}
+	}
+	return arguments;
+}
+
+void Interpreter::run_declaration(const Declaration& decl) {
+	cout << "Running declaration...\n";
+	// TODO activate/disactivate logger here
+	objects[decl.id] = apply_function_sequence(
+		decl.function_sequence, parameters_to_arguments(decl.parameters));
+	cout << "	assigned to " << decl.id << "\n";
+}
+
+void Interpreter::run_predicate(const Predicate& pred) {
+	cout << "Running predicate...\n";
+	auto res = apply_function(pred.predicate,
+							  parameters_to_arguments(pred.parameters));
+	cout << "	result: " << get<ObjectBoolean>(res).value << "\n";
+}
+
+void Interpreter::run_operation(const GeneralOperation& op) {
+	if (holds_alternative<Declaration>(op)) {
+		run_declaration(get<Declaration>(op));
+	} else if (holds_alternative<Predicate>(op)) {
+		run_predicate(get<Predicate>(op));
+	} else if (holds_alternative<Test>(op)) {
+		cout << "Tests are not supported yet : - (\n"; // TODO run tests
+	}
+}
+
+optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	vector<Lexem> lexems) {
 
-	Decalaration decl;
+	Declaration decl;
 
 	// [идентификатор]
 	if (lexems[0].type != Lexem::id) {
