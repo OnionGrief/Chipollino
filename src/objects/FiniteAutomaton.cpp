@@ -616,8 +616,6 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 		}
 	}
 	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
-	for (alphabet_symbol symb : new_alphabet)
-		cout << to_string(symb) << " " << endl;
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
@@ -648,8 +646,6 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 		}
 	}
 	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
-	for (alphabet_symbol symb : new_alphabet)
-		cout << to_string(symb) << " " << endl;
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
