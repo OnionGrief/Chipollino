@@ -237,9 +237,8 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 			delete data[i][j].temp_regex;
 		}
 	}
-	cout << r1->to_txt();
-	// Regex f;
-	// return f;
-	// return *r1;
+	// cout << r1->to_txt();
+
+	return *r1;
 }
 //На нефтеперерабатывающем заводе один мужик зажигалкой нашёл утечку газа.

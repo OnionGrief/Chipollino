@@ -487,6 +487,6 @@ void Example::arden_test() {
 	states[5].is_terminal = true;
 
 	FiniteAutomaton NDM(0, states, {"a", "b"});
-	nfa_to_regex(NDM);
-	// cout << .to_txt() + "\n";
+
+	cout << nfa_to_regex(NDM).to_txt() + "\n";
 }
