@@ -283,6 +283,11 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 
 	for (int i = 0; i < states.size(); i++) {
 		set<int> q = closure({states[i].index}, true);
+		for (int elem : q) {
+			if (states[elem].is_terminal) {
+				new_nfa.states[i].is_terminal = true;
+			}
+		}
 		vector<set<int>> x;
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			x.clear();
@@ -300,9 +305,6 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 				}
 			}
 			for (auto elem : x1) {
-				if (new_nfa.states[elem].is_terminal) {
-					new_nfa.states[i].is_terminal = true;
-				}
 				new_nfa.states[i].transitions[symb].insert(elem);
 			}
 		}
@@ -611,11 +613,15 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 			} else {
 				new_transitions[i][elem.first] =
 					new_fa.states[i].transitions[elem.first];
-				new_alphabet.insert(elem.first);
+				if (!is_epsilon(elem.first)) {
+					new_alphabet.insert(elem.first);
+				}
 			}
 		}
 	}
 	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
+	for (alphabet_symbol symb : new_alphabet)
+		cout << symb << " ";
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
