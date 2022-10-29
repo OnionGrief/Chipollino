@@ -518,7 +518,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 					new_dfa.states.push_back(
 						{size,
 						 {size},
-						 "TrapS",
+						 to_string(size),
 						 false,
 						 map<alphabet_symbol, set<int>>()});
 				} else {
