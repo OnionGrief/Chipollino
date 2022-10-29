@@ -1225,7 +1225,7 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 		}
 	}
 	result = next;
-	//cout << " answer is " << result.to_txt();
+	// cout << " answer is " << result.to_txt();
 	return success;
 }
 
@@ -1281,16 +1281,21 @@ int Regex::pump_length() const {
 					std::string pumped_prefix;
 					pumped_prefix += it->substr(0, j);
 					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
-					pumped_prefix += it->substr(j, it->size() - k);
+					pumped_prefix += it->substr(k, it->size() - k + j);
 					pumping.type = Type::conc;
 					pumping.term_l = new Regex;
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
 					derevative_with_respect_to_str(*it, this, *pumping.term_r);
 					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language = shared_ptr<Language>(new Language(pumping.alphabet));
+					pumping.language =
+						shared_ptr<Language>(new Language(pumping.alphabet));
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
+						/*cout << *it << "\n";
+						cout << pumped_prefix << " " << pumping.term_r->to_txt()
+							 << "\n";
+						cout << to_txt();*/
 						return i;
 					}
 				}
@@ -1332,8 +1337,6 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 bool Regex::subset(const Regex& r) const {
 	auto fst = to_ilieyu();
 	auto scd = r.to_ilieyu();
-	cout << fst.to_txt() << "\n";
-	cout << scd.to_txt() << "\n";
 
 	FiniteAutomaton dfa1(fst.determinize());
 	FiniteAutomaton dfa2(scd.determinize());
