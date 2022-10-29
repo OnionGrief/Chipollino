@@ -17,7 +17,8 @@ class FiniteAutomaton;
 struct State;
 
 struct Lexem {
-	enum Type {
+	enum Type
+	{
 		error,
 		parL, // (
 		parR, // )
@@ -36,7 +37,8 @@ struct Lexem {
 
 class Regex : BaseObject {
   private:
-	enum Type {
+	enum Type
+	{
 		// Epsilon
 		eps,
 		// Binary:
