@@ -28,9 +28,9 @@ struct Lexem {
 	};
 
 	Type type = error;
-	char symbol = 0;
+	alphabet_symbol symbol = "";
 	int number = 0;
-	Lexem(Type type = error, char symbol = 0, int number = 0);
+	Lexem(Type type = error, alphabet_symbol symbol = "", int number = 0);
 };
 
 class Regex : BaseObject {
