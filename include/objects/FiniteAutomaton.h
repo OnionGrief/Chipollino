@@ -90,8 +90,7 @@ class FiniteAutomaton : public BaseObject {
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
-	// проверка автоматов на вложенность (аргумент вложен в this)
-	// парсинг слова в нка
+	// проверяет, распознаёт ли автомат слово
 	bool parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO

@@ -151,7 +151,7 @@ void Example::regex_parsing() {
 	cout << d.to_txt();
 }
 
-void Example::parsing_nca() {
+void Example::parsing_nfa() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
 	regl = regl + regr;
