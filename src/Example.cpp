@@ -122,17 +122,20 @@ void Example::intersection() {
 void Example::regex_parsing() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
-	regl = regl + regr;
-	// regl = "abc"; //"bbb*(aaa*bbb*)*";
+	regl = "a|b|(((||)))";			 // regl + regr;
+	// egl = "a()a))";			  // regl + regr;
+	//  regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
 		return;
 	}
-
+	cout << r.to_txt();
+	/*
 	FiniteAutomaton a;
 	FiniteAutomaton b;
 	FiniteAutomaton c;
+	FiniteAutomaton d;
 
 	cout << "to_tompson ------------------------------\n";
 	c = r.to_tompson(); // to_tompson(-1);
@@ -144,6 +147,50 @@ void Example::regex_parsing() {
 	cout << "to_ilieyu  ------------------------------\n";
 	b = r.to_ilieyu();
 	cout << b.to_txt();
+
+	cout << "to_antimirov  ------------------------------\n";
+	// d = r.to_antimirov();
+	cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
+   */
+}
+
+void Example::regex_generating() {
+	cout << RegexGenerator(20, 100, 3, 3).generate_regex() << "\n";
+	cout << RegexGenerator().generate_regex() << "\n";
+	cout << RegexGenerator(9, 2, 2).generate_regex() << "\n";
+}
+
+void Example::tasks_generating() {
+	TasksGenerator TG;
+	cout << "\n" << TG.generate_task(10, 3, false, false); // корректные задачи
+	// cout << "\n" << TG.generate_task(15, 1, false, false);
+	cout << "\n" << TG.generate_task(3, 6, true, false); // для стат. тайпчека
+	cout << "\n" << TG.generate_task(5, 6, false, true); // для динам. тайпчека
+}
+
+void Example::random_regex_parsing() {
+	RegexGenerator r1(8, 10, 3, 2);
+	for (int i = 0; i < 5; i++) {
+		string str = r1.generate_regex();
+		cout << "\n" << str << "\n";
+		Regex r;
+		if (!r.from_string(str)) {
+			cout << "ERROR\n";
+			return;
+		}
+		cout << r.to_txt() << endl;
+	}
+}
+
+void Example::parsing_regex(string str) {
+	cout << str << endl;
+	Regex r;
+	if (!r.from_string(str)) {
+		cout << "ERROR\n";
+		return;
+	}
+	r.from_string(str);
+	cout << r.to_txt() << endl;
 }
 
 void Example::fa_bisimilar_check() {
@@ -395,4 +442,17 @@ void Example::step() {
 	Logger::log("Kомментарий", f2, f3);
 	Logger::finish_step();
 	Logger::finish();
+}
+void Example::normalize_regex() {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	// regl = "abc"; //"bbb*(aaa*bbb*)*";
+	Regex r;
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
+	}
+	r.normalize_regex("./../temp/Rules.txt");
+	cout << r.to_txt();
 }
