@@ -86,6 +86,7 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 }
 
 FiniteAutomaton FiniteAutomaton::determinize() const {
+	Logger::init_step("Determinize");
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({0}, true);
 
@@ -161,10 +162,12 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
+	Logger::finish_step();
 	return dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::minimize() const {
+	Logger::init_step("Minimize");
 	const optional<FiniteAutomaton>& language_min_dfa = language->get_min_dfa();
 	if (language->get_min_dfa())
 		return *language_min_dfa; // Нужно решить, что делаем с идентификаторами
@@ -273,10 +276,12 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
 	// кэширование
 	language->set_min_dfa(minimized_dfa);
+	Logger::finish_step();
 	return minimized_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_eps() const {
+	Logger::init_step("RemEps");
 	FiniteAutomaton new_nfa(initial_state, states, language);
 
 	for (auto& state : new_nfa.states)
@@ -308,11 +313,13 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 			}
 		}
 	}
+	Logger::finish_step();
 	return new_nfa;
 }
 
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 											  const FiniteAutomaton& fa2) {
+	Logger::init_step("Interection");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -352,11 +359,13 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 										const FiniteAutomaton& fa2) {
+	Logger::init_step("Union");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -396,12 +405,13 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
-
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 											const FiniteAutomaton& fa2) {
+	Logger::init_step("Difference");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -441,11 +451,12 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
-
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::complement() const {
+	Logger::init_step("Complement");
 	FiniteAutomaton new_dfa =
 		FiniteAutomaton(initial_state, states, language->get_alphabet());
 	for (int i = 0; i < new_dfa.states.size(); i++) {
@@ -496,6 +507,7 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
 		enfa.states[i].transitions = new_transition_matrix[i];
 	}
+	Logger::finish_step();
 	return enfa;
 }
 
@@ -592,6 +604,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 }
 
 FiniteAutomaton FiniteAutomaton::annote() const {
+	Logger::init_step("Annote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, shared_ptr<Language>());
@@ -619,10 +632,12 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
+	Logger::finish_step();
 	return new_fa;
 }
 
 FiniteAutomaton FiniteAutomaton::deannote() const {
+	Logger::init_step("DeAnnote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, shared_ptr<Language>());
@@ -648,6 +663,7 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
+	Logger::finish_step();
 	return new_fa;
 }
 
