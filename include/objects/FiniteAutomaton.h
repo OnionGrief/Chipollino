@@ -96,5 +96,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
+	// возвращает количество состояний (пердикат States)
+	int states_number() const;
 	friend class Regex;
 };

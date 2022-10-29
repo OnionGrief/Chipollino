@@ -972,6 +972,10 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	return equivalent(fa_instersection, check_fa);
 }
 
+int FiniteAutomaton::states_number() const {
+	return states.size();
+}
+
 /*
 Джун программист прибегает с проекта к своему ментору и кричит:
 — Меня отпустили с проекта пораньше!
