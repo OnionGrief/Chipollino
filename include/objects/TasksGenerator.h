@@ -4,8 +4,8 @@
 #include "RegexGenerator.h"
 #include <map>
 #include <string>
+#include <time.h>
 #include <vector>
-
 using namespace std;
 
 class TasksGenerator {
@@ -39,36 +39,35 @@ class TasksGenerator {
 				   // принимаемым значениям
 	map<string, vector<Id>> ids; // поиск идентификатора по его типу
 
-	vector<Function> functions = {
-		{"Thompson", {"Regex"}, "NFA"},
-		{"IlieYu", {"Regex"}, "NFA"},
-		{"Antimirov", {"Regex"}, "NFA"},
-		{"Arden", {"NFA"}, "Regex"},
-		{"Glushkov", {"Regex"}, "NFA"},
-		{"Determinize", {"NFA"}, "DFA"},
-		{"RemEps", {"NFA"}, "NFA"},
-		{"Linearize", {"Regex"}, "Regex"},
-		{"Minimize", {"NFA"}, "DFA"},
-		{"Reverse", {"NFA"}, "NFA"},
-		{"Annote", {"NFA"}, "DFA"},
-		{"DeLinearize", {"NFA"}, "NFA"},
-		{"DeLinearize", {"Regex"}, "Regex"},
-		{"Complement", {"DFA"}, "DFA"},
-		{"DeAnnote", {"NFA"}, "NFA"},
-		{"DeAnnote", {"Regex"}, "Regex"},
-		{"MergeBisim", {"NFA"}, "NFA"},
-		{"PumpLength", {"Regex"}, "Int"},
-		{"ClassLength", {"DFA"}, "Int"},
-		// TODO:
-		//{"KSubSet", {"Int", "NFA"}, "NFA"}, // пока
-		//не используется, исправить если будет
-		{"Normalize", {"Regex", "FileName"}, "Regex"},
-		{"States", {"NFA"}, "Int"},
-		{"ClassCard", {"DFA"}, "Int"},
-		{"Ambiguity", {"NFA"}, "Value"},
-		{"Width", {"NFA"}, "Int"},
-		{"MyhillNerode", {"DFA"}, "Int"},
-		{"Simplify", {"Regex"}, "Regex"}};
+	vector<Function> functions = {{"Thompson", {"Regex"}, "NFA"},
+								  {"IlieYu", {"Regex"}, "NFA"},
+								  {"Antimirov", {"Regex"}, "NFA"},
+								  {"Arden", {"NFA"}, "Regex"},
+								  {"Glushkov", {"Regex"}, "NFA"},
+								  {"Determinize", {"NFA"}, "DFA"},
+								  {"RemEps", {"NFA"}, "NFA"},
+								  {"Linearize", {"Regex"}, "Regex"},
+								  {"Minimize", {"NFA"}, "DFA"},
+								  {"Reverse", {"NFA"}, "NFA"},
+								  {"Annote", {"NFA"}, "DFA"},
+								  {"DeLinearize", {"NFA"}, "NFA"},
+								  {"DeLinearize", {"Regex"}, "Regex"},
+								  {"Complement", {"DFA"}, "DFA"},
+								  {"DeAnnote", {"NFA"}, "NFA"},
+								  {"DeAnnote", {"Regex"}, "Regex"},
+								  {"MergeBisim", {"NFA"}, "NFA"},
+								  {"PumpLength", {"Regex"}, "Int"},
+								  {"ClassLength", {"DFA"}, "Int"},
+								  // TODO:
+								  //{"KSubSet", {"Int", "NFA"}, "NFA"}, // пока
+								  //не используется, исправить если будет
+								  {"Normalize", {"Regex", "FileName"}, "Regex"},
+								  {"States", {"NFA"}, "Int"},
+								  {"ClassCard", {"DFA"}, "Int"},
+								  {"Ambiguity", {"NFA"}, "Value"},
+								  {"Width", {"NFA"}, "Int"},
+								  {"MyhillNerode", {"DFA"}, "Int"},
+								  {"Simplify", {"Regex"}, "Regex"}};
 
 	vector<Function> predicates = {
 		{"Bisimilar", {"NFA", "NFA"}, "Boolean"},

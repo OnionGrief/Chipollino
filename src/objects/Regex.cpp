@@ -9,7 +9,7 @@ Lexem::Lexem(Type type, char symbol, int number)
 vector<Lexem> Regex::parse_string(string str) {
 	vector<Lexem> lexems;
 	lexems = {};
-
+	bool flag_alt = false;
 	auto is_symbol = [](char c) {
 		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
 	};
@@ -19,9 +19,16 @@ vector<Lexem> Regex::parse_string(string str) {
 		switch (c) {
 		case '(':
 			lexem.type = Lexem::parL;
+			flag_alt = true;
 			break;
 		case ')':
 			lexem.type = Lexem::parR;
+			if (lexems.back().type == Lexem::parL || flag_alt) {
+				lexem.type = Lexem::error;
+				lexems = {};
+				lexems.push_back(lexem);
+				return lexems;
+			}
 			break;
 		case '|':
 			lexem.type = Lexem::alt;
@@ -33,6 +40,7 @@ vector<Lexem> Regex::parse_string(string str) {
 			if (is_symbol(c)) {
 				lexem.type = Lexem::symb;
 				lexem.symbol = c;
+				flag_alt = false;
 			} else {
 				lexem.type = Lexem::error;
 				lexems = {};
@@ -112,6 +120,7 @@ Regex* Regex::scan_conc(const vector<Lexem>& lexems, int index_start,
 
 			if (l == nullptr || r == nullptr || r->type == Regex::eps ||
 				l->type == Regex::eps) { // Проверка на адекватность)
+				cout << "Test\n";
 				return p;
 			}
 
@@ -209,15 +218,17 @@ Regex* Regex::scan_alt(const vector<Lexem>& lexems, int index_start,
 Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 						int index_end) {
 	Regex* p = nullptr;
-	if (lexems.size() <= (index_start) ||
-		lexems[index_start].type != Lexem::symb) {
+	if ((lexems.size() <= index_start) ||
+		(lexems[index_start].type != Lexem::symb) ||
+		(index_end - index_start > 1)) {
 		return nullptr;
 	}
 	p = new Regex;
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
 
-	vector<alphabet_symbol> v = {char_to_alphabet_symbol(lexems[index_start].symbol)};
+	vector<alphabet_symbol> v = {
+		char_to_alphabet_symbol(lexems[index_start].symbol)};
 	set<alphabet_symbol> s(v.begin(), v.end());
 
 	p->alphabet = s;
@@ -838,7 +849,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
 
 	for (size_t i = 0; i < first->size(); i++) {
-		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert((*first)[i].number + 1);
+		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert(
+			(*first)[i].number + 1);
 	}
 
 	if (eps_in) {
@@ -852,8 +864,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 		tr = {};
 
 		for (size_t j = 0; j < p[elem.number].size(); j++) {
-			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)].insert(p[elem.number][j] +
-															 1);
+			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)]
+				.insert(p[elem.number][j] + 1);
 		}
 		string s = elem.symbol + to_string(i + 1);
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
@@ -1329,11 +1341,13 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 }
 
 bool Regex::subset(const Regex& r) const {
-	FiniteAutomaton dfa1(to_ilieyu().determinize());
-	FiniteAutomaton dfa2(r.to_ilieyu().determinize());
-	FiniteAutomaton dfa_instersection(
-		FiniteAutomaton::intersection(dfa1, dfa2));
-	return FiniteAutomaton::equivalent(dfa_instersection, dfa2);
+	FiniteAutomaton fa1(to_ilieyu());
+	FiniteAutomaton fa2(r.to_ilieyu());
+	FiniteAutomaton fa_instersection(FiniteAutomaton::intersection(fa1, fa2));
+	// автомат с перечесеченным алфавитом
+	FiniteAutomaton check_fa(fa2.initial_state, fa2.states,
+							 fa_instersection.language->get_alphabet());
+	return FiniteAutomaton::equivalent(fa_instersection, check_fa);
 }
 
 FiniteAutomaton Regex::to_antimirov() {
