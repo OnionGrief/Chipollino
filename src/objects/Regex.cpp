@@ -351,6 +351,33 @@ Regex::Regex(const Regex& reg)
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
 	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
 
+Regex& Regex::operator=(const Regex& reg) {
+	type = reg.type;
+	value = reg.value;
+	language = reg.language;
+	if (type != Regex::eps && type != Regex::symb) {
+		term_l = reg.term_l->copy();
+		term_l->term_p = this;
+		if (type != Regex::star) {
+			term_r = reg.term_r->copy();
+			term_r->term_p = this;
+		}
+	}
+	return *this;
+}
+
+void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
+	if (term_l != nullptr) {
+		term_l->generate_alphabet(alphabet);
+	}
+	if (term_r != nullptr) {
+		term_r->generate_alphabet(alphabet);
+	}
+	for (auto sym : alphabet) {
+		_alphabet.insert(sym);
+	}
+}
+
 void Regex::clear() {
 	if (term_l != nullptr) {
 		// term_l->clear();
@@ -983,6 +1010,10 @@ bool Regex::is_eps_possible() {
 
 void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 	std::set<std::string>*prefs1, *prefs2;
+	if (len == 0) {
+		prefs->insert("");
+		return;
+	}
 	switch (type) {
 	case Type::eps:
 		if (len == 0) prefs->insert("");
@@ -1047,35 +1078,6 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 		delete prefs2;
 		return;
 	}
-}
-
-string Regex::to_str() const {
-	string str1 = "", str2 = "";
-	if (term_l) {
-		str1 = term_l->to_str();
-	}
-	if (term_r) {
-		str2 = term_r->to_str();
-	}
-	string symb;
-	if (value.symbol) symb = value.symbol;
-	if (type == Type::eps) symb = "";
-	if (type == Type::alt) {
-		symb = '|';
-		if (term_p != nullptr && term_p->type == Type::conc) {
-			str1 = "(" + str1;
-			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
-							   // конкатенации a(a|b)a
-		}
-	}
-	if (type == Type::star) {
-		symb = '*';
-		if (term_l->type != Type::symb)
-			str1 = "(" + str1 +
-				   ")"; // ставим скобки при итерации, если символов > 1
-	}
-
-	return str1 + symb + str2;
 }
 
 bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
@@ -1264,7 +1266,7 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 		}
 	}
 	result = next;
-	cout << " answer is " << result.to_str();
+	// cout << " answer is " << result.to_txt();
 	return success;
 }
 
@@ -1301,8 +1303,11 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 }
 // Длина накачки
 int Regex::pump_length() const {
+	if (language->get_pump_length()) {
+		return language->get_pump_length().value();
+	}
 	std::map<std::string, bool> checked_prefixes;
-	for (int i = 0;; i++) {
+	for (int i = 1;; i++) {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
@@ -1315,20 +1320,30 @@ int Regex::pump_length() const {
 			}
 			if (was) continue;
 			for (int j = 0; j < it->size(); j++) {
-				for (int k = j + 1; k < it->size(); k++) {
+				for (int k = j + 1; k <= it->size(); k++) {
 					Regex pumping;
 					std::string pumped_prefix;
 					pumped_prefix += it->substr(0, j);
 					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
-					pumped_prefix += it->substr(j, it->size() - k);
+					pumped_prefix += it->substr(k, it->size() - k + j);
 					pumping.type = Type::conc;
 					pumping.term_l = new Regex;
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
-					derevative_with_respect_to_str(*it, this, *pumping.term_r);
-					if (true) { // TODO: check if pumping language belongs
-								// reg_e language
+					if (!derevative_with_respect_to_str(*it, this,
+														*pumping.term_r))
+						continue;
+					pumping.generate_alphabet(pumping.alphabet);
+					pumping.language =
+						shared_ptr<Language>(new Language(pumping.alphabet));
+					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
+					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
+						language->set_pump_length(i);
+						/*cout << *it << "\n";
+						cout << pumped_prefix << " " << pumping.term_r->to_txt()
+							 << "\n";
+						cout << to_txt() << "\n";*/
 						return i;
 					}
 				}
