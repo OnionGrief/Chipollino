@@ -169,8 +169,10 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 FiniteAutomaton FiniteAutomaton::minimize() const {
 	Logger::init_step("Minimize");
 	const optional<FiniteAutomaton>& language_min_dfa = language->get_min_dfa();
-	if (language->get_min_dfa())
+	if (language->get_min_dfa()) {
+		Logger::finish_step();
 		return *language_min_dfa; // Нужно решить, что делаем с идентификаторами
+	}
 	// минимизация
 	FiniteAutomaton dfa = determinize();
 	vector<bool> table(dfa.states.size() * dfa.states.size());
@@ -462,9 +464,11 @@ FiniteAutomaton FiniteAutomaton::complement() const {
 	for (int i = 0; i < new_dfa.states.size(); i++) {
 		new_dfa.states[i].is_terminal = !new_dfa.states[i].is_terminal;
 	}
+	Logger::finish_step();
 	return new_dfa;
 }
 FiniteAutomaton FiniteAutomaton::reverse() const {
+	Logger::init_step("Reverse");
 	FiniteAutomaton enfa =
 		FiniteAutomaton(states.size(), states, language->get_alphabet());
 	int final_states_counter = 0;

@@ -1376,39 +1376,47 @@ bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 
 bool Regex::equal(const Regex& r1, const Regex& r2) {
 	Logger::init_step("Equal");
-	Logger::log("Первое регулярное выражение:", r1.to_txt());
-	Logger::log("Второе регулярное выражение:", r2.to_txt());
+	Logger::log("Первое регулярное выражение", r1.to_txt());
+	Logger::log("Второе регулярное выражение", r2.to_txt());
 	bool result = equality_checker(&r1, &r2);
 	if (result)
-		Logger::log("Результат", "true");
+		Logger::log("Результат Equal", "true");
 	else
-		Logger::log("Результат", "false");
+		Logger::log("Результат Equal", "false");
 	Logger::finish_step();
 	return result;
 }
 
 bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 	Logger::init_step("Equiv");
-	Logger::log("Первое регулярное выражение:", r1.to_txt());
-	Logger::log("Второе регулярное выражение:", r2.to_txt());
+	Logger::log("Первое регулярное выражение", r1.to_txt());
+	Logger::log("Второе регулярное выражение", r2.to_txt());
 	FiniteAutomaton fa1 = r1.to_ilieyu();
 	FiniteAutomaton fa2 = r2.to_ilieyu();
 	bool result = FiniteAutomaton::equivalent(fa1, fa2);
 	if (result)
-		Logger::log("Результат", "true");
+		Logger::log("Результат Equiv", "true");
 	else
-		Logger::log("Результат", "false");
+		Logger::log("Результат Equiv", "false");
 	Logger::finish_step();
 	return result;
 }
 
 bool Regex::subset(const Regex& r) const {
 	Logger::init_step("Subset");
+	Logger::log("Первое регулярное выражение", to_txt());
+	Logger::log("Второе регулярное выражение", r.to_txt());
 	FiniteAutomaton dfa1(to_ilieyu().determinize());
 	FiniteAutomaton dfa2(r.to_ilieyu().determinize());
 	FiniteAutomaton dfa_instersection(
 		FiniteAutomaton::intersection(dfa1, dfa2));
-	return FiniteAutomaton::equivalent(dfa_instersection, dfa2);
+	bool result = FiniteAutomaton::equivalent(dfa_instersection, dfa2);
+	if (result)
+		Logger::log("Результат Subset", "true");
+	else
+		Logger::log("Результат Subset", "false");
+	Logger::finish_step();
+	return result;
 }
 
 FiniteAutomaton Regex::to_antimirov() {
