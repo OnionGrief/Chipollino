@@ -930,6 +930,37 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	return equal(fa1.minimize(), fa2.minimize());
 }
 
+bool FiniteAutomaton::parsing_nfa(string s, State state) const {
+	// cout << s << endl;
+	if (s.size() == 0 && state.is_terminal) {
+		return true;
+	}
+
+	if (s.size() == 0 && !state.is_terminal) {
+		return false;
+	}
+	alphabet_symbol elem = char_to_alphabet_symbol(s[0]);
+	set<int> tr = state.transitions[elem];
+	set<int> tr_eps = state.transitions[char_to_alphabet_symbol('\0')];
+	vector<int> trans{tr.begin(), tr.end()};
+	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
+	for (size_t i = 0; i < trans.size(); i++) {
+		if (parsing_nfa(s.substr(1), states[trans[i]])) {
+			return true;
+		}
+	}
+	for (size_t i = 0; i < trans_eps.size(); i++) {
+		if (parsing_nfa(s, states[trans_eps[i]])) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
+	State state = states[0];
+	return parsing_nfa(s, state);
+}
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	FiniteAutomaton fa_instersection(intersection(*this, fa));
 	// автомат с перечесеченным алфавитом

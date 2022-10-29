@@ -130,8 +130,7 @@ void Example::regex_parsing() {
 		cout << "ERROR\n";
 		return;
 	}
-	cout << r.to_txt();
-	/*
+
 	FiniteAutomaton a;
 	FiniteAutomaton b;
 	FiniteAutomaton c;
@@ -149,9 +148,31 @@ void Example::regex_parsing() {
 	cout << b.to_txt();
 
 	cout << "to_antimirov  ------------------------------\n";
-	// d = r.to_antimirov();
-	cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
-   */
+	d = r.to_antimirov();
+	cout << d.to_txt();
+}
+
+void Example::parsing_nfa() {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	regl = "a*bc*"; //"bbb*(aaa*bbb*)*";
+	Regex r;
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
+	}
+
+	FiniteAutomaton a;
+	FiniteAutomaton b;
+	FiniteAutomaton c;
+
+	cout << "to_tompson ------------------------------\n";
+	c = r.to_ilieyu(); // to_tompson(-1);
+	cout << c.to_txt();
+	cout << "Parsing: aaaaaaaaaaaaaaaaaaabccccc\n";
+	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc")
+		 << endl; // true если распознал слово
 }
 
 void Example::regex_generating() {
