@@ -123,9 +123,10 @@ void Example::regex_parsing() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
 
-	//regl = regl + regr;				 // "a|b|(((||)))";
-	// egl = "a()a))";			  // regl + regr;
+	// regl = regl + regr;				 // "a|b|(((||)))";
+	//  egl = "a()a))";			  // regl + regr;
 	regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
+	regl = "a12|b34";
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
@@ -133,8 +134,8 @@ void Example::regex_parsing() {
 	}
 
 	cout << r.to_txt() << "\n";
-	//cout << r.pump_length() << "\n";
-  
+	// cout << r.pump_length() << "\n";
+
 	FiniteAutomaton a;
 	FiniteAutomaton b;
 	FiniteAutomaton c;
@@ -149,7 +150,7 @@ void Example::regex_parsing() {
 	// cout << a.to_txt();
 	cout << "to_ilieyu  ------------------------------\n";
 	b = r.to_ilieyu();
-	// cout << b.to_txt();
+	cout << b.to_txt();
 
 	// FiniteAutomaton d;
 	cout << "to_antimirov  ------------------------------\n";

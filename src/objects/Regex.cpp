@@ -1130,35 +1130,6 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 	}
 }
 
-string Regex::to_str() const {
-	string str1 = "", str2 = "";
-	if (term_l) {
-		str1 = term_l->to_str();
-	}
-	if (term_r) {
-		str2 = term_r->to_str();
-	}
-	string symb;
-	if (type == Type::symb /*value.symbol*/) symb = value.symbol;
-	if (type == Type::eps) symb = "";
-	if (type == Type::alt) {
-		symb = '|';
-		if (term_p != nullptr && term_p->type == Type::conc) {
-			str1 = "(" + str1;
-			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
-							   // конкатенации a(a|b)a
-		}
-	}
-	if (type == Type::star) {
-		symb = '*';
-		if (term_l->type != Type::symb)
-			str1 = "(" + str1 +
-				   ")"; // ставим скобки при итерации, если символов > 1
-	}
-
-	return str1 + symb + str2;
-}
-
 bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 										   const Regex* reg_e,
 										   Regex& result) const {
@@ -1415,7 +1386,7 @@ int Regex::pump_length() const {
 					pumping.generate_alphabet(pumping.alphabet);
 					pumping.language =
 						shared_ptr<Language>(new Language(pumping.alphabet));
-					//cout << pumped_prefix << " " << pumping.term_r->to_txt();
+					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
 						language->set_pump_length(i);
