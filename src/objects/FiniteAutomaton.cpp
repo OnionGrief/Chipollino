@@ -936,7 +936,7 @@ bool FiniteAutomaton::semdet() {
 		get_prefix;
 	get_prefix = [=](int state_beg, int state_end,
 					 map<int, bool>& was) -> std::optional<std::string> {
-		std::optional<std::string> ans;
+		std::optional<std::string> ans = nullopt;
 		if (state_beg == state_end) {
 			ans = "";
 			return ans;
@@ -970,6 +970,7 @@ bool FiniteAutomaton::semdet() {
 		Regex reg;
 		// Получение языка из производной регулярки автомата по префиксу:
 		//		this -> reg (arden?)
+		reg = nfa_to_regex(*this);
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
 		state_languages[i] = derevative.value();
@@ -1045,16 +1046,7 @@ int FiniteAutomaton::get_states_size() {
 State FiniteAutomaton::get_state(int i) {
 	return states[i];
 }
-set<alphabet_symbol> FiniteAutomaton::get_alphabet() {
-	return language->get_alphabet();
-}
 
-int FiniteAutomaton::get_states_size() {
-	return states.size();
-}
-State FiniteAutomaton::get_state(int i) {
-	return states[i];
-}
 int FiniteAutomaton::get_initial() {
 	return initial_state;
 }
