@@ -540,20 +540,17 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
-		bool is_trap_state = false;
+		bool is_trap_state = true;
 		set<int> reachable_states = new_dfa.closure({i}, false);
 		for (int j = 0; j < new_dfa.states.size(); j++) {
-			if (states[j].is_terminal) {
-				bool is_state_found = false;
+			if (new_dfa.states[j].is_terminal) {
 				for (auto elem : reachable_states) {
 					if (j == elem) {
-						is_state_found = true;
+						is_trap_state = false;
 					}
 				}
-				if (is_state_found) {
+				if (!is_trap_state) {
 					break;
-				} else {
-					is_trap_state = true;
 				}
 			}
 		}
@@ -620,8 +617,6 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 		}
 	}
 	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
-	for (alphabet_symbol symb : new_alphabet)
-		cout << symb << " ";
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
