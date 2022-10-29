@@ -3,7 +3,7 @@
 using namespace std;
 
 class AutomatonToImage {
-public:
+  public:
 	AutomatonToImage();
 	~AutomatonToImage();
 	static void to_image(string automat, int name);

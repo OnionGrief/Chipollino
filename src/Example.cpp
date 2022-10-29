@@ -122,18 +122,19 @@ void Example::intersection() {
 void Example::regex_parsing() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
-	regl = regl + regr;
+
+	//regl = regl + regr;				 // "a|b|(((||)))";
 	// egl = "a()a))";			  // regl + regr;
-	regl = "a1456|b244444444444";
-	//  regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
+	regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
 		return;
 	}
 
-	cout << r.to_txt();
-
+	cout << r.to_txt() << "\n";
+	//cout << r.pump_length() << "\n";
+  
 	FiniteAutomaton a;
 	FiniteAutomaton b;
 	FiniteAutomaton c;
@@ -153,9 +154,32 @@ void Example::regex_parsing() {
 	// FiniteAutomaton d;
 	cout << "to_antimirov  ------------------------------\n";
 	d = r.to_antimirov();
-	cout << r.deannote().to_txt();
 
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
+	cout << d.to_txt();
+}
+
+void Example::parsing_nfa() {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	regl = "a*bc*"; //"bbb*(aaa*bbb*)*";
+	Regex r;
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
+	}
+
+	FiniteAutomaton a;
+	FiniteAutomaton b;
+	FiniteAutomaton c;
+
+	cout << "to_tompson ------------------------------\n";
+	c = r.to_ilieyu(); // to_tompson(-1);
+	cout << c.to_txt();
+	cout << "Parsing: aaaaaaaaaaaaaaaaaaabccccc\n";
+	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc")
+		 << endl; // true если распознал слово
 }
 
 void Example::regex_generating() {
@@ -378,7 +402,7 @@ void Example::fa_subset_check() {
 	states2[0].set_transition(1, "b");
 	states2[1].set_transition(2, "b");
 	states2[2].is_terminal = true;
-	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
+	FiniteAutomaton fa2(0, states2, {"b"});
 
 	cout << fa1.subset(fa2) << endl;
 }
