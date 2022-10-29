@@ -898,13 +898,13 @@ bool FiniteAutomaton::semdet() {
 		}
 		auto trans = &states[state_beg].transitions;
 		for (auto it = trans->begin(); it != trans->end(); it++) {
-			for (int i = 0; i < it->second.size(); i++) {
-				if (!was[it->second[i]]) {
-					was[it->second[i]] = true;
+			for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+				if (!was[*it2]) {
+					was[*it2] = true;
 					std::optional<std::string> res =
-						get_prefix(it->second[i], state_end, was);
+						get_prefix(*it2, state_end, was);
 					if (res.has_value()) {
-						ans = string(1, it->first) + res.value();
+						ans = it->first + res.value();
 					}
 					return ans;
 				}
@@ -919,29 +919,25 @@ bool FiniteAutomaton::semdet() {
 	bool semdet_state = true;
 	std::vector<Regex> state_languages;
 	state_languages.resize(states.size());
-	DSU<int> dsu;
 	for (int i = 0; i < states.size(); i++) {
 		auto prefix = get_prefix(initial_state, i, was);
 		was.clear();
 		if (!prefix.has_value()) continue;
-		// Получение языка из производной регулярки автомата по префиксу:
-		//		this -> regex (arden?)
 		Regex reg;
-		state_languages[i] = reg.prefix_derevative(prefix).value();
+		// Получение языка из производной регулярки автомата по префиксу:
+		//		this -> reg (arden?)
+		auto derevative = reg.prefix_derevative(prefix.value());
+		if (!derevative.has_value()) continue;
+		state_languages[i] = derevative.value();
+	}
+	for (int i = 0; i < states.size(); i++) {
+		DSU<int> dsu;
+		for (int j = 0; j < states.size(); j++) {
+			dsu.make_set(j);
+		}
+		for (auto it = states.begin(); it != states.end(); it++) {
 
-		//		derevative -> language
-		// Парсинг полученного языка на языки состояний,
-		// т.е. языки которые ведут к конкретному финальному состоянию:
-		//		language -> state_language[]
-		// Проверка существования языка состояния, включающего в себя все
-		// остальные: bool answer = true; for (int i = 0; i <
-		// state_langueage[].size(); i++) {
-		//		for (int j = 0; j < i; j++) {
-		//			answer &= state_language[i].contains(state_language[j]);
-		//		}
-		// }
-		// semdet_state &= answer
-		//
+		}
 	}
 	return semdet_state;
 }
