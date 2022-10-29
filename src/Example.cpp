@@ -141,7 +141,7 @@ void Example::regex_parsing() {
 
 	cout << "to_tompson ------------------------------\n";
 	c = r.to_tompson(); // to_tompson(-1);
-	// cout << c.to_txt();
+	cout << c.to_txt();
 
 	cout << "to_glushkov ------------------------------\n";
 	a = r.to_glushkov();
@@ -153,7 +153,7 @@ void Example::regex_parsing() {
 	// FiniteAutomaton d;
 	cout << "to_antimirov  ------------------------------\n";
 	d = r.to_antimirov();
-	cout << d.deannote().to_txt();
+	cout << r.deannote().to_txt();
 
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
 	// cout << nfa_to_regex(d).to_txt();

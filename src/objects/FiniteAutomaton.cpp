@@ -585,11 +585,10 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	for (int i = 0; i < new_fa.states.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
 			if (elem.first.size() > 1 && elem.first != epsilon()) {
-				string str = to_string(elem.first);
-				str.pop_back();
-				new_alphabet.insert(str);
+				alphabet_symbol symb = remove_numbers(elem.first);
+				new_alphabet.insert(symb);
 				for (int transition_to : elem.second) {
-					new_transitions[i][str].insert(transition_to);
+					new_transitions[i][symb].insert(transition_to);
 				}
 			} else {
 				new_transitions[i][elem.first] =

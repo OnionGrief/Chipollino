@@ -7,3 +7,4 @@ alphabet_symbol epsilon();
 bool is_epsilon(alphabet_symbol);
 string to_string(alphabet_symbol);
 alphabet_symbol char_to_alphabet_symbol(char);
+alphabet_symbol remove_numbers(alphabet_symbol);
