@@ -122,9 +122,9 @@ void Example::intersection() {
 void Example::regex_parsing() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
-	regl = regl + regr;				 // "a|b|(((||)))";
+	//regl = regl + regr;				 // "a|b|(((||)))";
 	// egl = "a()a))";			  // regl + regr;
-	//  regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
+	regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";

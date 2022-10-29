@@ -983,6 +983,10 @@ bool Regex::is_eps_possible() {
 
 void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 	std::set<std::string>*prefs1, *prefs2;
+	if (len == 0) {
+		prefs->insert("");
+		return;
+	}
 	switch (type) {
 	case Type::eps:
 		if (len == 0) prefs->insert("");
@@ -1276,7 +1280,7 @@ int Regex::pump_length() const {
 		return language->get_pump_length().value();
 	}
 	std::map<std::string, bool> checked_prefixes;
-	for (int i = 0;; i++) {
+	for (int i = 1;; i++) {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
@@ -1289,7 +1293,7 @@ int Regex::pump_length() const {
 			}
 			if (was) continue;
 			for (int j = 0; j < it->size(); j++) {
-				for (int k = j + 1; k < it->size(); k++) {
+				for (int k = j + 1; k <= it->size(); k++) {
 					Regex pumping;
 					std::string pumped_prefix;
 					pumped_prefix += it->substr(0, j);
@@ -1299,17 +1303,20 @@ int Regex::pump_length() const {
 					pumping.term_l = new Regex;
 					pumping.term_l->from_string(pumped_prefix);
 					pumping.term_r = new Regex;
-					derevative_with_respect_to_str(*it, this, *pumping.term_r);
+					if (!derevative_with_respect_to_str(*it, this,
+														*pumping.term_r))
+						continue;
 					pumping.generate_alphabet(pumping.alphabet);
 					pumping.language =
 						shared_ptr<Language>(new Language(pumping.alphabet));
+					cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
-						/*language->set_pump_length(i);
+						language->set_pump_length(i);
 						cout << *it << "\n";
 						cout << pumped_prefix << " " << pumping.term_r->to_txt()
 							 << "\n";
-						cout << to_txt() << "\n";*/
+						cout << to_txt() << "\n";
 						return i;
 					}
 				}
