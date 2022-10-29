@@ -50,15 +50,15 @@ class FiniteAutomaton : public BaseObject {
 	FiniteAutomaton remove_eps() const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
 	FiniteAutomaton minimize() const;
-	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
+	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&,
 										const FiniteAutomaton&); // меняет язык
-	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия
+	// объединение НКА (на выходе - автомат, распознающий слова объединенеия
 	// языков L1 и L2)
 	static FiniteAutomaton uunion(const FiniteAutomaton&,
 								  const FiniteAutomaton&); // меняет язык
-	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
+	// разность НКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
 	static FiniteAutomaton difference(const FiniteAutomaton&,
 									  const FiniteAutomaton&); // меняет язык
