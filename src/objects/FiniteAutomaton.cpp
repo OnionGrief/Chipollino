@@ -318,8 +318,8 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 	}
 	FiniteAutomaton new_dfa1(fa1.initial_state, fa1.states, merged_alphabets);
 	FiniteAutomaton new_dfa2(fa2.initial_state, fa2.states, merged_alphabets);
-	new_dfa1 = new_dfa1.add_trap_state();
-	new_dfa2 = new_dfa2.add_trap_state();
+	new_dfa1 = new_dfa1.determinize();
+	new_dfa2 = new_dfa2.determinize();
 	FiniteAutomaton new_dfa(0, {}, merged_alphabets);
 	int counter = 0;
 	vector<pair<int, int>> state_pair; // пары индексов состояний
@@ -362,8 +362,8 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 	}
 	FiniteAutomaton new_dfa1(fa1.initial_state, fa1.states, merged_alphabets);
 	FiniteAutomaton new_dfa2(fa2.initial_state, fa2.states, merged_alphabets);
-	new_dfa1 = new_dfa1.add_trap_state();
-	new_dfa2 = new_dfa2.add_trap_state();
+	new_dfa1 = new_dfa1.determinize();
+	new_dfa2 = new_dfa2.determinize();
 	FiniteAutomaton new_dfa(0, {}, merged_alphabets);
 	int counter = 0;
 	vector<pair<int, int>> state_pair; // пары индексов состояний
@@ -407,8 +407,8 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 	}
 	FiniteAutomaton new_dfa1(fa1.initial_state, fa1.states, merged_alphabets);
 	FiniteAutomaton new_dfa2(fa2.initial_state, fa2.states, merged_alphabets);
-	new_dfa1 = new_dfa1.add_trap_state();
-	new_dfa2 = new_dfa2.add_trap_state();
+	new_dfa1 = new_dfa1.determinize();
+	new_dfa2 = new_dfa2.determinize();
 	FiniteAutomaton new_dfa(0, {}, merged_alphabets);
 	int counter = 0;
 	vector<pair<int, int>> state_pair; // пары индексов состояний

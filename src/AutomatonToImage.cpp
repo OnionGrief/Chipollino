@@ -14,7 +14,7 @@ void AutomatonToImage::to_image(string automat, int name) {
 			name);
 	FILE* fo;
 	fo = fopen("./resources/input.dot", "wt");
-	fprintf(fo, automat.c_str());
+	fprintf(fo, "%s", automat.c_str());
 	fclose(fo);
 	system(cmd);
 }
