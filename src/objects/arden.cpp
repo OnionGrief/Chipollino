@@ -8,7 +8,6 @@ bool compare(expression_arden a, expression_arden b) {
 
 vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 	vector<expression_arden> out;
-
 	for (int i = 0; i < in.size(); i++) {
 		int j = i + 1;
 		bool cond = false;
@@ -21,24 +20,19 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 			Regex* r = new Regex();
 			Regex* s1 = new Regex();
 			Regex* s2 = new Regex();
-			// cout << in[j].temp_regex.to_txt() << in[i].temp_regex.to_txt();
-			s1->regex_star(temp.temp_regex);
+			s1->regex_star(out[i].temp_regex);
 			s2->regex_star(in[j].temp_regex);
 			r->regex_union(s1, s2);
-			// delete temp.temp_regex;
-			temp.temp_regex = r;
-			// in[i].temp_regex = r;
-			// delete r;
+			delete temp.temp_regex;
+			out[i].temp_regex = r;
 			delete s1;
 			delete s2;
 			j++;
 		}
 		if (cond) {
-
 			i = j - 1;
 		}
 	}
-
 	return out;
 }
 
@@ -51,7 +45,14 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 		}
 	}
 	if (indexcur == -1) {
-		return in;
+		for (int i = 0; i < in.size(); i++) {
+			Regex* r = in[i].temp_regex->copy();
+			expression_arden temp;
+			temp.temp_regex = r;
+			temp.condition = in[i].condition;
+			out.push_back(temp);
+		}
+		return out;
 	}
 	if (in.size() < 2) {
 		Regex* r = new Regex();
@@ -69,16 +70,18 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			Regex* k = new Regex();
 			k->regex_union(in[i].temp_regex, r);
 			expression_arden temp;
-			temp.temp_regex = k;
+
 			delete r;
+			temp.temp_regex = k;
 			temp.condition = in[i].condition;
 			out.push_back(temp);
 		}
 	}
 	// cout << "arden";
+
 	return out;
 }
-Regex* nfa_to_regex(FiniteAutomaton in) {
+Regex nfa_to_regex(FiniteAutomaton in) {
 	vector<int> endstate;
 	vector<vector<expression_arden>> data;
 	set<alphabet_symbol> alphabet = in.get_alphabet();
@@ -153,36 +156,24 @@ Regex* nfa_to_regex(FiniteAutomaton in) {
 		}
 
 		sort(data[i].begin(), data[i].end(), compare);
-		for (int o = 0; o < tempdata.size(); o++) {
-			if (tempdata[o].temp_regex) {
-
-				// cout << tempdata[o].temp_regex->to_txt() << "\n";
-			}
-			// delete tempdata[o].temp_regex;
-		}
-		for (int o = 0; o < tempdata.size(); o++) {
-			// cout << tempdata[o].temp_regex->to_txt() << "\n";
-			// data[i].push_back(tempdata[o]);
-			// delete tempdata[o].temp_regex;
-		}
 		for (int o = 0; o < data[i].size(); o++) {
-			delete data[i][o].temp_regex;
+			// delete data[i][o].temp_regex;
 		}
-		data[i].clear();
-		// data[i] = tempdata;
-		for (int o = 0; o < data[i].size(); o++) {
-			//	delete data[i][o].temp_regex;
-		}
-		// data[i] = arden_minimize(data[i]);
-		tempdata = arden_minimize(tempdata);
-
-		vector<expression_arden> tempdata1 = arden(tempdata, i);
+		vector<expression_arden> tempdata1 = arden_minimize(tempdata);
+		vector<expression_arden> tempdata2 = arden(tempdata1, i);
 		for (int o = 0; o < tempdata.size(); o++) {
-			// cout << tempdata[o].temp_regex->to_txt() << "\n";
-			// data[i].push_back(tempdata[o]);
-			// delete tempdata[o].temp_regex;
+			delete tempdata[o].temp_regex;
 		}
-		data[i] = tempdata1;
+		for (int o = 0; o < tempdata1.size(); o++) {
+			delete tempdata1[o].temp_regex;
+		}
+
+		for (int o = 0; o < tempdata2.size(); o++) {
+			cout << tempdata2[o].temp_regex->to_txt() << "\n";
+			// data[i].push_back(tempdata[o]);
+			delete tempdata2[o].temp_regex;
+		}
+		// data[i] = tempdata1;
 		/*cout << i << " ";
 		for (int j = 0; j < data[i].size(); j++) {
 
@@ -192,47 +183,47 @@ Regex* nfa_to_regex(FiniteAutomaton in) {
 		cout << "\n";*/
 	}
 
-	if (data[0].size() > 1) {
-		cout << "error";
+	// if (data[0].size() > 1) {
+	// 	cout << "error";
 
-		Regex* f = new Regex;
-		return f;
-	}
-	for (int i = 0; i < data.size(); i++) {
-		for (int j = 0; j < data[i].size(); j++) {
-			if (data[i][j].condition != -1) {
+	// 	Regex* f = new Regex;
+	// 	return f;
+	// }
+	// for (int i = 0; i < data.size(); i++) {
+	// 	for (int j = 0; j < data[i].size(); j++) {
+	// 		if (data[i][j].condition != -1) {
 
-				Regex* r = new Regex;
-				r->regex_union(data[data[i][j].condition][0].temp_regex,
-							   data[i][j].temp_regex);
-				data[i][j].condition = -1;
-				delete data[i][j].temp_regex;
-				data[i][j].temp_regex = r;
-			}
-		}
-		data[i] = arden_minimize(data[i]);
-		for (int j = 0; j < data[i].size(); j++) {
+	// 			Regex* r = new Regex;
+	// 			r->regex_union(data[data[i][j].condition][0].temp_regex,
+	// 						   data[i][j].temp_regex);
+	// 			data[i][j].condition = -1;
+	// 			delete data[i][j].temp_regex;
+	// 			data[i][j].temp_regex = r;
+	// 		}
+	// 	}
+	// 	data[i] = arden_minimize(data[i]);
+	// 	for (int j = 0; j < data[i].size(); j++) {
 
-			/*cout << data[i][j].condition << "-"
-				 << data[i][j].temp_regex.to_txt() << " \n";*/
-		}
-	}
-	if (endstate.size() == 0) {
-		Regex* f = new Regex;
-		return f;
-	}
-	if (endstate.size() < 2) {
-		return data[endstate[0]][0].temp_regex;
-	}
-	Regex* r1 = new Regex;
-	r1->regex_alt(data[endstate[0]][0].temp_regex,
-				  data[endstate[1]][0].temp_regex);
-	for (int i = 2; i < endstate.size(); i++) {
-		Regex temp;
-		temp.regex_alt(r1, data[endstate[i]][0].temp_regex);
-		r1->clear();
-		r1 = temp.copy();
-	}
+	// 		cout << data[i][j].condition << "-"
+	// 			 << data[i][j].temp_regex->to_txt() << " \n";
+	// 	}
+	// }
+	// if (endstate.size() == 0) {
+	// 	Regex* f = new Regex;
+	// 	return f;
+	// }
+	// if (endstate.size() < 2) {
+	// 	return data[endstate[0]][0].temp_regex;
+	// }
+	// Regex* r1 = new Regex;
+	// r1->regex_alt(data[endstate[0]][0].temp_regex,
+	// 			  data[endstate[1]][0].temp_regex);
+	// for (int i = 2; i < endstate.size(); i++) {
+	// 	Regex temp;
+	// 	temp.regex_alt(r1, data[endstate[i]][0].temp_regex);
+	// 	r1->clear();
+	// 	r1 = temp.copy();
+	// }
 	for (int i = 0; i < data.size(); i++) {
 		for (int j = 0; j < data[i].size(); j++) {
 			delete data[i][j].temp_regex;
@@ -240,6 +231,9 @@ Regex* nfa_to_regex(FiniteAutomaton in) {
 	}
 	// cout << r1->to_txt();
 
-	return r1;
+	// return r1;
+	Regex f;
+
+	return f;
 }
 //На нефтеперерабатывающем заводе один мужик зажигалкой нашёл утечку газа.

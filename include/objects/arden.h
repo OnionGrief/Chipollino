@@ -16,5 +16,5 @@ struct expression_arden {
 	int condition;
 	Regex* temp_regex;
 };
-Regex* nfa_to_regex(FiniteAutomaton in);
+Regex nfa_to_regex(FiniteAutomaton in);
 #endif // CHIPOLLINO_ARDEN_H
