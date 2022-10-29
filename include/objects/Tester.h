@@ -6,7 +6,7 @@
 #include <iostream>
 #include <regex>
 #include <string>
-#include <time.h>
+#include <chrono>
 #include <vector>
 
 using namespace std;

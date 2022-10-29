@@ -129,7 +129,7 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1, co
 	out.close();
 }
 
-void Logger::log(string r1, string r2, int step, vector<int> times, vector<bool> booleans) {
+void Logger::log(string r1, string r2, int step, vector<double> times, vector<bool> booleans) {
 	if (!active) return;
 	if (skip) return;
 	Logger::log("Язык, основанный на регулярке", r1);
@@ -161,7 +161,7 @@ void Logger::log(string r1, string r2, int step, vector<int> times, vector<bool>
 	out.close(); 
 }
 
-void Logger::log(const FiniteAutomaton& fa1, string r2, int step, vector<int> times, vector<bool> booleans) {
+void Logger::log(const FiniteAutomaton& fa1, string r2, int step, vector<double> times, vector<bool> booleans) {
 	if (!active) return;
 	if (skip) return;
 	ofstream out("./resources/report.tex", ios::app);

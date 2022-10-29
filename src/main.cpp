@@ -3,6 +3,7 @@
 using namespace std;
 
 int main() {
+	Example::tester();
 	cout << "Chipollino :-)\n";
 	Logger::init();
 	Logger::activate();
