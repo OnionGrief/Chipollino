@@ -29,4 +29,5 @@ class Example {
 	static void normalize_regex();
 	static void tester();
 	static void step_interection();
+	static void table();
 };
