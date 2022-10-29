@@ -2,7 +2,6 @@
 # To find the cmake version run
 # $ cmake --version
 cmake_minimum_required(VERSION 3.5)
-set (CMAKE_CXX_STANDARD 17)
 
 # Set the project name
 project (chipollino)
@@ -16,13 +15,14 @@ set(SOURCES
 	src/objects/RegexGenerator.cpp
 	src/objects/TasksGenerator.cpp
 	src/objects/Language.cpp
+	src/objects/Arden.cpp
 	src/objects/Grammar.cpp
 	src/AlphabetSymbol.cpp
 	src/AutomatonToImage.cpp
 	src/Example.cpp
 	src/Logger.cpp
     src/main.cpp
-)
+	)
 
 # Add an executable with the above sources
 add_executable(chipollino ${SOURCES})

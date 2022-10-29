@@ -1,5 +1,10 @@
 build/
 .vscode/
+
+.idea/
+
+cmake-build-debug/
+
 .vs/
 /CMakeSettings.json
 /enc_temp_folder/

@@ -9,7 +9,6 @@
 #include <set>
 #include <string>
 #include <vector>
-
 using namespace std;
 
 class Language;
@@ -94,6 +93,7 @@ class Regex : BaseObject {
 		Regex* original); //рекурсивный поиск заменяемого листа дерева
 	void normalize_this_regex(
 		const string& file); //переписывание regex по пользовательским правилам
+	string to_str_log() const;
 
 	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
@@ -106,7 +106,7 @@ class Regex : BaseObject {
 	FiniteAutomaton to_tompson() const;
 	FiniteAutomaton to_glushkov() const;
 	FiniteAutomaton to_ilieyu() const;
-	FiniteAutomaton to_antimirov();
+	FiniteAutomaton to_antimirov() const;
 
 	~Regex();
 	Regex* copy() const;
@@ -134,9 +134,18 @@ class Regex : BaseObject {
 	std::optional<Regex> prefix_derevative(std::string respected_str) const;
 	// Длина накачки
 	int pump_length() const;
+	void regex_union(Regex* a, Regex* b);
 
+	void regex_alt(Regex* a, Regex* b);
+
+	void regex_star(Regex* a);
+
+	void regex_eps();
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
+
+	Regex linearize() const;
+	Regex delinearize() const;
 };
 
 /*

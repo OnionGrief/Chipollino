@@ -1045,6 +1045,19 @@ int FiniteAutomaton::get_states_size() {
 State FiniteAutomaton::get_state(int i) {
 	return states[i];
 }
+set<alphabet_symbol> FiniteAutomaton::get_alphabet() {
+	return language->get_alphabet();
+}
+
+int FiniteAutomaton::get_states_size() {
+	return states.size();
+}
+State FiniteAutomaton::get_state(int i) {
+	return states[i];
+}
+int FiniteAutomaton::get_initial() {
+	return initial_state;
+}
 
 const set<alphabet_symbol>& FiniteAutomaton::get_alphabet() {
 	return language->get_alphabet();

@@ -139,15 +139,16 @@ void Example::regex_parsing() {
 
 	cout << "to_tompson ------------------------------\n";
 	c = r.to_tompson(); // to_tompson(-1);
-	cout << c.to_txt();
+	// cout << c.to_txt();
 
 	cout << "to_glushkov ------------------------------\n";
 	a = r.to_glushkov();
-	cout << a.to_txt();
+	// cout << a.to_txt();
 	cout << "to_ilieyu  ------------------------------\n";
 	b = r.to_ilieyu();
-	cout << b.to_txt();
+	// cout << b.to_txt();
 
+	// FiniteAutomaton d;
 	cout << "to_antimirov  ------------------------------\n";
 	d = r.to_antimirov();
 	cout << d.to_txt();

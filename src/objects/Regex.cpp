@@ -327,7 +327,23 @@ bool Regex::from_string(string str) {
 	delete root;
 	return true;
 }
-
+void Regex::regex_union(Regex* a, Regex* b) {
+	type = Type::conc;
+	term_l = a->copy();
+	term_r = b->copy();
+}
+void Regex::regex_alt(Regex* a, Regex* b) {
+	type = Type::alt;
+	term_l = a->copy();
+	term_r = b->copy();
+}
+void Regex::regex_star(Regex* a) {
+	type = Type::star;
+	term_l = a->copy();
+}
+void Regex::regex_eps() {
+	type = Type::eps;
+}
 Regex* Regex::copy() const {
 	Regex* c = new Regex();
 	c->type = type;
@@ -479,7 +495,7 @@ void Regex::normalize_this_regex(const string& file) {
 }
 
 void Regex::pre_order_travers() const {
-	if (value.symbol) {
+	if (type == Regex::symb /*&& value.symbol*/) {
 		cout << value.symbol << " ";
 	} else {
 		cout << type << " ";
@@ -501,7 +517,7 @@ string Regex::to_txt() const {
 		str2 = term_r->to_txt();
 	}
 	string symb;
-	if (value.symbol) symb = value.symbol;
+	if (type == Type::symb /*value.symbol*/) symb = value.symbol;
 	if (type == Type::eps) symb = "";
 	if (type == Type::alt) {
 		symb = '|';
@@ -843,7 +859,7 @@ map<int, vector<int>> Regex::pairs() const {
 vector<Regex*> Regex::pre_order_travers_vect() {
 	vector<Regex*> r;
 	vector<Regex*> ret;
-	if (value.symbol) {
+	if (Regex::symb == type /*value.symbol*/) {
 		r = {};
 		r.push_back(this);
 		return r;
@@ -867,6 +883,24 @@ bool Regex::is_term(int number, const vector<Lexem>& list) const {
 	}
 	return false;
 }
+Regex Regex::linearize() const {
+	Regex test(*this);
+	vector<Regex*> list = test.pre_order_travers_vect();
+	for (size_t i = 0; i < list.size(); i++) {
+		list[i]->value.number = i;
+	}
+	return test;
+}
+
+Regex Regex::delinearize() const {
+	Regex test(*this);
+	vector<Regex*> list = test.pre_order_travers_vect();
+	for (size_t i = 0; i < list.size(); i++) {
+		list[i]->value.number = 0;
+	}
+	return test;
+}
+
 FiniteAutomaton Regex::to_glushkov() const {
 
 	Regex test(*this);
@@ -880,7 +914,37 @@ FiniteAutomaton Regex::to_glushkov() const {
 	map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
 	vector<State> st; // Список состояний в автомате
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
+	/*
+	string str_firs = "";
+	string str_end = "";
+	string str_pair = "";
+	for (size_t i = 0; i < first->size(); i++) {
+		str_firs =
+			str_firs + (*first)[i].symbol + to_string((*first)[i].number) + " ";
+	}
 
+	for (size_t i = 0; i < end->size(); i++) {
+		str_end =
+			str_end + (*end)[i].symbol + to_string((*end)[i].number) + " ";
+	}
+	for (auto& it1 : p) {
+		for (size_t i = 0; i < it1.second.size(); i++) {
+			str_pair = str_pair + list[it1.first]->value.symbol +
+					   to_string(list[it1.first]->value.number) +
+					   list[it1.second[i]]->value.symbol +
+					   to_string(list[it1.second[i]]->value.number) + " ";
+		}
+	}
+
+	if (eps) {
+		str_end = "eps" + str_end;
+	}
+
+	cout << test.to_str_log() << endl;
+	cout << "First " << str_firs << endl;
+	cout << "End " << str_end << endl;
+	cout << "Pairs " << str_pair << endl;
+	*/
 	for (size_t i = 0; i < first->size(); i++) {
 		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert(
 			(*first)[i].number + 1);
@@ -937,6 +1001,7 @@ FiniteAutomaton Regex::to_ilieyu() const {
 			}
 		}
 	}
+
 	vector<State> new_states;
 	for (size_t i = 0; i < states.size(); i++) {
 		if (find(follow.begin(), follow.end(), states[i].index) ==
@@ -944,6 +1009,21 @@ FiniteAutomaton Regex::to_ilieyu() const {
 			new_states.push_back(states[i]);
 		}
 	}
+
+	/*
+	string str_follow;
+	for (size_t i = 0; i < new_states.size(); i++) {
+		int state_ind = new_states[i].index;
+		str_follow = str_follow + states[state_ind].identifier + ": ";
+		for (auto j = states[state_ind].label.begin();
+			 j != states[state_ind].label.end(); j++) {
+			str_follow = str_follow + states[*j].identifier + " ";
+		}
+		str_follow = str_follow + ";\n";
+	}
+
+	cout << str_follow;
+	*/
 
 	for (size_t i = 0; i < new_states.size(); i++) {
 		State v1 = new_states[i];
@@ -1057,6 +1137,35 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 		delete prefs2;
 		return;
 	}
+}
+
+string Regex::to_str() const {
+	string str1 = "", str2 = "";
+	if (term_l) {
+		str1 = term_l->to_str();
+	}
+	if (term_r) {
+		str2 = term_r->to_str();
+	}
+	string symb;
+	if (type == Type::symb /*value.symbol*/) symb = value.symbol;
+	if (type == Type::eps) symb = "";
+	if (type == Type::alt) {
+		symb = '|';
+		if (term_p != nullptr && term_p->type == Type::conc) {
+			str1 = "(" + str1;
+			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
+							   // конкатенации a(a|b)a
+		}
+	}
+	if (type == Type::star) {
+		symb = '*';
+		if (term_l->type != Type::symb)
+			str1 = "(" + str1 +
+				   ")"; // ставим скобки при итерации, если символов > 1
+	}
+
+	return str1 + symb + str2;
 }
 
 bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
@@ -1367,22 +1476,112 @@ bool Regex::subset(const Regex& r) const {
 	return fa1.subset(fa2);
 }
 
-FiniteAutomaton Regex::to_antimirov() {
-	vector<Regex> regs;
+FiniteAutomaton Regex::to_antimirov() const {
 
-	Regex r;
-	if (!r.from_string("b")) {
-		cout << "ERROR\n";
-		// return;
+	map<set<string>, set<string>> trans;
+	vector<Regex> states;
+	vector<Regex> alph_regex;
+	vector<vector<Regex>> out;
+	set<string> check;
+	for (set<alphabet_symbol>::iterator i = alphabet.begin();
+		 i != alphabet.end(); i++) {
+		string symbol = *i;
+		Regex r;
+		if (!r.from_string(symbol)) {
+			// cout << "ERROR\n";
+			//  return;
+		}
+		alph_regex.push_back(r);
 	}
 
-	partial_symbol_derevative(r, regs);
-
-	cout << regs.size() << endl;
-
-	for (size_t i = 0; i < regs.size(); i++) {
-		cout << regs[i].to_txt() << endl;
+	states.push_back(*this);
+	check.insert(to_txt());
+	for (size_t i = 0; i < states.size(); i++) {
+		Regex state = states[i];
+		for (vector<Regex>::iterator j = alph_regex.begin();
+			 j != alph_regex.end(); j++) {
+			vector<Regex> regs;
+			state.partial_symbol_derevative(*j, regs);
+			for (vector<Regex>::iterator k = regs.begin(); k != regs.end();
+				 k++) {
+				out.push_back({state, *k, *j});
+				if (check.find(k->to_txt()) == check.end()) {
+					states.push_back(*k);
+					check.insert(k->to_txt());
+				}
+			}
+		}
 	}
 
-	return FiniteAutomaton();
+	vector<string> name_states;
+
+	for (size_t i = 0; i < states.size(); i++) {
+		name_states.push_back(states[i].to_txt());
+	}
+
+	vector<State> automat_state;
+
+	string derev_log = "";
+
+	for (size_t i = 0; i < name_states.size(); i++) {
+		string state = name_states[i];
+		map<alphabet_symbol, set<int>> transit;
+		for (size_t j = 0; j < out.size(); j++) {
+			// cout << out[j][0].to_txt() << " ";
+			// cout << out[j][1].to_txt() << " ";
+			// cout << out[j][2].to_txt() << endl;
+			derev_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
+						 " = " + out[j][1].to_txt() + "\n";
+			if (out[j][0].to_txt() == state) {
+				auto n = find(name_states.begin(), name_states.end(),
+							  out[j][1].to_txt());
+				alphabet_symbol s = out[j][2].to_txt();
+				transit[s].insert(n - name_states.begin());
+			}
+		}
+
+		if ((state.size() == 0) || (states[i].L() == 1)) {
+			automat_state.push_back({int(i), {}, state, true, transit});
+		} else {
+			automat_state.push_back({int(i), {}, state, false, transit});
+		}
+	}
+	string str_state = "State: ";
+	for (size_t i = 0; i < automat_state.size(); i++) {
+		str_state += automat_state[i].identifier + " ";
+	}
+
+	// cout << derev_log;
+	// cout << str_state << endl;
+	return FiniteAutomaton(0, automat_state, language);
+}
+
+string Regex::to_str_log() const {
+	string str1 = "", str2 = "";
+	if (term_l) {
+		str1 = term_l->to_str_log();
+	}
+	if (term_r) {
+		str2 = term_r->to_str_log();
+	}
+	string symb;
+	if (type == Type::symb /*value.symbol*/)
+		symb = value.symbol + to_string(value.number);
+	if (type == Type::eps) symb = "";
+	if (type == Type::alt) {
+		symb = '|';
+		if (term_p != nullptr && term_p->type == Type::conc) {
+			str1 = "(" + str1;
+			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
+							   // конкатенации a(a|b)a
+		}
+	}
+	if (type == Type::star) {
+		symb = '*';
+		if (term_l->type != Type::symb)
+			str1 = "(" + str1 +
+				   ")"; // ставим скобки при итерации, если символов > 1
+	}
+
+	return str1 + symb + str2;
 }

@@ -3,11 +3,13 @@
 #include "Language.h"
 #include "Logger.h"
 #include "Regex.h"
+#include "AutomatonToImage.h"
+#include "Logger.h"
+#include "arden.h"
 #include "RegexGenerator.h"
 #include "TasksGenerator.h"
 #include "TransformationMonoid.h"
 #include <iostream>
-
 /*
 Это статический класс, где вы можете писать примеры
 использования функций и, соответственно, их тестить.
@@ -34,5 +36,6 @@ class Example {
 	static void parsing_nfa();
 	static void fa_equivalent_check();
 	static void fa_subset_check();
+	static void arden_test();
 	static void to_image();
 };
