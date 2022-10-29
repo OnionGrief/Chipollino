@@ -917,13 +917,18 @@ bool FiniteAutomaton::semdet() {
 		if (states[i].is_terminal) final_states.push_back(i);
 	}
 	bool semdet_state = true;
+	std::vector<Regex> state_languages;
+	state_languages.resize(states.size());
+	DSU<int> dsu;
 	for (int i = 0; i < states.size(); i++) {
-		auto prefix = get_prefix(0, i, was);
+		auto prefix = get_prefix(initial_state, i, was);
 		was.clear();
 		if (!prefix.has_value()) continue;
 		// Получение языка из производной регулярки автомата по префиксу:
 		//		this -> regex (arden?)
-		//		derevative = regex.prefix_derevative(prefix)
+		Regex reg;
+		state_languages[i] = reg.prefix_derevative(prefix).value();
+
 		//		derevative -> language
 		// Парсинг полученного языка на языки состояний,
 		// т.е. языки которые ведут к конкретному финальному состоянию:
