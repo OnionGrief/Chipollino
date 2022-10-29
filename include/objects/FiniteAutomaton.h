@@ -60,7 +60,8 @@ class FiniteAutomaton : public BaseObject {
 								  const FiniteAutomaton&); // меняет язык
 	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
-	FiniteAutomaton difference(const FiniteAutomaton&) const; // меняет язык
+	static FiniteAutomaton difference(const FiniteAutomaton&,
+									  const FiniteAutomaton&); // меняет язык
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	FiniteAutomaton complement() const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
