@@ -1,6 +1,6 @@
 #include "Logger.h"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 using namespace std;
 
 Logger::Logger() {}
@@ -23,7 +23,7 @@ void Logger::init() {
 		out << "\\maketitle" << endl;
 		out << "\\newpage" << endl;
 	}
-	out.close(); 
+	out.close();
 }
 
 void Logger::init_step(string step_name) {
@@ -31,7 +31,7 @@ void Logger::init_step(string step_name) {
 	if (out.is_open()) {
 		out << step_name + "\n" << endl;
 	}
-	out.close(); 
+	out.close();
 }
 
 Logger l;
@@ -44,7 +44,7 @@ void Logger::log(string text, string fa1, string fa2) {
 			AutomatonToImage::to_image(fa1, l.i);
 			out << "Автомат до преобразования\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics{./resources/output%d.png}\n", l.i);
+			sprintf(si, "\\includegraphics{./resources/output%d.png}\n", l.i);
 			out << si << endl;
 		}
 		if (fa2 != "") {
@@ -52,7 +52,7 @@ void Logger::log(string text, string fa1, string fa2) {
 			AutomatonToImage::to_image(fa2, l.i);
 			out << "Автомат после преобразования\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics{./resources/output%d.png}\n", l.i);
+			sprintf(si, "\\includegraphics{./resources/output%d.png}\n", l.i);
 			out << si << endl;
 		}
 	}
@@ -64,7 +64,7 @@ void Logger::finish_step() {
 	if (out.is_open()) {
 		out << "\\newpage\n" << endl;
 	}
-	out.close(); 
+	out.close();
 }
 
 void Logger::finish() {
@@ -74,6 +74,6 @@ void Logger::finish() {
 	}
 	out.close();
 	char cmd[1024];
-    sprintf(cmd, "pdflatex \"./resources/report.tex\"");
-    system(cmd); 
+	sprintf(cmd, "pdflatex \"./resources/report.tex\"");
+	system(cmd);
 }

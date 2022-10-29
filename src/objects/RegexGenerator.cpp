@@ -1,10 +1,11 @@
 #include "RegexGenerator.h"
 
-RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {
-}
+RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {}
 
-RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting, int alphabet_size)
-	: regex_length(regex_length), star_num(cur_star_num), star_nesting(star_nesting) {
+RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
+							   int alphabet_size)
+	: regex_length(regex_length), star_num(cur_star_num),
+	  star_nesting(star_nesting) {
 
 	srand(time(nullptr));
 
@@ -21,9 +22,10 @@ RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
 	}
 }
 
-RegexGenerator::RegexGenerator(int regex_length, int cur_star_num, int star_nesting) 
-	: RegexGenerator::RegexGenerator(regex_length, cur_star_num, star_nesting, generate_alphabet(regex_length)) {
-}
+RegexGenerator::RegexGenerator(int regex_length, int cur_star_num,
+							   int star_nesting)
+	: RegexGenerator::RegexGenerator(regex_length, cur_star_num, star_nesting,
+									 generate_alphabet(regex_length)) {}
 
 int RegexGenerator::generate_alphabet(int regex_length) {
 	int max_alphabet_size = regex_length > 52 ? 52 : regex_length;
@@ -42,9 +44,11 @@ string RegexGenerator::generate_regex() {
 	return res_str;
 }
 
-void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt> <regex> | <conc-regex> | пусто
+void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt>
+										 // <regex> | <conc-regex> | пусто
 	int v;
-	if (all_alts_are_eps) //если нет ни одного не пустого слова то оно не допустимо
+	if (all_alts_are_eps) //если нет ни одного не пустого слова то оно не
+						  //допустимо
 		v = rand() % 2;
 	else
 		v = rand() % 3; // выбираем какую из 3х альтернатив использовать
@@ -60,14 +64,16 @@ void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt> <reg
 	}
 };
 
-void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex> | пусто
-	int v = rand() % 4;						  // подкрутим вероятность выпадения пустого слова
+void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex>
+											  // | пусто
+	int v = rand() % 4; // подкрутим вероятность выпадения пустого слова
 	if (v) {
 		generate_conc_regex();
 	}
 };
 
-void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex> | <simple-regex><conc-regex>
+void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
+											 // | <simple-regex><conc-regex>
 	int v = rand() % 2;
 	if (v == 0) {
 		generate_simple_regex();
@@ -78,7 +84,9 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex> 
 	}
 };
 
-void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <lbr><regex-without-eps><rbr><unary>? | буква <unary>?
+void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
+											   // <lbr><regex-without-eps><rbr><unary>?
+											   // | буква <unary>?
 	int v = rand() % 2;
 	if (v == 0) {
 		bool prev_eps_counter = all_alts_are_eps;
@@ -86,9 +94,14 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <lbr><regex
 
 		int v2;
 		if (cur_star_num) {
-			int star_chance = cur_regex_length / cur_star_num; //вероятность выпадения звезды при 2 звездах на 20 букв = 1/10
+			int star_chance = cur_regex_length /
+							  cur_star_num; //вероятность выпадения звезды при 2
+											//звездах на 20 букв = 1/10
 			if (cur_regex_length > cur_star_num)
-				star_chance += cur_star_num / star_nesting; // попытка в зависимость вероятности выпадения звезды от max звездной высоты
+				star_chance +=
+					cur_star_num /
+					star_nesting; // попытка в зависимость вероятности выпадения
+								  // звезды от max звездной высоты
 			else
 				star_chance += cur_regex_length / star_nesting;
 			if (star_chance < 2) star_chance += 2;
