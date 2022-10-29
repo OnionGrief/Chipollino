@@ -824,6 +824,24 @@ bool Regex::is_term(int number, const vector<Lexem>& list) const {
 	}
 	return false;
 }
+Regex Regex::linearize() const {
+	Regex test(*this);
+	vector<Regex*> list = test.pre_order_travers_vect();
+	for (size_t i = 0; i < list.size(); i++) {
+		list[i]->value.number = i;
+	}
+	return test;
+}
+
+Regex Regex::delinearize() const {
+	Regex test(*this);
+	vector<Regex*> list = test.pre_order_travers_vect();
+	for (size_t i = 0; i < list.size(); i++) {
+		list[i]->value.number = 0;
+	}
+	return test;
+}
+
 FiniteAutomaton Regex::to_glushkov() const {
 
 	Regex test(*this);

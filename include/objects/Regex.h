@@ -131,6 +131,9 @@ class Regex : BaseObject {
 
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
+
+	Regex linearize() const;
+	Regex delinearize() const;
 };
 
 /*
