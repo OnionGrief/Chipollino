@@ -93,6 +93,7 @@ class Regex : BaseObject {
 		Regex* original); //рекурсивный поиск заменяемого листа дерева
 	void normalize_this_regex(
 		const string& file); //переписывание regex по пользовательским правилам
+	string to_str_log() const;
 
   public:
 	Regex();

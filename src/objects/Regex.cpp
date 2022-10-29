@@ -837,7 +837,37 @@ FiniteAutomaton Regex::to_glushkov() const {
 	map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
 	vector<State> st; // Список состояний в автомате
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
+	/*
+	string str_firs = "";
+	string str_end = "";
+	string str_pair = "";
+	for (size_t i = 0; i < first->size(); i++) {
+		str_firs =
+			str_firs + (*first)[i].symbol + to_string((*first)[i].number) + " ";
+	}
 
+	for (size_t i = 0; i < end->size(); i++) {
+		str_end =
+			str_end + (*end)[i].symbol + to_string((*end)[i].number) + " ";
+	}
+	for (auto& it1 : p) {
+		for (size_t i = 0; i < it1.second.size(); i++) {
+			str_pair = str_pair + list[it1.first]->value.symbol +
+					   to_string(list[it1.first]->value.number) +
+					   list[it1.second[i]]->value.symbol +
+					   to_string(list[it1.second[i]]->value.number) + " ";
+		}
+	}
+
+	if (eps) {
+		str_end = "eps" + str_end;
+	}
+
+	cout << test.to_str_log() << endl;
+	cout << "First " << str_firs << endl;
+	cout << "End " << str_end << endl;
+	cout << "Pairs " << str_pair << endl;
+	*/
 	for (size_t i = 0; i < first->size(); i++) {
 		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert(
 			(*first)[i].number + 1);
@@ -894,6 +924,7 @@ FiniteAutomaton Regex::to_ilieyu() const {
 			}
 		}
 	}
+
 	vector<State> new_states;
 	for (size_t i = 0; i < states.size(); i++) {
 		if (find(follow.begin(), follow.end(), states[i].index) ==
@@ -901,6 +932,21 @@ FiniteAutomaton Regex::to_ilieyu() const {
 			new_states.push_back(states[i]);
 		}
 	}
+
+	/*
+	string str_follow;
+	for (size_t i = 0; i < new_states.size(); i++) {
+		int state_ind = new_states[i].index;
+		str_follow = str_follow + states[state_ind].identifier + ": ";
+		for (auto j = states[state_ind].label.begin();
+			 j != states[state_ind].label.end(); j++) {
+			str_follow = str_follow + states[*j].identifier + " ";
+		}
+		str_follow = str_follow + ";\n";
+	}
+
+	cout << str_follow;
+	*/
 
 	for (size_t i = 0; i < new_states.size(); i++) {
 		State v1 = new_states[i];
@@ -1384,6 +1430,8 @@ FiniteAutomaton Regex::to_antimirov() const {
 
 	vector<State> automat_state;
 
+	string derev_log = "";
+
 	for (size_t i; i < name_states.size(); i++) {
 		string state = name_states[i];
 		map<alphabet_symbol, set<int>> transit;
@@ -1391,6 +1439,8 @@ FiniteAutomaton Regex::to_antimirov() const {
 			// cout << out[j][0].to_txt() << " ";
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
+			derev_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
+						 " = " + out[j][1].to_txt() + "\n";
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
 							  out[j][1].to_txt());
@@ -1405,6 +1455,42 @@ FiniteAutomaton Regex::to_antimirov() const {
 			automat_state.push_back({int(i), {}, state, false, transit});
 		}
 	}
+	string str_state = "State: ";
+	for (size_t i = 0; i < automat_state.size(); i++) {
+		str_state += automat_state[i].identifier + " ";
+	}
 
+	// cout << derev_log;
+	// cout << str_state << endl;
 	return FiniteAutomaton(0, automat_state, language);
+}
+
+string Regex::to_str_log() const {
+	string str1 = "", str2 = "";
+	if (term_l) {
+		str1 = term_l->to_str_log();
+	}
+	if (term_r) {
+		str2 = term_r->to_str_log();
+	}
+	string symb;
+	if (type == Type::symb /*value.symbol*/)
+		symb = value.symbol + to_string(value.number);
+	if (type == Type::eps) symb = "";
+	if (type == Type::alt) {
+		symb = '|';
+		if (term_p != nullptr && term_p->type == Type::conc) {
+			str1 = "(" + str1;
+			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
+							   // конкатенации a(a|b)a
+		}
+	}
+	if (type == Type::star) {
+		symb = '*';
+		if (term_l->type != Type::symb)
+			str1 = "(" + str1 +
+				   ")"; // ставим скобки при итерации, если символов > 1
+	}
+
+	return str1 + symb + str2;
 }
