@@ -1309,14 +1309,14 @@ int Regex::pump_length() const {
 					pumping.generate_alphabet(pumping.alphabet);
 					pumping.language =
 						shared_ptr<Language>(new Language(pumping.alphabet));
-					cout << pumped_prefix << " " << pumping.term_r->to_txt();
+					//cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
 						language->set_pump_length(i);
-						cout << *it << "\n";
+						/*cout << *it << "\n";
 						cout << pumped_prefix << " " << pumping.term_r->to_txt()
 							 << "\n";
-						cout << to_txt() << "\n";
+						cout << to_txt() << "\n";*/
 						return i;
 					}
 				}
