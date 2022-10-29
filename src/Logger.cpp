@@ -245,7 +245,7 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
 void Logger::finish_step() {
 	if (!active) return;
 	step_counter--;
-	if (step_counter > 1) return;
+	if (step_counter > 0) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << "\\newpage\n" << endl;
