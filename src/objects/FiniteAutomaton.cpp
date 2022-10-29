@@ -890,13 +890,13 @@ bool FiniteAutomaton::parsing_nfa(string s, State state) const {
 	if (s.size() == 0 && state.is_terminal) {
 		return true;
 	}
-
+	/*
 	if (s.size() == 0 && !state.is_terminal) {
 		return false;
-	}
+	}*/
 	alphabet_symbol elem = char_to_alphabet_symbol(s[0]);
 	set<int> tr = state.transitions[elem];
-	set<int> tr_eps = state.transitions[char_to_alphabet_symbol('\0')];
+	set<int> tr_eps = state.transitions[epsilon()];//char_to_alphabet_symbol('\0')];
 	vector<int> trans{tr.begin(), tr.end()};
 	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
 	for (size_t i = 0; i < trans.size(); i++) {
@@ -905,6 +905,7 @@ bool FiniteAutomaton::parsing_nfa(string s, State state) const {
 		}
 	}
 	for (size_t i = 0; i < trans_eps.size(); i++) {
+		//cout << trans_eps[i] << endl;
 		if (parsing_nfa(s, states[trans_eps[i]])) {
 			return true;
 		}
