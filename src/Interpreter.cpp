@@ -66,13 +66,18 @@ Interpreter::Interpreter() {
 }
 
 void Interpreter::load_file(const string& filename) {
-	Lexer lexer;
+	Lexer lexer(*this);
 	auto lexem_strings = lexer.load_file(filename);
 	operations = {};
+	int line_number = 0;
 	for (const auto& lexems : lexem_strings) {
 		if (auto op = scan_operation(lexems); op.has_value()) {
 			operations.push_back(*op);
+		} else {
+			throw_error("Error: cannot identify operation in line " +
+						to_string(line_number));
 		}
+		line_number++;
 	}
 }
 
@@ -80,6 +85,23 @@ void Interpreter::run_all() {
 	for (const auto& op : operations) {
 		run_operation(op);
 	}
+}
+
+void Interpreter::set_log_mode(LogMode mode) {
+	log_mode = mode;
+}
+
+void Interpreter::log(const string& str) {
+	if (log_mode == LogMode::all) {
+		cout << str << "\n";
+	}
+}
+
+void Interpreter::throw_error(const string& str) {
+	if (log_mode != LogMode::nothing) {
+		cout << "ERROR: " << str << "\n";
+	}
+	error = true;
 }
 
 GeneralObject Interpreter::apply_function_sequence(
@@ -152,7 +174,7 @@ GeneralObject Interpreter::apply_function(
 		if (function.output == nfa) {
 			return ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
 		} else {
-			//return ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
+			// return ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
 		}
 	}
 	if (function.name == "MergeBisim") {
@@ -170,9 +192,9 @@ GeneralObject Interpreter::apply_function(
 		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
 	}*/
 	if (function.name == "Normalize") {
-		return ObjectRegex(
-			get<ObjectRegex>(arguments[0])
-				.value.normalize_regex(get<ObjectFileName>(arguments[0]).value));
+		return ObjectRegex(get<ObjectRegex>(arguments[0])
+							   .value.normalize_regex(
+								   get<ObjectFileName>(arguments[0]).value));
 	}
 	//Саша вроде сделает
 	/*if (function.name == "States") {
@@ -199,7 +221,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Bisimilar") {
 		return ObjectBoolean(
 			FiniteAutomaton::bisimilar(get<ObjectNFA>(arguments[0]).value,
-									 get<ObjectNFA>(arguments[1]).value));
+									   get<ObjectNFA>(arguments[1]).value));
 	}
 	//неясно чье
 	/*if (function.name == "Minimal") {
@@ -211,21 +233,21 @@ GeneralObject Interpreter::apply_function(
 			get<ObjectNFA>(arguments[1])
 				.value.subset(get<ObjectNFA>(arguments[1]).value));
 	}
- 	if (function.name == "Equiv") {
-		if (function.input[0] == nfa) {
+	if (function.name == "Equiv") {
+		if (vector<ObjectType> n = {nfa, nfa}; function.input == n) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
 				get<ObjectNFA>(arguments[0]).value,
 				get<ObjectNFA>(arguments[1]).value));
 		} else {
-			return ObjectBoolean(Regex::equivalent(
-				get<ObjectRegex>(arguments[0]).value,
-				get<ObjectRegex>(arguments[1]).value));
+			return ObjectBoolean(
+				Regex::equivalent(get<ObjectRegex>(arguments[0]).value,
+								  get<ObjectRegex>(arguments[1]).value));
 		}
 	}
 	if (function.name == "Equal") {
 		return ObjectBoolean(
 			FiniteAutomaton::equal(get<ObjectNFA>(arguments[0]).value,
-										get<ObjectNFA>(arguments[1]).value));
+								   get<ObjectNFA>(arguments[1]).value));
 	}
 	//пока не работает
 	/*(if (function.name == "SemDet") {
@@ -347,7 +369,6 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	finalfuncs.emplace() = {};
 	for (int i = 0; i < function_names.size(); i++) {
 		if (neededfuncs[i] > 0) {
-			// cout << function_names[i];
 			if (neededfuncs[i] == 1 || neededfuncs[i] == 2) {
 				Function f = names_to_functions[function_names[i]][0];
 				finalfuncs.value().push_back(f);
@@ -376,18 +397,18 @@ vector<GeneralObject> Interpreter::parameters_to_arguments(
 }
 
 void Interpreter::run_declaration(const Declaration& decl) {
-	cout << "Running declaration...\n";
+	log("Running declaration...");
 	// TODO activate/disactivate logger here
 	objects[decl.id] = apply_function_sequence(
 		decl.function_sequence, parameters_to_arguments(decl.parameters));
-	cout << "	assigned to " << decl.id << "\n";
+	log("    assigned to " + to_string(decl.id));
 }
 
 void Interpreter::run_predicate(const Predicate& pred) {
-	cout << "Running predicate...\n";
+	log( "Running predicate...");
 	auto res = apply_function(pred.predicate,
 							  parameters_to_arguments(pred.parameters));
-	cout << "    result: " << get<ObjectBoolean>(res).value << "\n";
+	log("    result: " + to_string(get<ObjectBoolean>(res).value));
 }
 
 void Interpreter::run_operation(const GeneralOperation& op) {
@@ -396,7 +417,7 @@ void Interpreter::run_operation(const GeneralOperation& op) {
 	} else if (holds_alternative<Predicate>(op)) {
 		run_predicate(get<Predicate>(op));
 	} else if (holds_alternative<Test>(op)) {
-		cout << "Tests are not supported yet : - (\n"; // TODO run tests
+		throw_error("Tests are not supported yet :-(\n"); // TODO run tests
 	}
 }
 
@@ -407,14 +428,12 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 
 	// [идентификатор]
 	if (lexems[0].type != Lexem::id) {
-		cout << "id expected\n";
 		return nullopt;
 	}
 	decl.id = lexems[0].value;
 
 	// =
 	if (lexems[1].type != Lexem::equalSign) {
-		cout << "= expected\n";
 		return nullopt;
 	}
 
@@ -454,8 +473,6 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	if (i < lexems.size() && lexems[i].type == Lexem::doubleExclamation) {
 		decl.show_result = true;
 	}
-
-	cout << "id\n";
 
 	if (auto seq = build_function_sequence(func_names, argument_types);
 		seq.has_value()) {
@@ -499,8 +516,6 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 			break;
 		}
 	}
-
-	cout << "pred\n";
 
 	if (auto seq = build_function_sequence({prdeicat_name}, argument_types);
 		seq.has_value()) {

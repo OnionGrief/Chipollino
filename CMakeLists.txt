@@ -11,6 +11,7 @@ project (chipollino)
 set(SOURCES
     src/Interpreter.Lexer.cpp
     src/Interpreter.cpp
+	src/objects/TransformationMonoid.cpp
 	src/objects/BaseObject.cpp
 	src/objects/FiniteAutomaton.cpp
 	src/objects/Regex.cpp

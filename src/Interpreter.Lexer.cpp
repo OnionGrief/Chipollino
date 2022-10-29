@@ -72,7 +72,6 @@ Interpreter::Lexem Interpreter::Lexer::scan_id() {
 	// TODO: сделать проверки на корректность имени, чтобы не
 	// начиналось с цифры, не было коллизий с именами функций
 	string id_name = scan_until_space();
-	cout << "ID " << id_name << "\n";
 	return Lexem(Lexem::id, id_name);
 }
 
@@ -156,6 +155,7 @@ Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
 	if (Lexem lex = scan_id(); lex.type) {
 		return lex;
 	}
+	cout << "Error: cannot scan lexem\n";
 	return Lexem(Lexem::error);
 }
 
@@ -163,10 +163,11 @@ Interpreter::Lexem::Lexem(Type type, string value) : type(type), value(value) {}
 
 Interpreter::Lexem::Lexem(int num) : num(num), type(number) {}
 
-Interpreter::Lexer::Lexer() {}
-
 vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
 	ifstream input_file(path);
+	if (!input_file) {
+		parent.throw_error("Error: failed to open " + to_string(path));
+	}
 	// Сюда будем записывать строки из лексем
 	vector<vector<Lexem>> lexem_lines = {};
 	string str = "";

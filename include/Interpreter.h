@@ -13,13 +13,24 @@ using namespace Typization;
 
 class Interpreter {
   public:
+	enum class LogMode { all, errors, nothing };
 	Interpreter();
 	// Загрузить программу из файла
 	void load_file(const string& filename);
 	// Выполнить все опреации
 	void run_all();
+	// Установит режим логгирования в консоль
+	void set_log_mode(LogMode mode);
 
   private:
+	// true, если во время исполнения произошла ошибка
+	bool error = false;
+
+	// Вывод
+	LogMode log_mode = LogMode::all;
+	void log(const string& str);
+	void throw_error(const string& str);
+
 	// Применение цепочки функций к набору аргументов
 	static GeneralObject apply_function_sequence(
 		const vector<Function>& functions, vector<GeneralObject> arguments);
@@ -126,7 +137,7 @@ class Interpreter {
 
 	class Lexer {
 	  public:
-		Lexer();
+		Lexer(Interpreter& parent) : parent(parent) {}
 		vector<vector<Lexem>> load_file(string path);
 		// Возвращает лексемы, разбитые по строчкам
 		// Бьёт строку на лексемы (без перевода строки)
@@ -185,5 +196,7 @@ class Interpreter {
 			"Bisimilar", "Minimal", "Subset", "Equiv",
 			"Minimal",	 "Equal",	"SemDet",
 		};
+
+		Interpreter& parent;
 	};
 };
