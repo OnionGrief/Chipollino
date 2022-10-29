@@ -1349,8 +1349,8 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 }
 
 bool Regex::subset(const Regex& r) const {
-	FiniteAutomaton fa1(to_ilieyu().determinize());
-	FiniteAutomaton fa2(r.to_ilieyu().determinize());
+	FiniteAutomaton fa1(to_ilieyu());
+	FiniteAutomaton fa2(r.to_ilieyu());
 	return fa1.subset(fa2);
 }
 
