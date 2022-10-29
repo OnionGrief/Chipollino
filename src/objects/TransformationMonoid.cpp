@@ -173,7 +173,8 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 								 //Эквивалентных классах
 			{
 				bool cond = true;
-				if (current.Transitions.size() != automat->get_states_size()) {
+				if (current.Transitions.size() !=
+					automat->get_states_size() - 1) {
 					cond = false;
 				}
 				for (int i = 0; i < current.Transitions.size(); i++) {
