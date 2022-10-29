@@ -211,8 +211,8 @@ GeneralObject Interpreter::apply_function(
 			get<ObjectNFA>(arguments[1])
 				.value.subset(get<ObjectNFA>(arguments[1]).value));
 	}
-	if (function.name == "Equiv") {
-		if (function.output == nfa) {
+ 	if (function.name == "Equiv") {
+		if (function.input[0] == nfa) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
 				get<ObjectNFA>(arguments[0]).value,
 				get<ObjectNFA>(arguments[1]).value));
@@ -387,7 +387,7 @@ void Interpreter::run_predicate(const Predicate& pred) {
 	cout << "Running predicate...\n";
 	auto res = apply_function(pred.predicate,
 							  parameters_to_arguments(pred.parameters));
-	cout << "	result: " << get<ObjectBoolean>(res).value << "\n";
+	cout << "    result: " << get<ObjectBoolean>(res).value << "\n";
 }
 
 void Interpreter::run_operation(const GeneralOperation& op) {
@@ -487,14 +487,16 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 		if (lexems[i].type == Lexem::id) {
 			if (id_types.count(lexems[i].value)) {
 				argument_types.push_back(id_types[lexems[i].value]);
+				arguments.push_back(lexems[i].value);
 			} else {
-				cout << "Unknown id";
+				cout << "Unknown id\n";
 				return nullopt;
 			}
 		} else if (lexems[i].type == Lexem::regex) {
+			argument_types.push_back(ObjectType::Regex);
 			arguments.push_back(ObjectRegex(lexems[i].reg));
-		} else if (lexems[i].type == Lexem::regex) {
-			arguments.push_back(ObjectRegex(lexems[i].reg));
+		} else {
+			break;
 		}
 	}
 
