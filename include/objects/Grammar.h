@@ -8,7 +8,8 @@
 using namespace std;
 
 struct GrammarItem {
-	enum Type {
+	enum Type
+	{
 		terminal,
 		nonterminal
 	};

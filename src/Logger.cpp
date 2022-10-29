@@ -76,25 +76,25 @@ void Logger::log(string a1, string a2, const FiniteAutomaton& fa1,
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		if (f1 != "") {
-			i += 1;
-			AutomatonToImage::to_image(f1, i);
+			image_number += 1;
+			AutomatonToImage::to_image(f1, image_number);
 			out << a1 + "\n" << endl;
 			char si[256];
 			sprintf(si,
 					"\\includegraphics[width=5in, "
 					"keepaspectratio]{./resources/output%d.png}\n",
-					i);
+					image_number);
 			out << si << endl;
 		}
 		if (f2 != "") {
-			i += 1;
-			AutomatonToImage::to_image(f2, i);
+			image_number += 1;
+			AutomatonToImage::to_image(f2, image_number);
 			out << a2 + "\n" << endl;
 			char si[256];
 			sprintf(si,
 					"\\includegraphics[width=5in, "
 					"keepaspectratio]{./resources/output%d.png}\n",
-					i);
+					image_number);
 			out << si << endl;
 		}
 	}
@@ -111,43 +111,44 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		if (f1 != "") {
-			i += 1;
-			AutomatonToImage::to_image(f1, i);
+			image_number += 1;
+			AutomatonToImage::to_image(f1, image_number);
 			out << a1 + "\n" << endl;
 			char si[256];
 			sprintf(si,
 					"\\includegraphics[width=5in, "
 					"keepaspectratio]{./resources/output%d.png}\n",
-					i);
+					image_number);
 			out << si << endl;
 		}
 		if (f2 != "") {
-			i += 1;
-			AutomatonToImage::to_image(f2, i);
+			image_number += 1;
+			AutomatonToImage::to_image(f2, image_number);
 			out << a2 + "\n" << endl;
 			char si[256];
 			sprintf(si,
 					"\\includegraphics[width=5in, "
 					"keepaspectratio]{./resources/output%d.png}\n",
-					i);
+					image_number);
 			out << si << endl;
 		}
 		if (f3 != "") {
-			i += 1;
-			AutomatonToImage::to_image(f3, i);
+			image_number += 1;
+			AutomatonToImage::to_image(f3, image_number);
 			out << a3 + "\n" << endl;
 			char si[256];
 			sprintf(si,
 					"\\includegraphics[width=5in, "
 					"keepaspectratio]{./resources/output%d.png}\n",
-					i);
+					image_number);
 			out << si << endl;
 		}
 	}
 	out.close();
 }
 
-void Logger::log(string r1, string r2, int step, vector<Tester::word> words) {
+void Logger::log(string r1, string r2, int step, vector<double> times,
+				 vector<bool> belongs) {
 	if (!active) return;
 	if (step_counter > 1) return;
 	Logger::log("Язык, основанный на регулярке", r1);
@@ -163,11 +164,16 @@ void Logger::log(string r1, string r2, int step, vector<Tester::word> words) {
 		s1 = s1 + "Принадлежность языку";
 		s1 = s1 + "\\\\";
 		out << s1 << endl;
-		for (int i = 0; i < words.size(); i++) {
-			string w1 = to_string(words[i].iterations_num + 1);
-			string w2 = to_string(words[i].time);
-			string w3 = to_string(words[i].is_belongs);
-			if (i != words.size() - 1) {
+		for (int i = 0; i < times.size(); i++) {
+			string w1 = to_string(step * i);
+			string w2 = to_string(times[i]);
+			string w3;
+			if (belongs[i]) {
+				w3 = "true";
+			} else {
+				w3 = "false";
+			}
+			if (i != times.size() - 1) {
 				out << w1 + " & " + w2 + " & " + w3 + " \\\\" << endl;
 			} else {
 				out << w1 + " & " + w2 + " & " + w3 << endl;
@@ -179,21 +185,21 @@ void Logger::log(string r1, string r2, int step, vector<Tester::word> words) {
 }
 
 void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
-				 vector<Tester::word> words1, vector<Tester::word> words2) {
+				 vector<double> times, vector<bool> belongs) {
 	if (!active) return;
 	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
 	string f1 = fa1.to_txt();
 	if (out.is_open()) {
 		if (f1 != "") {
-			i += 1;
-			AutomatonToImage::to_image(f1, i);
+			image_number += 1;
+			AutomatonToImage::to_image(f1, image_number);
 			out << "Автомат\n" << endl;
 			char si[256];
 			sprintf(si,
 					"\\includegraphics[width=5in, "
 					"keepaspectratio]{./resources/output%d.png}\n",
-					i);
+					image_number);
 			out << si << endl;
 		}
 	}
@@ -212,32 +218,49 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
 		s1 = s1 + "Принадлежность языку";
 		s1 = s1 + "\\\\";
 		out << s1 << endl;
-		for (int i = 0; i < words1.size(); i++) {
-			string w1 = to_string(words1[i].iterations_num + 1);
-			string w2 = to_string(words1[i].time);
-			string w3 = to_string(words1[i].is_belongs);
-			if (i != words1.size() - 1) {
+		for (int i = 0; i < times.size(); i++) {
+			string w1 = to_string(step * i);
+			string w2 = to_string(times[i]);
+			string w3;
+			if (belongs[i]) {
+				w3 = "true";
+			} else {
+				w3 = "false";
+			}
+			if (i != times.size() - 1) {
 				out << w1 + " & " + w2 + " & " + w3 + " \\\\" << endl;
 			} else {
 				out << w1 + " & " + w2 + " & " + w3 << endl;
 			}
 		}
 		out << "\\end{tabular}\n" << endl;
-		out << "\\begin{tabular}{lll}\n" << endl;
-		out << "\\multicolumn{3}{c}{Таблица по параллельному алгоритму} \\\\"
-			<< endl;
-		out << s1 << endl;
-		for (int i = 0; i < words2.size(); i++) {
-			string w1 = to_string(words2[i].iterations_num + 1);
-			string w2 = to_string(words2[i].time);
-			string w3 = to_string(words2[i].is_belongs);
-			if (i != words2.size() - 1) {
-				out << w1 + " & " + w2 + " & " + w3 + " \\\\" << endl;
-			} else {
-				out << w1 + " & " + w2 + " & " + w3 << endl;
-			}
-		}
-		out << "\\end{tabular}\n" << endl;
+
+		// out << "\\begin{tabular}{lll}\n" << endl;
+		// out << "\\multicolumn{3}{c}{Таблица по параллельному алгоритму} \\\\"
+		// 	<< endl;
+		// string s1 = "Количество итераций";
+		// s1 = s1 + " & ";
+		// s1 = s1 + "Время парсинга";
+		// s1 = s1 + " & ";
+		// s1 = s1 + "Принадлежность языку";
+		// s1 = s1 + "\\\\";
+		// out << s1 << endl;
+		// for (int i = 0; i < times.size(); i++) {
+		// 	string w1 = to_string(step * i);
+		// 	string w2 = to_string(times[i]);
+		// 	string w3;
+		// 	if (belongs[i]) {
+		// 		w3 = "true";
+		// 	} else {
+		// 		w3 = "false";
+		// 	}
+		// 	if (i != times.size() - 1) {
+		// 		out << w1 + " & " + w2 + " & " + w3 + " \\\\" << endl;
+		// 	} else {
+		// 		out << w1 + " & " + w2 + " & " + w3 << endl;
+		// 	}
+		// }
+		// out << "\\end{tabular}\n" << endl;
 	}
 	out.close();
 }
@@ -245,7 +268,7 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
 void Logger::finish_step() {
 	if (!active) return;
 	step_counter--;
-	if (step_counter > 1) return;
+	if (step_counter > 0) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << "\\newpage\n" << endl;

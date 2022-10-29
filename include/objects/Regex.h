@@ -17,7 +17,8 @@ class FiniteAutomaton;
 struct State;
 
 struct Lexem {
-	enum Type {
+	enum Type
+	{
 		error,
 		parL, // (
 		parR, // )
@@ -36,7 +37,8 @@ struct Lexem {
 
 class Regex : BaseObject {
   private:
-	enum Type {
+	enum Type
+	{
 		// Epsilon
 		eps,
 		// Binary:
@@ -86,13 +88,14 @@ class Regex : BaseObject {
 	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
-	string to_str() const;
 	static bool equality_checker(const Regex*, const Regex*);
 	int search_replace_rec(
 		const Regex& replacing, const Regex& replaced_by,
 		Regex* original); //рекурсивный поиск заменяемого листа дерева
 	void normalize_this_regex(
 		const string& file); //переписывание regex по пользовательским правилам
+
+	void generate_alphabet(set<alphabet_symbol>& _alphabet);
 
   public:
 	Regex();
@@ -107,6 +110,7 @@ class Regex : BaseObject {
 	~Regex();
 	Regex* copy() const;
 	Regex(const Regex&);
+	Regex& operator=(const Regex& other);
 
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const string& file) const;
@@ -127,6 +131,8 @@ class Regex : BaseObject {
 	std::optional<Regex> prefix_derevative(std::string respected_str) const;
 	// Длина накачки
 	int pump_length() const;
+	// Слово, в котором все итерации Клини раскрыты n раз
+	string get_iterated_word(int n) const;
 
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
