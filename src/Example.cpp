@@ -131,7 +131,7 @@ void Example::regex_parsing() {
 		return;
 	}
 	cout << r.to_txt() << "\n";
-	// cout << r.pump_length() << "\n";
+	cout << r.pump_length() << "\n";
 	/*
 	FiniteAutomaton a;
 	FiniteAutomaton b;
@@ -375,7 +375,7 @@ void Example::fa_subset_check() {
 	states2[0].set_transition(1, "b");
 	states2[1].set_transition(2, "b");
 	states2[2].is_terminal = true;
-	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
+	FiniteAutomaton fa2(0, states2, {"b"});
 
 	cout << fa1.subset(fa2) << endl;
 }

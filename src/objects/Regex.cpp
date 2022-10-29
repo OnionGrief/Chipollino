@@ -1305,11 +1305,11 @@ int Regex::pump_length() const {
 						shared_ptr<Language>(new Language(pumping.alphabet));
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
-						language->set_pump_length(i);
-						/*cout << *it << "\n";
+						/*language->set_pump_length(i);
+						cout << *it << "\n";
 						cout << pumped_prefix << " " << pumping.term_r->to_txt()
 							 << "\n";
-						cout << to_txt();*/
+						cout << to_txt() << "\n";*/
 						return i;
 					}
 				}
@@ -1349,14 +1349,9 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 }
 
 bool Regex::subset(const Regex& r) const {
-	auto fst = to_ilieyu();
-	auto scd = r.to_ilieyu();
-
-	FiniteAutomaton dfa1(fst.determinize());
-	FiniteAutomaton dfa2(scd.determinize());
-	FiniteAutomaton dfa_instersection(
-		FiniteAutomaton::intersection(dfa1, dfa2));
-	return FiniteAutomaton::equivalent(dfa_instersection, dfa2);
+	FiniteAutomaton fa1(to_ilieyu().determinize());
+	FiniteAutomaton fa2(r.to_ilieyu().determinize());
+	return fa1.subset(fa2);
 }
 
 FiniteAutomaton Regex::to_antimirov() {
