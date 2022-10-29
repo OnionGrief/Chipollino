@@ -2,6 +2,7 @@
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
 #include "Regex.h"
+#include "Logger.h"
 #include <iostream>
 #include <regex>
 #include <string>
@@ -9,14 +10,19 @@
 #include <vector>
 
 using namespace std;
-
-class Tester {
-  public:
-	struct word {			// доступ извне Tester::word
+struct word {			// доступ извне Tester::word
 		int iterations_num; // сколько проведено итераций
 		long long time;		// время парсинга в секундах
 		bool is_belongs;	// принадлежность языку
 	};
+
+class Tester {
+  public:
+	// struct word {			// доступ извне Tester::word
+	// 	int iterations_num; // сколько проведено итераций
+	// 	long long time;		// время парсинга в секундах
+	// 	bool is_belongs;	// принадлежность языку
+	// };
 
 	struct tableRegex {
 		string r1; // язык, основанный на регулярке

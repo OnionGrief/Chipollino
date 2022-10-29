@@ -3,6 +3,7 @@
 #include "FiniteAutomaton.h"
 #include "Tester.h"
 #include <string>
+#include <vector>
 using namespace std;
 
 class Logger {
@@ -29,7 +30,7 @@ public:
 	static void log(string text, string val);
 	static void log(string a1, string a2, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	static void log(string a1, string a2, string a3, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2, const FiniteAutomaton& fa3);
-	static void log(string r1, string r2, int step, vector<Tester::word> words);
+	static void log(string r1, string r2, int step, vector<word> words);
 	static void log(const FiniteAutomaton& fa1, string r2, int step, vector<Tester::word> words1, vector<Tester::word> words2);
 	// завершение шага
 	static void finish_step();

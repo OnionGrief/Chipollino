@@ -32,6 +32,9 @@ void Tester::test(string lang, string r2, int step) {
 	/* место для вызова логгера */
 	// my_loger(tableRegex); а мб можно не так
 	// my_loger(lang, r2, step, words); без лишней структуры
+	Logger::init_step("Test");
+	Logger::log(lang, r2, step, words);
+	Logger::finish_step();
 }
 
 void Tester::test(FiniteAutomaton lang, string r2, int step) {
