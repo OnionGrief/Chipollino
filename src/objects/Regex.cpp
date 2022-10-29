@@ -698,7 +698,11 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 }
 
 FiniteAutomaton Regex::to_tompson() const {
-	return FiniteAutomaton(0, get_tompson(-1).first, language);
+	Logger::init_step("Автомат Томпсона");
+	FiniteAutomaton a(0, get_tompson(-1).first, language);
+	Logger::log(a.to_txt());
+	Logger::finish_step();
+	return a;
 }
 
 int Regex::L() const {
@@ -895,6 +899,8 @@ Regex Regex::delinearize() const {
 
 FiniteAutomaton Regex::to_glushkov() const {
 
+	Logger::init_step("Автомат Глушкова");
+
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
@@ -906,7 +912,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 	map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
 	vector<State> st; // Список состояний в автомате
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
-	/*
+
 	string str_firs = "";
 	string str_end = "";
 	string str_pair = "";
@@ -932,11 +938,16 @@ FiniteAutomaton Regex::to_glushkov() const {
 		str_end = "eps" + str_end;
 	}
 
-	cout << test.to_str_log() << endl;
-	cout << "First " << str_firs << endl;
-	cout << "End " << str_end << endl;
-	cout << "Pairs " << str_pair << endl;
-	*/
+	// cout << test.to_str_log() << endl;
+	// cout << "First " << str_firs << endl;
+	// cout << "End " << str_end << endl;
+	// cout << "Pairs " << str_pair << endl;
+
+	Logger::log("Регулярка", test.to_str_log());
+	Logger::log("First", str_firs);
+	Logger::log("End", str_end);
+	Logger::log("Pairs", str_pair);
+
 	for (size_t i = 0; i < first->size(); i++) {
 		tr[(*first)[i].symbol].insert((*first)[i].number + 1);
 	}
@@ -960,10 +971,14 @@ FiniteAutomaton Regex::to_glushkov() const {
 	}
 	delete first;
 	delete end;
+	FiniteAutomaton a(0, st, language);
+	Logger::log(a.to_txt());
+	Logger::finish_step();
 	return FiniteAutomaton(0, st, language);
 }
 
 FiniteAutomaton Regex::to_ilieyu() const {
+	Logger::init_step("Автомат Илия–Ю");
 	FiniteAutomaton glushkov = this->to_glushkov();
 	vector<State> states = glushkov.states;
 	vector<int> follow;
@@ -1001,7 +1016,6 @@ FiniteAutomaton Regex::to_ilieyu() const {
 		}
 	}
 
-	/*
 	string str_follow;
 	for (size_t i = 0; i < new_states.size(); i++) {
 		int state_ind = new_states[i].index;
@@ -1013,8 +1027,9 @@ FiniteAutomaton Regex::to_ilieyu() const {
 		str_follow = str_follow + ";\n";
 	}
 
-	cout << str_follow;
-	*/
+	// cout << str_follow;
+	Logger::log("Автомат Глушкова", glushkov.to_txt());
+	Logger::log("Follow-отношения", str_follow);
 
 	for (size_t i = 0; i < new_states.size(); i++) {
 		State v1 = new_states[i];
@@ -1038,8 +1053,10 @@ FiniteAutomaton Regex::to_ilieyu() const {
 	for (size_t i = 0; i < new_states.size(); i++) {
 		new_states[i].index = i;
 	}
-
-	return FiniteAutomaton(0, new_states, glushkov.language);
+	FiniteAutomaton a(0, new_states, glushkov.language);
+	Logger::log("Итог", a.to_txt());
+	Logger::finish_step();
+	return a;
 }
 bool Regex::is_eps_possible() {
 	switch (type) {
@@ -1439,7 +1456,7 @@ bool Regex::subset(const Regex& r) const {
 }
 
 FiniteAutomaton Regex::to_antimirov() const {
-
+	Logger::init_step("Автомат Антимирова");
 	map<set<string>, set<string>> trans;
 	vector<Regex> states;
 	vector<Regex> alph_regex;
@@ -1515,7 +1532,12 @@ FiniteAutomaton Regex::to_antimirov() const {
 
 	// cout << derev_log;
 	// cout << str_state << endl;
-	return FiniteAutomaton(0, automat_state, language);
+	Logger::log(derev_log, str_state);
+
+	FiniteAutomaton a(0, automat_state, language);
+	Logger::log(a.to_txt());
+	Logger::finish_step();
+	return a;
 }
 
 string Regex::to_str_log() const {

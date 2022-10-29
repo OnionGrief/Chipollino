@@ -126,7 +126,6 @@ void Example::regex_parsing() {
 	// regl = regl + regr;				 // "a|b|(((||)))";
 	//  egl = "a()a))";			  // regl + regr;
 	regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
-	regl = "a12|b34";
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
@@ -147,7 +146,7 @@ void Example::regex_parsing() {
 
 	cout << "to_glushkov ------------------------------\n";
 	a = r.to_glushkov();
-	// cout << a.to_txt();
+	cout << a.to_txt();
 	cout << "to_ilieyu  ------------------------------\n";
 	b = r.to_ilieyu();
 	cout << b.to_txt();
