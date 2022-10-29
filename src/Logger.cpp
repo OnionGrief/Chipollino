@@ -146,7 +146,7 @@ void Logger::log(string r1, string r2, int step, vector<Tester::word> words) {
 		s1 = s1 + "\\\\";
 		out << s1 <<endl;
 		for (int i = 0; i < words.size(); i++) {
-			string w1 = to_string(words[i].iterations_num);
+			string w1 = to_string(words[i].iterations_num + 1);
 			string w2 = to_string(words[i].time);
 			string w3 = to_string(words[i].is_belongs);
 			if (i != words.size()-1) {
@@ -182,7 +182,7 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step, vector<Tester:
 	out.open("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << "\\begin{tabular}{lll}\n" << endl;
-		out << "Таблица по алгоритму с возвратами: & & \\\\" << endl;
+		out << "\\multicolumn{3}{c}{Таблица по алгоритму с возвратами} \\\\" << endl;
 		string s1 = "Количество итераций";
 		s1 = s1 + " & ";
 		s1 = s1 + "Время парсинга";
@@ -191,7 +191,7 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step, vector<Tester:
 		s1 = s1 + "\\\\";
 		out << s1 <<endl;
 		for (int i = 0; i < words1.size(); i++) {
-			string w1 = to_string(words1[i].iterations_num);
+			string w1 = to_string(words1[i].iterations_num + 1);
 			string w2 = to_string(words1[i].time);
 			string w3 = to_string(words1[i].is_belongs);
 			if (i != words1.size()-1) {
@@ -203,10 +203,10 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step, vector<Tester:
 		}
 		out << "\\end{tabular}\n" << endl;
 		out << "\\begin{tabular}{lll}\n" << endl;
-		out << "Таблица по параллельному алгоритму: & & \\\\" << endl;
+		out << "\\multicolumn{3}{c}{Таблица по параллельному алгоритму} \\\\" << endl;
 		out << s1 <<endl;
 		for (int i = 0; i < words2.size(); i++) {
-			string w1 = to_string(words2[i].iterations_num);
+			string w1 = to_string(words2[i].iterations_num + 1);
 			string w2 = to_string(words2[i].time);
 			string w3 = to_string(words2[i].is_belongs);
 			if (i != words2.size()-1) {
