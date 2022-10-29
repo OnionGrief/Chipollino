@@ -217,7 +217,8 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
 
-	vector<alphabet_symbol> v = {char_to_alphabet_symbol(lexems[index_start].symbol)};
+	vector<alphabet_symbol> v = {
+		char_to_alphabet_symbol(lexems[index_start].symbol)};
 	set<alphabet_symbol> s(v.begin(), v.end());
 
 	p->alphabet = s;
@@ -838,7 +839,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
 
 	for (size_t i = 0; i < first->size(); i++) {
-		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert((*first)[i].number + 1);
+		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert(
+			(*first)[i].number + 1);
 	}
 
 	if (eps_in) {
@@ -852,8 +854,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 		tr = {};
 
 		for (size_t j = 0; j < p[elem.number].size(); j++) {
-			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)].insert(p[elem.number][j] +
-															 1);
+			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)]
+				.insert(p[elem.number][j] + 1);
 		}
 		string s = elem.symbol + to_string(i + 1);
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));

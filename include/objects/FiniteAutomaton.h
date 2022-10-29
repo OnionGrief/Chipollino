@@ -37,6 +37,7 @@ class FiniteAutomaton : public BaseObject {
 
 	enum AmbiguityValue {
 		exponentially_ambiguous,
+		almost_unambigious,
 		unambigious,
 		polynomially_ambigious
 	};

@@ -892,8 +892,7 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	return equivalent(dfa_instersection, dfa2); // TODO
 }
 
-<<<<<<< HEAD
-FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
+vector<int> get_path_number(vector<State> states, int max_n) {
 	int s = states.size(); // число состояний КА
 	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
 	for (int i = 0; i < s; i++)
@@ -905,13 +904,11 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 			cout << t << " ";
 		cout << endl;
 	}*/
+	vector<int> paths_number(max_n); // число путей длины i в автомате
 
-	vector<int> paths_number(s * s); // число путей длины i в автомате
-
-	cout << endl;
-	vector<vector<int>> d(s * s + 1, vector<int>(s));
+	vector<vector<int>> d(max_n + 1, vector<int>(s));
 	d[0][0] = 1;
-	for (int k = 1; k < s * s + 1; k++) {
+	for (int k = 1; k < max_n + 1; k++) {
 		for (int v = 0; v < s; v++) {
 			for (int i = 0; i < s; i++) {
 				d[k][v] += adjacency_matrix[i][v] * d[k - 1][i];
@@ -919,12 +916,40 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 			if (states[v].is_terminal) paths_number[k - 1] += d[k][v];
 			// cout << d[k][v] << " ";
 		}
-		cout << paths_number[k - 1] << " ";
+		// cout << paths_number[k - 1] << " ";
 	}
-	cout << endl;
+	// cout << endl;
+	return paths_number;
+}
+
+double foo(int i, int n, const vector<double>& func) {
+	// cout << i << " " << n << endl;
+	if (i == 1) return func[n] - func[n - 1];
+	return foo(i - 1, n + 1, func) - foo(i - 1, n, func);
+}
+
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
+	int N = states.size() * states.size() * 200;
+	vector<int> path_number = get_path_number(states, N);
+
+	FiniteAutomaton min_fa = minimize();
+
+	vector<int> min_fa_path_number = get_path_number(min_fa.states, N);
+
+	vector<double> func(N);
+	for (int i = 0; i < N; i++)
+		if (min_fa_path_number[i] != 0)
+			func[i] = double(path_number[i]) / min_fa_path_number[i];
+
+	/*for (auto t : func)
+		cout << t << ", ";
+	cout << endl;*/
+
+	cout << foo(states.size() + 3, N - states.size() - 3, func) << endl;
+
 	return FiniteAutomaton::exponentially_ambiguous;
 }
-=======
+
 /*
 Джун программист прибегает с проекта к своему ментору и кричит:
 — Меня отпустили с проекта пораньше!
@@ -950,4 +975,3 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 вскликает:
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
->>>>>>> main
