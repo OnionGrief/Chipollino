@@ -134,6 +134,7 @@ class Regex : BaseObject {
 
 	Regex linearize() const;
 	Regex delinearize() const;
+	Regex deannote() const;
 };
 
 /*

@@ -1534,3 +1534,17 @@ string Regex::to_str_log() const {
 
 	return str1 + symb + str2;
 }
+
+Regex Regex::deannote() const {
+	Regex old_regex(*this);
+	string with_number = old_regex.to_txt();
+	string new_string;
+	for (size_t i = 0; i < with_number.size(); i++) {
+		if (!('0' <= with_number[i] && with_number[i] <= '9')) {
+			new_string += with_number[i];
+		}
+	}
+	Regex new_regex;
+	new_regex.from_string(new_string);
+	return new_regex;
+}
