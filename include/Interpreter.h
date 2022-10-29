@@ -18,7 +18,9 @@ class Interpreter {
 
   private:
 	// Применение функции к набору аргументов
-	GeneralObject apply_function(Function, vector<ObjectType>); // TODO
+	GeneralObject apply_function(
+		const Function& function,
+		const vector<GeneralObject>& arguments); // TODO
 
 	// Тут хранятся объекты по их id
 	map<string, GeneralObject> objects;
@@ -69,8 +71,8 @@ class Interpreter {
 	optional<Predicate> scan_predicate(vector<Lexem>);		  // TODO
 	optional<GeneralOperation> scan_operation(vector<Lexem>); // TODO
 
-    // Список опреаций для последовательного выполнения
-    vector<GeneralOperation> operations;
+	// Список опреаций для последовательного выполнения
+	vector<GeneralOperation> operations;
 
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(
@@ -82,7 +84,7 @@ class Interpreter {
 	// разумеется, генерировать эту мапу можно при инициализации
 	map<string, vector<Function>> names_to_functions;
 	// Заполнение мапы names_to_functions по сету functions
-	//void generate_function_mapping(); // TODO
+	// void generate_function_mapping(); // TODO
 
 	struct Lexem {
 		enum Type { // TODO добавить тип строки (для filename)

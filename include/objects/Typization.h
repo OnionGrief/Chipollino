@@ -32,11 +32,12 @@ template <ObjectType T, class V> struct ObjectHolder {
 };
 
 using ObjectNFA = ObjectHolder<ObjectType::NFA, FiniteAutomaton>;
-using ObjectDFA = ObjectHolder<ObjectType::NFA, FiniteAutomaton>;
+using ObjectDFA = ObjectHolder<ObjectType::DFA, FiniteAutomaton>;
 using ObjectRegex = ObjectHolder<ObjectType::Regex, Regex>;
 using ObjectInt = ObjectHolder<ObjectType::Int, int>;
 using ObjectFileName = ObjectHolder<ObjectType::FileName, string>;
 using ObjectBoolean = ObjectHolder<ObjectType::Boolean, bool>;
+using ObjectValue = ObjectHolder<ObjectType::Value, optional<bool>>;
 
 // Универсальный объект
 using GeneralObject = variant<ObjectHolder<ObjectType::NFA, FiniteAutomaton>,
@@ -60,4 +61,7 @@ struct Function {
 	Function(string name, vector<ObjectType> input, ObjectType output)
 		: name(name), input(input), output(output){};
 };
+
+
+
 }; // namespace Typization

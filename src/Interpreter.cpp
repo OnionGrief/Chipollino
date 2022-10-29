@@ -5,6 +5,10 @@
 #include <string>
 using namespace std;
 
+bool operator==(const Function& l, const Function& r) {
+	return l.name == r.name && l.input == r.input && l.output == r.output;
+}
+
 Interpreter::Interpreter() {
 	names_to_functions = {
 		{"Thompson", {{"Thompson", {ObjectType::Regex}, ObjectType::NFA}}},
@@ -70,6 +74,25 @@ void Interpreter::load_file(const string& filename) {
 			operations.push_back(*op);
 		}
 	}
+}
+
+GeneralObject Interpreter::apply_function(
+	const Function& function, const vector<GeneralObject>& arguments) {
+
+	// Можээт прыгодыытся
+	const auto nfa = ObjectType::NFA;
+	const auto dfa = ObjectType::DFA;
+	const auto regex = ObjectType::Regex;
+	const auto integer = ObjectType::Int;
+	const auto filename = ObjectType::FileName;
+	const auto boolean = ObjectType::Boolean;
+	const auto value = ObjectType::Value;
+
+	if (function.name == "Glushkov") {
+		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_glushkov());
+	}
+
+	return GeneralObject();
 }
 
 optional<vector<Function>> Interpreter::build_function_sequence(
@@ -320,3 +343,12 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	}
 	return nullopt;
 }
+
+/*
+Был такой анекдот: человек приходит к врачу. У него депрессия. Говорит, жизнь
+жестока и несправедлива. Говорит, он один-одинешенек в этом ужасном и мрачном
+мире, где будущее вечно скрыто во мраке. Врач говорит: «Лекарство очень простое.
+Сегодня в цирке выступает великий клоун Пальяччи. Сходите, посмотрите на него.
+Это вам поможет.» Человек разражается слезами. И говорит: «Но, доктор… … я и
+есть Пальяччи». Хороший анекдот. Всем смеяться.
+*/
