@@ -586,8 +586,7 @@ void Example::table() {
 	Logger::activate();
 	Logger::init();
 	Logger::init_step(s);
-	Logger::log("(a|ab)*", "((ab)*a)*", 2, words);
-	Logger::log(dfa3, "((ab)*a)*", 2, words, words);
+	tester();
 	Logger::finish_step();
 	Logger::finish();
 	Logger::deactivate();

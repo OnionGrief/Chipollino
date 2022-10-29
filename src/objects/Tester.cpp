@@ -2,6 +2,8 @@
 
 void Tester::test(string lang, string r2, int step) {
 	vector<word> words;
+	vector<int> times;
+	vector<bool> booleans;
 	Regex r;
 	r.from_string(r2);
 	FiniteAutomaton automaton = r.to_tompson();
@@ -18,11 +20,12 @@ void Tester::test(string lang, string r2, int step) {
 		int time = (end - start); // ((clock_t)100);
 		// cout << " " << time << endl;
 		// cout << is_belongs << endl;
-		words.push_back({i * step, time, is_belongs});
+		times.push_back(time);
+		booleans.push_back(is_belongs);
 		if (time >= 180) return;
 	}
 	Logger::init_step("Test");
-	Logger::log(lang, r2, step, words);
+	Logger::log(lang, r2, step, times, booleans);
 	Logger::finish_step();
 }
 
