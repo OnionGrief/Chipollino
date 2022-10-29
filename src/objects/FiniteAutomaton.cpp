@@ -476,6 +476,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 	bool flag = true;
 	int count = new_dfa.states.size();
 	for (int i = 0; i < count; i++) {
+
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			if (!new_dfa.states[i].transitions[symb].size()) {
 				if (flag) {
@@ -899,6 +900,10 @@ State FiniteAutomaton::get_state(int i) {
 	return states[i];
 }
 
+const set<alphabet_symbol>& FiniteAutomaton::get_alphabet() {
+
+	return language->get_alphabet();
+}
 /*
 Джун программист прибегает с проекта к своему ментору и кричит:
 — Меня отпустили с проекта пораньше!

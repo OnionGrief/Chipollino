@@ -15,7 +15,7 @@ struct Transition {
 };
 struct Term {
 	bool isFinal = false;
-	string name;
+	vector<alphabet_symbol> name;
 	vector<Transition> Transitions;
 };
 struct TermDouble {
@@ -24,9 +24,9 @@ struct TermDouble {
 };
 class TransformationMonoid : public BaseObject {
   private:
-	FiniteAutomaton* automat;		   //Ссылка на автомат
-	vector<Term> terms;				   //Эквивалентные классы
-	map<string, vector<string>> rules; //Правила переписывания
+	FiniteAutomaton* automat; //Ссылка на автомат
+	vector<Term> terms;		  //Эквивалентные классы
+	map<vector<string>, vector<vector<string>>> rules; //Правила переписывания
 	vector<vector<bool>> equivalence_class_table;
 
   public:
@@ -37,7 +37,7 @@ class TransformationMonoid : public BaseObject {
 	vector<Term> get_Equalence_Classes_VW(Term w);
 	vector<Term> get_Equalence_Classes_WV(Term w);
 	vector<TermDouble> get_Equalence_Classes_VWV(Term w);
-	map<string, vector<string>> get_Rewriting_Rules();
+	map<vector<string>, vector<vector<string>>> get_Rewriting_Rules();
 	string get_Equalence_Classes_Txt(); //вывод эквивалентных классов
 	string get_Rewriting_Rules_Txt(); //вывод правил переписывания
 	string to_txt() const override;

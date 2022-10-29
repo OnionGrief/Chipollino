@@ -1,33 +1,50 @@
 #include "TransformationMonoid.h"
+
 #include <iostream>
 using namespace std;
-
+vector<string> union_words(vector<string> a, vector<string> b) {
+	vector<string> newword;
+	for (int i = 0; i < a.size(); i++) {
+		newword.push_back(a[i]);
+	}
+	for (int i = 0; i < b.size(); i++) {
+		newword.push_back(b[i]);
+	}
+	return newword;
+}
 //получаем	все	перестановки	алфавита	длины	len
-vector<string> get_comb_alphabet(int len, vector<char> alphabet) {
-	vector<string> newcomb;
+vector<vector<string>> get_comb_alphabet(int len,
+										 const set<alphabet_symbol>& alphabet) {
+
+	vector<vector<string>> newcomb;
 	if (len == 0) {
 		return newcomb;
 	}
-	for (int i = 0; i < alphabet.size(); i++) {
-		string temp;
-		temp += alphabet[i];
+
+	for (set<alphabet_symbol>::iterator it = alphabet.begin();
+		 it != alphabet.end(); it++) {
+
+		// for (int i = 0; i < alphabet.size(); i++) {
+		vector<string> temp;
+		temp.push_back(*it); // alphabet[i];
 		newcomb.push_back(temp);
 	}
 	if (len == 1) {
 		return newcomb;
 	}
-	vector<string> comb;
-	vector<string> oldcomb = get_comb_alphabet(len - 1, alphabet);
+	vector<vector<string>> comb;
+	vector<vector<string>> oldcomb = get_comb_alphabet(len - 1, alphabet);
 	for (int i = 0; i < newcomb.size(); i++) {
 		for (int j = 0; j < oldcomb.size(); j++) {
-			comb.push_back(newcomb[i] + oldcomb[j]);
+			comb.push_back(union_words(newcomb[i], oldcomb[j]));
 		}
 	}
 	return comb;
 }
 
 //Проверяем	встречался	ли	терм	раньше
-string was_Term(vector<Term> allTerms, vector<Transition> curTransition) {
+vector<string> was_Term(vector<Term> allTerms,
+						vector<Transition> curTransition) {
 	bool cond = true;
 	for (int i = 0; i < allTerms.size(); i++) {
 		cond = true;
@@ -47,29 +64,30 @@ string was_Term(vector<Term> allTerms, vector<Transition> curTransition) {
 			return allTerms[i].name;
 		}
 	}
-	return "";
+	return {};
 }
 
 TransformationMonoid::TransformationMonoid(){};
 
 //переписывание терма
-string rewriting(string in, map<string, vector<string>> rules) {
+vector<string> rewriting(vector<string> in,
+						 map<vector<string>, vector<vector<string>>> rules) {
 	if (in.size() < 3) {
 		return in;
 	}
-	string out = "";
+	vector<string> out;
 	bool cond = true;
 	for (int k = 2; cond && (k < in.size()); k++) {
 		for (int i = 0; cond && (i < in.size() - k + 1); i++) {
-			string temp = "";
+			vector<string> temp;
 			for (int y = 0; y < k; y++) {
-				temp += in[i + y];
+				temp.push_back(in[i + y]);
 			}
-			cout << temp << " ";
+			// cout << temp << " ";
 			if ((rules.count(temp)) && (rules.at(temp)[0] != temp)) {
 				cond = false;
-				cout << "rulesat " << rules.at(temp)[0] << "\n";
-				// out += rules.at(temp)[0];
+				// cout << "rulesat " << rules.at(temp)[0] << "\n";
+				//  out += rules.at(temp)[0];
 			}
 		}
 	}
@@ -79,21 +97,24 @@ string rewriting(string in, map<string, vector<string>> rules) {
 	} else {
 		out = rewriting(out, rules);
 	}
-	return "";
+	return {};
 }
 
 TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 										   int transferlen) {
 	automat = in;
 	for (int i = 1; i <= transferlen; i++) {
-		vector<string> various = get_comb_alphabet(i, in->get_state[0]._;
+
+		vector<vector<string>> various =
+			get_comb_alphabet(i, in->get_alphabet());
 		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
 		{
 			Term current;
-			cout << various[j] << " 1 \n";
+			// cout << various[j] << " 1 \n";
+			current.name = various[j];
 			current.name = rewriting(various[j], rules);
 
-			cout << current.name << " 2 \n";
+			// cout << current.name << " 2 \n";
 
 			//вставить переписывание слова
 
@@ -111,8 +132,8 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 				{
 					State a = automat->get_state(endsost);
 					if (a.transitions.count(current.name[k])) {
-						vector<int> temp = a.transitions.at(current.name[k]);
-						endsost = temp[0];
+						set<int> temp = a.transitions.at(current.name[k]);
+						endsost = *temp.begin();
 					} else {
 						cond = false;
 					}
@@ -123,9 +144,9 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 				}
 			}
 
-			string eqv = was_Term(terms, current.Transitions);
-			if (eqv == "") //Если	не	встретился	в
-						   //Эквивалентных классах
+			vector<string> eqv = was_Term(terms, current.Transitions);
+			if (eqv.size() == 0) //Если	не	встретился	в
+								 //Эквивалентных классах
 			{
 				bool cond = true;
 				if (current.Transitions.size() != automat->get_states_size()) {
@@ -143,7 +164,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 				terms.push_back(current);
 			} else {
 				if (!rules.count(current.name) && current.name != eqv) {
-					cout << current.name << " dad\n";
+					// cout << current.name << " dad\n";
 					rules[current.name].push_back(eqv);
 				}
 				//	cout	<<	current.name	<<	"->"	<<
@@ -161,14 +182,21 @@ vector<Term> TransformationMonoid::get_Equalence_Classes() {
 	return terms;
 }
 
-map<string, vector<string>> TransformationMonoid::get_Rewriting_Rules() {
+map<vector<string>, vector<vector<string>>> TransformationMonoid::
+	get_Rewriting_Rules() {
 	return rules;
 }
-
+string to_str(vector<string> in) {
+	string out = "";
+	for (int i = 0; i < in.size(); i++) {
+		out += in[i];
+	}
+	return out;
+}
 string TransformationMonoid::get_Equalence_Classes_Txt() {
 	stringstream ss;
 	for (int i = 0; i < terms.size(); i++) {
-		ss << "Term	" << terms[i].name << "	in	language	"
+		ss << "Term	" << to_str(terms[i].name) << "	in	language	"
 		   << terms[i].isFinal << "\n";
 		for (int j = 0; j < terms[i].Transitions.size(); j++) {
 			ss << terms[i].Transitions[j].first << "	->	"
@@ -182,7 +210,8 @@ string TransformationMonoid::get_Rewriting_Rules_Txt() {
 	stringstream ss;
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
-			ss << item.first << "	->	" << item.second[i] << "\n";
+			ss << to_str(item.first) << "	->	" << to_str(item.second[i])
+			   << "\n";
 		}
 	}
 	return ss.str();
@@ -358,7 +387,8 @@ int TransformationMonoid::size_MyhillNerode() {
 
 //Вычисление Минимальности (1 если минимальный)
 bool TransformationMonoid::is_minimality() {
-	map<string, int> data; //храним ссылку на Терм (быстрее и проще искать)
+	map<vector<string>, int>
+		data; //храним ссылку на Терм (быстрее и проще искать)
 	for (int i = 0; i < terms.size(); i++) {
 		data[terms[i].name] = i;
 	}
@@ -393,14 +423,14 @@ string TransformationMonoid::to_Txt_MyhillNerode() {
 	stringstream ss;
 	ss << "    e   ";
 	for (int i = 0; i < terms.size(); i++) {
-		ss << terms[i].name << string(4 - terms[i].name.size(), ' ');
+		ss << to_str(terms[i].name) << string(4 - terms[i].name.size(), ' ');
 	}
 	ss << "\n";
 	for (int i = 0; i < equivalence_class_table.size(); i++) { //вывод матрицы
 		if (i == 0) {
 			ss << "e   ";
 		} else {
-			ss << terms[i - 1].name
+			ss << to_str(terms[i - 1].name)
 			   << string(4 - terms[i - 1].name.size(), ' ');
 		}
 		for (int j = 0; j < equivalence_class_table[0].size();
