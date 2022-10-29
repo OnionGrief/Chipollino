@@ -447,6 +447,7 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 FiniteAutomaton FiniteAutomaton::complement() const {
 	FiniteAutomaton new_dfa =
 		FiniteAutomaton(initial_state, states, language->get_alphabet());
+	new_dfa = new_dfa.determinize();
 	for (int i = 0; i < new_dfa.states.size(); i++) {
 		new_dfa.states[i].is_terminal = !new_dfa.states[i].is_terminal;
 	}
