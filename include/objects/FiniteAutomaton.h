@@ -34,6 +34,10 @@ class FiniteAutomaton : public BaseObject {
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	set<int> closure(const set<int>&, bool) const;
+	static bool equality_checker(const FiniteAutomaton& fa1,
+								 const FiniteAutomaton& fa2);
+	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
+									 const FiniteAutomaton& fa2);
 
   public:
 	FiniteAutomaton();

@@ -1,6 +1,6 @@
 #include "Logger.h"
-#include <iostream>
 #include <fstream>
+#include <iostream>
 using namespace std;
 
 Logger::Logger() {}
@@ -32,43 +32,45 @@ void Logger::init() {
 		out << "\\maketitle" << endl;
 		out << "\\newpage" << endl;
 	}
-	out.close(); 
+	out.close();
 }
 
 void Logger::init_step(string step_name) {
 	if (!active) return;
-	if (skip) return;
+	step_counter++;
+	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << step_name + "\n" << endl;
 	}
-	out.close(); 
+	out.close();
 }
 
 void Logger::log(string text) {
 	if (!active) return;
-	if (skip) return;
+	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
-		out << text + "\n" <<endl;
+		out << text + "\n" << endl;
 	}
 	out.close();
 }
 
 void Logger::log(string text, string val) {
 	if (!active) return;
-	if (skip) return;
+	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + ": ";
-		out << val + "\n" <<endl;
+		out << val + "\n" << endl;
 	}
 	out.close();
 }
 
-void Logger::log(string a1, string a2, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
+void Logger::log(string a1, string a2, const FiniteAutomaton& fa1,
+				 const FiniteAutomaton& fa2) {
 	if (!active) return;
-	if (skip) return;
+	if (step_counter > 1) return;
 	string f1 = fa1.to_txt();
 	string f2 = fa2.to_txt();
 	ofstream out("./resources/report.tex", ios::app);
@@ -78,7 +80,10 @@ void Logger::log(string a1, string a2, const FiniteAutomaton& fa1, const FiniteA
 			AutomatonToImage::to_image(f1, i);
 			out << a1 + "\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
+			sprintf(si,
+					"\\includegraphics[width=5in, "
+					"keepaspectratio]{./resources/output%d.png}\n",
+					i);
 			out << si << endl;
 		}
 		if (f2 != "") {
@@ -86,16 +91,20 @@ void Logger::log(string a1, string a2, const FiniteAutomaton& fa1, const FiniteA
 			AutomatonToImage::to_image(f2, i);
 			out << a2 + "\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
+			sprintf(si,
+					"\\includegraphics[width=5in, "
+					"keepaspectratio]{./resources/output%d.png}\n",
+					i);
 			out << si << endl;
 		}
 	}
 	out.close();
 }
 
-void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1, const FiniteAutomaton& fa2, const FiniteAutomaton& fa3) {
+void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
+				 const FiniteAutomaton& fa2, const FiniteAutomaton& fa3) {
 	if (!active) return;
-	if (skip) return;
+	if (step_counter > 1) return;
 	string f1 = fa1.to_txt();
 	string f2 = fa2.to_txt();
 	string f3 = fa3.to_txt();
@@ -106,7 +115,10 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1, co
 			AutomatonToImage::to_image(f1, i);
 			out << a1 + "\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
+			sprintf(si,
+					"\\includegraphics[width=5in, "
+					"keepaspectratio]{./resources/output%d.png}\n",
+					i);
 			out << si << endl;
 		}
 		if (f2 != "") {
@@ -114,7 +126,10 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1, co
 			AutomatonToImage::to_image(f2, i);
 			out << a2 + "\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
+			sprintf(si,
+					"\\includegraphics[width=5in, "
+					"keepaspectratio]{./resources/output%d.png}\n",
+					i);
 			out << si << endl;
 		}
 		if (f3 != "") {
@@ -122,7 +137,10 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1, co
 			AutomatonToImage::to_image(f3, i);
 			out << a3 + "\n" << endl;
 			char si[256];
-    		sprintf(si, "\\includegraphics[width=5in, keepaspectratio]{./resources/output%d.png}\n", i);
+			sprintf(si,
+					"\\includegraphics[width=5in, "
+					"keepaspectratio]{./resources/output%d.png}\n",
+					i);
 			out << si << endl;
 		}
 	}
@@ -131,15 +149,13 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1, co
 
 void Logger::finish_step() {
 	if (!active) return;
-	if (skip) {
-		skip = false;
-		return;
-	}
+	step_counter--;
+	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << "\\newpage\n" << endl;
 	}
-	out.close(); 
+	out.close();
 }
 
 void Logger::finish() {
@@ -149,10 +165,6 @@ void Logger::finish() {
 	}
 	out.close();
 	char cmd[1024];
-    sprintf(cmd, "pdflatex \"./resources/report.tex\"");
-    system(cmd); 
-}
-
-void Logger::skip_next_step() {
-	skip = true;
+	sprintf(cmd, "pdflatex \"./resources/report.tex\"");
+	system(cmd);
 }

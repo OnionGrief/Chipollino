@@ -397,7 +397,6 @@ void Example::step() {
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa1, fa2);
 	Logger::finish_step();
-	Logger::skip_next_step();
 	s = "skip";
 	Logger::activate();
 	Logger::init_step(s);
@@ -465,7 +464,8 @@ void Example::step_interection() {
 	Logger::activate();
 	Logger::init();
 	Logger::init_step(s);
-	Logger::log("Автомат1", "Автомат2", "Пересечение автоматов", dfa1, dfa2, dfa3);
+	Logger::log("Автомат1", "Автомат2", "Пересечение автоматов", dfa1, dfa2,
+				dfa3);
 	Logger::finish_step();
 	Logger::finish();
 	Logger::deactivate();

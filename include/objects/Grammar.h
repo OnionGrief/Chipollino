@@ -12,26 +12,14 @@ struct GrammarItem {
 		terminal,
 		nonterminal
 	};
-	Type type;
-	int state_index, class_number;
-	string term_name;
-	GrammarItem()
-		: type(terminal), state_index(-1), class_number(-1), term_name("") {}
-	GrammarItem(Type type, int state_index, int class_number)
-		: type(type), state_index(state_index), class_number(class_number) {}
-	GrammarItem(Type type, string term_name)
-		: type(type), term_name(term_name) {}
-	bool operator!=(const GrammarItem& other) {
-		return type != other.type || state_index != other.state_index ||
-			   class_number != other.class_number ||
-			   term_name != other.term_name;
-	}
-	void operator=(const GrammarItem& other) {
-		type = other.type;
-		state_index = other.state_index;
-		class_number = other.class_number;
-		term_name = other.term_name;
-	}
+	Type type = terminal;
+	int state_index = -1, class_number = -1;
+	string name = "";
+	GrammarItem();
+	GrammarItem(Type type, string name, int state_index, int class_number);
+	GrammarItem(Type type, string name);
+	bool operator!=(const GrammarItem& other);
+	void operator=(const GrammarItem& other);
 };
 // для отладки
 ostream& operator<<(ostream& os, const GrammarItem& item);
@@ -50,7 +38,7 @@ class Grammar {
 	static vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
 		vector<vector<vector<GrammarItem*>>>& rules,
 		vector<GrammarItem*>& nonterminals,
-		vector<GrammarItem*>& bisimilar_nonterminals);
+		vector<GrammarItem*>& bisimilar_nonterminals, bool log_flag = false);
 	// преобразование конечного автомата в грамматику
 	// в векторе терминалов по 0му индексу лежит epsilon,
 	// по terminals.size()-1 лежит initial

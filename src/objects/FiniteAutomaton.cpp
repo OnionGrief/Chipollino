@@ -1,6 +1,7 @@
 #include "FiniteAutomaton.h"
 #include "Grammar.h"
 #include "Language.h"
+#include "Logger.h"
 #include <algorithm>
 #include <iostream>
 #include <set>
@@ -642,25 +643,30 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 }
 
 FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
+	Logger::init_step("MergeBisim");
+
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
 	vector<GrammarItem*> terminals;
-
 	vector<vector<vector<GrammarItem*>>> rules = Grammar::fa_to_grammar(
 		states, language->get_alphabet(), fa_items, nonterminals, terminals);
-
 	vector<GrammarItem*> bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
 		Grammar::get_bisimilar_grammar(rules, nonterminals,
-									   bisimilar_nonterminals);
+									   bisimilar_nonterminals, true);
 	vector<int> classes;
 	for (const auto& nont : nonterminals)
 		classes.push_back(nont->class_number);
-	return merge_equivalent_classes(classes);
+	FiniteAutomaton result_fa = merge_equivalent_classes(classes);
+
+	Logger::log("Автомат до преобразования", "Автомат после преобразования",
+				*this, result_fa);
+	Logger::finish_step();
+	return result_fa;
 }
 
-bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
-								const FiniteAutomaton& fa2) {
+bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
+										   const FiniteAutomaton& fa2) {
 	// грамматики из автоматов
 	vector<GrammarItem> fa1_items;
 	vector<GrammarItem*> fa1_nonterminals;
@@ -705,7 +711,7 @@ bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
 	vector<GrammarItem*> bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
 		Grammar::get_bisimilar_grammar(rules, nonterminals,
-									   bisimilar_nonterminals);
+									   bisimilar_nonterminals, true);
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
@@ -717,8 +723,22 @@ bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
 	return true;
 }
 
-bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
-							const FiniteAutomaton& fa2) {
+bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
+								const FiniteAutomaton& fa2) {
+	Logger::init_step("Bisimilar");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
+	bool result = bisimilarity_checker(fa1, fa2);
+	if (result)
+		Logger::log("Результат Bisimilar", "true");
+	else
+		Logger::log("Результат Bisimilar", "false");
+	Logger::finish_step();
+	return result;
+}
+
+bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1,
+									   const FiniteAutomaton& fa2) {
 	// проверка равенства количества состояний
 	if (fa1.states.size() != fa2.states.size()) return false;
 	// грамматики из состояний автоматов
@@ -880,16 +900,47 @@ bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
 	return true;
 }
 
+bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
+							const FiniteAutomaton& fa2) {
+	Logger::init_step("Equal");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
+	bool result = equality_checker(fa1, fa2);
+	if (result)
+		Logger::log("Результат Equal", "true");
+	else
+		Logger::log("Результат Equal", "false");
+	Logger::finish_step();
+	return result;
+}
+
 bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 								 const FiniteAutomaton& fa2) {
-	return equal(fa1.minimize(), fa2.minimize());
+	Logger::init_step("Equiv");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
+	bool result = equal(fa1.minimize(), fa2.minimize());
+	if (result)
+		Logger::log("Результат Equiv", "true");
+	else
+		Logger::log("Результат Equiv", "false");
+	Logger::finish_step();
+	return result;
 }
 
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
+	Logger::init_step("Subset");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", *this, fa);
 	FiniteAutomaton dfa1(determinize());
 	FiniteAutomaton dfa2(fa.determinize());
 	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
-	return equivalent(dfa_instersection, dfa2); // TODO
+	bool result = equivalent(dfa_instersection, dfa2);
+	if (result)
+		Logger::log("Результат Subset", "true");
+	else
+		Logger::log("Результат Subset", "false");
+	return result;
 }
 
 /*
