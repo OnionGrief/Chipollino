@@ -7,6 +7,6 @@ int main() {
 	cout << "Chipollino :-)\n";
 	// Example ex;
 	//	 ex.regex_parsing();
-	// Example::arden_test();
-	Example::regex_parsing();
+	Example::arden_test();
+	// Example::regex_parsing();
 }

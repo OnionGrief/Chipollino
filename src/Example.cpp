@@ -151,6 +151,7 @@ void Example::regex_parsing() {
 	d = r.to_antimirov();
 	cout << d.to_txt();
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
+	// cout << nfa_to_regex(d).to_txt();
 }
 
 void Example::regex_generating() {
@@ -487,5 +488,5 @@ void Example::arden_test() {
 
 	FiniteAutomaton NDM(0, states, {"a", "b"});
 
-	cout << nfa_to_regex(NDM).to_txt() + "\n";
+	cout << nfa_to_regex(NDM)->to_txt() + "\n";
 }

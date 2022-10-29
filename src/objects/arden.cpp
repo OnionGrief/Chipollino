@@ -78,7 +78,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	// cout << "arden";
 	return out;
 }
-Regex nfa_to_regex(FiniteAutomaton in) {
+Regex* nfa_to_regex(FiniteAutomaton in) {
 	vector<int> endstate;
 	vector<vector<expression_arden>> data;
 	set<alphabet_symbol> alphabet = in.get_alphabet();
@@ -194,7 +194,8 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 
 	if (data[0].size() > 1) {
 		cout << "error";
-		Regex f;
+
+		Regex* f = new Regex;
 		return f;
 	}
 	for (int i = 0; i < data.size(); i++) {
@@ -217,11 +218,11 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 		}
 	}
 	if (endstate.size() == 0) {
-		Regex f;
+		Regex* f = new Regex;
 		return f;
 	}
 	if (endstate.size() < 2) {
-		return *data[endstate[0]][0].temp_regex;
+		return data[endstate[0]][0].temp_regex;
 	}
 	Regex* r1 = new Regex;
 	r1->regex_alt(data[endstate[0]][0].temp_regex,
@@ -239,6 +240,6 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 	}
 	// cout << r1->to_txt();
 
-	return *r1;
+	return r1;
 }
 //На нефтеперерабатывающем заводе один мужик зажигалкой нашёл утечку газа.
