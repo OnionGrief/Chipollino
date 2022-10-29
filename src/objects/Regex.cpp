@@ -9,7 +9,7 @@ Lexem::Lexem(Type type, char symbol, int number)
 vector<Lexem> Regex::parse_string(string str) {
 	vector<Lexem> lexems;
 	lexems = {};
-
+	bool flag_alt = false;
 	auto is_symbol = [](char c) {
 		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
 	};
@@ -19,9 +19,16 @@ vector<Lexem> Regex::parse_string(string str) {
 		switch (c) {
 		case '(':
 			lexem.type = Lexem::parL;
+			flag_alt = true;
 			break;
 		case ')':
 			lexem.type = Lexem::parR;
+			if (lexems.back().type == Lexem::parL || flag_alt) {
+				lexem.type = Lexem::error;
+				lexems = {};
+				lexems.push_back(lexem);
+				return lexems;
+			}
 			break;
 		case '|':
 			lexem.type = Lexem::alt;
@@ -33,6 +40,7 @@ vector<Lexem> Regex::parse_string(string str) {
 			if (is_symbol(c)) {
 				lexem.type = Lexem::symb;
 				lexem.symbol = c;
+				flag_alt = false;
 			} else {
 				lexem.type = Lexem::error;
 				lexems = {};
@@ -112,6 +120,7 @@ Regex* Regex::scan_conc(const vector<Lexem>& lexems, int index_start,
 
 			if (l == nullptr || r == nullptr || r->type == Regex::eps ||
 				l->type == Regex::eps) { // Проверка на адекватность)
+				cout << "Test\n";
 				return p;
 			}
 
@@ -209,8 +218,9 @@ Regex* Regex::scan_alt(const vector<Lexem>& lexems, int index_start,
 Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 						int index_end) {
 	Regex* p = nullptr;
-	if (lexems.size() <= (index_start) ||
-		lexems[index_start].type != Lexem::symb) {
+	if ((lexems.size() <= index_start) ||
+		(lexems[index_start].type != Lexem::symb) ||
+		(index_end - index_start > 1)) {
 		return nullptr;
 	}
 	p = new Regex;
