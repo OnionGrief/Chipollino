@@ -422,6 +422,11 @@ void Example::normalize_regex() {
 	r.normalize_regex("./../temp/Rules.txt");
 	cout << r.to_txt();
 }
+
+void Example::tester() {
+	Tester::test("(a|ab)*", "((ab)*a)*", 2);
+}
+
 void Example::step_interection() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
@@ -466,6 +471,62 @@ void Example::step_interection() {
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", "Пересечение автоматов", dfa1, dfa2,
 				dfa3);
+	Logger::finish_step();
+	Logger::finish();
+	Logger::deactivate();
+}
+
+void Example::table() {
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	vector<State> states2;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states2.push_back(s);
+	}
+
+	states1[0].set_transition(0, "b");
+	states1[0].set_transition(1, "a");
+	states1[1].set_transition(1, "b");
+	states1[1].set_transition(2, "a");
+	states1[2].set_transition(2, "a");
+	states1[2].set_transition(2, "b");
+
+	states1[1].is_terminal = true;
+
+	states2[0].set_transition(0, "a");
+	states2[0].set_transition(1, "b");
+	states2[1].set_transition(1, "a");
+	states2[1].set_transition(2, "b");
+	states2[2].set_transition(2, "a");
+	states2[2].set_transition(2, "b");
+
+	states2[1].is_terminal = true;
+
+	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b"});
+	FiniteAutomaton dfa2 = FiniteAutomaton(0, states2, {"a", "b"});
+
+	// string f1 = dfa1.to_txt();
+	// string f2 = dfa2.to_txt();
+	FiniteAutomaton dfa3 = FiniteAutomaton::intersection(dfa1, dfa2);
+
+	vector<Tester::word> words;
+	for(int i=0; i<12;i++) {
+		words.push_back({
+			i, i*100, true
+		});
+	}
+	string s = "test";
+	Logger::activate();
+	Logger::init();
+	Logger::init_step(s);
+	Logger::log("(a|ab)*", "((ab)*a)*", 2, words);
+	Logger::log(dfa3, "((ab)*a)*", 2, words, words);
 	Logger::finish_step();
 	Logger::finish();
 	Logger::deactivate();
