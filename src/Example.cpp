@@ -313,49 +313,35 @@ void Example::fa_merge_bisimilar() {
 }
 void Example::transformation_monoid_example() {
 	vector<State> states;
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < 4; i++) {
 		State s = {
 			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 	states[0].set_transition(1, "a");
-	states[0].set_transition(4, "b");
+	states[0].set_transition(3, "c");
 
+	states[3].set_transition(3, "a");
+	states[0].set_transition(0, "b");
 	states[1].set_transition(1, "a");
 	states[1].set_transition(2, "b");
+	states[1].set_transition(1, "c");
+	states[2].set_transition(2, "c");
 	states[2].set_transition(1, "a");
-	states[2].set_transition(3, "b");
-	states[3].set_transition(1, "a");
-	states[3].set_transition(3, "b");
-	states[4].set_transition(1, "a");
-	states[4].set_transition(5, "b");
-
-	states[5].set_transition(6, "a");
-	states[5].set_transition(5, "b");
-
-	states[6].set_transition(6, "a");
-	states[6].set_transition(7, "b");
-
-	states[7].set_transition(6, "a");
-	states[7].set_transition(5, "b");
-
-	states[0].is_terminal = true;
+	states[2].set_transition(2, "b");
 
 	states[1].is_terminal = true;
 
 	states[2].is_terminal = true;
 
-	states[4].is_terminal = true;
-
-	states[5].is_terminal = true;
-	FiniteAutomaton fa1(0, states, {"a", "b"});
+	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
 	// cout << fa1.to_txt();
 	TransformationMonoid a(&fa1, 3);
-	cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
+	// cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
 
-// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
-//  cout << a.is_minimality() << "\n";
-//  cout << a.to_Txt_MyhillNerode();
+	cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
+										 //  cout << a.is_minimality() << "\n";
+										 //  cout << a.to_Txt_MyhillNerode();
 //  cout << a.get_Equalence_Classes_Txt(); /*
 	/*vector<Term> cur = a.get_Equalence_Classes();
 	cout << cur[1].name << "\n";

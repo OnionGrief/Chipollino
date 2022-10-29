@@ -12,6 +12,13 @@ vector<string> union_words(vector<string> a, vector<string> b) {
 	}
 	return newword;
 }
+string to_str(vector<string> in) {
+	string out = "";
+	for (int i = 0; i < in.size(); i++) {
+		out += in[i];
+	}
+	return out;
+}
 //получаем	все	перестановки	алфавита	длины	len
 vector<vector<string>> get_comb_alphabet(int len,
 										 const set<alphabet_symbol>& alphabet) {
@@ -72,32 +79,49 @@ TransformationMonoid::TransformationMonoid(){};
 //переписывание терма
 vector<string> rewriting(vector<string> in,
 						 map<vector<string>, vector<vector<string>>> rules) {
-	if (in.size() < 3) {
+	if (in.size() < 2) {
 		return in;
 	}
 	vector<string> out;
+	vector<string> out1;
 	bool cond = true;
-	for (int k = 2; cond && (k < in.size()); k++) {
-		for (int i = 0; cond && (i < in.size() - k + 1); i++) {
-			vector<string> temp;
-			for (int y = 0; y < k; y++) {
-				temp.push_back(in[i + y]);
+	int counter = 0;
+	for (int k = 2; cond && (k <= in.size()); k++) {
+		vector<string> temp;
+		for (int y = 0; y < k; y++) {
+			temp.push_back(in[y]);
+		}
+		if ((rules.count(temp)) && (rules.at(temp)[0] != temp)) {
+			for (int y = 0; y < rules.at(temp)[0].size(); y++) {
+				out.push_back(rules.at(temp)[0][y]);
 			}
-			// cout << temp << " ";
-			if ((rules.count(temp)) && (rules.at(temp)[0] != temp)) {
-				cond = false;
-				// cout << "rulesat " << rules.at(temp)[0] << "\n";
-				//  out += rules.at(temp)[0];
-			}
+			counter = k;
+			cond = false;
+			// cout << "vivod " << to_str(temp) << " \n";
 		}
 	}
-
-	if (cond) {
-		out = in;
+	// cout << cond << " " << counter << "\n";
+	if (!cond) {
+		vector<string> rec_in = {in.begin() + counter, in.end()};
+		// cout << to_str(out) << " out \n";
+		out1 = rewriting(rec_in, rules);
+		// cout << to_str(out1) << " out1 \n";
+		for (int y = 0; y < out1.size(); y++) {
+			out.push_back(out1[y]);
+		}
+		return out;
 	} else {
-		out = rewriting(out, rules);
+		vector<string> rec_in = {in.begin() + 1, in.end()};
+		out.push_back(in[0]);
+		// cout << to_str(out) << " out \n";
+		out1 = rewriting(rec_in, rules);
+		// cout << to_str(out1) << " out1 \n";
+		for (int y = 0; y < out1.size(); y++) {
+			out.push_back(out1[y]);
+		}
+		return out;
 	}
-	return {};
+	return in;
 }
 
 TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
@@ -110,11 +134,11 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
 		{
 			Term current;
-			// cout << various[j] << " 1 \n";
+			// cout << to_str(various[j]) << " 1 \n";
 			current.name = various[j];
 			current.name = rewriting(various[j], rules);
 
-			// cout << current.name << " 2 \n";
+			// cout << to_str(current.name) << " 2 \n";
 
 			//вставить переписывание слова
 
@@ -186,13 +210,7 @@ map<vector<string>, vector<vector<string>>> TransformationMonoid::
 	get_Rewriting_Rules() {
 	return rules;
 }
-string to_str(vector<string> in) {
-	string out = "";
-	for (int i = 0; i < in.size(); i++) {
-		out += in[i];
-	}
-	return out;
-}
+
 string TransformationMonoid::get_Equalence_Classes_Txt() {
 	stringstream ss;
 	for (int i = 0; i < terms.size(); i++) {
