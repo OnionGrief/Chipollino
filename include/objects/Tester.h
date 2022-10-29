@@ -3,6 +3,7 @@
 #include "FiniteAutomaton.h"
 #include "Regex.h"
 #include <iostream>
+#include <regex>
 #include <string>
 #include <time.h>
 #include <vector>
@@ -13,8 +14,8 @@ class Tester {
   public:
 	struct word {			// доступ извне Tester::word
 		int iterations_num; // сколько проведено итераций
-		long long time; // время парсинга в секундах
-		bool is_belongs; // принадлежность языку
+		long long time;		// время парсинга в секундах
+		bool is_belongs;	// принадлежность языку
 	};
 
 	struct tableRegex {
@@ -34,8 +35,7 @@ class Tester {
 	};
 
   private:
-	static void create_words();
-	static string get_iterated_word();
+	static bool parsing_by_regex(string, string);
 
   public:
 	static void test(FiniteAutomaton language, string regex,
