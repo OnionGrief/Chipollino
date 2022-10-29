@@ -33,7 +33,6 @@ class Example {
 	static void normalize_regex();
 	static void step();
 	static void parsing_nfa();
-	static void parsing_nca_error();
 	static void fa_equivalent_check();
 	static void fa_subset_check();
 	static void to_image();

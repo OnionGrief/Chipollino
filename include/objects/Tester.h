@@ -1,20 +1,20 @@
 #pragma once
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
-#include "Regex.h"
 #include "Logger.h"
+#include "Regex.h"
+#include <chrono>
 #include <iostream>
 #include <regex>
 #include <string>
-#include <chrono>
 #include <vector>
 
 using namespace std;
 struct word {			// доступ извне Tester::word
-		int iterations_num; // сколько проведено итераций
-		long long time;		// время парсинга в секундах
-		bool is_belongs;	// принадлежность языку
-	};
+	int iterations_num; // сколько проведено итераций
+	long long time;		// время парсинга в секундах
+	bool is_belongs;	// принадлежность языку
+};
 
 class Tester {
   public:
