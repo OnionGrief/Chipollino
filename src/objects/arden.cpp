@@ -1,7 +1,7 @@
 //
 // Created by xtoter on 03.10.22.
 //
-#include "arden.h"
+#include "Arden.h"
 bool compare(expression_arden a, expression_arden b) {
 	return (a.condition < b.condition);
 }
