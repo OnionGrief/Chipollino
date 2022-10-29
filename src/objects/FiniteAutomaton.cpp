@@ -3,6 +3,7 @@
 #include "Language.h"
 #include <algorithm>
 #include <iostream>
+#include <queue>
 #include <set>
 #include <sstream>
 #include <stack>
@@ -885,37 +886,116 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	return equal(fa1.minimize(), fa2.minimize());
 }
 
-bool FiniteAutomaton::parsing_nfa(string s, State state) const {
-	// cout << s << endl;
+bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
+	// cout << s.size() << endl;
+	State state = states[index_state];
+
 	if (s.size() == 0 && state.is_terminal) {
 		return true;
 	}
-	/*
+	set<int> tr_eps =
+		state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
+	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
+	int n;
+	// tr_eps = {};
 	if (s.size() == 0 && !state.is_terminal) {
+		n = trans_eps.size();
+		for (size_t i = 0; i < trans_eps.size(); i++) {
+			// cout << trans_eps[i] << endl;
+			if (parsing_nfa(s, trans_eps[i])) {
+				return true;
+			}
+		}
 		return false;
-	}*/
+	}
+
 	alphabet_symbol elem = char_to_alphabet_symbol(s[0]);
 	set<int> tr = state.transitions[elem];
-	set<int> tr_eps = state.transitions[epsilon()];//char_to_alphabet_symbol('\0')];
 	vector<int> trans{tr.begin(), tr.end()};
-	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
-	for (size_t i = 0; i < trans.size(); i++) {
-		if (parsing_nfa(s.substr(1), states[trans[i]])) {
+	// tr = {};
+	n = trans.size();
+	for (size_t i = 0; i < n; i++) {
+		if (parsing_nfa(s.substr(1), trans[i])) {
 			return true;
 		}
 	}
-	for (size_t i = 0; i < trans_eps.size(); i++) {
-		//cout << trans_eps[i] << endl;
-		if (parsing_nfa(s, states[trans_eps[i]])) {
+	n = trans_eps.size();
+	for (size_t i = 0; i < n; i++) {
+		// cout << trans_eps[i] << endl;
+		if (parsing_nfa(s, trans_eps[i])) {
 			return true;
 		}
 	}
 	return false;
 }
 
+bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
+	// cout << s.size() << endl;
+	stack<State> stac_state;
+	stack<int> stack_s;
+	stack<int> stack_index;
+	stac_state.push(states[0]);
+	stack_s.push(0);
+	stack_index.push(0);
+	int n, n_eps;
+	int index = 0;
+	int state_s = 0;
+	State state = stac_state.top();
+	// cout << !stac_state.empty() << endl;
+	while (!stac_state.empty()) {
+		state = stac_state.top();
+		state_s = stack_s.top();
+		index = stack_index.top();
+		if (state.is_terminal && index == s.size()) {
+			break;
+		}
+		stac_state.pop();
+		stack_s.pop();
+		stack_index.pop();
+		alphabet_symbol elem = char_to_alphabet_symbol(s[index]);
+		set<int> tr = state.transitions[elem];
+		vector<int> trans{tr.begin(), tr.end()};
+		set<int> tr_eps =
+			state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
+		vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
+		// tr = {};
+		// cout << elem << " " << state.identifier << " " << index << " "
+		//	 << stac_state.size() << endl;
+		n = trans.size();
+		n_eps = trans_eps.size();
+		if (n + n_eps == 0) {
+			// stac_state.pop();
+			//  stack_s.pop();
+			if (state_s != 0) {
+				// index--;
+			}
+		}
+		for (size_t i = 0; i < n; i++) {
+			if (index + 1 <= s.size()) {
+				stac_state.push(states[trans[i]]);
+				stack_s.push(1);
+				stack_index.push(index + 1);
+			}
+		}
+		for (size_t i = 0; i < n_eps; i++) {
+			stac_state.push(states[trans_eps[i]]);
+			stack_s.push(0);
+			stack_index.push(index);
+		}
+		// if (state_s != 0) {
+		//	index++;
+		// }
+	}
+	if ((stac_state.empty() && s.size() <= index) ||
+		(s.size() == index && state.is_terminal)) {
+		return true;
+	}
+	return false;
+}
+
 bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	State state = states[0];
-	return parsing_nfa(s, state);
+	return parsing_nfa_for(s);
 }
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	FiniteAutomaton dfa1(determinize());

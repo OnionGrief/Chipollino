@@ -13,15 +13,17 @@ void Tester::test(string lang, string r2, int step) {
 
 	for (int i = 0; i < 13; i++) {
 		string w = r.get_iterated_word(i * step);
-		cout << w;
+		// cout << "i " << i << " " << w.size() << endl;
 
 		const auto start = clock::now();
 		bool is_belongs = automaton.parsing_by_nfa(w);
-		// parsing_by_regex(lang, w); // падает на больших словах((
+		// cout << is_belongs << endl;
+		//  parsing_by_regex(lang, w); // падает на больших словах((
 		const auto end = clock::now();
 		const double elapsed =
 			std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
-				.count()*1e-7;
+				.count() *
+			1e-7;
 		// int time = (int) elapsed;
 		// int time = (end - start); // ((clock_t)100);
 		cout << " " << elapsed << endl;
@@ -49,16 +51,19 @@ void Tester::test(FiniteAutomaton lang, string r2, int step) {
 		const auto start = clock::now();
 		bool is_belongs = lang.parsing_by_nfa(w);
 		const auto end = clock::now();
-		cout<<std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count();
-		
+		cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end -
+																	 start)
+					.count();
+
 		const double elapsed =
 			std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
-				.count()*1e-6;
+				.count() *
+			1e-6;
 		times.push_back(elapsed);
 		booleans.push_back(is_belongs);
 		// int time = (end - start); // CLOCKS_PER_SEC;
 		cout << is_belongs << " " << elapsed << endl;
-		//words.push_back({i * step, time, is_belongs});
+		// words.push_back({i * step, time, is_belongs});
 		if (elapsed >= 180) return;
 	}
 

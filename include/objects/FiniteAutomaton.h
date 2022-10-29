@@ -31,7 +31,8 @@ class FiniteAutomaton : public BaseObject {
 	int initial_state = 0;
 	vector<State> states;
 
-	bool parsing_nfa(string, State) const; // парсинг слова в нка
+	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
+	bool parsing_nfa_for(const string&) const;
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
