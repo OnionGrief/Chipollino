@@ -485,34 +485,14 @@ void Example::normalize_regex() {
 	cout << r.to_txt();
 }
 
-void Example::parsing_nca_error() {
-	Regex r;
-	// r.from_string("(ab|a)*");
-	r.from_string("a");
-	FiniteAutomaton dfa1 = r.to_tompson();
-	cout << dfa1.parsing_by_nfa("a") << endl;
-	;
-
-	Regex r2;
-	r2.from_string("(a|b)*aa");
-	FiniteAutomaton dfa2 = r2.to_tompson();
-	cout << dfa2.to_txt();
-	cout << dfa2.parsing_by_nfa("ababababaaa");
-}
-
 void Example::tester() {
 	Regex r;
-	r.from_string("((ab)*a)*");
-
-	// r.from_string("(ab|a)*abaabaaba");
+	r.from_string("ab(ab|a)*ababa");
 	FiniteAutomaton dfa1 = r.to_tompson();
-	cout << dfa1.to_txt();
-	cout << dfa1.parsing_by_nfa("abaaba");
-	// cout<<"test2";
-	// Tester::test(dfa1, "((ab)*a)*", 2);
-
-	Tester::test("(ab|a)*", "((ab)*a)*", 60);
-	//   cout<<"test2";
+	// cout << dfa1.parsing_by_nfa("abaaabaaababa");
+	// cout << dfa1.to_txt();
+	// Tester::test(dfa1, "((ab)*a)*", 1);
+	Tester::test("ab(ab|a)*ababa", "((ab)*a)*", 1);
 }
 
 void Example::step_interection() {
