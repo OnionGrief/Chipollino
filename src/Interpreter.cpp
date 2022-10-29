@@ -196,7 +196,8 @@ GeneralObject Interpreter::apply_function(
 				.value.subset(get<ObjectNFA>(arguments[1]).value));
 	}
 	if (function.name == "Equiv") {
-		if (function.output == nfa) {
+		vector<ObjectType> n = {nfa, nfa};
+		if (function.input == n) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
 				get<ObjectNFA>(arguments[0]).value,
 				get<ObjectNFA>(arguments[1]).value));
