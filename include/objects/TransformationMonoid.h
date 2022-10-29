@@ -24,8 +24,8 @@ struct TermDouble {
 };
 class TransformationMonoid : public BaseObject {
   private:
-	FiniteAutomaton* automat; //Ссылка на автомат
-	vector<Term> terms;		  //Эквивалентные классы
+	FiniteAutomaton automat; //Автомат
+	vector<Term> terms;		 //Эквивалентные классы
 	map<vector<string>, vector<vector<string>>> rules; //Правила переписывания
 	vector<vector<bool>> equivalence_class_table;
 

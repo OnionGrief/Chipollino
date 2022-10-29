@@ -342,7 +342,6 @@ void Example::transformation_monoid_example() {
 		states.push_back(s);
 	}
 	states[0].set_transition(1, "a");
-
 	states[0].set_transition(0, "b");
 	states[1].set_transition(1, "a");
 	states[1].set_transition(2, "b");
@@ -355,12 +354,11 @@ void Example::transformation_monoid_example() {
 	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
 	// cout << fa1.to_txt();
 	TransformationMonoid a(&fa1, 3);
-// cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
-
-// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
-// cout << a.is_minimality() << "\n";
-// cout << a.to_Txt_MyhillNerode();
-//  cout << a.get_Equalence_Classes_Txt(); /*
+	cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
+	// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
+	// cout << a.is_minimality() << "\n";
+	// cout << a.to_Txt_MyhillNerode();
+	//  cout << a.get_Equalence_Classes_Txt(); /*
 	/*vector<Term> cur = a.get_Equalence_Classes();
 	cout << cur[1].name << "\n";
 	vector<TermDouble> temp = a.get_Equalence_Classes_VWV(cur[1]);

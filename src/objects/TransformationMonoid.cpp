@@ -124,9 +124,12 @@ vector<string> rewriting(vector<string> in,
 	return in;
 }
 
+//Получаем ДКА и строим моноид
 TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 										   int transferlen) {
-	automat = in;
+
+	automat = in->remove_trap_states();
+	cout << automat.to_txt();
 	for (int i = 1; i <= transferlen; i++) {
 
 		vector<vector<string>> various =
@@ -134,27 +137,17 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
 		{
 			Term current;
-			// cout << to_str(various[j]) << " 1 \n";
 			current.name = various[j];
 			current.name = rewriting(various[j], rules);
-
-			// cout << to_str(current.name) << " 2 \n";
-
-			//вставить переписывание слова
-
-			for (int t = 0; t < automat->get_states_size();
-				 t++) //Для	всех	состояний
-			{
-				//	cout	<<	current.name	<<	"	";
+			for (int t = 0; t < automat.get_states_size(); t++) {
 				int endsost = t;
-
 				Transition g;
 				g.first = endsost;
 				bool cond = true;
 				for (int k = 0; k < current.name.size();
 					 k++) //Для	каждого	символа	перехода
 				{
-					State a = automat->get_state(endsost);
+					State a = automat.get_state(endsost);
 					if (a.transitions.count(current.name[k])) {
 						set<int> temp = a.transitions.at(current.name[k]);
 						endsost = *temp.begin();
@@ -173,34 +166,28 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 								 //Эквивалентных классах
 			{
 				bool cond = true;
-				if (current.Transitions.size() !=
-					automat->get_states_size() - 1) {
+				if (current.Transitions.size() != automat.get_states_size()) {
 					cond = false;
 				}
 				for (int i = 0; i < current.Transitions.size(); i++) {
-					if (!automat->get_state(current.Transitions[i].second)
+					if (!automat.get_state(current.Transitions[i].second)
 							 .is_terminal) {
 						cond = false;
 					}
 				}
 				current.isFinal = cond;
-				//	cout	<<	current.name	<<	"	"
-				//<<	current.isFinal	<<	"\n";
 				terms.push_back(current);
 			} else {
 				if (!rules.count(current.name) && current.name != eqv) {
-					// cout << current.name << " dad\n";
 					rules[current.name].push_back(eqv);
 				}
-				//	cout	<<	current.name	<<	"->"	<<
-				// eqv	<<	"\n";
 			}
 		}
 	}
 }
 
 string TransformationMonoid::to_txt() const {
-	return automat->to_txt();
+	return automat.to_txt();
 }
 
 vector<Term> TransformationMonoid::get_Equalence_Classes() {
@@ -253,14 +240,13 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_VW(Term w) {
 		}
 		if (Transitions.size() > 0) {
 			bool cond = true;
-			if (Transitions.size() != automat->get_states_size()) {
+			if (Transitions.size() != automat.get_states_size()) {
 				cond = false;
 			} else {
 				for (int j = 0; j < Transitions.size(); j++) {
 					// cout << "\n t " << Transitions[j].first << " " <<
 					// Transitions[j].second << "\n";
-					if (!automat->get_state(Transitions[j].second)
-							 .is_terminal) {
+					if (!automat.get_state(Transitions[j].second).is_terminal) {
 						cond = false;
 					}
 				}
@@ -291,12 +277,11 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_WV(Term w) {
 		}
 		if (Transitions.size() > 0) {
 			bool cond = true;
-			if (Transitions.size() != automat->get_states_size()) {
+			if (Transitions.size() != automat.get_states_size()) {
 				cond = false;
 			} else {
 				for (int j = 0; j < Transitions.size(); j++) {
-					if (!automat->get_state(Transitions[j].second)
-							 .is_terminal) {
+					if (!automat.get_state(Transitions[j].second).is_terminal) {
 						cond = false;
 					}
 				}
@@ -342,13 +327,13 @@ vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
 			}
 			if (Transitions.size() > 0) {
 				bool cond = true;
-				if (Transitions.size() != automat->get_states_size()) {
+				if (Transitions.size() != automat.get_states_size()) {
 					cond = false;
 				} else {
 					for (int j = 0; j < Transitions.size(); j++) {
 						// cout << "\n t " << Transitions[j].first << " " <<
 						// Transitions[j].second << "\n";
-						if (!automat->get_state(Transitions[j].second)
+						if (!automat.get_state(Transitions[j].second)
 								 .is_terminal) {
 							cond = false;
 						}
@@ -438,7 +423,6 @@ bool TransformationMonoid::is_minimality() {
 }
 
 string TransformationMonoid::to_Txt_MyhillNerode() {
-
 	stringstream ss;
 	ss << "    e   ";
 	for (int i = 0; i < terms.size(); i++) {
