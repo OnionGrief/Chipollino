@@ -6,6 +6,8 @@
 #include "AutomatonToImage.h"
 #include "Logger.h"
 #include "arden.h"
+#include "RegexGenerator.h"
+#include "TasksGenerator.h"
 #include <iostream>
 /*
 Это статический класс, где вы можете писать примеры
@@ -20,6 +22,10 @@ class Example {
 	static void minimize();
 	static void intersection();
 	static void regex_parsing();
+	static void regex_generating();
+	static void random_regex_parsing();
+	static void tasks_generating();
+	static void parsing_regex(string);
 	static void fa_equal_check();
 	static void fa_bisimilar_check();
 	static void fa_merge_bisimilar();
