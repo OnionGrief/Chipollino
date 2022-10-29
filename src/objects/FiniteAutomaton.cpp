@@ -651,9 +651,12 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 	vector<vector<vector<GrammarItem*>>> rules = Grammar::fa_to_grammar(
 		states, language->get_alphabet(), fa_items, nonterminals, terminals);
 	vector<GrammarItem*> bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
-		Grammar::get_bisimilar_grammar(rules, nonterminals,
-									   bisimilar_nonterminals, true);
+		Grammar::get_bisimilar_grammar(
+			rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
+
+	// log
 	vector<int> classes;
 	for (const auto& nont : nonterminals)
 		classes.push_back(nont->class_number);
@@ -661,6 +664,14 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 
 	Logger::log("Автомат до преобразования", "Автомат после преобразования",
 				*this, result_fa);
+	stringstream ss;
+	for (auto& elem : class_to_nonterminals) {
+		ss << "\\{";
+		for (int i = 0; i < elem.second.size() - 1; i++)
+			ss << elem.second[i]->name << ",";
+		ss << elem.second[elem.second.size() - 1]->name << "\\}";
+	}
+	Logger::log("Эквивалентные классы", ss.str());
 	Logger::finish_step();
 	return result_fa;
 }
@@ -687,14 +698,18 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 		if (*fa1_terminals[i] != *fa2_terminals[i]) return false;
 	// сначала получаем бисимилярные грамматики из данных автоматов
 	vector<GrammarItem*> fa1_bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> fa1_class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> fa1_bisimilar_rules =
 		Grammar::get_bisimilar_grammar(fa1_rules, fa1_nonterminals,
-									   fa1_bisimilar_nonterminals);
+									   fa1_bisimilar_nonterminals,
+									   fa1_class_to_nonterminals);
 
 	vector<GrammarItem*> fa2_bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> fa2_class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> fa2_bisimilar_rules =
 		Grammar::get_bisimilar_grammar(fa2_rules, fa2_nonterminals,
-									   fa2_bisimilar_nonterminals);
+									   fa2_bisimilar_nonterminals,
+									   fa2_class_to_nonterminals);
 	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size())
 		return false;
 	// из объединения полученных ранее получаем итоговую
@@ -705,13 +720,50 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 	rules.insert(rules.end(), fa2_bisimilar_rules.begin(),
 				 fa2_bisimilar_rules.end());
 
-	for (GrammarItem* nont : nonterminals)
-		nont->class_number = 0; // сбрасываю номера классов
+	vector<int> fa1_classes; // сохраяняю классы
+	for (GrammarItem* nont : fa1_nonterminals) {
+		fa1_classes.push_back(nont->class_number);
+		nont->class_number = -1; // сбрасываю номера классов
+	}
+	vector<int> fa2_classes; // сохраняю классы
+	for (GrammarItem* nont : fa2_nonterminals) {
+		fa2_classes.push_back(nont->class_number);
+		nont->class_number = -1; // сбрасываю номера классов
+	}
 
 	vector<GrammarItem*> bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
 		Grammar::get_bisimilar_grammar(rules, nonterminals,
-									   bisimilar_nonterminals, true);
+									   bisimilar_nonterminals);
+
+	map<int, vector<string>> class_to_nonterminals_names;
+
+	for (int i = 0; i < fa1_nonterminals.size(); i++) {
+		int nont_class =
+			fa1_class_to_nonterminals[fa1_classes[i]][0]
+				->class_number; // класс нетерминала в общей грамматике, 0й
+								// элемент попал в бисимилярную грамматику
+		class_to_nonterminals_names[nont_class].push_back(
+			"FA1:" + fa1_nonterminals[i]->name);
+	}
+
+	for (int i = 0; i < fa2_nonterminals.size(); i++) {
+		int nont_class =
+			fa2_class_to_nonterminals[fa2_classes[i]][0]
+				->class_number; // класс нетерминала в общей грамматике, 0й
+								// элемент попал в бисимилярную грамматику
+		class_to_nonterminals_names[nont_class].push_back(
+			"FA2:" + fa2_nonterminals[i]->name);
+	}
+	// log
+	stringstream ss;
+	for (auto& elem : class_to_nonterminals_names) {
+		ss << "\\{";
+		for (int i = 0; i < elem.second.size() - 1; i++)
+			ss << elem.second[i] << ",";
+		ss << elem.second[elem.second.size() - 1] << "\\}";
+	}
+	Logger::log("Эквивалентные классы", ss.str());
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
@@ -799,7 +851,7 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1,
 	reverse_rules.insert(reverse_rules.end(), fa2_reverse_rules.begin(),
 						 fa2_reverse_rules.end());
 	for (GrammarItem* nont : nonterminals)
-		nont->class_number = 0; // сбрасываю номера классов
+		nont->class_number = -1; // сбрасываю номера классов
 
 	vector<GrammarItem*> reverse_bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> reverse_bisimilar_rules =
@@ -940,6 +992,7 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 		Logger::log("Результат Subset", "true");
 	else
 		Logger::log("Результат Subset", "false");
+	Logger::finish_step();
 	return result;
 }
 

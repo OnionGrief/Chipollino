@@ -38,7 +38,9 @@ class Grammar {
 	static vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
 		vector<vector<vector<GrammarItem*>>>& rules,
 		vector<GrammarItem*>& nonterminals,
-		vector<GrammarItem*>& bisimilar_nonterminals, bool log_flag = false);
+		vector<GrammarItem*>& bisimilar_nonterminals,
+		map<int, vector<GrammarItem*>>& class_to_nonterminals =
+			map<int, vector<GrammarItem*>>());
 	// преобразование конечного автомата в грамматику
 	// в векторе терминалов по 0му индексу лежит epsilon,
 	// по terminals.size()-1 лежит initial

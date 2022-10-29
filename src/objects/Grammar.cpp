@@ -68,7 +68,8 @@ void Grammar::check_classes(
 vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 	vector<vector<vector<GrammarItem*>>>& rules,
 	vector<GrammarItem*>& nonterminals,
-	vector<GrammarItem*>& bisimilar_nonterminals, bool log_flag) {
+	vector<GrammarItem*>& bisimilar_nonterminals,
+	map<int, vector<GrammarItem*>>& class_to_nonterminals) {
 	map<set<string>, vector<GrammarItem*>> classes_check_map;
 	set<int> checker;
 	// checker
@@ -78,21 +79,10 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 		update_classes(checker, classes_check_map);
 		if (checker == temp) break;
 	}
-	// log
-	if (log_flag) {
-		stringstream ss;
-		for (auto& elem : classes_check_map) {
-			ss << "\\{";
-			for (int i = 0; i < elem.second.size() - 1; i++)
-				ss << elem.second[i]->name << ",";
-			ss << elem.second[elem.second.size() - 1]->name << "\\}";
-		}
-		Logger::log("Эквивалентные классы", ss.str());
-	}
 	// формирование бисимилярной грамматики
-	map<int, GrammarItem*> class_to_nonterm;
 	for (const auto& elem : classes_check_map)
-		class_to_nonterm[elem.second[0]->class_number] = elem.second[0];
+		for (GrammarItem* t : elem.second)
+			class_to_nonterminals[elem.second[0]->class_number].push_back(t);
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules;
 	for (const auto& elem : classes_check_map) {
 		GrammarItem* curNonterm = elem.second[0];
@@ -101,7 +91,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 			vector<GrammarItem*> tempRule;
 			for (GrammarItem* item : rule) {
 				if (item->type == GrammarItem::nonterminal) {
-					tempRule.push_back(class_to_nonterm[item->class_number]);
+					tempRule.push_back(
+						class_to_nonterminals[item->class_number][0]);
 				} else
 					tempRule.push_back(item);
 			}
@@ -110,7 +101,6 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 		bisimilar_nonterminals.push_back(curNonterm);
 		bisimilar_rules.push_back(temp_rules);
 	}
-
 	return bisimilar_rules;
 }
 

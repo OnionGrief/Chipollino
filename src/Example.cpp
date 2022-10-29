@@ -185,7 +185,7 @@ void Example::fa_bisimilar_check() {
 	states2[0].is_terminal = true;
 	FiniteAutomaton fa2(1, states2, {"a", "b"});
 
-	cout << FiniteAutomaton::bisimilar(fa1, fa2);
+	cout << FiniteAutomaton::bisimilar(fa1, fa2) << endl;
 	//правильный ответ true
 }
 
@@ -243,7 +243,7 @@ void Example::fa_equal_check() {
 
 	cout << FiniteAutomaton::equal(fa1, fa1) << endl
 		 << FiniteAutomaton::equal(fa1, fa2) << endl
-		 << FiniteAutomaton::equal(fa1, fa3);
+		 << FiniteAutomaton::equal(fa1, fa3) << endl;
 	//правильный ответ 1 0 1
 }
 
@@ -306,7 +306,7 @@ void Example::fa_equivalent_check() {
 	states2[0].is_terminal = true;
 	FiniteAutomaton fa2(0, states2, {"c", "d"});
 
-	cout << FiniteAutomaton::equivalent(fa1, fa2);
+	cout << FiniteAutomaton::equivalent(fa1, fa2) << endl;
 }
 
 void Example::fa_subset_check() {
@@ -516,10 +516,8 @@ void Example::table() {
 	FiniteAutomaton dfa3 = FiniteAutomaton::intersection(dfa1, dfa2);
 
 	vector<Tester::word> words;
-	for(int i=0; i<12;i++) {
-		words.push_back({
-			i, i*100, true
-		});
+	for (int i = 0; i < 12; i++) {
+		words.push_back({i, i * 100, true});
 	}
 	string s = "test";
 	Logger::activate();
