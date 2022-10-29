@@ -5,4 +5,6 @@ using namespace std;
 int main() {
 	Example::tester();
 	cout << "Chipollino :-)\n";
+	Example ex;
+	ex.regex_parsing();
 }
