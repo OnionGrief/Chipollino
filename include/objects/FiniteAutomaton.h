@@ -40,6 +40,10 @@ class FiniteAutomaton : public BaseObject {
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	set<int> closure(const set<int>&, bool) const;
 
+	// поиск префикса из состояния state_beg в состояние state_end
+	std::optional<std::string> get_prefix(int state_beg, int state_end,
+										  map<int, bool>& was);
+
   public:
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, vector<State> states,

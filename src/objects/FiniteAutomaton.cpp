@@ -930,33 +930,31 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	return equal(fa1.minimize(), fa2.minimize());
 }
 
-bool FiniteAutomaton::semdet() {
-	std::map<int, bool> was;
-	std::function<std::optional<std::string>(int, int, map<int, bool>&)>
-		get_prefix;
-	get_prefix = [=](int state_beg, int state_end,
-					 map<int, bool>& was) -> std::optional<std::string> {
-		std::optional<std::string> ans = nullopt;
-		if (state_beg == state_end) {
-			ans = "";
-			return ans;
-		}
-		auto trans = &states[state_beg].transitions;
-		for (auto it = trans->begin(); it != trans->end(); it++) {
-			for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
-				if (!was[*it2]) {
-					was[*it2] = true;
-					std::optional<std::string> res =
-						get_prefix(*it2, state_end, was);
-					if (res.has_value()) {
-						ans = it->first + res.value();
-					}
-					return ans;
+std::optional<std::string> FiniteAutomaton::get_prefix(int state_beg, int state_end,
+									  map<int, bool>& was) {
+	std::optional<std::string> ans = nullopt;
+	if (state_beg == state_end) {
+		ans = "";
+		return ans;
+	}
+	auto trans = &states[state_beg].transitions;
+	for (auto it = trans->begin(); it != trans->end(); it++) {
+		for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+			if (!was[*it2]) {
+				was[*it2] = true;
+				auto res = get_prefix(*it2, state_end, was);
+				if (res.has_value()) {
+					ans = it->first + res.value();
 				}
+				return ans;
 			}
 		}
-		return ans;
-	};
+	}
+	return ans;
+}
+
+bool FiniteAutomaton::semdet() {
+	std::map<int, bool> was;
 	std::vector<int> final_states;
 	for (int i = 0; i < states.size(); i++) {
 		if (states[i].is_terminal) final_states.push_back(i);
@@ -966,14 +964,19 @@ bool FiniteAutomaton::semdet() {
 	for (int i = 0; i < states.size(); i++) {
 		auto prefix = get_prefix(initial_state, i, was);
 		was.clear();
+		cout << "Try " << i << "\n";
 		if (!prefix.has_value()) continue;
 		Regex reg;
 		// Получение языка из производной регулярки автомата по префиксу:
 		//		this -> reg (arden?)
 		reg = nfa_to_regex(*this);
+		cout << "State: " << i << "\n";
+		cout << "Prefix: " << prefix.value() << "\n";
+		cout << "Regex: " << reg.to_txt() << "\n";
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
 		state_languages[i] = derevative.value();
+		cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 		state_languages[i].make_language();
 	}
 	for (int i = 0; i < states.size(); i++) {

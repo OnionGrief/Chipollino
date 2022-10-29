@@ -38,4 +38,5 @@ class Example {
 	static void fa_subset_check();
 	static void arden_test();
 	static void to_image();
+	static void fa_semdet_check();
 };

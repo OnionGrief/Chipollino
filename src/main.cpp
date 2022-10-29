@@ -8,5 +8,5 @@ int main() {
 	// Example ex;
 	//	 ex.regex_parsing();
 	// Example::arden_test();
-	Example::regex_parsing();
+	Example::fa_semdet_check();
 }
