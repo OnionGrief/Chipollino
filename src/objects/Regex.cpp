@@ -3,7 +3,7 @@
 #include "Language.h"
 #include <set>
 
-Lexem::Lexem(Type type, char symbol, int number)
+Lexem::Lexem(Type type, alphabet_symbol symbol, int number)
 	: type(type), symbol(symbol), number(number) {}
 
 vector<Lexem> Regex::parse_string(string str) {
@@ -13,8 +13,10 @@ vector<Lexem> Regex::parse_string(string str) {
 	auto is_symbol = [](char c) {
 		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
 	};
-
-	for (const char& c : str) {
+	// int index = 0;
+	// for (const char& c : str) {
+	for (size_t index = 0; index < str.size(); index++) {
+		char c = str[index];
 		Lexem lexem;
 		switch (c) {
 		case '(':
@@ -39,8 +41,19 @@ vector<Lexem> Regex::parse_string(string str) {
 		default:
 			if (is_symbol(c)) {
 				lexem.type = Lexem::symb;
-				lexem.symbol = c;
+				string number;
+				for (size_t i = index + 1; i < str.size(); i++) {
+					if (str[i] >= '0' && str[i] <= '9') {
+						number += str[i];
+					} else {
+						break;
+					}
+					index = i;
+				}
+
+				lexem.symbol = c + number;
 				flag_alt = false;
+
 			} else {
 				lexem.type = Lexem::error;
 				lexems = {};
@@ -227,8 +240,8 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
 
-	vector<alphabet_symbol> v = {
-		char_to_alphabet_symbol(lexems[index_start].symbol)};
+	vector<alphabet_symbol> v = {lexems[index_start].symbol};
+	// char_to_alphabet_symbol(lexems[index_start].symbol)};
 	set<alphabet_symbol> s(v.begin(), v.end());
 
 	p->alphabet = s;
@@ -646,7 +659,8 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 	default:
 
 		str = "q" + to_string(max_index + 1);
-		m[char_to_alphabet_symbol(value.symbol)] = {1};
+		// m[char_to_alphabet_symbol(value.symbol)] = {1};
+		m[value.symbol] = {1};
 		s.push_back(State(0, {}, str, false, m));
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
@@ -897,8 +911,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 	cout << "Pairs " << str_pair << endl;
 	*/
 	for (size_t i = 0; i < first->size(); i++) {
-		tr[char_to_alphabet_symbol((*first)[i].symbol)].insert(
-			(*first)[i].number + 1);
+		tr[(*first)[i].symbol].insert((*first)[i].number + 1);
 	}
 
 	if (eps_in) {
@@ -912,8 +925,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 		tr = {};
 
 		for (size_t j = 0; j < p[elem.number].size(); j++) {
-			tr[char_to_alphabet_symbol(list[p[elem.number][j]]->value.symbol)]
-				.insert(p[elem.number][j] + 1);
+			tr[list[p[elem.number][j]]->value.symbol].insert(p[elem.number][j] +
+															 1);
 		}
 		string s = elem.symbol + to_string(i + 1);
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
@@ -1378,13 +1391,13 @@ int Regex::pump_length() const {
 bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 	if (r1 == nullptr && r2 == nullptr) return true;
 	if (r1 == nullptr || r2 == nullptr) return true;
-	int r1_value, r2_value;
-	if (r1->value.symbol)
-		r1_value = (int)r1->value.symbol;
+	alphabet_symbol r1_value, r2_value;
+	if (r1->value.symbol != "")
+		r1_value = r1->value.symbol;
 	else
 		r1_value = r1->type;
-	if (r2->value.symbol)
-		r2_value = (int)r2->value.symbol;
+	if (r2->value.symbol != "")
+		r2_value = r2->value.symbol;
 	else
 		r2_value = r2->type;
 
