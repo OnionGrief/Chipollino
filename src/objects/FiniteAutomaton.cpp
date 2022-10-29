@@ -353,6 +353,23 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	set<alphabet_symbol> new_alphabet;
+	set_intersection(fa1.language->get_alphabet().begin(),
+					 fa1.language->get_alphabet().end(),
+					 fa2.language->get_alphabet().begin(),
+					 fa2.language->get_alphabet().end(),
+					 inserter(new_alphabet, new_alphabet.begin()));
+	new_dfa.language->set_alphabet(new_alphabet);
+	for (int i = 0; i < new_dfa.states.size(); i++) {
+		map<alphabet_symbol, set<int>> new_transitions;
+		for (alphabet_symbol symb : merged_alphabets) {
+			if (new_dfa.states[i].transitions.find(symb) !=
+				new_dfa.states[i].transitions.end()) {
+				new_transitions[symb] = new_dfa.states[i].transitions[symb];
+			}
+		}
+		new_dfa.states[i].transitions = new_transitions;
+	}
 	return new_dfa;
 }
 
@@ -397,7 +414,6 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
-
 	return new_dfa;
 }
 
@@ -441,6 +457,19 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 					 .transitions.at(symb)
 					 .begin());
 		}
+	}
+	new_dfa.language->set_alphabet(fa1.language->get_alphabet());
+	for (alphabet_symbol symb : fa1.language->get_alphabet())
+		cout << symb << " " << endl;
+	for (int i = 0; i < new_dfa.states.size(); i++) {
+		map<alphabet_symbol, set<int>> new_transitions;
+		for (alphabet_symbol symb : merged_alphabets) {
+			if (new_dfa.states[i].transitions.find(symb) !=
+				new_dfa.states[i].transitions.end()) {
+				new_transitions[symb] = new_dfa.states[i].transitions[symb];
+			}
+		}
+		new_dfa.states[i].transitions = new_transitions;
 	}
 
 	return new_dfa;
