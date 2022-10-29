@@ -92,6 +92,7 @@ class Regex : BaseObject {
 		Regex* original); //рекурсивный поиск заменяемого листа дерева
 	void normalize_this_regex(
 		const string& file); //переписывание regex по пользовательским правилам
+	string to_str_log() const;
 
   public:
 	Regex();
@@ -101,7 +102,7 @@ class Regex : BaseObject {
 	FiniteAutomaton to_tompson() const;
 	FiniteAutomaton to_glushkov() const;
 	FiniteAutomaton to_ilieyu() const;
-	FiniteAutomaton to_antimirov();
+	FiniteAutomaton to_antimirov() const;
 
 	~Regex();
 	Regex* copy() const;
@@ -135,6 +136,9 @@ class Regex : BaseObject {
 	void regex_eps();
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
+
+	Regex linearize() const;
+	Regex delinearize() const;
 };
 
 /*
