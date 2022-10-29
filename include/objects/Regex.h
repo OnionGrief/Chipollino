@@ -95,6 +95,7 @@ class Regex : BaseObject {
 	void normalize_this_regex(
 		const string& file); //переписывание regex по пользовательским правилам
 
+	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
 
   public:
@@ -112,6 +113,8 @@ class Regex : BaseObject {
 	Regex(const Regex&);
 	Regex& operator=(const Regex& other);
 
+	// Генерация языка из алфавита
+	void Regex::make_language();
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const string& file) const;
 	bool from_string(string);

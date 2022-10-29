@@ -961,7 +961,6 @@ bool FiniteAutomaton::semdet() {
 	for (int i = 0; i < states.size(); i++) {
 		if (states[i].is_terminal) final_states.push_back(i);
 	}
-	bool semdet_state = true;
 	std::vector<Regex> state_languages;
 	state_languages.resize(states.size());
 	for (int i = 0; i < states.size(); i++) {
@@ -974,17 +973,31 @@ bool FiniteAutomaton::semdet() {
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
 		state_languages[i] = derevative.value();
+		state_languages[i].make_language();
 	}
 	for (int i = 0; i < states.size(); i++) {
-		DSU<int> dsu;
 		for (int j = 0; j < states.size(); j++) {
-			dsu.make_set(j);
-		}
-		for (auto it = states.begin(); it != states.end(); it++) {
-
+			for (auto transition = states[j].transitions.begin();
+				 transition != states[j].transitions.end(); transition++) {
+				bool verified_ambiguity = false;
+				for (auto it = transition->second.begin();
+					 it != transition->second.end(); it++) {
+					bool reliability = true;
+					for (auto it2 = transition->second.begin();
+						 it2 != transition->second.end(); it2++) {
+						if (!state_languages[*it].subset(
+								state_languages[*it2])) {
+							reliability = false;
+							break;
+						}
+					}
+					verified_ambiguity |= reliability;
+				}
+				if (!verified_ambiguity) return false;
+			}
 		}
 	}
-	return semdet_state;
+	return true;
 }
 
 bool FiniteAutomaton::parsing_nfa(string s, State state) const {

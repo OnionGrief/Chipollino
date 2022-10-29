@@ -1,7 +1,6 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
-#include "DSU.h"
 #include <iostream>
 #include <map>
 #include <set>

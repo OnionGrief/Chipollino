@@ -377,6 +377,12 @@ void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 	}
 }
 
+void Regex::make_language() {
+	generate_alphabet(alphabet);
+
+	language = shared_ptr<Language>(new Language(alphabet));
+}
+
 void Regex::clear() {
 	if (term_l != nullptr) {
 		// term_l->clear();
