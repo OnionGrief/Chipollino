@@ -1348,7 +1348,7 @@ bool Regex::subset(const Regex& r) const {
 	return FiniteAutomaton::equivalent(dfa_instersection, dfa2);
 }
 
-FiniteAutomaton Regex::to_antimirov() {
+FiniteAutomaton Regex::to_antimirov() const{
 	vector<Regex> regs;
 
 	Regex r;

@@ -102,7 +102,7 @@ class Regex : BaseObject {
 	FiniteAutomaton to_tompson() const;
 	FiniteAutomaton to_glushkov() const;
 	FiniteAutomaton to_ilieyu() const;
-	FiniteAutomaton to_antimirov();
+	FiniteAutomaton to_antimirov() const;
 
 	~Regex();
 	Regex* copy() const;
