@@ -986,7 +986,7 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 		//	index++;
 		// }
 	}
-	if ((stac_state.empty() && s.size() <= index) ||
+	if (/*(stac_state.empty() && s.size() <= index) ||*/
 		(s.size() == index && state.is_terminal)) {
 		return true;
 	}
