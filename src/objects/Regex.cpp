@@ -1467,7 +1467,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 
 	vector<string> name_states;
 
-	for (size_t i; i < states.size(); i++) {
+	for (size_t i = 0; i < states.size(); i++) {
 		name_states.push_back(states[i].to_txt());
 	}
 
@@ -1475,7 +1475,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 
 	string derev_log = "";
 
-	for (size_t i; i < name_states.size(); i++) {
+	for (size_t i = 0; i < name_states.size(); i++) {
 		string state = name_states[i];
 		map<alphabet_symbol, set<int>> transit;
 		for (size_t j = 0; j < out.size(); j++) {
