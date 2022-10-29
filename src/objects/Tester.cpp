@@ -21,15 +21,9 @@ void Tester::test(string lang, string r2, int step) {
 		words.push_back({i * step, time, is_belongs});
 		if (time >= 180) return;
 	}
-
-	/*for (int i = 0; i < words.size(); i++) {
-		cout << words[i].iterations_num << " " << words[i].time << " "
-			 << words[i].is_belongs << endl;
-	}*/
-
-	/* место для вызова логгера */
-	// my_loger(tableRegex); а мб можно не так
-	// my_loger(lang, r2, step, words); без лишней структуры
+	Logger::init_step("Test");
+	Logger::log(lang, r2, step, words);
+	Logger::finish_step();
 }
 
 void Tester::test(FiniteAutomaton lang, string r2, int step) {

@@ -2,6 +2,7 @@
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
 #include "Regex.h"
+#include "Logger.h"
 #include <iostream>
 #include <regex>
 #include <string>
