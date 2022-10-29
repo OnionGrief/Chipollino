@@ -132,7 +132,6 @@ void Example::regex_parsing() {
 	}
 	cout << r.to_txt() << "\n";
 	//cout << r.pump_length() << "\n";
-	/*
 	FiniteAutomaton a;
 	FiniteAutomaton b;
 	FiniteAutomaton c;
