@@ -147,17 +147,19 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 	out.close();
 }
 
-void Logger::log(string r1, string r2, int step, vector<double> times,
-				 vector<bool> belongs) {
+void Logger::log(string lang, string regex, int step, vector<int> lengths,
+				 vector<double> times, vector<bool> belongs) {
 	if (!active) return;
 	if (step_counter > 1) return;
-	Logger::log("Язык, основанный на регулярке", r1);
-	Logger::log("Слова порождаются регуляркой", r2);
+	Logger::log("Язык, основанный на регулярке", lang);
+	Logger::log("Слова порождаются регуляркой", regex);
 	Logger::log("Шаг итерации", to_string(step));
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
-		out << "\\begin{tabular}{lll}\n" << endl;
+		out << "\\begin{tabular}{llll}\n" << endl;
 		string s1 = "Количество итераций";
+		s1 = s1 + " & ";
+		s1 = s1 + "Длина строки";
 		s1 = s1 + " & ";
 		s1 = s1 + "Время парсинга";
 		s1 = s1 + " & ";
@@ -166,17 +168,19 @@ void Logger::log(string r1, string r2, int step, vector<double> times,
 		out << s1 << endl;
 		for (int i = 0; i < times.size(); i++) {
 			string w1 = to_string(step * i);
-			string w2 = to_string(times[i]);
-			string w3;
+			string w2 = to_string(lengths[i]);
+			string w3 = to_string(times[i]);
+			string w4;
 			if (belongs[i]) {
-				w3 = "true";
+				w4 = "true";
 			} else {
-				w3 = "false";
+				w4 = "false";
 			}
 			if (i != times.size() - 1) {
-				out << w1 + " & " + w2 + " & " + w3 + " \\\\" << endl;
+				out << w1 + " & " + w2 + " & " + w3 + " & " + w4 + " \\\\"
+					<< endl;
 			} else {
-				out << w1 + " & " + w2 + " & " + w3 << endl;
+				out << w1 + " & " + w2 + " & " + w3 + " & " + w4 << endl;
 			}
 		}
 		out << "\\end{tabular}\n" << endl;
@@ -184,8 +188,9 @@ void Logger::log(string r1, string r2, int step, vector<double> times,
 	out.close();
 }
 
-void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
-				 vector<double> times, vector<bool> belongs) {
+void Logger::log(const FiniteAutomaton& fa1, string regex, int step,
+				 vector<int> lengths, vector<double> times,
+				 vector<bool> belongs) {
 	if (!active) return;
 	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
@@ -204,12 +209,14 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
 		}
 	}
 	out.close();
-	Logger::log("Слова порождаются регуляркой", r2);
+	Logger::log("Слова порождаются регуляркой", regex);
 	Logger::log("Шаг итерации", to_string(step));
 	out.open("./resources/report.tex", ios::app);
 	if (out.is_open()) {
-		out << "\\begin{tabular}{lll}\n" << endl;
+		out << "\\begin{tabular}{llll}\n" << endl;
 		string s1 = "Количество итераций";
+		s1 = s1 + " & ";
+		s1 = s1 + "Длина строки";
 		s1 = s1 + " & ";
 		s1 = s1 + "Время парсинга";
 		s1 = s1 + " & ";
@@ -218,17 +225,19 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
 		out << s1 << endl;
 		for (int i = 0; i < times.size(); i++) {
 			string w1 = to_string(step * i);
-			string w2 = to_string(times[i]);
-			string w3;
+			string w2 = to_string(lengths[i]);
+			string w3 = to_string(times[i]);
+			string w4;
 			if (belongs[i]) {
-				w3 = "true";
+				w4 = "true";
 			} else {
-				w3 = "false";
+				w4 = "false";
 			}
 			if (i != times.size() - 1) {
-				out << w1 + " & " + w2 + " & " + w3 + " \\\\" << endl;
+				out << w1 + " & " + w2 + " & " + w3 + " & " + w4 + " \\\\"
+					<< endl;
 			} else {
-				out << w1 + " & " + w2 + " & " + w3 << endl;
+				out << w1 + " & " + w2 + " & " + w3 + " & " + w4 << endl;
 			}
 		}
 		out << "\\end{tabular}\n" << endl;
