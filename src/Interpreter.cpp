@@ -141,83 +141,6 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Thompson") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_tompson());
 	}
-	if (function.name == "Determinize") {
-		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.determinize());
-	}
-	if (function.name == "RemEps") {
-		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.remove_eps());
-	}
-	/*if (function.name == "Linearize") {
-		return ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
-	}*/
-	if (function.name == "Minimize") {
-		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.minimize());
-	}
-	if (function.name == "Reverse") {
-		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.reverse());
-	}
-	if (function.name == "Annote") {
-		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.annote());
-	}
-
-	/*if (function.name == "Delinearize") {
-		if (function.output == regex){
-			return ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
-		} else {
-			return ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
-		}
-	}*/
-	if (function.name == "Complement") {
-		return ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
-	}
-	if (function.name == "DeAnnote") {
-		if (function.output == nfa) {
-			return ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
-		} else {
-			// return ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
-		}
-	}
-	if (function.name == "MergeBisim") {
-		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.merge_bisimilar());
-	}
-	if (function.name == "PumpLength") {
-		return ObjectInt(get<ObjectRegex>(arguments[0]).value.pump_length());
-	}
-	//Миша
-	/*if (function.name == "ClassLength") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
-	//у нас нет
-	/*if (function.name == "KSubSet") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
-	if (function.name == "Normalize") {
-		return ObjectRegex(get<ObjectRegex>(arguments[0])
-							   .value.normalize_regex(
-								   get<ObjectFileName>(arguments[0]).value));
-	}
-	//Саша вроде сделает
-	/*if (function.name == "States") {
-		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
-	}*/
-	//Мишино вроде
-	/*if (function.name == "ClassCard") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
-	//пока не реализовано
-	/*if (function.name == "Ambiguity") {
-		return ObjectValue(get<ObjectNFA>(arguments[0]).value.);
-	}*/
-	/*if (function.name == "Width") {
-		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
-	}*/
-	//Миша
-	/*if (function.name == "MyhillNerode") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}
-	if (function.name == "Simplify") {
-		return ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
-	}*/
 	if (function.name == "Bisimilar") {
 		return ObjectBoolean(
 			FiniteAutomaton::bisimilar(get<ObjectNFA>(arguments[0]).value,
@@ -234,7 +157,8 @@ GeneralObject Interpreter::apply_function(
 				.value.subset(get<ObjectNFA>(arguments[1]).value));
 	}
 	if (function.name == "Equiv") {
-		if (vector<ObjectType> n = {nfa, nfa}; function.input == n) {
+		vector<ObjectType> n = {nfa, nfa};
+		if (function.input == n) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
 				get<ObjectNFA>(arguments[0]).value,
 				get<ObjectNFA>(arguments[1]).value));
@@ -253,6 +177,130 @@ GeneralObject Interpreter::apply_function(
 	/*(if (function.name == "SemDet") {
 		return ObjectBoolean(get<ObjectNFA>(arguments[0]).value.);
 	}*/
+	if (function.name == "Determinize") {
+		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.determinize());
+	}
+	if (function.name == "Minimize") {
+		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.minimize());
+	}
+	if (function.name == "Annote") {
+		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.annote());
+	}
+	if (function.name == "PumpLength") {
+		return ObjectInt(get<ObjectRegex>(arguments[0]).value.pump_length());
+	}
+	//Миша
+	/*if (function.name == "ClassLength") {
+		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
+	}*/
+	//у нас нет
+	/*if (function.name == "KSubSet") {
+		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
+	}*/
+	//Саша вроде сделает
+	/*if (function.name == "States") {
+		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
+	}*/
+	//Мишино вроде
+	/*if (function.name == "ClassCard") {
+		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
+	}*/
+	//пока не реализовано
+	/*if (function.name == "Ambiguity") {
+		return ObjectValue(get<ObjectNFA>(arguments[0]).value.);
+	}*/
+	/*if (function.name == "Width") {
+		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
+	}*/
+	//Миша
+	/*if (function.name == "MyhillNerode") {
+		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
+	}*/
+
+	//пошла жопа
+
+	/*
+	* Идёт Глушков по лесу, видит -- регулярка.
+	Построил автомат и застрелился.
+	*/
+
+	GeneralObject predres = arguments[0];
+	optional<GeneralObject> res;
+
+	if (function.name == "RemEps") {
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.remove_eps());
+	}
+	/*if (function.name == "Linearize") {
+		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
+	}*/
+	if (function.name == "Reverse") {
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.reverse());
+	}
+	/*if (function.name == "Delinearize") {
+		if (function.output == regex){
+			res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
+		} else {
+			res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
+		}
+	}*/
+	if (function.name == "Complement") {
+		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
+	}
+	if (function.name == "DeAnnote") {
+		if (function.output == nfa) {
+			res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
+		} else {
+			// res =
+			// ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
+		}
+	}
+	if (function.name == "MergeBisim") {
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.merge_bisimilar());
+	}
+	if (function.name == "Normalize") {
+		res = ObjectRegex(get<ObjectRegex>(arguments[0])
+							  .value.normalize_regex(
+								  get<ObjectFileName>(arguments[0]).value));
+	}
+	/*if (function.name == "Simplify") {
+		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
+	}*/
+
+	if (res.has_value()) {
+		GeneralObject resval = res.value();
+
+		if (holds_alternative<ObjectRegex>(resval)) {
+			if (Regex::equal(get<ObjectRegex>(resval).value,
+							 get<ObjectRegex>(predres).value))
+				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
+					 << endl;
+		}
+
+		if (holds_alternative<ObjectDFA>(resval)) {
+			if (FiniteAutomaton::equal(get<ObjectDFA>(resval).value,
+									   get<ObjectDFA>(predres).value))
+				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
+					 << endl;
+		}
+
+		if (holds_alternative<ObjectNFA>(resval)) {
+			if (FiniteAutomaton::equal(get<ObjectNFA>(resval).value,
+									   get<ObjectNFA>(predres).value))
+				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
+					 << endl;
+		}
+
+		return res.value();
+	}
+
+	cerr << "Функция " + function.name + " страшная и мне не известная O_O"
+		 << endl;
+
+	// FIXME: Ошибка *намеренно* вызывает сегфолт.
+	//          Придумай что-нибудь!
+
+	cerr << *((int*)0);
+
 	return GeneralObject();
 }
 
@@ -405,7 +453,7 @@ void Interpreter::run_declaration(const Declaration& decl) {
 }
 
 void Interpreter::run_predicate(const Predicate& pred) {
-	log( "Running predicate...");
+	log("Running predicate...");
 	auto res = apply_function(pred.predicate,
 							  parameters_to_arguments(pred.parameters));
 	log("    result: " + to_string(get<ObjectBoolean>(res).value));
