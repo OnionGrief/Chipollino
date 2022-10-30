@@ -70,6 +70,7 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 	vector<GrammarItem*>& nonterminals,
 	vector<GrammarItem*>& bisimilar_nonterminals,
 	map<int, vector<GrammarItem*>>& class_to_nonterminals) {
+	class_to_nonterminals.clear();
 	map<set<string>, vector<GrammarItem*>> classes_check_map;
 	set<int> checker;
 	// checker

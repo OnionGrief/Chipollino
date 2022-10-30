@@ -797,9 +797,10 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 	}
 
 	vector<GrammarItem*> bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
-		Grammar::get_bisimilar_grammar(rules, nonterminals,
-									   bisimilar_nonterminals);
+		Grammar::get_bisimilar_grammar(
+			rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
 
 	map<int, vector<string>> class_to_nonterminals_names;
 
@@ -885,9 +886,10 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1,
 	for (GrammarItem* nont : nonterminals)
 		nont->class_number = 0; // сбрасываю номера классов
 	vector<GrammarItem*> bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
-		Grammar::get_bisimilar_grammar(rules, nonterminals,
-									   bisimilar_nonterminals);
+		Grammar::get_bisimilar_grammar(
+			rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
 		fa2_nonterminals[fa2.initial_state]->class_number)
@@ -921,7 +923,8 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1,
 	vector<GrammarItem*> reverse_bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> reverse_bisimilar_rules =
 		Grammar::get_bisimilar_grammar(reverse_rules, nonterminals,
-									   reverse_bisimilar_nonterminals);
+									   reverse_bisimilar_nonterminals,
+									   class_to_nonterminals);
 	// сопоставление состояний 1 к 1
 	vector<int> reverse_bisimilar_classes;
 	for (GrammarItem* nont : nonterminals) {
@@ -1001,9 +1004,9 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1,
 		nont->class_number = 0; // сбрасываю номера классов
 	vector<GrammarItem*> transitions_bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> transitions_bisimilar_rules =
-		Grammar::get_bisimilar_grammar(transitions_rules,
-									   transitions_nonterminals,
-									   transitions_bisimilar_nonterminals);
+		Grammar::get_bisimilar_grammar(
+			transitions_rules, transitions_nonterminals,
+			transitions_bisimilar_nonterminals, class_to_nonterminals);
 	// проверяю бисимилярность переходов
 	classes.clear();
 	classes.resize(transitions_bisimilar_nonterminals.size(), 0);
