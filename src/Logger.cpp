@@ -147,12 +147,12 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 	out.close();
 }
 
-void Logger::log(string r1, string r2, int step, vector<double> times,
-				 vector<bool> belongs) {
+void Logger::log(string lang, string regex, int step, vector<double> times,
+				 vector<int> lengths, vector<bool> belongs) {
 	if (!active) return;
 	if (step_counter > 1) return;
-	Logger::log("Язык, основанный на регулярке", r1);
-	Logger::log("Слова порождаются регуляркой r2", r2);
+	Logger::log("Язык, основанный на регулярке", lang);
+	Logger::log("Слова порождаются регуляркой r2", regex);
 	Logger::log("Шаг итерации", to_string(step));
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
@@ -184,8 +184,9 @@ void Logger::log(string r1, string r2, int step, vector<double> times,
 	out.close();
 }
 
-void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
-				 vector<double> times, vector<bool> belongs) {
+void Logger::log(const FiniteAutomaton& fa1, string regex, int step,
+				 vector<double> times, vector<int> lengths,
+				 vector<bool> belongs) {
 	if (!active) return;
 	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
@@ -204,7 +205,7 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
 		}
 	}
 	out.close();
-	Logger::log("Слова порождаются регуляркой r2", r2);
+	Logger::log("Слова порождаются регуляркой r2", regex);
 	Logger::log("Шаг итерации", to_string(step));
 	out.open("./resources/report.tex", ios::app);
 	if (out.is_open()) {

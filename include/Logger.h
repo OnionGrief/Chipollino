@@ -41,11 +41,12 @@ class Logger {
 					const FiniteAutomaton& fa2, const FiniteAutomaton& fa3);
 	// для отображения таблицы тестера tableRegex, ее структура описана в
 	// Tester.h
-	static void log(string r1, string r2, int step, vector<double> times,
-					vector<bool> belongs);
+	static void log(string lang, string regex, int step, vector<double> times,
+					vector<int> lengths, vector<bool> belongs);
 	// для отображения таблицы тестера tableFA, ее структура описана в Tester.h
-	static void log(const FiniteAutomaton& fa1, string r2, int step,
-					vector<double> times, vector<bool> belongs);
+	static void log(const FiniteAutomaton& fa, string regex, int step,
+					vector<double> times, vector<int> lengths,
+					vector<bool> belongs);
 	// завершение шага
 	static void finish_step();
 	// завершение записи в файл
