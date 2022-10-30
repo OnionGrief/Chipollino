@@ -152,9 +152,15 @@ GeneralObject Interpreter::apply_function(
 		return ObjectBoolean(get<ObjectDFA>(arguments[0]).value.);
 	}*/
 	if (function.name == "Subset") {
-		return ObjectBoolean(
-			get<ObjectNFA>(arguments[1])
-				.value.subset(get<ObjectNFA>(arguments[1]).value));
+		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
+			return ObjectBoolean(
+				get<ObjectNFA>(arguments[0])
+					.value.subset(get<ObjectNFA>(arguments[1]).value));
+		} else {
+			return ObjectBoolean(
+				get<ObjectRegex>(arguments[0])
+					.value.subset(get<ObjectRegex>(arguments[1]).value));
+		}
 	}
 	if (function.name == "Equiv") {
 		vector<ObjectType> n = {nfa, nfa};
