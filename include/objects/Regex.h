@@ -131,6 +131,8 @@ class Regex : BaseObject {
 	std::optional<Regex> prefix_derevative(std::string respected_str) const;
 	// Длина накачки
 	int pump_length() const;
+	// Слово, в котором все итерации Клини раскрыты n раз
+	string get_iterated_word(int n) const;
 
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc

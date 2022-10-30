@@ -1,6 +1,7 @@
 #include "Regex.h"
 #include "FiniteAutomaton.h"
 #include "Language.h"
+#include "Logger.h"
 #include <set>
 
 Lexem::Lexem(Type type, alphabet_symbol symbol, int number)
@@ -527,6 +528,32 @@ string Regex::to_txt() const {
 
 	return str1 + symb + str2;
 }
+
+// для метода test
+string Regex::get_iterated_word(int n) const {
+	string str = "";
+	if (term_l) {
+		if (type == Type::star) {
+			for (int i = 0; i < n; i++)
+				str += term_l->get_iterated_word(n);
+		} else
+			str += term_l->get_iterated_word(n);
+	}
+	if (term_r) {
+		str += term_r->get_iterated_word(n);
+	}
+	if (value.symbol) {
+		str += value.symbol;
+	}
+	if (type == Type::alt) {
+		cout << "ERROR: в метод test передано регулярное выражение с "
+			 << "альтернативами\n"; //по-хорошему тайпчекера запрячь,
+									//но не будем тревожить Сонечку
+		return "";
+	}
+	return str;
+}
+
 // возвращает пару <вектор сотсояний, max_index>
 pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 	string str;			  //идентификатор состояния
@@ -1442,17 +1469,48 @@ bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 }
 
 bool Regex::equal(const Regex& r1, const Regex& r2) {
-	return equality_checker(&r1, &r2);
+	Logger::init_step("Equal");
+	Logger::log("Первое регулярное выражение", r1.to_txt());
+	Logger::log("Второе регулярное выражение", r2.to_txt());
+	bool result = equality_checker(&r1, &r2);
+	if (result)
+		Logger::log("Результат Equal", "true");
+	else
+		Logger::log("Результат Equal", "false");
+	Logger::finish_step();
+	return result;
 }
 
 bool Regex::equivalent(const Regex& r1, const Regex& r2) {
-	return FiniteAutomaton::equivalent(r1.to_ilieyu(), r2.to_ilieyu());
+	Logger::init_step("Equiv");
+	Logger::log("Первое регулярное выражение", r1.to_txt());
+	Logger::log("Второе регулярное выражение", r2.to_txt());
+	FiniteAutomaton fa1 = r1.to_ilieyu();
+	FiniteAutomaton fa2 = r2.to_ilieyu();
+	bool result = FiniteAutomaton::equivalent(fa1, fa2);
+	if (result)
+		Logger::log("Результат Equiv", "true");
+	else
+		Logger::log("Результат Equiv", "false");
+	Logger::finish_step();
+	return result;
 }
 
 bool Regex::subset(const Regex& r) const {
-	FiniteAutomaton fa1(to_ilieyu());
-	FiniteAutomaton fa2(r.to_ilieyu());
-	return fa1.subset(fa2);
+	Logger::init_step("Subset");
+	Logger::log("Первое регулярное выражение", to_txt());
+	Logger::log("Второе регулярное выражение", r.to_txt());
+	FiniteAutomaton dfa1(to_ilieyu().determinize());
+	FiniteAutomaton dfa2(r.to_ilieyu().determinize());
+	FiniteAutomaton dfa_instersection(
+		FiniteAutomaton::intersection(dfa1, dfa2));
+	bool result = FiniteAutomaton::equivalent(dfa_instersection, dfa2);
+	if (result)
+		Logger::log("Результат Subset", "true");
+	else
+		Logger::log("Результат Subset", "false");
+	Logger::finish_step();
+	return result;
 }
 
 FiniteAutomaton Regex::to_antimirov() const {
