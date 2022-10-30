@@ -1116,47 +1116,20 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	return result;
 }
 
-bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
-	// cout << s.size() << endl;
-	State state = states[index_state];
-
-	if (s.size() == 0 && state.is_terminal) {
-		return true;
-	}
-	set<int> tr_eps =
-		state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
-	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
-	int n;
-	// tr_eps = {};
-	if (s.size() == 0 && !state.is_terminal) {
-		n = trans_eps.size();
-		for (size_t i = 0; i < trans_eps.size(); i++) {
-			// cout << trans_eps[i] << endl;
-			if (parsing_nfa(s, trans_eps[i])) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	alphabet_symbol elem = char_to_alphabet_symbol(s[0]);
-	set<int> tr = state.transitions[elem];
-	vector<int> trans{tr.begin(), tr.end()};
-	// tr = {};
-	n = trans.size();
-	for (size_t i = 0; i < n; i++) {
-		if (parsing_nfa(s.substr(1), trans[i])) {
-			return true;
-		}
-	}
-	n = trans_eps.size();
-	for (size_t i = 0; i < n; i++) {
-		// cout << trans_eps[i] << endl;
-		if (parsing_nfa(s, trans_eps[i])) {
-			return true;
-		}
-	}
-	return false;
+bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
+	Logger::init_step("Subset");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", *this, fa);
+	FiniteAutomaton dfa1(determinize());
+	FiniteAutomaton dfa2(fa.determinize());
+	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
+	bool result = equivalent(dfa_instersection, dfa2);
+	if (result)
+		Logger::log("Результат Subset", "true");
+	else
+		Logger::log("Результат Subset", "false");
+	Logger::finish_step();
+	return result;
 }
 
 vector<unsigned long long> get_path_number(vector<State> states, int max_n) {
@@ -1203,9 +1176,9 @@ double calc_ambiguity(int i, int n, const vector<double>& f1,
 	return d1 - d2;
 }
 
-FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 	FiniteAutomaton fa = remove_eps();
-	FiniteAutomaton min_fa = minimize().remove_trap_states();
+	FiniteAutomaton min_fa = fa.minimize().remove_trap_states();
 	fa = fa.remove_trap_states();
 
 	int i = 2;
@@ -1318,6 +1291,73 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	}
 	return FiniteAutomaton::polynomially_ambigious;
 }
+
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
+	Logger::init_step("Ambiguity");
+	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
+	switch (result) {
+	case FiniteAutomaton::exponentially_ambiguous:
+		Logger::log("Результат Ambiguity", "Exponentially ambiguous");
+		break;
+	case FiniteAutomaton::almost_unambigious:
+		Logger::log("Результат Ambiguity", "Almost unambigious");
+		break;
+	case FiniteAutomaton::unambigious:
+		Logger::log("Результат Ambiguity", "Unambigious");
+		break;
+	case FiniteAutomaton::polynomially_ambigious:
+		Logger::log("Результат Ambiguity", "Polynomially ambiguous");
+		break;
+	default:
+		break;
+	}
+	Logger::finish_step();
+	return result;
+}
+
+bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
+	// cout << s.size() << endl;
+	State state = states[index_state];
+
+	if (s.size() == 0 && state.is_terminal) {
+		return true;
+	}
+	set<int> tr_eps =
+		state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
+	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
+	int n;
+	// tr_eps = {};
+	if (s.size() == 0 && !state.is_terminal) {
+		n = trans_eps.size();
+		for (size_t i = 0; i < trans_eps.size(); i++) {
+			// cout << trans_eps[i] << endl;
+			if (parsing_nfa(s, trans_eps[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	alphabet_symbol elem = char_to_alphabet_symbol(s[0]);
+	set<int> tr = state.transitions[elem];
+	vector<int> trans{tr.begin(), tr.end()};
+	// tr = {};
+	n = trans.size();
+	for (size_t i = 0; i < n; i++) {
+		if (parsing_nfa(s.substr(1), trans[i])) {
+			return true;
+		}
+	}
+	n = trans_eps.size();
+	for (size_t i = 0; i < n; i++) {
+		// cout << trans_eps[i] << endl;
+		if (parsing_nfa(s, trans_eps[i])) {
+			return true;
+		}
+	}
+	return false;
+}
+
 bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 	// cout << s.size() << endl;
 	stack<State> stac_state;
@@ -1385,21 +1425,6 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	State state = states[0];
 	return parsing_nfa_for(s);
-}
-bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
-	Logger::init_step("Subset");
-	Logger::log("Автоматы:");
-	Logger::log("Первый автомат", "Второй автомат", *this, fa);
-	FiniteAutomaton dfa1(determinize());
-	FiniteAutomaton dfa2(fa.determinize());
-	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
-	bool result = equivalent(dfa_instersection, dfa2);
-	if (result)
-		Logger::log("Результат Subset", "true");
-	else
-		Logger::log("Результат Subset", "false");
-	Logger::finish_step();
-	return result;
 }
 
 int FiniteAutomaton::states_number() const {
