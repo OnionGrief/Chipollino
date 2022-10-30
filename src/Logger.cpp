@@ -152,7 +152,7 @@ void Logger::log(string r1, string r2, int step, vector<double> times,
 	if (!active) return;
 	if (step_counter > 1) return;
 	Logger::log("Язык, основанный на регулярке", r1);
-	Logger::log("Слова порождаются регуляркой r2", r2);
+	Logger::log("Слова порождаются регуляркой", r2);
 	Logger::log("Шаг итерации", to_string(step));
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
@@ -204,13 +204,11 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
 		}
 	}
 	out.close();
-	Logger::log("Слова порождаются регуляркой r2", r2);
+	Logger::log("Слова порождаются регуляркой", r2);
 	Logger::log("Шаг итерации", to_string(step));
 	out.open("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << "\\begin{tabular}{lll}\n" << endl;
-		out << "\\multicolumn{3}{c}{Таблица по алгоритму с возвратами} \\\\"
-			<< endl;
 		string s1 = "Количество итераций";
 		s1 = s1 + " & ";
 		s1 = s1 + "Время парсинга";
@@ -234,33 +232,6 @@ void Logger::log(const FiniteAutomaton& fa1, string r2, int step,
 			}
 		}
 		out << "\\end{tabular}\n" << endl;
-
-		// out << "\\begin{tabular}{lll}\n" << endl;
-		// out << "\\multicolumn{3}{c}{Таблица по параллельному алгоритму} \\\\"
-		// 	<< endl;
-		// string s1 = "Количество итераций";
-		// s1 = s1 + " & ";
-		// s1 = s1 + "Время парсинга";
-		// s1 = s1 + " & ";
-		// s1 = s1 + "Принадлежность языку";
-		// s1 = s1 + "\\\\";
-		// out << s1 << endl;
-		// for (int i = 0; i < times.size(); i++) {
-		// 	string w1 = to_string(step * i);
-		// 	string w2 = to_string(times[i]);
-		// 	string w3;
-		// 	if (belongs[i]) {
-		// 		w3 = "true";
-		// 	} else {
-		// 		w3 = "false";
-		// 	}
-		// 	if (i != times.size() - 1) {
-		// 		out << w1 + " & " + w2 + " & " + w3 + " \\\\" << endl;
-		// 	} else {
-		// 		out << w1 + " & " + w2 + " & " + w3 << endl;
-		// 	}
-		// }
-		// out << "\\end{tabular}\n" << endl;
 	}
 	out.close();
 }
