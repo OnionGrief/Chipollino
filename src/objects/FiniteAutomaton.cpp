@@ -1248,16 +1248,6 @@ int FiniteAutomaton::states_number() const {
 	return states.size();
 }
 
-int FiniteAutomaton::get_states_size() {
-	return states.size();
-}
-State FiniteAutomaton::get_state(int i) {
-	return states[i];
-}
-
-const set<alphabet_symbol>& FiniteAutomaton::get_alphabet() {
-	return language->get_alphabet();
-}
 /*
 Джун программист прибегает с проекта к своему ментору и кричит:
 — Меня отпустили с проекта пораньше!

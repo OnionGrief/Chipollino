@@ -104,10 +104,6 @@ class FiniteAutomaton : public BaseObject {
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
 	friend class Regex;
+	friend class TransformationMonoid;
 	// получаем кол-во состояний
-	int get_states_size();
-	//получаем состояние
-
-	const set<alphabet_symbol>& get_alphabet();
-	State get_state(int i);
 };

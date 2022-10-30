@@ -376,36 +376,8 @@ void Example::fa_equivalent_check() {
 	cout << FiniteAutomaton::equivalent(fa1, fa2);
 }
 
-void Example::fa_subset_check() {
-	vector<State> states1;
-	for (int i = 0; i < 4; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
-	}
-	states1[0].set_transition(1, "a");
-	states1[0].set_transition(1, "b");
-	states1[0].set_transition(2, "a");
-	states1[1].set_transition(3, "b");
-	states1[2].set_transition(3, "c");
-	states1[3].is_terminal = true;
-	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
-
-	vector<State> states2;
-	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states2.push_back(s);
-	}
-	states2[0].set_transition(1, "b");
-	states2[1].set_transition(2, "b");
-	states2[2].is_terminal = true;
-	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
-
-	cout << fa1.subset(fa2) << endl;
-}
-
 void Example::transformation_monoid_example() {
+
 	vector<State> states;
 	for (int i = 0; i < 4; i++) {
 		State s = {
@@ -438,6 +410,48 @@ void Example::transformation_monoid_example() {
 	}*/
 }
 
+void Example::fa_subset_check() {
+	vector<State> states1;
+	for (int i = 0; i < 4; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	states1[0].set_transition(1, "a");
+	states1[0].set_transition(1, "b");
+	states1[0].set_transition(2, "a");
+	states1[1].set_transition(3, "b");
+	states1[2].set_transition(3, "c");
+	states1[3].is_terminal = true;
+	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
+
+	vector<State> states2;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states2.push_back(s);
+	}
+	states2[0].set_transition(1, "b");
+	states2[1].set_transition(2, "b");
+	states2[2].is_terminal = true;
+	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
+
+	cout << fa1.subset(fa2) << endl;
+}
+
+void Example::normalize_regex() {
+	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	regl = regl + regr;
+	// regl = "abc"; //"bbb*(aaa*bbb*)*";
+	Regex r;
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
+	}
+	r.normalize_regex("./../temp/Rules.txt");
+	cout << r.to_txt();
+}
 void Example::to_image() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
@@ -508,19 +522,6 @@ void Example::step() {
 	Logger::finish_step();
 	Logger::finish();
 	Logger::deactivate();
-}
-void Example::normalize_regex() {
-	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
-	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
-	regl = regl + regr;
-	// regl = "abc"; //"bbb*(aaa*bbb*)*";
-	Regex r;
-	if (!r.from_string(regl)) {
-		cout << "ERROR\n";
-		return;
-	}
-	r.normalize_regex("./../temp/Rules.txt");
-	cout << r.to_txt();
 }
 
 void Example::tester() {
