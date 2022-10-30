@@ -542,7 +542,7 @@ string Regex::get_iterated_word(int n) const {
 	if (term_r) {
 		str += term_r->get_iterated_word(n);
 	}
-	if (value.symbol) {
+	if (value.symbol != "") {
 		str += value.symbol;
 	}
 	if (type == Type::alt) {
@@ -727,7 +727,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 FiniteAutomaton Regex::to_tompson() const {
 	Logger::init_step("Автомат Томпсона");
 	FiniteAutomaton a(0, get_tompson(-1).first, language);
-	Logger::log(a.to_txt());
+	Logger::log("", "", a, FiniteAutomaton());
 	Logger::finish_step();
 	return a;
 }
@@ -944,20 +944,20 @@ FiniteAutomaton Regex::to_glushkov() const {
 	string str_end = "";
 	string str_pair = "";
 	for (size_t i = 0; i < first->size(); i++) {
-		str_firs =
-			str_firs + (*first)[i].symbol + to_string((*first)[i].number) + " ";
+		str_firs = str_firs + (*first)[i].symbol +
+				   to_string((*first)[i].number + 1) + " ";
 	}
 
 	for (size_t i = 0; i < end->size(); i++) {
 		str_end =
-			str_end + (*end)[i].symbol + to_string((*end)[i].number) + " ";
+			str_end + (*end)[i].symbol + to_string((*end)[i].number + 1) + " ";
 	}
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
 			str_pair = str_pair + list[it1.first]->value.symbol +
-					   to_string(list[it1.first]->value.number) +
+					   to_string(list[it1.first]->value.number + 1) +
 					   list[it1.second[i]]->value.symbol +
-					   to_string(list[it1.second[i]]->value.number) + " ";
+					   to_string(list[it1.second[i]]->value.number + 1) + " ";
 		}
 	}
 
@@ -999,7 +999,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 	delete first;
 	delete end;
 	FiniteAutomaton a(0, st, language);
-	Logger::log(a.to_txt());
+	Logger::log("", "", a, FiniteAutomaton());
 	Logger::finish_step();
 	return FiniteAutomaton(0, st, language);
 }
@@ -1055,7 +1055,7 @@ FiniteAutomaton Regex::to_ilieyu() const {
 	}
 
 	// cout << str_follow;
-	Logger::log("Автомат Глушкова", glushkov.to_txt());
+	Logger::log("Автомат Глушкова", "", glushkov, FiniteAutomaton());
 	Logger::log("Follow-отношения", str_follow);
 
 	for (size_t i = 0; i < new_states.size(); i++) {
@@ -1081,7 +1081,7 @@ FiniteAutomaton Regex::to_ilieyu() const {
 		new_states[i].index = i;
 	}
 	FiniteAutomaton a(0, new_states, glushkov.language);
-	Logger::log("Итог", a.to_txt());
+	Logger::log("Итог", "", a, FiniteAutomaton());
 	Logger::finish_step();
 	return a;
 }
@@ -1567,8 +1567,9 @@ FiniteAutomaton Regex::to_antimirov() const {
 			// cout << out[j][0].to_txt() << " ";
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
-			derev_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
-						 " = " + out[j][1].to_txt() + "\n";
+			derev_log = out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
+						" = " + out[j][1].to_txt() + "\\";
+			Logger::log(derev_log);
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
 							  out[j][1].to_txt());
@@ -1590,10 +1591,11 @@ FiniteAutomaton Regex::to_antimirov() const {
 
 	// cout << derev_log;
 	// cout << str_state << endl;
-	Logger::log(derev_log, str_state);
+	// Logger::log(derev_log, str_state);
+	Logger::log(str_state);
 
 	FiniteAutomaton a(0, automat_state, language);
-	Logger::log(a.to_txt());
+	Logger::log("Итог", "", a, FiniteAutomaton());
 	Logger::finish_step();
 	return a;
 }
@@ -1608,7 +1610,7 @@ string Regex::to_str_log() const {
 	}
 	string symb;
 	if (type == Type::symb /*value.symbol*/)
-		symb = value.symbol + to_string(value.number);
+		symb = value.symbol + to_string(value.number + 1);
 	if (type == Type::eps) symb = "";
 	if (type == Type::alt) {
 		symb = '|';
