@@ -286,8 +286,9 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	stringstream ss;
 	for (auto& elem : groups) {
 		ss << "\\{";
-		for (int i = 0; i < elem.size(); i++)
+		for (int i = 0; i < elem.size() - 1; i++)
 			ss << states[elem[i]].identifier << ",";
+		ss << states[elem[elem.size() - 1]].identifier;
 		ss << "\\}";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
