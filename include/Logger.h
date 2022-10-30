@@ -31,6 +31,8 @@ class Logger {
 	static void log(string text);
 	// строковые данные(val) с заголовком(text)
 	static void log(string text, string val);
+	// для отображения одного автомата, а1 - название автомата
+	static void log(string a1, const FiniteAutomaton& fa1);
 	// для отображения двух автоматов; а1 и а2 - названия автоматов fa1 и fa2
 	// соответственно
 	static void log(string a1, string a2, const FiniteAutomaton& fa1,

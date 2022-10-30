@@ -67,6 +67,27 @@ void Logger::log(string text, string val) {
 	out.close();
 }
 
+void Logger::log(string a1, const FiniteAutomaton& fa1) {
+	if (!active) return;
+	if (step_counter > 1) return;
+	string f1 = fa1.to_txt();
+	ofstream out("./resources/report.tex", ios::app);
+	if (out.is_open()) {
+		if (f1 != "") {
+			image_number += 1;
+			AutomatonToImage::to_image(f1, image_number);
+			out << a1 + "\n" << endl;
+			char si[256];
+			sprintf(si,
+					"\\includegraphics[width=5in, "
+					"keepaspectratio]{./resources/output%d.png}\n",
+					image_number);
+			out << si << endl;
+		}
+	}
+	out.close();
+}
+
 void Logger::log(string a1, string a2, const FiniteAutomaton& fa1,
 				 const FiniteAutomaton& fa2) {
 	if (!active) return;
@@ -193,25 +214,10 @@ void Logger::log(const FiniteAutomaton& fa1, string regex, int step,
 				 vector<bool> belongs) {
 	if (!active) return;
 	if (step_counter > 1) return;
+	log("Автомат", fa1);
+	log("Слова порождаются регуляркой", regex);
+	log("Шаг итерации", to_string(step));
 	ofstream out("./resources/report.tex", ios::app);
-	string f1 = fa1.to_txt();
-	if (out.is_open()) {
-		if (f1 != "") {
-			image_number += 1;
-			AutomatonToImage::to_image(f1, image_number);
-			out << "Автомат\n" << endl;
-			char si[256];
-			sprintf(si,
-					"\\includegraphics[width=5in, "
-					"keepaspectratio]{./resources/output%d.png}\n",
-					image_number);
-			out << si << endl;
-		}
-	}
-	out.close();
-	Logger::log("Слова порождаются регуляркой", regex);
-	Logger::log("Шаг итерации", to_string(step));
-	out.open("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << "\\begin{tabular}{llll}\n" << endl;
 		string s1 = "Количество итераций";
