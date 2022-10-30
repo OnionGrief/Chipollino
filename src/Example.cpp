@@ -525,7 +525,7 @@ void Example::tester() {
 	FiniteAutomaton dfa1 = r.to_tompson();
 	// cout << dfa1.parsing_by_nfa("abaaabaaababa");
 	// cout << dfa1.to_txt();
-	// Tester::test(dfa1, "((ab)*a)*", 1);
+	Tester::test(dfa1, "((ab)*a)*", 1);
 	Tester::test("ab(ab|a)*ababa", "((ab)*a)*", 1);
 }
 
