@@ -1,6 +1,7 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
+#include "Logger.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -29,9 +30,9 @@ struct Lexem {
 	};
 
 	Type type = error;
-	char symbol = 0;
+	alphabet_symbol symbol = "";
 	int number = 0;
-	Lexem(Type type = error, char symbol = 0, int number = 0);
+	Lexem(Type type = error, alphabet_symbol symbol = "", int number = 0);
 };
 
 class Regex : BaseObject {
@@ -86,13 +87,15 @@ class Regex : BaseObject {
 	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
-	string to_str() const;
 	static bool equality_checker(const Regex*, const Regex*);
 	int search_replace_rec(
 		const Regex& replacing, const Regex& replaced_by,
 		Regex* original); //рекурсивный поиск заменяемого листа дерева
 	void normalize_this_regex(
 		const string& file); //переписывание regex по пользовательским правилам
+	string to_str_log() const;
+
+	void generate_alphabet(set<alphabet_symbol>& _alphabet);
 
   public:
 	Regex();
@@ -102,11 +105,12 @@ class Regex : BaseObject {
 	FiniteAutomaton to_tompson() const;
 	FiniteAutomaton to_glushkov() const;
 	FiniteAutomaton to_ilieyu() const;
-	FiniteAutomaton to_antimirov();
+	FiniteAutomaton to_antimirov() const;
 
 	~Regex();
 	Regex* copy() const;
 	Regex(const Regex&);
+	Regex& operator=(const Regex& other);
 
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const string& file) const;
@@ -130,6 +134,10 @@ class Regex : BaseObject {
 
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
+
+	Regex linearize() const;
+	Regex delinearize() const;
+	Regex deannote() const;
 };
 
 /*
