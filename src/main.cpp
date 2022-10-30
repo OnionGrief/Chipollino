@@ -4,14 +4,27 @@
 #include "Interpreter.h"
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
+	// Приветсвие
 	cout << "Chipollino :-)\n";
+
+	// Инициализируем логгер
 	Logger::init();
 	Logger::activate();
+
+	// Инициализируем интерпретатор
 	Interpreter interpreter;
 	interpreter.set_log_mode(Interpreter::LogMode::all);
-	interpreter.load_file("test.txt");
+
+	// Загружаем в интерпретатор файл с коммандами
+	string load_file = "test.txt";
+	if (argc > 1) load_file = argv[1];
+	interpreter.load_file(load_file);
+
+	// Выполняем коммнады
 	interpreter.run_all();
+
+	// Гененрируем выходной документ, завершаем работу логгера
 	Logger::finish();
 	Logger::deactivate();
 }
