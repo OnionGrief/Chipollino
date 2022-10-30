@@ -31,7 +31,10 @@ void Tester::test(string lang, string regex, int step) {
 		if (time >= 180) return;
 	}
 	Logger::init_step("Test");
-	Logger::log(lang, regex, step, lengths, times, belongs);
+	Logger::log("Язык, основанный на регулярке", lang);
+	Logger::log("Слова порождаются регуляркой", regex);
+	Logger::log("Шаг итерации", to_string(step));
+	Logger::log(step, lengths, times, belongs);
 	Logger::finish_step();
 }
 
@@ -61,7 +64,10 @@ void Tester::test(FiniteAutomaton lang, string regex, int step) {
 	}
 
 	Logger::init_step("Test");
-	Logger::log(lang, regex, step, lengths, times, belongs);
+	Logger::log("Автомат", lang);
+	Logger::log("Слова порождаются регуляркой", regex);
+	Logger::log("Шаг итерации", to_string(step));
+	Logger::log(step, lengths, times, belongs);
 	Logger::finish_step();
 }
 
