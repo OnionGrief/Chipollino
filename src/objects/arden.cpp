@@ -81,7 +81,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 
 	return out;
 }
-Regex nfa_to_regex(FiniteAutomaton in) {
+Regex* nfa_to_regex(FiniteAutomaton in) {
 	vector<int> endstate;
 	vector<vector<expression_arden>> data;
 	set<alphabet_symbol> alphabet = in.get_alphabet();
@@ -106,6 +106,19 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 		if (a.is_terminal) {
 			endstate.push_back(i);
 		}
+		if (a.transitions["eps"].size()) {
+			set<int> trans = a.transitions.at("eps");
+			for (set<int>::iterator itt = trans.begin(); itt != trans.end();
+				 itt++) {
+				Regex* r = new Regex;
+				expression_arden temp;
+				temp.condition = i;
+
+				r->regex_eps();
+				temp.temp_regex = r;
+				data[*itt].push_back(temp);
+			}
+		}
 		for (set<alphabet_symbol>::iterator it = alphabet.begin();
 			 it != alphabet.end(); it++) {
 			//}
@@ -127,14 +140,13 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 			}
 		}
 	}
-	//сортируем
+	// //сортируем
 	for (int i = data.size() - 1; i >= 0; i--) {
 
 		vector<expression_arden> tempdata;
 		for (int j = 0; j < data[i].size(); j++) {
 			if (data[i][j].condition > i) {
 				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
-
 					expression_arden temp;
 					Regex* r = new Regex;
 					// Regex r ;
@@ -175,19 +187,20 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 			//  delete tempdata2[o].temp_regex;
 		}
 		data[i] = tempdata2;
-		// cout << i << " ";
-		// for (int j = 0; j < data[i].size(); j++) {
+		cout << i << " ";
+		for (int j = 0; j < data[i].size(); j++) {
 
-		// 	cout << data[i][j].condition << "-"
-		// 		 << data[i][j].temp_regex->to_txt() << " ";
-		// }
-		// cout << "\n";
+			cout << data[i][j].condition << "-"
+				 << data[i][j].temp_regex->to_txt() << " ";
+		}
+		cout << "\n";
 	}
 
 	if (data[0].size() > 1) {
 		cout << "error";
 
-		Regex f;
+		Regex* f = new Regex;
+		f->from_string("a|b");
 		return f;
 	}
 	for (int i = 0; i < data.size(); i++) {
@@ -212,38 +225,50 @@ Regex nfa_to_regex(FiniteAutomaton in) {
 		// for (int o = 0; o < tempdata3.size(); o++) {
 		// 	delete tempdata3[o].temp_regex;
 		// }
-		for (int j = 0; j < data[i].size(); j++) {
+		// for (int j = 0; j < data[i].size(); j++) {
 
-			cout << data[i][j].condition << "-"
-				 << data[i][j].temp_regex->to_txt() << " \n";
-		}
+		// 	cout << data[i][j].condition << "-"
+		// 		 << data[i][j].temp_regex->to_txt() << " \n";
+		// }
 	}
 	if (endstate.size() == 0) {
-		Regex f;
+		Regex* f = new Regex;
+		f->from_string("a|b");
 		return f;
 	}
 	if (endstate.size() < 2) {
-		return *data[endstate[0]][0].temp_regex;
+		Regex* r1;
+		r1 = data[endstate[0]][0].temp_regex->copy();
+		for (int i = 0; i < data.size(); i++) {
+			for (int j = 0; j < data[i].size(); j++) {
+				delete data[i][j].temp_regex;
+			}
+		}
+		return r1;
 	}
-	Regex r1;
-	r1.regex_alt(data[endstate[0]][0].temp_regex,
-				 data[endstate[1]][0].temp_regex);
-	// for (int i = 2; i < endstate.size(); i++) {
-	// 	Regex temp;
-	// 	temp.regex_alt(r1, data[endstate[i]][0].temp_regex);
-	// 	r1->clear();
-	// 	r1 = temp.copy();
-	// }
+	Regex* r1;
+	r1 = data[endstate[0]][0].temp_regex->copy();
+	for (int i = 1; i < endstate.size(); i++) {
+		Regex* r2 = new Regex;
+		r2->regex_alt(r1, data[endstate[i]][0].temp_regex);
+		delete r1;
+		r1 = r2;
+	}
 	for (int i = 0; i < data.size(); i++) {
 		for (int j = 0; j < data[i].size(); j++) {
 			delete data[i][j].temp_regex;
 		}
 	}
+
+	// Regex* f = new Regex;
+	// f->from_string("a|b");
+	// return f;
+	// delete r1;
 	//	cout << r1->to_txt();
 
-	// return r1;
-	Regex f;
+	return r1;
+	//   Regex f;
 
-	return f;
+	// return f;
 }
 //На нефтеперерабатывающем заводе один мужик зажигалкой нашёл утечку газа.
