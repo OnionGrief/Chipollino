@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
+#include "Logger.h"
 #include <algorithm>
 #include <iostream>
 #include <map>
