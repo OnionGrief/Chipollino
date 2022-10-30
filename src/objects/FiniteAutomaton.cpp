@@ -892,21 +892,18 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	return equivalent(dfa_instersection, dfa2); // TODO
 }
 
-vector<int> get_path_number(vector<State> states, int max_n) {
+vector<unsigned long long> get_path_number(vector<State> states, int max_n) {
 	int s = states.size(); // число состояний КА
 	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
 	for (int i = 0; i < s; i++)
 		for (const auto& elem : states[i].transitions)
 			for (int transition : elem.second)
 				adjacency_matrix[i][transition]++;
-	/*for (auto vec : adjacency_matrix) {
-		for (auto t : vec)
-			cout << t << " ";
-		cout << endl;
-	}*/
-	vector<int> paths_number(max_n); // число путей длины i в автомате
+	vector<unsigned long long> paths_number(
+		max_n); // число путей длины i в автомате
 
-	vector<vector<int>> d(max_n + 1, vector<int>(s));
+	vector<vector<unsigned long long>> d(max_n + 1,
+										 vector<unsigned long long>(s));
 	d[0][0] = 1;
 	for (int k = 1; k < max_n + 1; k++) {
 		for (int v = 0; v < s; v++) {
@@ -914,40 +911,88 @@ vector<int> get_path_number(vector<State> states, int max_n) {
 				d[k][v] += adjacency_matrix[i][v] * d[k - 1][i];
 			}
 			if (states[v].is_terminal) paths_number[k - 1] += d[k][v];
-			// cout << d[k][v] << " ";
 		}
-		// cout << paths_number[k - 1] << " ";
 	}
-	// cout << endl;
 	return paths_number;
 }
 
-double foo(int i, int n, const vector<double>& func) {
-	// cout << i << " " << n << endl;
-	if (i == 1) return func[n] - func[n - 1];
-	return foo(i - 1, n + 1, func) - foo(i - 1, n, func);
+double calc_ambiguity(int i, int n, const vector<double>& f1,
+					  vector<vector<double>>& calculated,
+					  vector<vector<char>>& is_calculated) {
+	if (i == 0) return f1[n];
+	double d1, d2;
+	if (!is_calculated[i][n + 1]) {
+		calculated[i][n + 1] =
+			calc_ambiguity(i - 1, n + 1, f1, calculated, is_calculated);
+		is_calculated[i][n + 1] = 1;
+	}
+	d1 = calculated[i][n + 1];
+	if (!is_calculated[i][n]) {
+		calculated[i][n] =
+			calc_ambiguity(i - 1, n, f1, calculated, is_calculated);
+		is_calculated[i][n] = 1;
+	}
+	d2 = calculated[i][n];
+	return d1 - d2;
 }
 
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
-	int N = states.size() * states.size() * 200;
-	vector<int> path_number = get_path_number(states, N);
+	FiniteAutomaton fa = remove_eps();
+	FiniteAutomaton min_fa = minimize().remove_trap_state();
+	fa = fa.remove_trap_state();
 
-	FiniteAutomaton min_fa = minimize();
+	int N = fa.states.size() * fa.states.size();
+	vector<unsigned long long> path_number = get_path_number(fa.states, N);
+	vector<unsigned long long> min_fa_path_number =
+		get_path_number(min_fa.states, N);
 
-	vector<int> min_fa_path_number = get_path_number(min_fa.states, N);
-
-	vector<double> func(N);
+	vector<double> f1(N);
 	for (int i = 0; i < N; i++)
 		if (min_fa_path_number[i] != 0)
-			func[i] = double(path_number[i]) / min_fa_path_number[i];
+			f1[i] = double(path_number[i]) / min_fa_path_number[i];
 
-	/*for (auto t : func)
-		cout << t << ", ";
-	cout << endl;*/
+	double prev_val = -1;
+	bool return_flag = true;
+	for (int i = 0; i < f1.size() - 1; i++) {
+		if (f1[i] == 0) continue;
+		if (prev_val == -1) {
+			prev_val = f1[i];
+			continue;
+		}
+		if (f1[i] != prev_val) {
+			return_flag = false;
+			break;
+		}
+		prev_val = f1[i];
+	}
+	if (return_flag) {
+		if (prev_val == 1)
+			return FiniteAutomaton::unambigious;
+		else
+			return FiniteAutomaton::almost_unambigious;
+	}
 
-	cout << foo(states.size() + 3, N - states.size() - 3, func) << endl;
-
-	return FiniteAutomaton::exponentially_ambiguous;
+	int i = 2;
+	double val = 1;
+	vector<vector<double>> calculated(fa.states.size() + i + 1,
+									  vector<double>(N));
+	vector<vector<char>> is_calculated(fa.states.size() + i + 1,
+									   vector<char>(N, 0));
+	val = calc_ambiguity(fa.states.size() + i, N - fa.states.size() - i - 1, f1,
+						 calculated, is_calculated);
+	cout << "Val " << val << endl;
+	prev_val = val;
+	while (val > 0) {
+		i++;
+		calculated.push_back(vector<double>(N));
+		is_calculated.push_back(vector<char>(N, 0));
+		val = calc_ambiguity(fa.states.size() + i, N - fa.states.size() - i - 1,
+							 f1, calculated, is_calculated);
+		cout << "Val " << val << endl;
+		if (val > prev_val) return FiniteAutomaton::exponentially_ambiguous;
+		prev_val = val;
+	}
+	return FiniteAutomaton::polynomially_ambigious;
 }
 
 /*
