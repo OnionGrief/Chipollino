@@ -187,13 +187,13 @@ Regex* nfa_to_regex(FiniteAutomaton in) {
 			//  delete tempdata2[o].temp_regex;
 		}
 		data[i] = tempdata2;
-		cout << i << " ";
-		for (int j = 0; j < data[i].size(); j++) {
+		// cout << i << " ";
+		// for (int j = 0; j < data[i].size(); j++) {
 
-			cout << data[i][j].condition << "-"
-				 << data[i][j].temp_regex->to_txt() << " ";
-		}
-		cout << "\n";
+		// 	cout << data[i][j].condition << "-"
+		// 		 << data[i][j].temp_regex->to_txt() << " ";
+		// }
+		// cout << "\n";
 	}
 
 	if (data[0].size() > 1) {
