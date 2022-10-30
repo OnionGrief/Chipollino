@@ -97,10 +97,6 @@ class FiniteAutomaton : public BaseObject {
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
 	friend class Regex;
+	friend class TransformationMonoid;
 	// получаем кол-во состояний
-	int get_states_size();
-	//получаем состояние
-
-	const set<alphabet_symbol>& get_alphabet();
-	State get_state(int i);
 };
