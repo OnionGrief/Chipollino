@@ -197,10 +197,9 @@ GeneralObject Interpreter::apply_function(
 	/*if (function.name == "KSubSet") {
 		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
 	}*/
-	//Саша вроде сделает
-	/*if (function.name == "States") {
-		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
-	}*/
+	if (function.name == "States") {
+		return ObjectInt(get<ObjectNFA>(arguments[0]).value.states_number());
+	}
 	//Мишино вроде
 	/*if (function.name == "ClassCard") {
 		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
