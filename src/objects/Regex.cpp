@@ -727,7 +727,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 FiniteAutomaton Regex::to_tompson() const {
 	Logger::init_step("Автомат Томпсона");
 	FiniteAutomaton a(0, get_tompson(-1).first, language);
-	Logger::log("", "", a, FiniteAutomaton());
+	Logger::log("", a);
 	Logger::finish_step();
 	return a;
 }
@@ -999,7 +999,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 	delete first;
 	delete end;
 	FiniteAutomaton a(0, st, language);
-	Logger::log("", "", a, FiniteAutomaton());
+	Logger::log("", a);
 	Logger::finish_step();
 	return FiniteAutomaton(0, st, language);
 }
@@ -1055,7 +1055,7 @@ FiniteAutomaton Regex::to_ilieyu() const {
 	}
 
 	// cout << str_follow;
-	Logger::log("Автомат Глушкова", "", glushkov, FiniteAutomaton());
+	Logger::log("Автомат Глушкова", glushkov);
 	Logger::log("Follow-отношения", str_follow);
 
 	for (size_t i = 0; i < new_states.size(); i++) {
@@ -1081,7 +1081,7 @@ FiniteAutomaton Regex::to_ilieyu() const {
 		new_states[i].index = i;
 	}
 	FiniteAutomaton a(0, new_states, glushkov.language);
-	Logger::log("Итог", "", a, FiniteAutomaton());
+	Logger::log("Итог", a);
 	Logger::finish_step();
 	return a;
 }
@@ -1595,7 +1595,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 	Logger::log(str_state);
 
 	FiniteAutomaton a(0, automat_state, language);
-	Logger::log("Итог", "", a, FiniteAutomaton());
+	Logger::log("Итог", a);
 	Logger::finish_step();
 	return a;
 }
