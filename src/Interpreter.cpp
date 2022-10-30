@@ -450,7 +450,12 @@ vector<GeneralObject> Interpreter::parameters_to_arguments(
 
 void Interpreter::run_declaration(const Declaration& decl) {
 	log("Running declaration...");
-	// TODO activate/disactivate logger here
+	if (decl.show_result) {
+		Logger::activate();
+		log("    logger is activated for this task");
+	} else {
+		Logger::deactivate();
+	}
 	objects[decl.id] = apply_function_sequence(
 		decl.function_sequence, parameters_to_arguments(decl.parameters));
 	log("    assigned to " + to_string(decl.id));
