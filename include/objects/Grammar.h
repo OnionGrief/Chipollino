@@ -8,8 +8,7 @@
 using namespace std;
 
 struct GrammarItem {
-	enum Type
-	{
+	enum Type {
 		terminal,
 		nonterminal
 	};
@@ -40,8 +39,7 @@ class Grammar {
 		vector<vector<vector<GrammarItem*>>>& rules,
 		vector<GrammarItem*>& nonterminals,
 		vector<GrammarItem*>& bisimilar_nonterminals,
-		map<int, vector<GrammarItem*>>& class_to_nonterminals =
-			map<int, vector<GrammarItem*>>());
+		map<int, vector<GrammarItem*>>& class_to_nonterminals);
 	// преобразование конечного автомата в грамматику
 	// в векторе терминалов по 0му индексу лежит epsilon,
 	// по terminals.size()-1 лежит initial
