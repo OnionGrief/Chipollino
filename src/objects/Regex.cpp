@@ -395,10 +395,12 @@ void Regex::clear() {
 	if (term_l != nullptr) {
 		// term_l->clear();
 		delete term_l;
+		term_l = nullptr;
 	}
 	if (term_r != nullptr) {
 		// term_r->clear();
 		delete term_r;
+		term_r = nullptr;
 	}
 	// delete language;
 }
@@ -1404,6 +1406,7 @@ int Regex::pump_length() const {
 	for (int i = 1;; i++) {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
+		if (prefs.empty()) return -1;
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
 			bool was = false;
 			for (int j = 0; j < it->size(); j++) {
