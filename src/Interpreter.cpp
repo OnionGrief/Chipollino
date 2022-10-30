@@ -306,6 +306,10 @@ GeneralObject Interpreter::apply_function(
 
 optional<vector<Function>> Interpreter::build_function_sequence(
 	vector<string> function_names, vector<ObjectType> first_type) {
+	if (!function_names.size()) {
+		return vector<Function>();
+	}
+
 	// 0 - функцию надо исключить из последовательности
 	// 1 - функция остается в последовательности
 	// 2 - функция(Delinearize или DeAnnote) принимает на вход Regex
