@@ -89,7 +89,7 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 FiniteAutomaton FiniteAutomaton::determinize() const {
 	Logger::init_step("Determinize");
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
-	set<int> q0 = closure({0}, true);
+	set<int> q0 = closure({initial_state}, true);
 
 	set<int> label = q0;
 	string new_identifier;
