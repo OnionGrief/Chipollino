@@ -49,3 +49,6 @@ class TransformationMonoid : public BaseObject {
 	string to_Txt_MyhillNerode();
 	// и тд
 };
+int class_card_typecheker(FiniteAutomaton* in);
+int class_legth_typecheker(FiniteAutomaton* in);
+int MyhillNerode_typecheker(FiniteAutomaton* in);

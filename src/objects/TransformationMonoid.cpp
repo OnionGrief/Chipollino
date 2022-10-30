@@ -129,7 +129,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 										   int transferlen) {
 
 	automat = in->remove_trap_states();
-	cout << automat.to_txt();
+	//	cout << automat.to_txt();
 	for (int i = 1; i <= transferlen; i++) {
 
 		vector<vector<string>> various =
@@ -444,6 +444,18 @@ string TransformationMonoid::to_Txt_MyhillNerode() {
 	}
 
 	return ss.str();
+}
+int class_card_typecheker(FiniteAutomaton* in) {
+	TransformationMonoid a(in, 5);
+	return a.class_Card();
+}
+int MyhillNerode_typecheker(FiniteAutomaton* in) {
+	TransformationMonoid a(in, 5);
+	return a.size_MyhillNerode();
+}
+int class_legth_typecheker(FiniteAutomaton* in) {
+	TransformationMonoid a(in, 5);
+	return a.Class_Length().name.size();
 }
 //В психиатрической больнице люди по настоящему заботятся о своём здоровье. Они
 //переходят с электронных сигарет на воображаемые.
