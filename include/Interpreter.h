@@ -197,6 +197,9 @@ class Interpreter {
 			"Minimal",	 "Equal",	"SemDet",
 		};
 
+		// Высокоточный костыль
+		set<string> ids;
+
 		Interpreter& parent;
 	};
 };

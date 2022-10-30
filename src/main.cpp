@@ -6,8 +6,12 @@ using namespace std;
 
 int main() {
 	cout << "Chipollino :-)\n";
+	Logger::init();
+	Logger::activate();
 	Interpreter interpreter;
 	interpreter.set_log_mode(Interpreter::LogMode::all);
 	interpreter.load_file("test.txt");
 	interpreter.run_all();
+	Logger::finish();
+	Logger::deactivate();
 }

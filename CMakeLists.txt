@@ -15,6 +15,7 @@ set(SOURCES
 	src/objects/BaseObject.cpp
 	src/objects/FiniteAutomaton.cpp
 	src/objects/Regex.cpp
+	src/objects/Tester.cpp
 	src/objects/RegexGenerator.cpp
 	src/objects/TasksGenerator.cpp
 	src/objects/Language.cpp

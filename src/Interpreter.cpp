@@ -72,7 +72,7 @@ void Interpreter::load_file(const string& filename) {
 	int line_number = 0;
 	for (const auto& lexems : lexem_strings) {
 		if (auto op = scan_operation(lexems); op.has_value()) {
-			operations.push_back(*op);
+ 			operations.push_back(*op);
 		} else {
 			throw_error("Error: cannot identify operation in line " +
 						to_string(line_number));
@@ -475,7 +475,7 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	Declaration decl;
 
 	// [идентификатор]
-	if (lexems[0].type != Lexem::id) {
+	if (lexems[0].type != Lexem::id && lexems[0].type != Lexem::regex) {
 		return nullopt;
 	}
 	decl.id = lexems[0].value;
@@ -501,7 +501,8 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	vector<ObjectType> argument_types;
 	vector<variant<string, GeneralObject>> arguments;
 	for (; i < lexems.size(); i++) {
-		if (lexems[i].type == Lexem::id) {
+		if (lexems[i].type == Lexem::id || // TODO: аццкий костыль
+			lexems[i].type == Lexem::regex && id_types.count(lexems[i].value)) {
 			if (id_types.count(lexems[i].value)) {
 				argument_types.push_back(id_types[lexems[i].value]);
 				arguments.push_back(lexems[i].value);
@@ -549,7 +550,8 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 	vector<ObjectType> argument_types;
 	vector<variant<string, GeneralObject>> arguments;
 	for (int i = 1; i < lexems.size(); i++) {
-		if (lexems[i].type == Lexem::id) {
+		if (lexems[i].type == Lexem::id || // TODO: аццкий костыль
+			lexems[i].type == Lexem::regex && id_types.count(lexems[i].value)) {
 			if (id_types.count(lexems[i].value)) {
 				argument_types.push_back(id_types[lexems[i].value]);
 				arguments.push_back(lexems[i].value);

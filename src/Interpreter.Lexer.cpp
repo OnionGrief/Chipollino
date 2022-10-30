@@ -72,6 +72,7 @@ Interpreter::Lexem Interpreter::Lexer::scan_id() {
 	// TODO: сделать проверки на корректность имени, чтобы не
 	// начиналось с цифры, не было коллизий с именами функций
 	string id_name = scan_until_space();
+	ids.insert(id_name);
 	return Lexem(Lexem::id, id_name);
 }
 
@@ -91,6 +92,9 @@ Interpreter::Lexem Interpreter::Lexer::scan_regex() {
 		// TODO: это отвратительный костыль, надо использовать operator= как
 		// будет готов
 		lex.reg.from_string(word);
+		// TODO: А это отвратительный костыль, который нужен, чтобы потом
+		// превратить regex в id
+		lex.value = word;
 		return lex;
 	}
 	input.restore();
