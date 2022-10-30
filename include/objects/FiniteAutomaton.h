@@ -27,6 +27,14 @@ struct State {
 };
 
 class FiniteAutomaton : public BaseObject {
+  public:
+	enum AmbiguityValue {
+		exponentially_ambiguous,
+		almost_unambigious,
+		unambigious,
+		polynomially_ambigious
+	};
+
   private:
 	int initial_state = 0;
 	vector<State> states;
@@ -41,12 +49,6 @@ class FiniteAutomaton : public BaseObject {
 								 const FiniteAutomaton& fa2);
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
-	enum AmbiguityValue {
-		exponentially_ambiguous,
-		almost_unambigious,
-		unambigious,
-		polynomially_ambigious
-	};
 	AmbiguityValue get_ambiguity_value() const;
 
   public:
