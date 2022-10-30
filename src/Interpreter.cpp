@@ -72,7 +72,7 @@ void Interpreter::load_file(const string& filename) {
 	int line_number = 0;
 	for (const auto& lexems : lexem_strings) {
 		if (auto op = scan_operation(lexems); op.has_value()) {
- 			operations.push_back(*op);
+			operations.push_back(*op);
 		} else {
 			throw_error("Error: cannot identify operation in line " +
 						to_string(line_number));
@@ -169,9 +169,15 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equal") {
-		return ObjectBoolean(
-			FiniteAutomaton::equal(get<ObjectNFA>(arguments[0]).value,
-								   get<ObjectNFA>(arguments[1]).value));
+		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
+			return ObjectBoolean(
+				FiniteAutomaton::equal(get<ObjectNFA>(arguments[0]).value,
+									   get<ObjectNFA>(arguments[1]).value));
+		} else {
+			return ObjectBoolean(
+				Regex::equal(get<ObjectRegex>(arguments[0]).value,
+							 get<ObjectRegex>(arguments[1]).value));
+		}
 	}
 	//пока не работает
 	/*(if (function.name == "SemDet") {
