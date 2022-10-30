@@ -1,35 +1,32 @@
 #include "Tester.h"
 
 void Tester::test(string lang, string r2, int step) {
-	vector<word> words;
 	vector<double> times;
 	vector<bool> belongs;
 	Regex r;
 	r.from_string(r2);
-	FiniteAutomaton automaton = r.to_tompson();
+	// automaton.determinize();
 	Regex R;
 	R.from_string(lang);
+	FiniteAutomaton automaton = R.to_tompson();
+
 	using clock = std::chrono::high_resolution_clock;
 
 	for (int i = 0; i < 13; i++) {
 		string w = r.get_iterated_word(i * step);
 		// cout << w;
-
 		const auto start = clock::now();
 		bool is_belongs = automaton.parsing_by_nfa(w);
-		// parsing_by_regex(lang, w); // падает на больших словах((
+		//  parsing_by_regex(lang, w); // падает на больших словах((
 		const auto end = clock::now();
-		const double elapsed =
-			std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
-				.count() *
-			1e-6;
-		// int time = (int) elapsed;
-		// int time = (end - start); // ((clock_t)100);
-		// cout << " " << elapsed << endl;
-		// cout << is_belongs << endl;
-		times.push_back(elapsed);
+		const long long elapsed =
+			std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+				.count();
+		double time = (double)elapsed / 1000;
+		// cout << is_belongs << " " << time << endl;
+		times.push_back(time);
 		belongs.push_back(is_belongs);
-		if (elapsed >= 180) return;
+		if (time >= 180) return;
 	}
 	Logger::init_step("Test");
 	Logger::log(lang, r2, step, times, belongs);
@@ -37,7 +34,6 @@ void Tester::test(string lang, string r2, int step) {
 }
 
 void Tester::test(FiniteAutomaton lang, string r2, int step) {
-	vector<word> words;
 	vector<double> times;
 	vector<bool> belongs;
 	Regex r;
@@ -50,22 +46,16 @@ void Tester::test(FiniteAutomaton lang, string r2, int step) {
 		const auto start = clock::now();
 		bool is_belongs = lang.parsing_by_nfa(w);
 		const auto end = clock::now();
-
-		const double elapsed =
-			std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)
-				.count() *
-			1e-6;
-		times.push_back(elapsed);
+		const long long elapsed =
+			std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+				.count();
+		double time = (double)elapsed / 1000;
+		times.push_back(time);
 		belongs.push_back(is_belongs);
-		// int time = (end - start); // CLOCKS_PER_SEC;
-		// cout << is_belongs << " " << elapsed << endl;
-		// words.push_back({i * step, time, is_belongs});
-		if (elapsed >= 180) return;
+		// cout << is_belongs << " " << time << endl;
+		if (time >= 180) return;
 	}
 
-	/* место для вызова логгера */
-	// my_loger(tableFA); а мб можно не так
-	// my_loger(lang, r2, step, words); без лишней структуры
 	Logger::init_step("Test");
 	Logger::log(lang, r2, step, times, belongs);
 	Logger::finish_step();

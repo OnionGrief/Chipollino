@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include <algorithm>
 #include <iostream>
+#include <queue>
 #include <set>
 #include <sstream>
 #include <stack>
@@ -162,6 +163,8 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
+	Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
+				*this, dfa);
 	Logger::finish_step();
 	return dfa;
 }
@@ -278,6 +281,16 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
 	// кэширование
 	language->set_min_dfa(minimized_dfa);
+	Logger::log("Автомат до минимизации", "Автомат после минимизации", *this,
+				minimized_dfa);
+	stringstream ss;
+	for (auto& elem : groups) {
+		ss << "\\{";
+		for (int i = 0; i < elem.size(); i++)
+			ss << elem[i] << ",";
+		ss << "\\}";
+	}
+	Logger::log("Эквивалентные классы", ss.str());
 	Logger::finish_step();
 	return minimized_dfa;
 }
@@ -315,6 +328,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 			}
 		}
 	}
+	Logger::log("Автомат до удаления eps-переходов",
+				"Автомат после удаления eps-переходов", *this, new_nfa);
 	Logger::finish_step();
 	return new_nfa;
 }
@@ -361,6 +376,8 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	Logger::log("Первый автомат", "Второй автомат", "Результат пересечения",
+				fa1, fa2, new_dfa);
 	Logger::finish_step();
 	return new_dfa;
 }
@@ -407,6 +424,8 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	Logger::log("Первый автомат", "Второй автомат", "Результат объединения",
+				fa1, fa2, new_dfa);
 	Logger::finish_step();
 	return new_dfa;
 }
@@ -453,6 +472,8 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	Logger::log("Первый автомат", "Второй автомат", "Результат разности", fa1,
+				fa2, new_dfa);
 	Logger::finish_step();
 	return new_dfa;
 }
@@ -464,6 +485,8 @@ FiniteAutomaton FiniteAutomaton::complement() const {
 	for (int i = 0; i < new_dfa.states.size(); i++) {
 		new_dfa.states[i].is_terminal = !new_dfa.states[i].is_terminal;
 	}
+	Logger::log("Автомат до дополнения", "Автомат после дополнения", *this,
+				new_dfa);
 	Logger::finish_step();
 	return new_dfa;
 }
@@ -511,11 +534,13 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
 		enfa.states[i].transitions = new_transition_matrix[i];
 	}
+	Logger::log("Автомат до обращения", "Автомат после обращения", *this, enfa);
 	Logger::finish_step();
 	return enfa;
 }
 
 FiniteAutomaton FiniteAutomaton::add_trap_state() const {
+	Logger::init_step("AddTrapState");
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
 	int count = new_dfa.states.size();
@@ -546,10 +571,14 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 				new_dfa.states.size() - 1);
 		}
 	}
+	Logger::log("Автомат до добавления ловушки",
+				"Автомат после добавления ловушки", *this, new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
+	Logger::init_step("RemoveTrapState");
 	vector<map<alphabet_symbol, set<int>>> new_transitions;
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
@@ -604,6 +633,9 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 			count--;
 		}
 	}
+	Logger::log("Автомат до удаления ловушек", "Автомат после удаления ловушек",
+				*this, new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 
@@ -636,6 +668,8 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
+	Logger::log("Автомат до навешивания разметки",
+				"Автомат после навешивания разметки", *this, new_fa);
 	Logger::finish_step();
 	return new_fa;
 }
@@ -667,6 +701,8 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
+	Logger::log("Автомат до удаления разметки",
+				"Автомат после удаления разметки", *this, new_fa);
 	Logger::finish_step();
 	return new_fa;
 }
@@ -1048,36 +1084,116 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	return result;
 }
 
-bool FiniteAutomaton::parsing_nfa(string s, State state) const {
-	// cout << s << endl;
+bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
+	// cout << s.size() << endl;
+	State state = states[index_state];
+
 	if (s.size() == 0 && state.is_terminal) {
 		return true;
 	}
-
+	set<int> tr_eps =
+		state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
+	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
+	int n;
+	// tr_eps = {};
 	if (s.size() == 0 && !state.is_terminal) {
+		n = trans_eps.size();
+		for (size_t i = 0; i < trans_eps.size(); i++) {
+			// cout << trans_eps[i] << endl;
+			if (parsing_nfa(s, trans_eps[i])) {
+				return true;
+			}
+		}
 		return false;
 	}
+
 	alphabet_symbol elem = char_to_alphabet_symbol(s[0]);
 	set<int> tr = state.transitions[elem];
-	set<int> tr_eps = state.transitions[char_to_alphabet_symbol('\0')];
 	vector<int> trans{tr.begin(), tr.end()};
-	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
-	for (size_t i = 0; i < trans.size(); i++) {
-		if (parsing_nfa(s.substr(1), states[trans[i]])) {
+	// tr = {};
+	n = trans.size();
+	for (size_t i = 0; i < n; i++) {
+		if (parsing_nfa(s.substr(1), trans[i])) {
 			return true;
 		}
 	}
-	for (size_t i = 0; i < trans_eps.size(); i++) {
-		if (parsing_nfa(s, states[trans_eps[i]])) {
+	n = trans_eps.size();
+	for (size_t i = 0; i < n; i++) {
+		// cout << trans_eps[i] << endl;
+		if (parsing_nfa(s, trans_eps[i])) {
 			return true;
 		}
 	}
 	return false;
 }
 
+bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
+	// cout << s.size() << endl;
+	stack<State> stac_state;
+	stack<int> stack_s;
+	stack<int> stack_index;
+	stac_state.push(states[0]);
+	stack_s.push(0);
+	stack_index.push(0);
+	int n, n_eps;
+	int index = 0;
+	int state_s = 0;
+	State state = stac_state.top();
+	// cout << !stac_state.empty() << endl;
+	while (!stac_state.empty()) {
+		state = stac_state.top();
+		state_s = stack_s.top();
+		index = stack_index.top();
+		if (state.is_terminal && index == s.size()) {
+			break;
+		}
+		stac_state.pop();
+		stack_s.pop();
+		stack_index.pop();
+		alphabet_symbol elem = char_to_alphabet_symbol(s[index]);
+		set<int> tr = state.transitions[elem];
+		vector<int> trans{tr.begin(), tr.end()};
+		set<int> tr_eps =
+			state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
+		vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
+		// tr = {};
+		// cout << elem << " " << state.identifier << " " << index << " "
+		//	 << stac_state.size() << endl;
+		n = trans.size();
+		n_eps = trans_eps.size();
+		if (n + n_eps == 0) {
+			// stac_state.pop();
+			//  stack_s.pop();
+			if (state_s != 0) {
+				// index--;
+			}
+		}
+		for (size_t i = 0; i < n; i++) {
+			if (index + 1 <= s.size()) {
+				stac_state.push(states[trans[i]]);
+				stack_s.push(1);
+				stack_index.push(index + 1);
+			}
+		}
+		for (size_t i = 0; i < n_eps; i++) {
+			stac_state.push(states[trans_eps[i]]);
+			stack_s.push(0);
+			stack_index.push(index);
+		}
+		// if (state_s != 0) {
+		//	index++;
+		// }
+	}
+	if (/*(stac_state.empty() && s.size() <= index) ||*/
+		(s.size() == index && state.is_terminal)) {
+		return true;
+	}
+	return false;
+}
+
 bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	State state = states[0];
-	return parsing_nfa(s, state);
+	return parsing_nfa_for(s);
 }
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	Logger::init_step("Subset");
