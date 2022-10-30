@@ -163,6 +163,8 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
+	Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
+				*this, dfa);
 	Logger::finish_step();
 	return dfa;
 }
@@ -279,6 +281,16 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
 	// кэширование
 	language->set_min_dfa(minimized_dfa);
+	Logger::log("Автомат до минимизации", "Автомат после минимизации", *this,
+				minimized_dfa);
+	stringstream ss;
+	for (auto& elem : groups) {
+		ss << "\\{";
+		for (int i = 0; i < elem.size(); i++)
+			ss << elem[i] << ",";
+		ss << "\\}";
+	}
+	Logger::log("Эквивалентные классы", ss.str());
 	Logger::finish_step();
 	return minimized_dfa;
 }
@@ -316,6 +328,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 			}
 		}
 	}
+	Logger::log("Автомат до удаления eps-переходов",
+				"Автомат после удаления eps-переходов", *this, new_nfa);
 	Logger::finish_step();
 	return new_nfa;
 }
@@ -362,6 +376,8 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	Logger::log("Первый автомат", "Второй автомат", "Результат пересечения",
+				fa1, fa2, new_dfa);
 	Logger::finish_step();
 	return new_dfa;
 }
@@ -408,6 +424,8 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	Logger::log("Первый автомат", "Второй автомат", "Результат объединения",
+				fa1, fa2, new_dfa);
 	Logger::finish_step();
 	return new_dfa;
 }
@@ -454,6 +472,8 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	Logger::log("Первый автомат", "Второй автомат", "Результат разности", fa1,
+				fa2, new_dfa);
 	Logger::finish_step();
 	return new_dfa;
 }
@@ -465,6 +485,8 @@ FiniteAutomaton FiniteAutomaton::complement() const {
 	for (int i = 0; i < new_dfa.states.size(); i++) {
 		new_dfa.states[i].is_terminal = !new_dfa.states[i].is_terminal;
 	}
+	Logger::log("Автомат до дополнения", "Автомат после дополнения", *this,
+				new_dfa);
 	Logger::finish_step();
 	return new_dfa;
 }
@@ -512,11 +534,13 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
 		enfa.states[i].transitions = new_transition_matrix[i];
 	}
+	Logger::log("Автомат до обращения", "Автомат после обращения", *this, enfa);
 	Logger::finish_step();
 	return enfa;
 }
 
 FiniteAutomaton FiniteAutomaton::add_trap_state() const {
+	Logger::init_step("AddTrapState");
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
 	int count = new_dfa.states.size();
@@ -547,10 +571,14 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 				new_dfa.states.size() - 1);
 		}
 	}
+	Logger::log("Автомат до добавления ловушки",
+				"Автомат после добавления ловушки", *this, new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
+	Logger::init_step("RemoveTrapState");
 	vector<map<alphabet_symbol, set<int>>> new_transitions;
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
@@ -605,6 +633,9 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 			count--;
 		}
 	}
+	Logger::log("Автомат до удаления ловушек", "Автомат после удаления ловушек",
+				*this, new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 
@@ -637,6 +668,8 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
+	Logger::log("Автомат до навешивания разметки",
+				"Автомат после навешивания разметки", *this, new_fa);
 	Logger::finish_step();
 	return new_fa;
 }
@@ -668,6 +701,8 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
+	Logger::log("Автомат до удаления разметки",
+				"Автомат после удаления разметки", *this, new_fa);
 	Logger::finish_step();
 	return new_fa;
 }
