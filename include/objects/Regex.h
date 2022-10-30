@@ -1,6 +1,7 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
+#include "Logger.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -85,7 +86,6 @@ class Regex : BaseObject {
 	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
-	string to_str() const;
 	static bool equality_checker(const Regex*, const Regex*);
 	int search_replace_rec(
 		const Regex& replacing, const Regex& replaced_by,
@@ -93,6 +93,8 @@ class Regex : BaseObject {
 	void normalize_this_regex(
 		const string& file); //переписывание regex по пользовательским правилам
 	string to_str_log() const;
+
+	void generate_alphabet(set<alphabet_symbol>& _alphabet);
 
   public:
 	Regex();
@@ -107,6 +109,7 @@ class Regex : BaseObject {
 	~Regex();
 	Regex* copy() const;
 	Regex(const Regex&);
+	Regex& operator=(const Regex& other);
 
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const string& file) const;
