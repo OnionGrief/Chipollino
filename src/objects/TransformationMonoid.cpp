@@ -187,11 +187,11 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 	}
 	Logger::init_step("equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
-		Logger::log("class ", to_str(terms[i].name),
+		Logger::log("class " + to_str(terms[i].name),
 					terms[i].isFinal ? "in lang" : "not in lang");
 		for (int j = 0; j < terms[i].Transitions.size(); j++) {
-			Logger::log("transition ",
-						std::to_string(terms[i].Transitions[j].first),
+			Logger::log("transition " +
+							std::to_string(terms[i].Transitions[j].first),
 						std::to_string(terms[i].Transitions[j].second));
 		}
 	}
@@ -199,7 +199,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 	Logger::init_step("Rewriting_Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
-			Logger::log("rewriting ", to_str(item.first),
+			Logger::log("rewriting " + to_str(item.first),
 						to_str(item.second[i]));
 		}
 	}
@@ -225,13 +225,13 @@ string TransformationMonoid::get_Equalence_Classes_Txt() {
 	Logger::init_step("equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
 
-		Logger::log("class ", to_str(terms[i].name),
+		Logger::log("class " + to_str(terms[i].name),
 					terms[i].isFinal ? "in lang" : "not in lang");
 		ss << "Term	" << to_str(terms[i].name) << "	in	language	"
 		   << terms[i].isFinal << "\n";
 		for (int j = 0; j < terms[i].Transitions.size(); j++) {
-			Logger::log("transition ",
-						std::to_string(terms[i].Transitions[j].first),
+			Logger::log("transition " +
+							std::to_string(terms[i].Transitions[j].first),
 						std::to_string(terms[i].Transitions[j].second));
 			ss << terms[i].Transitions[j].first << "	->	"
 			   << terms[i].Transitions[j].second << "\n";
@@ -247,7 +247,7 @@ string TransformationMonoid::get_Rewriting_Rules_Txt() {
 	Logger::init_step("Rewriting_Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
-			Logger::log("rewriting ", to_str(item.first),
+			Logger::log("rewriting " + to_str(item.first),
 						to_str(item.second[i]));
 			ss << to_str(item.first) << "	->	" << to_str(item.second[i])
 			   << "\n";
@@ -294,7 +294,7 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_VW(Term w) {
 
 	Logger::init_step("Rewriting_Rules_VW");
 	for (int i = 0; i < out.size(); i++) {
-		Logger::log("class ", to_str(out[i].name), "");
+		Logger::log("class " + to_str(out[i].name), "");
 	}
 	Logger::finish_step();
 	return out;
@@ -334,7 +334,7 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_WV(Term w) {
 	}
 	Logger::init_step("Rewriting_Rules_WV");
 	for (int i = 0; i < out.size(); i++) {
-		Logger::log("class ", to_str(out[i].name), "");
+		Logger::log("class " + to_str(out[i].name), "");
 	}
 	Logger::finish_step();
 	return out;
@@ -395,7 +395,7 @@ vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
 	}
 	Logger::init_step("Rewriting_Rules_VWV");
 	for (int i = 0; i < out.size(); i++) {
-		Logger::log("class ", to_str(out[i].first.name),
+		Logger::log("class " + to_str(out[i].first.name),
 					to_str(out[i].second.name));
 	}
 	Logger::finish_step();
@@ -494,7 +494,7 @@ string TransformationMonoid::to_Txt_MyhillNerode() {
 		ss << "\n";
 	}
 	Logger::init_step("MyhillNerode TABLE");
-	Logger::log("", ss.str(), "");
+	Logger::log(ss.str());
 	Logger::finish_step();
 	return ss.str();
 }
