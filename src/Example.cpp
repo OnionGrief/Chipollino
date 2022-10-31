@@ -698,5 +698,7 @@ void Example::fa_semdet_check() {
 
 	FiniteAutomaton NDM(0, states, { "a", "b" });
 
-	cout << NDM.semdet();
+	auto sdet = NDM.semdet();
+
+	cout << "Semdet?: " << sdet << "\n";
 }
