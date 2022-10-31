@@ -8,6 +8,8 @@
 #include "arden.h"
 #include "RegexGenerator.h"
 #include "TasksGenerator.h"
+#include "Tester.h"
+#include "TransformationMonoid.h"
 #include <iostream>
 /*
 Это статический класс, где вы можете писать примеры
@@ -29,10 +31,15 @@ class Example {
 	static void fa_equal_check();
 	static void fa_bisimilar_check();
 	static void fa_merge_bisimilar();
+	static void transformation_monoid_example();
+	static void normalize_regex();
+	static void step();
+	static void parsing_nfa();
 	static void fa_equivalent_check();
 	static void fa_subset_check();
 	static void arden_test();
 	static void to_image();
-	static void step();
-	static void normalize_regex();
+	static void tester();
+	static void step_interection();
+	static void table();
 };

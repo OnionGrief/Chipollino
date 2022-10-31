@@ -1,9 +1,29 @@
 #include "Grammar.h"
+#include "Logger.h"
+#include <sstream>
+
+GrammarItem::GrammarItem()
+	: type(terminal), state_index(-1), class_number(-1), name("") {}
+GrammarItem::GrammarItem(Type type, string name, int state_index,
+						 int class_number)
+	: type(type), name(name), state_index(state_index),
+	  class_number(class_number) {}
+GrammarItem::GrammarItem(Type type, string name) : type(type), name(name) {}
+bool GrammarItem::operator!=(const GrammarItem& other) {
+	return type != other.type || state_index != other.state_index ||
+		   class_number != other.class_number || name != other.name;
+}
+void GrammarItem::operator=(const GrammarItem& other) {
+	type = other.type;
+	state_index = other.state_index;
+	class_number = other.class_number;
+	name = other.name;
+}
 
 ostream& operator<<(ostream& os, const GrammarItem& item) {
 	if (item.type == GrammarItem::terminal) {
-		if (item.term_name == "\0") return os << "eps";
-		return os << item.term_name;
+		if (item.name == "\0") return os << "eps";
+		return os << item.name;
 	} else
 		return os << "S" << item.state_index;
 }
@@ -34,7 +54,7 @@ void Grammar::check_classes(
 
 			for (GrammarItem* t : rule) {
 				if (t->type == GrammarItem::terminal)
-					newRule += t->term_name;
+					newRule += t->name;
 				else
 					newRule += to_string(t->class_number);
 			}
@@ -48,7 +68,9 @@ void Grammar::check_classes(
 vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 	vector<vector<vector<GrammarItem*>>>& rules,
 	vector<GrammarItem*>& nonterminals,
-	vector<GrammarItem*>& bisimilar_nonterminals) {
+	vector<GrammarItem*>& bisimilar_nonterminals,
+	map<int, vector<GrammarItem*>>& class_to_nonterminals) {
+	class_to_nonterminals.clear();
 	map<set<string>, vector<GrammarItem*>> classes_check_map;
 	set<int> checker;
 	// checker
@@ -58,17 +80,10 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 		update_classes(checker, classes_check_map);
 		if (checker == temp) break;
 	}
-	/*for (auto& elem : classes_check_map) {
-		cout << "{";
-		for (int i = 0; i < elem.second.size() - 1; i++)
-			cout << *elem.second[i] << ",";
-		cout << *elem.second[elem.second.size() - 1] << "}";
-	}
-	cout << endl;*/
 	// формирование бисимилярной грамматики
-	map<int, GrammarItem*> class_to_nonterm;
 	for (const auto& elem : classes_check_map)
-		class_to_nonterm[elem.second[0]->class_number] = elem.second[0];
+		for (GrammarItem* t : elem.second)
+			class_to_nonterminals[elem.second[0]->class_number].push_back(t);
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules;
 	for (const auto& elem : classes_check_map) {
 		GrammarItem* curNonterm = elem.second[0];
@@ -77,7 +92,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 			vector<GrammarItem*> tempRule;
 			for (GrammarItem* item : rule) {
 				if (item->type == GrammarItem::nonterminal) {
-					tempRule.push_back(class_to_nonterm[item->class_number]);
+					tempRule.push_back(
+						class_to_nonterminals[item->class_number][0]);
 				} else
 					tempRule.push_back(item);
 			}
@@ -86,7 +102,6 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 		bisimilar_nonterminals.push_back(curNonterm);
 		bisimilar_rules.push_back(temp_rules);
 	}
-
 	return bisimilar_rules;
 }
 
@@ -98,7 +113,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
 	fa_items.resize(states.size() + alphabet.size() + 2);
 	int item_ind = 0;
 	while (item_ind < states.size()) {
-		fa_items[item_ind] = GrammarItem(GrammarItem::nonterminal, item_ind, 0);
+		fa_items[item_ind] = GrammarItem(
+			GrammarItem::nonterminal, states[item_ind].identifier, item_ind, 0);
 		nonterminals.push_back(&fa_items[item_ind]);
 		item_ind++;
 	}
@@ -126,14 +142,6 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
 
 	return rules;
 }
-// имя терминала - строка (тк может представлять собой число)
-// нужно из имени получать alphabet_symbol
-alphabet_symbol to_alphabet_symbol(string s) {
-	if (s == "\0")
-		return epsilon();
-	else
-		return s;
-}
 
 vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
 	const vector<State>& states, const vector<GrammarItem*>& fa_nonterminals,
@@ -152,7 +160,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
 			vector<GrammarItem>& item_vec = fa_items[i].second[elem.first];
 			item_vec.resize(elem.second.size());
 			for (int j = 0; j < elem.second.size(); j++) {
-				item_vec[j] = (GrammarItem(GrammarItem::nonterminal, ind, 0));
+				item_vec[j] = (GrammarItem(GrammarItem::nonterminal,
+										   "Tr" + to_string(ind), ind, 0));
 				nonterminals.push_back(&item_vec[j]);
 				ind++;
 			}

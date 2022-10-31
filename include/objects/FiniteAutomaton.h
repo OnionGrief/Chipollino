@@ -31,9 +31,16 @@ class FiniteAutomaton : public BaseObject {
 	int initial_state = 0;
 	vector<State> states;
 
+	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
+	bool parsing_nfa_for(const string&) const;
+
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	set<int> closure(const set<int>&, bool) const;
+	static bool equality_checker(const FiniteAutomaton& fa1,
+								 const FiniteAutomaton& fa2);
+	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
+									 const FiniteAutomaton& fa2);
 
   public:
 	FiniteAutomaton();
@@ -50,17 +57,18 @@ class FiniteAutomaton : public BaseObject {
 	FiniteAutomaton remove_eps() const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
 	FiniteAutomaton minimize() const;
-	// пересечение ДКА (на выходе - автомат, распознающий слова пересечения
+	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&,
 										const FiniteAutomaton&); // меняет язык
-	// объединение ДКА (на выходе - автомат, распознающий слова объединенеия
+	// объединение НКА (на выходе - автомат, распознающий слова объединенеия
 	// языков L1 и L2)
 	static FiniteAutomaton uunion(const FiniteAutomaton&,
 								  const FiniteAutomaton&); // меняет язык
-	// разность ДКА (на выходе - автомат, распознающий слова разности языков L1
+	// разность НКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
-	FiniteAutomaton difference(const FiniteAutomaton&) const; // меняет язык
+	static FiniteAutomaton difference(const FiniteAutomaton&,
+									  const FiniteAutomaton&); // меняет язык
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	FiniteAutomaton complement() const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
@@ -68,8 +76,8 @@ class FiniteAutomaton : public BaseObject {
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
 	// себя)
 	FiniteAutomaton add_trap_state() const;
-	// удаление ловушки
-	FiniteAutomaton remove_trap_state() const;
+	// удаление ловушек
+	FiniteAutomaton remove_trap_states() const;
 	// навешивание разметки на все буквы в автомате, стоящие на
 	// недетерминированных переходах (если ветвление содержит eps-переходы, то
 	// eps размечаются как буквы). ДКА не меняется
@@ -88,16 +96,14 @@ class FiniteAutomaton : public BaseObject {
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
+	// проверяет, распознаёт ли автомат слово
+	bool parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
-	int get_states_size();
-	//получаем состояние
-	State get_state(int i);
-	//начальное состояние
-	int get_initial();
-	//получаем алфавит
-	set<alphabet_symbol> get_alphabet(); // TODO
-										 // и тд
+	// возвращает количество состояний (пердикат States)
+	int states_number() const;
 	friend class Regex;
+	friend class TransformationMonoid;
+	// получаем кол-во состояний
 };
