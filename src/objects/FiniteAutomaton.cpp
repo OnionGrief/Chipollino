@@ -1264,7 +1264,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		min_paths_number.push_back(0);
 		for (int v = 0; v < min_s; v++) {
 			for (int i = 0; i < min_s; i++) {
-				min_d[N + 1][v] += min_adjacency_matrix[i][v] * d[N][i];
+				min_d[N + 1][v] += min_adjacency_matrix[i][v] * min_d[N][i];
 			}
 			if (min_fa.states[v].is_terminal)
 				min_paths_number[N] += min_d[N + 1][v];
@@ -1283,7 +1283,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		val = calc_ambiguity(fa.states.size() + i,
 							 fa.states.size() * fa.states.size(), f1,
 							 calculated, is_calculated);
-		if (val > prev_val) return FiniteAutomaton::exponentially_ambiguous;
+		if (val >= prev_val) return FiniteAutomaton::exponentially_ambiguous;
 		prev_val = val;
 	}
 	return FiniteAutomaton::polynomially_ambigious;
