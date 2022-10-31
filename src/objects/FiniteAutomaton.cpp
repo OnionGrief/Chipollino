@@ -1350,7 +1350,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	}
 	return out;
 }
-Regex* FiniteAutomaton::nfa_to_regex() {
+Regex FiniteAutomaton::nfa_to_regex() {
 	vector<int> endstate;
 	vector<vector<expression_arden>> data;
 	set<alphabet_symbol> alphabet = language->get_alphabet();
@@ -1449,8 +1449,10 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 	if (data[0].size() > 1) {
 		cout << "error";
 		Regex* f = new Regex;
-		f->from_string("a|b");
-		return f;
+		f->from_string("");
+		Regex temp1 = *f;
+		delete f;
+		return temp1;
 	}
 	for (int i = 0; i < data.size(); i++) {
 		for (int j = 0; j < data[i].size(); j++) {
@@ -1480,8 +1482,10 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 	Logger::finish_step();
 	if (endstate.size() == 0) {
 		Regex* f = new Regex;
-		f->from_string("a|b");
-		return f;
+		f->from_string("");
+		Regex temp1 = *f;
+		delete f;
+		return temp1;
 	}
 	if (endstate.size() < 2) {
 		Regex* r1;
@@ -1491,7 +1495,9 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 				delete data[i][j].temp_regex;
 			}
 		}
-		return r1;
+		Regex temp = *r;
+		delete r;
+		return temp;
 	}
 	Regex* r1;
 	r1 = data[endstate[0]][0].temp_regex->copy();
@@ -1506,5 +1512,8 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 			delete data[i][j].temp_regex;
 		}
 	}
-	return r1;
+	Regex temp1 = *r1;
+	delete r1;
+	return temp1;
+	// return r1;
 }

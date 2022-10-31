@@ -109,6 +109,6 @@ class FiniteAutomaton : public BaseObject {
 	friend class Regex;
 	friend class TransformationMonoid;
 
-	Regex* nfa_to_regex();
+	Regex nfa_to_regex();
 	// получаем кол-во состояний
 };
