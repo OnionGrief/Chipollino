@@ -158,7 +158,7 @@ void Example::regex_parsing() {
 
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
 
-	Regex* test = nfa_to_regex(a);
+	Regex* test = a.nfa_to_regex();
 	cout << test->to_txt();
 	delete test;
 }
@@ -619,7 +619,7 @@ void Example::arden_test() {
 	states[5].is_terminal = true;
 
 	FiniteAutomaton NDM(0, states, {"a", "b"});
-	Regex* test = nfa_to_regex(NDM);
+	Regex* test = NDM.nfa_to_regex();
 	cout << test->to_txt() + "\n";
 	delete test;
 }

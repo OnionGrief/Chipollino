@@ -1,5 +1,4 @@
 #include "Example.h"
-#include "arden.h"
 #include <iostream>
 using namespace std;
 
@@ -13,7 +12,6 @@ int main() {
 	// Example::fa_equal_check();
 	// Example::fa_equivalent_check();
 	// Example::fa_subset_check();
-	Example::regex_parsing();
 	Logger::finish();
 	Logger::deactivate();
 }
