@@ -1348,8 +1348,6 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			out.push_back(temp);
 		}
 	}
-	// cout << "arden";
-
 	return out;
 }
 Regex* FiniteAutomaton::nfa_to_regex() {
@@ -1362,14 +1360,10 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 		data.push_back(temp);
 	}
 	Regex* r = new Regex;
-	// r->clear();
-	// delete r;
-	// Regex r ;
 	expression_arden temp;
 	temp.condition = -1;
 	string str = "";
 	r->regex_eps();
-	// cout << r.to_txt();
 	temp.temp_regex = r;
 	data[initial_state].push_back(temp);
 	for (int i = 0; i < states.size(); i++) {
@@ -1392,9 +1386,6 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 		}
 		for (set<alphabet_symbol>::iterator it = alphabet.begin();
 			 it != alphabet.end(); it++) {
-			//}
-			// for (int j = 0; j < alphabet.size(); j++) {
-
 			if (a.transitions[*it].size()) {
 				set<int> trans = a.transitions.at(*it);
 				for (set<int>::iterator itt = trans.begin(); itt != trans.end();
@@ -1412,6 +1403,8 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 		}
 	}
 	// //сортируем
+
+	Logger::init_step("Arden");
 	for (int i = data.size() - 1; i >= 0; i--) {
 
 		vector<expression_arden> tempdata;
@@ -1420,13 +1413,10 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
 					expression_arden temp;
 					Regex* r = new Regex;
-					// Regex r ;
 					r->regex_union(data[data[i][j].condition][k].temp_regex,
 								   data[i][j].temp_regex);
 					temp.temp_regex = r;
-
 					temp.condition = data[data[i][j].condition][k].condition;
-					// delete temp.temp_regex;
 					tempdata.push_back(temp);
 				}
 			} else {
@@ -1453,23 +1443,11 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 		}
 
 		for (int o = 0; o < tempdata2.size(); o++) {
-			// cout << tempdata2[o].temp_regex->to_txt() << "\n";
-			//  data[i].push_back(tempdata[o]);
-			//  delete tempdata2[o].temp_regex;
 		}
 		data[i] = tempdata2;
-		// cout << i << " ";
-		// for (int j = 0; j < data[i].size(); j++) {
-
-		// 	cout << data[i][j].condition << "-"
-		// 		 << data[i][j].temp_regex->to_txt() << " ";
-		// }
-		// cout << "\n";
 	}
-
 	if (data[0].size() > 1) {
 		cout << "error";
-
 		Regex* f = new Regex;
 		f->from_string("a|b");
 		return f;
@@ -1477,7 +1455,6 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 	for (int i = 0; i < data.size(); i++) {
 		for (int j = 0; j < data[i].size(); j++) {
 			if (data[i][j].condition != -1) {
-
 				Regex* ra = new Regex;
 				ra->regex_union(data[data[i][j].condition][0].temp_regex,
 								data[i][j].temp_regex);
@@ -1493,15 +1470,14 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 		}
 		data[i].clear();
 		data[i] = tempdata3;
-		// for (int o = 0; o < tempdata3.size(); o++) {
-		// 	delete tempdata3[o].temp_regex;
-		// }
-		// for (int j = 0; j < data[i].size(); j++) {
+		Logger::log("State ", std::to_string(i));
+		for (int j = 0; j < data[i].size(); j++) {
 
-		// 	cout << data[i][j].condition << "-"
-		// 		 << data[i][j].temp_regex->to_txt() << " \n";
-		// }
+			Logger::log("from state ", std::to_string(data[i][j].condition));
+			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
+		}
 	}
+	Logger::finish_step();
 	if (endstate.size() == 0) {
 		Regex* f = new Regex;
 		f->from_string("a|b");
@@ -1530,15 +1506,5 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 			delete data[i][j].temp_regex;
 		}
 	}
-
-	// Regex* f = new Regex;
-	// f->from_string("a|b");
-	// return f;
-	// delete r1;
-	//	cout << r1->to_txt();
-
 	return r1;
-	//   Regex f;
-
-	// return f;
 }
