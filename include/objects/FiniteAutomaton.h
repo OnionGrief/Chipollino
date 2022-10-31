@@ -1,7 +1,6 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
-#include "arden.h"
 #include <iostream>
 #include <map>
 #include <set>
@@ -14,7 +13,10 @@ using namespace std;
 
 class Regex;
 class Language;
-
+struct expression_arden {
+	int condition;
+	Regex* temp_regex;
+};
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
@@ -34,11 +36,16 @@ class FiniteAutomaton : public BaseObject {
 	int initial_state = 0;
 	vector<State> states;
 
-	bool parsing_nfa(string, State) const; // парсинг слова в нка
+	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
+	bool parsing_nfa_for(const string&) const;
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	set<int> closure(const set<int>&, bool) const;
+	static bool equality_checker(const FiniteAutomaton& fa1,
+								 const FiniteAutomaton& fa2);
+	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
+									 const FiniteAutomaton& fa2);
 
 	// поиск префикса из состояния state_beg в состояние state_end
 	std::optional<std::string> get_prefix(int state_beg, int state_end,
@@ -108,11 +115,11 @@ class FiniteAutomaton : public BaseObject {
 	//начальное состояние
 	int get_initial();
 	//получаем алфавит
+	// возвращает количество состояний (пердикат States)
+	int states_number() const;
 	friend class Regex;
-	// получаем кол-во состояний
-	int get_states_size();
-	//получаем состояние
+	friend class TransformationMonoid;
 
-	const set<alphabet_symbol>& get_alphabet();
-	State get_state(int i);
+	Regex* nfa_to_regex();
+	// получаем кол-во состояний
 };

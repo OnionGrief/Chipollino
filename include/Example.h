@@ -3,11 +3,9 @@
 #include "Language.h"
 #include "Logger.h"
 #include "Regex.h"
-#include "AutomatonToImage.h"
-#include "Logger.h"
-#include "arden.h"
 #include "RegexGenerator.h"
 #include "TasksGenerator.h"
+#include "Tester.h"
 #include "TransformationMonoid.h"
 #include <iostream>
 /*
@@ -38,5 +36,8 @@ class Example {
 	static void fa_subset_check();
 	static void arden_test();
 	static void to_image();
+	static void tester();
+	static void step_interection();
+	static void table();
 	static void fa_semdet_check();
 };

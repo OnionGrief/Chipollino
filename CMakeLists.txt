@@ -13,17 +13,16 @@ set(SOURCES
 	src/objects/BaseObject.cpp
 	src/objects/FiniteAutomaton.cpp
 	src/objects/Regex.cpp
+	src/objects/Tester.cpp
 	src/objects/RegexGenerator.cpp
 	src/objects/TasksGenerator.cpp
 	src/objects/Language.cpp
-	src/objects/arden.cpp
 	src/objects/Grammar.cpp
 	src/AlphabetSymbol.cpp
 	src/AutomatonToImage.cpp
 	src/Example.cpp
 	src/Logger.cpp
-    src/main.cpp
-	)
+    src/main.cpp)
 
 # Add an executable with the above sources
 add_executable(chipollino ${SOURCES})

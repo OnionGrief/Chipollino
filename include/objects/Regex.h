@@ -1,6 +1,7 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
+#include "Logger.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -16,8 +17,7 @@ class FiniteAutomaton;
 struct State;
 
 struct Lexem {
-	enum Type
-	{
+	enum Type {
 		error,
 		parL, // (
 		parR, // )
@@ -29,15 +29,14 @@ struct Lexem {
 	};
 
 	Type type = error;
-	char symbol = 0;
+	alphabet_symbol symbol = "";
 	int number = 0;
-	Lexem(Type type = error, char symbol = 0, int number = 0);
+	Lexem(Type type = error, alphabet_symbol symbol = "", int number = 0);
 };
 
 class Regex : BaseObject {
   private:
-	enum Type
-	{
+	enum Type {
 		// Epsilon
 		eps,
 		// Binary:
@@ -134,6 +133,8 @@ class Regex : BaseObject {
 	std::optional<Regex> prefix_derevative(std::string respected_str) const;
 	// Длина накачки
 	int pump_length() const;
+	// Слово, в котором все итерации Клини раскрыты n раз
+	string get_iterated_word(int n) const;
 	void regex_union(Regex* a, Regex* b);
 
 	void regex_alt(Regex* a, Regex* b);
@@ -146,6 +147,7 @@ class Regex : BaseObject {
 
 	Regex linearize() const;
 	Regex delinearize() const;
+	Regex deannote() const;
 };
 
 /*

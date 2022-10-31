@@ -1,8 +1,10 @@
 #include "FiniteAutomaton.h"
 #include "Grammar.h"
 #include "Language.h"
+#include "Logger.h"
 #include <algorithm>
 #include <iostream>
+#include <queue>
 #include <set>
 #include <sstream>
 #include <stack>
@@ -85,6 +87,7 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 }
 
 FiniteAutomaton FiniteAutomaton::determinize() const {
+	Logger::init_step("Determinize");
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({0}, true);
 
@@ -160,13 +163,19 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
+	Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
+				*this, dfa);
+	Logger::finish_step();
 	return dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::minimize() const {
+	Logger::init_step("Minimize");
 	const optional<FiniteAutomaton>& language_min_dfa = language->get_min_dfa();
-	if (language->get_min_dfa())
+	if (language->get_min_dfa()) {
+		Logger::finish_step();
 		return *language_min_dfa; // Нужно решить, что делаем с идентификаторами
+	}
 	// минимизация
 	FiniteAutomaton dfa = determinize();
 	vector<bool> table(dfa.states.size() * dfa.states.size());
@@ -272,10 +281,23 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
 	// кэширование
 	language->set_min_dfa(minimized_dfa);
+	Logger::log("Автомат до минимизации", "Автомат после минимизации", *this,
+				minimized_dfa);
+	stringstream ss;
+	for (auto& elem : groups) {
+		ss << "\\{";
+		for (int i = 0; i < elem.size() - 1; i++)
+			ss << states[elem[i]].identifier << ",";
+		ss << states[elem[elem.size() - 1]].identifier;
+		ss << "\\}";
+	}
+	Logger::log("Эквивалентные классы", ss.str());
+	Logger::finish_step();
 	return minimized_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_eps() const {
+	Logger::init_step("RemEps");
 	FiniteAutomaton new_nfa(initial_state, states, language);
 
 	for (auto& state : new_nfa.states)
@@ -283,6 +305,11 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 
 	for (int i = 0; i < states.size(); i++) {
 		set<int> q = closure({states[i].index}, true);
+		for (int elem : q) {
+			if (states[elem].is_terminal) {
+				new_nfa.states[i].is_terminal = true;
+			}
+		}
 		vector<set<int>> x;
 		for (alphabet_symbol symb : language->get_alphabet()) {
 			x.clear();
@@ -300,18 +327,19 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 				}
 			}
 			for (auto elem : x1) {
-				if (new_nfa.states[elem].is_terminal) {
-					new_nfa.states[i].is_terminal = true;
-				}
 				new_nfa.states[i].transitions[symb].insert(elem);
 			}
 		}
 	}
+	Logger::log("Автомат до удаления eps-переходов",
+				"Автомат после удаления eps-переходов", *this, new_nfa);
+	Logger::finish_step();
 	return new_nfa;
 }
 
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 											  const FiniteAutomaton& fa2) {
+	Logger::init_step("Interection");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -351,11 +379,32 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	set<alphabet_symbol> new_alphabet;
+	set_intersection(fa1.language->get_alphabet().begin(),
+					 fa1.language->get_alphabet().end(),
+					 fa2.language->get_alphabet().begin(),
+					 fa2.language->get_alphabet().end(),
+					 inserter(new_alphabet, new_alphabet.begin()));
+	new_dfa.language->set_alphabet(new_alphabet);
+	for (int i = 0; i < new_dfa.states.size(); i++) {
+		map<alphabet_symbol, set<int>> new_transitions;
+		for (alphabet_symbol symb : merged_alphabets) {
+			if (new_dfa.states[i].transitions.find(symb) !=
+				new_dfa.states[i].transitions.end()) {
+				new_transitions[symb] = new_dfa.states[i].transitions[symb];
+			}
+		}
+		new_dfa.states[i].transitions = new_transitions;
+	}
+	Logger::log("Первый автомат", "Второй автомат", "Результат пересечения",
+				fa1, fa2, new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 										const FiniteAutomaton& fa2) {
+	Logger::init_step("Union");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -395,12 +444,15 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
-
+	Logger::log("Первый автомат", "Второй автомат", "Результат объединения",
+				fa1, fa2, new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 											const FiniteAutomaton& fa2) {
+	Logger::init_step("Difference");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -440,19 +492,39 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	new_dfa.language->set_alphabet(fa1.language->get_alphabet());
+	for (int i = 0; i < new_dfa.states.size(); i++) {
+		map<alphabet_symbol, set<int>> new_transitions;
+		for (alphabet_symbol symb : merged_alphabets) {
+			if (new_dfa.states[i].transitions.find(symb) !=
+				new_dfa.states[i].transitions.end()) {
+				new_transitions[symb] = new_dfa.states[i].transitions[symb];
+			}
+		}
+		new_dfa.states[i].transitions = new_transitions;
+	}
 
+	Logger::log("Первый автомат", "Второй автомат", "Результат разности", fa1,
+				fa2, new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::complement() const {
+	Logger::init_step("Complement");
 	FiniteAutomaton new_dfa =
 		FiniteAutomaton(initial_state, states, language->get_alphabet());
+	new_dfa = new_dfa.determinize();
 	for (int i = 0; i < new_dfa.states.size(); i++) {
 		new_dfa.states[i].is_terminal = !new_dfa.states[i].is_terminal;
 	}
+	Logger::log("Автомат до дополнения", "Автомат после дополнения", *this,
+				new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 FiniteAutomaton FiniteAutomaton::reverse() const {
+	Logger::init_step("Reverse");
 	FiniteAutomaton enfa =
 		FiniteAutomaton(states.size(), states, language->get_alphabet());
 	int final_states_counter = 0;
@@ -495,10 +567,13 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
 		enfa.states[i].transitions = new_transition_matrix[i];
 	}
+	Logger::log("Автомат до обращения", "Автомат после обращения", *this, enfa);
+	Logger::finish_step();
 	return enfa;
 }
 
 FiniteAutomaton FiniteAutomaton::add_trap_state() const {
+	Logger::init_step("AddTrapState");
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
 	int count = new_dfa.states.size();
@@ -529,28 +604,29 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 				new_dfa.states.size() - 1);
 		}
 	}
+	Logger::log("Автомат до добавления ловушки",
+				"Автомат после добавления ловушки", *this, new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
+	Logger::init_step("RemoveTrapState");
 	vector<map<alphabet_symbol, set<int>>> new_transitions;
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
-		bool is_trap_state = false;
+		bool is_trap_state = true;
 		set<int> reachable_states = new_dfa.closure({i}, false);
 		for (int j = 0; j < new_dfa.states.size(); j++) {
-			if (states[j].is_terminal) {
-				bool is_state_found = false;
+			if (new_dfa.states[j].is_terminal) {
 				for (auto elem : reachable_states) {
 					if (j == elem) {
-						is_state_found = true;
+						is_trap_state = false;
 					}
 				}
-				if (is_state_found) {
+				if (!is_trap_state) {
 					break;
-				} else {
-					is_trap_state = true;
 				}
 			}
 		}
@@ -587,10 +663,14 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 			count--;
 		}
 	}
+	Logger::log("Автомат до удаления ловушек", "Автомат после удаления ловушек",
+				*this, new_dfa);
+	Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::annote() const {
+	Logger::init_step("Annote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, shared_ptr<Language>());
@@ -610,7 +690,9 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 			} else {
 				new_transitions[i][elem.first] =
 					new_fa.states[i].transitions[elem.first];
-				new_alphabet.insert(elem.first);
+				if (!is_epsilon(elem.first)) {
+					new_alphabet.insert(elem.first);
+				}
 			}
 		}
 	}
@@ -618,10 +700,14 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
+	Logger::log("Автомат до навешивания разметки",
+				"Автомат после навешивания разметки", *this, new_fa);
+	Logger::finish_step();
 	return new_fa;
 }
 
 FiniteAutomaton FiniteAutomaton::deannote() const {
+	Logger::init_step("DeAnnote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, shared_ptr<Language>());
@@ -629,12 +715,13 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 		new_fa.states.size());
 	for (int i = 0; i < new_fa.states.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
-			if (elem.first.size() > 1 && elem.first != epsilon()) {
-				string str = to_string(elem.first);
-				str.pop_back();
-				new_alphabet.insert(str);
+			if (elem.first.size() > 1) {
+				alphabet_symbol symb = remove_numbers(elem.first);
+				if (!is_epsilon(symb)) {
+					new_alphabet.insert(symb);
+				}
 				for (int transition_to : elem.second) {
-					new_transitions[i][str].insert(transition_to);
+					new_transitions[i][symb].insert(transition_to);
 				}
 			} else {
 				new_transitions[i][elem.first] =
@@ -647,6 +734,9 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
+	Logger::log("Автомат до удаления разметки",
+				"Автомат после удаления разметки", *this, new_fa);
+	Logger::finish_step();
 	return new_fa;
 }
 
@@ -687,25 +777,41 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 }
 
 FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
+	Logger::init_step("MergeBisim");
+
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
 	vector<GrammarItem*> terminals;
-
 	vector<vector<vector<GrammarItem*>>> rules = Grammar::fa_to_grammar(
 		states, language->get_alphabet(), fa_items, nonterminals, terminals);
-
 	vector<GrammarItem*> bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
-		Grammar::get_bisimilar_grammar(rules, nonterminals,
-									   bisimilar_nonterminals);
+		Grammar::get_bisimilar_grammar(
+			rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
+
+	// log
 	vector<int> classes;
 	for (const auto& nont : nonterminals)
 		classes.push_back(nont->class_number);
-	return merge_equivalent_classes(classes);
+	FiniteAutomaton result_fa = merge_equivalent_classes(classes);
+
+	Logger::log("Автомат до преобразования", "Автомат после преобразования",
+				*this, result_fa);
+	stringstream ss;
+	for (auto& elem : class_to_nonterminals) {
+		ss << "\\{";
+		for (int i = 0; i < elem.second.size() - 1; i++)
+			ss << elem.second[i]->name << ",";
+		ss << elem.second[elem.second.size() - 1]->name << "\\}";
+	}
+	Logger::log("Эквивалентные классы", ss.str());
+	Logger::finish_step();
+	return result_fa;
 }
 
-bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
-								const FiniteAutomaton& fa2) {
+bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
+										   const FiniteAutomaton& fa2) {
 	// грамматики из автоматов
 	vector<GrammarItem> fa1_items;
 	vector<GrammarItem*> fa1_nonterminals;
@@ -726,14 +832,18 @@ bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
 		if (*fa1_terminals[i] != *fa2_terminals[i]) return false;
 	// сначала получаем бисимилярные грамматики из данных автоматов
 	vector<GrammarItem*> fa1_bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> fa1_class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> fa1_bisimilar_rules =
 		Grammar::get_bisimilar_grammar(fa1_rules, fa1_nonterminals,
-									   fa1_bisimilar_nonterminals);
+									   fa1_bisimilar_nonterminals,
+									   fa1_class_to_nonterminals);
 
 	vector<GrammarItem*> fa2_bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> fa2_class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> fa2_bisimilar_rules =
 		Grammar::get_bisimilar_grammar(fa2_rules, fa2_nonterminals,
-									   fa2_bisimilar_nonterminals);
+									   fa2_bisimilar_nonterminals,
+									   fa2_class_to_nonterminals);
 	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size())
 		return false;
 	// из объединения полученных ранее получаем итоговую
@@ -744,13 +854,51 @@ bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
 	rules.insert(rules.end(), fa2_bisimilar_rules.begin(),
 				 fa2_bisimilar_rules.end());
 
-	for (GrammarItem* nont : nonterminals)
-		nont->class_number = 0; // сбрасываю номера классов
+	vector<int> fa1_classes; // сохраяняю классы
+	for (GrammarItem* nont : fa1_nonterminals) {
+		fa1_classes.push_back(nont->class_number);
+		nont->class_number = -1; // сбрасываю номера классов
+	}
+	vector<int> fa2_classes; // сохраняю классы
+	for (GrammarItem* nont : fa2_nonterminals) {
+		fa2_classes.push_back(nont->class_number);
+		nont->class_number = -1; // сбрасываю номера классов
+	}
 
 	vector<GrammarItem*> bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
-		Grammar::get_bisimilar_grammar(rules, nonterminals,
-									   bisimilar_nonterminals);
+		Grammar::get_bisimilar_grammar(
+			rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
+
+	map<int, vector<string>> class_to_nonterminals_names;
+
+	for (int i = 0; i < fa1_nonterminals.size(); i++) {
+		int nont_class =
+			fa1_class_to_nonterminals[fa1_classes[i]][0]
+				->class_number; // класс нетерминала в общей грамматике, 0й
+								// элемент попал в бисимилярную грамматику
+		class_to_nonterminals_names[nont_class].push_back(
+			"FA1:" + fa1_nonterminals[i]->name);
+	}
+
+	for (int i = 0; i < fa2_nonterminals.size(); i++) {
+		int nont_class =
+			fa2_class_to_nonterminals[fa2_classes[i]][0]
+				->class_number; // класс нетерминала в общей грамматике, 0й
+								// элемент попал в бисимилярную грамматику
+		class_to_nonterminals_names[nont_class].push_back(
+			"FA2:" + fa2_nonterminals[i]->name);
+	}
+	// log
+	stringstream ss;
+	for (auto& elem : class_to_nonterminals_names) {
+		ss << "\\{";
+		for (int i = 0; i < elem.second.size() - 1; i++)
+			ss << elem.second[i] << ",";
+		ss << elem.second[elem.second.size() - 1] << "\\}";
+	}
+	Logger::log("Эквивалентные классы", ss.str());
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
@@ -762,8 +910,22 @@ bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
 	return true;
 }
 
-bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
-							const FiniteAutomaton& fa2) {
+bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
+								const FiniteAutomaton& fa2) {
+	Logger::init_step("Bisimilar");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
+	bool result = bisimilarity_checker(fa1, fa2);
+	if (result)
+		Logger::log("Результат Bisimilar", "true");
+	else
+		Logger::log("Результат Bisimilar", "false");
+	Logger::finish_step();
+	return result;
+}
+
+bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1,
+									   const FiniteAutomaton& fa2) {
 	// проверка равенства количества состояний
 	if (fa1.states.size() != fa2.states.size()) return false;
 	// грамматики из состояний автоматов
@@ -793,9 +955,10 @@ bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
 	for (GrammarItem* nont : nonterminals)
 		nont->class_number = 0; // сбрасываю номера классов
 	vector<GrammarItem*> bisimilar_nonterminals;
+	map<int, vector<GrammarItem*>> class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> bisimilar_rules =
-		Grammar::get_bisimilar_grammar(rules, nonterminals,
-									   bisimilar_nonterminals);
+		Grammar::get_bisimilar_grammar(
+			rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
 		fa2_nonterminals[fa2.initial_state]->class_number)
@@ -824,12 +987,13 @@ bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
 	reverse_rules.insert(reverse_rules.end(), fa2_reverse_rules.begin(),
 						 fa2_reverse_rules.end());
 	for (GrammarItem* nont : nonterminals)
-		nont->class_number = 0; // сбрасываю номера классов
+		nont->class_number = -1; // сбрасываю номера классов
 
 	vector<GrammarItem*> reverse_bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> reverse_bisimilar_rules =
 		Grammar::get_bisimilar_grammar(reverse_rules, nonterminals,
-									   reverse_bisimilar_nonterminals);
+									   reverse_bisimilar_nonterminals,
+									   class_to_nonterminals);
 	// сопоставление состояний 1 к 1
 	vector<int> reverse_bisimilar_classes;
 	for (GrammarItem* nont : nonterminals) {
@@ -909,9 +1073,9 @@ bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
 		nont->class_number = 0; // сбрасываю номера классов
 	vector<GrammarItem*> transitions_bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> transitions_bisimilar_rules =
-		Grammar::get_bisimilar_grammar(transitions_rules,
-									   transitions_nonterminals,
-									   transitions_bisimilar_nonterminals);
+		Grammar::get_bisimilar_grammar(
+			transitions_rules, transitions_nonterminals,
+			transitions_bisimilar_nonterminals, class_to_nonterminals);
 	// проверяю бисимилярность переходов
 	classes.clear();
 	classes.resize(transitions_bisimilar_nonterminals.size(), 0);
@@ -925,9 +1089,32 @@ bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
 	return true;
 }
 
+bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
+							const FiniteAutomaton& fa2) {
+	Logger::init_step("Equal");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
+	bool result = equality_checker(fa1, fa2);
+	if (result)
+		Logger::log("Результат Equal", "true");
+	else
+		Logger::log("Результат Equal", "false");
+	Logger::finish_step();
+	return result;
+}
+
 bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 								 const FiniteAutomaton& fa2) {
-	return equal(fa1.minimize(), fa2.minimize());
+	Logger::init_step("Equiv");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
+	bool result = equal(fa1.minimize(), fa2.minimize());
+	if (result)
+		Logger::log("Результат Equiv", "true");
+	else
+		Logger::log("Результат Equiv", "false");
+	Logger::finish_step();
+	return result;
 }
 
 std::optional<std::string> FiniteAutomaton::get_prefix(int state_beg, int state_end,
@@ -969,7 +1156,7 @@ bool FiniteAutomaton::semdet() {
 		Regex reg;
 		// Получение языка из производной регулярки автомата по префиксу:
 		//		this -> reg (arden?)
-		reg = nfa_to_regex(*this);
+		reg = *nfa_to_regex();
 		cout << "State: " << i << "\n";
 		cout << "Prefix: " << prefix.value() << "\n";
 		cout << "Regex: " << reg.to_txt() << "\n";
@@ -1004,59 +1191,141 @@ bool FiniteAutomaton::semdet() {
 	return true;
 }
 
-bool FiniteAutomaton::parsing_nfa(string s, State state) const {
-	// cout << s << endl;
+bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
+	// cout << s.size() << endl;
+	State state = states[index_state];
+
 	if (s.size() == 0 && state.is_terminal) {
 		return true;
 	}
-
+	set<int> tr_eps =
+		state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
+	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
+	int n;
+	// tr_eps = {};
 	if (s.size() == 0 && !state.is_terminal) {
+		n = trans_eps.size();
+		for (size_t i = 0; i < trans_eps.size(); i++) {
+			// cout << trans_eps[i] << endl;
+			if (parsing_nfa(s, trans_eps[i])) {
+				return true;
+			}
+		}
 		return false;
 	}
+
 	alphabet_symbol elem = char_to_alphabet_symbol(s[0]);
 	set<int> tr = state.transitions[elem];
-	set<int> tr_eps = state.transitions[char_to_alphabet_symbol('\0')];
 	vector<int> trans{tr.begin(), tr.end()};
-	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
-	for (size_t i = 0; i < trans.size(); i++) {
-		if (parsing_nfa(s.substr(1), states[trans[i]])) {
+	// tr = {};
+	n = trans.size();
+	for (size_t i = 0; i < n; i++) {
+		if (parsing_nfa(s.substr(1), trans[i])) {
 			return true;
 		}
 	}
-	for (size_t i = 0; i < trans_eps.size(); i++) {
-		if (parsing_nfa(s, states[trans_eps[i]])) {
+	n = trans_eps.size();
+	for (size_t i = 0; i < n; i++) {
+		// cout << trans_eps[i] << endl;
+		if (parsing_nfa(s, trans_eps[i])) {
 			return true;
 		}
 	}
 	return false;
 }
 
-bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
-	State state = states[0];
-	return parsing_nfa(s, state);
-}
-bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
-	FiniteAutomaton fa_instersection(intersection(*this, fa));
-	// автомат с перечесеченным алфавитом
-	FiniteAutomaton check_fa(fa.initial_state, fa.states,
-							 fa_instersection.language->get_alphabet());
-	return equivalent(fa_instersection, check_fa);
+bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
+	// cout << s.size() << endl;
+	stack<State> stac_state;
+	stack<int> stack_s;
+	stack<int> stack_index;
+	stac_state.push(states[0]);
+	stack_s.push(0);
+	stack_index.push(0);
+	int n, n_eps;
+	int index = 0;
+	int state_s = 0;
+	State state = stac_state.top();
+	// cout << !stac_state.empty() << endl;
+	while (!stac_state.empty()) {
+		state = stac_state.top();
+		state_s = stack_s.top();
+		index = stack_index.top();
+		if (state.is_terminal && index == s.size()) {
+			break;
+		}
+		stac_state.pop();
+		stack_s.pop();
+		stack_index.pop();
+		alphabet_symbol elem = char_to_alphabet_symbol(s[index]);
+		set<int> tr = state.transitions[elem];
+		vector<int> trans{tr.begin(), tr.end()};
+		set<int> tr_eps =
+			state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
+		vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
+		// tr = {};
+		// cout << elem << " " << state.identifier << " " << index << " "
+		//	 << stac_state.size() << endl;
+		n = trans.size();
+		n_eps = trans_eps.size();
+		if (n + n_eps == 0) {
+			// stac_state.pop();
+			//  stack_s.pop();
+			if (state_s != 0) {
+				// index--;
+			}
+		}
+		for (size_t i = 0; i < n; i++) {
+			if (index + 1 <= s.size()) {
+				stac_state.push(states[trans[i]]);
+				stack_s.push(1);
+				stack_index.push(index + 1);
+			}
+		}
+		for (size_t i = 0; i < n_eps; i++) {
+			stac_state.push(states[trans_eps[i]]);
+			stack_s.push(0);
+			stack_index.push(index);
+		}
+		// if (state_s != 0) {
+		//	index++;
+		// }
+	}
+	if (/*(stac_state.empty() && s.size() <= index) ||*/
+		(s.size() == index && state.is_terminal)) {
+		return true;
+	}
+	return false;
 }
 
-int FiniteAutomaton::get_states_size() {
-	return states.size();
+bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
+	State state = states[0];
+	return parsing_nfa_for(s);
 }
-State FiniteAutomaton::get_state(int i) {
-	return states[i];
+bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
+	Logger::init_step("Subset");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", *this, fa);
+	FiniteAutomaton dfa1(determinize());
+	FiniteAutomaton dfa2(fa.determinize());
+	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
+	bool result = equivalent(dfa_instersection, dfa2);
+	if (result)
+		Logger::log("Результат Subset", "true");
+	else
+		Logger::log("Результат Subset", "false");
+	Logger::finish_step();
+	return result;
 }
 
 int FiniteAutomaton::get_initial() {
 	return initial_state;
 }
 
-const set<alphabet_symbol>& FiniteAutomaton::get_alphabet() {
-	return language->get_alphabet();
+int FiniteAutomaton::states_number() const {
+	return states.size();
 }
+
 /*
 Джун программист прибегает с проекта к своему ментору и кричит:
 — Меня отпустили с проекта пораньше!
@@ -1082,3 +1351,238 @@ const set<alphabet_symbol>& FiniteAutomaton::get_alphabet() {
 вскликает:
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
+bool compare(expression_arden a, expression_arden b) {
+	return (a.condition < b.condition);
+}
+
+vector<expression_arden> arden_minimize(vector<expression_arden> in) {
+	vector<expression_arden> out;
+	for (int i = 0; i < in.size(); i++) {
+		int j = i + 1;
+		bool cond = false;
+		expression_arden temp;
+		temp.temp_regex = in[i].temp_regex->copy();
+		temp.condition = in[i].condition;
+		out.push_back(temp);
+		while ((j < in.size()) && in[i].condition == in[j].condition) {
+			cond = true;
+			Regex* r = new Regex();
+			Regex* s1 = new Regex();
+			Regex* s2 = new Regex();
+			s1->regex_star(out[i].temp_regex);
+			s2->regex_star(in[j].temp_regex);
+			r->regex_union(s1, s2);
+			delete out[out.size() - 1].temp_regex;
+			out[out.size() - 1].temp_regex = r;
+			delete s1;
+			delete s2;
+			j++;
+		}
+		if (cond) {
+			i = j - 1;
+		}
+	}
+	return out;
+}
+
+vector<expression_arden> arden(vector<expression_arden> in, int index) {
+	vector<expression_arden> out;
+	int indexcur = -1;
+	for (int i = 0; (i < in.size() && indexcur == -1); i++) {
+		if (in[i].condition == index) {
+			indexcur = i;
+		}
+	}
+	if (indexcur == -1) {
+		for (int i = 0; i < in.size(); i++) {
+			Regex* r = in[i].temp_regex->copy();
+			expression_arden temp;
+			temp.temp_regex = r;
+			temp.condition = in[i].condition;
+			out.push_back(temp);
+		}
+		return out;
+	}
+	if (in.size() < 2) {
+		Regex* r = new Regex();
+		r->regex_star(in[0].temp_regex);
+		expression_arden temp;
+		temp.temp_regex = r;
+		temp.condition = -1;
+		out.push_back(temp);
+		return out;
+	}
+	for (int i = 0; i < in.size(); i++) {
+		if (i != indexcur) {
+			Regex* r = new Regex();
+			r->regex_star(in[indexcur].temp_regex);
+			Regex* k = new Regex();
+			k->regex_union(in[i].temp_regex, r);
+			expression_arden temp;
+
+			delete r;
+			temp.temp_regex = k;
+			temp.condition = in[i].condition;
+			out.push_back(temp);
+		}
+	}
+	return out;
+}
+Regex* FiniteAutomaton::nfa_to_regex() {
+	vector<int> endstate;
+	vector<vector<expression_arden>> data;
+	set<alphabet_symbol> alphabet = language->get_alphabet();
+
+	for (int i = 0; i < states.size(); i++) {
+		vector<expression_arden> temp;
+		data.push_back(temp);
+	}
+	Regex* r = new Regex;
+	expression_arden temp;
+	temp.condition = -1;
+	string str = "";
+	r->regex_eps();
+	temp.temp_regex = r;
+	data[initial_state].push_back(temp);
+	for (int i = 0; i < states.size(); i++) {
+		State a = states[i];
+		if (a.is_terminal) {
+			endstate.push_back(i);
+		}
+		if (a.transitions["eps"].size()) {
+			set<int> trans = a.transitions.at("eps");
+			for (set<int>::iterator itt = trans.begin(); itt != trans.end();
+				 itt++) {
+				Regex* r = new Regex;
+				expression_arden temp;
+				temp.condition = i;
+
+				r->regex_eps();
+				temp.temp_regex = r;
+				data[*itt].push_back(temp);
+			}
+		}
+		for (set<alphabet_symbol>::iterator it = alphabet.begin();
+			 it != alphabet.end(); it++) {
+			if (a.transitions[*it].size()) {
+				set<int> trans = a.transitions.at(*it);
+				for (set<int>::iterator itt = trans.begin(); itt != trans.end();
+					 itt++) {
+					Regex* r = new Regex;
+					expression_arden temp;
+					temp.condition = i;
+					string str = "";
+					str += *it;
+					r->from_string(str);
+					temp.temp_regex = r;
+					data[*itt].push_back(temp);
+				}
+			}
+		}
+	}
+	// //сортируем
+
+	Logger::init_step("Arden");
+	for (int i = data.size() - 1; i >= 0; i--) {
+
+		vector<expression_arden> tempdata;
+		for (int j = 0; j < data[i].size(); j++) {
+			if (data[i][j].condition > i) {
+				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
+					expression_arden temp;
+					Regex* r = new Regex;
+					r->regex_union(data[data[i][j].condition][k].temp_regex,
+								   data[i][j].temp_regex);
+					temp.temp_regex = r;
+					temp.condition = data[data[i][j].condition][k].condition;
+					tempdata.push_back(temp);
+				}
+			} else {
+				expression_arden temp;
+				Regex* r = new Regex(*data[i][j].temp_regex);
+				temp.temp_regex = r;
+				temp.condition = data[i][j].condition;
+				tempdata.push_back(temp);
+			}
+		}
+
+		sort(data[i].begin(), data[i].end(), compare);
+		for (int o = 0; o < data[i].size(); o++) {
+			delete data[i][o].temp_regex;
+		}
+		data[i].clear();
+		vector<expression_arden> tempdata1 = arden_minimize(tempdata);
+		vector<expression_arden> tempdata2 = arden(tempdata1, i);
+		for (int o = 0; o < tempdata.size(); o++) {
+			delete tempdata[o].temp_regex;
+		}
+		for (int o = 0; o < tempdata1.size(); o++) {
+			delete tempdata1[o].temp_regex;
+		}
+
+		for (int o = 0; o < tempdata2.size(); o++) {
+		}
+		data[i] = tempdata2;
+	}
+	if (data[0].size() > 1) {
+		cout << "error";
+		Regex* f = new Regex;
+		f->from_string("a|b");
+		return f;
+	}
+	for (int i = 0; i < data.size(); i++) {
+		for (int j = 0; j < data[i].size(); j++) {
+			if (data[i][j].condition != -1) {
+				Regex* ra = new Regex;
+				ra->regex_union(data[data[i][j].condition][0].temp_regex,
+								data[i][j].temp_regex);
+				data[i][j].condition = -1;
+				delete data[i][j].temp_regex;
+				data[i][j].temp_regex = ra;
+			}
+		}
+
+		vector<expression_arden> tempdata3 = arden_minimize(data[i]);
+		for (int o = 0; o < data[i].size(); o++) {
+			delete data[i][o].temp_regex;
+		}
+		data[i].clear();
+		data[i] = tempdata3;
+		Logger::log("State ", std::to_string(i));
+		for (int j = 0; j < data[i].size(); j++) {
+
+			Logger::log("from state ", std::to_string(data[i][j].condition));
+			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
+		}
+	}
+	Logger::finish_step();
+	if (endstate.size() == 0) {
+		Regex* f = new Regex;
+		f->from_string("a|b");
+		return f;
+	}
+	if (endstate.size() < 2) {
+		Regex* r1;
+		r1 = data[endstate[0]][0].temp_regex->copy();
+		for (int i = 0; i < data.size(); i++) {
+			for (int j = 0; j < data[i].size(); j++) {
+				delete data[i][j].temp_regex;
+			}
+		}
+		return r1;
+	}
+	Regex* r1;
+	r1 = data[endstate[0]][0].temp_regex->copy();
+	for (int i = 1; i < endstate.size(); i++) {
+		Regex* r2 = new Regex;
+		r2->regex_alt(r1, data[endstate[i]][0].temp_regex);
+		delete r1;
+		r1 = r2;
+	}
+	for (int i = 0; i < data.size(); i++) {
+		for (int j = 0; j < data[i].size(); j++) {
+			delete data[i][j].temp_regex;
+		}
+	}
+	return r1;
+}
