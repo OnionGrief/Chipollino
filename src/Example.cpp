@@ -122,17 +122,18 @@ void Example::intersection() {
 void Example::regex_parsing() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
-	// regl = regl + regr;				 // "a|b|(((||)))";
-	//  egl = "a()a))";			  // regl + regr;
-	regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
+	regl = regl + regr;
+	// egl = "a()a))";			  // regl + regr;
+	// regl = "a1456|b244444444444";
+	//  regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
 		return;
 	}
 
-	cout << r.to_txt() << "\n";
-	// cout << r.pump_length() << "\n";
+	// cout << r.to_txt();
+
 	FiniteAutomaton a;
 	FiniteAutomaton b;
 	FiniteAutomaton c;
@@ -152,9 +153,12 @@ void Example::regex_parsing() {
 	// FiniteAutomaton d;
 	cout << "to_antimirov  ------------------------------\n";
 	d = r.to_antimirov();
+	// cout << d.to_txt();
+	//  cout << r.deannote().to_txt();
 
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
-	cout << d.to_txt();
+
+	cout << a.nfa_to_regex().to_txt();
 }
 
 void Example::parsing_nfa() {
@@ -581,6 +585,39 @@ void Example::step_interection() {
 	Logger::finish_step();
 	Logger::finish();
 	Logger::deactivate();
+}
+
+void Example::arden_test() {
+	vector<State> states;
+	for (int i = 0; i < 8; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states.push_back(s);
+	}
+	states[0].set_transition(1, "a");
+	states[0].set_transition(4, "b");
+	states[1].set_transition(1, "a");
+	states[1].set_transition(2, "b");
+	states[2].set_transition(1, "a");
+	states[2].set_transition(3, "b");
+	states[3].set_transition(1, "a");
+	states[3].set_transition(3, "b");
+	states[4].set_transition(1, "a");
+	states[4].set_transition(5, "b");
+	states[5].set_transition(6, "a");
+	states[5].set_transition(5, "b");
+	states[6].set_transition(6, "a");
+	states[6].set_transition(7, "b");
+	states[7].set_transition(6, "a");
+	states[7].set_transition(5, "b");
+	states[0].is_terminal = true;
+	states[1].is_terminal = true;
+	states[2].is_terminal = true;
+	states[4].is_terminal = true;
+	states[5].is_terminal = true;
+
+	FiniteAutomaton NDM(0, states, {"a", "b"});
+	cout << NDM.nfa_to_regex().to_txt() + "\n";
 }
 
 void Example::table() {

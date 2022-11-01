@@ -22,8 +22,7 @@ set(SOURCES
 	src/AutomatonToImage.cpp
 	src/Example.cpp
 	src/Logger.cpp
-    src/main.cpp
-)
+    src/main.cpp)
 
 # Add an executable with the above sources
 add_executable(chipollino ${SOURCES})

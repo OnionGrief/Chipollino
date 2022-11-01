@@ -10,7 +10,6 @@
 #include <set>
 #include <string>
 #include <vector>
-
 using namespace std;
 
 class Language;
@@ -133,7 +132,13 @@ class Regex : BaseObject {
 	int pump_length() const;
 	// Слово, в котором все итерации Клини раскрыты n раз
 	string get_iterated_word(int n) const;
+	void regex_union(Regex* a, Regex* b);
 
+	void regex_alt(Regex* a, Regex* b);
+
+	void regex_star(Regex* a);
+
+	void regex_eps();
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 

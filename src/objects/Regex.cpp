@@ -341,7 +341,23 @@ bool Regex::from_string(string str) {
 	delete root;
 	return true;
 }
-
+void Regex::regex_union(Regex* a, Regex* b) {
+	type = Type::conc;
+	term_l = a->copy();
+	term_r = b->copy();
+}
+void Regex::regex_alt(Regex* a, Regex* b) {
+	type = Type::alt;
+	term_l = a->copy();
+	term_r = b->copy();
+}
+void Regex::regex_star(Regex* a) {
+	type = Type::star;
+	term_l = a->copy();
+}
+void Regex::regex_eps() {
+	type = Type::eps;
+}
 Regex* Regex::copy() const {
 	Regex* c = new Regex();
 	c->type = type;
