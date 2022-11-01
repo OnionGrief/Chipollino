@@ -129,17 +129,18 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 										   int transferlen) {
 
 	automat = in->remove_trap_states();
-	cout << automat.to_txt();
+	//	cout << automat.to_txt();
 	for (int i = 1; i <= transferlen; i++) {
 
 		vector<vector<string>> various =
-			get_comb_alphabet(i, in->get_alphabet());
+			get_comb_alphabet(i, automat.language->get_alphabet());
 		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
 		{
 			Term current;
 			current.name = various[j];
 			current.name = rewriting(various[j], rules);
-			for (int t = 0; t < automat.get_states_size(); t++) {
+
+			for (int t = 0; t < automat.states.size(); t++) {
 				int endsost = t;
 				Transition g;
 				g.first = endsost;
@@ -147,7 +148,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 				for (int k = 0; k < current.name.size();
 					 k++) //Для	каждого	символа	перехода
 				{
-					State a = automat.get_state(endsost);
+					State a = automat.states[endsost];
 					if (a.transitions.count(current.name[k])) {
 						set<int> temp = a.transitions.at(current.name[k]);
 						endsost = *temp.begin();
@@ -166,11 +167,11 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 								 //Эквивалентных классах
 			{
 				bool cond = true;
-				if (current.Transitions.size() != automat.get_states_size()) {
+				if (current.Transitions.size() != automat.states.size()) {
 					cond = false;
 				}
 				for (int i = 0; i < current.Transitions.size(); i++) {
-					if (!automat.get_state(current.Transitions[i].second)
+					if (!automat.states[current.Transitions[i].second]
 							 .is_terminal) {
 						cond = false;
 					}
@@ -184,6 +185,25 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 			}
 		}
 	}
+	Logger::init_step("equivalence classes");
+	for (int i = 0; i < terms.size(); i++) {
+		Logger::log("class " + to_str(terms[i].name),
+					terms[i].isFinal ? "in lang" : "not in lang");
+		for (int j = 0; j < terms[i].Transitions.size(); j++) {
+			Logger::log("transition " +
+							std::to_string(terms[i].Transitions[j].first),
+						std::to_string(terms[i].Transitions[j].second));
+		}
+	}
+	Logger::finish_step();
+	Logger::init_step("Rewriting_Rules");
+	for (auto& item : rules) {
+		for (int i = 0; i < item.second.size(); i++) {
+			Logger::log("rewriting " + to_str(item.first),
+						to_str(item.second[i]));
+		}
+	}
+	Logger::finish_step();
 }
 
 string TransformationMonoid::to_txt() const {
@@ -200,26 +220,40 @@ map<vector<string>, vector<vector<string>>> TransformationMonoid::
 }
 
 string TransformationMonoid::get_Equalence_Classes_Txt() {
+
 	stringstream ss;
+	Logger::init_step("equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
+
+		Logger::log("class " + to_str(terms[i].name),
+					terms[i].isFinal ? "in lang" : "not in lang");
 		ss << "Term	" << to_str(terms[i].name) << "	in	language	"
 		   << terms[i].isFinal << "\n";
 		for (int j = 0; j < terms[i].Transitions.size(); j++) {
+			Logger::log("transition " +
+							std::to_string(terms[i].Transitions[j].first),
+						std::to_string(terms[i].Transitions[j].second));
 			ss << terms[i].Transitions[j].first << "	->	"
 			   << terms[i].Transitions[j].second << "\n";
 		}
 	}
+	Logger::finish_step();
 	return ss.str();
 }
 
 string TransformationMonoid::get_Rewriting_Rules_Txt() {
 	stringstream ss;
+
+	Logger::init_step("Rewriting_Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
+			Logger::log("rewriting " + to_str(item.first),
+						to_str(item.second[i]));
 			ss << to_str(item.first) << "	->	" << to_str(item.second[i])
 			   << "\n";
 		}
 	}
+	Logger::finish_step();
 	return ss.str();
 }
 
@@ -240,13 +274,13 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_VW(Term w) {
 		}
 		if (Transitions.size() > 0) {
 			bool cond = true;
-			if (Transitions.size() != automat.get_states_size()) {
+			if (Transitions.size() != automat.states.size()) {
 				cond = false;
 			} else {
 				for (int j = 0; j < Transitions.size(); j++) {
 					// cout << "\n t " << Transitions[j].first << " " <<
 					// Transitions[j].second << "\n";
-					if (!automat.get_state(Transitions[j].second).is_terminal) {
+					if (!automat.states[Transitions[j].second].is_terminal) {
 						cond = false;
 					}
 				}
@@ -257,6 +291,12 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_VW(Term w) {
 			}
 		}
 	}
+
+	Logger::init_step("Rewriting_Rules_VW");
+	for (int i = 0; i < out.size(); i++) {
+		Logger::log("class " + to_str(out[i].name), "");
+	}
+	Logger::finish_step();
 	return out;
 }
 
@@ -277,11 +317,11 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_WV(Term w) {
 		}
 		if (Transitions.size() > 0) {
 			bool cond = true;
-			if (Transitions.size() != automat.get_states_size()) {
+			if (Transitions.size() != automat.states.size()) {
 				cond = false;
 			} else {
 				for (int j = 0; j < Transitions.size(); j++) {
-					if (!automat.get_state(Transitions[j].second).is_terminal) {
+					if (!automat.states[Transitions[j].second].is_terminal) {
 						cond = false;
 					}
 				}
@@ -292,6 +332,11 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_WV(Term w) {
 			}
 		}
 	}
+	Logger::init_step("Rewriting_Rules_WV");
+	for (int i = 0; i < out.size(); i++) {
+		Logger::log("class " + to_str(out[i].name), "");
+	}
+	Logger::finish_step();
 	return out;
 }
 bool wasTransition(vector<Transition> mas, Transition b) {
@@ -327,13 +372,13 @@ vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
 			}
 			if (Transitions.size() > 0) {
 				bool cond = true;
-				if (Transitions.size() != automat.get_states_size()) {
+				if (Transitions.size() != automat.states.size()) {
 					cond = false;
 				} else {
 					for (int j = 0; j < Transitions.size(); j++) {
 						// cout << "\n t " << Transitions[j].first << " " <<
 						// Transitions[j].second << "\n";
-						if (!automat.get_state(Transitions[j].second)
+						if (!automat.states[Transitions[j].second]
 								 .is_terminal) {
 							cond = false;
 						}
@@ -348,6 +393,12 @@ vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
 			}
 		}
 	}
+	Logger::init_step("Rewriting_Rules_VWV");
+	for (int i = 0; i < out.size(); i++) {
+		Logger::log("class " + to_str(out[i].first.name),
+					to_str(out[i].second.name));
+	}
+	Logger::finish_step();
 	return out;
 }
 
@@ -442,8 +493,22 @@ string TransformationMonoid::to_Txt_MyhillNerode() {
 		}
 		ss << "\n";
 	}
-
+	Logger::init_step("MyhillNerode TABLE");
+	Logger::log(ss.str());
+	Logger::finish_step();
 	return ss.str();
+}
+int class_card_typecheker(FiniteAutomaton* in) {
+	TransformationMonoid a(in, 5);
+	return a.class_Card();
+}
+int MyhillNerode_typecheker(FiniteAutomaton* in) {
+	TransformationMonoid a(in, 5);
+	return a.size_MyhillNerode();
+}
+int class_legth_typecheker(FiniteAutomaton* in) {
+	TransformationMonoid a(in, 5);
+	return a.Class_Length().name.size();
 }
 //В психиатрической больнице люди по настоящему заботятся о своём здоровье. Они
 //переходят с электронных сигарет на воображаемые.

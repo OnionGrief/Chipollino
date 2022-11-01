@@ -341,7 +341,23 @@ bool Regex::from_string(string str) {
 	delete root;
 	return true;
 }
-
+void Regex::regex_union(Regex* a, Regex* b) {
+	type = Type::conc;
+	term_l = a->copy();
+	term_r = b->copy();
+}
+void Regex::regex_alt(Regex* a, Regex* b) {
+	type = Type::alt;
+	term_l = a->copy();
+	term_r = b->copy();
+}
+void Regex::regex_star(Regex* a) {
+	type = Type::star;
+	term_l = a->copy();
+}
+void Regex::regex_eps() {
+	type = Type::eps;
+}
 Regex* Regex::copy() const {
 	Regex* c = new Regex();
 	c->type = type;
@@ -395,10 +411,12 @@ void Regex::clear() {
 	if (term_l != nullptr) {
 		// term_l->clear();
 		delete term_l;
+		term_l = nullptr;
 	}
 	if (term_r != nullptr) {
 		// term_r->clear();
 		delete term_r;
+		term_r = nullptr;
 	}
 	// delete language;
 }
@@ -1404,6 +1422,7 @@ int Regex::pump_length() const {
 	for (int i = 1;; i++) {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
+		if (prefs.empty()) return -1;
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
 			bool was = false;
 			for (int j = 0; j < it->size(); j++) {
