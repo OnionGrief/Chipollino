@@ -1151,19 +1151,19 @@ bool FiniteAutomaton::semdet() {
 	for (int i = 0; i < states.size(); i++) {
 		auto prefix = get_prefix(initial_state, i, was);
 		was.clear();
-		cout << "Try " << i << "\n";
+		// cout << "Try " << i << "\n";
 		if (!prefix.has_value()) continue;
 		Regex reg;
 		// Получение языка из производной регулярки автомата по префиксу:
 		//		this -> reg (arden?)
 		reg = *nfa_to_regex();
-		cout << "State: " << i << "\n";
-		cout << "Prefix: " << prefix.value() << "\n";
-		cout << "Regex: " << reg.to_txt() << "\n";
+		// cout << "State: " << i << "\n";
+		// cout << "Prefix: " << prefix.value() << "\n";
+		// cout << "Regex: " << reg.to_txt() << "\n";
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
 		state_languages[i] = derevative.value();
-		cout << "Derevative: " << state_languages[i].to_txt() << "\n";
+		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 		state_languages[i].make_language();
 	}
 	for (int i = 0; i < states.size(); i++) {
@@ -1525,7 +1525,7 @@ Regex* FiniteAutomaton::nfa_to_regex() {
 		data[i] = tempdata2;
 	}
 	if (data[0].size() > 1) {
-		cout << "error";
+		// cout << "error";
 		Regex* f = new Regex;
 		f->from_string("a|b");
 		return f;

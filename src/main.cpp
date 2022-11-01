@@ -4,10 +4,6 @@ using namespace std;
 
 int main() {
 	cout << "Chipollino :-)\n";
-	// Example ex;
-	//	 ex.regex_parsing();
-	// Example::arden_test();
-	Example::fa_semdet_check();
 	Logger::init();
 	Logger::activate();
 	// Example::determinize();
@@ -16,6 +12,7 @@ int main() {
 	// Example::fa_equal_check();
 	// Example::fa_equivalent_check();
 	// Example::fa_subset_check();
+	// Example::fa_semdet_check();
 	Logger::finish();
 	Logger::deactivate();
 }
