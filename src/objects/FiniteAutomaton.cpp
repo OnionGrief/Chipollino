@@ -89,7 +89,7 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 FiniteAutomaton FiniteAutomaton::determinize() const {
 	Logger::init_step("Determinize");
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
-	set<int> q0 = closure({0}, true);
+	set<int> q0 = closure({initial_state}, true);
 
 	set<int> label = q0;
 	string new_identifier;
@@ -284,12 +284,8 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	Logger::log("Автомат до минимизации", "Автомат после минимизации", *this,
 				minimized_dfa);
 	stringstream ss;
-	for (auto& elem : groups) {
-		ss << "\\{";
-		for (int i = 0; i < elem.size() - 1; i++)
-			ss << states[elem[i]].identifier << ",";
-		ss << states[elem[elem.size() - 1]].identifier;
-		ss << "\\}";
+	for (const auto& state : minimized_dfa.states) {
+		ss << "{" << state.identifier << "} ";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
 	Logger::finish_step();
@@ -1117,6 +1113,205 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	return result;
 }
 
+bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
+	Logger::init_step("Subset");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", *this, fa);
+	FiniteAutomaton dfa1(determinize());
+	FiniteAutomaton dfa2(fa.determinize());
+	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
+	bool result = equivalent(dfa_instersection, dfa2);
+	if (result)
+		Logger::log("Результат Subset", "true");
+	else
+		Logger::log("Результат Subset", "false");
+	Logger::finish_step();
+	return result;
+}
+
+vector<unsigned long long> get_path_number(vector<State> states, int max_n) {
+	int s = states.size(); // число состояний КА
+	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
+	for (int i = 0; i < s; i++)
+		for (const auto& elem : states[i].transitions)
+			for (int transition : elem.second)
+				adjacency_matrix[i][transition]++;
+	vector<unsigned long long> paths_number(
+		max_n); // число путей длины i в автомате
+
+	vector<vector<unsigned long long>> d(max_n + 1,
+										 vector<unsigned long long>(s));
+	d[0][0] = 1;
+	for (int k = 1; k < max_n + 1; k++) {
+		for (int v = 0; v < s; v++) {
+			for (int i = 0; i < s; i++) {
+				d[k][v] += adjacency_matrix[i][v] * d[k - 1][i];
+			}
+			if (states[v].is_terminal) paths_number[k - 1] += d[k][v];
+		}
+	}
+	return paths_number;
+}
+
+double calc_ambiguity(int i, int n, const vector<double>& f1,
+					  vector<vector<double>>& calculated,
+					  vector<vector<char>>& is_calculated) {
+	if (i == 0) return f1[n];
+	double d1, d2;
+	if (!is_calculated[i][n + 1]) {
+		calculated[i][n + 1] =
+			calc_ambiguity(i - 1, n + 1, f1, calculated, is_calculated);
+		is_calculated[i][n + 1] = 1;
+	}
+	d1 = calculated[i][n + 1];
+	if (!is_calculated[i][n]) {
+		calculated[i][n] =
+			calc_ambiguity(i - 1, n, f1, calculated, is_calculated);
+		is_calculated[i][n] = 1;
+	}
+	d2 = calculated[i][n];
+	return d1 - d2;
+}
+
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
+	FiniteAutomaton fa = remove_eps();
+	FiniteAutomaton min_fa = fa.minimize().remove_trap_states();
+	fa = fa.remove_trap_states();
+
+	int i = 2;
+	int s = fa.states.size();
+	int min_s = min_fa.states.size();
+	int N = fa.states.size() * fa.states.size() + fa.states.size() + i + 1;
+	vector<unsigned long long> paths_number(N);
+	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
+	for (int i = 0; i < s; i++)
+		for (const auto& elem : fa.states[i].transitions)
+			for (int transition : elem.second)
+				adjacency_matrix[i][transition]++;
+	vector<vector<unsigned long long>> d(N + 1, vector<unsigned long long>(s));
+	d[0][0] = 1;
+	for (int k = 1; k < N + 1; k++) {
+		for (int v = 0; v < s; v++) {
+			for (int i = 0; i < s; i++) {
+				d[k][v] += adjacency_matrix[i][v] * d[k - 1][i];
+			}
+			if (fa.states[v].is_terminal) paths_number[k - 1] += d[k][v];
+		}
+	}
+	vector<unsigned long long> min_paths_number(N);
+	vector<vector<int>> min_adjacency_matrix(min_s, vector<int>(min_s));
+	for (int i = 0; i < min_s; i++)
+		for (const auto& elem : min_fa.states[i].transitions)
+			for (int transition : elem.second)
+				min_adjacency_matrix[i][transition]++;
+	vector<vector<unsigned long long>> min_d(N + 1,
+											 vector<unsigned long long>(min_s));
+	min_d[0][0] = 1;
+	for (int k = 1; k < N + 1; k++) {
+		for (int v = 0; v < min_s; v++) {
+			for (int i = 0; i < min_s; i++) {
+				min_d[k][v] += min_adjacency_matrix[i][v] * min_d[k - 1][i];
+			}
+			if (min_fa.states[v].is_terminal)
+				min_paths_number[k - 1] += min_d[k][v];
+		}
+	}
+
+	vector<double> f1(N);
+	for (int i = 0; i < N; i++)
+		if (min_paths_number[i] != 0)
+			f1[i] = double(paths_number[i]) / min_paths_number[i];
+
+	double prev_val = -1;
+	bool return_flag = true;
+	for (int i = 0; i < f1.size() - 1; i++) {
+		if (f1[i] == 0) continue;
+		if (prev_val == -1) {
+			prev_val = f1[i];
+			continue;
+		}
+		if (f1[i] != prev_val) {
+			return_flag = false;
+			break;
+		}
+		prev_val = f1[i];
+	}
+	if (return_flag) {
+		if (prev_val == 1)
+			return FiniteAutomaton::unambigious;
+		else
+			return FiniteAutomaton::almost_unambigious;
+	}
+
+	vector<vector<double>> calculated(fa.states.size() + i + 1,
+									  vector<double>(N));
+	vector<vector<char>> is_calculated(fa.states.size() + i + 1,
+									   vector<char>(N, 0));
+	double val = calc_ambiguity(fa.states.size() + i,
+								fa.states.size() * fa.states.size(), f1,
+								calculated, is_calculated);
+	prev_val = val;
+	while (val > 0) {
+		d.push_back(vector<unsigned long long>(s));
+		paths_number.push_back(0);
+		for (int v = 0; v < s; v++) {
+			for (int i = 0; i < s; i++) {
+				d[N + 1][v] += adjacency_matrix[i][v] * d[N][i];
+			}
+			if (fa.states[v].is_terminal) paths_number[N] += d[N + 1][v];
+		}
+		min_d.push_back(vector<unsigned long long>(s));
+		min_paths_number.push_back(0);
+		for (int v = 0; v < min_s; v++) {
+			for (int i = 0; i < min_s; i++) {
+				min_d[N + 1][v] += min_adjacency_matrix[i][v] * min_d[N][i];
+			}
+			if (min_fa.states[v].is_terminal)
+				min_paths_number[N] += min_d[N + 1][v];
+		}
+		f1.push_back(0);
+		if (min_paths_number[N] != 0)
+			f1[N] = double(paths_number[N]) / min_paths_number[N];
+		for (int j = 0; j < calculated.size(); j++) {
+			calculated[j].push_back(0);
+			is_calculated[j].push_back(0);
+		}
+		N++;
+		i++;
+		calculated.push_back(vector<double>(N));
+		is_calculated.push_back(vector<char>(N, 0));
+		val = calc_ambiguity(fa.states.size() + i,
+							 fa.states.size() * fa.states.size(), f1,
+							 calculated, is_calculated);
+		if (val >= prev_val) return FiniteAutomaton::exponentially_ambiguous;
+		prev_val = val;
+	}
+	return FiniteAutomaton::polynomially_ambigious;
+}
+
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
+	Logger::init_step("Ambiguity");
+	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
+	switch (result) {
+	case FiniteAutomaton::exponentially_ambiguous:
+		Logger::log("Результат Ambiguity", "Exponentially ambiguous");
+		break;
+	case FiniteAutomaton::almost_unambigious:
+		Logger::log("Результат Ambiguity", "Almost unambigious");
+		break;
+	case FiniteAutomaton::unambigious:
+		Logger::log("Результат Ambiguity", "Unambigious");
+		break;
+	case FiniteAutomaton::polynomially_ambigious:
+		Logger::log("Результат Ambiguity", "Polynomially ambiguous");
+		break;
+	default:
+		break;
+	}
+	Logger::finish_step();
+	return result;
+}
+
 bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 	// cout << s.size() << endl;
 	State state = states[index_state];
@@ -1227,21 +1422,6 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	State state = states[0];
 	return parsing_nfa_for(s);
-}
-bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
-	Logger::init_step("Subset");
-	Logger::log("Автоматы:");
-	Logger::log("Первый автомат", "Второй автомат", *this, fa);
-	FiniteAutomaton dfa1(determinize());
-	FiniteAutomaton dfa2(fa.determinize());
-	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
-	bool result = equivalent(dfa_instersection, dfa2);
-	if (result)
-		Logger::log("Результат Subset", "true");
-	else
-		Logger::log("Результат Subset", "false");
-	Logger::finish_step();
-	return result;
 }
 
 int FiniteAutomaton::states_number() const {

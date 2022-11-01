@@ -30,6 +30,14 @@ struct State {
 };
 
 class FiniteAutomaton : public BaseObject {
+  public:
+	enum AmbiguityValue {
+		exponentially_ambiguous,
+		almost_unambigious,
+		unambigious,
+		polynomially_ambigious
+	};
+
   private:
 	int initial_state = 0;
 	vector<State> states;
@@ -44,6 +52,7 @@ class FiniteAutomaton : public BaseObject {
 								 const FiniteAutomaton& fa2);
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
+	AmbiguityValue get_ambiguity_value() const;
 
   public:
 	FiniteAutomaton();
@@ -104,6 +113,8 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
+	// определяет меру неоднозначности
+	AmbiguityValue ambiguity() const;
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
 	friend class Regex;
