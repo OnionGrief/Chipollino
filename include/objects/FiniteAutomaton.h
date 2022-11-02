@@ -33,8 +33,7 @@ struct State {
 
 class FiniteAutomaton : public BaseObject {
   public:
-	enum AmbiguityValue
-	{
+	enum AmbiguityValue {
 		exponentially_ambiguous,
 		almost_unambigious,
 		unambigious,
