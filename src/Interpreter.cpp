@@ -470,17 +470,21 @@ void Interpreter::run_declaration(const Declaration& decl) {
 	objects[decl.id] = apply_function_sequence(
 		decl.function_sequence, parameters_to_arguments(decl.parameters));
 	log("    assigned to " + to_string(decl.id));
+	Logger::deactivate();
 }
 
 void Interpreter::run_predicate(const Predicate& pred) {
 	log("Running predicate...");
+	Logger::activate();
 	auto res = apply_function(pred.predicate,
 							  parameters_to_arguments(pred.parameters));
 	log("    result: " + to_string(get<ObjectBoolean>(res).value));
+	Logger::deactivate();
 }
 
 void Interpreter::run_test(const Test& test) {
 	log("Running test...");
+	Logger::activate();
 	const Regex& reg =
 		holds_alternative<Regex>(test.test_set)
 			? get<Regex>(test.test_set)
@@ -489,6 +493,7 @@ void Interpreter::run_test(const Test& test) {
 	if (holds_alternative<Regex>(test.language)) {
 		Tester::test(get<Regex>(test.language), reg, test.iterations);
 	}
+	Logger::deactivate();
 }
 
 void Interpreter::run_operation(const GeneralOperation& op) {
