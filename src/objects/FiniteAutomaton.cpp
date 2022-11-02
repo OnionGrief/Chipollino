@@ -89,7 +89,7 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 FiniteAutomaton FiniteAutomaton::determinize() const {
 	Logger::init_step("Determinize");
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
-	set<int> q0 = closure({0}, true);
+	set<int> q0 = closure({initial_state}, true);
 
 	set<int> label = q0;
 	string new_identifier;
@@ -284,11 +284,8 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	Logger::log("Автомат до минимизации", "Автомат после минимизации", *this,
 				minimized_dfa);
 	stringstream ss;
-	for (auto& elem : groups) {
-		ss << "\\{";
-		for (int i = 0; i < elem.size(); i++)
-			ss << states[elem[i]].identifier << ",";
-		ss << "\\}";
+	for (const auto& state : minimized_dfa.states) {
+		ss << "{" << state.identifier << "} ";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
 	Logger::finish_step();
@@ -1116,6 +1113,280 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	return result;
 }
 
+bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
+	Logger::init_step("Subset");
+	Logger::log("Автоматы:");
+	Logger::log("Первый автомат", "Второй автомат", *this, fa);
+	FiniteAutomaton dfa1(determinize());
+	FiniteAutomaton dfa2(fa.determinize());
+	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
+	bool result = equivalent(dfa_instersection, dfa2);
+	if (result)
+		Logger::log("Результат Subset", "true");
+	else
+		Logger::log("Результат Subset", "false");
+	Logger::finish_step();
+	return result;
+}
+
+vector<unsigned long long> get_path_number(vector<State> states, int max_n) {
+	int s = states.size(); // число состояний КА
+	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
+	for (int i = 0; i < s; i++)
+		for (const auto& elem : states[i].transitions)
+			for (int transition : elem.second)
+				adjacency_matrix[i][transition]++;
+	vector<unsigned long long> paths_number(
+		max_n); // число путей длины i в автомате
+
+	vector<vector<unsigned long long>> d(max_n + 1,
+										 vector<unsigned long long>(s));
+	d[0][0] = 1;
+	for (int k = 1; k < max_n + 1; k++) {
+		for (int v = 0; v < s; v++) {
+			for (int i = 0; i < s; i++) {
+				d[k][v] += adjacency_matrix[i][v] * d[k - 1][i];
+			}
+			if (states[v].is_terminal) paths_number[k - 1] += d[k][v];
+		}
+	}
+	return paths_number;
+}
+
+double calc_ambiguity(int i, int n, const vector<double>& f1,
+					  vector<vector<double>>& calculated,
+					  vector<vector<char>>& is_calculated) {
+	if (i == 0) return f1[n];
+	double d1, d2;
+	if (!is_calculated[i][n + 1]) {
+		calculated[i][n + 1] =
+			calc_ambiguity(i - 1, n + 1, f1, calculated, is_calculated);
+		is_calculated[i][n + 1] = 1;
+	}
+	d1 = calculated[i][n + 1];
+	if (!is_calculated[i][n]) {
+		calculated[i][n] =
+			calc_ambiguity(i - 1, n, f1, calculated, is_calculated);
+		is_calculated[i][n] = 1;
+	}
+	d2 = calculated[i][n];
+	return d1 - d2;
+}
+
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
+	FiniteAutomaton fa = remove_eps();
+	FiniteAutomaton min_fa = fa.minimize().remove_trap_states();
+	fa = fa.remove_trap_states();
+
+	int i = 2;
+	int s = fa.states.size();
+	int min_s = min_fa.states.size();
+	int N = fa.states.size() * fa.states.size() + fa.states.size() + i + 1;
+	vector<unsigned long long> paths_number(N);
+	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
+	for (int i = 0; i < s; i++)
+		for (const auto& elem : fa.states[i].transitions)
+			for (int transition : elem.second)
+				adjacency_matrix[i][transition]++;
+	vector<vector<unsigned long long>> d(N + 1, vector<unsigned long long>(s));
+	d[0][0] = 1;
+	for (int k = 1; k < N + 1; k++) {
+		for (int v = 0; v < s; v++) {
+			for (int i = 0; i < s; i++) {
+				d[k][v] += adjacency_matrix[i][v] * d[k - 1][i];
+			}
+			if (fa.states[v].is_terminal) paths_number[k - 1] += d[k][v];
+		}
+	}
+	vector<unsigned long long> min_paths_number(N);
+	vector<vector<int>> min_adjacency_matrix(min_s, vector<int>(min_s));
+	for (int i = 0; i < min_s; i++)
+		for (const auto& elem : min_fa.states[i].transitions)
+			for (int transition : elem.second)
+				min_adjacency_matrix[i][transition]++;
+	vector<vector<unsigned long long>> min_d(N + 1,
+											 vector<unsigned long long>(min_s));
+	min_d[0][0] = 1;
+	for (int k = 1; k < N + 1; k++) {
+		for (int v = 0; v < min_s; v++) {
+			for (int i = 0; i < min_s; i++) {
+				min_d[k][v] += min_adjacency_matrix[i][v] * min_d[k - 1][i];
+			}
+			if (min_fa.states[v].is_terminal)
+				min_paths_number[k - 1] += min_d[k][v];
+		}
+	}
+
+	vector<double> f1(N);
+	for (int i = 0; i < N; i++)
+		if (min_paths_number[i] != 0)
+			f1[i] = double(paths_number[i]) / min_paths_number[i];
+
+	double prev_val = -1;
+	bool return_flag = true;
+	for (int i = 0; i < f1.size() - 1; i++) {
+		if (f1[i] == 0) continue;
+		if (prev_val == -1) {
+			prev_val = f1[i];
+			continue;
+		}
+		if (f1[i] != prev_val) {
+			return_flag = false;
+			break;
+		}
+		prev_val = f1[i];
+	}
+	if (return_flag) {
+		if (prev_val == 1)
+			return FiniteAutomaton::unambigious;
+		else
+			return FiniteAutomaton::almost_unambigious;
+	}
+
+	vector<vector<double>> calculated(fa.states.size() + i + 1,
+									  vector<double>(N));
+	vector<vector<char>> is_calculated(fa.states.size() + i + 1,
+									   vector<char>(N, 0));
+	double val = calc_ambiguity(fa.states.size() + i,
+								fa.states.size() * fa.states.size(), f1,
+								calculated, is_calculated);
+	prev_val = val;
+	while (val > 0) {
+		d.push_back(vector<unsigned long long>(s));
+		paths_number.push_back(0);
+		for (int v = 0; v < s; v++) {
+			for (int i = 0; i < s; i++) {
+				d[N + 1][v] += adjacency_matrix[i][v] * d[N][i];
+			}
+			if (fa.states[v].is_terminal) paths_number[N] += d[N + 1][v];
+		}
+		min_d.push_back(vector<unsigned long long>(s));
+		min_paths_number.push_back(0);
+		for (int v = 0; v < min_s; v++) {
+			for (int i = 0; i < min_s; i++) {
+				min_d[N + 1][v] += min_adjacency_matrix[i][v] * min_d[N][i];
+			}
+			if (min_fa.states[v].is_terminal)
+				min_paths_number[N] += min_d[N + 1][v];
+		}
+		f1.push_back(0);
+		if (min_paths_number[N] != 0)
+			f1[N] = double(paths_number[N]) / min_paths_number[N];
+		for (int j = 0; j < calculated.size(); j++) {
+			calculated[j].push_back(0);
+			is_calculated[j].push_back(0);
+		}
+		N++;
+		i++;
+		calculated.push_back(vector<double>(N));
+		is_calculated.push_back(vector<char>(N, 0));
+		val = calc_ambiguity(fa.states.size() + i,
+							 fa.states.size() * fa.states.size(), f1,
+							 calculated, is_calculated);
+		if (val >= prev_val) return FiniteAutomaton::exponentially_ambiguous;
+		prev_val = val;
+	}
+	return FiniteAutomaton::polynomially_ambigious;
+}
+
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
+	Logger::init_step("Ambiguity");
+	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
+	switch (result) {
+	case FiniteAutomaton::exponentially_ambiguous:
+		Logger::log("Результат Ambiguity", "Exponentially ambiguous");
+		break;
+	case FiniteAutomaton::almost_unambigious:
+		Logger::log("Результат Ambiguity", "Almost unambigious");
+		break;
+	case FiniteAutomaton::unambigious:
+		Logger::log("Результат Ambiguity", "Unambigious");
+		break;
+	case FiniteAutomaton::polynomially_ambigious:
+		Logger::log("Результат Ambiguity", "Polynomially ambiguous");
+		break;
+	default:
+		break;
+	}
+	Logger::finish_step();
+	return result;
+}
+
+std::optional<std::string> FiniteAutomaton::get_prefix(int state_beg,
+													   int state_end,
+													   map<int, bool>& was) {
+	std::optional<std::string> ans = nullopt;
+	if (state_beg == state_end) {
+		ans = "";
+		return ans;
+	}
+	auto trans = &states[state_beg].transitions;
+	for (auto it = trans->begin(); it != trans->end(); it++) {
+		for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+			if (!was[*it2]) {
+				was[*it2] = true;
+				auto res = get_prefix(*it2, state_end, was);
+				if (res.has_value()) {
+					ans = it->first + res.value();
+				}
+				return ans;
+			}
+		}
+	}
+	return ans;
+}
+
+bool FiniteAutomaton::semdet() {
+	std::map<int, bool> was;
+	std::vector<int> final_states;
+	for (int i = 0; i < states.size(); i++) {
+		if (states[i].is_terminal) final_states.push_back(i);
+	}
+	std::vector<Regex> state_languages;
+	state_languages.resize(states.size());
+	for (int i = 0; i < states.size(); i++) {
+		auto prefix = get_prefix(initial_state, i, was);
+		was.clear();
+		// cout << "Try " << i << "\n";
+		if (!prefix.has_value()) continue;
+		Regex reg;
+		// Получение языка из производной регулярки автомата по префиксу:
+		//		this -> reg (arden?)
+		reg = nfa_to_regex();
+		// cout << "State: " << i << "\n";
+		// cout << "Prefix: " << prefix.value() << "\n";
+		// cout << "Regex: " << reg.to_txt() << "\n";
+		auto derevative = reg.prefix_derevative(prefix.value());
+		if (!derevative.has_value()) continue;
+		state_languages[i] = derevative.value();
+		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
+		state_languages[i].make_language();
+	}
+	for (int i = 0; i < states.size(); i++) {
+		for (int j = 0; j < states.size(); j++) {
+			for (auto transition = states[j].transitions.begin();
+				 transition != states[j].transitions.end(); transition++) {
+				bool verified_ambiguity = false;
+				for (auto it = transition->second.begin();
+					 it != transition->second.end(); it++) {
+					bool reliability = true;
+					for (auto it2 = transition->second.begin();
+						 it2 != transition->second.end(); it2++) {
+						if (!state_languages[*it].subset(
+								state_languages[*it2])) {
+							reliability = false;
+							break;
+						}
+					}
+					verified_ambiguity |= reliability;
+				}
+				if (!verified_ambiguity) return false;
+			}
+		}
+	}
+	return true;
+}
+
 bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 	// cout << s.size() << endl;
 	State state = states[index_state];
@@ -1227,36 +1498,15 @@ bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	State state = states[0];
 	return parsing_nfa_for(s);
 }
-bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
-	Logger::init_step("Subset");
-	Logger::log("Автоматы:");
-	Logger::log("Первый автомат", "Второй автомат", *this, fa);
-	FiniteAutomaton dfa1(determinize());
-	FiniteAutomaton dfa2(fa.determinize());
-	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
-	bool result = equivalent(dfa_instersection, dfa2);
-	if (result)
-		Logger::log("Результат Subset", "true");
-	else
-		Logger::log("Результат Subset", "false");
-	Logger::finish_step();
-	return result;
+
+int FiniteAutomaton::get_initial() {
+	return initial_state;
 }
 
 int FiniteAutomaton::states_number() const {
 	return states.size();
 }
 
-int FiniteAutomaton::get_states_size() {
-	return states.size();
-}
-State FiniteAutomaton::get_state(int i) {
-	return states[i];
-}
-
-const set<alphabet_symbol>& FiniteAutomaton::get_alphabet() {
-	return language->get_alphabet();
-}
 /*
 Джун программист прибегает с проекта к своему ментору и кричит:
 — Меня отпустили с проекта пораньше!
@@ -1282,3 +1532,247 @@ const set<alphabet_symbol>& FiniteAutomaton::get_alphabet() {
 вскликает:
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
+bool compare(expression_arden a, expression_arden b) {
+	return (a.condition < b.condition);
+}
+
+vector<expression_arden> arden_minimize(vector<expression_arden> in) {
+	vector<expression_arden> out;
+	for (int i = 0; i < in.size(); i++) {
+		int j = i + 1;
+		bool cond = false;
+		expression_arden temp;
+		temp.temp_regex = in[i].temp_regex->copy();
+		temp.condition = in[i].condition;
+		out.push_back(temp);
+		while ((j < in.size()) && in[i].condition == in[j].condition) {
+			cond = true;
+			Regex* r = new Regex();
+			Regex* s1 = new Regex();
+			Regex* s2 = new Regex();
+			s1->regex_star(out[i].temp_regex);
+			s2->regex_star(in[j].temp_regex);
+			r->regex_union(s1, s2);
+			delete out[out.size() - 1].temp_regex;
+			out[out.size() - 1].temp_regex = r;
+			delete s1;
+			delete s2;
+			j++;
+		}
+		if (cond) {
+			i = j - 1;
+		}
+	}
+	return out;
+}
+
+vector<expression_arden> arden(vector<expression_arden> in, int index) {
+	vector<expression_arden> out;
+	int indexcur = -1;
+	for (int i = 0; (i < in.size() && indexcur == -1); i++) {
+		if (in[i].condition == index) {
+			indexcur = i;
+		}
+	}
+	if (indexcur == -1) {
+		for (int i = 0; i < in.size(); i++) {
+			Regex* r = in[i].temp_regex->copy();
+			expression_arden temp;
+			temp.temp_regex = r;
+			temp.condition = in[i].condition;
+			out.push_back(temp);
+		}
+		return out;
+	}
+	if (in.size() < 2) {
+		Regex* r = new Regex();
+		r->regex_star(in[0].temp_regex);
+		expression_arden temp;
+		temp.temp_regex = r;
+		temp.condition = -1;
+		out.push_back(temp);
+		return out;
+	}
+	for (int i = 0; i < in.size(); i++) {
+		if (i != indexcur) {
+			Regex* r = new Regex();
+			r->regex_star(in[indexcur].temp_regex);
+			Regex* k = new Regex();
+			k->regex_union(in[i].temp_regex, r);
+			expression_arden temp;
+
+			delete r;
+			temp.temp_regex = k;
+			temp.condition = in[i].condition;
+			out.push_back(temp);
+		}
+	}
+	return out;
+}
+Regex FiniteAutomaton::nfa_to_regex() {
+	vector<int> endstate;
+	vector<vector<expression_arden>> data;
+	set<alphabet_symbol> alphabet = language->get_alphabet();
+
+	for (int i = 0; i < states.size(); i++) {
+		vector<expression_arden> temp;
+		data.push_back(temp);
+	}
+	Regex* r = new Regex;
+	expression_arden temp;
+	temp.condition = -1;
+	string str = "";
+	r->regex_eps();
+	temp.temp_regex = r;
+	data[initial_state].push_back(temp);
+	for (int i = 0; i < states.size(); i++) {
+		State a = states[i];
+		if (a.is_terminal) {
+			endstate.push_back(i);
+		}
+		if (a.transitions["eps"].size()) {
+			set<int> trans = a.transitions.at("eps");
+			for (set<int>::iterator itt = trans.begin(); itt != trans.end();
+				 itt++) {
+				Regex* r = new Regex;
+				expression_arden temp;
+				temp.condition = i;
+
+				r->regex_eps();
+				temp.temp_regex = r;
+				data[*itt].push_back(temp);
+			}
+		}
+		for (set<alphabet_symbol>::iterator it = alphabet.begin();
+			 it != alphabet.end(); it++) {
+			if (a.transitions[*it].size()) {
+				set<int> trans = a.transitions.at(*it);
+				for (set<int>::iterator itt = trans.begin(); itt != trans.end();
+					 itt++) {
+					Regex* r = new Regex;
+					expression_arden temp;
+					temp.condition = i;
+					string str = "";
+					str += *it;
+					r->from_string(str);
+					temp.temp_regex = r;
+					data[*itt].push_back(temp);
+				}
+			}
+		}
+	}
+	// //сортируем
+
+	Logger::init_step("Arden");
+	for (int i = data.size() - 1; i >= 0; i--) {
+
+		vector<expression_arden> tempdata;
+		for (int j = 0; j < data[i].size(); j++) {
+			if (data[i][j].condition > i) {
+				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
+					expression_arden temp;
+					Regex* r = new Regex;
+					r->regex_union(data[data[i][j].condition][k].temp_regex,
+								   data[i][j].temp_regex);
+					temp.temp_regex = r;
+					temp.condition = data[data[i][j].condition][k].condition;
+					tempdata.push_back(temp);
+				}
+			} else {
+				expression_arden temp;
+				Regex* r = new Regex(*data[i][j].temp_regex);
+				temp.temp_regex = r;
+				temp.condition = data[i][j].condition;
+				tempdata.push_back(temp);
+			}
+		}
+
+		sort(data[i].begin(), data[i].end(), compare);
+		for (int o = 0; o < data[i].size(); o++) {
+			delete data[i][o].temp_regex;
+		}
+		data[i].clear();
+		vector<expression_arden> tempdata1 = arden_minimize(tempdata);
+		vector<expression_arden> tempdata2 = arden(tempdata1, i);
+		for (int o = 0; o < tempdata.size(); o++) {
+			delete tempdata[o].temp_regex;
+		}
+		for (int o = 0; o < tempdata1.size(); o++) {
+			delete tempdata1[o].temp_regex;
+		}
+
+		for (int o = 0; o < tempdata2.size(); o++) {
+		}
+		data[i] = tempdata2;
+	}
+	if (data[0].size() > 1) {
+		// cout << "error";
+		Regex* f = new Regex;
+		f->from_string("");
+		Regex temp1 = *f;
+		delete f;
+		return temp1;
+	}
+	for (int i = 0; i < data.size(); i++) {
+		for (int j = 0; j < data[i].size(); j++) {
+			if (data[i][j].condition != -1) {
+				Regex* ra = new Regex;
+				ra->regex_union(data[data[i][j].condition][0].temp_regex,
+								data[i][j].temp_regex);
+				data[i][j].condition = -1;
+				delete data[i][j].temp_regex;
+				data[i][j].temp_regex = ra;
+			}
+		}
+
+		vector<expression_arden> tempdata3 = arden_minimize(data[i]);
+		for (int o = 0; o < data[i].size(); o++) {
+			delete data[i][o].temp_regex;
+		}
+		data[i].clear();
+		data[i] = tempdata3;
+		Logger::log("State ", std::to_string(i));
+		for (int j = 0; j < data[i].size(); j++) {
+
+			Logger::log("from state ", std::to_string(data[i][j].condition));
+			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
+		}
+	}
+	Logger::finish_step();
+	if (endstate.size() == 0) {
+		Regex* f = new Regex;
+		f->from_string("");
+		Regex temp1 = *f;
+		delete f;
+		return temp1;
+	}
+	if (endstate.size() < 2) {
+		Regex* r1;
+		r1 = data[endstate[0]][0].temp_regex->copy();
+		for (int i = 0; i < data.size(); i++) {
+			for (int j = 0; j < data[i].size(); j++) {
+				delete data[i][j].temp_regex;
+			}
+		}
+		Regex temp = *r;
+		delete r;
+		return temp;
+	}
+	Regex* r1;
+	r1 = data[endstate[0]][0].temp_regex->copy();
+	for (int i = 1; i < endstate.size(); i++) {
+		Regex* r2 = new Regex;
+		r2->regex_alt(r1, data[endstate[i]][0].temp_regex);
+		delete r1;
+		r1 = r2;
+	}
+	for (int i = 0; i < data.size(); i++) {
+		for (int j = 0; j < data[i].size(); j++) {
+			delete data[i][j].temp_regex;
+		}
+	}
+	Regex temp1 = *r1;
+	delete r1;
+	return temp1;
+	// return r1;
+}

@@ -10,7 +10,6 @@
 #include <set>
 #include <string>
 #include <vector>
-
 using namespace std;
 
 class Language;
@@ -95,6 +94,7 @@ class Regex : BaseObject {
 		const string& file); //переписывание regex по пользовательским правилам
 	string to_str_log() const;
 
+	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
 
   public:
@@ -112,6 +112,8 @@ class Regex : BaseObject {
 	Regex(const Regex&);
 	Regex& operator=(const Regex& other);
 
+	// Генерация языка из алфавита
+	void Regex::make_language();
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const string& file) const;
 	bool from_string(string);
@@ -133,7 +135,13 @@ class Regex : BaseObject {
 	int pump_length() const;
 	// Слово, в котором все итерации Клини раскрыты n раз
 	string get_iterated_word(int n) const;
+	void regex_union(Regex* a, Regex* b);
 
+	void regex_alt(Regex* a, Regex* b);
+
+	void regex_star(Regex* a);
+
+	void regex_eps();
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 

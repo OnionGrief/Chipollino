@@ -1,20 +1,16 @@
 #include "Tester.h"
 
-void Tester::test(string lang, string regex, int step) {
+void Tester::test(const Regex& lang, const Regex& regex, int step) {
 	vector<double> times;
 	vector<int> lengths;
 	vector<bool> belongs;
-	Regex r;
-	r.from_string(regex);
 	// automaton.determinize();
-	Regex R;
-	R.from_string(lang);
-	FiniteAutomaton automaton = R.to_tompson();
+	FiniteAutomaton automaton = lang.to_tompson();
 
 	using clock = std::chrono::high_resolution_clock;
 
 	for (int i = 0; i < 13; i++) {
-		string word = r.get_iterated_word(i * step);
+		string word = regex.get_iterated_word(i * step);
 		// cout << word;
 		const auto start = clock::now();
 		bool is_belongs = automaton.parsing_by_nfa(word);
@@ -31,20 +27,21 @@ void Tester::test(string lang, string regex, int step) {
 		if (time >= 180) return;
 	}
 	Logger::init_step("Test");
-	Logger::log(lang, regex, step, lengths, times, belongs);
+	Logger::log("Язык, основанный на регулярке", lang.to_txt());
+	Logger::log("Слова порождаются регуляркой", regex.to_txt());
+	Logger::log("Шаг итерации", to_string(step));
+	Logger::log(step, lengths, times, belongs);
 	Logger::finish_step();
 }
 
-void Tester::test(FiniteAutomaton lang, string regex, int step) {
+void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step) {
 	vector<double> times;
 	vector<int> lengths;
 	vector<bool> belongs;
-	Regex r;
-	r.from_string(regex);
 	using clock = std::chrono::high_resolution_clock;
 
 	for (int i = 0; i < 13; i++) {
-		string word = r.get_iterated_word(i * step);
+		string word = regex.get_iterated_word(i * step);
 		// cout << word <<endl;
 		const auto start = clock::now();
 		bool is_belongs = lang.parsing_by_nfa(word);
@@ -61,7 +58,10 @@ void Tester::test(FiniteAutomaton lang, string regex, int step) {
 	}
 
 	Logger::init_step("Test");
-	Logger::log(lang, regex, step, lengths, times, belongs);
+	Logger::log("Автомат", lang);
+	Logger::log("Слова порождаются регуляркой", regex.to_txt());
+	Logger::log("Шаг итерации", to_string(step));
+	Logger::log(step, lengths, times, belongs);
 	Logger::finish_step();
 }
 

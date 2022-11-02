@@ -1,8 +1,10 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
+#include <functional>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <set>
 #include <stack>
 #include <string>
@@ -11,7 +13,10 @@ using namespace std;
 
 class Regex;
 class Language;
-
+struct expression_arden {
+	int condition;
+	Regex* temp_regex;
+};
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
@@ -27,6 +32,14 @@ struct State {
 };
 
 class FiniteAutomaton : public BaseObject {
+  public:
+	enum AmbiguityValue {
+		exponentially_ambiguous,
+		almost_unambigious,
+		unambigious,
+		polynomially_ambigious
+	};
+
   private:
 	int initial_state = 0;
 	vector<State> states;
@@ -41,6 +54,11 @@ class FiniteAutomaton : public BaseObject {
 								 const FiniteAutomaton& fa2);
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
+	AmbiguityValue get_ambiguity_value() const;
+
+	// поиск префикса из состояния state_beg в состояние state_end
+	std::optional<std::string> get_prefix(int state_beg, int state_end,
+										  map<int, bool>& was);
 
   public:
 	FiniteAutomaton();
@@ -96,18 +114,23 @@ class FiniteAutomaton : public BaseObject {
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
+	// проверка НКА на семантический детерминизм
+	bool semdet();
 	// проверяет, распознаёт ли автомат слово
 	bool parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
+	//начальное состояние
+	int get_initial();
+	//получаем алфавит
+	// определяет меру неоднозначности
+	AmbiguityValue ambiguity() const;
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
 	friend class Regex;
-	// получаем кол-во состояний
-	int get_states_size();
-	//получаем состояние
+	friend class TransformationMonoid;
 
-	const set<alphabet_symbol>& get_alphabet();
-	State get_state(int i);
+	Regex nfa_to_regex();
+	// получаем кол-во состояний
 };
