@@ -107,6 +107,7 @@ Interpreter::Lexem Interpreter::Lexer::scan_number() {
 	string acc = "";
 	while (!eof() && is_digit(current_symbol())) {
 		acc += current_symbol();
+		next_symbol();
 	}
 	if (acc == "") {
 		input.pos = pos_prev;

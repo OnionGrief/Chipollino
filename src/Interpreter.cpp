@@ -479,13 +479,25 @@ void Interpreter::run_predicate(const Predicate& pred) {
 	log("    result: " + to_string(get<ObjectBoolean>(res).value));
 }
 
+void Interpreter::run_test(const Test& test) {
+	log("Running test...");
+	const Regex& reg =
+		holds_alternative<Regex>(test.test_set)
+			? get<Regex>(test.test_set)
+			: get<ObjectRegex>(objects[get<string>(test.test_set)]).value;
+
+	if (holds_alternative<Regex>(test.language)) {
+		Tester::test(get<Regex>(test.language), reg, test.iterations);
+	}
+}
+
 void Interpreter::run_operation(const GeneralOperation& op) {
 	if (holds_alternative<Declaration>(op)) {
 		run_declaration(get<Declaration>(op));
 	} else if (holds_alternative<Predicate>(op)) {
 		run_predicate(get<Predicate>(op));
 	} else if (holds_alternative<Test>(op)) {
-		throw_error("Tests are not supported yet :-(\n"); // TODO run tests
+		run_test(get<Test>(op));
 	}
 }
 
@@ -562,9 +574,9 @@ optional<Interpreter::Test> Interpreter::scan_test(vector<Lexem> lexems) {
 
 	Test test;
 	if (lexems[1].type == Lexem::regex) {
-		test.sample = lexems[1].reg;
+		test.language = lexems[1].reg;
 	} else if (lexems[1].type == Lexem::id) {
-		test.sample = lexems[1].value;
+		test.language = lexems[1].value;
 	} else {
 		return nullopt;
 	}
@@ -636,6 +648,9 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	}
 	if (auto predicate = scan_predicate(lexems); predicate.has_value()) {
 		return predicate;
+	}
+	if (auto test = scan_test(lexems); test.has_value()) {
+		return test;
 	}
 	return nullopt;
 }

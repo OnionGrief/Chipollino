@@ -59,7 +59,7 @@ class Interpreter {
 	struct Test {
 		// Аргументы:
 		// НКА или регулярное выражение;
-		variant<Regex, string> sample;
+		variant<Regex, string> language;
 		// регулярное выражение без альтернатив(только с итерацией Клини) —
 		// тестовый сет;
 		variant<Regex, string> test_set;
@@ -82,6 +82,7 @@ class Interpreter {
 		const vector<variant<string, GeneralObject>>& parameters);
 	void run_declaration(const Declaration&);
 	void run_predicate(const Predicate&);
+	void run_test(const Test&);
 	void run_operation(const GeneralOperation&);
 
 	struct Lexem;
