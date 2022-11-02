@@ -533,8 +533,12 @@ void Example::tester() {
 	FiniteAutomaton dfa1 = r.to_tompson();
 	// cout << dfa1.parsing_by_nfa("abaaabaaababa");
 	// cout << dfa1.to_txt();
-	Tester::test(dfa1, "((ab)*a)*", 1);
-	Tester::test("ab(ab|a)*ababa", "((ab)*a)*", 1);
+	Regex r1;
+	r1.from_string("((ab)*a)*");
+	Regex r2;
+	r2.from_string("ab(ab|a)*ababa");
+	Tester::test(dfa1, r1, 1);
+	Tester::test(r2, r1, 1);
 }
 
 void Example::step_interection() {
