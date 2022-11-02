@@ -44,6 +44,6 @@ class Tester {
 	static bool parsing_by_regex(string, string);
 
   public:
-	static void test(FiniteAutomaton language, Regex regex, int iteration_step);
-	static void test(Regex language, Regex regex, int iteration_step);
+	static void test(const FiniteAutomaton& language, const Regex& regex, int iteration_step);
+	static void test(const Regex& language, const Regex& regex, int iteration_step);
 };

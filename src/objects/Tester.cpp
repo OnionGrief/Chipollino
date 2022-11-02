@@ -1,6 +1,6 @@
 #include "Tester.h"
 
-void Tester::test(Regex lang, Regex regex, int step) {
+void Tester::test(const Regex& lang, const Regex& regex, int step) {
 	vector<double> times;
 	vector<int> lengths;
 	vector<bool> belongs;
@@ -34,7 +34,7 @@ void Tester::test(Regex lang, Regex regex, int step) {
 	Logger::finish_step();
 }
 
-void Tester::test(FiniteAutomaton lang, Regex regex, int step) {
+void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step) {
 	vector<double> times;
 	vector<int> lengths;
 	vector<bool> belongs;
