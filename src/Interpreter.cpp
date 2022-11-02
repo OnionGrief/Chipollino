@@ -555,6 +555,37 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	return nullopt;
 }
 
+optional<Interpreter::Test> Interpreter::scan_test(vector<Lexem> lexems) {
+	if (lexems[0].type != Lexem::test) {
+		return nullopt;
+	}
+
+	Test test;
+	if (lexems[1].type == Lexem::regex) {
+		test.sample = lexems[1].reg;
+	} else if (lexems[1].type == Lexem::id) {
+		test.sample = lexems[1].value;
+	} else {
+		return nullopt;
+	}
+
+	if (lexems[2].type == Lexem::regex) {
+		test.test_set = lexems[2].reg;
+	} else if (lexems[2].type == Lexem::id) {
+		test.test_set = lexems[2].value;
+	} else {
+		return nullopt;
+	}
+
+	if (lexems[3].type == Lexem::number) {
+		test.iterations = lexems[3].num;
+	} else {
+		return nullopt;
+	}
+
+	return test;
+}
+
 optional<Interpreter::Predicate> Interpreter::scan_predicate(
 	vector<Lexem> lexems) {
 

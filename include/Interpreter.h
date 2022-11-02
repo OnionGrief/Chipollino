@@ -59,10 +59,10 @@ class Interpreter {
 	struct Test {
 		// Аргументы:
 		// НКА или регулярное выражение;
-		variant<Regex, FiniteAutomaton> sample;
+		variant<Regex, string> sample;
 		// регулярное выражение без альтернатив(только с итерацией Клини) —
 		// тестовый сет;
-		Regex test_set;
+		variant<Regex, string> test_set;
 		// натуральное число — шаг итерации в сете.
 		int iterations;
 	};
