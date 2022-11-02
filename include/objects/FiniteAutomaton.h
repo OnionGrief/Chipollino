@@ -32,6 +32,14 @@ struct State {
 };
 
 class FiniteAutomaton : public BaseObject {
+  public:
+	enum AmbiguityValue {
+		exponentially_ambiguous,
+		almost_unambigious,
+		unambigious,
+		polynomially_ambigious
+	};
+
   private:
 	int initial_state = 0;
 	vector<State> states;
@@ -46,6 +54,7 @@ class FiniteAutomaton : public BaseObject {
 								 const FiniteAutomaton& fa2);
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
+	AmbiguityValue get_ambiguity_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
 	std::optional<std::string> get_prefix(int state_beg, int state_end,
@@ -115,11 +124,13 @@ class FiniteAutomaton : public BaseObject {
 	//начальное состояние
 	int get_initial();
 	//получаем алфавит
+	// определяет меру неоднозначности
+	AmbiguityValue ambiguity() const;
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
 	friend class Regex;
 	friend class TransformationMonoid;
 
-	Regex* nfa_to_regex();
+	Regex nfa_to_regex();
 	// получаем кол-во состояний
 };
