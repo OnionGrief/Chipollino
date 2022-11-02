@@ -1,14 +1,14 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
+#include <functional>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <set>
 #include <stack>
 #include <string>
 #include <vector>
-#include <functional>
-#include <optional>
 using namespace std;
 
 class Regex;
@@ -33,7 +33,8 @@ struct State {
 
 class FiniteAutomaton : public BaseObject {
   public:
-	enum AmbiguityValue {
+	enum AmbiguityValue
+	{
 		exponentially_ambiguous,
 		almost_unambigious,
 		unambigious,

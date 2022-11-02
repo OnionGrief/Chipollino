@@ -1312,8 +1312,9 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	return result;
 }
 
-std::optional<std::string> FiniteAutomaton::get_prefix(int state_beg, int state_end,
-									  map<int, bool>& was) {
+std::optional<std::string> FiniteAutomaton::get_prefix(int state_beg,
+													   int state_end,
+													   map<int, bool>& was) {
 	std::optional<std::string> ans = nullopt;
 	if (state_beg == state_end) {
 		ans = "";
