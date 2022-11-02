@@ -1312,6 +1312,81 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	return result;
 }
 
+std::optional<std::string> FiniteAutomaton::get_prefix(int state_beg,
+													   int state_end,
+													   map<int, bool>& was) {
+	std::optional<std::string> ans = nullopt;
+	if (state_beg == state_end) {
+		ans = "";
+		return ans;
+	}
+	auto trans = &states[state_beg].transitions;
+	for (auto it = trans->begin(); it != trans->end(); it++) {
+		for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+			if (!was[*it2]) {
+				was[*it2] = true;
+				auto res = get_prefix(*it2, state_end, was);
+				if (res.has_value()) {
+					ans = it->first + res.value();
+				}
+				return ans;
+			}
+		}
+	}
+	return ans;
+}
+
+bool FiniteAutomaton::semdet() {
+	std::map<int, bool> was;
+	std::vector<int> final_states;
+	for (int i = 0; i < states.size(); i++) {
+		if (states[i].is_terminal) final_states.push_back(i);
+	}
+	std::vector<Regex> state_languages;
+	state_languages.resize(states.size());
+	for (int i = 0; i < states.size(); i++) {
+		auto prefix = get_prefix(initial_state, i, was);
+		was.clear();
+		// cout << "Try " << i << "\n";
+		if (!prefix.has_value()) continue;
+		Regex reg;
+		// Получение языка из производной регулярки автомата по префиксу:
+		//		this -> reg (arden?)
+		reg = nfa_to_regex();
+		// cout << "State: " << i << "\n";
+		// cout << "Prefix: " << prefix.value() << "\n";
+		// cout << "Regex: " << reg.to_txt() << "\n";
+		auto derevative = reg.prefix_derevative(prefix.value());
+		if (!derevative.has_value()) continue;
+		state_languages[i] = derevative.value();
+		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
+		state_languages[i].make_language();
+	}
+	for (int i = 0; i < states.size(); i++) {
+		for (int j = 0; j < states.size(); j++) {
+			for (auto transition = states[j].transitions.begin();
+				 transition != states[j].transitions.end(); transition++) {
+				bool verified_ambiguity = false;
+				for (auto it = transition->second.begin();
+					 it != transition->second.end(); it++) {
+					bool reliability = true;
+					for (auto it2 = transition->second.begin();
+						 it2 != transition->second.end(); it2++) {
+						if (!state_languages[*it].subset(
+								state_languages[*it2])) {
+							reliability = false;
+							break;
+						}
+					}
+					verified_ambiguity |= reliability;
+				}
+				if (!verified_ambiguity) return false;
+			}
+		}
+	}
+	return true;
+}
+
 bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 	// cout << s.size() << endl;
 	State state = states[index_state];
@@ -1422,6 +1497,10 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	State state = states[0];
 	return parsing_nfa_for(s);
+}
+
+int FiniteAutomaton::get_initial() {
+	return initial_state;
 }
 
 int FiniteAutomaton::states_number() const {
@@ -1627,7 +1706,7 @@ Regex FiniteAutomaton::nfa_to_regex() {
 		data[i] = tempdata2;
 	}
 	if (data[0].size() > 1) {
-		cout << "error";
+		// cout << "error";
 		Regex* f = new Regex;
 		f->from_string("");
 		Regex temp1 = *f;

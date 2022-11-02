@@ -1,8 +1,10 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
+#include <functional>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <set>
 #include <stack>
 #include <string>
@@ -53,6 +55,10 @@ class FiniteAutomaton : public BaseObject {
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
 	AmbiguityValue get_ambiguity_value() const;
+
+	// поиск префикса из состояния state_beg в состояние state_end
+	std::optional<std::string> get_prefix(int state_beg, int state_end,
+										  map<int, bool>& was);
 
   public:
 	FiniteAutomaton();
@@ -108,11 +114,16 @@ class FiniteAutomaton : public BaseObject {
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
+	// проверка НКА на семантический детерминизм
+	bool semdet();
 	// проверяет, распознаёт ли автомат слово
 	bool parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
+	//начальное состояние
+	int get_initial();
+	//получаем алфавит
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity() const;
 	// возвращает количество состояний (пердикат States)

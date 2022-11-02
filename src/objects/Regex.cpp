@@ -407,6 +407,12 @@ void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 	}
 }
 
+void Regex::make_language() {
+	generate_alphabet(alphabet);
+
+	language = shared_ptr<Language>(new Language(alphabet));
+}
+
 void Regex::clear() {
 	if (term_l != nullptr) {
 		// term_l->clear();
@@ -1221,19 +1227,29 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 												 subresult);
 		answer2 = derevative_with_respect_to_sym(respected_sym, reg_e->term_r,
 												 subresult1);
+		// cout << "alt of " << reg_e->term_l->to_txt() << " and "
+		//	 << reg_e->term_r->to_txt() << "\n";
+		// cout << answer1 << " " << answer2 << "\n";
 		if (answer1 && answer2) {
 			result.type = Type::alt;
 			result.term_l = subresult.copy();
 			result.term_r = subresult1.copy();
+			// cout << result.to_txt() << "\n";
+			return true;
 		}
 		if (!answer1 && !answer2) {
+			// cout << result.to_txt() << "\n";
 			return false;
 		}
 		if (answer1) {
 			result = subresult;
+			// cout << result.to_txt() << "\n";
+			return true;
 		}
-		if (answer2) {
+		if (answer2 && ! answer1) {
 			result = subresult1;
+			// cout << result.to_txt() << "\n";
+			return true;
 		}
 		return answer;
 	case Type::conc:
@@ -1264,8 +1280,15 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 				if (subresult1.term_r != nullptr)
 					result.term_r = subresult1.term_r->copy();
 			}
+			// cout << "conc of " << reg_e->term_l->to_txt() << " and "
+			//	 << reg_e->term_r->to_txt() << "\n";
+			// cout << answer1 << " " << answer2 << " " << result.to_txt()
+			//	 << "\n";
 			answer = answer1 | answer2;
 		} else {
+			// cout << "conc of " << reg_e->term_l->to_txt() << " and "
+			//	 << reg_e->term_r->to_txt() << "\n";
+			// cout << answer1 << "\n";
 			answer = answer1;
 			result.type = subresult.type;
 			if (subresult.term_l != nullptr)
@@ -1365,12 +1388,17 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										   Regex& result) const {
 	bool success = true;
 	Regex cur = *reg_e;
-	Regex next;
+	Regex next = *reg_e;
+	// cout << "start getting derevative for prefix " << str << " in "
+	//	 << reg_e->to_txt() << "\n";
 	for (int i = 0; i < str.size(); i++) {
 		auto sym = new Regex();
 		sym->type = Type::symb;
 		sym->value.symbol = str[i];
+		next.clear();
 		success &= derevative_with_respect_to_sym(sym, &cur, next);
+		// cout << "derevative for prefix " << sym->to_txt() << " in "
+		//	 << cur.to_txt() << " is " << next.to_txt() << "\n";
 		delete sym;
 		cur = next;
 		if (!success) {

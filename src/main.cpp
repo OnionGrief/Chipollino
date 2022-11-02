@@ -13,6 +13,7 @@ int main() {
 	// Example::fa_equal_check();
 	// Example::fa_equivalent_check();
 	// Example::fa_subset_check();
+	// Example::fa_semdet_check();
 	Logger::finish();
 	Logger::deactivate();
 }

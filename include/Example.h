@@ -39,4 +39,5 @@ class Example {
 	static void tester();
 	static void step_interection();
 	static void table();
+	static void fa_semdet_check();
 };

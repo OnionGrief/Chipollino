@@ -131,9 +131,8 @@ void Example::regex_parsing() {
 		cout << "ERROR\n";
 		return;
 	}
-
-	// cout << r.to_txt();
-
+	cout << r.to_txt() << "\n";
+	// cout << r.pump_length() << "\n";
 	FiniteAutomaton a;
 	FiniteAutomaton b;
 	FiniteAutomaton c;
@@ -673,4 +672,29 @@ void Example::table() {
 	// Logger::finish_step();
 	Logger::finish();
 	Logger::deactivate();
+}
+
+void Example::fa_semdet_check() {
+	vector<State> states;
+	for (int i = 0; i < 4; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states.push_back(s);
+	}
+	states[0].set_transition(1, "a");
+	states[1].set_transition(1, "a");
+	states[1].set_transition(2, "b");
+	states[2].set_transition(1, "a");
+	states[2].set_transition(3, "b");
+	states[3].set_transition(1, "a");
+	states[3].set_transition(3, "b");
+	states[0].is_terminal = true;
+	states[1].is_terminal = true;
+	states[2].is_terminal = true;
+
+	FiniteAutomaton NDM(0, states, {"a", "b"});
+
+	auto sdet = NDM.semdet();
+
+	cout << "Semdet?: " << sdet << "\n";
 }
