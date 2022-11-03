@@ -7,8 +7,6 @@ RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
 	: regex_length(regex_length), star_num(cur_star_num),
 	  star_nesting(star_nesting) {
 
-	srand(time(nullptr));
-
 	if (regex_length < 1) return;
 	if (star_nesting < 0) star_nesting = 0;
 	if (star_num < 0) star_num = 0;
@@ -27,7 +25,12 @@ RegexGenerator::RegexGenerator(int regex_length, int cur_star_num,
 	: RegexGenerator::RegexGenerator(regex_length, cur_star_num, star_nesting,
 									 generate_alphabet(regex_length)) {}
 
+void RegexGenerator::change_seed() {
+	srand(time(nullptr) + rand() % 100);
+}
+
 int RegexGenerator::generate_alphabet(int regex_length) {
+	change_seed();
 	int max_alphabet_size = regex_length > 52 ? 52 : regex_length;
 	int alphabet_size = 0;
 	if (max_alphabet_size) alphabet_size = rand() % max_alphabet_size;
@@ -35,6 +38,7 @@ int RegexGenerator::generate_alphabet(int regex_length) {
 }
 
 string RegexGenerator::generate_regex() {
+	change_seed();
 	all_alts_are_eps = true;
 	cur_nesting = 0;
 	res_str = "";

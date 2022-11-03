@@ -1,13 +1,18 @@
 #include "TasksGenerator.h"
 
 TasksGenerator::TasksGenerator() {
-	srand(time(nullptr) + rand() % 100);
+	change_seed();
 	distribute_functions();
+}
+
+void TasksGenerator::change_seed() {
+	srand(time(nullptr) + rand() % 100);
 }
 
 string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 									 bool for_static_Tpchkr_,
 									 bool for_dinamic_Tpchkr_) {
+	change_seed();
 	res_str = "";
 	id_num = 0;
 	ids.clear();
@@ -37,7 +42,7 @@ string TasksGenerator::generate_op() {
 }
 
 string TasksGenerator::generate_predicate() {
-	srand(rand() % 100);
+	change_seed();
 	string str = "";
 
 	Function predicate = rand_pred();
@@ -92,7 +97,7 @@ string TasksGenerator::generate_predicate() {
 
 // TODO: для дин и стат тайпчека 
 string TasksGenerator::generate_test() {
-	srand(rand() % 100);
+	change_seed();
 	string str = "";
 	str += "Test ";
 
@@ -119,7 +124,7 @@ string TasksGenerator::generate_test() {
 }
 
 string TasksGenerator::generate_declaration() {
-	srand(rand() % 100);
+	change_seed();
 	string str = "";
 	id_num++;
 	str += "N" + to_string(id_num) + " = ";
