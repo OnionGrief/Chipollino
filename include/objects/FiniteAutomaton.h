@@ -58,7 +58,7 @@ class FiniteAutomaton : public BaseObject {
 
 	// поиск префикса из состояния state_beg в состояние state_end
 	std::optional<std::string> get_prefix(int state_beg, int state_end,
-										  map<int, bool>& was);
+										  map<int, bool>& was) const;
 
   public:
 	FiniteAutomaton();
@@ -115,7 +115,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка НКА на семантический детерминизм
-	bool semdet();
+	bool semdet() const;
 	// проверяет, распознаёт ли автомат слово
 	bool parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
@@ -131,6 +131,6 @@ class FiniteAutomaton : public BaseObject {
 	friend class Regex;
 	friend class TransformationMonoid;
 
-	Regex nfa_to_regex();
+	Regex nfa_to_regex() const;
 	// получаем кол-во состояний
 };

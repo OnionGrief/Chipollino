@@ -84,6 +84,7 @@ class TasksGenerator {
 	string generate_op();
 	Function rand_func();
 	Function rand_pred();
+	void change_seed();
 
   public:
 	TasksGenerator();

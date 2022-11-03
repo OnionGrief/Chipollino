@@ -1,19 +1,30 @@
 #include "Example.h"
 #include <iostream>
+#include "Regex.h"
+#include "Interpreter.h"
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
+	// Приветсвие
 	cout << "Chipollino :-)\n";
 
+	// Инициализируем логгер
 	Logger::init();
 	Logger::activate();
-	// Example::determinize();
-	// Example::fa_merge_bisimilar();
-	// Example::fa_bisimilar_check();
-	// Example::fa_equal_check();
-	// Example::fa_equivalent_check();
-	// Example::fa_subset_check();
-	// Example::fa_semdet_check();
+
+	// Инициализируем интерпретатор
+	Interpreter interpreter;
+	interpreter.set_log_mode(Interpreter::LogMode::all);
+
+	// Загружаем в интерпретатор файл с коммандами
+	string load_file = "test.txt";
+	if (argc > 1) load_file = argv[1];
+	interpreter.load_file(load_file);
+
+	// Выполняем коммнады
+	interpreter.run_all();
+
+	// Гененрируем выходной документ, завершаем работу логгера
 	Logger::finish();
 	Logger::deactivate();
 }

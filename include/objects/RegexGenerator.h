@@ -24,6 +24,7 @@ class RegexGenerator {
 	void generate_simple_regex();
 	int generate_alphabet(int);
 	char rand_symb();
+	void change_seed();
 
   public:
 	/*генератор регулярных выражений, со значениями по умолчанию:
