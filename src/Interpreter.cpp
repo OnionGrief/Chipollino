@@ -66,6 +66,7 @@ Interpreter::Interpreter() {
 }
 
 void Interpreter::load_file(const string& filename) {
+	log("Interpreter: loading file " + filename);
 	Lexer lexer(*this);
 	auto lexem_strings = lexer.load_file(filename);
 	operations = {};
@@ -79,9 +80,11 @@ void Interpreter::load_file(const string& filename) {
 		}
 		line_number++;
 	}
+	log("Interpreter: file loaded " + filename);
 }
 
 void Interpreter::run_all() {
+	log("Running all");
 	for (const auto& op : operations) {
 		run_operation(op);
 	}
@@ -544,7 +547,7 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 				argument_types.push_back(id_types[lexems[i].value]);
 				arguments.push_back(lexems[i].value);
 			} else {
-				cout << "Unknown id\n";
+				log("Scan declaration: unknown id: " + lexems[i].value);
 				return nullopt;
 			}
 		} else if (lexems[i].type == Lexem::regex) {
@@ -561,6 +564,7 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	}
 
 	if (arguments.size() == 0) {
+		log("Scan declaration: no arguments given");
 		return nullopt;
 	}
 
@@ -573,6 +577,8 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 			(*seq).size() ? (*seq).back().output : argument_types[0];
 		return decl;
 	}
+
+	log("Scan declaration: failed to build function sequence");
 	return nullopt;
 }
 
@@ -587,6 +593,7 @@ optional<Interpreter::Test> Interpreter::scan_test(vector<Lexem> lexems) {
 	} else if (lexems[1].type == Lexem::id) {
 		test.language = lexems[1].value;
 	} else {
+		log("Scan test: wrong type at position 1, id or regex expeccted");
 		return nullopt;
 	}
 
@@ -595,12 +602,14 @@ optional<Interpreter::Test> Interpreter::scan_test(vector<Lexem> lexems) {
 	} else if (lexems[2].type == Lexem::id) {
 		test.test_set = lexems[2].value;
 	} else {
+		log("Scan test: wrong type at position 2, id or regex expeccted");
 		return nullopt;
 	}
 
 	if (lexems[3].type == Lexem::number) {
 		test.iterations = lexems[3].num;
 	} else {
+		log("Scan test: wrong type at position 3, number expected");
 		return nullopt;
 	}
 
@@ -628,7 +637,7 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 				argument_types.push_back(id_types[lexems[i].value]);
 				arguments.push_back(lexems[i].value);
 			} else {
-				cout << "Unknown id\n";
+				log("Scan test: unknown id: " + lexems[i].value);
 				return nullopt;
 			}
 		} else if (lexems[i].type == Lexem::regex) {
@@ -646,7 +655,8 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 		pred.parameters = arguments;
 		return pred;
 	}
-	return optional<Predicate>();
+	log("Scan predicate: failed to build function sequence");
+	return nullopt;
 }
 
 optional<Interpreter::GeneralOperation> Interpreter::scan_operation(

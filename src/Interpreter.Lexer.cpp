@@ -160,7 +160,7 @@ Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
 	if (Lexem lex = scan_id(); lex.type) {
 		return lex;
 	}
-	cout << "Error: cannot scan lexem\n";
+	parent.log("Lexer: failed to scan \"" + input.str.substr(input.pos, input.str.size()) + "\"");
 	return Lexem(Lexem::error);
 }
 
@@ -169,6 +169,7 @@ Interpreter::Lexem::Lexem(Type type, string value) : type(type), value(value) {}
 Interpreter::Lexem::Lexem(int num) : num(num), type(number) {}
 
 vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
+	parent.log("Lexer: loading file" + path);
 	ifstream input_file(path);
 	if (!input_file) {
 		parent.throw_error("Error: failed to open " + to_string(path));
@@ -179,6 +180,7 @@ vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
 	while (getline(input_file, str)) {
 		lexem_lines.push_back(parse_string(str));
 	}
+	parent.log("Lexer: file loaded");
 	return lexem_lines;
 }
 
