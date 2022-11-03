@@ -190,7 +190,7 @@ class Interpreter {
 			"Minimize",	  "Reverse",	 "Annote",		 "DeLinearize",
 			"Complement", "MergeBisim",	 "PumpLength",	 "ClassLength",
 			"KSubSet",	  "Normalize",	 "States",		 "ClassCard",
-			"Ambiguity",  "Width",		 "MyhillNerode", "Simplify",
+			"Ambiguity",  "Width",		 "MyhillNerode", "Simplify", "DeAnnote",
 		};
 
 		set<string> predicates = {

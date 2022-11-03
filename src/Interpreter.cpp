@@ -128,6 +128,15 @@ GeneralObject Interpreter::apply_function(
 	const auto boolean = ObjectType::Boolean;
 	const auto value = ObjectType::Value;
 
+	auto get_automaton = [](const GeneralObject& obj) -> const FiniteAutomaton& {
+		if (holds_alternative<ObjectNFA>(obj)) {
+			return get<ObjectNFA>(obj).value;
+		}
+		if (holds_alternative<ObjectDFA>(obj)) {
+			return get<ObjectDFA>(obj).value;
+		}
+	};
+
 	if (function.name == "Glushkov") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_glushkov());
 	}
@@ -138,18 +147,17 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Antimirov") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_antimirov());
 	}
-	/*if (function.name == "Arden") {
-		return ObjectRegex(nfa_to_regex(get<ObjectNFA>(arguments[0]).value));
-	}*/
+	if (function.name == "Arden") {
+		return ObjectRegex((get_automaton(arguments[0]).nfa_to_regex()));
+	}
 	if (function.name == "Thompson") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_tompson());
 	}
 	if (function.name == "Bisimilar") {
 		return ObjectBoolean(
-			FiniteAutomaton::bisimilar(get<ObjectNFA>(arguments[0]).value,
-									   get<ObjectNFA>(arguments[1]).value));
+			FiniteAutomaton::bisimilar(get_automaton(arguments[0]), get_automaton(arguments[1])));
 	}
-	//неясно чье
+	//мое
 	/*if (function.name == "Minimal") {
 
 		return ObjectBoolean(get<ObjectDFA>(arguments[0]).value.);
@@ -157,8 +165,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
 			return ObjectBoolean(
-				get<ObjectNFA>(arguments[0])
-					.value.subset(get<ObjectNFA>(arguments[1]).value));
+				(get_automaton(arguments[0]).subset(get_automaton(arguments[0]))));
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
@@ -169,8 +176,8 @@ GeneralObject Interpreter::apply_function(
 		vector<ObjectType> n = {nfa, nfa};
 		if (function.input == n) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
-				get<ObjectNFA>(arguments[0]).value,
-				get<ObjectNFA>(arguments[1]).value));
+				get_automaton(arguments[0]),
+				get_automaton(arguments[1])));
 		} else {
 			return ObjectBoolean(
 				Regex::equivalent(get<ObjectRegex>(arguments[0]).value,
@@ -180,49 +187,48 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Equal") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
 			return ObjectBoolean(
-				FiniteAutomaton::equal(get<ObjectNFA>(arguments[0]).value,
-									   get<ObjectNFA>(arguments[1]).value));
+				FiniteAutomaton::equal(get_automaton(arguments[0]),
+									   get_automaton(arguments[1])));
 		} else {
 			return ObjectBoolean(
 				Regex::equal(get<ObjectRegex>(arguments[0]).value,
 							 get<ObjectRegex>(arguments[1]).value));
 		}
 	}
-	//пока не работает
 	if (function.name == "SemDet") {
-		return ObjectBoolean(get<ObjectNFA>(arguments[0]).value.semdet());
+		return ObjectBoolean(get_automaton(arguments[0]).semdet());
 	}
 	if (function.name == "Determinize") {
-		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.determinize());
+		return ObjectDFA(get_automaton(arguments[0]).determinize());
 	}
 	if (function.name == "Minimize") {
-		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.minimize());
+		return ObjectDFA(get_automaton(arguments[0]).minimize());
 	}
 	if (function.name == "Annote") {
-		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.annote());
+		return ObjectDFA(get_automaton(arguments[0]).annote());
 	}
 	if (function.name == "PumpLength") {
 		return ObjectInt(get<ObjectRegex>(arguments[0]).value.pump_length());
 	}
 	//Миша
 	/*if (function.name == "ClassLength") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
+		return ObjectInt(class_legth_typecheker(get<ObjectDFA>(arguments[0]).value));
+	}
 	//у нас нет
 	/*if (function.name == "KSubSet") {
 		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
 	}*/
 	if (function.name == "States") {
-		return ObjectInt(get<ObjectNFA>(arguments[0]).value.states_number());
+		return ObjectInt(get_automaton(arguments[0]).states_number());
 	}
 	//Мишино вроде
 	/*if (function.name == "ClassCard") {
 		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
 	}*/
 	//пока не реализовано
-	/*if (function.name == "Ambiguity") {
-		return ObjectValue(get<ObjectNFA>(arguments[0]).value.);
-	}*/
+	if (function.name == "Ambiguity") {
+		return ObjectValue(get_automaton(arguments[0]).ambiguity());
+	}
 	/*if (function.name == "Width") {
 		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
 	}*/
@@ -230,8 +236,6 @@ GeneralObject Interpreter::apply_function(
 	/*if (function.name == "MyhillNerode") {
 		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
 	}*/
-
-	//пошла жопа
 
 	/*
 	* Идёт Глушков по лесу, видит -- регулярка.
@@ -242,34 +246,33 @@ GeneralObject Interpreter::apply_function(
 	optional<GeneralObject> res;
 
 	if (function.name == "RemEps") {
-		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.remove_eps());
+		res = ObjectNFA(get_automaton(arguments[0]).remove_eps());
 	}
-	/*if (function.name == "Linearize") {
-		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
-	}*/
+	if (function.name == "Linearize") {
+		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.linearize());
+	}
 	if (function.name == "Reverse") {
-		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.reverse());
+		res = ObjectNFA(get_automaton(arguments[0]).reverse());
 	}
-	/*if (function.name == "Delinearize") {
+	if (function.name == "Delinearize") {
 		if (function.output == regex){
-			res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
+			res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
 		} else {
-			res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
+			//res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
 		}
-	}*/
+	}
 	if (function.name == "Complement") {
 		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == nfa) {
-			res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
+			res = ObjectNFA(get_automaton(arguments[0]).deannote());
 		} else {
-			// res =
-			// ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
+			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
 		}
 	}
 	if (function.name == "MergeBisim") {
-		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.merge_bisimilar());
+		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar());
 	}
 	if (function.name == "Normalize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0])
