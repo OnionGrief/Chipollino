@@ -1312,9 +1312,8 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	return result;
 }
 
-std::optional<std::string> FiniteAutomaton::get_prefix(int state_beg,
-													   int state_end,
-													   map<int, bool>& was) {
+std::optional<std::string> FiniteAutomaton::get_prefix(
+	int state_beg, int state_end, map<int, bool>& was) const {
 	std::optional<std::string> ans = nullopt;
 	if (state_beg == state_end) {
 		ans = "";
@@ -1336,7 +1335,7 @@ std::optional<std::string> FiniteAutomaton::get_prefix(int state_beg,
 	return ans;
 }
 
-bool FiniteAutomaton::semdet() {
+bool FiniteAutomaton::semdet() const {
 	std::map<int, bool> was;
 	std::vector<int> final_states;
 	for (int i = 0; i < states.size(); i++) {
@@ -1609,7 +1608,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	}
 	return out;
 }
-Regex FiniteAutomaton::nfa_to_regex() {
+Regex FiniteAutomaton::nfa_to_regex() const {
 	vector<int> endstate;
 	vector<vector<expression_arden>> data;
 	set<alphabet_symbol> alphabet = language->get_alphabet();

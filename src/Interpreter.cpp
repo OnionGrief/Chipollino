@@ -186,9 +186,9 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	//пока не работает
-	/*(if (function.name == "SemDet") {
-		return ObjectBoolean(get<ObjectNFA>(arguments[0]).value.);
-	}*/
+	if (function.name == "SemDet") {
+		return ObjectBoolean(get<ObjectNFA>(arguments[0]).value.semdet());
+	}
 	if (function.name == "Determinize") {
 		return ObjectDFA(get<ObjectNFA>(arguments[0]).value.determinize());
 	}
@@ -558,6 +558,10 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	// (!!)
 	if (i < lexems.size() && lexems[i].type == Lexem::doubleExclamation) {
 		decl.show_result = true;
+	}
+
+	if (arguments.size() == 0) {
+		return nullopt;
 	}
 
 	if (auto seq = build_function_sequence(func_names, argument_types);
