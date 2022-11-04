@@ -1,0 +1,4 @@
+N1 = Glushkov ((ab)a) !!
+N2 = Glushkov (a(ab)) !!
+Equal N1 N2
+Test ab(aba)ababa ((ab)a) 1
