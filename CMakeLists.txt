@@ -22,6 +22,7 @@ set(SOURCES
 	src/objects/Grammar.cpp
 	src/AlphabetSymbol.cpp
 	src/AutomatonToImage.cpp
+	src/LongDouble.cpp
 	src/Example.cpp
 	src/Logger.cpp
     src/main.cpp)
