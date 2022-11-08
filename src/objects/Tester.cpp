@@ -5,7 +5,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 	vector<int> lengths;
 	vector<bool> belongs;
 	// automaton.determinize();
-	FiniteAutomaton automaton = lang.to_tompson();
+	FiniteAutomaton automaton = lang.to_glushkov();
 
 	using clock = std::chrono::high_resolution_clock;
 
