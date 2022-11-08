@@ -556,6 +556,10 @@ string Regex::to_txt() const {
 // для метода test
 string Regex::get_iterated_word(int n) const {
 	string str = "";
+	/*if (type == Type::alt) {
+		cout << "ERROR: regex with '|' is passed to the method Test\n";
+		return "";
+	}*/
 	if (term_l) {
 		if (type == Type::star) {
 			for (int i = 0; i < n; i++)
@@ -563,17 +567,11 @@ string Regex::get_iterated_word(int n) const {
 		} else
 			str += term_l->get_iterated_word(n);
 	}
-	if (term_r) {
+	if (term_r && type != Type::alt) {
 		str += term_r->get_iterated_word(n);
 	}
 	if (value.symbol != "") {
 		str += value.symbol;
-	}
-	if (type == Type::alt) {
-		cout << "ERROR: в метод test передано регулярное выражение с "
-			 << "альтернативами\n"; //по-хорошему тайпчекера запрячь,
-									//но не будем тревожить Сонечку
-		return "";
 	}
 	return str;
 }
@@ -1246,7 +1244,7 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 			// cout << result.to_txt() << "\n";
 			return true;
 		}
-		if (answer2 && ! answer1) {
+		if (answer2 && !answer1) {
 			result = subresult1;
 			// cout << result.to_txt() << "\n";
 			return true;
