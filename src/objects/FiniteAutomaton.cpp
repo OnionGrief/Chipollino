@@ -1,7 +1,7 @@
 #include "FiniteAutomaton.h"
 #include "Fraction.h"
 #include "Grammar.h"
-#include "InfInt.h"
+#include "InfInt/InfInt.h"
 #include "Language.h"
 #include "Logger.h"
 #include <algorithm>

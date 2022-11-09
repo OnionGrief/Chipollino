@@ -1,5 +1,5 @@
 #pragma once
-#include "InfInt.h"
+#include "InfInt/InfInt.h"
 #include <iostream>
 using namespace std;
 

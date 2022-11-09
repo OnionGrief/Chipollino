@@ -51,8 +51,7 @@ Fraction Fraction::operator+=(const Fraction& f) {
 	denominator = denominator * f.denominator;
 	simplify();
 
-	Fraction ff(numerator, denominator);
-	return ff;
+	return *this;
 }
 
 Fraction Fraction::operator++() {
@@ -61,8 +60,7 @@ Fraction Fraction::operator++() {
 	denominator = denominator * f.denominator;
 	simplify();
 
-	Fraction ff(numerator, denominator);
-	return ff;
+	return *this;
 }
 
 Fraction Fraction::operator++(int) {
@@ -77,18 +75,12 @@ Fraction Fraction::operator++(int) {
 
 bool Fraction::operator>(const Fraction& f) {
 	InfInt n = numerator * f.denominator - f.numerator * denominator;
-	InfInt d = denominator * f.denominator;
-
-	Fraction ff(n, d);
-	return ff.numerator > 0;
+	return n > 0;
 }
 
 bool Fraction::operator==(const Fraction& f) {
 	InfInt n = numerator * f.denominator - f.numerator * denominator;
-	InfInt d = denominator * f.denominator;
-
-	Fraction ff(n, d);
-	return ff.numerator == 0;
+	return n == 0;
 }
 
 ostream& operator<<(ostream& output, const Fraction& f) {
