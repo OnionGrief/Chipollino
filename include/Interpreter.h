@@ -91,7 +91,7 @@ class Interpreter {
 	map<string, ObjectType> id_types;
 	// Считывание операции из набора лексем
 	optional<Declaration> scan_declaration(vector<Lexem>);
-	optional<Test> scan_test(vector<Lexem>); // TODO
+	optional<Test> scan_test(vector<Lexem>);
 	optional<Predicate> scan_predicate(vector<Lexem>);
 	optional<GeneralOperation> scan_operation(vector<Lexem>);
 
@@ -100,15 +100,10 @@ class Interpreter {
 
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(
-		vector<string> function_names, vector<ObjectType> first_type); // TODO
-	// Множество всех функций; TODO: инициализировать его в конструкторе
-	// Interpreter()
-	set<Function> functions; // TODO: определить operator< для Function
+		vector<string> function_names, vector<ObjectType> first_type);
 	// Так предлагается сделать мапинг между названиями функций и сигнатурами
 	// разумеется, генерировать эту мапу можно при инициализации
 	map<string, vector<Function>> names_to_functions;
-	// Заполнение мапы names_to_functions по сету functions
-	// void generate_function_mapping(); // TODO
 
 	struct Lexem {
 		enum Type { // TODO добавить тип строки (для filename)
