@@ -311,6 +311,17 @@ Regex::Regex() {
 	term_r = nullptr;
 }
 
+Regex::Regex(string str) : Regex() {
+	try {
+		bool res = from_string(str);
+		if (!res) {
+			throw exception("from_string ERROR");
+		}
+	} catch (const exception& ex) {
+		cout << ex.what() << endl;
+	}
+}
+
 Regex Regex::normalize_regex(const string& file) const {
 	Regex regex = *this;
 	regex.normalize_this_regex(file);

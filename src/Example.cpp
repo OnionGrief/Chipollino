@@ -515,11 +515,7 @@ void Example::step() {
 	Logger::log("Автомат1", "Автомат2", fa1, fa2);
 	Logger::finish_step();
 	s = "skip";
-<<<<<<< HEAD
-	//Logger::activate();
-=======
 	// Logger::activate();
->>>>>>> c45fade37e62be39cf8abc30c8c84397dc9903a7
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa1, fa1);
 	Logger::finish_step();
