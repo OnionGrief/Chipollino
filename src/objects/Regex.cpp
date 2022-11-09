@@ -318,6 +318,10 @@ Regex Regex::normalize_regex(const string& file) const {
 }
 
 bool Regex::from_string(string str) {
+	if (!str.size()) {
+		return false;
+	}
+
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
 
