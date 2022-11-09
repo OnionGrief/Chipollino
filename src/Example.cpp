@@ -515,7 +515,11 @@ void Example::step() {
 	Logger::log("Автомат1", "Автомат2", fa1, fa2);
 	Logger::finish_step();
 	s = "skip";
+<<<<<<< HEAD
 	//Logger::activate();
+=======
+	// Logger::activate();
+>>>>>>> c45fade37e62be39cf8abc30c8c84397dc9903a7
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa1, fa1);
 	Logger::finish_step();
@@ -712,6 +716,7 @@ void Example::all_examples() {
 	fa_merge_bisimilar();
 	transformation_monoid_example();
 	// normalize_regex();
+<<<<<<< HEAD
 	step();
 	parsing_nfa();
 	fa_equivalent_check();
@@ -721,6 +726,17 @@ void Example::all_examples() {
 	tester();
 	step_interection();
 	table();
+=======
+	// step();
+	parsing_nfa();
+	fa_equivalent_check();
+	// fa_subset_check();
+	// arden_test();
+	// to_image();
+	tester();
+	// step_interection();
+	// table();
+>>>>>>> c45fade37e62be39cf8abc30c8c84397dc9903a7
 	fa_semdet_check();
 	cout << "all the examlples are successful" << endl;
 }
