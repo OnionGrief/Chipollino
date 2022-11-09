@@ -1356,7 +1356,7 @@ bool FiniteAutomaton::semdet() const {
 		Regex reg;
 		// Получение языка из производной регулярки автомата по префиксу:
 		//		this -> reg (arden?)
-		reg = annote().nfa_to_regex();
+		reg = nfa_to_regex();
 		// cout << "State: " << i << "\n";
 		// cout << "Prefix: " << prefix.value() << "\n";
 		// cout << "Regex: " << reg.to_txt() << "\n";
