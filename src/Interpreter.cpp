@@ -165,7 +165,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
 			return ObjectBoolean(
-				(get_automaton(arguments[0]).subset(get_automaton(arguments[0]))));
+				(get_automaton(arguments[0]).subset(get_automaton(arguments[1]))));
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
@@ -277,7 +277,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Normalize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0])
 							  .value.normalize_regex(
-								  get<ObjectFileName>(arguments[0]).value));
+								  get<ObjectFileName>(arguments[1]).value));
 	}
 	/*if (function.name == "Simplify") {
 		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
