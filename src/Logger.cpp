@@ -79,7 +79,7 @@ void Logger::log(string a1, const FiniteAutomaton& fa1) {
 		char si[256];
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{./resources/output%d.png}\n",
+				"keepaspectratio]{output%d.png}\n",
 				image_number);
 		out << si << endl;
 	}
@@ -100,7 +100,7 @@ void Logger::log(string a1, string a2, const FiniteAutomaton& fa1,
 		char si[256];
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{./resources/output%d.png}\n",
+				"keepaspectratio]{output%d.png}\n",
 				image_number);
 		out << si << endl;
 
@@ -109,7 +109,7 @@ void Logger::log(string a1, string a2, const FiniteAutomaton& fa1,
 		out << a2 + "\n" << endl;
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{./resources/output%d.png}\n",
+				"keepaspectratio]{output%d.png}\n",
 				image_number);
 		out << si << endl;
 	}
@@ -131,7 +131,7 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 		char si[256];
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{./resources/output%d.png}\n",
+				"keepaspectratio]{output%d.png}\n",
 				image_number);
 		out << si << endl;
 
@@ -140,7 +140,7 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 		out << a2 + "\n" << endl;
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{./resources/output%d.png}\n",
+				"keepaspectratio]{output%d.png}\n",
 				image_number);
 		out << si << endl;
 
@@ -149,7 +149,7 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 		out << a3 + "\n" << endl;
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{./resources/output%d.png}\n",
+				"keepaspectratio]{output%d.png}\n",
 				image_number);
 		out << si << endl;
 	}
