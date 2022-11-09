@@ -376,7 +376,7 @@ void Example::fa_equivalent_check() {
 	states2[0].is_terminal = true;
 	FiniteAutomaton fa2(0, states2, {"c", "d"});
 
-	cout << FiniteAutomaton::equivalent(fa1, fa2);
+	cout << FiniteAutomaton::equivalent(fa1, fa2) << endl;
 }
 
 void Example::transformation_monoid_example() {
@@ -400,7 +400,7 @@ void Example::transformation_monoid_example() {
 	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
 	// cout << fa1.to_txt();
 	TransformationMonoid a(&fa1, 3);
-	cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
+	cout << a.get_Equalence_Classes_Txt() << endl; //вывод эквивалентных классов
 	// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
 	// cout << a.is_minimality() << "\n";
 	// cout << a.to_Txt_MyhillNerode();
@@ -701,4 +701,32 @@ void Example::fa_semdet_check() {
 	auto sdet = NDM.semdet();
 
 	cout << "Semdet?: " << sdet << "\n";
+}
+
+void Example::all_examples() {
+	determinize();
+	remove_eps();
+	minimize();
+	intersection();
+	regex_parsing();
+	regex_generating();
+	random_regex_parsing();
+	tasks_generating();
+	parsing_regex("b(ab)*b");
+	fa_equal_check();
+	fa_bisimilar_check();
+	fa_merge_bisimilar();
+	transformation_monoid_example();
+	// normalize_regex();
+	step();
+	parsing_nfa();
+	fa_equivalent_check();
+	fa_subset_check();
+	// arden_test();
+	to_image();
+	tester();
+	step_interection();
+	table();
+	fa_semdet_check();
+	cout << "all the examlples are successful" << endl;
 }

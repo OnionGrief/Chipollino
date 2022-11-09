@@ -15,7 +15,8 @@
 */
 class Example {
   public:
-	// Пример построения regex из строки
+	/*запуск всех примеров*/
+	static void all_examples();
 	static void determinize();
 	static void remove_eps();
 	static void minimize();
