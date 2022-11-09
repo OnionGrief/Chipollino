@@ -1310,6 +1310,9 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 }
 
 bool FiniteAutomaton::semdet() const {
+	Logger::init_step("SemDet");
+	Logger::log(
+		"Получение языка из производной регулярки автомата по префиксу");
 	std::map<int, bool> was;
 	std::vector<int> final_states;
 	for (int i = 0; i < states.size(); i++) {
@@ -1329,10 +1332,14 @@ bool FiniteAutomaton::semdet() const {
 		// cout << "State: " << i << "\n";
 		// cout << "Prefix: " << prefix.value() << "\n";
 		// cout << "Regex: " << reg.to_txt() << "\n";
+		Logger::log("State", to_string(i));
+		Logger::log("Prefix", prefix.value());
+		Logger::log("Regex", reg.to_txt());
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
 		state_languages[i] = derevative.value();
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
+		Logger::log("Derevative", state_languages[i].to_txt());
 		state_languages[i].make_language();
 	}
 	for (int i = 0; i < states.size(); i++) {
@@ -1353,10 +1360,16 @@ bool FiniteAutomaton::semdet() const {
 					}
 					verified_ambiguity |= reliability;
 				}
-				if (!verified_ambiguity) return false;
+				if (!verified_ambiguity) {
+					Logger::log("Результат SemDet", "false");
+					Logger::finish_step();
+					return false;
+				}
 			}
 		}
 	}
+	Logger::log("Результат SemDet", "true");
+	Logger::finish_step();
 	return true;
 }
 
