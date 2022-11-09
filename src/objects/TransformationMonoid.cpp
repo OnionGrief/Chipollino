@@ -125,20 +125,27 @@ vector<string> rewriting(vector<string> in,
 }
 
 //Получаем ДКА и строим моноид
-TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
-										   int transferlen) {
+TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 
 	automat = in->remove_trap_states();
 	//	cout << automat.to_txt();
-	for (int i = 1; i <= transferlen; i++) {
-
+	int i=0;
+	bool cond = true;
+	//for (int i = 1; i <= transferlen; i++)
+	while (cond) {
+		i++;
 		vector<vector<string>> various =
 			get_comb_alphabet(i, automat.language->get_alphabet());
+
+		bool cond1 = true;
 		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
 		{
 			Term current;
 			current.name = various[j];
 			current.name = rewriting(various[j], rules);
+			if (current.name.size() != i){
+				cond1=false;
+			}
 
 			for (int t = 0; t < automat.states.size(); t++) {
 				int endsost = t;
@@ -183,6 +190,9 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in,
 					rules[current.name].push_back(eqv);
 				}
 			}
+		}
+		if (!cond1) {
+			cond=false;
 		}
 	}
 	Logger::init_step("equivalence classes");
@@ -499,15 +509,15 @@ string TransformationMonoid::to_Txt_MyhillNerode() {
 	return ss.str();
 }
 int class_card_typecheker(FiniteAutomaton* in) {
-	TransformationMonoid a(in, 5);
+	TransformationMonoid a(in);
 	return a.class_Card();
 }
 int MyhillNerode_typecheker(FiniteAutomaton* in) {
-	TransformationMonoid a(in, 5);
+	TransformationMonoid a(in);
 	return a.size_MyhillNerode();
 }
 int class_legth_typecheker(FiniteAutomaton* in) {
-	TransformationMonoid a(in, 5);
+	TransformationMonoid a(in);
 	return a.Class_Length().name.size();
 }
 //В психиатрической больнице люди по настоящему заботятся о своём здоровье. Они

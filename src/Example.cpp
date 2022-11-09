@@ -380,7 +380,6 @@ void Example::fa_equivalent_check() {
 }
 
 void Example::transformation_monoid_example() {
-
 	vector<State> states;
 	for (int i = 0; i < 4; i++) {
 		State s = {
@@ -399,7 +398,7 @@ void Example::transformation_monoid_example() {
 	states[2].is_terminal = true;
 	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
 	// cout << fa1.to_txt();
-	TransformationMonoid a(&fa1, 3);
+	TransformationMonoid a(&fa1);
 	cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
 	// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
 	// cout << a.is_minimality() << "\n";
@@ -411,6 +410,7 @@ void Example::transformation_monoid_example() {
 	for (int i = 0; i < temp.size(); i++) {
 		cout << temp[i].first.name << " " << temp[i].second.name << "\n";
 	}*/
+	return;
 }
 
 void Example::fa_subset_check() {
