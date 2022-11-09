@@ -24,5 +24,6 @@ class Language {
 	const optional<int>& get_pump_length();
 	void set_min_dfa(FiniteAutomaton);
 	const optional<FiniteAutomaton>& get_min_dfa();
+	bool annoted = false;
 	// и тд
 };

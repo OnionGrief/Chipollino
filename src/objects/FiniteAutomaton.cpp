@@ -693,6 +693,7 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 		}
 	}
 	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
+	new_fa.language->annoted = true;
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
@@ -727,6 +728,7 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 		}
 	}
 	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
+	new_fa.language->annoted = false;
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
@@ -1336,6 +1338,9 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 }
 
 bool FiniteAutomaton::semdet() const {
+	if (!language->annoted) {
+		return annote().semdet();
+	}
 	std::map<int, bool> was;
 	std::vector<int> final_states;
 	for (int i = 0; i < states.size(); i++) {
@@ -1351,7 +1356,7 @@ bool FiniteAutomaton::semdet() const {
 		Regex reg;
 		// Получение языка из производной регулярки автомата по префиксу:
 		//		this -> reg (arden?)
-		reg = nfa_to_regex();
+		reg = annote().nfa_to_regex();
 		// cout << "State: " << i << "\n";
 		// cout << "Prefix: " << prefix.value() << "\n";
 		// cout << "Regex: " << reg.to_txt() << "\n";
