@@ -99,6 +99,7 @@ class Regex : BaseObject {
 
   public:
 	Regex();
+	Regex(string);
 	string to_txt() const override;
 	void pre_order_travers() const;
 	void clear();
