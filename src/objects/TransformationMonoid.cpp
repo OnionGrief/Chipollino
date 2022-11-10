@@ -173,17 +173,13 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 			if (eqv.size() == 0) //Если	не	встретился	в
 								 //Эквивалентных классах
 			{
-				bool cond = true;
-				if (current.Transitions.size() != automat.states.size()) {
-					cond = false;
-				}
+				
 				for (int i = 0; i < current.Transitions.size(); i++) {
-					if (!automat.states[current.Transitions[i].second]
-							 .is_terminal) {
-						cond = false;
+					if (automat.states[current.Transitions[i].second]
+							 .is_terminal && current.Transitions[i].first == automat.initial_state ){	
+						current.isFinal = true;
 					}
 				}
-				current.isFinal = cond;
 				terms.push_back(current);
 			} else {
 				if (!rules.count(current.name) && current.name != eqv) {

@@ -380,23 +380,36 @@ void Example::fa_equivalent_check() {
 }
 
 void Example::transformation_monoid_example() {
-	vector<State> states;
-	for (int i = 0; i < 4; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states.push_back(s);
+	// vector<State> states;
+	// for (int i = 0; i < 4; i++) {
+	// 	State s = {
+	// 		i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+	// 	states.push_back(s);
+	// }
+	// states[0].set_transition(1, "a");
+	// states[0].set_transition(0, "b");
+	// states[1].set_transition(1, "a");
+	// states[1].set_transition(2, "b");
+	// states[1].set_transition(1, "c");
+	// states[2].set_transition(2, "c");
+	// states[2].set_transition(1, "a");
+	// states[2].set_transition(2, "b");
+	// states[1].is_terminal = true;
+	// states[2].is_terminal = true;
+	// FiniteAutomaton fa1(0, states, {"a", "b", "c"});
+	string regl = "abaa";
+	Regex r;
+	if (!r.from_string(regl)) {
+		cout << "ERROR\n";
+		return;
 	}
-	states[0].set_transition(1, "a");
-	states[0].set_transition(0, "b");
-	states[1].set_transition(1, "a");
-	states[1].set_transition(2, "b");
-	states[1].set_transition(1, "c");
-	states[2].set_transition(2, "c");
-	states[2].set_transition(1, "a");
-	states[2].set_transition(2, "b");
-	states[1].is_terminal = true;
-	states[2].is_terminal = true;
-	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
+
+	FiniteAutomaton fa1;
+
+	//cout << "to_tompson ------------------------------\n";
+	fa1=r.to_glushkov();
+	cout << fa1.to_txt();
+	//c = r.to_ilieyu(); // to_tompson(-1);
 	// cout << fa1.to_txt();
 	TransformationMonoid a(&fa1);
 	cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
