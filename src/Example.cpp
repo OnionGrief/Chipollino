@@ -769,11 +769,15 @@ void Example::test_ambiguity() {
 	FiniteAutomaton fa2 = Regex("b|a|aa").to_tompson();
 	FiniteAutomaton fa3 = Regex("abc").to_tompson();
 	FiniteAutomaton fa4 = Regex("b|a").to_tompson();
+	FiniteAutomaton fa5 = Regex("(aa|aa)*").to_glushkov();
+	FiniteAutomaton fa6 = Regex("(aab|aab)*").to_glushkov();
 
 	assert(fa1.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
 	assert(fa2.ambiguity() == FiniteAutomaton::polynomially_ambigious);
 	assert(fa3.ambiguity() == FiniteAutomaton::unambigious);
 	assert(fa4.ambiguity() == FiniteAutomaton::almost_unambigious);
+	assert(fa5.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
+	assert(fa6.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
 }
 
 void Example::test_arden() {

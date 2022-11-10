@@ -319,6 +319,7 @@ Regex::Regex(string str) : Regex() {
 		}
 	} catch (const exception& ex) {
 		cout << ex.what() << endl;
+		exit(EXIT_FAILURE);
 	}
 }
 
