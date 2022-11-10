@@ -1631,12 +1631,11 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 				set<int> trans = a.transitions.at(*it);
 				for (set<int>::iterator itt = trans.begin(); itt != trans.end();
 					 itt++) {
-					Regex* r = new Regex;
 					expression_arden temp;
 					temp.condition = i;
 					string str = "";
 					str += *it;
-					r->from_string(str);
+					Regex* r = new Regex(str);
 					temp.temp_regex = r;
 					data[*itt].push_back(temp);
 				}
@@ -1689,8 +1688,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	}
 	if (data[0].size() > 1) {
 		// cout << "error";
-		Regex* f = new Regex;
-		f->from_string("");
+		Regex* f = new Regex("");
 		Regex temp1 = *f;
 		delete f;
 		return temp1;
@@ -1722,8 +1720,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	}
 	Logger::finish_step();
 	if (endstate.size() == 0) {
-		Regex* f = new Regex;
-		f->from_string("");
+		Regex* f = new Regex("");
 		Regex temp1 = *f;
 		delete f;
 		return temp1;
