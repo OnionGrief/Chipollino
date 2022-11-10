@@ -165,8 +165,8 @@ GeneralObject Interpreter::apply_function(
 	}*/
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
-			return ObjectBoolean(
-				(get_automaton(arguments[0]).subset(get_automaton(arguments[1]))));
+			return ObjectBoolean((get_automaton(arguments[0])
+									  .subset(get_automaton(arguments[1]))));
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
@@ -322,6 +322,19 @@ GeneralObject Interpreter::apply_function(
 	return GeneralObject();
 }
 
+bool Interpreter::typecheck(string function_name,
+							vector<ObjectType> first_type) {
+	if (first_type.size() != names_to_functions[function_name][0].input.size())
+		return false;
+	for (int i = 0; i < first_type.size(); i++) {
+		if (!((first_type[i] == names_to_functions[function_name][0].input[i]) ||
+			(first_type[i] == ObjectType::DFA &&
+			 names_to_functions[function_name][0].input[i] == ObjectType::NFA)))
+			return false;
+	}
+	return true;
+}
+
 optional<vector<Function>> Interpreter::build_function_sequence(
 	vector<string> function_names, vector<ObjectType> first_type) {
 	if (!function_names.size()) {
@@ -333,7 +346,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	// 2 - функция(Delinearize или DeAnnote) принимает на вход Regex
 	// 3 - функция(Delinearize или DeAnnote) принимает на вход NFA
 	vector<int> neededfuncs(function_names.size(), 1);
-	if (first_type == names_to_functions[function_names[0]][0].input) {
+	if (typecheck(function_names[0], first_type)) {
 		if (names_to_functions[function_names[0]].size() == 2) {
 			neededfuncs[0] = 2;
 		} else {

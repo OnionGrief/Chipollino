@@ -99,6 +99,8 @@ class Interpreter {
 	vector<GeneralOperation> operations;
 
 	// Построение последовательности функций по их названиям
+	bool typecheck(string function_names,
+				   vector<ObjectType> first_type);
 	optional<vector<Function>> build_function_sequence(
 		vector<string> function_names, vector<ObjectType> first_type);
 	// Так предлагается сделать мапинг между названиями функций и сигнатурами
