@@ -5,7 +5,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 	vector<int> lengths;
 	vector<bool> belongs;
 	// automaton.determinize();
-	FiniteAutomaton automaton = lang.to_tompson();
+	FiniteAutomaton automaton = lang.to_glushkov();
 
 	using clock = std::chrono::high_resolution_clock;
 
@@ -74,3 +74,9 @@ bool Tester::parsing_by_regex(string reg, string word) {
 	}
 	return false;
 }
+
+/*
+Продам шары для ночного катания по полу.
+Б/у. Работают без нареканий.
+Причина продажи: переезд на первый этаж.
+*/

@@ -99,6 +99,7 @@ class Regex : BaseObject {
 
   public:
 	Regex();
+	Regex(string);
 	string to_txt() const override;
 	void pre_order_travers() const;
 	void clear();
@@ -113,7 +114,7 @@ class Regex : BaseObject {
 	Regex& operator=(const Regex& other);
 
 	// Генерация языка из алфавита
-	void Regex::make_language();
+	void make_language();
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const string& file) const;
 	bool from_string(string);

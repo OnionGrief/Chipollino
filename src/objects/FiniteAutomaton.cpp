@@ -1,5 +1,7 @@
 #include "FiniteAutomaton.h"
+#include "Fraction.h"
 #include "Grammar.h"
+#include "InfInt/InfInt.h"
 #include "Language.h"
 #include "Logger.h"
 #include <algorithm>
@@ -1129,35 +1131,11 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	return result;
 }
 
-vector<unsigned long long> get_path_number(vector<State> states, int max_n) {
-	int s = states.size(); // число состояний КА
-	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
-	for (int i = 0; i < s; i++)
-		for (const auto& elem : states[i].transitions)
-			for (int transition : elem.second)
-				adjacency_matrix[i][transition]++;
-	vector<unsigned long long> paths_number(
-		max_n); // число путей длины i в автомате
-
-	vector<vector<unsigned long long>> d(max_n + 1,
-										 vector<unsigned long long>(s));
-	d[0][0] = 1;
-	for (int k = 1; k < max_n + 1; k++) {
-		for (int v = 0; v < s; v++) {
-			for (int i = 0; i < s; i++) {
-				d[k][v] += adjacency_matrix[i][v] * d[k - 1][i];
-			}
-			if (states[v].is_terminal) paths_number[k - 1] += d[k][v];
-		}
-	}
-	return paths_number;
-}
-
-double calc_ambiguity(int i, int n, const vector<double>& f1,
-					  vector<vector<double>>& calculated,
-					  vector<vector<char>>& is_calculated) {
+Fraction calc_ambiguity(int i, int n, const vector<Fraction>& f1,
+						vector<vector<Fraction>>& calculated,
+						vector<vector<char>>& is_calculated) {
 	if (i == 0) return f1[n];
-	double d1, d2;
+	Fraction d1, d2;
 	if (!is_calculated[i][n + 1]) {
 		calculated[i][n + 1] =
 			calc_ambiguity(i - 1, n + 1, f1, calculated, is_calculated);
@@ -1182,108 +1160,104 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 	int s = fa.states.size();
 	int min_s = min_fa.states.size();
 	int N = fa.states.size() * fa.states.size() + fa.states.size() + i + 1;
-	vector<unsigned long long> paths_number(N);
+	vector<InfInt> paths_number(N);
 	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
+	vector<InfInt> min_paths_number(N);
+	vector<vector<int>> min_adjacency_matrix(min_s, vector<int>(min_s));
+	vector<vector<InfInt>> d(N + 1, vector<InfInt>(s));
+	vector<vector<InfInt>> min_d(N + 1, vector<InfInt>(min_s));
+	d[0][fa.initial_state] = 1;
+	min_d[0][min_fa.initial_state] = 1;
 	for (int i = 0; i < s; i++)
 		for (const auto& elem : fa.states[i].transitions)
 			for (int transition : elem.second)
 				adjacency_matrix[i][transition]++;
-	vector<vector<unsigned long long>> d(N + 1, vector<unsigned long long>(s));
-	d[0][0] = 1;
-	for (int k = 1; k < N + 1; k++) {
-		for (int v = 0; v < s; v++) {
-			for (int i = 0; i < s; i++) {
-				d[k][v] += adjacency_matrix[i][v] * d[k - 1][i];
-			}
-			if (fa.states[v].is_terminal) paths_number[k - 1] += d[k][v];
-		}
-	}
-	vector<unsigned long long> min_paths_number(N);
-	vector<vector<int>> min_adjacency_matrix(min_s, vector<int>(min_s));
 	for (int i = 0; i < min_s; i++)
 		for (const auto& elem : min_fa.states[i].transitions)
 			for (int transition : elem.second)
 				min_adjacency_matrix[i][transition]++;
-	vector<vector<unsigned long long>> min_d(N + 1,
-											 vector<unsigned long long>(min_s));
-	min_d[0][0] = 1;
+	vector<Fraction> f1(N);
+	optional<Fraction> prev_val;
+	bool return_flag = true;
 	for (int k = 1; k < N + 1; k++) {
+		for (int v = 0; v < s; v++) {
+			for (int i = 0; i < s; i++) {
+				d[k][v] += InfInt(adjacency_matrix[i][v]) * d[k - 1][i];
+			}
+			if (fa.states[v].is_terminal)
+				paths_number[k - 1] = paths_number[k - 1] + d[k][v];
+		}
 		for (int v = 0; v < min_s; v++) {
 			for (int i = 0; i < min_s; i++) {
-				min_d[k][v] += min_adjacency_matrix[i][v] * min_d[k - 1][i];
+				min_d[k][v] +=
+					InfInt(min_adjacency_matrix[i][v]) * min_d[k - 1][i];
 			}
 			if (min_fa.states[v].is_terminal)
-				min_paths_number[k - 1] += min_d[k][v];
+				min_paths_number[k - 1] = min_paths_number[k - 1] + min_d[k][v];
 		}
-	}
-
-	vector<double> f1(N);
-	for (int i = 0; i < N; i++)
-		if (min_paths_number[i] != 0)
-			f1[i] = double(paths_number[i]) / min_paths_number[i];
-
-	double prev_val = -1;
-	bool return_flag = true;
-	for (int i = 0; i < f1.size() - 1; i++) {
-		if (f1[i] == 0) continue;
-		if (prev_val == -1) {
-			prev_val = f1[i];
+		if (min_paths_number[k - 1] != 0)
+			f1[k - 1] = Fraction(paths_number[k - 1], min_paths_number[k - 1]);
+		if (f1[k - 1] == Fraction()) continue;
+		if (!prev_val) {
+			prev_val = f1[k - 1];
 			continue;
 		}
-		if (f1[i] != prev_val) {
+		if (!(f1[k - 1] == *prev_val)) {
 			return_flag = false;
-			break;
 		}
-		prev_val = f1[i];
+		prev_val = f1[k - 1];
 	}
+
 	if (return_flag) {
-		if (prev_val == 1)
+		if (*prev_val == Fraction(1, 1))
 			return FiniteAutomaton::unambigious;
 		else
 			return FiniteAutomaton::almost_unambigious;
 	}
 
-	vector<vector<double>> calculated(fa.states.size() + i + 1,
-									  vector<double>(N));
+	vector<vector<Fraction>> calculated(fa.states.size() + i + 1,
+										vector<Fraction>(N));
 	vector<vector<char>> is_calculated(fa.states.size() + i + 1,
 									   vector<char>(N, 0));
-	double val = calc_ambiguity(fa.states.size() + i,
-								fa.states.size() * fa.states.size(), f1,
-								calculated, is_calculated);
+	Fraction val = calc_ambiguity(fa.states.size() + i,
+								  fa.states.size() * fa.states.size(), f1,
+								  calculated, is_calculated);
 	prev_val = val;
-	while (val > 0) {
-		d.push_back(vector<unsigned long long>(s));
+	while (val > Fraction()) {
+		d.push_back(vector<InfInt>(s));
 		paths_number.push_back(0);
 		for (int v = 0; v < s; v++) {
 			for (int i = 0; i < s; i++) {
-				d[N + 1][v] += adjacency_matrix[i][v] * d[N][i];
+				d[N + 1][v] += InfInt(adjacency_matrix[i][v]) * d[N][i];
 			}
 			if (fa.states[v].is_terminal) paths_number[N] += d[N + 1][v];
 		}
-		min_d.push_back(vector<unsigned long long>(s));
+		min_d.push_back(vector<InfInt>(s));
 		min_paths_number.push_back(0);
 		for (int v = 0; v < min_s; v++) {
 			for (int i = 0; i < min_s; i++) {
-				min_d[N + 1][v] += min_adjacency_matrix[i][v] * min_d[N][i];
+				min_d[N + 1][v] +=
+					InfInt(min_adjacency_matrix[i][v]) * min_d[N][i];
 			}
 			if (min_fa.states[v].is_terminal)
 				min_paths_number[N] += min_d[N + 1][v];
 		}
-		f1.push_back(0);
+		f1.push_back(Fraction());
 		if (min_paths_number[N] != 0)
-			f1[N] = double(paths_number[N]) / min_paths_number[N];
+			f1[N] = Fraction(paths_number[N], min_paths_number[N]);
 		for (int j = 0; j < calculated.size(); j++) {
-			calculated[j].push_back(0);
+			calculated[j].push_back(Fraction());
 			is_calculated[j].push_back(0);
 		}
 		N++;
 		i++;
-		calculated.push_back(vector<double>(N));
+		calculated.push_back(vector<Fraction>(N));
 		is_calculated.push_back(vector<char>(N, 0));
 		val = calc_ambiguity(fa.states.size() + i,
 							 fa.states.size() * fa.states.size(), f1,
 							 calculated, is_calculated);
-		if (val >= prev_val) return FiniteAutomaton::exponentially_ambiguous;
+		if (val > *prev_val || val == *prev_val)
+			return FiniteAutomaton::exponentially_ambiguous;
 		prev_val = val;
 	}
 	return FiniteAutomaton::polynomially_ambigious;

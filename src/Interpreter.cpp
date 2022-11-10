@@ -128,7 +128,8 @@ GeneralObject Interpreter::apply_function(
 	const auto boolean = ObjectType::Boolean;
 	const auto value = ObjectType::Value;
 
-	auto get_automaton = [](const GeneralObject& obj) -> const FiniteAutomaton& {
+	auto get_automaton =
+		[](const GeneralObject& obj) -> const FiniteAutomaton& {
 		if (holds_alternative<ObjectNFA>(obj)) {
 			return get<ObjectNFA>(obj).value;
 		}
@@ -154,8 +155,8 @@ GeneralObject Interpreter::apply_function(
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_tompson());
 	}
 	if (function.name == "Bisimilar") {
-		return ObjectBoolean(
-			FiniteAutomaton::bisimilar(get_automaton(arguments[0]), get_automaton(arguments[1])));
+		return ObjectBoolean(FiniteAutomaton::bisimilar(
+			get_automaton(arguments[0]), get_automaton(arguments[1])));
 	}
 	//мое
 	/*if (function.name == "Minimal") {
@@ -176,8 +177,7 @@ GeneralObject Interpreter::apply_function(
 		vector<ObjectType> n = {nfa, nfa};
 		if (function.input == n) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
-				get_automaton(arguments[0]),
-				get_automaton(arguments[1])));
+				get_automaton(arguments[0]), get_automaton(arguments[1])));
 		} else {
 			return ObjectBoolean(
 				Regex::equivalent(get<ObjectRegex>(arguments[0]).value,
@@ -186,9 +186,8 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "Equal") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
-			return ObjectBoolean(
-				FiniteAutomaton::equal(get_automaton(arguments[0]),
-									   get_automaton(arguments[1])));
+			return ObjectBoolean(FiniteAutomaton::equal(
+				get_automaton(arguments[0]), get_automaton(arguments[1])));
 		} else {
 			return ObjectBoolean(
 				Regex::equal(get<ObjectRegex>(arguments[0]).value,
@@ -212,7 +211,8 @@ GeneralObject Interpreter::apply_function(
 	}
 	//Миша
 	/*if (function.name == "ClassLength") {
-		return ObjectInt(class_legth_typecheker(get<ObjectDFA>(arguments[0]).value));
+		return
+	ObjectInt(class_legth_typecheker(get<ObjectDFA>(arguments[0]).value));
 	}
 	//у нас нет
 	/*if (function.name == "KSubSet") {
@@ -255,10 +255,11 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectNFA(get_automaton(arguments[0]).reverse());
 	}
 	if (function.name == "Delinearize") {
-		if (function.output == regex){
-			res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
+		if (function.output == regex) {
+			res =
+				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
 		} else {
-			//res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
+			// res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
 		}
 	}
 	if (function.name == "Complement") {
@@ -515,16 +516,20 @@ void Interpreter::run_operation(const GeneralOperation& op) {
 optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	vector<Lexem> lexems) {
 
-	Declaration decl;
+	if (lexems.size() < 3) {
+		return nullopt;
+	}
 
+	Declaration decl;
 	// [идентификатор]
-	if (lexems[0].type != Lexem::id && lexems[0].type != Lexem::regex) {
+	if (lexems.size() < 1 ||
+		lexems[0].type != Lexem::id && lexems[0].type != Lexem::regex) {
 		return nullopt;
 	}
 	decl.id = lexems[0].value;
 
 	// =
-	if (lexems[1].type != Lexem::equalSign) {
+	if (lexems.size() < 2 || lexems[1].type != Lexem::equalSign) {
 		return nullopt;
 	}
 
@@ -586,6 +591,10 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 }
 
 optional<Interpreter::Test> Interpreter::scan_test(vector<Lexem> lexems) {
+	if (lexems.size() < 4) {
+		return nullopt;
+	}
+
 	if (lexems[0].type != Lexem::test) {
 		return nullopt;
 	}
@@ -621,6 +630,9 @@ optional<Interpreter::Test> Interpreter::scan_test(vector<Lexem> lexems) {
 
 optional<Interpreter::Predicate> Interpreter::scan_predicate(
 	vector<Lexem> lexems) {
+	if (lexems.size() < 2) {
+		return nullopt;
+	}
 
 	Predicate pred;
 
