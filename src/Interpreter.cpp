@@ -287,21 +287,24 @@ GeneralObject Interpreter::apply_function(
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
 
-		if (holds_alternative<ObjectRegex>(resval)) {
+		if (holds_alternative<ObjectRegex>(resval) &&
+			holds_alternative<ObjectRegex>(predres)) {
 			if (Regex::equal(get<ObjectRegex>(resval).value,
 							 get<ObjectRegex>(predres).value))
 				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
 					 << endl;
 		}
 
-		if (holds_alternative<ObjectDFA>(resval)) {
+		if (holds_alternative<ObjectDFA>(resval) &&
+			holds_alternative<ObjectDFA>(predres)) {
 			if (FiniteAutomaton::equal(get<ObjectDFA>(resval).value,
 									   get<ObjectDFA>(predres).value))
 				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
 					 << endl;
 		}
 
-		if (holds_alternative<ObjectNFA>(resval)) {
+		if (holds_alternative<ObjectNFA>(resval) &&
+			holds_alternative<ObjectNFA>(predres)) {
 			if (FiniteAutomaton::equal(get<ObjectNFA>(resval).value,
 									   get<ObjectNFA>(predres).value))
 				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
@@ -327,9 +330,11 @@ bool Interpreter::typecheck(string function_name,
 	if (first_type.size() != names_to_functions[function_name][0].input.size())
 		return false;
 	for (int i = 0; i < first_type.size(); i++) {
-		if (!((first_type[i] == names_to_functions[function_name][0].input[i]) ||
-			(first_type[i] == ObjectType::DFA &&
-			 names_to_functions[function_name][0].input[i] == ObjectType::NFA)))
+		if (!((first_type[i] ==
+			   names_to_functions[function_name][0].input[i]) ||
+			  (first_type[i] == ObjectType::DFA &&
+			   names_to_functions[function_name][0].input[i] ==
+				   ObjectType::NFA)))
 			return false;
 	}
 	return true;
