@@ -1217,6 +1217,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 
 	if (f1.size() < 3) return FiniteAutomaton::polynomially_ambigious;
 	int new_s = floor(double(-1 + sqrt(-11 + 4 * f1.size())) / 2);
+	i += f1.size() - (new_s * new_s + new_s + i + 1);
 
 	vector<vector<Fraction>> calculated(new_s + i + 1,
 										vector<Fraction>(f1.size()));
@@ -1227,36 +1228,32 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 	prev_val = val;
 	while (val > Fraction()) {
 		i++;
-		if (new_s * new_s + new_s + i + 1 >= f1.size()) {
-			int return_counter = 0;
-			do {
-				if (return_counter == s)
-					return FiniteAutomaton::polynomially_ambigious;
-				N++;
-				d.push_back(vector<InfInt>(s));
-				paths_number.push_back(0);
-				for (int v = 0; v < s; v++) {
-					for (int i = 0; i < s; i++) {
-						d[N][v] += InfInt(adjacency_matrix[i][v]) * d[N - 1][i];
-					}
-					if (fa.states[v].is_terminal)
-						paths_number[N - 1] += d[N][v];
+		int return_counter = 0;
+		do {
+			if (return_counter == s)
+				return FiniteAutomaton::polynomially_ambigious;
+			N++;
+			d.push_back(vector<InfInt>(s));
+			paths_number.push_back(0);
+			for (int v = 0; v < s; v++) {
+				for (int i = 0; i < s; i++) {
+					d[N][v] += InfInt(adjacency_matrix[i][v]) * d[N - 1][i];
 				}
-				min_d.push_back(vector<InfInt>(s));
-				min_paths_number.push_back(0);
-				for (int v = 0; v < min_s; v++) {
-					for (int i = 0; i < min_s; i++) {
-						min_d[N][v] += InfInt(min_adjacency_matrix[i][v]) *
-									   min_d[N - 1][i];
-					}
-					if (min_fa.states[v].is_terminal)
-						min_paths_number[N - 1] += min_d[N][v];
+				if (fa.states[v].is_terminal) paths_number[N - 1] += d[N][v];
+			}
+			min_d.push_back(vector<InfInt>(s));
+			min_paths_number.push_back(0);
+			for (int v = 0; v < min_s; v++) {
+				for (int i = 0; i < min_s; i++) {
+					min_d[N][v] +=
+						InfInt(min_adjacency_matrix[i][v]) * min_d[N - 1][i];
 				}
-				return_counter++;
-			} while (min_paths_number[N - 1] == 0);
-			f1.push_back(
-				Fraction(paths_number[N - 1], min_paths_number[N - 1]));
-		}
+				if (min_fa.states[v].is_terminal)
+					min_paths_number[N - 1] += min_d[N][v];
+			}
+			return_counter++;
+		} while (min_paths_number[N - 1] == 0);
+		f1.push_back(Fraction(paths_number[N - 1], min_paths_number[N - 1]));
 		for (int j = 0; j < calculated.size(); j++) {
 			calculated[j].push_back(Fraction());
 			is_calculated[j].push_back(0);
@@ -1275,6 +1272,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	Logger::init_step("Ambiguity");
 	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
+	Logger::log("Автомат:", *this);
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
 		Logger::log("Результат Ambiguity", "Exponentially ambiguous");
