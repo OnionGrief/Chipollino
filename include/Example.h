@@ -47,4 +47,6 @@ class Example {
 	static void test_merge_bisimilar();
 	static void test_regex_equal();
 	static void test_ambiguity();
+	static void test_arden();
+	static void test_pump_length();
 };
