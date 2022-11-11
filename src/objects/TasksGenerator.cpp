@@ -30,8 +30,7 @@ string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 void TasksGenerator::write_to_file() {
 	ofstream out;
 	out.open("./test.txt", ofstream::trunc);
-	if (out.is_open())
-		out << res_str;
+	if (out.is_open()) out << res_str;
 	out.close();
 }
 
@@ -103,7 +102,7 @@ string TasksGenerator::generate_predicate() {
 	return str;
 }
 
-// TODO: для дин и стат тайпчека 
+// TODO: для дин и стат тайпчека
 string TasksGenerator::generate_test() {
 	change_seed();
 	string str = "";
@@ -123,7 +122,7 @@ string TasksGenerator::generate_test() {
 
 	str += " ";
 	// TODO:
-	//str += "((ab)*a)*";
+	// str += "((ab)*a)*";
 	str += regex_generator.generate_regex();
 
 	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
@@ -244,7 +243,7 @@ string TasksGenerator::generate_declaration() {
 	if (prevOutput == "DFA" || prevOutput == "NFA")
 		ids["NFA-DFA"].push_back({id_num, prevOutput});
 
-	if (/*rand() % 2 && */funcNum > 0) str += " !!";
+	if (/*rand() % 2 && */ funcNum > 0) str += " !!";
 
 	return str;
 }
