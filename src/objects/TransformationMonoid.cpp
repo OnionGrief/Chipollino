@@ -128,6 +128,7 @@ vector<string> rewriting(vector<string> in,
 TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 
 	automat = in->remove_trap_states();
+	in->remove_unreachable_states();
 	cout << automat.to_txt();
 	//	cout << automat.to_txt();
 	int i = 0;
@@ -177,7 +178,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 				}
 				if (endsost != -1) {
 					g.second = endsost;
-					cout << "result " << g.first << " " << g.second << "\n";
+					// cout << "result " << g.first << " " << g.second << "\n";
 					if (cond) {
 						current.Transitions.push_back(g);
 					}

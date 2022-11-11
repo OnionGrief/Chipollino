@@ -223,64 +223,15 @@ void Example::parsing_regex(string str) {
 }
 
 void Example::transformation_monoid_example() {
-	// vector<State> states;
-	// for (int i = 0; i < 4; i++) {
-	// 	State s = {
-	// 		i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-	// 	states.push_back(s);
-	// }
-	// states[0].set_transition(1, "a");
-	// states[0].set_transition(0, "b");
-	// states[1].set_transition(1, "a");
-	// states[1].set_transition(2, "b");
-	// states[1].set_transition(1, "c");
-	// states[2].set_transition(2, "c");
-	// states[2].set_transition(1, "a");
-	// states[2].set_transition(2, "b");
-	// states[1].is_terminal = true;
-	// states[2].is_terminal = true;
-	// FiniteAutomaton fa1(0, states, {"a", "b", "c"});
 	string regl = "abaa";
 	Regex r;
 	if (!r.from_string(regl)) {
-		cout << "ERROR\n";
 		return;
 	}
-
-	vector<State> states;
-	for (int i = 0; i < 4; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states.push_back(s);
-	}
-	states[0].set_transition(1, "a");
-	states[0].set_transition(0, "b");
-	states[1].set_transition(1, "a");
-	states[1].set_transition(2, "b");
-	states[1].set_transition(1, "c");
-	states[2].set_transition(2, "c");
-	states[2].set_transition(1, "a");
-	states[2].set_transition(2, "b");
-	states[1].is_terminal = true;
-	states[2].is_terminal = true;
-	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
-	// cout << fa1.to_txt();
-	TransformationMonoid a(&fa1, 3);
+	FiniteAutomaton fa1;
+	fa1 = r.to_glushkov().determinize();
+	TransformationMonoid a(&fa1);
 	cout << a.get_Equalence_Classes_Txt() << endl; //вывод эквивалентных классов
-	// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
-	//  cout << a.is_minimality() << "\n";
-	//  cout << a.to_Txt_MyhillNerode();
-	//   cout << a.get_Equalence_Classes_Txt(); /*
-	// vector<Term> cur = a.get_Equalence_Classes();
-	// for (int i = 0; i < cur.size(); i++) {
-
-	// 	cout << a.is_Synchronized(cur[i]) << "\n";
-	// }
-	/*
-	vector<TermDouble> temp = a.get_Equalence_Classes_VWV(cur[1]);
-	for (int i = 0; i < temp.size(); i++) {
-		cout << temp[i].first.name << " " << temp[i].second.name << "\n";
-	}*/
 	return;
 }
 
