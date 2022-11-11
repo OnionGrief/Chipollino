@@ -287,7 +287,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 				minimized_dfa);
 	stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
-		ss << "{" << state.identifier << "} ";
+		ss << "\\{" << state.identifier << "\\} ";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
 	Logger::finish_step();
