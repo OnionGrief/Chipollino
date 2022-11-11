@@ -315,10 +315,11 @@ Regex::Regex(string str) : Regex() {
 	try {
 		bool res = from_string(str);
 		if (!res) {
-			throw exception("from_string ERROR");
+			throw runtime_error("from_string ERROR");
 		}
-	} catch (const exception& ex) {
-		cout << ex.what() << endl;
+	} catch (const runtime_error& re) {
+		cout << re.what() << endl;
+		exit(EXIT_FAILURE);
 	}
 }
 
@@ -1638,7 +1639,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 			}
 		}
 
-		if ((state.size() == 0) || (states[i].L() == 1)) {
+		if ((state.size() == 0) || (states[i].L())) {
 			automat_state.push_back({int(i), {}, state, true, transit});
 		} else {
 			automat_state.push_back({int(i), {}, state, false, transit});

@@ -183,7 +183,7 @@ vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
 	vector<vector<Lexem>> lexem_lines = {};
 	string str = "";
 	while (getline(input_file, str)) {
-		if (auto& lexems = parse_string(str); lexems.size()) {
+		if (auto lexems = parse_string(str); lexems.size()) {
 			lexem_lines.push_back(lexems);
 			parent.log("scanned line: " + str);
 		}
