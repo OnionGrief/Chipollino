@@ -301,19 +301,28 @@ GeneralObject Interpreter::apply_function(
 		}
 
 		FiniteAutomaton fa1, fa2;
-		if (holds_alternative<ObjectDFA>(resval))
+		bool is_fa1 = false, is_fa2 = false;
+		if (holds_alternative<ObjectDFA>(resval)) {
 			fa1 = get<ObjectDFA>(resval).value;
-		if (holds_alternative<ObjectDFA>(predres))
-			fa2 = get<ObjectDFA>(predres).value;
-		if (holds_alternative<ObjectNFA>(resval))
-			fa1 = get<ObjectNFA>(resval).value;
-		if (holds_alternative<ObjectNFA>(predres))
-			fa2 = get<ObjectNFA>(predres).value;
-
-		if (FiniteAutomaton::equal(fa1, fa2)) {
-			cerr << "Function " + function.name + " do nothing. Sadness("
-				 << endl;
+			is_fa1 = true;
 		}
+		if (holds_alternative<ObjectDFA>(predres)) {
+			fa2 = get<ObjectDFA>(predres).value;
+			is_fa2 = true;
+		}
+		if (holds_alternative<ObjectNFA>(resval)) {
+			fa1 = get<ObjectNFA>(resval).value;
+			is_fa1 = true;
+		}
+		if (holds_alternative<ObjectNFA>(predres)) {
+			fa2 = get<ObjectNFA>(predres).value;
+			is_fa2 = true;
+		}
+		if (is_fa1 && is_fa2)
+			if (FiniteAutomaton::equal(fa1, fa2)) {
+				cerr << "Function " + function.name + " do nothing. Sadness("
+					 << endl;
+			}
 
 		return res.value();
 	}
