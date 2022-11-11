@@ -127,7 +127,7 @@ void Example::regex_parsing() {
 	// regl = "a1456|b244444444444";
 	//  regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
 	Regex r;
-	if (!r.from_string(regl)) {
+	if (!r.from_string("|a*")) {
 		cout << "ERROR\n";
 		return;
 	}
@@ -152,12 +152,12 @@ void Example::regex_parsing() {
 	// FiniteAutomaton d;
 	cout << "to_antimirov  ------------------------------\n";
 	d = r.to_antimirov();
-	// cout << d.to_txt();
+	cout << d.to_txt();
 	//  cout << r.deannote().to_txt();
 
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
 
-	cout << a.nfa_to_regex().to_txt();
+	// cout << a.nfa_to_regex().to_txt();
 }
 
 void Example::parsing_nfa() {

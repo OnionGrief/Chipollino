@@ -329,6 +329,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 			}
 		}
 	}
+	new_nfa = new_nfa.remove_unreachable_states();
 	Logger::log("Автомат до удаления eps-переходов",
 				"Автомат после удаления eps-переходов", *this, new_nfa);
 	Logger::finish_step();
@@ -337,7 +338,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 											  const FiniteAutomaton& fa2) {
-	Logger::init_step("Interection");
+	Logger::init_step("Intersection");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -394,6 +395,7 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 		}
 		new_dfa.states[i].transitions = new_transitions;
 	}
+	new_dfa = new_dfa.remove_unreachable_states();
 	Logger::log("Первый автомат", "Второй автомат", "Результат пересечения",
 				fa1, fa2, new_dfa);
 	Logger::finish_step();
@@ -442,6 +444,7 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 					 .begin());
 		}
 	}
+	new_dfa = new_dfa.remove_unreachable_states();
 	Logger::log("Первый автомат", "Второй автомат", "Результат объединения",
 				fa1, fa2, new_dfa);
 	Logger::finish_step();
@@ -501,7 +504,7 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 		}
 		new_dfa.states[i].transitions = new_transitions;
 	}
-
+	new_dfa = new_dfa.remove_unreachable_states();
 	Logger::log("Первый автомат", "Второй автомат", "Результат разности", fa1,
 				fa2, new_dfa);
 	Logger::finish_step();
@@ -565,6 +568,7 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
 		enfa.states[i].transitions = new_transition_matrix[i];
 	}
+	enfa = enfa.remove_unreachable_states();
 	Logger::log("Автомат до обращения", "Автомат после обращения", *this, enfa);
 	Logger::finish_step();
 	return enfa;
@@ -585,7 +589,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 					new_dfa.states.push_back(
 						{size,
 						 {size},
-						 to_string(size),
+						 "",
 						 false,
 						 map<alphabet_symbol, set<int>>()});
 				} else {
@@ -610,7 +614,6 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 	Logger::init_step("RemoveTrapState");
-	vector<map<alphabet_symbol, set<int>>> new_transitions;
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
@@ -642,8 +645,10 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 										  new_dfa.states[j].transitions});
 				}
 			}
+			if (new_dfa.initial_state > i) new_dfa.initial_state -= 1;
 			new_dfa.states = new_states;
 			for (int j = 0; j < new_dfa.states.size(); j++) {
+				map<alphabet_symbol, set<int>> new_transitions;
 				for (auto& transition : new_dfa.states[j].transitions) {
 					set<int> new_transition;
 					for (int transition_to : transition.second) {
@@ -654,8 +659,10 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 							new_transition.insert(transition_to - 1);
 						}
 					}
-					transition.second = new_transition;
+					if (new_transition.size())
+						new_transitions[transition.first] = new_transition;
 				}
+				new_dfa.states[j].transitions = new_transitions;
 			}
 			i--;
 			count--;
@@ -664,6 +671,57 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 	Logger::log("Автомат до удаления ловушек", "Автомат после удаления ловушек",
 				*this, new_dfa);
 	Logger::finish_step();
+	return new_dfa;
+}
+
+FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
+	FiniteAutomaton new_dfa(initial_state, states, language);
+	int count = new_dfa.states.size();
+	for (int i = 0; i >= 0 && i < count; i++) {
+		bool is_unreachable_state = false;
+		set<int> reachable_states =
+			new_dfa.closure({new_dfa.initial_state}, false);
+		if (find(reachable_states.begin(), reachable_states.end(), i) ==
+			reachable_states.end()) {
+			is_unreachable_state = true;
+		}
+		if (is_unreachable_state) {
+			vector<State> new_states;
+			for (int j = 0; j < new_dfa.states.size(); j++) {
+				if (j < i) {
+					new_states.push_back(new_dfa.states[j]);
+				}
+				if (j > i && i != count - 1) {
+					new_states.push_back({new_dfa.states[j].index - 1,
+										  new_dfa.states[j].label,
+										  new_dfa.states[j].identifier,
+										  new_dfa.states[j].is_terminal,
+										  new_dfa.states[j].transitions});
+				}
+			}
+			if (new_dfa.initial_state > i) new_dfa.initial_state -= 1;
+			new_dfa.states = new_states;
+			for (int j = 0; j < new_dfa.states.size(); j++) {
+				map<alphabet_symbol, set<int>> new_transitions;
+				for (auto& transition : new_dfa.states[j].transitions) {
+					set<int> new_transition;
+					for (int transition_to : transition.second) {
+						if (transition_to < i) {
+							new_transition.insert(transition_to);
+						}
+						if (transition_to > i) {
+							new_transition.insert(transition_to - 1);
+						}
+					}
+					if (new_transition.size())
+						new_transitions[transition.first] = new_transition;
+				}
+				new_dfa.states[j].transitions = new_transitions;
+			}
+			i--;
+			count--;
+		}
+	}
 	return new_dfa;
 }
 
