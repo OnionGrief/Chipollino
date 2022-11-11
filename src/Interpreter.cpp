@@ -258,12 +258,7 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.linearize());
 	}
 	if (function.name == "Reverse") {
-		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
-		if (temp_automaton.is_deterministic()) {
-			res = ObjectDFA(temp_automaton.reverse());
-		} else {
-			res = ObjectNFA(temp_automaton.reverse());
-		}
+		res = ObjectNFA(get_automaton(arguments[0]).reverse());
 	}
 	if (function.name == "Delinearize") {
 		if (function.output == regex) {
