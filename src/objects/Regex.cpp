@@ -311,6 +311,18 @@ Regex::Regex() {
 	term_r = nullptr;
 }
 
+Regex::Regex(string str) : Regex() {
+	try {
+		bool res = from_string(str);
+		if (!res) {
+			throw runtime_error("from_string ERROR");
+		}
+	} catch (const runtime_error& re) {
+		cout << re.what() << endl;
+		exit(EXIT_FAILURE);
+	}
+}
+
 Regex Regex::normalize_regex(const string& file) const {
 	Regex regex = *this;
 	regex.normalize_this_regex(file);
@@ -318,6 +330,10 @@ Regex Regex::normalize_regex(const string& file) const {
 }
 
 bool Regex::from_string(string str) {
+	if (!str.size()) {
+		return false;
+	}
+
 	vector<Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
 
@@ -1623,7 +1639,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 			}
 		}
 
-		if ((state.size() == 0) || (states[i].L() == 1)) {
+		if ((state.size() == 0) || (states[i].L())) {
 			automat_state.push_back({int(i), {}, state, true, transit});
 		} else {
 			automat_state.push_back({int(i), {}, state, false, transit});

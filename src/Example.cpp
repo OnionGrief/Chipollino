@@ -127,7 +127,7 @@ void Example::regex_parsing() {
 	// regl = "a1456|b244444444444";
 	//  regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
 	Regex r;
-	if (!r.from_string(regl)) {
+	if (!r.from_string("|a*")) {
 		cout << "ERROR\n";
 		return;
 	}
@@ -152,12 +152,12 @@ void Example::regex_parsing() {
 	// FiniteAutomaton d;
 	cout << "to_antimirov  ------------------------------\n";
 	d = r.to_antimirov();
-	// cout << d.to_txt();
+	cout << d.to_txt();
 	//  cout << r.deannote().to_txt();
 
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
 
-	cout << a.nfa_to_regex().to_txt();
+	// cout << a.nfa_to_regex().to_txt();
 }
 
 void Example::parsing_nfa() {
@@ -222,163 +222,6 @@ void Example::parsing_regex(string str) {
 	cout << r.to_txt() << endl;
 }
 
-void Example::fa_bisimilar_check() {
-	vector<State> states1;
-	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
-	}
-	states1[0].set_transition(1, "a");
-	states1[0].set_transition(1, "eps");
-	states1[0].set_transition(2, "b");
-	states1[1].set_transition(2, "a");
-	states1[1].set_transition(1, "b");
-	states1[2].set_transition(1, "a");
-	states1[2].set_transition(1, "eps");
-	states1[2].set_transition(0, "b");
-	states1[0].is_terminal = true;
-	states1[2].is_terminal = true;
-	FiniteAutomaton fa1(1, states1, {"a", "b"});
-
-	vector<State> states2;
-	for (int i = 0; i < 2; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states2.push_back(s);
-	}
-	states2[0].set_transition(1, "a");
-	states2[0].set_transition(1, "eps");
-	states2[0].set_transition(0, "b");
-	states2[1].set_transition(0, "a");
-	states2[1].set_transition(1, "b");
-	states2[0].is_terminal = true;
-	FiniteAutomaton fa2(1, states2, {"a", "b"});
-
-	cout << FiniteAutomaton::bisimilar(fa1, fa2) << endl;
-	//правильный ответ true
-}
-
-void Example::fa_equal_check() {
-	vector<State> states1;
-	for (int i = 0; i < 6; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
-	}
-	states1[0].set_transition(1, "b");
-	states1[0].set_transition(2, "b");
-	states1[0].set_transition(5, "c");
-	states1[1].set_transition(3, "a");
-	states1[1].set_transition(4, "c");
-	states1[2].set_transition(4, "a");
-	states1[5].set_transition(4, "a");
-	states1[3].is_terminal = true;
-	states1[4].is_terminal = true;
-	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
-
-	vector<State> states2;
-	for (int i = 0; i < 6; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states2.push_back(s);
-	}
-	states2[0].set_transition(1, "b");
-	states2[0].set_transition(2, "b");
-	states2[0].set_transition(5, "c");
-	states2[1].set_transition(3, "a");
-	states2[1].set_transition(3, "c");
-	states2[2].set_transition(4, "a");
-	states2[5].set_transition(4, "a");
-	states2[3].is_terminal = true;
-	states2[4].is_terminal = true;
-	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
-
-	vector<State> states3;
-	for (int i = 0; i < 6; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states3.push_back(s);
-	}
-	states3[5].set_transition(4, "b");
-	states3[5].set_transition(3, "b");
-	states3[5].set_transition(0, "c");
-	states3[4].set_transition(2, "a");
-	states3[4].set_transition(1, "c");
-	states3[3].set_transition(1, "a");
-	states3[0].set_transition(1, "a");
-	states3[2].is_terminal = true;
-	states3[1].is_terminal = true;
-	FiniteAutomaton fa3(5, states3, {"a", "b", "c"});
-
-	cout << FiniteAutomaton::equal(fa1, fa1) << endl
-		 << FiniteAutomaton::equal(fa1, fa2) << endl
-		 << FiniteAutomaton::equal(fa1, fa3) << endl;
-	//правильный ответ 1 0 1
-}
-
-void Example::fa_merge_bisimilar() {
-	vector<State> states1;
-	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
-	}
-	states1[0].set_transition(1, "a");
-	states1[0].set_transition(1, "eps");
-	states1[0].set_transition(2, "b");
-	states1[1].set_transition(2, "a");
-	states1[1].set_transition(1, "b");
-	states1[2].set_transition(1, "a");
-	states1[2].set_transition(1, "eps");
-	states1[2].set_transition(0, "b");
-	states1[0].is_terminal = true;
-	states1[2].is_terminal = true;
-	FiniteAutomaton fa1(1, states1, {"a", "b"});
-
-	cout << fa1.to_txt();
-
-	FiniteAutomaton fa2 = fa1.merge_bisimilar();
-
-	cout << fa2.to_txt();
-}
-
-void Example::fa_equivalent_check() {
-	vector<State> states1;
-	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
-	}
-	states1[0].set_transition(0, "c");
-	states1[0].set_transition(1, "d");
-	states1[1].set_transition(2, "c");
-	states1[1].set_transition(0, "d");
-	states1[2].set_transition(1, "c");
-	states1[2].set_transition(2, "d");
-	states1[0].is_terminal = true;
-	FiniteAutomaton fa1(0, states1, {"c", "d"});
-
-	vector<State> states2;
-	for (int i = 0; i < 4; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states2.push_back(s);
-	}
-	states2[0].set_transition(0, "c");
-	states2[0].set_transition(1, "d");
-	states2[1].set_transition(2, "c");
-	states2[1].set_transition(0, "d");
-	states2[2].set_transition(3, "c");
-	states2[2].set_transition(2, "d");
-	states2[3].set_transition(2, "c");
-	states2[3].set_transition(0, "d");
-	states2[0].is_terminal = true;
-	FiniteAutomaton fa2(0, states2, {"c", "d"});
-
-	cout << FiniteAutomaton::equivalent(fa1, fa2);
-}
-
 void Example::transformation_monoid_example() {
 	// vector<State> states;
 	// for (int i = 0; i < 4; i++) {
@@ -404,15 +247,26 @@ void Example::transformation_monoid_example() {
 		return;
 	}
 
-	FiniteAutomaton fa1;
-
-	// cout << "to_tompson ------------------------------\n";
-	fa1 = r.to_glushkov().determinize();
-	cout << fa1.to_txt();
-	// c = r.to_ilieyu(); // to_tompson(-1);
-	//  cout << fa1.to_txt();
-	TransformationMonoid a(&fa1);
-	// cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
+	vector<State> states;
+	for (int i = 0; i < 4; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states.push_back(s);
+	}
+	states[0].set_transition(1, "a");
+	states[0].set_transition(0, "b");
+	states[1].set_transition(1, "a");
+	states[1].set_transition(2, "b");
+	states[1].set_transition(1, "c");
+	states[2].set_transition(2, "c");
+	states[2].set_transition(1, "a");
+	states[2].set_transition(2, "b");
+	states[1].is_terminal = true;
+	states[2].is_terminal = true;
+	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
+	// cout << fa1.to_txt();
+	TransformationMonoid a(&fa1, 3);
+	cout << a.get_Equalence_Classes_Txt() << endl; //вывод эквивалентных классов
 	// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
 	//  cout << a.is_minimality() << "\n";
 	//  cout << a.to_Txt_MyhillNerode();
@@ -526,13 +380,13 @@ void Example::step() {
 	FiniteAutomaton fa3 = fa2.remove_eps();
 	// string f3 = fa3.to_txt();
 	string s = "merge\\_bisimilar";
-	Logger::activate();
-	Logger::init();
+	/*Logger::activate();
+	Logger::init();*/
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa1, fa2);
 	Logger::finish_step();
 	s = "skip";
-	Logger::activate();
+	// Logger::activate();
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa1, fa1);
 	Logger::finish_step();
@@ -540,8 +394,8 @@ void Example::step() {
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa2, fa3);
 	Logger::finish_step();
-	Logger::finish();
-	Logger::deactivate();
+	/*Logger::finish();
+	Logger::deactivate();*/
 }
 
 void Example::tester() {
@@ -597,14 +451,14 @@ void Example::step_interection() {
 	// string f2 = dfa2.to_txt();
 	FiniteAutomaton dfa3 = FiniteAutomaton::intersection(dfa1, dfa2);
 	string s = "interection";
-	Logger::activate();
-	Logger::init();
+	/*Logger::activate();
+	Logger::init();*/
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", "Пересечение автоматов", dfa1, dfa2,
 				dfa3);
 	Logger::finish_step();
-	Logger::finish();
-	Logger::deactivate();
+	/*Logger::finish();
+	Logger::deactivate();*/
 }
 
 void Example::arden_test() {
@@ -686,13 +540,7 @@ void Example::table() {
 	// 	});
 	// }
 	// string s = "test";
-	Logger::activate();
-	Logger::init();
-	// Logger::init_step(s);
 	tester();
-	// Logger::finish_step();
-	Logger::finish();
-	Logger::deactivate();
 }
 
 void Example::fa_semdet_check() {
@@ -718,4 +566,256 @@ void Example::fa_semdet_check() {
 	auto sdet = NDM.semdet();
 
 	cout << "Semdet?: " << sdet << "\n";
+}
+
+void Example::all_examples() {
+	determinize();
+	remove_eps();
+	minimize();
+	intersection();
+	regex_parsing();
+	regex_generating();
+	random_regex_parsing();
+	tasks_generating();
+	parsing_regex("b(ab)*b");
+	transformation_monoid_example();
+	// normalize_regex();
+	// step();
+	parsing_nfa();
+	// fa_subset_check();
+	// arden_test();
+	// to_image();
+	tester();
+	// step_interection();
+	// table();
+	fa_semdet_check();
+	cout << "all the examlples are successful" << endl;
+}
+// TEST
+
+void Example::test_all() {
+	test_fa_equal();
+	test_fa_equiv();
+	test_bisimilar();
+	test_merge_bisimilar();
+	test_regex_subset();
+	test_regex_equal();
+	test_ambiguity();
+	// test_arden();
+	test_pump_length();
+	cout << "all tests passed" << endl;
+}
+
+void Example::test_fa_equal() {
+	vector<State> states1;
+	for (int i = 0; i < 6; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	states1[0].set_transition(1, "b");
+	states1[0].set_transition(2, "b");
+	states1[0].set_transition(5, "c");
+	states1[1].set_transition(3, "a");
+	states1[1].set_transition(4, "c");
+	states1[2].set_transition(4, "a");
+	states1[5].set_transition(4, "a");
+	states1[3].is_terminal = true;
+	states1[4].is_terminal = true;
+	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
+
+	vector<State> states2;
+	for (int i = 0; i < 6; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states2.push_back(s);
+	}
+	states2[0].set_transition(1, "b");
+	states2[0].set_transition(2, "b");
+	states2[0].set_transition(5, "c");
+	states2[1].set_transition(3, "a");
+	states2[1].set_transition(3, "c");
+	states2[2].set_transition(4, "a");
+	states2[5].set_transition(4, "a");
+	states2[3].is_terminal = true;
+	states2[4].is_terminal = true;
+	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
+
+	vector<State> states3;
+	for (int i = 0; i < 6; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states3.push_back(s);
+	}
+	states3[5].set_transition(4, "b");
+	states3[5].set_transition(3, "b");
+	states3[5].set_transition(0, "c");
+	states3[4].set_transition(2, "a");
+	states3[4].set_transition(1, "c");
+	states3[3].set_transition(1, "a");
+	states3[0].set_transition(1, "a");
+	states3[2].is_terminal = true;
+	states3[1].is_terminal = true;
+	FiniteAutomaton fa3(5, states3, {"a", "b", "c"});
+
+	assert(FiniteAutomaton::equal(fa1, fa1));
+	assert(!FiniteAutomaton::equal(fa1, fa2));
+	assert(FiniteAutomaton::equal(fa1, fa3));
+}
+
+void Example::test_fa_equiv() {
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	states1[0].set_transition(0, "c");
+	states1[0].set_transition(1, "d");
+	states1[1].set_transition(2, "c");
+	states1[1].set_transition(0, "d");
+	states1[2].set_transition(1, "c");
+	states1[2].set_transition(2, "d");
+	states1[0].is_terminal = true;
+	FiniteAutomaton fa1(0, states1, {"c", "d"});
+
+	vector<State> states2;
+	for (int i = 0; i < 4; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states2.push_back(s);
+	}
+	states2[0].set_transition(0, "c");
+	states2[0].set_transition(1, "d");
+	states2[1].set_transition(2, "c");
+	states2[1].set_transition(0, "d");
+	states2[2].set_transition(3, "c");
+	states2[2].set_transition(2, "d");
+	states2[3].set_transition(2, "c");
+	states2[3].set_transition(0, "d");
+	states2[0].is_terminal = true;
+	FiniteAutomaton fa2(0, states2, {"c", "d"});
+
+	assert(FiniteAutomaton::equivalent(fa1, fa2));
+}
+
+void Example::test_bisimilar() {
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	states1[0].set_transition(1, "a");
+	states1[0].set_transition(1, "eps");
+	states1[0].set_transition(2, "b");
+	states1[1].set_transition(2, "a");
+	states1[1].set_transition(1, "b");
+	states1[2].set_transition(1, "a");
+	states1[2].set_transition(1, "eps");
+	states1[2].set_transition(0, "b");
+	states1[0].is_terminal = true;
+	states1[2].is_terminal = true;
+	FiniteAutomaton fa1(1, states1, {"a", "b"});
+
+	vector<State> states2;
+	for (int i = 0; i < 2; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states2.push_back(s);
+	}
+	states2[0].set_transition(1, "a");
+	states2[0].set_transition(1, "eps");
+	states2[0].set_transition(0, "b");
+	states2[1].set_transition(0, "a");
+	states2[1].set_transition(1, "b");
+	states2[0].is_terminal = true;
+	FiniteAutomaton fa2(1, states2, {"a", "b"});
+
+	assert(FiniteAutomaton::bisimilar(fa1, fa2));
+}
+
+void Example::test_merge_bisimilar() {
+	FiniteAutomaton fa = Regex("(a|b)*b").to_glushkov();
+	FiniteAutomaton fa1 = fa.merge_bisimilar();
+
+	vector<State> states2;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states2.push_back(s);
+	}
+	states2[0].set_transition(1, "a");
+	states2[0].set_transition(1, "eps");
+	states2[0].set_transition(2, "b");
+	states2[1].set_transition(2, "a");
+	states2[1].set_transition(1, "b");
+	states2[2].set_transition(1, "a");
+	states2[2].set_transition(1, "eps");
+	states2[2].set_transition(0, "b");
+	states2[0].is_terminal = true;
+	states2[2].is_terminal = true;
+	FiniteAutomaton fa2(1, states2, {"a", "b"});
+
+	vector<State> states3;
+	for (int i = 0; i < 2; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states3.push_back(s);
+	}
+	states3[0].set_transition(0, "b");
+	states3[0].set_transition(1, "a");
+	states3[1].set_transition(0, "eps");
+	states3[1].set_transition(0, "a");
+	states3[1].set_transition(1, "b");
+	states3[1].is_terminal = true;
+	FiniteAutomaton fa3(0, states3, {"a", "b"});
+
+	assert(FiniteAutomaton::equal(Regex("(a|b)*b").to_ilieyu(), fa1));
+	assert(FiniteAutomaton::equal(fa2.merge_bisimilar(), fa3));
+}
+
+void Example::test_regex_subset() {
+	Regex r1("a*baa");
+	Regex r2("abaa");
+
+	assert(r1.subset(r2));
+	assert(!r2.subset(r1));
+}
+
+void Example::test_regex_equal() {
+	Regex r1("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*");
+	Regex r2("aaa*(bbb*aaa*)*|a(bbb*aaa*)*bb*");
+	Regex r3("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)");
+
+	assert(Regex::equal(r1, r2));
+	assert(!Regex::equal(r1, r3));
+}
+
+void Example::test_ambiguity() {
+	FiniteAutomaton fa1 = Regex("(a*)*").to_tompson();
+	FiniteAutomaton fa2 = Regex("b|a|aa").to_tompson();
+	FiniteAutomaton fa3 = Regex("abc").to_tompson();
+	FiniteAutomaton fa4 = Regex("b|a").to_tompson();
+
+	assert(fa1.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
+	assert(fa2.ambiguity() == FiniteAutomaton::polynomially_ambigious);
+	assert(fa3.ambiguity() == FiniteAutomaton::unambigious);
+	assert(fa4.ambiguity() == FiniteAutomaton::almost_unambigious);
+}
+
+void Example::test_arden() {
+	Regex r1("a");
+	Regex r2("a*");
+	Regex r3("(ab)*a");
+	Regex r4("a(a)*ab(bb)*baa");
+
+	assert(Regex::equivalent(r1, r1.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r2, r2.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r3, r3.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r4, r4.to_tompson().nfa_to_regex()));
+}
+
+void Example::test_pump_length() {
+	assert(Regex("abaa").pump_length() == 5);
 }

@@ -218,7 +218,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 		}
 	}
 	Logger::finish_step();
-	Logger::init_step("Rewriting_Rules");
+	Logger::init_step("Rewriting Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
 			Logger::log("rewriting " + to_str(item.first),
@@ -269,7 +269,7 @@ string TransformationMonoid::get_Equalence_Classes_Txt() {
 string TransformationMonoid::get_Rewriting_Rules_Txt() {
 	stringstream ss;
 
-	Logger::init_step("Rewriting_Rules");
+	Logger::init_step("Rewriting Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
 			Logger::log("rewriting " + to_str(item.first),
@@ -314,7 +314,7 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_VW(Term w) {
 		}
 	}
 
-	Logger::init_step("Rewriting_Rules_VW");
+	Logger::init_step("Rewriting Rules VW");
 	for (int i = 0; i < out.size(); i++) {
 		Logger::log("class " + to_str(out[i].name), "");
 	}
@@ -347,7 +347,7 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_WV(Term w) {
 			}
 		}
 	}
-	Logger::init_step("Rewriting_Rules_WV");
+	Logger::init_step("Rewriting Rules WV");
 	for (int i = 0; i < out.size(); i++) {
 		Logger::log("class " + to_str(out[i].name), "");
 	}
@@ -399,7 +399,7 @@ vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
 			}
 		}
 	}
-	Logger::init_step("Rewriting_Rules_VWV");
+	Logger::init_step("Rewriting Rules VWV");
 	for (int i = 0; i < out.size(); i++) {
 		Logger::log("class " + to_str(out[i].first.name),
 					to_str(out[i].second.name));

@@ -16,7 +16,7 @@ void Interpreter::Lexer::next_symbol() {
 }
 
 void Interpreter::Lexer::skip_spaces() {
-	while (current_symbol() == ' ') {
+	while (current_symbol() == ' ' || current_symbol() == '\t') {
 		next_symbol();
 	}
 }
@@ -37,7 +37,8 @@ bool Interpreter::Lexer::scan_word(string word) {
 string Interpreter::Lexer::scan_until_space() {
 	string acc = "";
 	skip_spaces();
-	while (current_symbol() != ' ' && current_symbol() != '\n' && !eof()) {
+	while (!eof() && current_symbol() != ' ' && current_symbol() != '\n' &&
+		   current_symbol() != '\t') {
 
 		acc += current_symbol();
 		next_symbol();
@@ -72,8 +73,11 @@ Interpreter::Lexem Interpreter::Lexer::scan_id() {
 	// TODO: сделать проверки на корректность имени, чтобы не
 	// начиналось с цифры, не было коллизий с именами функций
 	string id_name = scan_until_space();
-	ids.insert(id_name);
-	return Lexem(Lexem::id, id_name);
+	if (id_name.size()) {
+		ids.insert(id_name);
+		return Lexem(Lexem::id, id_name);
+	}
+	return Lexem(Lexem::error);
 }
 
 Interpreter::Lexem Interpreter::Lexer::scan_dot() {
@@ -160,7 +164,8 @@ Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
 	if (Lexem lex = scan_id(); lex.type) {
 		return lex;
 	}
-	parent.log("Lexer: failed to scan \"" + input.str.substr(input.pos, input.str.size()) + "\"");
+	parent.log("Lexer: failed to scan \"" +
+			   input.str.substr(input.pos, input.str.size()) + "\"");
 	return Lexem(Lexem::error);
 }
 
@@ -169,7 +174,7 @@ Interpreter::Lexem::Lexem(Type type, string value) : type(type), value(value) {}
 Interpreter::Lexem::Lexem(int num) : num(num), type(number) {}
 
 vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
-	parent.log("Lexer: loading file" + path);
+	parent.log("Lexer: loading file " + path);
 	ifstream input_file(path);
 	if (!input_file) {
 		parent.throw_error("Error: failed to open " + to_string(path));
@@ -178,7 +183,10 @@ vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
 	vector<vector<Lexem>> lexem_lines = {};
 	string str = "";
 	while (getline(input_file, str)) {
-		lexem_lines.push_back(parse_string(str));
+		if (auto lexems = parse_string(str); lexems.size()) {
+			lexem_lines.push_back(lexems);
+			parent.log("scanned line: " + str);
+		}
 	}
 	parent.log("Lexer: file loaded");
 	return lexem_lines;
@@ -188,6 +196,7 @@ vector<Interpreter::Lexem> Interpreter::Lexer::parse_string(string str) {
 	input.str = str;
 	input.pos = 0;
 	vector<Lexem> lexems;
+	skip_spaces();
 	while (!eof()) {
 		auto lexem = scan_lexem();
 		lexems.push_back(lexem);
