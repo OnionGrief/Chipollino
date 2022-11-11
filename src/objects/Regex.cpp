@@ -1469,7 +1469,8 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 int Regex::pump_length() const {
 	Logger::init_step("PumpLength");
 	if (language->get_pump_length()) {
-		Logger::log(to_string(language->get_pump_length().value()));
+		Logger::log("Длина накачки",
+					to_string(language->get_pump_length().value()));
 		Logger::finish_step();
 		return language->get_pump_length().value();
 	}
@@ -1478,7 +1479,7 @@ int Regex::pump_length() const {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
 		if (prefs.empty()) {
-			Logger::log("-1");
+			Logger::log("Накачки нет");
 			Logger::finish_step();
 			return -1;
 		}
@@ -1516,7 +1517,7 @@ int Regex::pump_length() const {
 						cout << pumped_prefix << " " << pumping.term_r->to_txt()
 							 << "\n";
 						cout << to_txt() << "\n";*/
-						Logger::log(to_string(i));
+						Logger::log("Длина накачки", to_string(i));
 						Logger::finish_step();
 						return i;
 					}
@@ -1524,7 +1525,7 @@ int Regex::pump_length() const {
 			}
 		}
 	}
-	Logger::log("-1");
+	Logger::log("Накачки нет");
 	Logger::finish_step();
 	return -1;
 }
