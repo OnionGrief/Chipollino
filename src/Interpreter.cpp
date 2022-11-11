@@ -247,53 +247,38 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectDFA(get_automaton(arguments[0]).annote());
 	}
 	if (function.name == "RemEps") {
-		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
-		if (temp_automaton.is_deterministic()){
-			res = ObjectDFA(temp_automaton.remove_eps());
-		} else {
-			res = ObjectNFA(temp_automaton.remove_eps());
-		}
+		res = ObjectNFA(get_automaton(arguments[0]).remove_eps());
 	}
 	if (function.name == "Linearize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.linearize());
 	}
 	if (function.name == "Reverse") {
-		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
-		if (temp_automaton.is_deterministic()) {
-			res = ObjectDFA(temp_automaton.reverse());
-		} else {
-			res = ObjectNFA(temp_automaton.reverse());
-		}
+		res = ObjectNFA(get_automaton(arguments[0]).reverse());
 	}
 	if (function.name == "Delinearize") {
 		if (function.output == regex) {
-			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
-		}/* else {
-			// res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
-		}*/
+			res =
+				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
+		} /* else {
+			 // res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
+		 }*/
 	}
 	if (function.name == "Complement") {
-		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
+		FiniteAutomaton fa = get_automaton(arguments[0]);
+		if (fa.is_deterministic())
+			res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
+		else
+			cout << "not dfa";
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == nfa) {
-			FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
-			if (temp_automaton.is_deterministic()) {
-				res = ObjectDFA(temp_automaton.deannote());
-			} else {
-				res = ObjectNFA(temp_automaton.deannote());
-			}
+			res = ObjectNFA(get_automaton(arguments[0]).deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
 		}
 	}
 	if (function.name == "MergeBisim") {
-		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
-		if (temp_automaton.is_deterministic()) {
-			res = ObjectDFA(temp_automaton.merge_bisimilar());
-		} else {
-			res = ObjectNFA(temp_automaton.merge_bisimilar());
-		}
+		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar());
 	}
 	if (function.name == "Normalize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0])
@@ -315,20 +300,19 @@ GeneralObject Interpreter::apply_function(
 					 << endl;
 		}
 
-		if (holds_alternative<ObjectDFA>(resval) &&
-			holds_alternative<ObjectDFA>(predres)) {
-			if (FiniteAutomaton::equal(get<ObjectDFA>(resval).value,
-									   get<ObjectDFA>(predres).value))
-				cerr << "Function " + function.name + " do nothing. Sadness("
-					 << endl;
-		}
+		FiniteAutomaton fa1, fa2;
+		if (holds_alternative<ObjectDFA>(resval))
+			fa1 = get<ObjectDFA>(resval).value;
+		if (holds_alternative<ObjectDFA>(predres))
+			fa2 = get<ObjectDFA>(predres).value;
+		if (holds_alternative<ObjectNFA>(resval))
+			fa1 = get<ObjectNFA>(resval).value;
+		if (holds_alternative<ObjectNFA>(predres))
+			fa2 = get<ObjectNFA>(predres).value;
 
-		if (holds_alternative<ObjectNFA>(resval) &&
-			holds_alternative<ObjectNFA>(predres)) {
-			if (FiniteAutomaton::equal(get<ObjectNFA>(resval).value,
-									   get<ObjectNFA>(predres).value))
-				cerr << "Function " + function.name + " do nothing. Sadness("
-					 << endl;
+		if (FiniteAutomaton::equal(fa1, fa2)) {
+			cerr << "Function " + function.name + " do nothing. Sadness("
+				 << endl;
 		}
 
 		return res.value();
