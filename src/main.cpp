@@ -1,12 +1,16 @@
 #include "Example.h"
-#include <iostream>
-#include "Regex.h"
 #include "Interpreter.h"
+#include "Regex.h"
+#include <iostream>
 using namespace std;
 
 int main(int argc, char* argv[]) {
 	// Приветсвие
 	cout << "Chipollino :-)\n";
+
+	// Тестирование
+	// Example::test_all();
+	// Example::all_examples();
 
 	// Инициализируем логгер
 	Logger::init();
