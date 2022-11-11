@@ -148,12 +148,12 @@ void Example::regex_parsing() {
 	// FiniteAutomaton d;
 	cout << "to_antimirov  ------------------------------\n";
 	d = r.to_antimirov();
-	// cout << d.to_txt();
+	cout << d.to_txt();
 	//  cout << r.deannote().to_txt();
 
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
 
-	cout << a.nfa_to_regex().to_txt();
+	// cout << a.nfa_to_regex().to_txt();
 }
 
 void Example::parsing_nfa() {
