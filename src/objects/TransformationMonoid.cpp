@@ -128,10 +128,11 @@ vector<string> rewriting(vector<string> in,
 TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 
 	automat = in->remove_trap_states();
+	cout << automat.to_txt();
 	//	cout << automat.to_txt();
-	int i=0;
+	int i = 0;
 	bool cond = true;
-	//for (int i = 1; i <= transferlen; i++)
+	// for (int i = 1; i <= transferlen; i++)
 	while (cond) {
 		i++;
 		vector<vector<string>> various =
@@ -143,29 +144,43 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 			Term current;
 			current.name = various[j];
 			current.name = rewriting(various[j], rules);
-			if (current.name.size() != i){
-				cond1=false;
+			if (current.name.size() != i) {
+				cond1 = false;
 			}
 
 			for (int t = 0; t < automat.states.size(); t++) {
-				int endsost = t;
+				int endsost = -1;
 				Transition g;
-				g.first = endsost;
+				g.first = t;
+
 				bool cond = true;
+
 				for (int k = 0; k < current.name.size();
 					 k++) //Для	каждого	символа	перехода
 				{
-					State a = automat.states[endsost];
+					State a;
+					if (endsost == -1) {
+						a = automat.states[g.first];
+					} else {
+						a = automat.states[endsost];
+					}
 					if (a.transitions.count(current.name[k])) {
 						set<int> temp = a.transitions.at(current.name[k]);
-						endsost = *temp.begin();
+						if (temp.size()) {
+							endsost = *temp.begin();
+						} else {
+							cond = false;
+						}
 					} else {
 						cond = false;
 					}
 				}
-				g.second = endsost;
-				if (cond) {
-					current.Transitions.push_back(g);
+				if (endsost != -1) {
+					g.second = endsost;
+					cout << "result " << g.first << " " << g.second << "\n";
+					if (cond) {
+						current.Transitions.push_back(g);
+					}
 				}
 			}
 
@@ -173,10 +188,11 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 			if (eqv.size() == 0) //Если	не	встретился	в
 								 //Эквивалентных классах
 			{
-				
+
 				for (int i = 0; i < current.Transitions.size(); i++) {
 					if (automat.states[current.Transitions[i].second]
-							 .is_terminal && current.Transitions[i].first == automat.initial_state ){	
+							.is_terminal &&
+						current.Transitions[i].first == automat.initial_state) {
 						current.isFinal = true;
 					}
 				}
@@ -188,7 +204,7 @@ TransformationMonoid::TransformationMonoid(FiniteAutomaton* in) {
 			}
 		}
 		if (!cond1) {
-			cond=false;
+			cond = false;
 		}
 	}
 	Logger::init_step("equivalence classes");
@@ -236,11 +252,14 @@ string TransformationMonoid::get_Equalence_Classes_Txt() {
 		ss << "Term	" << to_str(terms[i].name) << "	in	language	"
 		   << terms[i].isFinal << "\n";
 		for (int j = 0; j < terms[i].Transitions.size(); j++) {
-			Logger::log("transition " +
-							std::to_string(terms[i].Transitions[j].first),
-						std::to_string(terms[i].Transitions[j].second));
-			ss << terms[i].Transitions[j].first << "	->	"
-			   << terms[i].Transitions[j].second << "\n";
+			Logger::log(
+				"transition " +
+					automat.states[terms[i].Transitions[j].first].identifier,
+				automat.states[terms[i].Transitions[j].second].identifier);
+			ss << automat.states[terms[i].Transitions[j].first].identifier
+			   << "	->	"
+			   << automat.states[terms[i].Transitions[j].second].identifier
+			   << "\n";
 		}
 	}
 	Logger::finish_step();
@@ -264,6 +283,7 @@ string TransformationMonoid::get_Rewriting_Rules_Txt() {
 }
 
 vector<Term> TransformationMonoid::get_Equalence_Classes_VW(Term w) {
+	// cout << to_str(w.name) << "\n";
 	vector<Term> out;
 	for (int i = 0; i < terms.size(); i++) {
 		vector<Transition> Transitions;
@@ -272,28 +292,24 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_VW(Term w) {
 			for (int k = 0; k < w.Transitions.size(); k++) {
 				if (terms[i].Transitions[j].second == w.Transitions[k].first) {
 					Transition temp;
-					temp.first = terms[i].Transitions[j].first;
 					temp.second = w.Transitions[k].second;
+					temp.first = terms[i].Transitions[j].first;
 					Transitions.push_back(temp);
 				}
 			}
 		}
 		if (Transitions.size() > 0) {
 			bool cond = true;
-			if (Transitions.size() != automat.states.size()) {
-				cond = false;
-			} else {
-				for (int j = 0; j < Transitions.size(); j++) {
-					// cout << "\n t " << Transitions[j].first << " " <<
-					// Transitions[j].second << "\n";
-					if (!automat.states[Transitions[j].second].is_terminal) {
-						cond = false;
-					}
+
+			for (int j = 0; j < Transitions.size(); j++) {
+				// cout << "\n t " << to_str(terms[i].name) << " "
+				//	 << Transitions[j].first << " " << Transitions[j].second
+				//	 << "\n";
+				if (automat.states[Transitions[j].second].is_terminal &&
+					Transitions[j].first == automat.initial_state) {
+					out.push_back(terms[i]);
+					// cout << to_str(terms[i].name) << "\n";
 				}
-			}
-			if (cond) {
-				out.push_back(terms[i]);
-				// cout << terms[i].name << "	";
 			}
 		}
 	}
@@ -323,18 +339,11 @@ vector<Term> TransformationMonoid::get_Equalence_Classes_WV(Term w) {
 		}
 		if (Transitions.size() > 0) {
 			bool cond = true;
-			if (Transitions.size() != automat.states.size()) {
-				cond = false;
-			} else {
-				for (int j = 0; j < Transitions.size(); j++) {
-					if (!automat.states[Transitions[j].second].is_terminal) {
-						cond = false;
-					}
+			for (int j = 0; j < Transitions.size(); j++) {
+				if (automat.states[Transitions[j].second].is_terminal &&
+					Transitions[j].first == automat.initial_state) {
+					out.push_back(terms[i]);
 				}
-			}
-			if (cond) {
-				out.push_back(terms[i]);
-				// cout << terms[i].name << "	";
 			}
 		}
 	}
@@ -360,7 +369,7 @@ vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
 		for (int i2 = 0; i2 < terms.size(); i2++) {
 			vector<Transition> Transitions;
 			for (int j1 = 0; j1 < terms[i1].Transitions.size(); j1++) {
-				for (int j2 = 0; j2 < terms[i1].Transitions.size(); j2++) {
+				for (int j2 = 0; j2 < terms[i2].Transitions.size(); j2++) {
 					for (int k = 0; k < w.Transitions.size(); k++) {
 						if ((terms[i1].Transitions[j1].second ==
 							 w.Transitions[k].first) &&
@@ -378,23 +387,14 @@ vector<TermDouble> TransformationMonoid::get_Equalence_Classes_VWV(Term w) {
 			}
 			if (Transitions.size() > 0) {
 				bool cond = true;
-				if (Transitions.size() != automat.states.size()) {
-					cond = false;
-				} else {
-					for (int j = 0; j < Transitions.size(); j++) {
-						// cout << "\n t " << Transitions[j].first << " " <<
-						// Transitions[j].second << "\n";
-						if (!automat.states[Transitions[j].second]
-								 .is_terminal) {
-							cond = false;
-						}
+				for (int j = 0; j < Transitions.size(); j++) {
+					if (automat.states[Transitions[j].second].is_terminal &&
+						Transitions[j].first == automat.initial_state) {
+						TermDouble temp1;
+						temp1.first = terms[i1];
+						temp1.second = terms[i2];
+						out.push_back(temp1);
 					}
-				}
-				if (cond) {
-					TermDouble temp1;
-					temp1.first = terms[i1];
-					temp1.second = terms[i2];
-					out.push_back(temp1);
 				}
 			}
 		}

@@ -406,19 +406,23 @@ void Example::transformation_monoid_example() {
 
 	FiniteAutomaton fa1;
 
-	//cout << "to_tompson ------------------------------\n";
-	fa1=r.to_glushkov();
+	// cout << "to_tompson ------------------------------\n";
+	fa1 = r.to_glushkov().determinize();
 	cout << fa1.to_txt();
-	//c = r.to_ilieyu(); // to_tompson(-1);
-	// cout << fa1.to_txt();
+	// c = r.to_ilieyu(); // to_tompson(-1);
+	//  cout << fa1.to_txt();
 	TransformationMonoid a(&fa1);
-	cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
+	// cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
 	// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
-	// cout << a.is_minimality() << "\n";
-	// cout << a.to_Txt_MyhillNerode();
-	//  cout << a.get_Equalence_Classes_Txt(); /*
-	/*vector<Term> cur = a.get_Equalence_Classes();
-	cout << cur[1].name << "\n";
+	//  cout << a.is_minimality() << "\n";
+	//  cout << a.to_Txt_MyhillNerode();
+	//   cout << a.get_Equalence_Classes_Txt(); /*
+	// vector<Term> cur = a.get_Equalence_Classes();
+	// for (int i = 0; i < cur.size(); i++) {
+
+	// 	cout << a.is_Synchronized(cur[i]) << "\n";
+	// }
+	/*
 	vector<TermDouble> temp = a.get_Equalence_Classes_VWV(cur[1]);
 	for (int i = 0; i < temp.size(); i++) {
 		cout << temp[i].first.name << " " << temp[i].second.name << "\n";
