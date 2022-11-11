@@ -349,7 +349,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	// 0 - функцию надо исключить из последовательности
 	// 1 - функция остается в последовательности
 	// 2 - функция(Delinearize или DeAnnote) принимает на вход Regex
-	// 3 - функция(Delinearize или DeAnnote) принимает на вход NFA
+	// 3 - функция(Delinearize или DeAnnote) принимает на вход NFA/DFA
 	vector<int> neededfuncs(function_names.size(), 1);
 	if (typecheck(function_names[0], first_type)) {
 		if (names_to_functions[function_names[0]].size() == 2) {
@@ -409,6 +409,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 		} else {
 			vector<ObjectType> r = {ObjectType::Regex};
 			vector<ObjectType> n = {ObjectType::NFA};
+			vector<ObjectType> d = {ObjectType::DFA};
 			if (names_to_functions[predfunc].size() == 2 &&
 				names_to_functions[func].size() == 2) {
 				if (predfunc != func) {
@@ -424,7 +425,8 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 				if (neededfuncs[i - 1] < 2) {
 					if (names_to_functions[func][0].input == r) {
 						neededfuncs[i - 1] = 2;
-					} else if (names_to_functions[func][0].input == n) {
+					} else if (names_to_functions[func][0].input == n ||
+							   names_to_functions[func][0].input == d) {
 						neededfuncs[i - 1] = 3;
 					} else {
 						return nullopt;
@@ -434,7 +436,8 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 						if (neededfuncs[i - 1] != 2) {
 							return nullopt;
 						}
-					} else if (names_to_functions[func][0].input == n) {
+					} else if (names_to_functions[func][0].input == n ||
+							   names_to_functions[func][0].input == d) {
 						if (neededfuncs[i - 1] != 3) {
 							return nullopt;
 						}
@@ -445,7 +448,8 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			} else {
 				if (names_to_functions[predfunc][0].input == r) {
 					neededfuncs[i] = 2;
-				} else if (names_to_functions[predfunc][0].input == n) {
+				} else if (names_to_functions[predfunc][0].input == n ||
+						   names_to_functions[predfunc][0].input == d) {
 					neededfuncs[i] = 3;
 				} else {
 					return nullopt;
