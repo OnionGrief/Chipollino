@@ -26,7 +26,6 @@ class Language {
   public:
 	Language();
 	Language(set<alphabet_symbol> alphabet);
-	// string to_txt();
 	const set<alphabet_symbol>& get_alphabet();
 	void set_alphabet(set<alphabet_symbol>);
 	int get_alphabet_size();

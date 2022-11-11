@@ -5,6 +5,7 @@
 #include "Language.h"
 #include "Logger.h"
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <queue>
 #include <set>
@@ -176,7 +177,8 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	optional<FiniteAutomaton> language_min_dfa = language->get_min_dfa();
 	if (language_min_dfa) {
 		Logger::finish_step();
-		return *language_min_dfa; // Нужно решить, что делаем с идентификаторами
+		return *language_min_dfa; // TODO Нужно решить, что делаем с
+								  // идентификаторами
 	}
 	// минимизация
 	FiniteAutomaton dfa = determinize();
@@ -730,7 +732,7 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 	Logger::init_step("Annote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
-		FiniteAutomaton(initial_state, states, shared_ptr<Language>());
+		FiniteAutomaton(initial_state, states, make_shared<Language>());
 	vector<map<alphabet_symbol, set<int>>> new_transitions(
 		new_fa.states.size());
 	for (int i = 0; i < new_fa.states.size(); i++) {
@@ -753,7 +755,7 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 			}
 		}
 	}
-	new_fa.language = shared_ptr<Language>(make_shared<Language>(new_alphabet));
+	new_fa.language = make_shared<Language>(new_alphabet);
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
@@ -767,7 +769,7 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	Logger::init_step("DeAnnote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
-		FiniteAutomaton(initial_state, states, shared_ptr<Language>());
+		FiniteAutomaton(initial_state, states, make_shared<Language>());
 	vector<map<alphabet_symbol, set<int>>> new_transitions(
 		new_fa.states.size());
 	for (int i = 0; i < new_fa.states.size(); i++) {
@@ -787,7 +789,7 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 			}
 		}
 	}
-	new_fa.language = shared_ptr<Language>(make_shared<Language>(new_alphabet));
+	new_fa.language = make_shared<Language>(new_alphabet);
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
@@ -1219,10 +1221,13 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 	int s = fa.states.size();
 	int min_s = min_fa.states.size();
 	int N = s * s + s + i + 1;
+	// количество путей длины n до финальных из начального
 	vector<InfInt> paths_number(N);
-	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
 	vector<InfInt> min_paths_number(N);
+	// матрица смежности
+	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
 	vector<vector<int>> min_adjacency_matrix(min_s, vector<int>(min_s));
+	// количество путей длины n до всех вершин из начальной
 	vector<vector<InfInt>> d(N + 1, vector<InfInt>(s));
 	vector<vector<InfInt>> min_d(N + 1, vector<InfInt>(min_s));
 	d[0][fa.initial_state] = 1;
@@ -1236,7 +1241,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 			for (int transition : elem.second)
 				min_adjacency_matrix[i][transition]++;
 	vector<Fraction> f1;
-	optional<Fraction> prev_val;
+	optional<Fraction> prev_val; // для проверки на константность
 	bool return_flag = true;
 	for (int k = 1; k < N + 1; k++) {
 		for (int v = 0; v < s; v++) {
@@ -1274,10 +1279,14 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 			return FiniteAutomaton::almost_unambigious;
 	}
 
+	// в f1 только ненулевые результаты
 	if (f1.size() < 3) return FiniteAutomaton::polynomially_ambigious;
+	// считаю new_s, чтобы удовлетворяло
+	// new_s * new_s + new_s + i + 1 <= f1.size()
 	int new_s = floor(double(-1 + sqrt(-11 + 4 * f1.size())) / 2);
 	i += f1.size() - (new_s * new_s + new_s + i + 1);
 
+	// для сохранения результатов calc_ambiguity
 	vector<vector<Fraction>> calculated(new_s + i + 1,
 										vector<Fraction>(f1.size()));
 	vector<vector<char>> is_calculated(new_s + i + 1,
@@ -1288,6 +1297,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 	while (val > Fraction()) {
 		i++;
 		int return_counter = 0;
+		// цикл ищет новое ненулевое значение
 		do {
 			if (return_counter == s)
 				return FiniteAutomaton::polynomially_ambigious;
@@ -1319,6 +1329,8 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		}
 		calculated.push_back(vector<Fraction>(f1.size()));
 		is_calculated.push_back(vector<char>(f1.size(), 0));
+		// увеличил i на 1, увеличил f1 и другие массивы на 1
+		// можем снова считать
 		val = calc_ambiguity(new_s + i, new_s * new_s, f1, calculated,
 							 is_calculated);
 		if (val > *prev_val || val == *prev_val)

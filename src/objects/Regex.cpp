@@ -345,7 +345,7 @@ bool Regex::from_string(string str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	language = shared_ptr<Language>(make_shared<Language>(alphabet));
+	language = make_shared<Language>(alphabet);
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 		term_l->term_p = this;
@@ -426,7 +426,7 @@ void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 void Regex::make_language() {
 	generate_alphabet(alphabet);
 
-	language = shared_ptr<Language>(make_shared<Language>(alphabet));
+	language = make_shared<Language>(alphabet);
 }
 
 void Regex::clear() {
@@ -1456,13 +1456,19 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 // Длина накачки
 int Regex::pump_length() const {
 	if (language->get_pump_length()) {
+		cout << "LPAD P\n";
 		return language->get_pump_length().value();
 	}
 	std::map<std::string, bool> checked_prefixes;
 	for (int i = 1;; i++) {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
-		if (prefs.empty()) return -1;
+		if (prefs.empty()) {
+			language->set_pump_length(-1); // TODO нужно оформить получение
+										   // значения в отдельную фунцию
+			// тогда и результат кэшировать проще, и логи делать
+			return -1;
+		}
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
 			bool was = false;
 			for (int j = 0; j < it->size(); j++) {
@@ -1486,8 +1492,7 @@ int Regex::pump_length() const {
 														*pumping.term_r))
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language = shared_ptr<Language>(
-						make_shared<Language>(pumping.alphabet));
+					pumping.language = make_shared<Language>(pumping.alphabet);
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
@@ -1502,6 +1507,7 @@ int Regex::pump_length() const {
 			}
 		}
 	}
+	language->set_pump_length(-1);
 	return -1;
 }
 
