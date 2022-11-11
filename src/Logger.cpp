@@ -15,6 +15,14 @@ void Logger::deactivate() {
 	active = false;
 }
 
+void Logger::activate_step_counter() {
+	step_counter++;
+}
+
+void Logger::deactivate_step_counter() {
+	step_counter--;
+}
+
 void Logger::init() {
 	ofstream out;
 	out.open("./resources/report.tex", ofstream::trunc);

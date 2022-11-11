@@ -286,7 +286,7 @@ GeneralObject Interpreter::apply_function(
 
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
-
+		Logger::activate_step_counter();
 		if (holds_alternative<ObjectRegex>(resval)) {
 			if (Regex::equal(get<ObjectRegex>(resval).value,
 							 get<ObjectRegex>(predres).value))
@@ -307,7 +307,7 @@ GeneralObject Interpreter::apply_function(
 				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
 					 << endl;
 		}
-
+		Logger::deactivate_step_counter();
 		return res.value();
 	}
 
