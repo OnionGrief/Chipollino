@@ -173,8 +173,8 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 
 FiniteAutomaton FiniteAutomaton::minimize() const {
 	Logger::init_step("Minimize");
-	const optional<FiniteAutomaton>& language_min_dfa = language->get_min_dfa();
-	if (language->get_min_dfa()) {
+	optional<FiniteAutomaton> language_min_dfa = language->get_min_dfa();
+	if (language_min_dfa) {
 		Logger::finish_step();
 		return *language_min_dfa; // Нужно решить, что делаем с идентификаторами
 	}
@@ -282,7 +282,8 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	}
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
 	// кэширование
-	language->set_min_dfa(minimized_dfa);
+	language->set_min_dfa(minimized_dfa.initial_state, minimized_dfa.states,
+						  minimized_dfa.language);
 	Logger::log("Автомат до минимизации", "Автомат после минимизации", *this,
 				minimized_dfa);
 	stringstream ss;
@@ -752,7 +753,7 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 			}
 		}
 	}
-	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
+	new_fa.language = shared_ptr<Language>(make_shared<Language>(new_alphabet));
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
@@ -786,7 +787,7 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 			}
 		}
 	}
-	new_fa.language = shared_ptr<Language>(new Language(new_alphabet));
+	new_fa.language = shared_ptr<Language>(make_shared<Language>(new_alphabet));
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}

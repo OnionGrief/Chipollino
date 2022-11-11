@@ -345,7 +345,7 @@ bool Regex::from_string(string str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	language = shared_ptr<Language>(new Language(alphabet));
+	language = shared_ptr<Language>(make_shared<Language>(alphabet));
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 		term_l->term_p = this;
@@ -426,7 +426,7 @@ void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 void Regex::make_language() {
 	generate_alphabet(alphabet);
 
-	language = shared_ptr<Language>(new Language(alphabet));
+	language = shared_ptr<Language>(make_shared<Language>(alphabet));
 }
 
 void Regex::clear() {
@@ -1489,8 +1489,8 @@ int Regex::pump_length() const {
 														*pumping.term_r))
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language =
-						shared_ptr<Language>(new Language(pumping.alphabet));
+					pumping.language = shared_ptr<Language>(
+						make_shared<Language>(pumping.alphabet));
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
