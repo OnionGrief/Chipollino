@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 	// Используем сгенерированный тест
 	TasksGenerator TG;
 	TG.generate_task(3, 5, false, false);
-	TG.write_to_file();
+	TG.write_to_file("test.txt");
 
 	// Загружаем в интерпретатор файл с коммандами
 	string load_file = "test.txt";

@@ -104,7 +104,7 @@ class TasksGenerator {
 	test (НКА | рег. выр-е, рег. выр-е без альтернатив, шаг итерации) */
 	string generate_test();
 	/*запись теста в файл*/
-	void write_to_file();
+	void write_to_file(string filename);
 };
 
 // TODO: убедиться, что интерпретатор + тайпчекер правильно обрабатывают

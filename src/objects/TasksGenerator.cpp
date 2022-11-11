@@ -27,9 +27,9 @@ string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 	return res_str;
 }
 
-void TasksGenerator::write_to_file() {
+void TasksGenerator::write_to_file(string filename) {
 	ofstream out;
-	out.open("./test.txt", ofstream::trunc);
+	out.open(filename, ofstream::trunc);
 	if (out.is_open()) out << res_str;
 	out.close();
 }
