@@ -1490,6 +1490,9 @@ int FiniteAutomaton::get_initial() {
 }
 
 int FiniteAutomaton::states_number() const {
+	Logger::init_step("States");
+	Logger::log(to_string(states.size()));
+	Logger::finish_step();
 	return states.size();
 }
 
@@ -1596,6 +1599,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	return out;
 }
 Regex FiniteAutomaton::nfa_to_regex() const {
+	Logger::init_step("Arden");
 	vector<int> endstate;
 	vector<vector<expression_arden>> data;
 	set<alphabet_symbol> alphabet = language->get_alphabet();
@@ -1649,7 +1653,6 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	}
 	// //сортируем
 
-	Logger::init_step("Arden");
 	for (int i = data.size() - 1; i >= 0; i--) {
 
 		vector<expression_arden> tempdata;
@@ -1724,7 +1727,6 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
 		}
 	}
-	Logger::finish_step();
 	if (endstate.size() == 0) {
 		Regex* f = new Regex;
 		f->from_string("");
@@ -1759,6 +1761,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	}
 	Regex temp1 = *r1;
 	delete r1;
+	Logger::finish_step();
 	return temp1;
 	// return r1;
 }
