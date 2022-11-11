@@ -123,7 +123,8 @@ string TasksGenerator::generate_test() {
 
 	str += " ";
 	// TODO:
-	str += "((ab)*a)*";
+	//str += "((ab)*a)*";
+	str += regex_generator.generate_regex();
 
 	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
 	str += " " + to_string(rand_num);
