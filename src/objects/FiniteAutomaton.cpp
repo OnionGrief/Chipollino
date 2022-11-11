@@ -338,7 +338,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 											  const FiniteAutomaton& fa2) {
-	Logger::init_step("Interection");
+	Logger::init_step("Intersection");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -614,7 +614,6 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 	Logger::init_step("RemoveTrapState");
-	vector<map<alphabet_symbol, set<int>>> new_transitions;
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
@@ -649,6 +648,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 			if (new_dfa.initial_state > i) new_dfa.initial_state -= 1;
 			new_dfa.states = new_states;
 			for (int j = 0; j < new_dfa.states.size(); j++) {
+				map<alphabet_symbol, set<int>> new_transitions;
 				for (auto& transition : new_dfa.states[j].transitions) {
 					set<int> new_transition;
 					for (int transition_to : transition.second) {
@@ -659,8 +659,10 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 							new_transition.insert(transition_to - 1);
 						}
 					}
-					transition.second = new_transition;
+					if (new_transition.size())
+						new_transitions[transition.first] = new_transition;
 				}
+				new_dfa.states[j].transitions = new_transitions;
 			}
 			i--;
 			count--;
@@ -673,7 +675,6 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
-	vector<map<alphabet_symbol, set<int>>> new_transitions;
 	FiniteAutomaton new_dfa(initial_state, states, language);
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
@@ -701,6 +702,7 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 			if (new_dfa.initial_state > i) new_dfa.initial_state -= 1;
 			new_dfa.states = new_states;
 			for (int j = 0; j < new_dfa.states.size(); j++) {
+				map<alphabet_symbol, set<int>> new_transitions;
 				for (auto& transition : new_dfa.states[j].transitions) {
 					set<int> new_transition;
 					for (int transition_to : transition.second) {
@@ -711,8 +713,10 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 							new_transition.insert(transition_to - 1);
 						}
 					}
-					transition.second = new_transition;
+					if (new_transition.size())
+						new_transitions[transition.first] = new_transition;
 				}
+				new_dfa.states[j].transitions = new_transitions;
 			}
 			i--;
 			count--;
