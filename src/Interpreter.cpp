@@ -250,8 +250,9 @@ GeneralObject Interpreter::apply_function(
 		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
 		if (temp_automaton.is_deterministic()){
 			res = ObjectDFA(temp_automaton.remove_eps());
+		} else {
+			res = ObjectNFA(temp_automaton.remove_eps());
 		}
-		res = ObjectNFA(temp_automaton.remove_eps());
 	}
 	if (function.name == "Linearize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.linearize());
@@ -260,13 +261,13 @@ GeneralObject Interpreter::apply_function(
 		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
 		if (temp_automaton.is_deterministic()) {
 			res = ObjectDFA(temp_automaton.reverse());
+		} else {
+			res = ObjectNFA(temp_automaton.reverse());
 		}
-		res = ObjectNFA(temp_automaton.reverse());
 	}
 	if (function.name == "Delinearize") {
 		if (function.output == regex) {
-			res =
-				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
+			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
 		}/* else {
 			// res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
 		}*/
@@ -279,8 +280,9 @@ GeneralObject Interpreter::apply_function(
 			FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
 			if (temp_automaton.is_deterministic()) {
 				res = ObjectDFA(temp_automaton.deannote());
+			} else {
+				res = ObjectNFA(temp_automaton.deannote());
 			}
-			res = ObjectNFA(temp_automaton.deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
 		}
@@ -289,8 +291,9 @@ GeneralObject Interpreter::apply_function(
 		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
 		if (temp_automaton.is_deterministic()) {
 			res = ObjectDFA(temp_automaton.merge_bisimilar());
+		} else {
+			res = ObjectNFA(temp_automaton.merge_bisimilar());
 		}
-		res = ObjectNFA(temp_automaton.merge_bisimilar());
 	}
 	if (function.name == "Normalize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0])
