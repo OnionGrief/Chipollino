@@ -1479,7 +1479,8 @@ int Regex::pump_length() const {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
 		if (prefs.empty()) {
-			Logger::log("Накачки нет");
+			Logger::log(
+				"Длина накачки совпадает с длиной регулярного выражения");
 			Logger::finish_step();
 			return -1;
 		}
@@ -1525,7 +1526,7 @@ int Regex::pump_length() const {
 			}
 		}
 	}
-	Logger::log("Накачки нет");
+	Logger::log("Длина накачки совпадает с длиной регулярного выражения");
 	Logger::finish_step();
 	return -1;
 }
