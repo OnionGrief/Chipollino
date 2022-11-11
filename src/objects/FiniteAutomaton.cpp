@@ -1579,6 +1579,7 @@ int FiniteAutomaton::states_number() const {
 вскликает:
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
+
 bool compare(expression_arden a, expression_arden b) {
 	return (a.condition < b.condition);
 }

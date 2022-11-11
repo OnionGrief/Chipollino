@@ -83,7 +83,7 @@ void Logger::log(string a1, const FiniteAutomaton& fa1) {
 	if (out.is_open()) {
 		image_number += 1;
 		AutomatonToImage::to_image(f1, image_number);
-		out << a1 + "\n" << endl;
+		out << a1 + ":\n" << endl;
 		char si[256];
 		sprintf(si,
 				"\\includegraphics[width=5in, "
@@ -104,7 +104,7 @@ void Logger::log(string a1, string a2, const FiniteAutomaton& fa1,
 	if (out.is_open()) {
 		image_number += 1;
 		AutomatonToImage::to_image(f1, image_number);
-		out << a1 + "\n" << endl;
+		out << a1 + ":\n" << endl;
 		char si[256];
 		sprintf(si,
 				"\\includegraphics[width=5in, "
@@ -114,7 +114,7 @@ void Logger::log(string a1, string a2, const FiniteAutomaton& fa1,
 
 		image_number += 1;
 		AutomatonToImage::to_image(f2, image_number);
-		out << a2 + "\n" << endl;
+		out << a2 + ":\n" << endl;
 		sprintf(si,
 				"\\includegraphics[width=5in, "
 				"keepaspectratio]{output%d.png}\n",
@@ -135,7 +135,7 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 	if (out.is_open()) {
 		image_number += 1;
 		AutomatonToImage::to_image(f1, image_number);
-		out << a1 + "\n" << endl;
+		out << a1 + ":\n" << endl;
 		char si[256];
 		sprintf(si,
 				"\\includegraphics[width=5in, "
@@ -145,7 +145,7 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 
 		image_number += 1;
 		AutomatonToImage::to_image(f2, image_number);
-		out << a2 + "\n" << endl;
+		out << a2 + ":\n" << endl;
 		sprintf(si,
 				"\\includegraphics[width=5in, "
 				"keepaspectratio]{output%d.png}\n",
@@ -154,7 +154,7 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 
 		image_number += 1;
 		AutomatonToImage::to_image(f3, image_number);
-		out << a3 + "\n" << endl;
+		out << a3 + ":\n" << endl;
 		sprintf(si,
 				"\\includegraphics[width=5in, "
 				"keepaspectratio]{output%d.png}\n",
