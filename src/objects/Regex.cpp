@@ -1717,7 +1717,7 @@ string Regex::to_str_log() const {
 Regex Regex::deannote() const {
 	Logger::init_step("DeAnnote");
 	Regex old_regex(*this);
-	Logger::log("Регулярноевыражение до преобразования", old_regex.to_txt());
+	Logger::log("Регулярное выражение до преобразования", old_regex.to_txt());
 	string with_number = old_regex.to_txt();
 	string new_string;
 	for (size_t i = 0; i < with_number.size(); i++) {
@@ -1727,7 +1727,7 @@ Regex Regex::deannote() const {
 	}
 	Regex new_regex;
 	new_regex.from_string(new_string);
-	Logger::log("Регулярноевыражение после преобразования", new_regex.to_txt());
+	Logger::log("Регулярное выражение после преобразования", new_regex.to_txt());
 	Logger::finish_step();
 	return new_regex;
 }
