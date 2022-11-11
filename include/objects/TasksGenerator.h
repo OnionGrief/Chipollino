@@ -40,44 +40,43 @@ class TasksGenerator {
 				   // принимаемым значениям
 	map<string, vector<Id>> ids; // поиск идентификатора по его типу
 
-	vector<Function> functions = {{"Thompson", {"Regex"}, "NFA"},
-								  {"IlieYu", {"Regex"}, "NFA"},
-								  {"Antimirov", {"Regex"}, "NFA"},
-								  {"Arden", {"NFA"}, "Regex"},
-								  {"Glushkov", {"Regex"}, "NFA"},
-								  {"Determinize", {"NFA"}, "DFA"},
-								  {"RemEps", {"NFA"}, "NFA"},
-								  {"Linearize", {"Regex"}, "Regex"},
-								  {"Minimize", {"NFA"}, "DFA"},
-								  {"Reverse", {"NFA"}, "NFA"},
-								  {"Annote", {"NFA"}, "DFA"},
-								  {"DeLinearize", {"NFA"}, "NFA"},
-								  {"DeLinearize", {"Regex"}, "Regex"},
-								  {"Complement", {"DFA"}, "DFA"},
-								  {"DeAnnote", {"NFA"}, "NFA"},
-								  {"DeAnnote", {"Regex"}, "Regex"},
-								  {"MergeBisim", {"NFA"}, "NFA"},
-								  {"PumpLength", {"Regex"}, "Int"},
-								  {"ClassLength", {"DFA"}, "Int"},
-								  // TODO:
-								  //{"KSubSet", {"Int", "NFA"}, "NFA"}, // пока
-								  //не используется, исправить если будет
-								  {"Normalize", {"Regex", "FileName"}, "Regex"},
-								  {"States", {"NFA"}, "Int"},
-								  {"ClassCard", {"DFA"}, "Int"},
-								  {"Ambiguity", {"NFA"}, "Value"},
-								  {"Width", {"NFA"}, "Int"},
-								  {"MyhillNerode", {"DFA"}, "Int"},
-								  {"Simplify", {"Regex"}, "Regex"}};
+	vector<Function> functions = {
+		{"Thompson", {"Regex"}, "NFA"},
+		{"IlieYu", {"Regex"}, "NFA"},
+		{"Antimirov", {"Regex"}, "NFA"},
+		{"Arden", {"NFA"}, "Regex"},
+		{"Glushkov", {"Regex"}, "NFA"},
+		{"Determinize", {"NFA"}, "DFA"},
+		{"RemEps", {"NFA"}, "NFA"},
+		{"Linearize", {"Regex"}, "Regex"},
+		{"Minimize", {"NFA"}, "DFA"},
+		{"Reverse", {"NFA"}, "NFA"},
+		{"Annote", {"NFA"}, "DFA"},
+		//{"DeLinearize", {"NFA"}, "NFA"},
+		{"DeLinearize", {"Regex"}, "Regex"},
+		{"Complement", {"DFA"}, "DFA"},
+		{"DeAnnote", {"NFA"}, "NFA"},
+		{"DeAnnote", {"Regex"}, "Regex"},
+		{"MergeBisim", {"NFA"}, "NFA"},
+		{"PumpLength", {"Regex"}, "Int"},
+		//{"ClassLength", {"DFA"}, "Int"},
+		//{"Normalize", {"Regex", "FileName"}, "Regex"},
+		{"States", {"NFA"}, "Int"},
+		//{"ClassCard", {"DFA"}, "Int"},
+		{"Ambiguity", {"NFA"}, "Value"},
+		//{"Width", {"NFA"}, "Int"},
+		//{"MyhillNerode", {"DFA"}, "Int"},
+		//{"Simplify", {"Regex"}, "Regex"}
+	};
 
 	vector<Function> predicates = {
 		{"Bisimilar", {"NFA", "NFA"}, "Boolean"},
 		{"Minimal", {"DFA"}, "Boolean"},
 		{"Subset", {"Regex", "Regex"}, "Boolean"},
 		{"Equiv", {"NFA", "NFA"}, "Boolean"},
-		{"Minimal", {"NFA"}, "Boolean"},
+		//{"Minimal", {"NFA"}, "Boolean"},
 		{"Equal", {"NFA", "NFA"}, "Boolean"},
-		{"SemDet", {"NFA"}, "Boolean"},
+		//{"SemDet", {"NFA"}, "Boolean"},
 	};
 
 	void distribute_functions();

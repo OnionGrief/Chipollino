@@ -243,7 +243,7 @@ string TasksGenerator::generate_declaration() {
 	if (prevOutput == "DFA" || prevOutput == "NFA")
 		ids["NFA-DFA"].push_back({id_num, prevOutput});
 
-	if (!(rand() % 3) && funcNum > 0) str += " !!";
+	if (/*rand() % 2 && */funcNum > 0) str += " !!";
 
 	return str;
 }

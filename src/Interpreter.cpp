@@ -225,7 +225,6 @@ GeneralObject Interpreter::apply_function(
 	/*if (function.name == "ClassCard") {
 		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
 	}*/
-	//пока не реализовано
 	if (function.name == "Ambiguity") {
 		return ObjectValue(get_automaton(arguments[0]).ambiguity());
 	}
