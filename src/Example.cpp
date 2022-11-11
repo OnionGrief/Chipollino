@@ -126,11 +126,7 @@ void Example::regex_parsing() {
 	// egl = "a()a))";			  // regl + regr;
 	// regl = "a1456|b244444444444";
 	//  regl = "(ab|b)*ba"; //"bbb*(aaa*bbb*)*";
-	Regex r;
-	if (!r.from_string("|a*")) {
-		cout << "ERROR\n";
-		return;
-	}
+	Regex r(regl);
 	cout << r.to_txt() << "\n";
 	// cout << r.pump_length() << "\n";
 	FiniteAutomaton a;
@@ -165,11 +161,7 @@ void Example::parsing_nfa() {
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
 	regl = regl + regr;
 	regl = "a*bc*"; //"bbb*(aaa*bbb*)*";
-	Regex r;
-	if (!r.from_string(regl)) {
-		cout << "ERROR\n";
-		return;
-	}
+	Regex r(regl);
 
 	FiniteAutomaton a;
 	FiniteAutomaton b;
@@ -202,23 +194,14 @@ void Example::random_regex_parsing() {
 	for (int i = 0; i < 5; i++) {
 		string str = r1.generate_regex();
 		cout << "\n" << str << "\n";
-		Regex r;
-		if (!r.from_string(str)) {
-			cout << "ERROR\n";
-			return;
-		}
+		Regex r(str);
 		cout << r.to_txt() << endl;
 	}
 }
 
 void Example::parsing_regex(string str) {
 	cout << str << endl;
-	Regex r;
-	if (!r.from_string(str)) {
-		cout << "ERROR\n";
-		return;
-	}
-	r.from_string(str);
+	Regex r(str);
 	cout << r.to_txt() << endl;
 }
 
@@ -290,11 +273,7 @@ void Example::normalize_regex() {
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
 	regl = regl + regr;
 	// regl = "abc"; //"bbb*(aaa*bbb*)*";
-	Regex r;
-	if (!r.from_string(regl)) {
-		cout << "ERROR\n";
-		return;
-	}
+	Regex r(regl);
 	r.normalize_regex("./../temp/Rules.txt");
 	cout << r.to_txt();
 }
@@ -371,15 +350,12 @@ void Example::step() {
 }
 
 void Example::tester() {
-	Regex r;
-	r.from_string("ab(ab|a)*ababa");
+	Regex r("ab(ab|a)*ababa");
 	FiniteAutomaton dfa1 = r.to_tompson();
 	// cout << dfa1.parsing_by_nfa("abaaabaaababa");
 	// cout << dfa1.to_txt();
-	Regex r1;
-	r1.from_string("((ab)*a)*");
-	Regex r2;
-	r2.from_string("ab(ab|a)*ababa");
+	Regex r1("((ab)*a)*");
+	Regex r2("ab(ab|a)*ababa");
 	Tester::test(dfa1, r1, 1);
 	Tester::test(r2, r1, 1);
 }
@@ -769,11 +745,15 @@ void Example::test_ambiguity() {
 	FiniteAutomaton fa2 = Regex("b|a|aa").to_tompson();
 	FiniteAutomaton fa3 = Regex("abc").to_tompson();
 	FiniteAutomaton fa4 = Regex("b|a").to_tompson();
+	FiniteAutomaton fa5 = Regex("(aa|aa)*").to_glushkov();
+	FiniteAutomaton fa6 = Regex("(aab|aab)*").to_glushkov();
 
 	assert(fa1.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
 	assert(fa2.ambiguity() == FiniteAutomaton::polynomially_ambigious);
 	assert(fa3.ambiguity() == FiniteAutomaton::unambigious);
 	assert(fa4.ambiguity() == FiniteAutomaton::almost_unambigious);
+	assert(fa5.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
+	assert(fa6.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
 }
 
 void Example::test_arden() {
