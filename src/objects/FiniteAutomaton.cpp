@@ -674,7 +674,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 
 FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 	vector<map<alphabet_symbol, set<int>>> new_transitions;
-	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
+	FiniteAutomaton new_dfa(initial_state, states, language);
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
 		bool is_unreachable_state = false;
