@@ -197,15 +197,6 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "SemDet") {
 		return ObjectBoolean(get_automaton(arguments[0]).semdet());
 	}
-	if (function.name == "Determinize") {
-		return ObjectDFA(get_automaton(arguments[0]).determinize());
-	}
-	if (function.name == "Minimize") {
-		return ObjectDFA(get_automaton(arguments[0]).minimize());
-	}
-	if (function.name == "Annote") {
-		return ObjectDFA(get_automaton(arguments[0]).annote());
-	}
 	if (function.name == "PumpLength") {
 		return ObjectInt(get<ObjectRegex>(arguments[0]).value.pump_length());
 	}
@@ -245,35 +236,61 @@ GeneralObject Interpreter::apply_function(
 	GeneralObject predres = arguments[0];
 	optional<GeneralObject> res;
 
+
+	if (function.name == "Determinize") {
+		res = ObjectDFA(get_automaton(arguments[0]).determinize());
+	}
+	if (function.name == "Minimize") {
+		res = ObjectDFA(get_automaton(arguments[0]).minimize());
+	}
+	if (function.name == "Annote") {
+		res = ObjectDFA(get_automaton(arguments[0]).annote());
+	}
 	if (function.name == "RemEps") {
-		res = ObjectNFA(get_automaton(arguments[0]).remove_eps());
+		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
+		if (temp_automaton.is_deterministic()){
+			res = ObjectDFA(temp_automaton.remove_eps());
+		}
+		res = ObjectNFA(temp_automaton.remove_eps());
 	}
 	if (function.name == "Linearize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.linearize());
 	}
 	if (function.name == "Reverse") {
-		res = ObjectNFA(get_automaton(arguments[0]).reverse());
+		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
+		if (temp_automaton.is_deterministic()) {
+			res = ObjectDFA(temp_automaton.reverse());
+		}
+		res = ObjectNFA(temp_automaton.reverse());
 	}
 	if (function.name == "Delinearize") {
 		if (function.output == regex) {
 			res =
 				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
-		} else {
+		}/* else {
 			// res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
-		}
+		}*/
 	}
 	if (function.name == "Complement") {
 		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == nfa) {
-			res = ObjectNFA(get_automaton(arguments[0]).deannote());
+			FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
+			if (temp_automaton.is_deterministic()) {
+				res = ObjectDFA(temp_automaton.deannote());
+			}
+			res = ObjectNFA(temp_automaton.deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
 		}
 	}
 	if (function.name == "MergeBisim") {
-		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar());
+		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
+		if (temp_automaton.is_deterministic()) {
+			res = ObjectDFA(temp_automaton.merge_bisimilar());
+		}
+		res = ObjectNFA(temp_automaton.merge_bisimilar());
 	}
 	if (function.name == "Normalize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0])
@@ -291,7 +308,7 @@ GeneralObject Interpreter::apply_function(
 			holds_alternative<ObjectRegex>(predres)) {
 			if (Regex::equal(get<ObjectRegex>(resval).value,
 							 get<ObjectRegex>(predres).value))
-				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
+				cerr << "Function " + function.name + " do nothing. Sadness("
 					 << endl;
 		}
 
@@ -299,7 +316,7 @@ GeneralObject Interpreter::apply_function(
 			holds_alternative<ObjectDFA>(predres)) {
 			if (FiniteAutomaton::equal(get<ObjectDFA>(resval).value,
 									   get<ObjectDFA>(predres).value))
-				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
+				cerr << "Function " + function.name + " do nothing. Sadness("
 					 << endl;
 		}
 
@@ -307,7 +324,7 @@ GeneralObject Interpreter::apply_function(
 			holds_alternative<ObjectNFA>(predres)) {
 			if (FiniteAutomaton::equal(get<ObjectNFA>(resval).value,
 									   get<ObjectNFA>(predres).value))
-				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
+				cerr << "Function " + function.name + " do nothing. Sadness("
 					 << endl;
 		}
 
@@ -446,10 +463,13 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 					}
 				}
 			} else {
-				if (names_to_functions[predfunc][0].input == r) {
+				if (names_to_functions[predfunc][0].output ==
+					ObjectType::Regex) {
 					neededfuncs[i] = 2;
-				} else if (names_to_functions[predfunc][0].input == n ||
-						   names_to_functions[predfunc][0].input == d) {
+				} else if (names_to_functions[predfunc][0].output ==
+							   ObjectType::NFA ||
+						   names_to_functions[predfunc][0].output ==
+							   ObjectType::DFA) {
 					neededfuncs[i] = 3;
 				} else {
 					return nullopt;
