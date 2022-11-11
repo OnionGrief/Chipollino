@@ -5,6 +5,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 	vector<int> lengths;
 	vector<bool> belongs;
 	// automaton.determinize();
+	Logger::init_step("Test");
 	FiniteAutomaton automaton = lang.to_glushkov();
 
 	using clock = std::chrono::high_resolution_clock;
@@ -26,7 +27,6 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 		belongs.push_back(is_belongs);
 		if (time >= 180) return;
 	}
-	Logger::init_step("Test");
 	Logger::log("Язык, основанный на регулярке", lang.to_txt());
 	Logger::log("Слова порождаются регуляркой", regex.to_txt());
 	Logger::log("Шаг итерации", to_string(step));

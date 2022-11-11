@@ -2,6 +2,7 @@
 #include "BaseObject.h"
 #include "Regex.h"
 #include "RegexGenerator.h"
+#include <fstream>
 #include <map>
 #include <string>
 #include <time.h>
@@ -103,6 +104,8 @@ class TasksGenerator {
 	/* генерирует метод:
 	test (НКА | рег. выр-е, рег. выр-е без альтернатив, шаг итерации) */
 	string generate_test();
+	/*запись теста в файл*/
+	void write_to_file();
 };
 
 // TODO: убедиться, что интерпретатор + тайпчекер правильно обрабатывают

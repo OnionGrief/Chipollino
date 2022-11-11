@@ -27,6 +27,14 @@ string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 	return res_str;
 }
 
+void TasksGenerator::write_to_file() {
+	ofstream out;
+	out.open("./test.txt", ofstream::trunc);
+	if (out.is_open())
+		out << res_str;
+	out.close();
+}
+
 string TasksGenerator::generate_op() {
 	string str = "";
 	int op = rand() % 5; // на объявление - вероятность 3 / 5;

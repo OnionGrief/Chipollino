@@ -20,6 +20,11 @@ int main(int argc, char* argv[]) {
 	Interpreter interpreter;
 	interpreter.set_log_mode(Interpreter::LogMode::all);
 
+	// Используем сгенерируемый тест
+	/*TasksGenerator TG;
+	TG.generate_task(3, 5, false, false);
+	TG.write_to_file();*/
+
 	// Загружаем в интерпретатор файл с коммандами
 	string load_file = "test.txt";
 	if (argc > 1) load_file = argv[1];
