@@ -1698,7 +1698,13 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			}
 		}
 	}
-
+	if (end_state.size() ==
+		0) { //если нет принимающих состояний - то регулярки не будет
+		Regex* f = new Regex("eps");
+		Regex temp1 = *f;
+		delete f;
+		return temp1;
+	}
 	// // вывод всех уравнений
 	// for (int i = 0; i < data.size(); i++) {
 	// 	cout << i << " = ";
@@ -1764,23 +1770,14 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		}
 		data[i] = tempdata2;
 	}
-	cout << "result";
-	// вывод всех уравнений
-	for (int i = 0; i < data.size(); i++) {
-		cout << i << " = ";
-		for (int j = 0; j < data[i].size(); j++) {
-			cout << data[i][j].condition << " "
-				 << data[i][j].temp_regex->to_txt() << " ";
-		}
-		cout << "\n";
-	}
 	if (data[0].size() > 1) {
 		// cout << "error";
-		Regex* f = new Regex("");
+		Regex* f = new Regex("eps");
 		Regex temp1 = *f;
 		delete f;
 		return temp1;
 	}
+
 	for (int i = 0; i < data.size(); i++) {
 		for (int j = 0; j < data[i].size(); j++) {
 			if (data[i][j].condition != -1) {
@@ -1806,25 +1803,34 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
 		}
 	}
-	Logger::finish_step();
-	if (end_state.size() == 0) {
-		Regex* f = new Regex("");
-		Regex temp1 = *f;
-		delete f;
-		return temp1;
+	cout << "result\n";
+	// вывод всех уравнений
+	for (int i = 0; i < data.size(); i++) {
+		cout << i << " = ";
+		for (int j = 0; j < data[i].size(); j++) {
+			cout << data[i][j].condition << " "
+				 << data[i][j].temp_regex->to_txt() << " ";
+		}
+		cout << "\n";
 	}
+
+	Logger::finish_step();
+
 	if (end_state.size() < 2) {
 		Regex* r1;
 		r1 = data[end_state[0]][0].temp_regex->copy();
+
 		for (int i = 0; i < data.size(); i++) {
 			for (int j = 0; j < data[i].size(); j++) {
 				delete data[i][j].temp_regex;
 			}
 		}
-		Regex temp = *r;
-		delete r;
+
+		Regex temp = *r1;
+		delete r1;
 		return temp;
 	}
+
 	Regex* r1;
 	r1 = data[end_state[0]][0].temp_regex->copy();
 	for (int i = 1; i < end_state.size(); i++) {
@@ -1841,5 +1847,4 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	Regex temp1 = *r1;
 	delete r1;
 	return temp1;
-	// return r1;
 }
