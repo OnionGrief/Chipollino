@@ -415,9 +415,9 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 				return nullopt;
 			}
 		} else {
-			vector<ObjectType> r = {ObjectType::Regex};
-			vector<ObjectType> n = {ObjectType::NFA};
-			vector<ObjectType> d = {ObjectType::DFA};
+			vector<ObjectType> regex_type = {ObjectType::Regex};
+			vector<ObjectType> nfa_type = {ObjectType::NFA};
+			vector<ObjectType> dfa_type = {ObjectType::DFA};
 			if (names_to_functions[predfunc].size() == 2 &&
 				names_to_functions[func].size() == 2) {
 				if (predfunc != func) {
@@ -431,21 +431,21 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 				}
 			} else if (names_to_functions[predfunc].size() == 2) {
 				if (neededfuncs[i - 1] < 2) {
-					if (names_to_functions[func][0].input == r) {
+					if (names_to_functions[func][0].input == regex_type) {
 						neededfuncs[i - 1] = 2;
-					} else if (names_to_functions[func][0].input == n ||
-							   names_to_functions[func][0].input == d) {
+					} else if (names_to_functions[func][0].input == nfa_type ||
+							   names_to_functions[func][0].input == dfa_type) {
 						neededfuncs[i - 1] = 3;
 					} else {
 						return nullopt;
 					}
 				} else {
-					if (names_to_functions[func][0].input == r) {
+					if (names_to_functions[func][0].input == regex_type) {
 						if (neededfuncs[i - 1] != 2) {
 							return nullopt;
 						}
-					} else if (names_to_functions[func][0].input == n ||
-							   names_to_functions[func][0].input == d) {
+					} else if (names_to_functions[func][0].input == nfa_type ||
+							   names_to_functions[func][0].input == dfa_type) {
 						if (neededfuncs[i - 1] != 3) {
 							return nullopt;
 						}
