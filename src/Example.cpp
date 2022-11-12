@@ -447,11 +447,26 @@ void Example::arden_test() {
 		cout << "ERROR\n";
 		return;
 	}
-	FiniteAutomaton a, d;
+	FiniteAutomaton a, d, b, k;
 	a = r.to_glushkov();
 	d = a.determinize().reverse();
-	cout << d.to_txt();
-	cout << d.nfa_to_regex().to_txt();
+	// cout << d.minimize().to_txt();
+	Regex temp = d.nfa_to_regex();
+	cout << "----------" << endl;
+	// cout << temp.to_txt() << "\n";
+
+	cout << "----------" << endl;
+	string reg = temp.to_txt();
+	cout << reg << "\n";
+	// b = temp.to_glushkov();
+	// //  k = b.determinize();
+	// cout << b.determinize().to_txt();
+	Regex r2;
+	if (!r2.from_string(reg)) {
+		cout << "ERROR\n";
+		return;
+	}
+	cout << r2.to_txt();
 }
 
 void Example::table() {
