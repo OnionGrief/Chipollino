@@ -226,7 +226,7 @@ void Example::transformation_monoid_example() {
 	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
 	// cout << fa1.to_txt();
 	TransformationMonoid a(&fa1, 3);
-	cout << a.get_Equalence_Classes_Txt() << endl; //вывод эквивалентных классов
+	cout << a.get_Equalence_Classes_Txt(); //вывод эквивалентных классов
 	// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
 	// cout << a.is_minimality() << "\n";
 	// cout << a.to_Txt_MyhillNerode();
@@ -331,13 +331,13 @@ void Example::step() {
 	FiniteAutomaton fa3 = fa2.remove_eps();
 	// string f3 = fa3.to_txt();
 	string s = "merge\\_bisimilar";
-	/*Logger::activate();
-	Logger::init();*/
+	Logger::activate();
+	Logger::init();
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa1, fa2);
 	Logger::finish_step();
 	s = "skip";
-	// Logger::activate();
+	Logger::activate();
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa1, fa1);
 	Logger::finish_step();
@@ -345,8 +345,8 @@ void Example::step() {
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", fa2, fa3);
 	Logger::finish_step();
-	/*Logger::finish();
-	Logger::deactivate();*/
+	Logger::finish();
+	Logger::deactivate();
 }
 
 void Example::tester() {
@@ -399,14 +399,14 @@ void Example::step_interection() {
 	// string f2 = dfa2.to_txt();
 	FiniteAutomaton dfa3 = FiniteAutomaton::intersection(dfa1, dfa2);
 	string s = "interection";
-	/*Logger::activate();
-	Logger::init();*/
+	Logger::activate();
+	Logger::init();
 	Logger::init_step(s);
 	Logger::log("Автомат1", "Автомат2", "Пересечение автоматов", dfa1, dfa2,
 				dfa3);
 	Logger::finish_step();
-	/*Logger::finish();
-	Logger::deactivate();*/
+	Logger::finish();
+	Logger::deactivate();
 }
 
 void Example::arden_test() {
@@ -488,7 +488,13 @@ void Example::table() {
 	// 	});
 	// }
 	// string s = "test";
+	Logger::activate();
+	Logger::init();
+	// Logger::init_step(s);
 	tester();
+	// Logger::finish_step();
+	Logger::finish();
+	Logger::deactivate();
 }
 
 void Example::fa_semdet_check() {
@@ -517,26 +523,27 @@ void Example::fa_semdet_check() {
 }
 
 void Example::all_examples() {
-	determinize();
-	remove_eps();
-	minimize();
-	intersection();
-	regex_parsing();
-	regex_generating();
-	random_regex_parsing();
-	tasks_generating();
-	parsing_regex("b(ab)*b");
-	transformation_monoid_example();
-	// normalize_regex();
+	// determinize();
+	// remove_eps();
+	// minimize();
+	// intersection();
+	// regex_parsing();
+	// regex_generating();
+	// random_regex_parsing();
+	// tasks_generating();
+	// parsing_regex("b(ab)*b");
+	// transformation_monoid_example();
+	normalize_regex();
 	// step();
 	parsing_nfa();
-	// fa_subset_check();
-	// arden_test();
+	fa_subset_check();
+	arden_test();
 	// to_image();
-	tester();
+	// tester();
 	// step_interection();
 	// table();
 	fa_semdet_check();
+	Regex("abaa").pump_length();
 	cout << "all the examlples are successful" << endl;
 }
 // TEST

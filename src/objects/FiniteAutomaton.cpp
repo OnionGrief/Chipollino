@@ -287,7 +287,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 				minimized_dfa);
 	stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
-		ss << "{" << state.identifier << "} ";
+		ss << "\\{" << state.identifier << "\\} ";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
 	Logger::finish_step();
@@ -1375,6 +1375,9 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 }
 
 bool FiniteAutomaton::semdet() const {
+	Logger::init_step("SemDet");
+	Logger::log(
+		"Получение языка из производной регулярки автомата по префиксу");
 	std::map<int, bool> was;
 	std::vector<int> final_states;
 	for (int i = 0; i < states.size(); i++) {
@@ -1394,10 +1397,14 @@ bool FiniteAutomaton::semdet() const {
 		// cout << "State: " << i << "\n";
 		// cout << "Prefix: " << prefix.value() << "\n";
 		// cout << "Regex: " << reg.to_txt() << "\n";
+		Logger::log("State", to_string(i));
+		Logger::log("Prefix", prefix.value());
+		Logger::log("Regex", reg.to_txt());
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
 		state_languages[i] = derevative.value();
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
+		Logger::log("Derevative", state_languages[i].to_txt());
 		state_languages[i].make_language();
 	}
 	for (int i = 0; i < states.size(); i++) {
@@ -1418,10 +1425,16 @@ bool FiniteAutomaton::semdet() const {
 					}
 					verified_ambiguity |= reliability;
 				}
-				if (!verified_ambiguity) return false;
+				if (!verified_ambiguity) {
+					Logger::log("Результат SemDet", "false");
+					Logger::finish_step();
+					return false;
+				}
 			}
 		}
 	}
+	Logger::log("Результат SemDet", "true");
+	Logger::finish_step();
 	return true;
 }
 
@@ -1542,6 +1555,9 @@ int FiniteAutomaton::get_initial() {
 }
 
 int FiniteAutomaton::states_number() const {
+	Logger::init_step("States");
+	Logger::log(to_string(states.size()));
+	Logger::finish_step();
 	return states.size();
 }
 
@@ -1570,6 +1586,7 @@ int FiniteAutomaton::states_number() const {
 вскликает:
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
+
 bool compare(expression_arden a, expression_arden b) {
 	return (a.condition < b.condition);
 }
@@ -1648,6 +1665,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	return out;
 }
 Regex FiniteAutomaton::nfa_to_regex() const {
+	Logger::init_step("Arden");
 	vector<int> endstate;
 	vector<vector<expression_arden>> data;
 	set<alphabet_symbol> alphabet = language->get_alphabet();
@@ -1700,7 +1718,6 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	}
 	// //сортируем
 
-	Logger::init_step("Arden");
 	for (int i = data.size() - 1; i >= 0; i--) {
 
 		vector<expression_arden> tempdata;
@@ -1774,7 +1791,6 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
 		}
 	}
-	Logger::finish_step();
 	if (endstate.size() == 0) {
 		Regex* f = new Regex("");
 		Regex temp1 = *f;
@@ -1808,6 +1824,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	}
 	Regex temp1 = *r1;
 	delete r1;
+	Logger::finish_step();
 	return temp1;
 	// return r1;
 }

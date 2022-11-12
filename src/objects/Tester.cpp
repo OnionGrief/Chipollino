@@ -1,6 +1,7 @@
 #include "Tester.h"
 
 void Tester::test(const Regex& lang, const Regex& regex, int step) {
+	Logger::init_step("Test");
 	vector<double> times;
 	vector<int> lengths;
 	vector<bool> belongs;
@@ -26,7 +27,6 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 		belongs.push_back(is_belongs);
 		if (time >= 180) return;
 	}
-	Logger::init_step("Test");
 	Logger::log("Язык, основанный на регулярке", lang.to_txt());
 	Logger::log("Слова порождаются регуляркой", regex.to_txt());
 	Logger::log("Шаг итерации", to_string(step));
@@ -35,6 +35,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 }
 
 void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step) {
+	Logger::init_step("Test");
 	vector<double> times;
 	vector<int> lengths;
 	vector<bool> belongs;
@@ -57,7 +58,6 @@ void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step) {
 		if (time >= 180) return;
 	}
 
-	Logger::init_step("Test");
 	Logger::log("Автомат", lang);
 	Logger::log("Слова порождаются регуляркой", regex.to_txt());
 	Logger::log("Шаг итерации", to_string(step));

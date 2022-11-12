@@ -324,8 +324,12 @@ Regex::Regex(string str) : Regex() {
 }
 
 Regex Regex::normalize_regex(const string& file) const {
+	Logger::init_step("Normalize");
 	Regex regex = *this;
+	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
 	regex.normalize_this_regex(file);
+	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
+	Logger::finish_step();
 	return regex;
 }
 
@@ -943,20 +947,26 @@ bool Regex::is_term(int number, const vector<Lexem>& list) const {
 	return false;
 }
 Regex Regex::linearize() const {
+	Logger::init_step("Linearise");
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = i;
 	}
+	Logger::log(test.to_txt());
+	Logger::finish_step();
 	return test;
 }
 
 Regex Regex::delinearize() const {
+	Logger::init_step("DeLinearise");
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = 0;
 	}
+	Logger::log(test.to_txt());
+	Logger::finish_step();
 	return test;
 }
 
@@ -1455,14 +1465,23 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 }
 // Длина накачки
 int Regex::pump_length() const {
+	Logger::init_step("PumpLength");
 	if (language->get_pump_length()) {
+		Logger::log("Длина накачки",
+					to_string(language->get_pump_length().value()));
+		Logger::finish_step();
 		return language->get_pump_length().value();
 	}
 	std::map<std::string, bool> checked_prefixes;
 	for (int i = 1;; i++) {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
-		if (prefs.empty()) return -1;
+		if (prefs.empty()) {
+			Logger::log(
+				"Длина накачки совпадает с длиной регулярного выражения");
+			Logger::finish_step();
+			return -1;
+		}
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
 			bool was = false;
 			for (int j = 0; j < it->size(); j++) {
@@ -1496,12 +1515,16 @@ int Regex::pump_length() const {
 						cout << pumped_prefix << " " << pumping.term_r->to_txt()
 							 << "\n";
 						cout << to_txt() << "\n";*/
+						Logger::log("Длина накачки", to_string(i));
+						Logger::finish_step();
 						return i;
 					}
 				}
 			}
 		}
 	}
+	Logger::log("Длина накачки совпадает с длиной регулярного выражения");
+	Logger::finish_step();
 	return -1;
 }
 
@@ -1685,7 +1708,9 @@ string Regex::to_str_log() const {
 }
 
 Regex Regex::deannote() const {
+	Logger::init_step("DeAnnote");
 	Regex old_regex(*this);
+	Logger::log("Регулярное выражение до преобразования", old_regex.to_txt());
 	string with_number = old_regex.to_txt();
 	string new_string;
 	for (size_t i = 0; i < with_number.size(); i++) {
@@ -1694,5 +1719,8 @@ Regex Regex::deannote() const {
 		}
 	}
 	Regex new_regex(new_string);
+	Logger::log("Регулярное выражение после преобразования",
+				new_regex.to_txt());
+	Logger::finish_step();
 	return new_regex;
 }
