@@ -259,7 +259,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Reverse") {
 		res = ObjectNFA(get_automaton(arguments[0]).reverse());
 	}
-	if (function.name == "Delinearize") {
+	if (function.name == "DeLinearize") {
 		if (function.output == regex) {
 			res =
 				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
@@ -340,16 +340,13 @@ GeneralObject Interpreter::apply_function(
 	return GeneralObject();
 }
 
-bool Interpreter::typecheck(string function_name,
-							vector<ObjectType> first_type) {
-	if (first_type.size() != names_to_functions[function_name][0].input.size())
-		return false;
-	for (int i = 0; i < first_type.size(); i++) {
-		if (!((first_type[i] ==
-			   names_to_functions[function_name][0].input[i]) ||
-			  (first_type[i] == ObjectType::DFA &&
-			   names_to_functions[function_name][0].input[i] ==
-				   ObjectType::NFA)))
+bool Interpreter::typecheck(vector<ObjectType> func_input_type,
+							vector<ObjectType> input_type) {
+	if (input_type.size() != func_input_type.size()) return false;
+	for (int i = 0; i < input_type.size(); i++) {
+		if (!((input_type[i] == func_input_type[i]) ||
+			  (input_type[i] == ObjectType::DFA &&
+			   func_input_type[i] == ObjectType::NFA)))
 			return false;
 	}
 	return true;
@@ -366,7 +363,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	// 2 - функция(Delinearize или DeAnnote) принимает на вход Regex
 	// 3 - функция(Delinearize или DeAnnote) принимает на вход NFA/DFA
 	vector<int> neededfuncs(function_names.size(), 1);
-	if (typecheck(function_names[0], first_type)) {
+	if (typecheck(names_to_functions[function_names[0]][0].input, first_type)) {
 		if (names_to_functions[function_names[0]].size() == 2) {
 			neededfuncs[0] = 2;
 		} else {
@@ -374,7 +371,8 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 		}
 	} else {
 		if (names_to_functions[function_names[0]].size() == 2) {
-			if (first_type == names_to_functions[function_names[0]][1].input) {
+			if (typecheck(names_to_functions[function_names[0]][1].input,
+						  first_type)) {
 				neededfuncs[0] = 3;
 			}
 		} else {
