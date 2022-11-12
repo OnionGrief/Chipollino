@@ -511,11 +511,9 @@ void Regex::normalize_this_regex(const string& file) {
 				cout << "error rewriting rules read from file";
 				return;
 			}
-			Regex a;
-			Regex b;
+			Regex a(v1);
+			Regex b(v2);
 
-			a.from_string(v1);
-			b.from_string(v2);
 			Rules temp = {a, b};
 			all_rules.push_back(temp);
 		}
@@ -1501,8 +1499,7 @@ int Regex::pump_length() const {
 					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
 					pumped_prefix += it->substr(k, it->size() - k + j);
 					pumping.type = Type::conc;
-					pumping.term_l = new Regex;
-					pumping.term_l->from_string(pumped_prefix);
+					pumping.term_l = new Regex(pumped_prefix);
 					pumping.term_r = new Regex;
 					if (!derevative_with_respect_to_str(*it, this,
 														*pumping.term_r))
@@ -1607,11 +1604,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 	for (set<alphabet_symbol>::iterator i = alphabet.begin();
 		 i != alphabet.end(); i++) {
 		string symbol = *i;
-		Regex r;
-		if (!r.from_string(symbol)) {
-			// cout << "ERROR\n";
-			//  return;
-		}
+		Regex r(symbol);
 		alph_regex.push_back(r);
 	}
 
@@ -1725,9 +1718,9 @@ Regex Regex::deannote() const {
 			new_string += with_number[i];
 		}
 	}
-	Regex new_regex;
-	new_regex.from_string(new_string);
-	Logger::log("Регулярное выражение после преобразования", new_regex.to_txt());
+	Regex new_regex(new_string);
+	Logger::log("Регулярное выражение после преобразования",
+				new_regex.to_txt());
 	Logger::finish_step();
 	return new_regex;
 }

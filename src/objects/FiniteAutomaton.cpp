@@ -1217,7 +1217,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 	int i = 2;
 	int s = fa.states.size();
 	int min_s = min_fa.states.size();
-	int N = fa.states.size() * fa.states.size() + fa.states.size() + i + 1;
+	int N = s * s + s + i + 1;
 	vector<InfInt> paths_number(N);
 	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
 	vector<InfInt> min_paths_number(N);
@@ -1234,7 +1234,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		for (const auto& elem : min_fa.states[i].transitions)
 			for (int transition : elem.second)
 				min_adjacency_matrix[i][transition]++;
-	vector<Fraction> f1(N);
+	vector<Fraction> f1;
 	optional<Fraction> prev_val;
 	bool return_flag = true;
 	for (int k = 1; k < N + 1; k++) {
@@ -1253,17 +1253,17 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 			if (min_fa.states[v].is_terminal)
 				min_paths_number[k - 1] = min_paths_number[k - 1] + min_d[k][v];
 		}
-		if (min_paths_number[k - 1] != 0)
-			f1[k - 1] = Fraction(paths_number[k - 1], min_paths_number[k - 1]);
-		if (f1[k - 1] == Fraction()) continue;
+		if (min_paths_number[k - 1] == 0) continue;
+		f1.push_back(Fraction(paths_number[k - 1], min_paths_number[k - 1]));
+
 		if (!prev_val) {
-			prev_val = f1[k - 1];
+			prev_val = f1[f1.size() - 1];
 			continue;
 		}
-		if (!(f1[k - 1] == *prev_val)) {
+		if (!(f1[f1.size() - 1] == *prev_val)) {
 			return_flag = false;
 		}
-		prev_val = f1[k - 1];
+		prev_val = f1[f1.size() - 1];
 	}
 
 	if (return_flag) {
@@ -1273,47 +1273,53 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 			return FiniteAutomaton::almost_unambigious;
 	}
 
-	vector<vector<Fraction>> calculated(fa.states.size() + i + 1,
-										vector<Fraction>(N));
-	vector<vector<char>> is_calculated(fa.states.size() + i + 1,
-									   vector<char>(N, 0));
-	Fraction val = calc_ambiguity(fa.states.size() + i,
-								  fa.states.size() * fa.states.size(), f1,
-								  calculated, is_calculated);
+	if (f1.size() < 3) return FiniteAutomaton::polynomially_ambigious;
+	int new_s = floor(double(-1 + sqrt(-11 + 4 * f1.size())) / 2);
+	i += f1.size() - (new_s * new_s + new_s + i + 1);
+
+	vector<vector<Fraction>> calculated(new_s + i + 1,
+										vector<Fraction>(f1.size()));
+	vector<vector<char>> is_calculated(new_s + i + 1,
+									   vector<char>(f1.size(), 0));
+	Fraction val =
+		calc_ambiguity(new_s + i, new_s * new_s, f1, calculated, is_calculated);
 	prev_val = val;
 	while (val > Fraction()) {
-		d.push_back(vector<InfInt>(s));
-		paths_number.push_back(0);
-		for (int v = 0; v < s; v++) {
-			for (int i = 0; i < s; i++) {
-				d[N + 1][v] += InfInt(adjacency_matrix[i][v]) * d[N][i];
+		i++;
+		int return_counter = 0;
+		do {
+			if (return_counter == s)
+				return FiniteAutomaton::polynomially_ambigious;
+			N++;
+			d.push_back(vector<InfInt>(s));
+			paths_number.push_back(0);
+			for (int v = 0; v < s; v++) {
+				for (int i = 0; i < s; i++) {
+					d[N][v] += InfInt(adjacency_matrix[i][v]) * d[N - 1][i];
+				}
+				if (fa.states[v].is_terminal) paths_number[N - 1] += d[N][v];
 			}
-			if (fa.states[v].is_terminal) paths_number[N] += d[N + 1][v];
-		}
-		min_d.push_back(vector<InfInt>(s));
-		min_paths_number.push_back(0);
-		for (int v = 0; v < min_s; v++) {
-			for (int i = 0; i < min_s; i++) {
-				min_d[N + 1][v] +=
-					InfInt(min_adjacency_matrix[i][v]) * min_d[N][i];
+			min_d.push_back(vector<InfInt>(s));
+			min_paths_number.push_back(0);
+			for (int v = 0; v < min_s; v++) {
+				for (int i = 0; i < min_s; i++) {
+					min_d[N][v] +=
+						InfInt(min_adjacency_matrix[i][v]) * min_d[N - 1][i];
+				}
+				if (min_fa.states[v].is_terminal)
+					min_paths_number[N - 1] += min_d[N][v];
 			}
-			if (min_fa.states[v].is_terminal)
-				min_paths_number[N] += min_d[N + 1][v];
-		}
-		f1.push_back(Fraction());
-		if (min_paths_number[N] != 0)
-			f1[N] = Fraction(paths_number[N], min_paths_number[N]);
+			return_counter++;
+		} while (min_paths_number[N - 1] == 0);
+		f1.push_back(Fraction(paths_number[N - 1], min_paths_number[N - 1]));
 		for (int j = 0; j < calculated.size(); j++) {
 			calculated[j].push_back(Fraction());
 			is_calculated[j].push_back(0);
 		}
-		N++;
-		i++;
-		calculated.push_back(vector<Fraction>(N));
-		is_calculated.push_back(vector<char>(N, 0));
-		val = calc_ambiguity(fa.states.size() + i,
-							 fa.states.size() * fa.states.size(), f1,
-							 calculated, is_calculated);
+		calculated.push_back(vector<Fraction>(f1.size()));
+		is_calculated.push_back(vector<char>(f1.size(), 0));
+		val = calc_ambiguity(new_s + i, new_s * new_s, f1, calculated,
+							 is_calculated);
 		if (val > *prev_val || val == *prev_val)
 			return FiniteAutomaton::exponentially_ambiguous;
 		prev_val = val;
@@ -1324,6 +1330,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	Logger::init_step("Ambiguity");
 	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
+	Logger::log("Автомат:", *this);
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
 		Logger::log("Результат Ambiguity", "Exponentially ambiguous");
@@ -1698,12 +1705,11 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 				set<int> trans = a.transitions.at(*it);
 				for (set<int>::iterator itt = trans.begin(); itt != trans.end();
 					 itt++) {
-					Regex* r = new Regex;
 					expression_arden temp;
 					temp.condition = i;
 					string str = "";
 					str += *it;
-					r->from_string(str);
+					Regex* r = new Regex(str);
 					temp.temp_regex = r;
 					data[*itt].push_back(temp);
 				}
@@ -1755,8 +1761,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	}
 	if (data[0].size() > 1) {
 		// cout << "error";
-		Regex* f = new Regex;
-		f->from_string("");
+		Regex* f = new Regex("");
 		Regex temp1 = *f;
 		delete f;
 		return temp1;
@@ -1787,8 +1792,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		}
 	}
 	if (endstate.size() == 0) {
-		Regex* f = new Regex;
-		f->from_string("");
+		Regex* f = new Regex("");
 		Regex temp1 = *f;
 		delete f;
 		return temp1;
