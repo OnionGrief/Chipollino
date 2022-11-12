@@ -4,11 +4,10 @@ project (Interpreter)
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
 	src/Interpreter.cpp
-	src/Interpreter.Lexer.cpp
-	src/main.cpp)
+	src/Interpreter.Lexer.cpp)
 
 # Add a library with the above sources
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_library(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories( ${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}/include

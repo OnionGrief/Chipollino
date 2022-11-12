@@ -1,9 +1,8 @@
 # Set the project name
-project (Tests)
+project (InterpreterApp)
 
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
-	src/Example.cpp
 	src/main.cpp)
 
 # Add a library with the above sources
@@ -14,7 +13,5 @@ target_include_directories( ${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
- 	InputGenerator
- 	Tester
- 	Objects
+	Interpreter
 )
