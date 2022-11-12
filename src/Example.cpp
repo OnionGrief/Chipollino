@@ -214,7 +214,7 @@ void Example::transformation_monoid_example() {
 	FiniteAutomaton fa1;
 	fa1 = r.to_glushkov().determinize();
 	TransformationMonoid a(fa1);
-	cout << a.get_Equalence_Classes_Txt() << endl; //вывод эквивалентных классов
+	cout << a.get_equalence_classes_txt() << endl; //вывод эквивалентных классов
 	return;
 }
 

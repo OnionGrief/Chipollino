@@ -539,6 +539,7 @@ void Regex::pre_order_travers() const {
 }
 
 string Regex::to_txt() const {
+
 	string str1 = "", str2 = "";
 	if (term_l) {
 		str1 = term_l->to_txt();
@@ -1037,6 +1038,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 	FiniteAutomaton a(0, st, language);
 	Logger::log("", a);
 	Logger::finish_step();
+
 	return FiniteAutomaton(0, st, language);
 }
 
