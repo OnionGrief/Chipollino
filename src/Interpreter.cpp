@@ -236,7 +236,6 @@ GeneralObject Interpreter::apply_function(
 	GeneralObject predres = arguments[0];
 	optional<GeneralObject> res;
 
-
 	if (function.name == "Determinize") {
 		res = ObjectDFA(get_automaton(arguments[0]).determinize());
 	}
@@ -248,7 +247,7 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "RemEps") {
 		FiniteAutomaton temp_automaton = get_automaton(arguments[0]);
-		if (temp_automaton.is_deterministic()){
+		if (temp_automaton.is_deterministic()) {
 			res = ObjectDFA(temp_automaton.remove_eps());
 		} else {
 			res = ObjectNFA(temp_automaton.remove_eps());
@@ -262,10 +261,11 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "Delinearize") {
 		if (function.output == regex) {
-			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
-		}/* else {
-			// res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
-		}*/
+			res =
+				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
+		} /* else {
+			 // res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
+		 }*/
 	}
 	if (function.name == "Complement") {
 		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
