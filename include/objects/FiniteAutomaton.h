@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <math.h>
 #include <optional>
 #include <set>
 #include <stack>
@@ -14,8 +15,8 @@ using namespace std;
 class Regex;
 class Language;
 struct expression_arden {
-	int condition;
-	Regex* temp_regex;
+	int condition; //индекс состояния на которое ссылаемся
+	Regex* temp_regex; // Regex
 };
 struct State {
 	int index;
