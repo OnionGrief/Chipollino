@@ -47,7 +47,7 @@ class TasksGenerator {
 		{"Thompson", {REGEX}, NFA},
 		{"IlieYu", {REGEX}, NFA},
 		{"Antimirov", {REGEX}, NFA},
-		{"Arden", {NFA}, REGEX},
+		//{"Arden", {NFA}, REGEX},
 		{"Glushkov", {REGEX}, NFA},
 		{"Determinize", {NFA}, DFA},
 		{"RemEps", {NFA}, NFA},
