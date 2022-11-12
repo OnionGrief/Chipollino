@@ -18,9 +18,7 @@ int main() {
 	TG.write_to_file("test.txt");
 
 	// Загружаем в интерпретатор файл с коммандами
-	string load_file = "test.txt";
-	if (argc > 1) load_file = argv[1];
-	interpreter.load_file(load_file);
+	interpreter.load_file("test.txt");
 
 	// Выполняем коммнады
 	interpreter.run_all();
