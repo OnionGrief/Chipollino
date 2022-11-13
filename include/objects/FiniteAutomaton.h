@@ -125,14 +125,12 @@ class FiniteAutomaton : public BaseObject {
 											   // и тд
 	//начальное состояние
 	int get_initial();
-	//получаем алфавит
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity() const;
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
+	// метод Arden
+	Regex nfa_to_regex() const;
 	friend class Regex;
 	friend class TransformationMonoid;
-
-	Regex nfa_to_regex() const;
-	// получаем кол-во состояний
 };

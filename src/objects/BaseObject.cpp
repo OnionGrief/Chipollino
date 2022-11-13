@@ -6,4 +6,4 @@ BaseObject::BaseObject(){};
 BaseObject::BaseObject(shared_ptr<Language> language) : language(language){};
 
 BaseObject::BaseObject(set<alphabet_symbol> alphabet)
-	: language(new Language(alphabet)){};
+	: language(make_shared<Language>(alphabet)){};

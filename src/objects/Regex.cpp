@@ -349,7 +349,7 @@ bool Regex::from_string(string str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	language = shared_ptr<Language>(new Language(alphabet));
+	language = make_shared<Language>(alphabet);
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 		term_l->term_p = this;
@@ -430,7 +430,7 @@ void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 void Regex::make_language() {
 	generate_alphabet(alphabet);
 
-	language = shared_ptr<Language>(new Language(alphabet));
+	language = make_shared<Language>(alphabet);
 }
 
 void Regex::clear() {
@@ -1467,9 +1467,7 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 int Regex::pump_length() const {
 	Logger::init_step("PumpLength");
 	if (language->get_pump_length()) {
-		Logger::log("Длина накачки",
-					to_string(language->get_pump_length().value()));
-		Logger::finish_step();
+		cout << "LPAD P\n";
 		return language->get_pump_length().value();
 	}
 	std::map<std::string, bool> checked_prefixes;
@@ -1480,6 +1478,9 @@ int Regex::pump_length() const {
 			Logger::log(
 				"Длина накачки совпадает с длиной регулярного выражения");
 			Logger::finish_step();
+			language->set_pump_length(-1); // TODO нужно оформить получение
+										   // значения в отдельную фунцию
+			// тогда и результат кэшировать проще, и логи делать
 			return -1;
 		}
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
@@ -1505,8 +1506,7 @@ int Regex::pump_length() const {
 														*pumping.term_r))
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language =
-						shared_ptr<Language>(new Language(pumping.alphabet));
+					pumping.language = make_shared<Language>(pumping.alphabet);
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
@@ -1525,6 +1525,7 @@ int Regex::pump_length() const {
 	}
 	Logger::log("Длина накачки совпадает с длиной регулярного выражения");
 	Logger::finish_step();
+	language->set_pump_length(-1);
 	return -1;
 }
 
