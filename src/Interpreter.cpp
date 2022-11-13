@@ -56,9 +56,13 @@ Interpreter::Interpreter() {
 		{"Subset",
 		 {{"Subset",
 		   {ObjectType::Regex, ObjectType::Regex},
-		   ObjectType::Boolean}}},
+		   ObjectType::Boolean},
+		  {"Subset", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equiv",
-		 {{"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
+		 {{"Equiv",
+		   {ObjectType::Regex, ObjectType::Regex},
+		   ObjectType::Boolean},
+		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equal",
 		 {{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
@@ -136,6 +140,11 @@ GeneralObject Interpreter::apply_function(
 		if (holds_alternative<ObjectDFA>(obj)) {
 			return get<ObjectDFA>(obj).value;
 		}
+	};
+
+	auto is_automaton = [](const GeneralObject& obj) -> const bool {
+		return holds_alternative<ObjectNFA>(obj) ||
+			   holds_alternative<ObjectDFA>(obj);
 	};
 
 	if (function.name == "Glushkov") {
@@ -297,26 +306,9 @@ GeneralObject Interpreter::apply_function(
 					 << endl;
 		}
 
-		FiniteAutomaton fa1, fa2;
-		bool is_fa1 = false, is_fa2 = false;
-		if (holds_alternative<ObjectDFA>(resval)) {
-			fa1 = get<ObjectDFA>(resval).value;
-			is_fa1 = true;
-		}
-		if (holds_alternative<ObjectDFA>(predres)) {
-			fa2 = get<ObjectDFA>(predres).value;
-			is_fa2 = true;
-		}
-		if (holds_alternative<ObjectNFA>(resval)) {
-			fa1 = get<ObjectNFA>(resval).value;
-			is_fa1 = true;
-		}
-		if (holds_alternative<ObjectNFA>(predres)) {
-			fa2 = get<ObjectNFA>(predres).value;
-			is_fa2 = true;
-		}
-		if (is_fa1 && is_fa2)
-			if (FiniteAutomaton::equal(fa1, fa2)) {
+		if (is_automaton(resval) && is_automaton(predres))
+			if (FiniteAutomaton::equal(get_automaton(resval),
+									   get_automaton(predres))) {
 				cerr << "Function " + function.name + " do nothing. Sadness("
 					 << endl;
 			}
