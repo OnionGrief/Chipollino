@@ -378,8 +378,10 @@ void Regex::regex_star(Regex* a) {
 void Regex::regex_eps() {
 	type = Type::eps;
 }
+
 Regex* Regex::copy() const {
 	Regex* c = new Regex();
+	c->alphabet = alphabet;
 	c->type = type;
 	c->value = value;
 	c->language = language;
@@ -398,9 +400,17 @@ Regex::Regex(const Regex& reg)
 	: BaseObject(reg.language), type(reg.type), value(reg.value),
 	  term_p(reg.term_p), alphabet(reg.alphabet),
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
-	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
+	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {
+	if (type != Regex::eps && type != Regex::symb) {
+		if (term_l) term_l->term_p = this;
+		if (type != Regex::star) {
+			if (term_r) term_r->term_p = this;
+		}
+	}
+}
 
 Regex& Regex::operator=(const Regex& reg) {
+	alphabet = reg.alphabet;
 	type = reg.type;
 	value = reg.value;
 	language = reg.language;
@@ -435,21 +445,19 @@ void Regex::make_language() {
 
 void Regex::clear() {
 	if (term_l != nullptr) {
-		// term_l->clear();
 		delete term_l;
 		term_l = nullptr;
 	}
 	if (term_r != nullptr) {
-		// term_r->clear();
 		delete term_r;
 		term_r = nullptr;
 	}
-	// delete language;
 }
 
 Regex::~Regex() {
 	clear();
 }
+
 int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
 							  Regex* original) {
 	int cond = 0;
@@ -1467,7 +1475,9 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 int Regex::pump_length() const {
 	Logger::init_step("PumpLength");
 	if (language->get_pump_length()) {
-		cout << "LPAD P\n";
+		Logger::log("Длина накачки",
+					to_string(language->get_pump_length().value()));
+		Logger::finish_step();
 		return language->get_pump_length().value();
 	}
 	std::map<std::string, bool> checked_prefixes;
@@ -1536,11 +1546,11 @@ bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 	if (r1->value.symbol != "")
 		r1_value = r1->value.symbol;
 	else
-		r1_value = r1->type;
+		r1_value = to_string(r1->type);
 	if (r2->value.symbol != "")
 		r2_value = r2->value.symbol;
 	else
-		r2_value = r2->type;
+		r2_value = to_string(r2->type);
 
 	if (r1_value != r2_value) return false;
 
@@ -1724,4 +1734,33 @@ Regex Regex::deannote() const {
 				new_regex.to_txt());
 	Logger::finish_step();
 	return new_regex;
+}
+
+// для дебага
+void Regex::print_subtree(Regex* r, int level) {
+	if (r) {
+		print_subtree(r->term_l, level + 1);
+		for (int i = 0; i < level; i++)
+			cout << "   ";
+		alphabet_symbol r_v;
+		if (r->value.symbol != "")
+			r_v = r->value.symbol;
+		else
+			r_v = to_string(r->type);
+		cout << r_v << endl;
+		print_subtree(r->term_r, level + 1);
+	}
+}
+
+void Regex::print_tree() {
+	print_subtree(term_l, 1);
+	for (int i = 0; i < 0; i++)
+		cout << "   ";
+	alphabet_symbol r_v;
+	if (value.symbol != "")
+		r_v = value.symbol;
+	else
+		r_v = to_string(type);
+	cout << r_v << endl;
+	print_subtree(term_r, 1);
 }
