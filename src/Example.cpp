@@ -778,3 +778,17 @@ void Example::test_arden() {
 void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
 }
+
+Regex return_regex(Regex R) {
+	cout<<"RETURN REGEX "<<R.to_txt()<<endl;
+	return R;
+}
+
+void Example::error_test() {
+	Regex r;
+	r.from_string("(a|b)b");
+	cout<<r.to_txt()<<endl;
+	cout<<return_regex(r).to_txt()<<endl;
+	cout<<"test2:\n";
+	cout<<return_regex(Regex("(a|b)b")).to_txt()<<endl;
+}

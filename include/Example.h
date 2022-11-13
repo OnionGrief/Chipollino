@@ -49,4 +49,5 @@ class Example {
 	static void test_ambiguity();
 	static void test_arden();
 	static void test_pump_length();
+	static void error_test();
 };
