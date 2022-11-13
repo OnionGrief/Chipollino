@@ -378,27 +378,16 @@ void Regex::regex_star(Regex* a) {
 void Regex::regex_eps() {
 	type = Type::eps;
 }
+
 Regex* Regex::copy() const {
-	Regex* c = new Regex();
-	c->type = type;
-	c->value = value;
-	c->language = language;
-	if (type != Regex::eps && type != Regex::symb) {
-		c->term_l = term_l->copy();
-		c->term_l->term_p = c;
-		if (type != Regex::star) {
-			c->term_r = term_r->copy();
-			c->term_r->term_p = c;
-		}
-	}
-	return c;
+	return new Regex(*this);
 }
 
 Regex::Regex(const Regex& reg)
 	: BaseObject(reg.language), type(reg.type), value(reg.value),
 	  term_p(reg.term_p), alphabet(reg.alphabet),
-	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
-	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
+	  term_l(reg.term_l == nullptr ? nullptr : new Regex(*reg.term_l)),
+	  term_r(reg.term_r == nullptr ? nullptr : new Regex(*reg.term_r)) {}
 
 Regex& Regex::operator=(const Regex& reg) {
 	type = reg.type;
