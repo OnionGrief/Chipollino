@@ -420,22 +420,22 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 
 			if (names_to_functions[predfunc].size() == 2 &&
 				names_to_functions[func].size() == 2) {
-				if (predfunc == func) {
+				if (predfunc != func) {
 					if (neededfuncs[i - 1] > 1) {
 						neededfuncs[i] = neededfuncs[i - 1];
 					} else {
 						return nullopt;
 					}
 				} else {
-					neededfuncs[i - 1] = 0;
+					neededfuncs[i] = 0;
 				}
 			} else if (names_to_functions[predfunc].size() == 2) {
 				if (neededfuncs[i - 1] < 2) {
 					if (names_to_functions[func][0].input == regex_type) {
-						neededfuncs[i - 1] = 2;
+						neededfuncs[i] = 2;
 					} else if (names_to_functions[func][0].input == nfa_type ||
 							   names_to_functions[func][0].input == dfa_type) {
-						neededfuncs[i - 1] = 3;
+						neededfuncs[i] = 3;
 					} else {
 						return nullopt;
 					}
