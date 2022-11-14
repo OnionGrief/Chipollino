@@ -6,11 +6,10 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 	vector<int> lengths;
 	vector<bool> belongs;
 	// automaton.determinize();
-	Logger::init_step("Test");
 	FiniteAutomaton automaton = lang.to_glushkov();
 
 	using clock = std::chrono::high_resolution_clock;
-	int word_length = 0;
+	size_t word_length = -1;
 
 	for (int i = 0; i < 13; i++) {
 		string word = regex.get_iterated_word(i * step);
