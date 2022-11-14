@@ -1101,7 +1101,7 @@ FiniteAutomaton Regex::to_ilieyu() const {
 	}
 
 	// cout << str_follow;
-	
+
 	Logger::log("Регулярное выражение", to_txt());
 	Logger::log("Автомат Глушкова", glushkov);
 	Logger::log("Follow-отношения", str_follow);
