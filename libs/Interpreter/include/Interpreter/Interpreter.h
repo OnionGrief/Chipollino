@@ -13,7 +13,11 @@ using namespace Typization;
 
 class Interpreter {
   public:
-	enum class LogMode { all, errors, nothing };
+	enum class LogMode {
+		all,
+		errors,
+		nothing
+	};
 	Interpreter();
 	// Загрузить программу из файла
 	void load_file(const string& filename);
@@ -98,6 +102,9 @@ class Interpreter {
 	// Список опреаций для последовательного выполнения
 	vector<GeneralOperation> operations;
 
+	// Сравнение типов ожидаемых и полученных входных данных
+	bool typecheck(vector<ObjectType> func_input_type,
+				   vector<ObjectType> input_type);
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(
 		vector<string> function_names, vector<ObjectType> first_type);

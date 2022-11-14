@@ -13,7 +13,6 @@ bool operator==(const Function& l, const Function& r) {
 Interpreter::Interpreter() {
 	names_to_functions = {
 		{"Thompson", {{"Thompson", {ObjectType::Regex}, ObjectType::NFA}}},
-
 		{"IlieYu", {{"IlieYu", {ObjectType::Regex}, ObjectType::NFA}}},
 		{"Antimirov", {{"Antimirov", {ObjectType::Regex}, ObjectType::NFA}}},
 		{"Arden", {{"Arden", {ObjectType::NFA}, ObjectType::Regex}}},
@@ -57,9 +56,13 @@ Interpreter::Interpreter() {
 		{"Subset",
 		 {{"Subset",
 		   {ObjectType::Regex, ObjectType::Regex},
-		   ObjectType::Boolean}}},
+		   ObjectType::Boolean},
+		  {"Subset", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equiv",
-		 {{"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
+		 {{"Equiv",
+		   {ObjectType::Regex, ObjectType::Regex},
+		   ObjectType::Boolean},
+		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equal",
 		 {{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
@@ -139,6 +142,11 @@ GeneralObject Interpreter::apply_function(
 		}
 	};
 
+	auto is_automaton = [](const GeneralObject& obj) -> const bool {
+		return holds_alternative<ObjectNFA>(obj) ||
+			   holds_alternative<ObjectDFA>(obj);
+	};
+
 	if (function.name == "Glushkov") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_glushkov());
 	}
@@ -167,7 +175,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
 			return ObjectBoolean((get_automaton(arguments[0])
-									  .subset(get_automaton(arguments[0]))));
+									  .subset(get_automaton(arguments[1]))));
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
@@ -197,15 +205,6 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "SemDet") {
 		return ObjectBoolean(get_automaton(arguments[0]).semdet());
-	}
-	if (function.name == "Determinize") {
-		return ObjectDFA(get_automaton(arguments[0]).determinize());
-	}
-	if (function.name == "Minimize") {
-		return ObjectDFA(get_automaton(arguments[0]).minimize());
-	}
-	if (function.name == "Annote") {
-		return ObjectDFA(get_automaton(arguments[0]).annote());
 	}
 	if (function.name == "PumpLength") {
 		return ObjectInt(get<ObjectRegex>(arguments[0]).value.pump_length());
@@ -245,6 +244,15 @@ GeneralObject Interpreter::apply_function(
 	GeneralObject predres = arguments[0];
 	optional<GeneralObject> res;
 
+	if (function.name == "Determinize") {
+		res = ObjectDFA(get_automaton(arguments[0]).determinize());
+	}
+	if (function.name == "Minimize") {
+		res = ObjectDFA(get_automaton(arguments[0]).minimize());
+	}
+	if (function.name == "Annote") {
+		res = ObjectDFA(get_automaton(arguments[0]).annote());
+	}
 	if (function.name == "RemEps") {
 		res = ObjectNFA(get_automaton(arguments[0]).remove_eps());
 	}
@@ -254,15 +262,17 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Reverse") {
 		res = ObjectNFA(get_automaton(arguments[0]).reverse());
 	}
-	if (function.name == "Delinearize") {
+	if (function.name == "DeLinearize") {
 		if (function.output == regex) {
 			res =
 				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
-		} else {
-			// res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
-		}
+		} /* else {
+			 // res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
+		 }*/
 	}
 	if (function.name == "Complement") {
+		// FiniteAutomaton fa = get_automaton(arguments[0]);
+		// if (fa.is_deterministic())
 		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
 	}
 	if (function.name == "DeAnnote") {
@@ -287,26 +297,22 @@ GeneralObject Interpreter::apply_function(
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
 		Logger::activate_step_counter();
-		if (holds_alternative<ObjectRegex>(resval)) {
+
+		if (holds_alternative<ObjectRegex>(resval) &&
+			holds_alternative<ObjectRegex>(predres)) {
 			if (Regex::equal(get<ObjectRegex>(resval).value,
 							 get<ObjectRegex>(predres).value))
-				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
+				cerr << "Function " + function.name + " do nothing. Sadness("
 					 << endl;
 		}
 
-		if (holds_alternative<ObjectDFA>(resval)) {
-			if (FiniteAutomaton::equal(get<ObjectDFA>(resval).value,
-									   get<ObjectDFA>(predres).value))
-				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
+		if (is_automaton(resval) && is_automaton(predres))
+			if (FiniteAutomaton::equal(get_automaton(resval),
+									   get_automaton(predres))) {
+				cerr << "Function " + function.name + " do nothing. Sadness("
 					 << endl;
-		}
+			}
 
-		if (holds_alternative<ObjectNFA>(resval)) {
-			if (FiniteAutomaton::equal(get<ObjectNFA>(resval).value,
-									   get<ObjectNFA>(predres).value))
-				cerr << "Функция " + function.name + " ниче не меняет. Грусть("
-					 << endl;
-		}
 		Logger::deactivate_step_counter();
 		return res.value();
 	}
@@ -322,6 +328,18 @@ GeneralObject Interpreter::apply_function(
 	return GeneralObject();
 }
 
+bool Interpreter::typecheck(vector<ObjectType> func_input_type,
+							vector<ObjectType> input_type) {
+	if (input_type.size() != func_input_type.size()) return false;
+	for (int i = 0; i < input_type.size(); i++) {
+		if (!((input_type[i] == func_input_type[i]) ||
+			  (input_type[i] == ObjectType::DFA &&
+			   func_input_type[i] == ObjectType::NFA)))
+			return false;
+	}
+	return true;
+}
+
 optional<vector<Function>> Interpreter::build_function_sequence(
 	vector<string> function_names, vector<ObjectType> first_type) {
 	if (!function_names.size()) {
@@ -331,9 +349,9 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	// 0 - функцию надо исключить из последовательности
 	// 1 - функция остается в последовательности
 	// 2 - функция(Delinearize или DeAnnote) принимает на вход Regex
-	// 3 - функция(Delinearize или DeAnnote) принимает на вход NFA
+	// 3 - функция(Delinearize или DeAnnote) принимает на вход NFA/DFA
 	vector<int> neededfuncs(function_names.size(), 1);
-	if (first_type == names_to_functions[function_names[0]][0].input) {
+	if (typecheck(names_to_functions[function_names[0]][0].input, first_type)) {
 		if (names_to_functions[function_names[0]].size() == 2) {
 			neededfuncs[0] = 2;
 		} else {
@@ -341,32 +359,38 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 		}
 	} else {
 		if (names_to_functions[function_names[0]].size() == 2) {
-			if (first_type == names_to_functions[function_names[0]][1].input) {
+			if (typecheck(names_to_functions[function_names[0]][1].input,
+						  first_type)) {
 				neededfuncs[0] = 3;
 			}
 		} else {
 			return nullopt;
 		}
 	}
+
+	string predfunc = function_names[0];
 	for (int i = 1; i < function_names.size(); i++) {
+		cout<<function_names[i]<<endl;
+		if (neededfuncs[i - 1] != 0) predfunc = function_names[i - 1];
 		string func = function_names[i];
-		string predfunc = function_names[i - 1];
 		// check on types
+
 		if (names_to_functions[func].size() == 1 &&
 			names_to_functions[predfunc].size() == 1) {
 			if (names_to_functions[func][0].input.size() == 1) {
 				if (names_to_functions[predfunc][0].output !=
 					names_to_functions[func][0].input[0]) {
-					vector<ObjectType> v = {ObjectType::NFA};
+					vector<ObjectType> nfa_type = {ObjectType::NFA};
 					if (!(names_to_functions[predfunc][0].output ==
 							  ObjectType::DFA &&
-						  names_to_functions[func][0].input == v)) {
+						  names_to_functions[func][0].input == nfa_type)) {
 						return nullopt;
 					} else {
-						if (predfunc == "Determinize" || predfunc == "Annote") {
-							if (func == "Determinize" || func == "Minimize" ||
-								func == "Annote") {
-								neededfuncs[i - 1] = 0;
+						if (func == "Determinize" || func == "Annote") {
+							if (predfunc == "Determinize" ||
+								predfunc == "Minimize" ||
+								predfunc == "Annote") {
+								neededfuncs[i] = 0;
 							}
 						} else if (predfunc == "Minimize" &&
 								   func == "Minimize") {
@@ -375,12 +399,12 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 					}
 				} else {
 					if (predfunc == func) {
-						if (predfunc != "Reverse" || predfunc != "Complement") {
+						if (predfunc != "Reverse" && predfunc != "Complement") {
 							neededfuncs[i - 1] = 0;
 						}
 					} else {
-						if (predfunc == "Linearize" &&
-							(func == "Glushkov" || func == "IlieYu")) {
+						if (func == "Linearize" &&
+							(predfunc == "Glushkov" || predfunc == "IlieYu")) {
 							neededfuncs[i - 1] = 0;
 						}
 					}
@@ -389,8 +413,11 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 				return nullopt;
 			}
 		} else {
-			vector<ObjectType> r = {ObjectType::Regex};
-			vector<ObjectType> n = {ObjectType::NFA};
+
+			vector<ObjectType> regex_type = {ObjectType::Regex};
+			vector<ObjectType> nfa_type = {ObjectType::NFA};
+			vector<ObjectType> dfa_type = {ObjectType::DFA};
+
 			if (names_to_functions[predfunc].size() == 2 &&
 				names_to_functions[func].size() == 2) {
 				if (predfunc != func) {
@@ -400,23 +427,25 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 						return nullopt;
 					}
 				} else {
-					neededfuncs[i - 1] = 0;
+					neededfuncs[i] = 0;
 				}
 			} else if (names_to_functions[predfunc].size() == 2) {
 				if (neededfuncs[i - 1] < 2) {
-					if (names_to_functions[func][0].input == r) {
-						neededfuncs[i - 1] = 2;
-					} else if (names_to_functions[func][0].input == n) {
-						neededfuncs[i - 1] = 3;
+					if (names_to_functions[func][0].input == regex_type) {
+						neededfuncs[i] = 2;
+					} else if (names_to_functions[func][0].input == nfa_type ||
+							   names_to_functions[func][0].input == dfa_type) {
+						neededfuncs[i] = 3;
 					} else {
 						return nullopt;
 					}
 				} else {
-					if (names_to_functions[func][0].input == r) {
+					if (names_to_functions[func][0].input == regex_type) {
 						if (neededfuncs[i - 1] != 2) {
 							return nullopt;
 						}
-					} else if (names_to_functions[func][0].input == n) {
+					} else if (names_to_functions[func][0].input == nfa_type ||
+							   names_to_functions[func][0].input == dfa_type) {
 						if (neededfuncs[i - 1] != 3) {
 							return nullopt;
 						}
@@ -425,9 +454,13 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 					}
 				}
 			} else {
-				if (names_to_functions[predfunc][0].input == r) {
+				if (names_to_functions[predfunc][0].output ==
+					ObjectType::Regex) {
 					neededfuncs[i] = 2;
-				} else if (names_to_functions[predfunc][0].input == n) {
+				} else if (names_to_functions[predfunc][0].output ==
+							   ObjectType::NFA ||
+						   names_to_functions[predfunc][0].output ==
+							   ObjectType::DFA) {
 					neededfuncs[i] = 3;
 				} else {
 					return nullopt;
@@ -435,6 +468,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			}
 		}
 	}
+
 	optional<vector<Function>> finalfuncs = nullopt;
 	finalfuncs.emplace() = {};
 	for (int i = 0; i < function_names.size(); i++) {
@@ -443,6 +477,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 				Function f = names_to_functions[function_names[i]][0];
 				finalfuncs.value().push_back(f);
 			} else {
+				// тип NFA для DeAnnote
 				Function f = names_to_functions[function_names[i]][1];
 				finalfuncs.value().push_back(f);
 			}

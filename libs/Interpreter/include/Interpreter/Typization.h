@@ -53,7 +53,7 @@ using GeneralObject = variant<ObjectHolder<ObjectType::NFA, FiniteAutomaton>,
 struct Function {
 	// Имя функции
 	string name;
-	// Типы воходных аргументов
+	// Типы входных аргументов
 	vector<ObjectType> input;
 	// Тип выходного аргумента
 	ObjectType output;
