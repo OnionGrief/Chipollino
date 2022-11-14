@@ -379,6 +379,21 @@ void Regex::regex_eps() {
 	type = Type::eps;
 }
 
+void Regex::clear() {
+	if (term_l != nullptr) {
+		delete term_l;
+		term_l = nullptr;
+	}
+	if (term_r != nullptr) {
+		delete term_r;
+		term_r = nullptr;
+	}
+}
+
+Regex::~Regex() {
+	clear();
+}
+
 Regex* Regex::copy() const {
 	Regex* c = new Regex();
 	c->alphabet = alphabet;
@@ -398,29 +413,26 @@ Regex* Regex::copy() const {
 
 Regex::Regex(const Regex& reg)
 	: BaseObject(reg.language), type(reg.type), value(reg.value),
-	  term_p(reg.term_p), alphabet(reg.alphabet),
+	  term_p(nullptr), alphabet(reg.alphabet),
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
 	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {
-	if (type != Regex::eps && type != Regex::symb) {
-		if (term_l) term_l->term_p = this;
-		if (type != Regex::star) {
-			if (term_r) term_r->term_p = this;
-		}
-	}
+	if (term_l) term_l->term_p = this;
+	if (term_r) term_r->term_p = this;
 }
 
 Regex& Regex::operator=(const Regex& reg) {
-	alphabet = reg.alphabet;
+	clear();
+	language = reg.language;
 	type = reg.type;
 	value = reg.value;
-	language = reg.language;
-	if (type != Regex::eps && type != Regex::symb) {
+	alphabet = reg.alphabet;
+	if (reg.term_l) {
 		term_l = reg.term_l->copy();
 		term_l->term_p = this;
-		if (type != Regex::star) {
-			term_r = reg.term_r->copy();
-			term_r->term_p = this;
-		}
+	}
+	if (reg.term_r) {
+		term_r = reg.term_r->copy();
+		term_r->term_p = this;
 	}
 	return *this;
 }
@@ -441,21 +453,6 @@ void Regex::make_language() {
 	generate_alphabet(alphabet);
 
 	language = make_shared<Language>(alphabet);
-}
-
-void Regex::clear() {
-	if (term_l != nullptr) {
-		delete term_l;
-		term_l = nullptr;
-	}
-	if (term_r != nullptr) {
-		delete term_r;
-		term_r = nullptr;
-	}
-}
-
-Regex::~Regex() {
-	clear();
 }
 
 int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
