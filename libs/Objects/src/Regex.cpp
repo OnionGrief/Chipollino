@@ -1512,12 +1512,12 @@ int Regex::pump_length() const {
 					if (subset(repumping)) {
 						checked_prefixes[*it] = true;
 						language->set_pump_length(i);
-						cout << *it << "\n";
+						/*cout << *it << "\n";
 						cout << pumping.to_txt() << "\n";
 						cout << to_txt() << "\n";
 						cout << subset(pumping) << "\n";
 						Regex pump2;
-						cout << subset(pump2);
+						cout << subset(pump2);*/
 						Logger::log("Длина накачки", to_string(i));
 						Logger::finish_step();
 						return i;
