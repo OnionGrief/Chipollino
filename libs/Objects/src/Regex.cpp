@@ -1479,6 +1479,7 @@ int Regex::pump_length() const {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
 		if (prefs.empty()) {
+			language->set_pump_length(i);
 			Logger::log(
 				"Длина накачки совпадает с длиной регулярного выражения");
 			Logger::finish_step();
