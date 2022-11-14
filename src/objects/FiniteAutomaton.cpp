@@ -1186,10 +1186,8 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	Logger::init_step("Subset");
 	Logger::log("Автоматы:");
 	Logger::log("Первый автомат", "Второй автомат", *this, fa);
-	FiniteAutomaton dfa1(determinize());
-	FiniteAutomaton dfa2(fa.determinize());
-	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
-	bool result = equivalent(dfa_instersection, dfa2);
+	FiniteAutomaton fa_instersection(intersection(*this, fa));
+	bool result = equivalent(fa_instersection, fa);
 	if (result)
 		Logger::log("Результат Subset", "true");
 	else
