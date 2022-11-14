@@ -122,8 +122,10 @@ vector<string> rewriting(vector<string> in,
 
 //Получаем ДКА и строим моноид
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
+	Logger::activate_step_counter();
 	automat = in.remove_trap_states();
 	automat.remove_unreachable_states();
+	Logger::deactivate_step_counter();
 	int i = 0;
 	bool cond_get_transactions = true;
 	while (cond_get_transactions) {
@@ -194,25 +196,6 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 			cond_get_transactions = false;
 		}
 	}
-	Logger::init_step("equivalence classes");
-	for (int i = 0; i < terms.size(); i++) {
-		Logger::log("class " + to_str(terms[i].name),
-					terms[i].isFinal ? "in lang" : "not in lang");
-		for (int j = 0; j < terms[i].transitions.size(); j++) {
-			Logger::log("transition " +
-							std::to_string(terms[i].transitions[j].first),
-						std::to_string(terms[i].transitions[j].second));
-		}
-	}
-	Logger::finish_step();
-	Logger::init_step("Rewriting Rules");
-	for (auto& item : rules) {
-		for (int i = 0; i < item.second.size(); i++) {
-			Logger::log("rewriting " + to_str(item.first),
-						to_str(item.second[i]));
-		}
-	}
-	Logger::finish_step();
 }
 
 string TransformationMonoid::to_txt() const {
@@ -231,7 +214,7 @@ map<vector<string>, vector<vector<string>>> TransformationMonoid::
 
 string TransformationMonoid::get_equalence_classes_txt() {
 	stringstream ss;
-	Logger::init_step("equivalence classes");
+	Logger::init_step("Equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
 
 		Logger::log("class " + to_str(terms[i].name),
@@ -391,7 +374,7 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 //Вернет	-1	если	не	синхронизирован	или	номер
 //состояния	с	которым синхронизирован
 int TransformationMonoid::is_synchronized(const Term& w) {
-	Logger::init_step("is synchronized word?");
+	Logger::init_step("Is synchronized word?");
 	Logger::log("word " + to_str(w.name));
 
 	if (w.transitions.size() == 0) {
@@ -414,7 +397,7 @@ int TransformationMonoid::is_synchronized(const Term& w) {
 
 //Вернет число классов эквивалентности
 int TransformationMonoid::class_card() {
-	Logger::init_step("number of equivalence classes");
+	Logger::init_step("Number of equivalence classes");
 	Logger::log(to_string(terms.size()));
 	Logger::finish_step();
 	return terms.size();
@@ -422,9 +405,9 @@ int TransformationMonoid::class_card() {
 
 //Вернет самое длинное слово в классе
 int TransformationMonoid::class_length() {
-	Logger::init_step("longest word in the class");
-	Logger::log("size " + to_string(terms[terms.size() - 1].name.size()));
-	Logger::log("one of the correct words " +
+	Logger::init_step("Longest word in the class");
+	Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
+	Logger::log("One of the correct words",
 				to_str(terms[terms.size() - 1].name));
 	Logger::finish_step();
 	return terms[terms.size() - 1].name.size();
@@ -440,7 +423,7 @@ int TransformationMonoid::classes_number_MyhillNerode() {
 			}
 		}
 	}
-	Logger::init_step("classes_number_MyhillNerode");
+	Logger::init_step("Myhill-Nerode сlasses number");
 	Logger::log(to_string(sum));
 	Logger::finish_step();
 	return sum;
@@ -477,7 +460,7 @@ bool TransformationMonoid::is_minimal() {
 		}
 	}
 
-	Logger::init_step("is_minimal");
+	Logger::init_step("Is minimal");
 
 	Logger::log(((log2(terms.size()) + 1) <= counter) ? "true" : "false");
 	Logger::finish_step();
