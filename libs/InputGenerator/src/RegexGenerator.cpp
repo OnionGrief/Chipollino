@@ -26,7 +26,8 @@ RegexGenerator::RegexGenerator(int regex_length, int cur_star_num,
 									 generate_alphabet(regex_length)) {}
 
 void RegexGenerator::change_seed() {
-	srand(time(nullptr) + rand() % 100);
+	seed_it++;
+	srand((size_t)time(nullptr) + seed_it + rand());
 }
 
 int RegexGenerator::generate_alphabet(int regex_length) {

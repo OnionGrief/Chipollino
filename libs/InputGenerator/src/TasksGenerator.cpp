@@ -6,7 +6,8 @@ TasksGenerator::TasksGenerator() {
 }
 
 void TasksGenerator::change_seed() {
-	srand(time(nullptr) + rand() % 100);
+	seed_it++;
+	srand((size_t)time(nullptr) + seed_it + rand());
 }
 
 string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,

@@ -25,6 +25,7 @@ class TasksGenerator {
 
   private:
 	RegexGenerator regex_generator;
+	size_t seed_it = 0; // итерация для рандома
 
 	string res_str = "";
 	int max_num_of_func_in_seq = 5; // максимальное кол-во функций в посл-ти

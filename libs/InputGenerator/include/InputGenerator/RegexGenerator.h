@@ -9,6 +9,7 @@ using namespace std;
 class RegexGenerator {
   private:
 	vector<char> alphabet; // TODO: убрать алфавит
+	size_t seed_it = 0; // итерация для рандома
 
 	int regex_length = 0;
 	int star_num = 0;
