@@ -206,12 +206,13 @@ void Example::parsing_regex(string str) {
 }
 
 void Example::transformation_monoid_example() {
-	FiniteAutomaton fa = Regex("(aba)*ba").to_tompson();
+	FiniteAutomaton fa = Regex("ababa").to_tompson();
 	TransformationMonoid a(fa);
 	a.get_equalence_classes_txt();
 	a.get_rewriting_rules_txt();
 	a.class_card();
 	a.class_length();
+	a.is_minimal();
 	a.classes_number_MyhillNerode();
 }
 

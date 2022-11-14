@@ -275,11 +275,6 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 			}
 		}
 	}
-	Logger::init_step("Rewriting Rules VW");
-	for (int i = 0; i < out.size(); i++) {
-		Logger::log("class " + to_str(out[i].name), "");
-	}
-	Logger::finish_step();
 	return out;
 }
 
@@ -307,11 +302,6 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 			}
 		}
 	}
-	Logger::init_step("Rewriting Rules WV");
-	for (int i = 0; i < out.size(); i++) {
-		Logger::log("class " + to_str(out[i].name), "");
-	}
-	Logger::finish_step();
 	return out;
 }
 bool wasTransition(vector<TransformationMonoid::Transition> mas,
@@ -362,12 +352,6 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 			}
 		}
 	}
-	Logger::init_step("Rewriting Rules VWV");
-	for (int i = 0; i < out.size(); i++) {
-		Logger::log("class " + to_str(out[i].first.name),
-					to_str(out[i].second.name));
-	}
-	Logger::finish_step();
 	return out;
 }
 
