@@ -412,7 +412,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			vector<ObjectType> dfa_type = {ObjectType::DFA};
 			if (names_to_functions[predfunc].size() == 2 &&
 				names_to_functions[func].size() == 2) {
-				if (predfunc != func) {
+				if (predfunc == func) {
 					if (neededfuncs[i - 1] > 1) {
 						neededfuncs[i] = neededfuncs[i - 1];
 					} else {
