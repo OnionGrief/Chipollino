@@ -12,7 +12,6 @@ bool operator==(const Function& l, const Function& r) {
 Interpreter::Interpreter() {
 	names_to_functions = {
 		{"Thompson", {{"Thompson", {ObjectType::Regex}, ObjectType::NFA}}},
-
 		{"IlieYu", {{"IlieYu", {ObjectType::Regex}, ObjectType::NFA}}},
 		{"Antimirov", {{"Antimirov", {ObjectType::Regex}, ObjectType::NFA}}},
 		{"Arden", {{"Arden", {ObjectType::NFA}, ObjectType::Regex}}},
@@ -368,25 +367,30 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			return nullopt;
 		}
 	}
+
+	string predfunc = function_names[0];
 	for (int i = 1; i < function_names.size(); i++) {
+		cout<<function_names[i]<<endl;
+		if (neededfuncs[i - 1] != 0) predfunc = function_names[i - 1];
 		string func = function_names[i];
-		string predfunc = function_names[i - 1];
 		// check on types
+
 		if (names_to_functions[func].size() == 1 &&
 			names_to_functions[predfunc].size() == 1) {
 			if (names_to_functions[func][0].input.size() == 1) {
 				if (names_to_functions[predfunc][0].output !=
 					names_to_functions[func][0].input[0]) {
-					vector<ObjectType> v = {ObjectType::NFA};
+					vector<ObjectType> nfa_type = {ObjectType::NFA};
 					if (!(names_to_functions[predfunc][0].output ==
 							  ObjectType::DFA &&
-						  names_to_functions[func][0].input == v)) {
+						  names_to_functions[func][0].input == nfa_type)) {
 						return nullopt;
 					} else {
-						if (predfunc == "Determinize" || predfunc == "Annote") {
-							if (func == "Determinize" || func == "Minimize" ||
-								func == "Annote") {
-								neededfuncs[i - 1] = 0;
+						if (func == "Determinize" || func == "Annote") {
+							if (predfunc == "Determinize" ||
+								predfunc == "Minimize" ||
+								predfunc == "Annote") {
+								neededfuncs[i] = 0;
 							}
 						} else if (predfunc == "Minimize" &&
 								   func == "Minimize") {
@@ -395,12 +399,12 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 					}
 				} else {
 					if (predfunc == func) {
-						if (predfunc != "Reverse" || predfunc != "Complement") {
+						if (predfunc != "Reverse" && predfunc != "Complement") {
 							neededfuncs[i - 1] = 0;
 						}
 					} else {
-						if (predfunc == "Linearize" &&
-							(func == "Glushkov" || func == "IlieYu")) {
+						if (func == "Linearize" &&
+							(predfunc == "Glushkov" || predfunc == "IlieYu")) {
 							neededfuncs[i - 1] = 0;
 						}
 					}
@@ -409,9 +413,11 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 				return nullopt;
 			}
 		} else {
+
 			vector<ObjectType> regex_type = {ObjectType::Regex};
 			vector<ObjectType> nfa_type = {ObjectType::NFA};
 			vector<ObjectType> dfa_type = {ObjectType::DFA};
+
 			if (names_to_functions[predfunc].size() == 2 &&
 				names_to_functions[func].size() == 2) {
 				if (predfunc == func) {
@@ -462,6 +468,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			}
 		}
 	}
+
 	optional<vector<Function>> finalfuncs = nullopt;
 	finalfuncs.emplace() = {};
 	for (int i = 0; i < function_names.size(); i++) {
@@ -470,6 +477,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 				Function f = names_to_functions[function_names[i]][0];
 				finalfuncs.value().push_back(f);
 			} else {
+				// тип NFA для DeAnnote
 				Function f = names_to_functions[function_names[i]][1];
 				finalfuncs.value().push_back(f);
 			}
