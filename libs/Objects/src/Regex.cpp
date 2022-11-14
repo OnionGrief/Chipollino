@@ -543,6 +543,7 @@ void Regex::pre_order_travers() const {
 }
 
 string Regex::to_txt() const {
+
 	string str1 = "", str2 = "";
 	if (term_l) {
 		str1 = term_l->to_txt();
@@ -1044,10 +1045,10 @@ FiniteAutomaton Regex::to_glushkov() const {
 	}
 	delete first;
 	delete end;
-	FiniteAutomaton a(0, st, language);
-	Logger::log("", a);
+	FiniteAutomaton fa(0, st, language);
+	Logger::log("Автомат", fa);
 	Logger::finish_step();
-	return FiniteAutomaton(0, st, language);
+	return fa;
 }
 
 FiniteAutomaton Regex::to_ilieyu() const {
@@ -1582,11 +1583,7 @@ bool Regex::subset(const Regex& r) const {
 	Logger::init_step("Subset");
 	Logger::log("Первое регулярное выражение", to_txt());
 	Logger::log("Второе регулярное выражение", r.to_txt());
-	FiniteAutomaton dfa1(to_ilieyu().determinize());
-	FiniteAutomaton dfa2(r.to_ilieyu().determinize());
-	FiniteAutomaton dfa_instersection(
-		FiniteAutomaton::intersection(dfa1, dfa2));
-	bool result = FiniteAutomaton::equivalent(dfa_instersection, dfa2);
+	bool result = to_ilieyu().subset(r.to_ilieyu());
 	if (result)
 		Logger::log("Результат Subset", "true");
 	else
@@ -1673,10 +1670,10 @@ FiniteAutomaton Regex::to_antimirov() const {
 	// Logger::log(derev_log, str_state);
 	Logger::log(str_state);
 
-	FiniteAutomaton a(0, automat_state, language);
-	Logger::log("Итог", a);
+	FiniteAutomaton fa(0, automat_state, language);
+	Logger::log("Автомат", fa);
 	Logger::finish_step();
-	return a;
+	return fa;
 }
 
 string Regex::to_str_log() const {

@@ -95,9 +95,10 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 	}
 };
 
-void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
-											   // <lbr><regex-without-eps><rbr><unary>?
-											   // | буква <unary>?
+void RegexGenerator::
+	generate_simple_regex() { // <simple-regex> ::=
+							  // <lbr><regex-without-eps><rbr><unary>?
+							  // | буква <unary>?
 	int v = rand() % 2;
 	if (v == 0) {
 		bool prev_eps_counter = all_alts_are_eps;

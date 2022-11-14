@@ -15,7 +15,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 		string word = regex.get_iterated_word(i * step);
 		if (word.length() == word_length)
 			break; // если длина не меняется (2 аргумент - регулярное выражение
-					// без * (просто слово), то выходим из цикла)
+				   // без * (просто слово), то выходим из цикла)
 		word_length = word.length();
 		// cout << word;
 		const auto start = clock::now();

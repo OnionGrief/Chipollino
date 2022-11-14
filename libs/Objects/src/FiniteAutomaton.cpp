@@ -6,6 +6,7 @@
 #include "Objects/Logger.h"
 #include <algorithm>
 #include <iostream>
+#include <math.h>
 #include <queue>
 #include <set>
 #include <sstream>
@@ -515,10 +516,14 @@ FiniteAutomaton FiniteAutomaton::complement() const {
 	Logger::init_step("Complement");
 	FiniteAutomaton new_dfa =
 		FiniteAutomaton(initial_state, states, language->get_alphabet());
-	new_dfa = new_dfa.determinize();
+	new_dfa = new_dfa.add_trap_state();
 	for (int i = 0; i < new_dfa.states.size(); i++) {
 		new_dfa.states[i].is_terminal = !new_dfa.states[i].is_terminal;
 	}
+	int final_states_counter = 0;
+	for (int i = 0; i < new_dfa.states.size(); i++)
+		if (new_dfa.states[i].is_terminal) final_states_counter++;
+	if (!final_states_counter) new_dfa = new_dfa.minimize();
 	Logger::log("Автомат до дополнения", "Автомат после дополнения", *this,
 				new_dfa);
 	Logger::finish_step();
@@ -543,31 +548,35 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 							   false,
 							   map<alphabet_symbol, set<int>>()});
 	}
-	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
-		if (enfa.states[i].is_terminal) {
-			enfa.states[i].is_terminal = false;
-			if (final_states_counter > 1) {
-				enfa.states[enfa.initial_state].transitions[epsilon()].insert(
-					i);
-			} else {
-				enfa.initial_state = i;
+	if (final_states_counter) {
+		for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
+			if (enfa.states[i].is_terminal) {
+				enfa.states[i].is_terminal = false;
+				if (final_states_counter > 1) {
+					enfa.states[enfa.initial_state]
+						.transitions[epsilon()]
+						.insert(i);
+				} else {
+					enfa.initial_state = i;
+				}
 			}
 		}
-	}
-	enfa.states[initial_state].is_terminal = true;
-	vector<map<alphabet_symbol, set<int>>> new_transition_matrix(
-		enfa.states.size() - final_states_flag);
-	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
-		for (const auto& transition : enfa.states[i].transitions) {
-			for (int elem : transition.second) {
-				new_transition_matrix[elem][transition.first].insert(
-					enfa.states[i].index);
+		enfa.states[initial_state].is_terminal = true;
+		vector<map<alphabet_symbol, set<int>>> new_transition_matrix(
+			enfa.states.size() - final_states_flag);
+		for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
+			for (const auto& transition : enfa.states[i].transitions) {
+				for (int elem : transition.second) {
+					new_transition_matrix[elem][transition.first].insert(
+						enfa.states[i].index);
+				}
 			}
 		}
-	}
-	for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
-		enfa.states[i].transitions = new_transition_matrix[i];
-	}
+		for (int i = 0; i < enfa.states.size() - final_states_flag; i++) {
+			enfa.states[i].transitions = new_transition_matrix[i];
+		}
+	} else
+		enfa.initial_state = initial_state;
 	enfa = enfa.remove_unreachable_states();
 	Logger::log("Автомат до обращения", "Автомат после обращения", *this, enfa);
 	Logger::finish_step();
@@ -1177,10 +1186,8 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
 	Logger::init_step("Subset");
 	Logger::log("Автоматы:");
 	Logger::log("Первый автомат", "Второй автомат", *this, fa);
-	FiniteAutomaton dfa1(determinize());
-	FiniteAutomaton dfa2(fa.determinize());
-	FiniteAutomaton dfa_instersection(intersection(dfa1, dfa2));
-	bool result = equivalent(dfa_instersection, dfa2);
+	FiniteAutomaton fa_instersection(intersection(*this, fa));
+	bool result = equivalent(fa_instersection, fa);
 	if (result)
 		Logger::log("Результат Subset", "true");
 	else
