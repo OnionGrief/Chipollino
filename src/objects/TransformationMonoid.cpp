@@ -391,25 +391,42 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 //Вернет	-1	если	не	синхронизирован	или	номер
 //состояния	с	которым синхронизирован
 int TransformationMonoid::is_synchronized(const Term& w) {
+	Logger::init_step("is synchronized word?");
+	Logger::log("word " + to_str(w.name));
+
 	if (w.transitions.size() == 0) {
+		Logger::log("not synchronized");
+		Logger::finish_step();
 		return -1;
 	}
 	int state = w.transitions[0].second;
 	for (int i = 1; i < w.transitions.size(); i++) {
 		if (w.transitions[i].second != state) {
+			Logger::log("not synchronized");
+			Logger::finish_step();
 			return -1;
 		}
 	}
+	Logger::log("synchronized");
+	Logger::finish_step();
 	return state;
 }
 
 //Вернет число классов эквивалентности
 int TransformationMonoid::class_card() {
+	Logger::init_step("number of equivalence classes");
+	Logger::log(to_string(terms.size()));
+	Logger::finish_step();
 	return terms.size();
 }
 
 //Вернет самое длинное слово в классе
 int TransformationMonoid::class_length() {
+	Logger::init_step("longest word in the class");
+	Logger::log("size " + to_string(terms[terms.size() - 1].name.size()));
+	Logger::log("one of the correct words " +
+				to_str(terms[terms.size() - 1].name));
+	Logger::finish_step();
 	return terms[terms.size() - 1].name.size();
 }
 
@@ -423,6 +440,9 @@ int TransformationMonoid::classes_number_MyhillNerode() {
 			}
 		}
 	}
+	Logger::init_step("classes_number_MyhillNerode");
+	Logger::log(to_string(sum));
+	Logger::finish_step();
 	return sum;
 }
 
@@ -456,6 +476,11 @@ bool TransformationMonoid::is_minimal() {
 			counter++;
 		}
 	}
+
+	Logger::init_step("is_minimal");
+
+	Logger::log(((log2(terms.size()) + 1) <= counter) ? "true" : "false");
+	Logger::finish_step();
 	return (log2(terms.size()) + 1) <= counter;
 }
 
