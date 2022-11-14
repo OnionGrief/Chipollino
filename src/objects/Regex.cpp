@@ -1581,11 +1581,7 @@ bool Regex::subset(const Regex& r) const {
 	Logger::init_step("Subset");
 	Logger::log("Первое регулярное выражение", to_txt());
 	Logger::log("Второе регулярное выражение", r.to_txt());
-	FiniteAutomaton dfa1(to_ilieyu().determinize());
-	FiniteAutomaton dfa2(r.to_ilieyu().determinize());
-	FiniteAutomaton dfa_instersection(
-		FiniteAutomaton::intersection(dfa1, dfa2));
-	bool result = FiniteAutomaton::equivalent(dfa_instersection, dfa2);
+	bool result = to_ilieyu().subset(r.to_ilieyu());
 	if (result)
 		Logger::log("Результат Subset", "true");
 	else
