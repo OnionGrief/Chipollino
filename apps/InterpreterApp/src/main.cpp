@@ -15,6 +15,8 @@ int main(int argc, char* argv[]) {
 	Logger::init();
 	Logger::activate();
 
+	//Example::all_examples();
+
 	// Инициализируем интерпретатор
 	Interpreter interpreter;
 	interpreter.set_log_mode(Interpreter::LogMode::all);
