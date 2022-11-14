@@ -767,7 +767,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 FiniteAutomaton Regex::to_tompson() const {
 	Logger::init_step("Автомат Томпсона");
 	FiniteAutomaton a(0, get_tompson(-1).first, language);
-	Logger::log("", a);
+	Logger::log("Регулярное выражение: " + to_txt(), a);
 	Logger::finish_step();
 	return a;
 }
@@ -1101,6 +1101,8 @@ FiniteAutomaton Regex::to_ilieyu() const {
 	}
 
 	// cout << str_follow;
+	
+	Logger::log("Регулярное выражение", to_txt());
 	Logger::log("Автомат Глушкова", glushkov);
 	Logger::log("Follow-отношения", str_follow);
 
@@ -1127,7 +1129,7 @@ FiniteAutomaton Regex::to_ilieyu() const {
 		new_states[i].index = i;
 	}
 	FiniteAutomaton a(0, new_states, glushkov.language);
-	Logger::log("Итог", a);
+	Logger::log("Итог:", a);
 	Logger::finish_step();
 	return a;
 }
@@ -1596,6 +1598,7 @@ bool Regex::subset(const Regex& r) const {
 
 FiniteAutomaton Regex::to_antimirov() const {
 	Logger::init_step("Автомат Антимирова");
+	Logger::log("Регулярное выражение", to_txt());
 	map<set<string>, set<string>> trans;
 	vector<Regex> states;
 	vector<Regex> alph_regex;

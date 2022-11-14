@@ -4,7 +4,7 @@ RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {}
 
 RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
 							   int alphabet_size)
-	: regex_length(regex_length), star_num(cur_star_num),
+	: regex_length(regex_length), star_num(star_num),
 	  star_nesting(star_nesting) {
 
 	if (regex_length < 1) return;

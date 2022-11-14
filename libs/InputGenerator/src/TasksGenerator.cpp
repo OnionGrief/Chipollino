@@ -27,6 +27,13 @@ string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 	return res_str;
 }
 
+void TasksGenerator::write_to_file(string filename) {
+	ofstream out;
+	out.open(filename, ofstream::trunc);
+	if (out.is_open()) out << res_str;
+	out.close();
+}
+
 string TasksGenerator::generate_op() {
 	string str = "";
 	int op = rand() % 5; // на объявление - вероятность 3 / 5;
@@ -50,11 +57,10 @@ string TasksGenerator::generate_predicate() {
 	// да, не логично, но второй аргумент всегда повторяется,
 	// а значит можно забить на их проверку
 
-	while (
-		!for_static_Tpchkr &&
-		!(input_type == "DFA" && ids.count("NFA-DFA") && for_dinamic_Tpchkr) &&
-		((input_type == "DFA" && !ids.count("DFA")) ||
-		 (input_type == "NFA") && !(ids.count("NFA") || ids.count("DFA")))) {
+	while (!for_static_Tpchkr &&
+		   !(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
+		   ((input_type == DFA && !ids.count(DFA)) ||
+			(input_type == NFA) && !(ids.count(NFA) || ids.count(DFA)))) {
 		predicate = rand_pred();
 		input_type = predicate.input[0];
 	}
@@ -69,11 +75,11 @@ string TasksGenerator::generate_predicate() {
 				str += " " + regex_generator.generate_regex();
 			}
 		} else {
-			if (predicate.input[i] == "Regex") {
+			if (predicate.input[i] == REGEX) {
 				// сгенерировать регулярку или найти идентификатор
 				// если есть идентификаторы с типом Regex
-				if (ids.count("Regex") && rand() % 2) {
-					vector<Id> possible_ids = ids["Regex"];
+				if (ids.count(REGEX) && rand() % 2) {
+					vector<Id> possible_ids = ids[REGEX];
 					Id rand_id = possible_ids[rand() % possible_ids.size()];
 					str += " N" + to_string(rand_id.num);
 				} else {
@@ -81,9 +87,9 @@ string TasksGenerator::generate_predicate() {
 				}
 			}
 
-			if (predicate.input[i] == "NFA" || predicate.input[i] == "DFA") {
+			if (predicate.input[i] == NFA || predicate.input[i] == DFA) {
 				string id_type = predicate.input[i];
-				if (for_dinamic_Tpchkr || id_type == "NFA") id_type = "NFA-DFA";
+				if (for_dinamic_Tpchkr || id_type == NFA) id_type = NFA_DFA;
 				vector<Id> possible_ids = ids[id_type];
 				int rand_num = rand() % possible_ids.size();
 				Id rand_id = possible_ids[rand_num];
@@ -95,18 +101,18 @@ string TasksGenerator::generate_predicate() {
 	return str;
 }
 
-// TODO: для дин и стат тайпчека 
+// TODO: для дин и стат тайпчека
 string TasksGenerator::generate_test() {
 	change_seed();
 	string str = "";
 	str += "Test ";
 
-	if (rand() % 2 && ids.count("NFA-DFA")) {
-		vector<Id> possible_ids = ids["NFA-DFA"];
+	if (rand() % 2 && ids.count(NFA_DFA)) {
+		vector<Id> possible_ids = ids[NFA_DFA];
 		Id rand_id = possible_ids[rand() % possible_ids.size()];
 		str += "N" + to_string(rand_id.num);
-	} else if (rand() % 2 && ids.count("Regex")) {
-		vector<Id> possible_ids = ids["Regex"];
+	} else if (rand() % 2 && ids.count(REGEX)) {
+		vector<Id> possible_ids = ids[REGEX];
 		Id rand_id = possible_ids[rand() % possible_ids.size()];
 		str += "N" + to_string(rand_id.num);
 	} else {
@@ -115,7 +121,8 @@ string TasksGenerator::generate_test() {
 
 	str += " ";
 	// TODO:
-	str += "((ab)*a)*";
+	// str += "((ab)*a)*";
+	str += regex_generator.generate_regex();
 
 	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
 	str += " " + to_string(rand_num);
@@ -140,14 +147,13 @@ string TasksGenerator::generate_declaration() {
 		string input_type = first_func.input[0]; // исправить для ksubset!!!
 
 		// Андрей не дает мне делать большие комменты((
-		while ((!for_static_Tpchkr &&
-				!(input_type == "DFA" && ids.count("NFA-DFA") &&
-				  for_dinamic_Tpchkr) &&
-				((input_type == "DFA" && !ids.count("DFA")) ||
-				 (input_type == "NFA") &&
-					 !(ids.count("NFA") || ids.count("DFA")))) ||
-			   ((first_func.output == "Int" || first_func.output == "Value") &&
-				!for_static_Tpchkr && funcNum > 1)) {
+		while (
+			(!for_static_Tpchkr &&
+			 !(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
+			 ((input_type == DFA && !ids.count(DFA)) ||
+			  (input_type == NFA) && !(ids.count(NFA) || ids.count(DFA)))) ||
+			((first_func.output == INT || first_func.output == VALUE) &&
+			 !for_static_Tpchkr && funcNum > 1)) {
 			first_func = rand_func();
 			input_type = first_func.input[0];
 		} // вроде работает
@@ -164,11 +170,11 @@ string TasksGenerator::generate_declaration() {
 				}
 			} else {
 
-				if (first_func.input[i] == "Regex") {
+				if (first_func.input[i] == REGEX) {
 					// сгенерировать регулярку или найти идентификатор
 					// если есть идентификаторы с типом Regex
-					if (ids.count("Regex") && rand() % 2) {
-						vector<Id> possible_ids = ids["Regex"];
+					if (ids.count(REGEX) && rand() % 2) {
+						vector<Id> possible_ids = ids[REGEX];
 						Id rand_id = possible_ids[rand() % possible_ids.size()];
 						func_str += " N" + to_string(rand_id.num);
 					} else {
@@ -176,25 +182,23 @@ string TasksGenerator::generate_declaration() {
 					}
 				}
 
-				if (first_func.input[i] == "Int") {
+				if (first_func.input[i] == INT) {
 					// сгенерировать число или найти идентификатор (так можно??)
 					// таких функций пока нет
 					int rand_num = rand() % 5; // пусть будет до 5..
 					func_str += " " + to_string(rand_num);
 				}
 
-				if (first_func.input[i] == "NFA" ||
-					first_func.input[i] == "DFA") {
+				if (first_func.input[i] == NFA || first_func.input[i] == DFA) {
 					string id_type = first_func.input[i];
-					if (for_dinamic_Tpchkr || id_type == "NFA")
-						id_type = "NFA-DFA";
+					if (for_dinamic_Tpchkr || id_type == NFA) id_type = NFA_DFA;
 					vector<Id> possible_ids = ids[id_type];
 					int rand_num = rand() % possible_ids.size();
 					Id rand_id = possible_ids[rand_num];
 					func_str += " N" + to_string(rand_id.num);
 				}
 
-				if (first_func.input[i] == "FileName") {
+				if (first_func.input[i] == FILENAME) {
 					func_str += " Rules";
 				}
 			}
@@ -212,9 +216,9 @@ string TasksGenerator::generate_declaration() {
 
 	if (funcNum == 0) {
 		if (rand() % 3 && ids.size() > 0) {
-			string id_output = "NFA-DFA";
+			string id_output = NFA_DFA;
 			map<string, vector<Id>>::iterator it;
-			while (id_output == "NFA-DFA") {
+			while (id_output == NFA_DFA) {
 				it = ids.begin();
 				advance(it, (rand() % ids.size()));
 				pair<string, vector<Id>> possible_ids = *it;
@@ -226,16 +230,16 @@ string TasksGenerator::generate_declaration() {
 			prevOutput = id_output;
 		} else {
 			str += regex_generator.generate_regex();
-			prevOutput = "Regex";
+			prevOutput = REGEX;
 		}
 	}
 
 	// запоминаем идентификатор N#
 	ids[prevOutput].push_back({id_num, prevOutput});
-	if (prevOutput == "DFA" || prevOutput == "NFA")
-		ids["NFA-DFA"].push_back({id_num, prevOutput});
+	if (prevOutput == DFA || prevOutput == NFA)
+		ids[NFA_DFA].push_back({id_num, prevOutput});
 
-	if (!(rand() % 3) && funcNum > 0) str += " !!";
+	if (/*rand() % 2 && */ funcNum > 0) str += " !!";
 
 	return str;
 }
@@ -245,16 +249,15 @@ TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput,
 	Function str;
 	if (for_static_Tpchkr)
 		str = rand_func();
-	else if ((for_dinamic_Tpchkr && prevOutput == "NFA") ||
-			 prevOutput == "DFA") {
-		vector<Function> possible_functions = funcInput["NFA-DFA"];
+	else if ((for_dinamic_Tpchkr && prevOutput == NFA) || prevOutput == DFA) {
+		vector<Function> possible_functions = funcInput[NFA_DFA];
 		str = possible_functions[rand() % possible_functions.size()];
-		if ((str.output == "Int" || str.output == "Value") && funcNum != 0)
+		if ((str.output == INT || str.output == VALUE) && funcNum != 0)
 			str = generate_next_func(prevOutput, funcNum);
 	} else {
 		vector<Function> possible_functions = funcInput[prevOutput];
 		str = possible_functions[rand() % possible_functions.size()];
-		if ((str.output == "Int" || str.output == "Value") &&
+		if ((str.output == INT || str.output == VALUE) &&
 			funcNum != 0) // может возвращать int если
 						  // последняя функция в посл-ти
 			str = generate_next_func(prevOutput, funcNum);
@@ -267,8 +270,8 @@ void TasksGenerator::distribute_functions() {
 		if (functions[i].input.size() == 1) {
 			string input_type = functions[i].input[0];
 			funcInput[input_type].push_back(functions[i]);
-			if (input_type == "NFA" || input_type == "DFA")
-				funcInput["NFA-DFA"].push_back(functions[i]);
+			if (input_type == NFA || input_type == DFA)
+				funcInput[NFA_DFA].push_back(functions[i]);
 		}
 	}
 }

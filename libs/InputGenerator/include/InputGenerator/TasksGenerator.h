@@ -1,7 +1,8 @@
 #pragma once
+#include "InputGenerator/RegexGenerator.h"
 #include "Objects/BaseObject.h"
 #include "Objects/Regex.h"
-#include "InputGenerator/RegexGenerator.h"
+#include <fstream>
 #include <map>
 #include <string>
 #include <time.h>
@@ -39,44 +40,48 @@ class TasksGenerator {
 				   // принимаемым значениям
 	map<string, vector<Id>> ids; // поиск идентификатора по его типу
 
-	vector<Function> functions = {{"Thompson", {"Regex"}, "NFA"},
-								  {"IlieYu", {"Regex"}, "NFA"},
-								  {"Antimirov", {"Regex"}, "NFA"},
-								  {"Arden", {"NFA"}, "Regex"},
-								  {"Glushkov", {"Regex"}, "NFA"},
-								  {"Determinize", {"NFA"}, "DFA"},
-								  {"RemEps", {"NFA"}, "NFA"},
-								  {"Linearize", {"Regex"}, "Regex"},
-								  {"Minimize", {"NFA"}, "DFA"},
-								  {"Reverse", {"NFA"}, "NFA"},
-								  {"Annote", {"NFA"}, "DFA"},
-								  {"DeLinearize", {"NFA"}, "NFA"},
-								  {"DeLinearize", {"Regex"}, "Regex"},
-								  {"Complement", {"DFA"}, "DFA"},
-								  {"DeAnnote", {"NFA"}, "NFA"},
-								  {"DeAnnote", {"Regex"}, "Regex"},
-								  {"MergeBisim", {"NFA"}, "NFA"},
-								  {"PumpLength", {"Regex"}, "Int"},
-								  {"ClassLength", {"DFA"}, "Int"},
-								  // TODO:
-								  //{"KSubSet", {"Int", "NFA"}, "NFA"}, // пока
-								  //не используется, исправить если будет
-								  {"Normalize", {"Regex", "FileName"}, "Regex"},
-								  {"States", {"NFA"}, "Int"},
-								  {"ClassCard", {"DFA"}, "Int"},
-								  {"Ambiguity", {"NFA"}, "Value"},
-								  {"Width", {"NFA"}, "Int"},
-								  {"MyhillNerode", {"DFA"}, "Int"},
-								  {"Simplify", {"Regex"}, "Regex"}};
+	string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int",
+		   VALUE = "Value", BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA",
+		   FILENAME = "FileName";
+	vector<Function> functions = {
+		{"Thompson", {REGEX}, NFA},
+		{"IlieYu", {REGEX}, NFA},
+		{"Antimirov", {REGEX}, NFA},
+		//{"Arden", {NFA}, REGEX},
+		{"Glushkov", {REGEX}, NFA},
+		{"Determinize", {NFA}, DFA},
+		{"RemEps", {NFA}, NFA},
+		{"Linearize", {REGEX}, REGEX},
+		{"Minimize", {NFA}, DFA},
+		{"Reverse", {NFA}, NFA},
+		{"Annote", {NFA}, DFA},
+		//{"DeLinearize", {NFA}, NFA},
+		{"DeLinearize", {REGEX}, REGEX},
+		{"Complement", {DFA}, DFA},
+		{"DeAnnote", {NFA}, NFA},
+		{"DeAnnote", {REGEX}, REGEX},
+		{"MergeBisim", {NFA}, NFA},
+		{"PumpLength", {REGEX}, INT},
+		//{"ClassLength", {DFA}, INT},
+		//{"Normalize", {REGEX, FILENAME}, REGEX},
+		{"States", {NFA}, INT},
+		//{"ClassCard", {DFA}, INT},
+		{"Ambiguity", {NFA}, VALUE},
+		//{"Width", {NFA}, INT},
+		//{"MyhillNerode", {DFA}, INT},
+		//{"Simplify", {REGEX}, REGEX}
+	};
 
 	vector<Function> predicates = {
-		{"Bisimilar", {"NFA", "NFA"}, "Boolean"},
-		{"Minimal", {"DFA"}, "Boolean"},
-		{"Subset", {"Regex", "Regex"}, "Boolean"},
-		{"Equiv", {"NFA", "NFA"}, "Boolean"},
-		{"Minimal", {"NFA"}, "Boolean"},
-		{"Equal", {"NFA", "NFA"}, "Boolean"},
-		{"SemDet", {"NFA"}, "Boolean"},
+		{"Bisimilar", {NFA, NFA}, BOOLEAN},
+		{"Subset", {REGEX, REGEX}, BOOLEAN},
+		{"Subset", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {REGEX, REGEX}, BOOLEAN},
+		//{"Minimal", {DFA}, BOOLEAN},
+		//{"Minimal", {NFA}, BOOLEAN},
+		{"Equal", {NFA, NFA}, BOOLEAN},
+		//{"SemDet", {NFA}, BOOLEAN},
 	};
 
 	void distribute_functions();
@@ -89,8 +94,8 @@ class TasksGenerator {
   public:
 	TasksGenerator();
 
-	/* создает рандомный список операций, которые могут иметь один из трёх
-	видов: Объявление: [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
+	/*создает рандомный список операций, которые могут иметь один из трёх видов:
+	Объявление: [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
 	Специальная форма test
 	Предикат [предикат] [объект]+ */
 	string generate_task(int opNum, int max_num_of_func_in_seq_,
@@ -103,6 +108,8 @@ class TasksGenerator {
 	/* генерирует метод:
 	test (НКА | рег. выр-е, рег. выр-е без альтернатив, шаг итерации) */
 	string generate_test();
+	/*запись теста в файл*/
+	void write_to_file(string filename);
 };
 
 // TODO: убедиться, что интерпретатор + тайпчекер правильно обрабатывают
