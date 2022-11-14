@@ -96,13 +96,19 @@ class Regex : BaseObject {
 
 	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
+	// для print_tree
+	void print_subtree(Regex* r, int level);
+
+	void pre_order_travers() const;
+	void clear();
 
   public:
 	Regex();
 	Regex(string);
 	string to_txt() const override;
-	void pre_order_travers() const;
-	void clear();
+	// вывод дерева для дебага
+	void print_tree();
+
 	FiniteAutomaton to_tompson() const;
 	FiniteAutomaton to_glushkov() const;
 	FiniteAutomaton to_ilieyu() const;
@@ -136,15 +142,11 @@ class Regex : BaseObject {
 	int pump_length() const;
 	// Слово, в котором все итерации Клини раскрыты n раз
 	string get_iterated_word(int n) const;
+
 	void regex_union(Regex* a, Regex* b);
-
 	void regex_alt(Regex* a, Regex* b);
-
 	void regex_star(Regex* a);
-
 	void regex_eps();
-	// TODO: there may be some *to-automat* methods
-	// like to_glushkov, to_antimirov, etc
 
 	Regex linearize() const;
 	Regex delinearize() const;
