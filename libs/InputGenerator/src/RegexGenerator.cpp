@@ -30,6 +30,12 @@ void RegexGenerator::change_seed() {
 	srand((size_t)time(nullptr) + seed_it + rand());
 }
 
+void RegexGenerator::write_to_file(string filename) {
+	ofstream out(filename, ios::app);
+	if (out.is_open()) out << res_str << "\n";
+	out.close();
+}
+
 int RegexGenerator::generate_alphabet(int regex_length) {
 	change_seed();
 	int max_alphabet_size = regex_length > 52 ? 52 : regex_length;

@@ -1,5 +1,6 @@
 #pragma once
 #include "Objects/BaseObject.h"
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <time.h>
@@ -9,7 +10,7 @@ using namespace std;
 class RegexGenerator {
   private:
 	vector<char> alphabet; // TODO: убрать алфавит
-	size_t seed_it = 0; // итерация для рандома
+	size_t seed_it = 0;	   // итерация для рандома
 
 	int regex_length = 0;
 	int star_num = 0;
@@ -42,4 +43,6 @@ class RegexGenerator {
 	/*сгенерировать регулярное выражение, параметрирозованное длиной, кол-вом
 	итераций Клини, звездной вложенностью и размером алфавита*/
 	string generate_regex();
+	/*запись регулярки в файл*/
+	void write_to_file(string filename);
 };
