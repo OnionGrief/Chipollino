@@ -4,7 +4,7 @@ RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {}
 
 RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting,
 							   int alphabet_size)
-	: regex_length(regex_length), star_num(cur_star_num),
+	: regex_length(regex_length), star_num(star_num),
 	  star_nesting(star_nesting) {
 
 	if (regex_length < 1) return;
@@ -26,7 +26,14 @@ RegexGenerator::RegexGenerator(int regex_length, int cur_star_num,
 									 generate_alphabet(regex_length)) {}
 
 void RegexGenerator::change_seed() {
-	srand(time(nullptr) + rand() % 100);
+	seed_it++;
+	srand((size_t)time(nullptr) + seed_it + rand());
+}
+
+void RegexGenerator::write_to_file(string filename) {
+	ofstream out(filename, ios::app);
+	if (out.is_open()) out << res_str << "\n";
+	out.close();
 }
 
 int RegexGenerator::generate_alphabet(int regex_length) {
@@ -88,9 +95,10 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 	}
 };
 
-void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
-											   // <lbr><regex-without-eps><rbr><unary>?
-											   // | буква <unary>?
+void RegexGenerator::
+	generate_simple_regex() { // <simple-regex> ::=
+							  // <lbr><regex-without-eps><rbr><unary>?
+							  // | буква <unary>?
 	int v = rand() % 2;
 	if (v == 0) {
 		bool prev_eps_counter = all_alts_are_eps;

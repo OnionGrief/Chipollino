@@ -7,10 +7,6 @@ int main(int argc, char* argv[]) {
 	// Приветсвие
 	cout << "Chipollino :-)\n";
 
-	// Тестирование
-	// Example::test_all();
-	// Example::all_examples();
-
 	// Инициализируем логгер
 	Logger::init();
 	Logger::activate();
