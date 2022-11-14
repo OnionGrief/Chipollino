@@ -21,6 +21,9 @@ class Logger {
 	static void activate();
 	// сброс флага логгирования
 	static void deactivate();
+	// вкл и выкл логирования вложенных функций
+	static void activate_step_counter();
+	static void deactivate_step_counter();
 	// начало записи в файл
 	static void init();
 	// начало шага, передается название
