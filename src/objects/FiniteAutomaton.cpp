@@ -1582,7 +1582,9 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		expression_arden temp;
 		temp.temp_regex = in[i].temp_regex->copy();
 		temp.condition = in[i].condition;
-		out.push_back(temp);
+		if (!(temp.temp_regex->to_txt() == "" && temp.condition == -1)) {
+			out.push_back(temp);
+		}
 		while ((j < in.size()) && in[i].condition == in[j].condition) {
 			cond = true;
 			Regex* r;
@@ -1752,8 +1754,9 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 						r = data[i][j].temp_regex->copy();
 					} else {
 						r->regex_union(
-							data[i][j].temp_regex,
-							data[data[i][j].condition][k].temp_regex);
+
+							data[data[i][j].condition][k].temp_regex,
+							data[i][j].temp_regex);
 					}
 					temp_expression.temp_regex = r;
 					temp_expression.condition =
@@ -1781,6 +1784,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		data[i].clear();
 		vector<expression_arden> tempdata1 = arden_minimize(temp_data);
 		vector<expression_arden> tempdata2 = arden(tempdata1, i);
+		vector<expression_arden> tempdata3 = arden_minimize(tempdata2);
 		for (int o = 0; o < temp_data.size(); o++) {
 			delete temp_data[o].temp_regex;
 		}
@@ -1796,7 +1800,13 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 				 << tempdata2[j].temp_regex->to_txt() << " ";
 		}
 		cout << "\n";
-		data[i] = tempdata2;
+		cout << "   ";
+		for (int j = 0; j < tempdata3.size(); j++) {
+			cout << tempdata3[j].condition << " "
+				 << tempdata3[j].temp_regex->to_txt() << " ";
+		}
+		cout << "\n";
+		data[i] = tempdata3;
 	}
 	if (data[0].size() > 1) {
 		// cout << "error";
