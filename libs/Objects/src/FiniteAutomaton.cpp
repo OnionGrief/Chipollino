@@ -1,7 +1,7 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Fraction/Fraction.h"
-#include "Objects/Grammar.h"
 #include "InfInt/InfInt.h"
+#include "Objects/Grammar.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
 #include <algorithm>
@@ -806,6 +806,46 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 				"Автомат после удаления разметки", *this, new_fa);
 	Logger::finish_step();
 	return new_fa;
+}
+
+bool FiniteAutomaton::is_one_unambiguous() {
+	FiniteAutomaton min_fa = minimize().remove_trap_states();
+
+	set<map<alphabet_symbol, set<int>>> final_states_transitions;
+	for (int i = 0; i < min_fa.states.size(); i++) {
+		if (min_fa.states[i].is_terminal) {
+			final_states_transitions.insert(min_fa.states[i].transitions);
+		}
+	}
+
+	set<alphabet_symbol> min_fa_consistent;
+	// calculate a set of min_fa_consistent symbols
+	for (alphabet_symbol symb : min_fa.language->get_alphabet()) {
+		set<int> reachable_by_symb;
+		bool is_symb_min_fa_consistent = true;
+		for (int i = 0; i < min_fa.states.size(); i++) {
+			for (const auto& transition : min_fa.states[i].transitions) {
+				if (transition.first == symb) {
+					for (int elem : transition.second) {
+						reachable_by_symb.insert(elem);
+					}
+				}
+			}
+		}
+		for (auto final_state_transitions : final_states_transitions) {
+			for (int elem : reachable_by_symb) {
+				if (find(final_state_transitions[symb].begin(),
+						 final_state_transitions[symb].end(),
+						 elem) == final_state_transitions[symb].end()) {
+					is_symb_min_fa_consistent = false;
+				}
+			}
+		}
+		if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
+	}
+	for (auto elem : min_fa_consistent)
+		cout << elem << " ";
+	return true;
 }
 
 FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
