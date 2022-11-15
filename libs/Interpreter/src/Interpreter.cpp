@@ -386,15 +386,13 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 						  names_to_functions[func][0].input == nfa_type)) {
 						return nullopt;
 					} else {
-						if (func == "Determinize" || func == "Annote") {
-							if (predfunc == "Determinize" ||
-								predfunc == "Minimize" ||
-								predfunc == "Annote") {
-								neededfuncs[i] = 0;
-							}
-						} else if (predfunc == "Minimize" &&
-								   func == "Minimize") {
-							neededfuncs[i - 1] = 0;
+						if ((func == "Determinize" || func == "Annote") &&
+							names_to_functions[predfunc][0].output ==
+								ObjectType::DFA) {
+							neededfuncs[i] = 0;
+						}
+						if (predfunc == "Minimize" && func == "Minimize") {
+							neededfuncs[i] = 0;
 						}
 					}
 				} else {
@@ -403,8 +401,8 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 							neededfuncs[i - 1] = 0;
 						}
 					} else {
-						if (func == "Linearize" &&
-							(predfunc == "Glushkov" || predfunc == "IlieYu")) {
+						if (predfunc == "Linearize" &&
+							(func == "Glushkov" || func == "IlieYu")) {
 							neededfuncs[i - 1] = 0;
 						}
 					}
