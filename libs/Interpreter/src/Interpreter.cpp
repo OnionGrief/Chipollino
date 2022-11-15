@@ -35,8 +35,6 @@ Interpreter::Interpreter() {
 		//Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
-		{"KSubSet",
-		 {{"KSubSet", {ObjectType::Int, ObjectType::NFA}, ObjectType::NFA}}},
 		{"Normalize",
 		 {{"Normalize",
 		   {ObjectType::Regex, ObjectType::FileName},
@@ -44,10 +42,8 @@ Interpreter::Interpreter() {
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
 		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
 		{"Ambiguity", {{"Ambiguity", {ObjectType::NFA}, ObjectType::Value}}},
-		{"Width", {{"Width", {ObjectType::NFA}, ObjectType::Int}}},
 		{"MyhillNerode",
 		 {{"MyhillNerode", {ObjectType::DFA}, ObjectType::Int}}},
-		{"Simplify", {{"Simplify", {ObjectType::Regex}, ObjectType::Regex}}},
 		//Предикаты
 		{"Bisimilar",
 		 {{"Bisimilar",
@@ -64,7 +60,6 @@ Interpreter::Interpreter() {
 		   {ObjectType::Regex, ObjectType::Regex},
 		   ObjectType::Boolean},
 		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
-		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equal",
 		 {{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
@@ -366,7 +361,6 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 
 	string predfunc = function_names[0];
 	for (int i = 1; i < function_names.size(); i++) {
-		cout<<function_names[i]<<endl;
 		if (neededfuncs[i - 1] != 0) predfunc = function_names[i - 1];
 		string func = function_names[i];
 		// check on types

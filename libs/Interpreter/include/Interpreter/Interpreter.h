@@ -14,11 +14,7 @@ using namespace Typization;
 
 class Interpreter {
   public:
-	enum class LogMode {
-		all,
-		errors,
-		nothing
-	};
+	enum class LogMode { all, errors, nothing };
 	Interpreter();
 	// Загрузить программу из файла
 	void load_file(const string& filename);
