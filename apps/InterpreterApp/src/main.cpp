@@ -5,10 +5,10 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 	// Приветсвие
-	cout << "Chipollino :-)\n";
+		cout << "Chipollino :-)\n";
 
 	// Инициализируем логгер
-	Logger::init();
+Logger::init();
 	Logger::activate();
 
 	// Example::all_examples();
