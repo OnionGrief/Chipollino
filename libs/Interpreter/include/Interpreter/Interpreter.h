@@ -1,6 +1,7 @@
 #pragma once
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
+#include "Objects/TransformationMonoid.h"
 #include "Interpreter/Typization.h"
 #include <deque>
 #include <fstream>

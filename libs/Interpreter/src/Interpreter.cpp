@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <map>
 #include <string>
+
 using namespace std;
 
 bool operator==(const Function& l, const Function& r) {
@@ -167,11 +168,11 @@ GeneralObject Interpreter::apply_function(
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
 			get_automaton(arguments[0]), get_automaton(arguments[1])));
 	}
-	//мое
-	/*if (function.name == "Minimal") {
-
-		return ObjectBoolean(get<ObjectDFA>(arguments[0]).value.);
-	}*/
+	TransformationMonoid trmon;
+	if (function.name == "Minimal") {
+		trmon = TransformationMonoid(get_automaton(arguments[0]));
+		return ObjectBoolean(trmon.is_minimal());
+	}
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
 			return ObjectBoolean((get_automaton(arguments[0])
@@ -209,32 +210,27 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "PumpLength") {
 		return ObjectInt(get<ObjectRegex>(arguments[0]).value.pump_length());
 	}
-	//Миша
-	/*if (function.name == "ClassLength") {
-		return
-	ObjectInt(class_legth_typecheker(get<ObjectDFA>(arguments[0]).value));
+	if (function.name == "ClassLength") {
+		trmon = TransformationMonoid(get_automaton(arguments[0]));
+		return ObjectInt(trmon.class_length());
 	}
-	//у нас нет
-	/*if (function.name == "KSubSet") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
 	if (function.name == "States") {
 		return ObjectInt(get_automaton(arguments[0]).states_number());
 	}
-	//Мишино вроде
-	/*if (function.name == "ClassCard") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
+	if (function.name == "ClassCard") {
+		trmon = TransformationMonoid(get_automaton(arguments[0]));
+		return ObjectInt(trmon.class_card());
+	}
 	if (function.name == "Ambiguity") {
 		return ObjectValue(get_automaton(arguments[0]).ambiguity());
 	}
 	/*if (function.name == "Width") {
 		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
 	}*/
-	//Миша
-	/*if (function.name == "MyhillNerode") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
+	if (function.name == "MyhillNerode") {
+		trmon = TransformationMonoid(get_automaton(arguments[0]));
+		return ObjectInt(trmon.classes_number_MyhillNerode());
+	}
 
 	/*
 	* Идёт Глушков по лесу, видит -- регулярка.
