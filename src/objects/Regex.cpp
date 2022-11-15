@@ -566,6 +566,56 @@ string Regex::to_txt() const {
 
 	return str1 + symb + str2;
 }
+string Regex::tree_rec(int* count) {
+	stringstream ss;
+	int thiscount = *count;
+	string type_str = "";
+	switch (this->type) {
+	case Regex::Type::eps:
+		type_str += "eps";
+		break;
+	case Regex::Type::alt:
+		type_str += "|";
+		break;
+	case Regex::Type::conc:
+		type_str += ".";
+		break;
+	case Regex::Type::star:
+		type_str += "*";
+		break;
+	case Regex::Type::symb:
+		type_str += this->value.symbol;
+		break;
+	default:
+		type_str += "err";
+		break;
+	}
+	ss << *count << " [label = \"" << type_str << "\", shape = circle]\n\t";
+	string str1 = "", str2 = "";
+
+	if (this->term_l) {
+		ss << thiscount << " -> " << ++(*count) << "\n\t";
+		ss << this->term_l->tree_rec(count);
+	}
+	if (this->term_r) {
+		ss << thiscount << " -> " << ++(*count) << "\n\t";
+		ss << this->term_r->tree_rec(count);
+	}
+	return ss.str();
+}
+string Regex::tree_txt() const {
+
+	stringstream ss;
+	ss << "digraph {\n\tdummy [label = \"\", shape = none]\n\t";
+	int count = 0;
+
+	ss << "dummy -> 0\n\t";
+	//заполняем всякое
+	Regex regex = *this;
+	ss << regex.tree_rec(&count);
+	ss << "}\n";
+	return ss.str();
+}
 
 // для метода test
 string Regex::get_iterated_word(int n) const {
@@ -1488,12 +1538,14 @@ int Regex::pump_length() const {
 					pumping.generate_alphabet(pumping.alphabet);
 					pumping.language =
 						shared_ptr<Language>(new Language(pumping.alphabet));
-					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
+					// cout << pumped_prefix << " " <<
+					// pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
 						language->set_pump_length(i);
 						/*cout << *it << "\n";
-						cout << pumped_prefix << " " << pumping.term_r->to_txt()
+						cout << pumped_prefix << " " <<
+						pumping.term_r->to_txt()
 							 << "\n";
 						cout << to_txt() << "\n";*/
 						return i;

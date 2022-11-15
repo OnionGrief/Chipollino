@@ -149,6 +149,8 @@ class Regex : BaseObject {
 	Regex linearize() const;
 	Regex delinearize() const;
 	Regex deannote() const;
+	string tree_txt() const;
+	string tree_rec(int* count);
 };
 
 /*
