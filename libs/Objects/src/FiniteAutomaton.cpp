@@ -843,8 +843,52 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		}
 		if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
 	}
-	for (auto elem : min_fa_consistent)
-		cout << elem << " ";
+
+	// calculate an orbit of each state
+	// search for strongly connected component of each state
+	set<int> states_with_trivial_orbit;
+	set<set<int>> min_fa_orbits;
+	for (int i = 0; i < min_fa.states.size(); i++) {
+		set<int> orbit_of_state;
+		orbit_of_state.insert(i);
+		bool is_state_has_transitions_to_itself = false;
+		for (const auto& transition : min_fa.states[i].transitions) {
+			for (int elem : transition.second) {
+				if (elem == i) is_state_has_transitions_to_itself = true;
+				for (alphabet_symbol symb : min_fa.language->get_alphabet()) {
+					if (find(min_fa.states[elem].transitions[symb].begin(),
+							 min_fa.states[elem].transitions[symb].end(), i) !=
+						min_fa.states[elem].transitions[symb].end()) {
+						orbit_of_state.insert(elem);
+					}
+				}
+			}
+		}
+		// check if orbit of this state is trivial
+		// if so, insert into states_with_trivial_orbit
+		if (orbit_of_state.size() == 1 && *orbit_of_state.begin() == i &&
+			!is_state_has_transitions_to_itself) {
+			states_with_trivial_orbit.insert(i);
+		}
+		min_fa_orbits.insert(orbit_of_state);
+	}
+
+	for (auto elem : min_fa_orbits) {
+		for (auto elem1 : elem)
+			cout << elem1 << " ";
+		cout << endl;
+	}
+
+	// check if min_fa has a single, trivial orbit
+	// return true if it exists
+	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1)
+		return true;
+
+	// check if min_fa has a single, nontrivial orbit
+	// return true if it exists
+	if (min_fa_orbits.size() == 1 && !states_with_trivial_orbit.size())
+		return true;
+
 	return true;
 }
 
