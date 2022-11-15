@@ -1,5 +1,9 @@
 #include "Objects/Language.h"
 
+FA_structure::FA_structure(int initial_state, vector<State> states,
+						   weak_ptr<Language> language)
+	: initial_state(initial_state), states(states), language(language) {}
+
 Language::Language() {}
 
 Language::Language(set<alphabet_symbol> alphabet) : alphabet(alphabet) {}
@@ -24,10 +28,15 @@ const optional<int>& Language::get_pump_length() {
 	return pump_length;
 }
 
-void Language::set_min_dfa(FiniteAutomaton min_dfa_value) {
-	min_dfa.emplace(min_dfa_value);
+void Language::set_min_dfa(int initial_state, const vector<State>& states,
+						   shared_ptr<Language> language) {
+	min_dfa.emplace(FA_structure(initial_state, states, language));
 }
 
-const optional<FiniteAutomaton>& Language::get_min_dfa() {
-	return min_dfa;
+optional<FiniteAutomaton> Language::get_min_dfa() {
+	optional<FiniteAutomaton> min_fa_opt;
+	if (min_dfa)
+		min_fa_opt.emplace(FiniteAutomaton(
+			min_dfa->initial_state, min_dfa->states, min_dfa->language.lock()));
+	return min_fa_opt;
 }
