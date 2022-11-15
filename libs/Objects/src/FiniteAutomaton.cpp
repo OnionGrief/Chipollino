@@ -844,9 +844,9 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
 	}
 
-	for (auto elem : min_fa_consistent)
-		cout << elem << " ";
-	cout << endl;
+	//	for (auto elem : min_fa_consistent)
+	//		cout << elem << " ";
+	//	cout << endl;
 
 	// calculate an orbit of each state
 	// search for strongly connected component of each state
@@ -877,11 +877,11 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		min_fa_orbits.insert(orbit_of_state);
 	}
 
-	for (auto elem : min_fa_orbits) {
-		for (auto elem1 : elem)
-			cout << elem1 << " ";
-		cout << endl;
-	}
+	//		for (auto elem : min_fa_orbits) {
+	//			for (auto elem1 : elem)
+	//				cout << elem1 << " ";
+	//			cout << endl;
+	//		}
 
 	// check if min_fa has a single, trivial orbit
 	// return true if it exists
@@ -913,6 +913,60 @@ bool FiniteAutomaton::is_one_unambiguous() {
 			}
 			min_fa_cut.states[i].transitions = new_transitions;
 		}
+	}
+
+	// calculate the orbits of min_fa_cut
+	set<set<int>> min_fa_cut_orbits;
+	for (int i = 0; i < min_fa_cut.states.size(); i++) {
+		set<int> orbit_of_state;
+		orbit_of_state.insert(i);
+		for (const auto& transition : min_fa_cut.states[i].transitions) {
+			for (int elem : transition.second) {
+				for (alphabet_symbol symb :
+					 min_fa_cut.language->get_alphabet()) {
+					if (find(min_fa_cut.states[elem].transitions[symb].begin(),
+							 min_fa_cut.states[elem].transitions[symb].end(),
+							 i) !=
+						min_fa_cut.states[elem].transitions[symb].end()) {
+						orbit_of_state.insert(elem);
+					}
+				}
+			}
+		}
+		min_fa_cut_orbits.insert(orbit_of_state);
+	}
+
+	// check if min_fa_cut has an orbit property
+	// we need to show that all the gates of each orbit have identical
+	// connections to the outside world
+
+	// calculate gates of each orbit of min_fa_cut
+	set<set<int>> min_fa_cut_gates;
+	for (auto min_fa_cut_orbit : min_fa_cut_orbits) {
+		set<int> gates_of_orbit;
+		for (auto elem : min_fa_cut_orbit) {
+			if (min_fa_cut.states[elem].is_terminal) {
+				gates_of_orbit.insert(elem);
+				continue;
+			}
+			bool is_exists_transition_outside_orbit = false;
+			for (const auto& transition : min_fa_cut.states[elem].transitions) {
+				for (int elem1 : transition.second) {
+					if (find(min_fa_cut_orbit.begin(), min_fa_cut_orbit.end(),
+							 elem1) == min_fa_cut_orbit.end()) {
+						is_exists_transition_outside_orbit = true;
+					}
+				}
+			}
+			if (is_exists_transition_outside_orbit) gates_of_orbit.insert(elem);
+		}
+		min_fa_cut_gates.insert(gates_of_orbit);
+	}
+	for (auto min_fa_cut_gate : min_fa_cut_gates) {
+		for (auto elem : min_fa_cut_gate) {
+			cout << elem << " ";
+		}
+		cout << endl;
 	}
 
 	return true;
