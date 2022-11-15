@@ -117,6 +117,8 @@ class FiniteAutomaton : public BaseObject {
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
+	// проверка автомата на детерминированность
+	bool is_deterministic();
 	// проверка НКА на семантический детерминизм
 	bool semdet() const;
 	// проверяет, распознаёт ли автомат слово
