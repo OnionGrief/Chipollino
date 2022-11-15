@@ -376,13 +376,23 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 						  names_to_functions[func][0].input == nfa_type)) {
 						return nullopt;
 					} else {
-						if ((func == "Determinize" || func == "Annote") &&
+						// Determinize добавляет ловушку после Annote
+						// if ((func == "Determinize" || func == "Annote") &&
+						if (func == "Annote" &&
 							names_to_functions[predfunc][0].output ==
 								ObjectType::DFA) {
 							neededfuncs[i] = 0;
 						}
-						if (predfunc == "Minimize" && func == "Minimize") {
+						if (predfunc == "Minimize" &&
+							(func == "Minimize" || func == "Determinize")) {
 							neededfuncs[i] = 0;
+						}
+						if (predfunc == "Determinize" &&
+							func == "Determinize") {
+							neededfuncs[i] = 0;
+						}
+						if (predfunc == "Determinize" && func == "Minimize") {
+							neededfuncs[i - 1] = 0;
 						}
 					}
 				} else {
