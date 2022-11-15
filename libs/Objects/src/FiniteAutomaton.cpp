@@ -844,6 +844,10 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
 	}
 
+	for (auto elem : min_fa_consistent)
+		cout << elem << " ";
+	cout << endl;
+
 	// calculate an orbit of each state
 	// search for strongly connected component of each state
 	set<int> states_with_trivial_orbit;
@@ -884,10 +888,32 @@ bool FiniteAutomaton::is_one_unambiguous() {
 	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1)
 		return true;
 
-	// check if min_fa has a single, nontrivial orbit
+	// check if min_fa has a single, nontrivial orbit and
+	// min_fa_consistent.size() is 0
 	// return true if it exists
-	if (min_fa_orbits.size() == 1 && !states_with_trivial_orbit.size())
-		return true;
+	if (min_fa_orbits.size() == 1 && !states_with_trivial_orbit.size() &&
+		!min_fa_consistent.size())
+		return false;
+
+	// construct a min_fa_consistent cut of min_fa
+	// to construct it, we will remove for each symb in min_fa_consistent
+	// all symb-transitions that leave a final state of min_fa
+	FiniteAutomaton min_fa_cut =
+		FiniteAutomaton(min_fa.initial_state, min_fa.states, min_fa.language);
+	vector<State> min_fa_cut_new_states;
+
+	for (int i = 0; i < min_fa.states.size(); i++) {
+		if (min_fa.states[i].is_terminal) {
+			map<alphabet_symbol, set<int>> new_transitions;
+			for (const auto& transition : min_fa.states[i].transitions) {
+				if (find(min_fa_consistent.begin(), min_fa_consistent.end(),
+						 transition.first) == min_fa_consistent.end()) {
+					new_transitions[transition.first] = transition.second;
+				}
+			}
+			min_fa_cut.states[i].transitions = new_transitions;
+		}
+	}
 
 	return true;
 }
