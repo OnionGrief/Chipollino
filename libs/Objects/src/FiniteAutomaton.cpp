@@ -1394,7 +1394,10 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 	return ans;
 }
 
-bool FiniteAutomaton::semdet() const {
+bool FiniteAutomaton::semdet_entry(bool annoted) const {
+	if (!annoted) {
+		return annote().semdet_entry(true);
+	}
 	Logger::init_step("SemDet");
 	Logger::log(
 		"Получение языка из производной регулярки автомата по префиксу");
@@ -1456,6 +1459,10 @@ bool FiniteAutomaton::semdet() const {
 	Logger::log("Результат SemDet", "true");
 	Logger::finish_step();
 	return true;
+}
+
+bool FiniteAutomaton::semdet() const {
+	return semdet_entry();
 }
 
 bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
