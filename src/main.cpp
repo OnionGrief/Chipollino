@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 	Logger::init();
 	Logger::activate();
 
-	//Example::all_examples();
+	// Example::all_examples();
 
 	// Инициализируем интерпретатор
 	Interpreter interpreter;

@@ -24,7 +24,9 @@ enum class ObjectType {
 // Структуры объектов для хранения в интерпретаторе
 template <ObjectType T, class V> struct ObjectHolder {
 	V value;
-	ObjectType type() const {return T;};
+	ObjectType type() const {
+		return T;
+	};
 	// Кэширование
 	optional<bool> minimal; // и так далее
 	ObjectHolder(){};
@@ -61,8 +63,6 @@ struct Function {
 	Function(string name, vector<ObjectType> input, ObjectType output)
 		: name(name), input(input), output(output){};
 };
-
-
 
 }; // namespace Typization
 

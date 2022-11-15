@@ -95,7 +95,7 @@ string TasksGenerator::generate_predicate() {
 	return str;
 }
 
-// TODO: для дин и стат тайпчека 
+// TODO: для дин и стат тайпчека
 string TasksGenerator::generate_test() {
 	change_seed();
 	string str = "";

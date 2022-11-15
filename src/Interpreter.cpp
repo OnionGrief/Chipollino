@@ -370,7 +370,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 
 	string predfunc = function_names[0];
 	for (int i = 1; i < function_names.size(); i++) {
-		cout<<function_names[i]<<endl;
+		cout << function_names[i] << endl;
 		if (neededfuncs[i - 1] != 0) predfunc = function_names[i - 1];
 		string func = function_names[i];
 		// check on types
