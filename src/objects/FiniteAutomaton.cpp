@@ -1636,7 +1636,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			Regex* r = new Regex();
 			r->regex_star(in[indexcur].temp_regex);
 			Regex* k = new Regex();
-			k->regex_union(in[i].temp_regex, r);
+			k->regex_union(r, in[i].temp_regex);
 			expression_arden temp;
 
 			delete r;
@@ -1731,8 +1731,16 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
 					expression_arden temp_expression;
 					Regex* r = new Regex;
-					r->regex_union(data[data[i][j].condition][k].temp_regex,
-								   data[i][j].temp_regex);
+					if (data[i][j].temp_regex->to_txt() == "") {
+						r = data[data[i][j].condition][k].temp_regex->copy();
+					} else if (data[data[i][j].condition][k]
+								   .temp_regex->to_txt() == "") {
+						r = data[i][j].temp_regex->copy();
+					} else {
+						r->regex_union(
+							data[i][j].temp_regex,
+							data[data[i][j].condition][k].temp_regex);
+					}
 					temp_expression.temp_regex = r;
 					temp_expression.condition =
 						data[data[i][j].condition][k].condition;
@@ -1768,11 +1776,19 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 
 		for (int o = 0; o < tempdata2.size(); o++) {
 		}
+		cout << "   ";
+		for (int j = 0; j < tempdata2.size(); j++) {
+			cout << tempdata2[j].condition << " "
+				 << tempdata2[j].temp_regex->to_txt() << " ";
+		}
+		cout << "\n";
 		data[i] = tempdata2;
 	}
 	if (data[0].size() > 1) {
 		// cout << "error";
-		Regex* f = new Regex("eps");
+
+		Regex* f = new Regex("ERROR");
+		f->regex_eps();
 		Regex temp1 = *f;
 		delete f;
 		return temp1;
@@ -1782,6 +1798,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		for (int j = 0; j < data[i].size(); j++) {
 			if (data[i][j].condition != -1) {
 				Regex* ra = new Regex;
+
 				ra->regex_union(data[data[i][j].condition][0].temp_regex,
 								data[i][j].temp_regex);
 				data[i][j].condition = -1;
