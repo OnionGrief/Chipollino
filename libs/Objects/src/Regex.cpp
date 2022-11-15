@@ -349,7 +349,7 @@ bool Regex::from_string(string str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	language = shared_ptr<Language>(new Language(alphabet));
+	language = make_shared<Language>(alphabet);
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 		term_l->term_p = this;
@@ -378,8 +378,25 @@ void Regex::regex_star(Regex* a) {
 void Regex::regex_eps() {
 	type = Type::eps;
 }
+
+void Regex::clear() {
+	if (term_l != nullptr) {
+		delete term_l;
+		term_l = nullptr;
+	}
+	if (term_r != nullptr) {
+		delete term_r;
+		term_r = nullptr;
+	}
+}
+
+Regex::~Regex() {
+	clear();
+}
+
 Regex* Regex::copy() const {
 	Regex* c = new Regex();
+	c->alphabet = alphabet;
 	c->type = type;
 	c->value = value;
 	c->language = language;
@@ -396,21 +413,26 @@ Regex* Regex::copy() const {
 
 Regex::Regex(const Regex& reg)
 	: BaseObject(reg.language), type(reg.type), value(reg.value),
-	  term_p(reg.term_p), alphabet(reg.alphabet),
+	  term_p(nullptr), alphabet(reg.alphabet),
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
-	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
+	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {
+	if (term_l) term_l->term_p = this;
+	if (term_r) term_r->term_p = this;
+}
 
 Regex& Regex::operator=(const Regex& reg) {
+	clear();
+	language = reg.language;
 	type = reg.type;
 	value = reg.value;
-	language = reg.language;
-	if (type != Regex::eps && type != Regex::symb) {
+	alphabet = reg.alphabet;
+	if (reg.term_l) {
 		term_l = reg.term_l->copy();
 		term_l->term_p = this;
-		if (type != Regex::star) {
-			term_r = reg.term_r->copy();
-			term_r->term_p = this;
-		}
+	}
+	if (reg.term_r) {
+		term_r = reg.term_r->copy();
+		term_r->term_p = this;
 	}
 	return *this;
 }
@@ -430,26 +452,9 @@ void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 void Regex::make_language() {
 	generate_alphabet(alphabet);
 
-	language = shared_ptr<Language>(new Language(alphabet));
+	language = make_shared<Language>(alphabet);
 }
 
-void Regex::clear() {
-	if (term_l != nullptr) {
-		// term_l->clear();
-		delete term_l;
-		term_l = nullptr;
-	}
-	if (term_r != nullptr) {
-		// term_r->clear();
-		delete term_r;
-		term_r = nullptr;
-	}
-	// delete language;
-}
-
-Regex::~Regex() {
-	clear();
-}
 int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
 							  Regex* original) {
 	int cond = 0;
@@ -1483,6 +1488,9 @@ int Regex::pump_length() const {
 			Logger::log(
 				"Длина накачки совпадает с длиной регулярного выражения");
 			Logger::finish_step();
+			language->set_pump_length(-1); // TODO нужно оформить получение
+										   // значения в отдельную фунцию
+			// тогда и результат кэшировать проще, и логи делать
 			return -1;
 		}
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
@@ -1508,8 +1516,7 @@ int Regex::pump_length() const {
 														*pumping.term_r))
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language =
-						shared_ptr<Language>(new Language(pumping.alphabet));
+					pumping.language = make_shared<Language>(pumping.alphabet);
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
@@ -1528,6 +1535,7 @@ int Regex::pump_length() const {
 	}
 	Logger::log("Длина накачки совпадает с длиной регулярного выражения");
 	Logger::finish_step();
+	language->set_pump_length(-1);
 	return -1;
 }
 
@@ -1538,11 +1546,11 @@ bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 	if (r1->value.symbol != "")
 		r1_value = r1->value.symbol;
 	else
-		r1_value = r1->type;
+		r1_value = to_string(r1->type);
 	if (r2->value.symbol != "")
 		r2_value = r2->value.symbol;
 	else
-		r2_value = r2->type;
+		r2_value = to_string(r2->type);
 
 	if (r1_value != r2_value) return false;
 
@@ -1723,4 +1731,33 @@ Regex Regex::deannote() const {
 				new_regex.to_txt());
 	Logger::finish_step();
 	return new_regex;
+}
+
+// для дебага
+void Regex::print_subtree(Regex* r, int level) {
+	if (r) {
+		print_subtree(r->term_l, level + 1);
+		for (int i = 0; i < level; i++)
+			cout << "   ";
+		alphabet_symbol r_v;
+		if (r->value.symbol != "")
+			r_v = r->value.symbol;
+		else
+			r_v = to_string(r->type);
+		cout << r_v << endl;
+		print_subtree(r->term_r, level + 1);
+	}
+}
+
+void Regex::print_tree() {
+	print_subtree(term_l, 1);
+	for (int i = 0; i < 0; i++)
+		cout << "   ";
+	alphabet_symbol r_v;
+	if (value.symbol != "")
+		r_v = value.symbol;
+	else
+		r_v = to_string(type);
+	cout << r_v << endl;
+	print_subtree(term_r, 1);
 }
