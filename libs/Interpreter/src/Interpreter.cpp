@@ -34,8 +34,6 @@ Interpreter::Interpreter() {
 		//Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
-		{"KSubSet",
-		 {{"KSubSet", {ObjectType::Int, ObjectType::NFA}, ObjectType::NFA}}},
 		{"Normalize",
 		 {{"Normalize",
 		   {ObjectType::Regex, ObjectType::FileName},
@@ -43,10 +41,8 @@ Interpreter::Interpreter() {
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
 		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
 		{"Ambiguity", {{"Ambiguity", {ObjectType::NFA}, ObjectType::Value}}},
-		{"Width", {{"Width", {ObjectType::NFA}, ObjectType::Int}}},
 		{"MyhillNerode",
 		 {{"MyhillNerode", {ObjectType::DFA}, ObjectType::Int}}},
-		{"Simplify", {{"Simplify", {ObjectType::Regex}, ObjectType::Regex}}},
 		//Предикаты
 		{"Bisimilar",
 		 {{"Bisimilar",
@@ -63,7 +59,6 @@ Interpreter::Interpreter() {
 		   {ObjectType::Regex, ObjectType::Regex},
 		   ObjectType::Boolean},
 		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
-		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equal",
 		 {{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
