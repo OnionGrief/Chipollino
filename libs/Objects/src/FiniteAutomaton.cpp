@@ -1565,6 +1565,20 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 	return false;
 }
 
+bool FiniteAutomaton::is_deterministic() {
+	for (int i = 0; i < states.size(); i++) {
+		for (auto elem : states[i].transitions) {
+			if (elem.first == "/0") {
+				return false;
+			}
+			if (elem.second.size() > 1) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	State state = states[0];
 	return parsing_nfa_for(s);
