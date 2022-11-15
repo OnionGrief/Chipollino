@@ -1585,12 +1585,21 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		out.push_back(temp);
 		while ((j < in.size()) && in[i].condition == in[j].condition) {
 			cond = true;
-			Regex* r = new Regex();
+			Regex* r;
 			Regex* s1 = new Regex();
 			Regex* s2 = new Regex();
 			s1->regex_star(out[i].temp_regex);
 			s2->regex_star(in[j].temp_regex);
-			r->regex_union(s1, s2);
+			if (out[i].temp_regex->to_txt() == "") {
+				r = in[j].temp_regex->copy();
+			} else if (in[j].temp_regex->to_txt() == "") {
+
+				r = out[i].temp_regex->copy();
+			} else {
+				r = new Regex();
+				r->regex_union(s1, s2);
+			}
+
 			delete out[out.size() - 1].temp_regex;
 			out[out.size() - 1].temp_regex = r;
 			delete s1;
@@ -1636,7 +1645,12 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			Regex* r = new Regex();
 			r->regex_star(in[indexcur].temp_regex);
 			Regex* k = new Regex();
-			k->regex_union(r, in[i].temp_regex);
+			// k->regex_union(r, in[i].temp_regex);
+			if (in[i].temp_regex->to_txt() == "") {
+				k = r->copy();
+			} else {
+				k->regex_union(r, in[i].temp_regex);
+			}
 			expression_arden temp;
 
 			delete r;
