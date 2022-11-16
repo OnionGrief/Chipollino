@@ -1596,7 +1596,7 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 				r->regex_alt(out[i].temp_regex, in[j].temp_regex);
 			}*/
 			r = new Regex();
-			r->regex_alt(out[i].temp_regex, in[j].temp_regex);
+			r->regex_alt(in[j].temp_regex, out[i].temp_regex);
 			delete out[out.size() - 1].temp_regex;
 			out[out.size() - 1].temp_regex = r;
 			j++;
@@ -1645,7 +1645,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 				k = r->copy();
 			} else {
 
-				k->regex_union(in[i].temp_regex, r);
+				k->regex_union(r, in[i].temp_regex);
 			}
 			expression_arden temp;
 
@@ -1749,8 +1749,9 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 						r = data[i][j].temp_regex->copy(); //тут б
 														   //	continue;
 					} else {
-						r->regex_union(data[data[i][j].condition][k].temp_regex,
-									   data[i][j].temp_regex);
+						r->regex_union(
+							data[i][j].temp_regex,
+							data[data[i][j].condition][k].temp_regex);
 					}
 					temp_expression.temp_regex = r;
 					temp_expression.condition =
