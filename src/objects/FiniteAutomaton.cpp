@@ -1583,8 +1583,8 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		temp.temp_regex = in[i].temp_regex->copy();
 		temp.condition = in[i].condition;
 		if (!(temp.temp_regex->to_txt() == "" && temp.condition == -1)) {
-			out.push_back(temp);
 		}
+		out.push_back(temp);
 		while ((j < in.size()) && in[i].condition == in[j].condition) {
 			cond = true;
 			Regex* r;
@@ -1754,9 +1754,8 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 						r = data[i][j].temp_regex->copy();
 					} else {
 						r->regex_union(
-
-							data[data[i][j].condition][k].temp_regex,
-							data[i][j].temp_regex);
+							data[i][j].temp_regex,
+							data[data[i][j].condition][k].temp_regex);
 					}
 					temp_expression.temp_regex = r;
 					temp_expression.condition =
