@@ -257,9 +257,10 @@ GeneralObject Interpreter::apply_function(
 		if (function.output == regex) {
 			res =
 				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
-		} /* else {
-			 // res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
-		 }*/
+		} else {
+			// пусть будет так
+			res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
+		}
 	}
 	if (function.name == "Complement") {
 		// FiniteAutomaton fa = get_automaton(arguments[0]);
@@ -418,11 +419,16 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			vector<ObjectType> nfa_type = {ObjectType::NFA};
 			vector<ObjectType> dfa_type = {ObjectType::DFA};
 
-			if (names_to_functions[predfunc].size() == 2 &&
-				names_to_functions[func].size() == 2) {
+			if (names_to_functions[func].size() == 2) {
 				if (predfunc != func) {
-					if (neededfuncs[i - 1] > 1) {
-						neededfuncs[i] = neededfuncs[i - 1];
+					if (names_to_functions[predfunc][0].output ==
+						ObjectType::Regex) {
+						neededfuncs[i] = 2;
+					} else if (names_to_functions[predfunc][0].output ==
+								   ObjectType::NFA ||
+							   names_to_functions[predfunc][0].output ==
+								   ObjectType::DFA) {
+						neededfuncs[i] = 3;
 					} else {
 						return nullopt;
 					}
