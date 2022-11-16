@@ -1001,10 +1001,10 @@ bool FiniteAutomaton::is_one_unambiguous() {
 				}
 				q1_transitions_outside_orbit[symb] =
 					q1_symb_transitions_outside_orbit;
-				for (int elem : q1_transitions_outside_orbit[symb])
-					cout << elem << " ";
+				//				for (int elem :
+				//q1_transitions_outside_orbit[symb]) 					cout << elem << " ";
 			}
-			cout << endl;
+			//			cout << endl;
 			auto it2 = it1;
 			for (int j = i; j < min_fa_cut_orbit_gates.size(); j++) {
 				// check if for any pair q1 and q2 of gates in the same orbit
@@ -1046,8 +1046,51 @@ bool FiniteAutomaton::is_one_unambiguous() {
 			++it1;
 		}
 	}
-	cout << is_min_fa_cut_has_an_orbit_property;
+	// cout << is_min_fa_cut_has_an_orbit_property;
 	if (!is_min_fa_cut_has_an_orbit_property) return false;
+
+	// check if all orbit languages of min_fa_cut are 1-ambiguous
+	for (auto min_fa_cut_orbit : min_fa_cut_orbits) {
+		int i = 0;
+		for (int state_of_orbit : min_fa_cut_orbit) {
+			// construction of an orbit automaton for a state_of_orbit
+			FiniteAutomaton orbit_automaton =
+				FiniteAutomaton(state_of_orbit, {}, make_shared<Language>());
+			vector<State> orbit_automaton_states;
+			for (int elem : min_fa_cut_orbit) {
+				orbit_automaton.states.push_back(min_fa_cut.states[elem]);
+				orbit_automaton.states[orbit_automaton.states.size() - 1]
+					.is_terminal = false;
+				if (find(min_fa_cut_gates[i].begin(), min_fa_cut_gates[i].end(),
+						 elem) != min_fa_cut_gates[i].end()) {
+					orbit_automaton.states[orbit_automaton.states.size() - 1]
+						.is_terminal = true;
+				}
+			}
+			set<alphabet_symbol> orbit_automaton_alphabet;
+			for (int j = 0; j < orbit_automaton.states.size(); j++) {
+				map<alphabet_symbol, set<int>> orbit_automaton_transitions;
+				for (const auto& symb_transitions :
+					 orbit_automaton.states[j].transitions) {
+					set<int> orbit_automaton_symb_transitions;
+					for (int transition : symb_transitions.second) {
+						if (transition < orbit_automaton.states.size()) {
+							orbit_automaton_symb_transitions.insert(transition);
+						}
+					}
+					if (orbit_automaton_symb_transitions.size()) {
+						orbit_automaton_transitions[symb_transitions.first] =
+							orbit_automaton_symb_transitions;
+						orbit_automaton_alphabet.insert(symb_transitions.first);
+					}
+				}
+			}
+			orbit_automaton.language =
+				make_shared<Language>(orbit_automaton_alphabet);
+			if (!orbit_automaton.is_one_unambiguous()) return false;
+		}
+		i++;
+	}
 	return true;
 }
 
