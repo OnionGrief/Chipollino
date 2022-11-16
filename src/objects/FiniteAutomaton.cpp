@@ -1588,10 +1588,6 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		while ((j < in.size()) && in[i].condition == in[j].condition) {
 			cond = true;
 			Regex* r;
-			Regex* s1 = new Regex();
-			Regex* s2 = new Regex();
-			s1->regex_star(out[i].temp_regex);
-			s2->regex_star(in[j].temp_regex);
 			if (out[i].temp_regex->to_txt() == "") {
 				r = in[j].temp_regex->copy();
 			} else if (in[j].temp_regex->to_txt() == "") {
@@ -1599,13 +1595,10 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 				r = out[i].temp_regex->copy();
 			} else {
 				r = new Regex();
-				r->regex_union(s1, s2);
+				r->regex_alt(out[i].temp_regex, in[j].temp_regex);
 			}
-
 			delete out[out.size() - 1].temp_regex;
 			out[out.size() - 1].temp_regex = r;
-			delete s1;
-			delete s2;
 			j++;
 		}
 		if (cond) {
@@ -1649,7 +1642,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			Regex* k = new Regex();
 			// k->regex_union(r, in[i].temp_regex);
 
-			k->regex_union(r, in[i].temp_regex);
+			k->regex_union(in[i].temp_regex, r);
 
 			expression_arden temp;
 
@@ -1750,8 +1743,8 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 								.temp_regex->copy(); //тут 0
 					} else if (data[data[i][j].condition][k]
 								   .temp_regex->to_txt() == "") {
-						// r = data[i][j].temp_regex->copy(); //тут б
-						continue;
+						r = data[i][j].temp_regex->copy(); //тут б
+														   //	continue;
 					} else {
 						r->regex_union(data[data[i][j].condition][k].temp_regex,
 									   data[i][j].temp_regex);
