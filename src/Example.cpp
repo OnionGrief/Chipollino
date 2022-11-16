@@ -224,13 +224,14 @@ void Example::transformation_monoid_example() {
 	states[1].is_terminal = true;
 	states[2].is_terminal = true;
 	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
-	// cout << fa1.to_txt();
+	cout << fa1.to_txt();
 	TransformationMonoid a(&fa1, 3);
-	cout << a.get_Equalence_Classes_Txt() << endl; //вывод эквивалентных классов
-	// cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
-	// cout << a.is_minimality() << "\n";
-	// cout << a.to_Txt_MyhillNerode();
-	//  cout << a.get_Equalence_Classes_Txt(); /*
+	// cout << a.get_Equalence_Classes_Txt() << endl; //вывод эквивалентных
+	// классов
+	//  cout << a.get_Rewriting_Rules_Txt(); //Вывод правил переписывания
+	//  cout << a.is_minimality() << "\n";
+	//  cout << a.to_Txt_MyhillNerode();
+	//   cout << a.get_Equalence_Classes_Txt(); /*
 	/*vector<Term> cur = a.get_Equalence_Classes();
 	cout << cur[1].name << "\n";
 	vector<TermDouble> temp = a.get_Equalence_Classes_VWV(cur[1]);
@@ -410,63 +411,18 @@ void Example::step_interection() {
 }
 
 void Example::arden_test() {
-	// vector<State> states;
-	// for (int i = 0; i < 8; i++) {
-	// 	State s = {
-	// 		i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-	// 	states.push_back(s);
-	// }
-	// states[0].set_transition(1, "a");
-	// states[0].set_transition(4, "b");
-	// states[1].set_transition(1, "a");
-	// states[1].set_transition(2, "b");
-	// states[2].set_transition(1, "a");
-	// states[2].set_transition(3, "b");
-	// states[3].set_transition(1, "a");
-	// states[3].set_transition(3, "b");
-	// states[4].set_transition(1, "a");
-	// states[4].set_transition(5, "b");
-	// states[5].set_transition(6, "a");
-	// states[5].set_transition(5, "b");
-	// states[6].set_transition(6, "a");
-	// states[6].set_transition(7, "b");
-	// states[7].set_transition(6, "a");
-	// states[7].set_transition(5, "b");
-	// states[0].is_terminal = true;
-	// states[1].is_terminal = true;
-	// states[2].is_terminal = true;
-	// states[4].is_terminal = true;
-	// states[5].is_terminal = true;
-
-	// FiniteAutomaton NDM(0, states, {"a", "b"});
-	// cout << NDM.to_txt() << "\n";
-	// cout << NDM.nfa_to_regex().to_txt() + "\n";
-	string regl = "a(a)*ab(bb)*baa";
+	string regl = "a(a)*ab(bb)*baa*";
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
 		return;
 	}
-	FiniteAutomaton a, d, b, k;
+	FiniteAutomaton a, d;
 	a = r.to_glushkov();
 	d = a.determinize().reverse();
-	// cout << d.minimize().to_txt();
 	Regex temp = d.nfa_to_regex();
-	cout << "----------" << endl;
-	// cout << temp.to_txt() << "\n";
-
-	cout << "----------" << endl;
 	string reg = temp.to_txt();
 	cout << reg << "\n";
-	// b = temp.to_glushkov();
-	// //  k = b.determinize();
-	// cout << b.determinize().to_txt();
-	Regex r2;
-	if (!r2.from_string(reg)) {
-		cout << "ERROR\n";
-		return;
-	}
-	cout << r2.to_txt();
 }
 
 void Example::table() {
