@@ -1582,13 +1582,11 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		expression_arden temp;
 		temp.temp_regex = in[i].temp_regex->copy();
 		temp.condition = in[i].condition;
-		if (!(temp.temp_regex->to_txt() == "" && temp.condition == -1)) {
-		}
 		out.push_back(temp);
 		while ((j < in.size()) && in[i].condition == in[j].condition) {
 			cond = true;
 			Regex* r;
-			if (out[i].temp_regex->to_txt() == "") {
+			/*if (out[i].temp_regex->to_txt() == "") {
 				r = in[j].temp_regex->copy();
 			} else if (in[j].temp_regex->to_txt() == "") {
 
@@ -1596,7 +1594,9 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 			} else {
 				r = new Regex();
 				r->regex_alt(out[i].temp_regex, in[j].temp_regex);
-			}
+			}*/
+			r = new Regex();
+			r->regex_alt(out[i].temp_regex, in[j].temp_regex);
 			delete out[out.size() - 1].temp_regex;
 			out[out.size() - 1].temp_regex = r;
 			j++;
@@ -1641,9 +1641,12 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			r->regex_star(in[indexcur].temp_regex);
 			Regex* k = new Regex();
 			// k->regex_union(r, in[i].temp_regex);
+			if (in[i].temp_regex->to_txt() == "") {
+				k = r->copy();
+			} else {
 
-			k->regex_union(in[i].temp_regex, r);
-
+				k->regex_union(in[i].temp_regex, r);
+			}
 			expression_arden temp;
 
 			delete r;
@@ -1773,15 +1776,21 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			delete data[i][o].temp_regex;
 		}
 		data[i].clear();
-		vector<expression_arden> tempdata1 = arden_minimize(temp_data);
-		vector<expression_arden> tempdata2 = arden(tempdata1, i);
+		// vector<expression_arden> tempdata1 = arden_minimize(temp_data);
+		// cout << " (0/1) ";
+		// for (int j = 0; j < tempdata1.size(); j++) {
+		// 	cout << tempdata1[j].condition << " "
+		// 		 << tempdata1[j].temp_regex->to_txt() << " ";
+		// }
+		// cout << "\n";
+		vector<expression_arden> tempdata2 = arden(temp_data, i);
 		vector<expression_arden> tempdata3 = arden_minimize(tempdata2);
 		for (int o = 0; o < temp_data.size(); o++) {
 			delete temp_data[o].temp_regex;
 		}
-		for (int o = 0; o < tempdata1.size(); o++) {
-			delete tempdata1[o].temp_regex;
-		}
+		// for (int o = 0; o < tempdata1.size(); o++) {
+		// 	delete tempdata1[o].temp_regex;
+		// }
 
 		for (int o = 0; o < tempdata2.size(); o++) {
 		}
