@@ -1648,11 +1648,9 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			r->regex_star(in[indexcur].temp_regex);
 			Regex* k = new Regex();
 			// k->regex_union(r, in[i].temp_regex);
-			if (in[i].temp_regex->to_txt() == "") {
-				k = r->copy();
-			} else {
-				k->regex_union(r, in[i].temp_regex);
-			}
+
+			k->regex_union(r, in[i].temp_regex);
+
 			expression_arden temp;
 
 			delete r;
@@ -1748,14 +1746,15 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 					expression_arden temp_expression;
 					Regex* r = new Regex;
 					if (data[i][j].temp_regex->to_txt() == "") {
-						r = data[data[i][j].condition][k].temp_regex->copy();
+						r = data[data[i][j].condition][k]
+								.temp_regex->copy(); //тут 0
 					} else if (data[data[i][j].condition][k]
 								   .temp_regex->to_txt() == "") {
-						r = data[i][j].temp_regex->copy();
+						// r = data[i][j].temp_regex->copy(); //тут б
+						continue;
 					} else {
-						r->regex_union(
-							data[i][j].temp_regex,
-							data[data[i][j].condition][k].temp_regex);
+						r->regex_union(data[data[i][j].condition][k].temp_regex,
+									   data[i][j].temp_regex);
 					}
 					temp_expression.temp_regex = r;
 					temp_expression.condition =
@@ -1770,7 +1769,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 				temp_data.push_back(temp_expression);
 			}
 		}
-		cout << "   ";
+		cout << " (0) ";
 		for (int j = 0; j < temp_data.size(); j++) {
 			cout << temp_data[j].condition << " "
 				 << temp_data[j].temp_regex->to_txt() << " ";
@@ -1793,13 +1792,13 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 
 		for (int o = 0; o < tempdata2.size(); o++) {
 		}
-		cout << "   ";
+		cout << " (1) ";
 		for (int j = 0; j < tempdata2.size(); j++) {
 			cout << tempdata2[j].condition << " "
 				 << tempdata2[j].temp_regex->to_txt() << " ";
 		}
 		cout << "\n";
-		cout << "   ";
+		cout << " (2) ";
 		for (int j = 0; j < tempdata3.size(); j++) {
 			cout << tempdata3[j].condition << " "
 				 << tempdata3[j].temp_regex->to_txt() << " ";
