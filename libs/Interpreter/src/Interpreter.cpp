@@ -353,6 +353,8 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			if (typecheck(names_to_functions[function_names[0]][1].input,
 						  first_type)) {
 				neededfuncs[0] = 3;
+			} else {
+				return nullopt;
 			}
 		} else {
 			return nullopt;
@@ -428,28 +430,13 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 					neededfuncs[i] = 0;
 				}
 			} else if (names_to_functions[predfunc].size() == 2) {
-				if (neededfuncs[i - 1] < 2) {
-					if (names_to_functions[func][0].input == regex_type) {
-						neededfuncs[i] = 2;
-					} else if (names_to_functions[func][0].input == nfa_type ||
-							   names_to_functions[func][0].input == dfa_type) {
-						neededfuncs[i] = 3;
-					} else {
-						return nullopt;
-					}
+				if (typecheck(names_to_functions[func][0].input,
+							  names_to_functions[predfunc][0].input) ||
+					(typecheck(names_to_functions[func][0].input,
+							   names_to_functions[predfunc][1].input))) {
+					neededfuncs[i] = 1;
 				} else {
-					if (names_to_functions[func][0].input == regex_type) {
-						if (neededfuncs[i - 1] != 2) {
-							return nullopt;
-						}
-					} else if (names_to_functions[func][0].input == nfa_type ||
-							   names_to_functions[func][0].input == dfa_type) {
-						if (neededfuncs[i - 1] != 3) {
-							return nullopt;
-						}
-					} else {
-						return nullopt;
-					}
+					return nullopt;
 				}
 			} else {
 				if (names_to_functions[predfunc][0].output ==
