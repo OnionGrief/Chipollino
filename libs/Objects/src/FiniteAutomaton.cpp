@@ -810,7 +810,6 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 
 bool FiniteAutomaton::is_one_unambiguous() {
 	FiniteAutomaton min_fa = minimize().remove_trap_states();
-
 	set<map<alphabet_symbol, set<int>>> final_states_transitions;
 	for (int i = 0; i < min_fa.states.size(); i++) {
 		if (min_fa.states[i].is_terminal) {
@@ -844,9 +843,9 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
 	}
 
-	//	for (auto elem : min_fa_consistent)
-	//		cout << elem << " ";
-	//	cout << endl;
+	//		for (auto elem : min_fa_consistent)
+	//			cout << elem << " ";
+	//		cout << endl;
 
 	// calculate an orbit of each state
 	// search for strongly connected component of each state
@@ -854,18 +853,20 @@ bool FiniteAutomaton::is_one_unambiguous() {
 	set<set<int>> min_fa_orbits;
 	for (int i = 0; i < min_fa.states.size(); i++) {
 		set<int> orbit_of_state;
-		orbit_of_state.insert(i);
+		set<int> reachable_states = min_fa.closure({i}, false);
+		for (int reachable_state : reachable_states) {
+			set<int> reachable_states_for_reachable =
+				min_fa.closure({reachable_states}, false);
+			if (find(reachable_states_for_reachable.begin(),
+					 reachable_states_for_reachable.end(),
+					 i) != reachable_states_for_reachable.end()) {
+				orbit_of_state.insert(reachable_state);
+			}
+		}
 		bool is_state_has_transitions_to_itself = false;
 		for (const auto& transition : min_fa.states[i].transitions) {
 			for (int elem : transition.second) {
 				if (elem == i) is_state_has_transitions_to_itself = true;
-				for (alphabet_symbol symb : min_fa.language->get_alphabet()) {
-					if (find(min_fa.states[elem].transitions[symb].begin(),
-							 min_fa.states[elem].transitions[symb].end(), i) !=
-						min_fa.states[elem].transitions[symb].end()) {
-						orbit_of_state.insert(elem);
-					}
-				}
 			}
 		}
 		// check if orbit of this state is trivial
@@ -877,11 +878,11 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		min_fa_orbits.insert(orbit_of_state);
 	}
 
-	//		for (auto elem : min_fa_orbits) {
-	//			for (auto elem1 : elem)
-	//				cout << elem1 << " ";
-	//			cout << endl;
-	//		}
+	for (auto elem : min_fa_orbits) {
+		for (auto elem1 : elem)
+			cout << elem1 << " ";
+		cout << endl;
+	}
 
 	// check if min_fa has a single, trivial orbit
 	// return true if it exists
@@ -919,26 +920,25 @@ bool FiniteAutomaton::is_one_unambiguous() {
 	set<set<int>> min_fa_cut_orbits;
 	for (int i = 0; i < min_fa_cut.states.size(); i++) {
 		set<int> orbit_of_state;
-		orbit_of_state.insert(i);
-		for (const auto& transition : min_fa_cut.states[i].transitions) {
-			for (int elem : transition.second) {
-				for (alphabet_symbol symb :
-					 min_fa_cut.language->get_alphabet()) {
-					if (find(min_fa_cut.states[elem].transitions[symb].begin(),
-							 min_fa_cut.states[elem].transitions[symb].end(),
-							 i) !=
-						min_fa_cut.states[elem].transitions[symb].end()) {
-						orbit_of_state.insert(elem);
-					}
-				}
+		set<int> reachable_states = min_fa_cut.closure({i}, false);
+		for (int reachable_state : reachable_states) {
+			set<int> reachable_states_for_reachable =
+				min_fa_cut.closure({reachable_states}, false);
+			if (find(reachable_states_for_reachable.begin(),
+					 reachable_states_for_reachable.end(),
+					 i) != reachable_states_for_reachable.end()) {
+				orbit_of_state.insert(reachable_state);
 			}
 		}
 		min_fa_cut_orbits.insert(orbit_of_state);
 	}
 
-	// check if min_fa_cut has an orbit property
-	// we need to show that all the gates of each orbit have identical
-	// connections to the outside world
+	//	for (auto elem : min_fa_cut_orbits) {
+	//		for (auto elem1 : elem)
+	//			cout << elem1 << " ";
+	//		cout << endl;
+	//	}
+	//	cout << min_fa_cut.to_txt();
 
 	// calculate gates of each orbit of min_fa_cut
 	set<set<int>> min_fa_cut_gates;
@@ -962,12 +962,17 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		}
 		min_fa_cut_gates.insert(gates_of_orbit);
 	}
-	for (auto min_fa_cut_gate : min_fa_cut_gates) {
-		for (auto elem : min_fa_cut_gate) {
-			cout << elem << " ";
-		}
-		cout << endl;
-	}
+
+	//	for (auto min_fa_cut_gate : min_fa_cut_gates) {
+	//		for (auto elem : min_fa_cut_gate) {
+	//			cout << elem << " ";
+	//		}
+	//		cout << endl;
+	//	}
+
+	// check if min_fa_cut has an orbit property
+	// we need to show that all the gates of each orbit have identical
+	// connections to the outside world
 
 	return true;
 }
