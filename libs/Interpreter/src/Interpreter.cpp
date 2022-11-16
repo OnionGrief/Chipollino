@@ -420,7 +420,8 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			vector<ObjectType> dfa_type = {ObjectType::DFA};
 
 			if (names_to_functions[func].size() == 2) {
-				if (predfunc != func) {
+				// DeLinearize ~ DeAnnote
+				if (names_to_functions[predfunc].size() != 2) {
 					if (names_to_functions[predfunc][0].output ==
 						ObjectType::Regex) {
 						neededfuncs[i] = 2;
@@ -433,26 +434,15 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 						return nullopt;
 					}
 				} else {
-					neededfuncs[i] = 0;
+					neededfuncs[i] = neededfuncs[i - 1];
+					neededfuncs[i - 1] = 0;
 				}
 			} else if (names_to_functions[predfunc].size() == 2) {
-				if (typecheck(names_to_functions[func][0].input,
-							  names_to_functions[predfunc][0].input) ||
-					(typecheck(names_to_functions[func][0].input,
-							   names_to_functions[predfunc][1].input))) {
+				if (names_to_functions[func][0].input == regex_type &&
+						neededfuncs[i - 1] == 2 ||
+					names_to_functions[func][0].input == nfa_type &&
+						neededfuncs[i - 1] == 3) {
 					neededfuncs[i] = 1;
-				} else {
-					return nullopt;
-				}
-			} else {
-				if (names_to_functions[predfunc][0].output ==
-					ObjectType::Regex) {
-					neededfuncs[i] = 2;
-				} else if (names_to_functions[predfunc][0].output ==
-							   ObjectType::NFA ||
-						   names_to_functions[predfunc][0].output ==
-							   ObjectType::DFA) {
-					neededfuncs[i] = 3;
 				} else {
 					return nullopt;
 				}
