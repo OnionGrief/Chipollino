@@ -1076,8 +1076,6 @@ bool FiniteAutomaton::is_one_unambiguous() {
 			}
 			orbit_automaton.language =
 				make_shared<Language>(orbit_automaton_alphabet);
-			cout << orbit_automaton.initial_state;
-			cout << orbit_automaton.to_txt() << endl;
 			if (!orbit_automaton.is_one_unambiguous()) return false;
 			orbit_automaton_initial_state++;
 		}
