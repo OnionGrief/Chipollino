@@ -860,10 +860,6 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
 	}
 
-	//			for (auto elem : min_fa_consistent)
-	//				cout << elem << " ";
-	//			cout << endl;
-
 	// calculate an orbit of each state
 	// search for strongly connected component of each state
 	set<int> states_with_trivial_orbit;
@@ -894,12 +890,6 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		}
 		min_fa_orbits.insert(orbit_of_state);
 	}
-
-	//		for (auto elem : min_fa_orbits) {
-	//			for (auto elem1 : elem)
-	//				cout << elem1 << " ";
-	//			cout << endl;
-	//		}
 
 	// check if min_fa has a single, trivial orbit
 	// return true if it exists
@@ -951,19 +941,6 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		min_fa_cut_orbits_of_states.push_back(orbit_of_state);
 	}
 
-	//			for (auto elem : min_fa_cut_orbits) {
-	//				for (auto elem1 : elem)
-	//					cout << elem1 << " ";
-	//				cout << endl;
-	//			}
-	//			cout << min_fa_cut.to_txt();
-	//
-	//		for (auto elem : min_fa_cut_orbits_of_states) {
-	//			for (auto elem1 : elem)
-	//				cout << elem1 << " ";
-	//			cout << endl;
-	//		}
-
 	// calculate gates of each orbit of min_fa_cut
 	vector<set<int>> min_fa_cut_gates;
 	for (auto min_fa_cut_orbit : min_fa_cut_orbits) {
@@ -985,13 +962,6 @@ bool FiniteAutomaton::is_one_unambiguous() {
 			if (is_exists_transition_outside_orbit) gates_of_orbit.insert(elem);
 		}
 		min_fa_cut_gates.push_back(gates_of_orbit);
-	}
-
-	for (auto min_fa_cut_gate : min_fa_cut_gates) {
-		for (auto elem : min_fa_cut_gate) {
-			cout << elem << " ";
-		}
-		cout << endl;
 	}
 
 	// check if min_fa_cut has an orbit property
@@ -1018,12 +988,7 @@ bool FiniteAutomaton::is_one_unambiguous() {
 				}
 				q1_transitions_outside_orbit[symb] =
 					q1_symb_transitions_outside_orbit;
-				//				for (int elem :
-				// q1_transitions_outside_orbit[symb]) 					cout << elem <<
-				// "
-				// ";
 			}
-			//			cout << endl;
 			auto it2 = it1;
 			for (int j = i; j < min_fa_cut_orbit_gates.size(); j++) {
 				// check if for any pair q1 and q2 of gates in the same orbit
@@ -1065,7 +1030,6 @@ bool FiniteAutomaton::is_one_unambiguous() {
 			++it1;
 		}
 	}
-	// cout << is_min_fa_cut_has_an_orbit_property;
 	if (!is_min_fa_cut_has_an_orbit_property) return false;
 
 	// check if all orbit languages of min_fa_cut are 1-ambiguous
