@@ -133,6 +133,8 @@ class FiniteAutomaton : public BaseObject {
 	int get_initial();
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity() const;
+	// проверка на детерминированность методом орбит Брюггеманн-Вуда
+	bool is_one_unambiguous();
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
 	// метод Arden

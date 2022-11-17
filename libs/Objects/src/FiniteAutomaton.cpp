@@ -1,7 +1,7 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Fraction/Fraction.h"
-#include "Objects/Grammar.h"
 #include "InfInt/InfInt.h"
+#include "Objects/Grammar.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
 #include <algorithm>
@@ -92,6 +92,12 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 
 FiniteAutomaton FiniteAutomaton::determinize() const {
 	Logger::init_step("Determinize");
+	if (states.size() == 1) {
+		Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
+					*this, *this);
+		Logger::finish_step();
+		return *this;
+	}
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({initial_state}, true);
 
@@ -177,6 +183,13 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	Logger::init_step("Minimize");
 	optional<FiniteAutomaton> language_min_dfa = language->get_min_dfa();
 	if (language_min_dfa) {
+		Logger::log("Автомат до минимизации", "Автомат после минимизации",
+					*this, *language_min_dfa);
+		stringstream ss;
+		for (const auto& state : language_min_dfa->states) {
+			ss << "\\{" << state.identifier << "\\} ";
+		}
+		Logger::log("Эквивалентные классы", ss.str());
 		Logger::finish_step();
 		return *language_min_dfa; // TODO Нужно решить, что делаем с
 								  // идентификаторами
@@ -806,6 +819,269 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 				"Автомат после удаления разметки", *this, new_fa);
 	Logger::finish_step();
 	return new_fa;
+}
+
+bool FiniteAutomaton::is_one_unambiguous() {
+	FiniteAutomaton min_fa;
+	if (states.size() == 1)
+		min_fa = minimize();
+	else
+		min_fa = minimize().remove_trap_states();
+	set<map<alphabet_symbol, set<int>>> final_states_transitions;
+	for (int i = 0; i < min_fa.states.size(); i++) {
+		if (min_fa.states[i].is_terminal) {
+			final_states_transitions.insert(min_fa.states[i].transitions);
+		}
+	}
+
+	set<alphabet_symbol> min_fa_consistent;
+	// calculate a set of min_fa_consistent symbols
+	for (alphabet_symbol symb : min_fa.language->get_alphabet()) {
+		set<int> reachable_by_symb;
+		bool is_symb_min_fa_consistent = true;
+		for (int i = 0; i < min_fa.states.size(); i++) {
+			for (const auto& transition : min_fa.states[i].transitions) {
+				if (transition.first == symb) {
+					for (int elem : transition.second) {
+						reachable_by_symb.insert(elem);
+					}
+				}
+			}
+		}
+		for (auto final_state_transitions : final_states_transitions) {
+			for (int elem : reachable_by_symb) {
+				if (find(final_state_transitions[symb].begin(),
+						 final_state_transitions[symb].end(),
+						 elem) == final_state_transitions[symb].end()) {
+					is_symb_min_fa_consistent = false;
+				}
+			}
+		}
+		if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
+	}
+
+	// calculate an orbit of each state
+	// search for strongly connected component of each state
+	set<int> states_with_trivial_orbit;
+	set<set<int>> min_fa_orbits;
+	for (int i = 0; i < min_fa.states.size(); i++) {
+		set<int> orbit_of_state;
+		set<int> reachable_states = min_fa.closure({i}, false);
+		for (int reachable_state : reachable_states) {
+			set<int> reachable_states_for_reachable =
+				min_fa.closure({reachable_state}, false);
+			if (find(reachable_states_for_reachable.begin(),
+					 reachable_states_for_reachable.end(),
+					 i) != reachable_states_for_reachable.end()) {
+				orbit_of_state.insert(reachable_state);
+			}
+		}
+		bool is_state_has_transitions_to_itself = false;
+		for (const auto& transition : min_fa.states[i].transitions) {
+			for (int elem : transition.second) {
+				if (elem == i) is_state_has_transitions_to_itself = true;
+			}
+		}
+		// check if orbit of this state is trivial
+		// if so, insert into states_with_trivial_orbit
+		if (orbit_of_state.size() == 1 && *orbit_of_state.begin() == i &&
+			!is_state_has_transitions_to_itself) {
+			states_with_trivial_orbit.insert(i);
+		}
+		min_fa_orbits.insert(orbit_of_state);
+	}
+
+	// check if min_fa has a single, trivial orbit
+	// return true if it exists
+	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1)
+		return true;
+
+	// check if min_fa has a single, nontrivial orbit and
+	// min_fa_consistent.size() is 0
+	// return true if it exists
+	if (min_fa_orbits.size() == 1 && !states_with_trivial_orbit.size() &&
+		!min_fa_consistent.size())
+		return false;
+
+	// construct a min_fa_consistent cut of min_fa
+	// to construct it, we will remove for each symb in min_fa_consistent
+	// all symb-transitions that leave a final state of min_fa
+	FiniteAutomaton min_fa_cut =
+		FiniteAutomaton(min_fa.initial_state, min_fa.states, min_fa.language);
+
+	for (int i = 0; i < min_fa.states.size(); i++) {
+		if (min_fa.states[i].is_terminal) {
+			map<alphabet_symbol, set<int>> new_transitions;
+			for (const auto& transition : min_fa.states[i].transitions) {
+				if (find(min_fa_consistent.begin(), min_fa_consistent.end(),
+						 transition.first) == min_fa_consistent.end()) {
+					new_transitions[transition.first] = transition.second;
+				}
+			}
+			min_fa_cut.states[i].transitions = new_transitions;
+		}
+	}
+
+	// calculate the orbits of min_fa_cut
+	set<set<int>> min_fa_cut_orbits;
+	vector<set<int>> min_fa_cut_orbits_of_states;
+	for (int i = 0; i < min_fa_cut.states.size(); i++) {
+		set<int> orbit_of_state;
+		set<int> reachable_states = min_fa_cut.closure({i}, false);
+		for (int reachable_state : reachable_states) {
+			set<int> reachable_states_for_reachable =
+				min_fa_cut.closure({reachable_state}, false);
+			if (find(reachable_states_for_reachable.begin(),
+					 reachable_states_for_reachable.end(),
+					 i) != reachable_states_for_reachable.end()) {
+				orbit_of_state.insert(reachable_state);
+			}
+		}
+		min_fa_cut_orbits.insert(orbit_of_state);
+		min_fa_cut_orbits_of_states.push_back(orbit_of_state);
+	}
+
+	// calculate gates of each orbit of min_fa_cut
+	vector<set<int>> min_fa_cut_gates;
+	for (auto min_fa_cut_orbit : min_fa_cut_orbits) {
+		set<int> gates_of_orbit;
+		for (auto elem : min_fa_cut_orbit) {
+			if (min_fa_cut.states[elem].is_terminal) {
+				gates_of_orbit.insert(elem);
+				continue;
+			}
+			bool is_exists_transition_outside_orbit = false;
+			for (const auto& transition : min_fa_cut.states[elem].transitions) {
+				for (int elem1 : transition.second) {
+					if (find(min_fa_cut_orbit.begin(), min_fa_cut_orbit.end(),
+							 elem1) == min_fa_cut_orbit.end()) {
+						is_exists_transition_outside_orbit = true;
+					}
+				}
+			}
+			if (is_exists_transition_outside_orbit) gates_of_orbit.insert(elem);
+		}
+		min_fa_cut_gates.push_back(gates_of_orbit);
+	}
+
+	// check if min_fa_cut has an orbit property
+	// we need to show that all the gates of each orbit have identical
+	// connections to the outside world
+	bool is_min_fa_cut_has_an_orbit_property = true;
+	for (auto min_fa_cut_orbit_gates : min_fa_cut_gates) {
+		auto it1 = min_fa_cut_orbit_gates.begin();
+		for (int i = 0; i < min_fa_cut_orbit_gates.size(); i++) {
+			map<alphabet_symbol, set<int>> q1_transitions_outside_orbit;
+			for (alphabet_symbol symb : min_fa_cut.language->get_alphabet()) {
+				set<int> q1_symb_transitions_outside_orbit;
+				for (int transition :
+					 min_fa_cut.states[*it1].transitions[symb]) {
+					bool is_transition_outside_orbit = true;
+					for (int elem : min_fa_cut_orbits_of_states[*it1]) {
+						if (transition == elem) {
+							is_transition_outside_orbit = false;
+						}
+					}
+					if (is_transition_outside_orbit) {
+						q1_symb_transitions_outside_orbit.insert(transition);
+					}
+				}
+				q1_transitions_outside_orbit[symb] =
+					q1_symb_transitions_outside_orbit;
+			}
+			auto it2 = it1;
+			for (int j = i; j < min_fa_cut_orbit_gates.size(); j++) {
+				// check if for any pair q1 and q2 of gates in the same orbit
+				// q1 is final if and only if q2 is final
+				if (min_fa_cut.states[i].is_terminal !=
+					min_fa_cut.states[j].is_terminal) {
+					is_min_fa_cut_has_an_orbit_property = false;
+				}
+				map<alphabet_symbol, set<int>> q2_transitions_outside_orbit;
+				for (alphabet_symbol symb :
+					 min_fa_cut.language->get_alphabet()) {
+					set<int> q2_symb_transitions_outside_orbit;
+					for (int transition :
+						 min_fa_cut.states[*it2].transitions[symb]) {
+						bool is_transition_outside_orbit = true;
+						for (int elem : min_fa_cut_orbits_of_states[*it2]) {
+							if (transition == elem) {
+								is_transition_outside_orbit = false;
+							}
+						}
+						if (is_transition_outside_orbit) {
+							q2_symb_transitions_outside_orbit.insert(
+								transition);
+						}
+					}
+					q2_transitions_outside_orbit[symb] =
+						q2_symb_transitions_outside_orbit;
+					// check if for all states q outside the orbit of q1 and q2
+					// there is a transition (q1, a, q) in min_fa_cut
+					// if and only if there is a transition (q2, a, q) in
+					// min_fa_cut
+					if (q1_transitions_outside_orbit[symb] !=
+						q2_symb_transitions_outside_orbit) {
+						is_min_fa_cut_has_an_orbit_property = false;
+					}
+				}
+				++it2;
+			}
+			++it1;
+		}
+	}
+	if (!is_min_fa_cut_has_an_orbit_property) return false;
+
+	// check if all orbit languages of min_fa_cut are 1-ambiguous
+	int i = 0;
+	for (auto min_fa_cut_orbit : min_fa_cut_orbits) {
+		int orbit_automaton_initial_state = 0;
+		for (int state_of_orbit : min_fa_cut_orbit) {
+			// construction of an orbit automaton for a state_of_orbit
+			FiniteAutomaton orbit_automaton = FiniteAutomaton(
+				orbit_automaton_initial_state, {}, make_shared<Language>());
+			for (int elem : min_fa_cut_orbit) {
+				orbit_automaton.states.push_back(min_fa_cut.states[elem]);
+				orbit_automaton.states[orbit_automaton.states.size() - 1]
+					.index = orbit_automaton.states.size() - 1;
+				orbit_automaton.states[orbit_automaton.states.size() - 1]
+					.is_terminal = false;
+				if (find(min_fa_cut_gates[i].begin(), min_fa_cut_gates[i].end(),
+						 elem) != min_fa_cut_gates[i].end()) {
+					orbit_automaton.states[orbit_automaton.states.size() - 1]
+						.is_terminal = true;
+				}
+			}
+			set<alphabet_symbol> orbit_automaton_alphabet;
+			for (int j = 0; j < orbit_automaton.states.size(); j++) {
+				map<alphabet_symbol, set<int>>
+					orbit_automaton_state_transitions;
+				for (const auto& symb_transitions :
+					 orbit_automaton.states[j].transitions) {
+					set<int> orbit_automaton_symb_transitions;
+					for (int transition : symb_transitions.second) {
+						if (transition < orbit_automaton.states.size()) {
+							orbit_automaton_symb_transitions.insert(transition);
+						}
+					}
+					if (orbit_automaton_symb_transitions.size()) {
+						orbit_automaton_state_transitions[symb_transitions
+															  .first] =
+							orbit_automaton_symb_transitions;
+						orbit_automaton_alphabet.insert(symb_transitions.first);
+					}
+				}
+				orbit_automaton.states[j].transitions =
+					orbit_automaton_state_transitions;
+			}
+			orbit_automaton.language =
+				make_shared<Language>(orbit_automaton_alphabet);
+			if (!orbit_automaton.is_one_unambiguous()) return false;
+			orbit_automaton_initial_state++;
+		}
+		i++;
+	}
+	return true;
 }
 
 FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
