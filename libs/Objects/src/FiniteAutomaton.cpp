@@ -92,6 +92,12 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 
 FiniteAutomaton FiniteAutomaton::determinize() const {
 	Logger::init_step("Determinize");
+	if (states.size() == 1) {
+		Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
+					*this, *this);
+		Logger::finish_step();
+		return *this;
+	}
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({initial_state}, true);
 
@@ -816,7 +822,11 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 }
 
 bool FiniteAutomaton::is_one_unambiguous() {
-	FiniteAutomaton min_fa = minimize().remove_trap_states();
+	FiniteAutomaton min_fa;
+	if (states.size() == 1)
+		min_fa = minimize();
+	else
+		min_fa = minimize().remove_trap_states();
 	set<map<alphabet_symbol, set<int>>> final_states_transitions;
 	for (int i = 0; i < min_fa.states.size(); i++) {
 		if (min_fa.states[i].is_terminal) {
@@ -850,9 +860,9 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
 	}
 
-	//		for (auto elem : min_fa_consistent)
-	//			cout << elem << " ";
-	//		cout << endl;
+	//			for (auto elem : min_fa_consistent)
+	//				cout << elem << " ";
+	//			cout << endl;
 
 	// calculate an orbit of each state
 	// search for strongly connected component of each state
@@ -885,11 +895,11 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		min_fa_orbits.insert(orbit_of_state);
 	}
 
-	//	for (auto elem : min_fa_orbits) {
-	//		for (auto elem1 : elem)
-	//			cout << elem1 << " ";
-	//		cout << endl;
-	//	}
+	//		for (auto elem : min_fa_orbits) {
+	//			for (auto elem1 : elem)
+	//				cout << elem1 << " ";
+	//			cout << endl;
+	//		}
 
 	// check if min_fa has a single, trivial orbit
 	// return true if it exists
@@ -941,18 +951,18 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		min_fa_cut_orbits_of_states.push_back(orbit_of_state);
 	}
 
-	//		for (auto elem : min_fa_cut_orbits) {
+	//			for (auto elem : min_fa_cut_orbits) {
+	//				for (auto elem1 : elem)
+	//					cout << elem1 << " ";
+	//				cout << endl;
+	//			}
+	//			cout << min_fa_cut.to_txt();
+	//
+	//		for (auto elem : min_fa_cut_orbits_of_states) {
 	//			for (auto elem1 : elem)
 	//				cout << elem1 << " ";
 	//			cout << endl;
 	//		}
-	//		cout << min_fa_cut.to_txt();
-
-	//	for (auto elem : min_fa_cut_orbits_of_states) {
-	//		for (auto elem1 : elem)
-	//			cout << elem1 << " ";
-	//		cout << endl;
-	//	}
 
 	// calculate gates of each orbit of min_fa_cut
 	vector<set<int>> min_fa_cut_gates;
@@ -977,12 +987,12 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		min_fa_cut_gates.push_back(gates_of_orbit);
 	}
 
-	//	for (auto min_fa_cut_gate : min_fa_cut_gates) {
-	//		for (auto elem : min_fa_cut_gate) {
-	//			cout << elem << " ";
-	//		}
-	//		cout << endl;
-	//	}
+	for (auto min_fa_cut_gate : min_fa_cut_gates) {
+		for (auto elem : min_fa_cut_gate) {
+			cout << elem << " ";
+		}
+		cout << endl;
+	}
 
 	// check if min_fa_cut has an orbit property
 	// we need to show that all the gates of each orbit have identical
@@ -1009,7 +1019,8 @@ bool FiniteAutomaton::is_one_unambiguous() {
 				q1_transitions_outside_orbit[symb] =
 					q1_symb_transitions_outside_orbit;
 				//				for (int elem :
-				// q1_transitions_outside_orbit[symb]) 					cout << elem << "
+				// q1_transitions_outside_orbit[symb]) 					cout << elem <<
+				// "
 				// ";
 			}
 			//			cout << endl;
@@ -1058,15 +1069,17 @@ bool FiniteAutomaton::is_one_unambiguous() {
 	if (!is_min_fa_cut_has_an_orbit_property) return false;
 
 	// check if all orbit languages of min_fa_cut are 1-ambiguous
+	int i = 0;
 	for (auto min_fa_cut_orbit : min_fa_cut_orbits) {
-		int i = 0;
+		int orbit_automaton_initial_state = 0;
 		for (int state_of_orbit : min_fa_cut_orbit) {
 			// construction of an orbit automaton for a state_of_orbit
-			FiniteAutomaton orbit_automaton =
-				FiniteAutomaton(state_of_orbit, {}, make_shared<Language>());
-			vector<State> orbit_automaton_states;
+			FiniteAutomaton orbit_automaton = FiniteAutomaton(
+				orbit_automaton_initial_state, {}, make_shared<Language>());
 			for (int elem : min_fa_cut_orbit) {
 				orbit_automaton.states.push_back(min_fa_cut.states[elem]);
+				orbit_automaton.states[orbit_automaton.states.size() - 1]
+					.index = orbit_automaton.states.size() - 1;
 				orbit_automaton.states[orbit_automaton.states.size() - 1]
 					.is_terminal = false;
 				if (find(min_fa_cut_gates[i].begin(), min_fa_cut_gates[i].end(),
@@ -1077,7 +1090,8 @@ bool FiniteAutomaton::is_one_unambiguous() {
 			}
 			set<alphabet_symbol> orbit_automaton_alphabet;
 			for (int j = 0; j < orbit_automaton.states.size(); j++) {
-				map<alphabet_symbol, set<int>> orbit_automaton_transitions;
+				map<alphabet_symbol, set<int>>
+					orbit_automaton_state_transitions;
 				for (const auto& symb_transitions :
 					 orbit_automaton.states[j].transitions) {
 					set<int> orbit_automaton_symb_transitions;
@@ -1087,15 +1101,21 @@ bool FiniteAutomaton::is_one_unambiguous() {
 						}
 					}
 					if (orbit_automaton_symb_transitions.size()) {
-						orbit_automaton_transitions[symb_transitions.first] =
+						orbit_automaton_state_transitions[symb_transitions
+															  .first] =
 							orbit_automaton_symb_transitions;
 						orbit_automaton_alphabet.insert(symb_transitions.first);
 					}
 				}
+				orbit_automaton.states[j].transitions =
+					orbit_automaton_state_transitions;
 			}
 			orbit_automaton.language =
 				make_shared<Language>(orbit_automaton_alphabet);
+			cout << orbit_automaton.initial_state;
+			cout << orbit_automaton.to_txt() << endl;
 			if (!orbit_automaton.is_one_unambiguous()) return false;
+			orbit_automaton_initial_state++;
 		}
 		i++;
 	}
