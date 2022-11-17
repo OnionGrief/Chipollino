@@ -1429,11 +1429,11 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 		success &= derevative_with_respect_to_sym(sym, &cur, next);
 		// cout << "derevative for prefix " << sym->to_txt() << " in "
 		//	 << cur.to_txt() << " is " << next.to_txt() << "\n";
+		if (!success) {
+			return false;
+		}
 		delete sym;
 		cur = next;
-		if (!success) {
-			break;
-		}
 	}
 	result = next;
 	// cout << " answer is " << result.to_txt();
@@ -1485,13 +1485,11 @@ int Regex::pump_length() const {
 		std::set<std::string> prefs;
 		get_prefix(i, &prefs);
 		if (prefs.empty()) {
+			language->set_pump_length(i);
 			Logger::log(
 				"Длина накачки совпадает с длиной регулярного выражения");
 			Logger::finish_step();
-			language->set_pump_length(-1); // TODO нужно оформить получение
-										   // значения в отдельную фунцию
-			// тогда и результат кэшировать проще, и логи делать
-			return -1;
+			return i;
 		}
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
 			bool was = false;
@@ -1509,9 +1507,7 @@ int Regex::pump_length() const {
 					pumped_prefix += it->substr(0, j);
 					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
 					pumped_prefix += it->substr(k, it->size() - k + j);
-					pumping.type = Type::conc;
-					pumping.term_l = new Regex(pumped_prefix);
-					pumping.term_r = new Regex;
+					pumping.regex_union(new Regex(pumped_prefix), new Regex);
 					if (!derevative_with_respect_to_str(*it, this,
 														*pumping.term_r))
 						continue;
@@ -1522,9 +1518,11 @@ int Regex::pump_length() const {
 						checked_prefixes[*it] = true;
 						language->set_pump_length(i);
 						/*cout << *it << "\n";
-						cout << pumped_prefix << " " << pumping.term_r->to_txt()
-							 << "\n";
-						cout << to_txt() << "\n";*/
+						cout << pumping.to_txt() << "\n";
+						cout << to_txt() << "\n";
+						cout << subset(pumping) << "\n";
+						Regex pump2;
+						cout << subset(pump2);*/
 						Logger::log("Длина накачки", to_string(i));
 						Logger::finish_step();
 						return i;
@@ -1533,10 +1531,6 @@ int Regex::pump_length() const {
 			}
 		}
 	}
-	Logger::log("Длина накачки совпадает с длиной регулярного выражения");
-	Logger::finish_step();
-	language->set_pump_length(-1);
-	return -1;
 }
 
 bool Regex::equality_checker(const Regex* r1, const Regex* r2) {

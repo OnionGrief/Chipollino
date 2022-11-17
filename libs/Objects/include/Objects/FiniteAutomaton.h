@@ -63,6 +63,9 @@ class FiniteAutomaton : public BaseObject {
 	std::optional<std::string> get_prefix(int state_beg, int state_end,
 										  map<int, bool>& was) const;
 
+	// функция проверки на семантическую детерминированность
+	bool semdet_entry(bool annoted = false) const;
+
   public:
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, vector<State> states,
