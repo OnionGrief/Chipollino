@@ -177,6 +177,13 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	Logger::init_step("Minimize");
 	optional<FiniteAutomaton> language_min_dfa = language->get_min_dfa();
 	if (language_min_dfa) {
+		Logger::log("Автомат до минимизации", "Автомат после минимизации",
+					*this, *language_min_dfa);
+		stringstream ss;
+		for (const auto& state : language_min_dfa->states) {
+			ss << "\\{" << state.identifier << "\\} ";
+		}
+		Logger::log("Эквивалентные классы", ss.str());
 		Logger::finish_step();
 		return *language_min_dfa; // TODO Нужно решить, что делаем с
 								  // идентификаторами
@@ -1002,7 +1009,8 @@ bool FiniteAutomaton::is_one_unambiguous() {
 				q1_transitions_outside_orbit[symb] =
 					q1_symb_transitions_outside_orbit;
 				//				for (int elem :
-				//q1_transitions_outside_orbit[symb]) 					cout << elem << " ";
+				// q1_transitions_outside_orbit[symb]) 					cout << elem << "
+				// ";
 			}
 			//			cout << endl;
 			auto it2 = it1;
