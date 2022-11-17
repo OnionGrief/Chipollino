@@ -14,6 +14,7 @@ using namespace std;
 
 class Regex;
 class Language;
+class Grammar;
 struct expression_arden {
 	int condition;
 	Regex* temp_regex;
@@ -136,4 +137,5 @@ class FiniteAutomaton : public BaseObject {
 	Regex nfa_to_regex() const;
 	friend class Regex;
 	friend class TransformationMonoid;
+	friend class Grammar;
 };

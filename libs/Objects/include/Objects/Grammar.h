@@ -8,12 +8,19 @@
 using namespace std;
 
 struct GrammarItem {
-	enum Type { terminal, nonterminal };
+	enum Type {
+		terminal,
+		nonterminal
+	};
 	Type type = terminal;
+	bool is_started = false; //
 	int state_index = -1, class_number = -1;
+	set<string> equivalence_class;
+	map<alphabet_symbol, set<int>> rules;
 	string name = "";
 	GrammarItem();
 	GrammarItem(Type type, string name, int state_index, int class_number);
+	GrammarItem(Type type, string name, int state_index);
 	GrammarItem(Type type, string name);
 	bool operator!=(const GrammarItem& other);
 	void operator=(const GrammarItem& other);
@@ -57,4 +64,8 @@ class Grammar {
 		vector<vector<vector<GrammarItem*>>>& rules,
 		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
 		int initial_state);
+	static vector<vector<GrammarItem>> fa_to_prefix_grammar(
+		const FiniteAutomaton&);
+	static int fa_to_g(const FiniteAutomaton&, string, int, int,
+					   map<int, GrammarItem*>);
 };

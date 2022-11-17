@@ -4,11 +4,17 @@
 
 GrammarItem::GrammarItem()
 	: type(terminal), state_index(-1), class_number(-1), name("") {}
+
 GrammarItem::GrammarItem(Type type, string name, int state_index,
 						 int class_number)
 	: type(type), name(name), state_index(state_index),
 	  class_number(class_number) {}
+
+GrammarItem::GrammarItem(Type type, string name, int state_index)
+	: type(type), name(name), state_index(state_index) {}
+
 GrammarItem::GrammarItem(Type type, string name) : type(type), name(name) {}
+
 bool GrammarItem::operator!=(const GrammarItem& other) {
 	return type != other.type || state_index != other.state_index ||
 		   class_number != other.class_number || name != other.name;
@@ -209,4 +215,91 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 	}
 	reverse_rules[initial_state].push_back({terminals[0]});
 	return reverse_rules;
+}
+
+// vector<vector<GrammarItem>>
+int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
+					 int index_back, map<int, GrammarItem*> grammer_items) {
+	// int index = st.index;
+	State st = fa.states[index];
+	State st_back = fa.states[index_back];
+	// GrammarItem gr(GrammarItem::nonterminal, w, index);
+	GrammarItem* g = grammer_items[index];
+	set equivalence_class_back = grammer_items[index_back]->equivalence_class;
+	g->rules[w].insert(index_back);
+	for (const auto& equ : equivalence_class_back) {
+		g->equivalence_class.insert(equ + w);
+	}
+
+	for (const auto& elem : st.transitions) {
+		alphabet_symbol alpha = elem.first;
+		set<int> transitions = elem.second;
+		// if st.is_terminal то учитываем только переходы в себя
+		for (const auto& ind : transitions) {
+			if (st.is_terminal) {
+				if (index == ind) {
+					g->rules[alpha].insert(index);
+				}
+			} else {
+				if (index != ind) {
+					fa_to_g(fa, alpha, ind, index, grammer_items);
+				} else {
+					g->rules[alpha].insert(index);
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
+	const FiniteAutomaton& fa) {
+
+	vector<State> states = fa.states;
+	State st0 = states[fa.initial_state];
+	map<int, GrammarItem*> grammer_items;
+	for (size_t i = 0; i < states.size(); i++) {
+		grammer_items[states[i].index] = new GrammarItem();
+		grammer_items[states[i].index]->state_index = i; // states[i].index;
+	}
+	GrammarItem* g = grammer_items[fa.initial_state];
+	for (const auto& elem : st0.transitions) {
+		alphabet_symbol alpha = elem.first;
+		set<int> transitions = elem.second;
+		// if st.is_terminal то учитываем только переходы в себя
+		for (const auto& ind : transitions) {
+			if (fa.initial_state == ind) {
+				g->rules[alpha].insert(fa.initial_state);
+				g->equivalence_class.insert(alpha);
+			}
+		}
+	}
+	for (const auto& elem : st0.transitions) {
+		alphabet_symbol alpha = elem.first;
+		set<int> transitions = elem.second;
+		// if st.is_terminal то учитываем только переходы в себя
+		for (const auto& ind : transitions) {
+			if (fa.initial_state != ind) {
+				fa_to_g(fa, alpha, ind, fa.initial_state, grammer_items);
+			}
+		}
+	}
+
+	for (int i = 0; i < states.size(); i++) {
+		GrammarItem* g = grammer_items[i];
+		for (const auto& w : g->equivalence_class) {
+			for (const auto& elem : g->rules) {
+				alphabet_symbol a = elem.first;
+				// int index = elem.second;
+				for (const auto& w_back : elem.second) {
+					for (const auto& eq_back :
+						 grammer_items[w_back]->equivalence_class) {
+						cout << w << " -> " << eq_back << " " << a << endl;
+					}
+				}
+			}
+		}
+	}
+
+	return {};
 }
