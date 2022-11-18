@@ -18,3 +18,8 @@ target_link_libraries(${PROJECT_NAME}
  	Tester
  	Objects
 )
+
+enable_testing()
+
+add_test(NAME UnitTests
+         COMMAND ${PROJECT_NAME})
