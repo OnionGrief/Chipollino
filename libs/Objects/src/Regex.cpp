@@ -772,10 +772,11 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 
 FiniteAutomaton Regex::to_tompson() const {
 	Logger::init_step("Автомат Томпсона");
-	FiniteAutomaton a(0, get_tompson(-1).first, language);
-	Logger::log("Регулярное выражение: " + to_txt(), a);
+	Logger::log("Регулярное выражение", to_txt());
+	FiniteAutomaton fa(0, get_tompson(-1).first, language);
+	Logger::log("Автомат", fa);
 	Logger::finish_step();
-	return a;
+	return fa;
 }
 
 int Regex::L() const {
@@ -1134,10 +1135,10 @@ FiniteAutomaton Regex::to_ilieyu() const {
 	for (size_t i = 0; i < new_states.size(); i++) {
 		new_states[i].index = i;
 	}
-	FiniteAutomaton a(0, new_states, glushkov.language);
-	Logger::log("Итог:", a);
+	FiniteAutomaton fa(0, new_states, glushkov.language);
+	Logger::log("Автомат", fa);
 	Logger::finish_step();
-	return a;
+	return fa;
 }
 bool Regex::is_eps_possible() {
 	switch (type) {

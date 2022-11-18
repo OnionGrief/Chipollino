@@ -9,14 +9,9 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 	FiniteAutomaton automaton = lang.to_glushkov();
 
 	using clock = std::chrono::high_resolution_clock;
-	size_t word_length = -1;
 
 	for (int i = 0; i < 13; i++) {
 		string word = regex.get_iterated_word(i * step);
-		if (word.length() == word_length)
-			break; // если длина не меняется (2 аргумент - регулярное выражение
-				   // без * (просто слово), то выходим из цикла)
-		word_length = word.length();
 		// cout << word;
 		const auto start = clock::now();
 		bool is_belongs = automaton.parsing_by_nfa(word);
@@ -28,7 +23,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 		double time = (double)elapsed / 1000;
 		// cout << is_belongs << " " << time << endl;
 		times.push_back(time);
-		lengths.push_back(word_length);
+		lengths.push_back(word.length());
 		belongs.push_back(is_belongs);
 
 		if (time >= 180) break;

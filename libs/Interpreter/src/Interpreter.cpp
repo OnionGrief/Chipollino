@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <map>
 #include <string>
+
 using namespace std;
 
 bool operator==(const Function& l, const Function& r) {
@@ -34,8 +35,6 @@ Interpreter::Interpreter() {
 		//Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
-		{"KSubSet",
-		 {{"KSubSet", {ObjectType::Int, ObjectType::NFA}, ObjectType::NFA}}},
 		{"Normalize",
 		 {{"Normalize",
 		   {ObjectType::Regex, ObjectType::FileName},
@@ -43,10 +42,8 @@ Interpreter::Interpreter() {
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
 		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
 		{"Ambiguity", {{"Ambiguity", {ObjectType::NFA}, ObjectType::Value}}},
-		{"Width", {{"Width", {ObjectType::NFA}, ObjectType::Int}}},
 		{"MyhillNerode",
 		 {{"MyhillNerode", {ObjectType::DFA}, ObjectType::Int}}},
-		{"Simplify", {{"Simplify", {ObjectType::Regex}, ObjectType::Regex}}},
 		//Предикаты
 		{"Bisimilar",
 		 {{"Bisimilar",
@@ -63,7 +60,6 @@ Interpreter::Interpreter() {
 		   {ObjectType::Regex, ObjectType::Regex},
 		   ObjectType::Boolean},
 		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
-		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equal",
 		 {{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
@@ -167,11 +163,11 @@ GeneralObject Interpreter::apply_function(
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
 			get_automaton(arguments[0]), get_automaton(arguments[1])));
 	}
-	//мое
-	/*if (function.name == "Minimal") {
-
-		return ObjectBoolean(get<ObjectDFA>(arguments[0]).value.);
-	}*/
+	TransformationMonoid trmon;
+	if (function.name == "Minimal") {
+		trmon = TransformationMonoid(get_automaton(arguments[0]));
+		return ObjectBoolean(trmon.is_minimal());
+	}
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
 			return ObjectBoolean((get_automaton(arguments[0])
@@ -209,32 +205,27 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "PumpLength") {
 		return ObjectInt(get<ObjectRegex>(arguments[0]).value.pump_length());
 	}
-	//Миша
-	/*if (function.name == "ClassLength") {
-		return
-	ObjectInt(class_legth_typecheker(get<ObjectDFA>(arguments[0]).value));
+	if (function.name == "ClassLength") {
+		trmon = TransformationMonoid(get_automaton(arguments[0]));
+		return ObjectInt(trmon.class_length());
 	}
-	//у нас нет
-	/*if (function.name == "KSubSet") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
 	if (function.name == "States") {
 		return ObjectInt(get_automaton(arguments[0]).states_number());
 	}
-	//Мишино вроде
-	/*if (function.name == "ClassCard") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
+	if (function.name == "ClassCard") {
+		trmon = TransformationMonoid(get_automaton(arguments[0]));
+		return ObjectInt(trmon.class_card());
+	}
 	if (function.name == "Ambiguity") {
 		return ObjectValue(get_automaton(arguments[0]).ambiguity());
 	}
 	/*if (function.name == "Width") {
 		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
 	}*/
-	//Миша
-	/*if (function.name == "MyhillNerode") {
-		return ObjectInt(get<ObjectDFA>(arguments[0]).value.);
-	}*/
+	if (function.name == "MyhillNerode") {
+		trmon = TransformationMonoid(get_automaton(arguments[0]));
+		return ObjectInt(trmon.classes_number_MyhillNerode());
+	}
 
 	/*
 	* Идёт Глушков по лесу, видит -- регулярка.
@@ -266,9 +257,10 @@ GeneralObject Interpreter::apply_function(
 		if (function.output == regex) {
 			res =
 				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
-		} /* else {
-			 // res =  ObjectNFA(get<ObjectNFA>(arguments[0]).value.);
-		 }*/
+		} else {
+			// пусть будет так
+			res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
+		}
 	}
 	if (function.name == "Complement") {
 		// FiniteAutomaton fa = get_automaton(arguments[0]);
@@ -362,6 +354,8 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			if (typecheck(names_to_functions[function_names[0]][1].input,
 						  first_type)) {
 				neededfuncs[0] = 3;
+			} else {
+				return nullopt;
 			}
 		} else {
 			return nullopt;
@@ -385,14 +379,22 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 						  names_to_functions[func][0].input == nfa_type)) {
 						return nullopt;
 					} else {
-						if (func == "Determinize" || func == "Annote") {
-							if (predfunc == "Determinize" ||
-								predfunc == "Minimize" ||
-								predfunc == "Annote") {
-								neededfuncs[i] = 0;
-							}
-						} else if (predfunc == "Minimize" &&
-								   func == "Minimize") {
+						// Determinize добавляет ловушку после Annote
+						// if ((func == "Determinize" || func == "Annote") &&
+						if (func == "Annote" &&
+							names_to_functions[predfunc][0].output ==
+								ObjectType::DFA) {
+							neededfuncs[i] = 0;
+						}
+						if (predfunc == "Minimize" &&
+							(func == "Minimize" || func == "Determinize")) {
+							neededfuncs[i] = 0;
+						}
+						if (predfunc == "Determinize" &&
+							func == "Determinize") {
+							neededfuncs[i] = 0;
+						}
+						if (predfunc == "Determinize" && func == "Minimize") {
 							neededfuncs[i - 1] = 0;
 						}
 					}
@@ -402,8 +404,8 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 							neededfuncs[i - 1] = 0;
 						}
 					} else {
-						if (func == "Linearize" &&
-							(predfunc == "Glushkov" || predfunc == "IlieYu")) {
+						if (predfunc == "Linearize" &&
+							(func == "Glushkov" || func == "IlieYu")) {
 							neededfuncs[i - 1] = 0;
 						}
 					}
@@ -417,50 +419,30 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			vector<ObjectType> nfa_type = {ObjectType::NFA};
 			vector<ObjectType> dfa_type = {ObjectType::DFA};
 
-			if (names_to_functions[predfunc].size() == 2 &&
-				names_to_functions[func].size() == 2) {
-				if (predfunc != func) {
-					if (neededfuncs[i - 1] > 1) {
-						neededfuncs[i] = neededfuncs[i - 1];
-					} else {
-						return nullopt;
-					}
-				} else {
-					neededfuncs[i] = 0;
-				}
-			} else if (names_to_functions[predfunc].size() == 2) {
-				if (neededfuncs[i - 1] < 2) {
-					if (names_to_functions[func][0].input == regex_type) {
+			if (names_to_functions[func].size() == 2) {
+				// DeLinearize ~ DeAnnote
+				if (names_to_functions[predfunc].size() != 2) {
+					if (names_to_functions[predfunc][0].output ==
+						ObjectType::Regex) {
 						neededfuncs[i] = 2;
-					} else if (names_to_functions[func][0].input == nfa_type ||
-							   names_to_functions[func][0].input == dfa_type) {
+					} else if (names_to_functions[predfunc][0].output ==
+								   ObjectType::NFA ||
+							   names_to_functions[predfunc][0].output ==
+								   ObjectType::DFA) {
 						neededfuncs[i] = 3;
 					} else {
 						return nullopt;
 					}
 				} else {
-					if (names_to_functions[func][0].input == regex_type) {
-						if (neededfuncs[i - 1] != 2) {
-							return nullopt;
-						}
-					} else if (names_to_functions[func][0].input == nfa_type ||
-							   names_to_functions[func][0].input == dfa_type) {
-						if (neededfuncs[i - 1] != 3) {
-							return nullopt;
-						}
-					} else {
-						return nullopt;
-					}
+					neededfuncs[i] = neededfuncs[i - 1];
+					neededfuncs[i - 1] = 0;
 				}
-			} else {
-				if (names_to_functions[predfunc][0].output ==
-					ObjectType::Regex) {
-					neededfuncs[i] = 2;
-				} else if (names_to_functions[predfunc][0].output ==
-							   ObjectType::NFA ||
-						   names_to_functions[predfunc][0].output ==
-							   ObjectType::DFA) {
-					neededfuncs[i] = 3;
+			} else if (names_to_functions[predfunc].size() == 2) {
+				if (names_to_functions[func][0].input == regex_type &&
+						neededfuncs[i - 1] == 2 ||
+					names_to_functions[func][0].input == nfa_type &&
+						neededfuncs[i - 1] == 3) {
+					neededfuncs[i] = 1;
 				} else {
 					return nullopt;
 				}
