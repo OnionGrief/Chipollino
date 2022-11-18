@@ -203,6 +203,56 @@ void Logger::log(int step, vector<int> lengths, vector<double> times,
 	out.close();
 }
 
+void Logger::log_table(vector<string> rows, vector<string> columns,
+					   vector<string> data) {
+	if (!active) return;
+	if (step_counter > 1) return;
+	ofstream out("./resources/report.tex", ios::app);
+	if (out.is_open()) {
+		string format = "l";
+		string cols = "  & ";
+		string row = "";
+		for (int i = 0; i < columns.size(); i++) {
+			format += "l";
+			if (i != columns.size() - 1) {
+				cols += columns[i] + " & ";
+			} else {
+				cols += columns[i] + "\\\\";
+			}
+		}
+		format = "\\begin{tabular}{" + format + "}\n";
+		out << format << endl;
+		out << cols << endl;
+		int k = 0;
+		int j;
+		for (int i = 0; i < rows.size(); i++) {
+			row = rows[i] + " & ";
+			if (i != rows.size() - 1) {
+				for (j = 0; j < columns.size(); j++) {
+					if (j != columns.size() - 1) {
+						row = row + data[k + j] + " & ";
+					} else {
+						row = row + data[k + j] + "\\\\";
+					}
+				}
+				k += j;
+			} else {
+				for (j = 0; j < columns.size(); j++) {
+					if (j != columns.size() - 1) {
+						row = row + data[k + j] + " & ";
+					} else {
+						row = row + data[k + j];
+					}
+				}
+				k += j;
+			}
+			out << row << endl;
+		}
+		out << "\\end{tabular}\n" << endl;
+	}
+	out.close();
+}
+
 void Logger::finish_step() {
 	if (!active) return;
 	step_counter--;

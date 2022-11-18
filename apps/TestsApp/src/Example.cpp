@@ -420,58 +420,23 @@ void Example::arden_test() {
 }
 
 void Example::table() {
-	vector<State> states1;
-	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
+	vector<string> rows;
+	vector<string> columns;
+	vector<string> data;
+	string s;
+	string r = "r";
+	string c = "c";
+	for (int i; i < 3; i++) {
+		s = to_string(i);
+		rows.push_back(r);
+		columns.push_back(c);
+		data.push_back(s);
+		data.push_back(s);
+		data.push_back(s);
 	}
-	vector<State> states2;
-	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states2.push_back(s);
-	}
-
-	states1[0].set_transition(0, "b");
-	states1[0].set_transition(1, "a");
-	states1[1].set_transition(1, "b");
-	states1[1].set_transition(2, "a");
-	states1[2].set_transition(2, "a");
-	states1[2].set_transition(2, "b");
-
-	states1[1].is_terminal = true;
-
-	states2[0].set_transition(0, "a");
-	states2[0].set_transition(1, "b");
-	states2[1].set_transition(1, "a");
-	states2[1].set_transition(2, "b");
-	states2[2].set_transition(2, "a");
-	states2[2].set_transition(2, "b");
-
-	states2[1].is_terminal = true;
-
-	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b"});
-	FiniteAutomaton dfa2 = FiniteAutomaton(0, states2, {"a", "b"});
-
-	// string f1 = dfa1.to_txt();
-	// string f2 = dfa2.to_txt();
-	FiniteAutomaton dfa3 = FiniteAutomaton::intersection(dfa1, dfa2);
-
-	// vector<Tester::word> words;
-	// for(int i=0; i<12;i++) {
-	// 	words.push_back({
-	// 		i, i*100, true
-	// 	});
-	// }
-	// string s = "test";
-	Logger::activate();
-	Logger::init();
-	// Logger::init_step(s);
-	tester();
-	// Logger::finish_step();
-	Logger::finish();
-	Logger::deactivate();
+	Logger::init_step("table");
+	Logger::log_table(rows, columns, data);
+	Logger::finish_step();
 }
 
 void Example::fa_semdet_check() {
@@ -510,17 +475,17 @@ void Example::all_examples() {
 	// tasks_generating();
 	// parsing_regex("b(ab)*b");
 	// transformation_monoid_example();
-	normalize_regex();
+	// normalize_regex();
 	// step();
-	parsing_nfa();
-	fa_subset_check();
-	arden_test();
+	// parsing_nfa();
+	// fa_subset_check();
+	// arden_test();
 	// to_image();
-	// tester();
+	tester();
 	// step_interection();
-	// table();
-	fa_semdet_check();
-	Regex("abaa").pump_length();
+	table();
+	// fa_semdet_check();
+	// Regex("abaa").pump_length();
 	cout << "all the examlples are successful" << endl;
 }
 // TEST
