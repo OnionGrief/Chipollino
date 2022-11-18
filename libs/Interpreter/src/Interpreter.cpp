@@ -65,29 +65,40 @@ Interpreter::Interpreter() {
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
 }
 
-void Interpreter::load_file(const string& filename) {
-	log("Interpreter: loading file " + filename);
+bool Interpreter::run_line(const string& line) {
 	Lexer lexer(*this);
-	auto lexem_strings = lexer.load_file(filename);
-	operations = {};
-	int line_number = 0;
-	for (const auto& lexems : lexem_strings) {
-		if (auto op = scan_operation(lexems); op.has_value()) {
-			operations.push_back(*op);
-		} else {
-			throw_error("Error: cannot identify operation in line " +
-						to_string(line_number));
-		}
-		line_number++;
+	log("running \"" + line + "\"");
+	auto lexems = lexer.parse_string(line);
+	if (const auto op = scan_operation(lexems); op.has_value()) {
+		run_operation(*op);
+	} else {
+		throw_error("failed to scan operation");
+		return false;
 	}
-	log("Interpreter: file loaded " + filename);
+	return true;
 }
 
-void Interpreter::run_all() {
-	log("Running all");
-	for (const auto& op : operations) {
-		run_operation(op);
+bool Interpreter::run_file(const string& path) {
+	log("opening file " + path);
+	ifstream input_file(path);
+	if (!input_file) {
+		throw_error("failed to open " + to_string(path));
+		return false;
 	}
+	log("file opened");
+
+	string str = "";
+	while (getline(input_file, str)) {
+		if (!run_line(str)) {
+			throw_error("failed to run string \"" + str + "\"");
+			return false;
+		}
+	}
+
+	input_file.close();
+	log("successfully interpreted " + path);
+
+	return true;
 }
 
 void Interpreter::set_log_mode(LogMode mode) {

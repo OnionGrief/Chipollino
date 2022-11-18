@@ -16,10 +16,10 @@ class Interpreter {
   public:
 	enum class LogMode { all, errors, nothing };
 	Interpreter();
-	// Загрузить программу из файла
-	void load_file(const string& filename);
-	// Выполнить все опреации
-	void run_all();
+	// Интерпретация строчки, возвращает true в случае успеха
+	bool run_line(const string& line);
+	// Интерпретация файла построчно
+	bool run_file(const string& path);
 	// Установит режим логгирования в консоль
 	void set_log_mode(LogMode mode);
 
