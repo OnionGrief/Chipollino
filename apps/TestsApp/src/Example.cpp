@@ -767,11 +767,11 @@ void Example::test_is_one_unambiguous() {
 	// ok
 	assert(r1.to_glushkov().is_one_unambiguous());
 	// doesn't fulfills the orbit property
-	assert(r2.to_glushkov().is_one_unambiguous() == 0);
+	assert(!r2.to_glushkov().is_one_unambiguous());
 	// consists of a single orbit, but neither a nor b is consistent
-	assert(r3.to_glushkov().is_one_unambiguous() == 0);
+	assert(!r3.to_glushkov().is_one_unambiguous());
 	// ok
 	assert(r4.to_glushkov().is_one_unambiguous());
 	// doesn't fulfills the orbit property
-	assert(r5.to_glushkov().is_one_unambiguous() == 0);
+	assert(!r5.to_glushkov().is_one_unambiguous());
 };
