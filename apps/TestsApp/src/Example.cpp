@@ -535,6 +535,7 @@ void Example::test_all() {
 	test_ambiguity();
 	// test_arden();
 	test_pump_length();
+	test_is_one_unambiguous();
 	cout << "all tests passed" << endl;
 }
 
@@ -755,3 +756,22 @@ void Example::test_arden() {
 void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
 }
+
+void Example::test_is_one_unambiguous() {
+	Regex r1("(a|b)*a");
+	Regex r2("(a|b)*(ac|bd)");
+	Regex r3("(a|b)*a(a|b)");
+	Regex r4("(c(a|b)*c)*");
+	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
+
+	// ok
+	assert(r1.to_glushkov().is_one_unambiguous());
+	// doesn't fulfills the orbit property
+	assert(!r2.to_glushkov().is_one_unambiguous());
+	// consists of a single orbit, but neither a nor b is consistent
+	assert(!r3.to_glushkov().is_one_unambiguous());
+	// ok
+	assert(r4.to_glushkov().is_one_unambiguous());
+	// doesn't fulfills the orbit property
+	assert(!r5.to_glushkov().is_one_unambiguous());
+};

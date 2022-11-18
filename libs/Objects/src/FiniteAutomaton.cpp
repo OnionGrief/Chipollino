@@ -849,16 +849,18 @@ bool FiniteAutomaton::is_one_unambiguous() {
 				}
 			}
 		}
-		for (auto final_state_transitions : final_states_transitions) {
-			for (int elem : reachable_by_symb) {
+		for (int elem : reachable_by_symb) {
+			is_symb_min_fa_consistent = true;
+			for (auto final_state_transitions : final_states_transitions) {
 				if (find(final_state_transitions[symb].begin(),
 						 final_state_transitions[symb].end(),
 						 elem) == final_state_transitions[symb].end()) {
 					is_symb_min_fa_consistent = false;
+					break;
 				}
 			}
+			if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
 		}
-		if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
 	}
 
 	// calculate an orbit of each state
@@ -867,6 +869,7 @@ bool FiniteAutomaton::is_one_unambiguous() {
 	set<set<int>> min_fa_orbits;
 	for (int i = 0; i < min_fa.states.size(); i++) {
 		set<int> orbit_of_state;
+		orbit_of_state.insert(i);
 		set<int> reachable_states = min_fa.closure({i}, false);
 		for (int reachable_state : reachable_states) {
 			set<int> reachable_states_for_reachable =
@@ -885,8 +888,7 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		}
 		// check if orbit of this state is trivial
 		// if so, insert into states_with_trivial_orbit
-		if (orbit_of_state.size() == 1 && *orbit_of_state.begin() == i &&
-			!is_state_has_transitions_to_itself) {
+		if (orbit_of_state.size() == 1 && !is_state_has_transitions_to_itself) {
 			states_with_trivial_orbit.insert(i);
 		}
 		min_fa_orbits.insert(orbit_of_state);
@@ -1033,7 +1035,7 @@ bool FiniteAutomaton::is_one_unambiguous() {
 	}
 	if (!is_min_fa_cut_has_an_orbit_property) return false;
 
-	// check if all orbit languages of min_fa_cut are 1-ambiguous
+	// check if all orbit languages of min_fa_cut are 1-unambiguous
 	int i = 0;
 	for (auto min_fa_cut_orbit : min_fa_cut_orbits) {
 		int orbit_automaton_initial_state = 0;
@@ -1060,9 +1062,13 @@ bool FiniteAutomaton::is_one_unambiguous() {
 				for (const auto& symb_transitions :
 					 orbit_automaton.states[j].transitions) {
 					set<int> orbit_automaton_symb_transitions;
+					int k = 0;
 					for (int transition : symb_transitions.second) {
-						if (transition < orbit_automaton.states.size()) {
-							orbit_automaton_symb_transitions.insert(transition);
+						if (find(min_fa_cut_orbit.begin(),
+								 min_fa_cut_orbit.end(),
+								 transition) != min_fa_cut_orbit.end()) {
+							orbit_automaton_symb_transitions.insert(k);
+							k++;
 						}
 					}
 					if (orbit_automaton_symb_transitions.size()) {
