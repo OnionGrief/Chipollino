@@ -80,7 +80,7 @@ class Regex : BaseObject {
 	pair<vector<State>, int> get_tompson(int) const;
 
 	vector<Lexem>* first_state() const; // начальные состояния для to_glushkov
-	int L() const; //проверяет, входит ли eps в дерево regex
+	bool contains_eps() const; // проверяет, входит ли eps в дерево regex
 	vector<Lexem>* end_state() const; // конечные состояния для to_glushkov
 	map<int, vector<int>> pairs() const;
 	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex

@@ -779,21 +779,14 @@ FiniteAutomaton Regex::to_tompson() const {
 	return fa;
 }
 
-int Regex::L() const {
+bool Regex::contains_eps() const {
 	int l;
 	int r;
 	switch (type) {
 	case Regex::alt:
-		l = term_l->L();
-		r = term_r->L();
-		return l + r;
+		return term_l->contains_eps() || term_r->contains_eps();
 	case Regex::conc:
-		l = term_l->L();
-		r = term_r->L();
-		if (l != 0 && r != 0) {
-			return 1;
-		}
-		return 0;
+		return term_l->contains_eps() && term_r->contains_eps();
 	case Regex::star:
 		return 1;
 	case Regex::eps:
@@ -817,7 +810,7 @@ vector<Lexem>* Regex::first_state() const {
 		return l;
 	case Regex::conc:
 		l = term_l->first_state();
-		if (term_l->L() != 0) {
+		if (term_l->contains_eps()) {
 			r = term_r->first_state();
 			l->insert(l->end(), r->begin(), r->end());
 			delete r;
@@ -849,7 +842,7 @@ vector<Lexem>* Regex::end_state() const {
 		return l;
 	case Regex::conc:
 		l = term_r->end_state();
-		if (term_r->L() != 0) {
+		if (term_r->contains_eps()) {
 
 			r = term_l->end_state();
 			l->insert(l->end(), r->begin(), r->end());
@@ -988,7 +981,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 	}
 	vector<Lexem>* first = test.first_state(); // Множество начальных состояний
 	vector<Lexem>* end = test.end_state(); // Множество конечных состояний
-	int eps_in = test.L();
+	int eps_in = test.contains_eps();
 	map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
 	vector<State> st; // Список состояний в автомате
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
@@ -1658,7 +1651,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 			}
 		}
 
-		if ((state.size() == 0) || (states[i].L())) {
+		if ((state.size() == 0) || (states[i].contains_eps())) {
 			automat_state.push_back({int(i), {}, state, true, transit});
 		} else {
 			automat_state.push_back({int(i), {}, state, false, transit});
