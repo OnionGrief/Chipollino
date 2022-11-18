@@ -14,6 +14,7 @@ using namespace std;
 
 class Regex;
 class Language;
+class TransformationMonoid;
 struct expression_arden {
 	int condition;
 	Regex* temp_regex;

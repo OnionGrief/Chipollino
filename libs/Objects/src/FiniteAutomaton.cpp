@@ -4,6 +4,7 @@
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
+#include "Objects/TransformationMonoid.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -1668,7 +1669,9 @@ TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
 	return syntactic_monoid;
 }
 
-bool FiniteAutomaton::minimality_test_GlaisterShallit() const {}
+bool FiniteAutomaton::minimality_test_GlaisterShallit() const {
+	return false;
+}
 
 std::optional<std::string> FiniteAutomaton::get_prefix(
 	int state_beg, int state_end, map<int, bool>& was) const {

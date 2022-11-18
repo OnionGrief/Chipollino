@@ -1,4 +1,6 @@
 #include "Objects/TransformationMonoid.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Language.h"
 
 #include <iostream>
 using namespace std;
@@ -400,9 +402,9 @@ int TransformationMonoid::class_length() {
 //Вычисление
 int TransformationMonoid::classes_number_MyhillNerode() {
 	int sum = 0;
-	for (int i = 0; i < equivalence_class_table.size(); i++) {
-		for (int j = 0; j < equivalence_class_table[i].size(); j++) {
-			if (equivalence_class_table[i][j]) {
+	for (int i = 0; i < equivalence_classes_table.size(); i++) {
+		for (int j = 0; j < equivalence_classes_table[i].size(); j++) {
+			if (equivalence_classes_table[i][j]) {
 				sum++;
 			}
 		}
@@ -422,24 +424,24 @@ bool TransformationMonoid::is_minimal() {
 	}
 	for (int i = 0; i <= terms.size(); i++) { //заполняем матрицу нулями
 		vector<bool> vector_first(terms.size() + 1);
-		equivalence_class_table.push_back(vector_first);
+		equivalence_classes_table.push_back(vector_first);
 	}
 	for (int i = 0; i < terms.size(); i++) {
 		if (terms[i].isFinal) {
-			equivalence_class_table[0][i + 1] = true;
+			equivalence_classes_table[0][i + 1] = true;
 		}
 	}
 	for (int i = 0; i < terms.size(); i++) {
 		vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
 		for (int j = 0; j < cur.size(); j++) {
-			equivalence_class_table[i + 1][data.at(cur[j].name) + 1] = true;
+			equivalence_classes_table[i + 1][data.at(cur[j].name) + 1] = true;
 		}
 	}
 	map<vector<bool>, bool> wasvec;
 	int counter = 0;
-	for (int i = 0; i < equivalence_class_table.size(); i++) {
-		if (!wasvec.count(equivalence_class_table[i])) {
-			wasvec[equivalence_class_table[i]] = true;
+	for (int i = 0; i < equivalence_classes_table.size(); i++) {
+		if (!wasvec.count(equivalence_classes_table[i])) {
+			wasvec[equivalence_classes_table[i]] = true;
 			counter++;
 		}
 	}
@@ -458,16 +460,16 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 		ss << to_str(terms[i].name) << string(4 - terms[i].name.size(), ' ');
 	}
 	ss << "\n";
-	for (int i = 0; i < equivalence_class_table.size(); i++) { //вывод матрицы
+	for (int i = 0; i < equivalence_classes_table.size(); i++) { //вывод матрицы
 		if (i == 0) {
 			ss << "e   ";
 		} else {
 			ss << to_str(terms[i - 1].name)
 			   << string(4 - terms[i - 1].name.size(), ' ');
 		}
-		for (int j = 0; j < equivalence_class_table[0].size();
+		for (int j = 0; j < equivalence_classes_table[0].size();
 			 j++) { //вывод матрицы
-			ss << equivalence_class_table[j][i] << "   ";
+			ss << equivalence_classes_table[j][i] << "   ";
 		}
 		ss << "\n";
 	}
@@ -476,5 +478,11 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	Logger::finish_step();
 	return ss.str();
 }
+
+const vector<vector<bool>>& TransformationMonoid::
+	get_equivalence_classes_table() {
+	return equivalence_classes_table;
+}
+
 //В психиатрической больнице люди по настоящему заботятся о своём здоровье. Они
 //переходят с электронных сигарет на воображаемые.

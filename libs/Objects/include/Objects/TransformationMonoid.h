@@ -1,7 +1,5 @@
 #pragma once
 #include "BaseObject.h"
-#include "FiniteAutomaton.h"
-#include "Language.h"
 #include "Logger.h"
 #include <algorithm>
 #include <iostream>
@@ -11,8 +9,10 @@
 #include <vector>
 using namespace std;
 
-class TransformationMonoid : public BaseObject {
+class Language;
+class FiniteAutomaton;
 
+class TransformationMonoid : public BaseObject {
   public:
 	struct Transition { //переход (индекс состояния - индекс состояния)
 		int first;
@@ -50,9 +50,12 @@ class TransformationMonoid : public BaseObject {
 	bool is_minimal(); //Вычисление Минимальности по М-Н(1 если минимальный)
 	int classes_number_MyhillNerode(); //Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); //вывод таблицы М-Н
+	const vector<vector<bool>>& get_equivalence_classes_table(); // возвращает
+																 // таблицу М-Н
+
   private:
 	FiniteAutomaton automat; //Автомат
 	vector<Term> terms;		 //Эквивалентные классы
 	map<vector<string>, vector<vector<string>>> rules; //Правила переписывания
-	vector<vector<bool>> equivalence_class_table; //таблица М-Н
+	vector<vector<bool>> equivalence_classes_table; //таблица М-Н
 };
