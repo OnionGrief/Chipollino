@@ -40,3 +40,11 @@ optional<FiniteAutomaton> Language::get_min_dfa() {
 			min_dfa->initial_state, min_dfa->states, min_dfa->language.lock()));
 	return min_fa_opt;
 }
+
+void Language::set_syntactic_monoid(
+	TransformationMonoid syntactic_monoid_value) {
+	syntactic_monoid.emplace(syntactic_monoid_value);
+}
+const optional<TransformationMonoid>& Language::get_syntactic_monoid() {
+	return syntactic_monoid;
+}

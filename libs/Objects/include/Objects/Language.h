@@ -2,6 +2,7 @@
 #include "AlphabetSymbol.h"
 #include "FiniteAutomaton.h"
 #include "Regex.h"
+#include "TransformationMonoid.h"
 #include <optional>
 #include <vector>
 
@@ -20,6 +21,7 @@ class Language {
 	set<alphabet_symbol> alphabet;
 	optional<int> pump_length;
 	optional<FA_structure> min_dfa;
+	optional<TransformationMonoid> syntactic_monoid;
 	// классы эквивалентности минимального дка TODO
 	// синтаксический моноид TODO
 	// аппроксимации минимальных НКА и регулярок TODO
@@ -34,5 +36,7 @@ class Language {
 	void set_min_dfa(int initial_state, const vector<State>& states,
 					 shared_ptr<Language> Language);
 	optional<FiniteAutomaton> get_min_dfa();
+	void set_syntactic_monoid(TransformationMonoid);
+	const optional<TransformationMonoid>& get_syntactic_monoid();
 	// и тд
 };

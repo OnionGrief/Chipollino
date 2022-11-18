@@ -1654,6 +1654,22 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	return result;
 }
 
+TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
+	optional<TransformationMonoid> language_syntactic_monoid =
+		language->get_syntactic_monoid();
+	if (language_syntactic_monoid) {
+		return *language_syntactic_monoid;
+	}
+	FiniteAutomaton min_dfa = minimize();
+	TransformationMonoid syntactic_monoid(min_dfa);
+	syntactic_monoid.is_minimal();
+	// кэширование
+	language->set_syntactic_monoid(syntactic_monoid);
+	return syntactic_monoid;
+}
+
+bool FiniteAutomaton::minimality_test_GlaisterShallit() const {}
+
 std::optional<std::string> FiniteAutomaton::get_prefix(
 	int state_beg, int state_end, map<int, bool>& was) const {
 	std::optional<std::string> ans = nullopt;
