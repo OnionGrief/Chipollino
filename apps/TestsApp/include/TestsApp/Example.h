@@ -22,7 +22,6 @@ class Example {
 	static void remove_eps();
 	static void minimize();
 	static void intersection();
-	static void is_one_unambiguous();
 	static void regex_parsing();
 	static void regex_generating();
 	static void random_regex_parsing();
@@ -50,4 +49,5 @@ class Example {
 	static void test_ambiguity();
 	static void test_arden();
 	static void test_pump_length();
+	static void test_is_one_unambiguous();
 };
