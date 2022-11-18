@@ -815,6 +815,7 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
+	new_fa = new_fa.remove_trap_states();
 	Logger::log("Автомат до удаления разметки",
 				"Автомат после удаления разметки", *this, new_fa);
 	Logger::finish_step();
