@@ -22,6 +22,8 @@ class Language {
 	optional<int> pump_length;
 	optional<FA_structure> min_dfa;
 	optional<TransformationMonoid> syntactic_monoid;
+	// нижняя граница размера НКА для языка
+	optional<int> nfa_minimum_size;
 	// классы эквивалентности минимального дка TODO
 	// синтаксический моноид TODO
 	// аппроксимации минимальных НКА и регулярок TODO
@@ -38,5 +40,7 @@ class Language {
 	optional<FiniteAutomaton> get_min_dfa();
 	void set_syntactic_monoid(TransformationMonoid);
 	const optional<TransformationMonoid>& get_syntactic_monoid();
+	void set_nfa_minimum_size(int);
+	const optional<int>& get_nfa_minimum_size();
 	// и тд
 };

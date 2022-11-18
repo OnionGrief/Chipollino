@@ -823,7 +823,7 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	return new_fa;
 }
 
-bool FiniteAutomaton::is_one_unambiguous() {
+bool FiniteAutomaton::is_one_unambiguous() const {
 	FiniteAutomaton min_fa;
 	if (states.size() == 1)
 		min_fa = minimize();
@@ -1669,8 +1669,65 @@ TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
 	return syntactic_monoid;
 }
 
+void find_maximum_identity_matrix(vector<vector<bool>>& table, int& res,
+								  vector<bool> used_x, vector<bool> used_y,
+								  int size, int row) {
+	if (res == min(table.size(), table[0].size())) return;
+	vector<int> true_indexes_x;
+	for (int i = 0; i < table[row].size(); i++) {
+		if (used_x[i]) continue;
+		if (table[row][i] == 1) {
+			true_indexes_x.push_back(i);
+			used_x[i] = true;
+		}
+	}
+	if (true_indexes_x.empty()) {
+		res = max(res, size);
+		return;
+	}
+	for (int x : true_indexes_x) {
+		vector<bool> new_used_y = used_y;
+		vector<int> false_indexes_y;
+		for (int i = 0; i < table.size(); i++) {
+			if (new_used_y[i]) continue;
+			if (table[i][x] == 1)
+				new_used_y[i] = true;
+			else {
+				false_indexes_y.push_back(i);
+			}
+		}
+		if (false_indexes_y.empty()) {
+			res = max(res, size + 1);
+			continue;
+		}
+		for (int y : false_indexes_y) {
+			new_used_y[y] = true;
+			find_maximum_identity_matrix(table, res, used_x, new_used_y,
+										 size + 1, y);
+			new_used_y[y] = false;
+		}
+	}
+}
+
 bool FiniteAutomaton::minimality_test_GlaisterShallit() const {
-	return false;
+	if (language->get_nfa_minimum_size()) {
+		return *language->get_nfa_minimum_size() == states_number();
+	}
+
+	vector<vector<bool>> equivalence_classes_table =
+		get_syntactic_monoid().get_equivalence_classes_table();
+
+	int result = -1;
+	vector<bool> used_x(equivalence_classes_table[0].size());
+	vector<bool> used_y(equivalence_classes_table.size());
+	for (int i = 0; i < equivalence_classes_table.size(); i++) {
+		find_maximum_identity_matrix(equivalence_classes_table, result, used_x,
+									 used_y, 0, i);
+	}
+	// кэширование
+	language->set_nfa_minimum_size(result);
+	cout << result << endl;
+	return result == states_number();
 }
 
 std::optional<std::string> FiniteAutomaton::get_prefix(
@@ -1874,10 +1931,10 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 	return false;
 }
 
-bool FiniteAutomaton::is_deterministic() {
+bool FiniteAutomaton::is_deterministic() const {
 	for (int i = 0; i < states.size(); i++) {
 		for (auto elem : states[i].transitions) {
-			if (elem.first == "/0") {
+			if (elem.first == epsilon()) {
 				return false;
 			}
 			if (elem.second.size() > 1) {

@@ -122,7 +122,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автомата на детерминированность
-	bool is_deterministic();
+	bool is_deterministic() const;
 	// проверка НКА на семантический детерминизм
 	bool semdet() const;
 	// проверяет, распознаёт ли автомат слово
@@ -135,12 +135,12 @@ class FiniteAutomaton : public BaseObject {
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity() const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
-	bool is_one_unambiguous();
+	bool is_one_unambiguous() const;
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
 	// метод Arden
 	Regex nfa_to_regex() const;
-	// тест минимальности НКА по Глейстеру-Шаллиту
+	// определение минимальности НКА по Глейстеру-Шаллиту
 	bool minimality_test_GlaisterShallit() const;
 	// построение синтаксического моноида по автомату
 	TransformationMonoid get_syntactic_monoid() const;

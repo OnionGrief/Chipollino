@@ -48,3 +48,11 @@ void Language::set_syntactic_monoid(
 const optional<TransformationMonoid>& Language::get_syntactic_monoid() {
 	return syntactic_monoid;
 }
+
+void Language::set_nfa_minimum_size(int nfa_minimum_size_value) {
+	nfa_minimum_size.emplace(nfa_minimum_size_value);
+};
+
+const optional<int>& Language::get_nfa_minimum_size() {
+	return nfa_minimum_size;
+}
