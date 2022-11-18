@@ -1,10 +1,10 @@
 #include "AutomatonToImage/AutomatonToImage.h"
+#include "InputGenerator/RegexGenerator.h"
+#include "InputGenerator/TasksGenerator.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
 #include "Objects/Regex.h"
-#include "InputGenerator/TasksGenerator.h"
-#include "InputGenerator/RegexGenerator.h"
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
 #include <cassert>
@@ -22,6 +22,7 @@ class Example {
 	static void remove_eps();
 	static void minimize();
 	static void intersection();
+	static void is_one_unambiguous();
 	static void regex_parsing();
 	static void regex_generating();
 	static void random_regex_parsing();

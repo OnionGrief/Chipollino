@@ -119,6 +119,25 @@ void Example::intersection() {
 	cout << FiniteAutomaton::intersection(dfa1, dfa2).to_txt();
 }
 
+void Example::is_one_unambiguous() {
+	Regex r1("(a|b)*a");
+	Regex r2("(a|b)*(ac|bd)");
+	Regex r3("(a|b)*a(a|b)");
+	Regex r4("(c(a|b)*c)*");
+	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
+
+	// ok
+	cout << r1.to_glushkov().is_one_unambiguous() << endl;
+	// doesn't fulfills the orbit property
+	cout << r2.to_glushkov().is_one_unambiguous() << endl;
+	// consists of a single orbit, but neither a nor b is consistent
+	cout << r3.to_glushkov().is_one_unambiguous() << endl;
+	// ok
+	cout << r4.to_glushkov().is_one_unambiguous() << endl;
+	// doesn't fulfills the orbit property
+	cout << r5.to_glushkov().is_one_unambiguous() << endl;
+};
+
 void Example::regex_parsing() {
 	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
 	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
