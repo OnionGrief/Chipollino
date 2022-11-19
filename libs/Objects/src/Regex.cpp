@@ -7,7 +7,81 @@
 Lexem::Lexem(Type type, alphabet_symbol symbol, int number)
 	: type(type), symbol(symbol), number(number) {}
 
+bool Regex::generate_alphabet(string str) {
+	map<char, map<char, int>> pair_cnt; // подсчёт попарных включений
+	map<char, int> cnt; // подсчёт включений
+	auto is_symbol = [](char c) {
+		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' ||
+			   c >= '0' && c <= '9';
+	};
+	for (int i = 0; i < str.size(); i++) {
+		if (str[i] == '[') {
+			i++;
+			set<char> symbols;
+			while (i != str.size() && str[i] != ']') {
+				if (i + 2 < str.size() && str[i + 1] == '-') {
+					for (char j = str[i]; j <= str[i + 2]; j++) {
+						symbols.insert(j);
+					}
+					i += 3;
+				} else {
+					symbols.insert(str[i]);
+					i++;
+				}
+			}
+			if (i == str.size() || str[i] != ']') {
+				return false;
+			}
+			for (auto it = symbols.begin(); it != symbols.end(); it++) {
+				cnt[*it]++;
+				for (auto it2 = symbols.begin(); it2 != symbols.end(); it2++) {
+					pair_cnt[*it][*it2]++;
+				}
+			}
+		}
+		if (is_symbol(str[i])) {
+			cnt[str[i]]++;
+			pair_cnt[str[i]][str[i]]++;
+		}
+	}
+
+	map<char, bool> was; // обработан ли символ
+
+	for (auto it = cnt.begin(); it != cnt.end(); it++) {
+		if (was[it->first]) continue;
+		was[it->first] = true;
+		set<char> team;
+		for (auto it2 = pair_cnt[it->first].begin(); it2 != pair_cnt[it->first].end(); it2++) {
+			if (it2->second == it->second && it2->second == cnt[it2->first]) {
+				team.insert(it2->first);
+				was[it2->first] = true;
+			}
+		}
+		char last = *team.begin();
+		char next = *team.begin();
+		string answer = "";
+		for (auto it2 = team.begin(); it2 != team.end(); it2++) {
+			if (next != *it2) {
+				answer += last;
+				if (last != next - 1) {
+					answer += '-';
+					answer += (next - 1);
+				}
+				last = *it2;
+			}
+			next = *it2 + 1;
+		}
+		answer += last;
+		if (last != next - 1) {
+			answer += '-';
+			answer += (next - 1);
+		}
+		alphabet.insert(alphabet_symbol(answer));
+	}
+}
+
 vector<Lexem> Regex::parse_string(string str) {
+	// generate_alphabet(str);
 	vector<Lexem> lexems;
 	lexems = {};
 	bool flag_alt = false;
@@ -548,7 +622,6 @@ void Regex::pre_order_travers() const {
 }
 
 string Regex::to_txt() const {
-
 	string str1 = "", str2 = "";
 	if (term_l) {
 		str1 = term_l->to_txt();
@@ -971,7 +1044,6 @@ Regex Regex::delinearize() const {
 }
 
 FiniteAutomaton Regex::to_glushkov() const {
-
 	Logger::init_step("Автомат Глушкова");
 
 	Regex test(*this);
@@ -1507,7 +1579,8 @@ int Regex::pump_length() const {
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
 					pumping.language = make_shared<Language>(pumping.alphabet);
-					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
+					// cout << pumped_prefix << " " <<
+					// pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
 						language->set_pump_length(i);

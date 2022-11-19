@@ -19,13 +19,14 @@ struct State;
 struct Lexem {
 	enum Type {
 		error,
-		parL, // (
-		parR, // )
-		alt,  // |
-		conc, // .
-		star, // *
-		symb, // alphabet symbol
-		eps,  // Epsilon
+		parL,		// (
+		parR,		// )
+		alt,		// |
+		conc,		// .
+		star,		// *
+		symb,		// alphabet symbol
+		eps,		// Epsilon
+		interval,	// Interval
 	};
 
 	Type type = error;
@@ -47,7 +48,7 @@ class Regex : BaseObject {
 		// Terminal:
 		symb
 	};
-	set<alphabet_symbol> alphabet;
+	
 	Type type;
 	Lexem value;
 	Regex* term_p = nullptr;
@@ -130,6 +131,9 @@ class Regex : BaseObject {
 	static bool equivalent(const Regex&, const Regex&);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const Regex&) const; // TODO
+
+	set<alphabet_symbol> alphabet;
+	bool generate_alphabet(string);
 
 	// Производная по символу
 	std::optional<Regex> symbol_derevative(const Regex& respected_sym) const;

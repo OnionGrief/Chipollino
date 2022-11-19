@@ -499,6 +499,15 @@ void Example::fa_semdet_check() {
 	cout << "Semdet?: " << sdet << "\n";
 }
 
+void Example::generate_alphabet_check() {
+	Regex r;
+	r.generate_alphabet("[a-z0]([0-9]|bc)");
+
+	for (auto it = r.alphabet.begin(); it != r.alphabet.end(); it++) {
+		cout << *it << "\n";
+	}
+}
+
 void Example::all_examples() {
 	// determinize();
 	// remove_eps();
@@ -510,16 +519,17 @@ void Example::all_examples() {
 	// tasks_generating();
 	// parsing_regex("b(ab)*b");
 	// transformation_monoid_example();
-	normalize_regex();
+	// normalize_regex();
 	// step();
-	parsing_nfa();
-	fa_subset_check();
-	arden_test();
+	// parsing_nfa();
+	// fa_subset_check();
+	// arden_test();
 	// to_image();
 	// tester();
 	// step_interection();
 	// table();
-	fa_semdet_check();
+	// fa_semdet_check();
+	generate_alphabet_check();
 	Regex("abaa").pump_length();
 	cout << "all the examlples are successful" << endl;
 }
