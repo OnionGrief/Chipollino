@@ -755,3 +755,13 @@ void Example::test_arden() {
 void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
 }
+
+void Example::fa_to_pgrammar() {
+	FiniteAutomaton a1 =
+		Regex("b*a(a|c)*b(b|c)*")
+			.to_ilieyu(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
+	cout << a1.to_txt();
+
+	Grammar g;
+	g.fa_to_prefix_grammar(a1);
+}

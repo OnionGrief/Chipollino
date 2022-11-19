@@ -1,10 +1,11 @@
 #include "AutomatonToImage/AutomatonToImage.h"
+#include "InputGenerator/RegexGenerator.h"
+#include "InputGenerator/TasksGenerator.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
 #include "Objects/Regex.h"
-#include "InputGenerator/TasksGenerator.h"
-#include "InputGenerator/RegexGenerator.h"
+#include "Objects/Grammar.h"
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
 #include <cassert>
@@ -49,4 +50,5 @@ class Example {
 	static void test_ambiguity();
 	static void test_arden();
 	static void test_pump_length();
+	static void fa_to_pgrammar();
 };

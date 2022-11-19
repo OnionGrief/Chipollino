@@ -258,11 +258,15 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 	vector<State> states = fa.states;
 	State st0 = states[fa.initial_state];
 	map<int, GrammarItem*> grammer_items;
+	map<int, GrammarItem> gr_it;
 	for (size_t i = 0; i < states.size(); i++) {
-		grammer_items[states[i].index] = new GrammarItem();
-		grammer_items[states[i].index]->state_index = i; // states[i].index;
+		gr_it[states[i].index].state_index = i;
+		grammer_items[states[i].index] =
+			&gr_it[states[i].index]; // new GrammarItem();
+		// grammer_items[states[i].index]->state_index = i; // states[i].index;
 	}
 	GrammarItem* g = grammer_items[fa.initial_state];
+	g->equivalence_class.insert("");
 	for (const auto& elem : st0.transitions) {
 		alphabet_symbol alpha = elem.first;
 		set<int> transitions = elem.second;
@@ -270,7 +274,7 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 		for (const auto& ind : transitions) {
 			if (fa.initial_state == ind) {
 				g->rules[alpha].insert(fa.initial_state);
-				g->equivalence_class.insert(alpha);
+				// g->equivalence_class.insert("");
 			}
 		}
 	}
@@ -285,16 +289,34 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 		}
 	}
 
+	for (const auto& elem : st0.transitions) {
+		alphabet_symbol alpha = elem.first;
+		set<int> transitions = elem.second;
+		// if st.is_terminal то учитываем только переходы в себя
+		for (const auto& ind : transitions) {
+			if (fa.initial_state == ind) {
+				// g->rules[alpha].insert(fa.initial_state);
+				g->equivalence_class.insert(alpha);
+				g->equivalence_class.erase("");
+			}
+		}
+	}
+
+	cout << "---------" << endl;
 	for (int i = 0; i < states.size(); i++) {
-		GrammarItem* g = grammer_items[i];
-		for (const auto& w : g->equivalence_class) {
-			for (const auto& elem : g->rules) {
+		GrammarItem g = gr_it[i];
+		for (const auto& w : g.equivalence_class) {
+			for (const auto& elem : g.rules) {
 				alphabet_symbol a = elem.first;
 				// int index = elem.second;
 				for (const auto& w_back : elem.second) {
 					for (const auto& eq_back :
 						 grammer_items[w_back]->equivalence_class) {
-						cout << w << " -> " << eq_back << " " << a << endl;
+						string eq = eq_back;
+						if (eq == "") {
+							eq = "eps";
+						}
+						cout << w << " -> " << eq << " " << a << endl;
 					}
 				}
 			}
