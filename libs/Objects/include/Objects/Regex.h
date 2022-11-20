@@ -48,14 +48,16 @@ class Regex : BaseObject {
 		// Terminal:
 		symb
 	};
-	
+
+	set<alphabet_symbol> alphabet;
 	Type type;
 	Lexem value;
 	Regex* term_p = nullptr;
 	Regex* term_l = nullptr;
 	Regex* term_r = nullptr;
 	// Turns string into lexem vector
-	vector<Lexem> parse_string(string);
+	bool generate_alphabet(string);
+	
 	Regex* expr(const vector<Lexem>&, int, int);
 	Regex* scan_conc(const vector<Lexem>&, int, int);
 	Regex* scan_star(const vector<Lexem>&, int, int);
@@ -104,6 +106,8 @@ class Regex : BaseObject {
 	void clear();
 
   public:
+	vector<Lexem> parse_string(string);
+
 	Regex();
 	Regex(string);
 	string to_txt() const override;
@@ -131,9 +135,6 @@ class Regex : BaseObject {
 	static bool equivalent(const Regex&, const Regex&);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const Regex&) const; // TODO
-
-	set<alphabet_symbol> alphabet;
-	bool generate_alphabet(string);
 
 	// Производная по символу
 	std::optional<Regex> symbol_derevative(const Regex& respected_sym) const;

@@ -81,16 +81,20 @@ bool Regex::generate_alphabet(string str) {
 }
 
 vector<Lexem> Regex::parse_string(string str) {
-	// generate_alphabet(str);
+	if (!generate_alphabet(str)) {
+		std::cout << "incorrect input";
+	}
 	vector<Lexem> lexems;
 	lexems = {};
 	bool flag_alt = false;
 	auto is_symbol = [](char c) {
-		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
+		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' ||
+			   c >= '0' && c <= '9';
 	};
 	// int index = 0;
 	// for (const char& c : str) {
 	for (size_t index = 0; index < str.size(); index++) {
+		string answer = "";
 		char c = str[index];
 		Lexem lexem;
 		switch (c) {
@@ -112,6 +116,15 @@ vector<Lexem> Regex::parse_string(string str) {
 			break;
 		case '*':
 			lexem.type = Lexem::star;
+			break;
+		case '[':
+			lexem.type = Lexem::interval;
+			index++;
+			while (str[index] != ']') {
+				answer += str[index];
+				index++;
+			}
+			lexem.symbol = answer;
 			break;
 		default:
 			if (is_symbol(c)) {

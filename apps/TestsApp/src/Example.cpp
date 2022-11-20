@@ -499,12 +499,11 @@ void Example::fa_semdet_check() {
 	cout << "Semdet?: " << sdet << "\n";
 }
 
-void Example::generate_alphabet_check() {
+void Example::parse_string_check() {
 	Regex r;
-	r.generate_alphabet("[a-z0]([0-9]|bc)");
-
-	for (auto it = r.alphabet.begin(); it != r.alphabet.end(); it++) {
-		cout << *it << "\n";
+	auto lex = r.parse_string("[a-z0]([0-9]|bc)");
+	for (int i = 0; i < lex.size(); i++) {
+		cout << lex[i].symbol << "\n";
 	}
 }
 
@@ -529,7 +528,7 @@ void Example::all_examples() {
 	// step_interection();
 	// table();
 	// fa_semdet_check();
-	generate_alphabet_check();
+	parse_string_check();
 	Regex("abaa").pump_length();
 	cout << "all the examlples are successful" << endl;
 }

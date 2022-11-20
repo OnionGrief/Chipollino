@@ -38,7 +38,7 @@ class Example {
 	static void step_interection();
 	static void table();
 	static void fa_semdet_check();
-	static void generate_alphabet_check();
+	static void parse_string_check();
 	// запуск всех тестов
 	static void test_all();
 	static void test_fa_equal();
