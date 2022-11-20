@@ -51,7 +51,7 @@ class Interpreter {
 	struct FunctionSequence {
 		// Композиция функций
 		vector<Function> functions;
-		// Параметры композиции функций (1 или более). Могут содержать ID
+		// Параметры композиции функций (1 или более)
 		vector<Expression> parameters;
 	};
 

@@ -69,7 +69,7 @@ bool Interpreter::run_line(const string& line) {
 	Lexer lexer(*this);
 	log("running \"" + line + "\"");
 	auto lexems = lexer.parse_string(line);
- 	if (const auto op = scan_operation(lexems); op.has_value()) {
+	if (const auto op = scan_operation(lexems); op.has_value()) {
 		run_operation(*op);
 	} else {
 		throw_error("failed to scan operation");
@@ -345,10 +345,22 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 
 optional<vector<Function>> Interpreter::build_function_sequence(
 	vector<string> function_names, vector<ObjectType> first_type) {
+
+	// Если функций нет - возвращаем пустой вектор
 	if (!function_names.size()) {
 		return vector<Function>();
 	}
 
+	// Проверка корректности названий
+	for (const auto& func : function_names) {
+		if (!names_to_functions.count(func)) {
+			throw_error("unknown function name \"" + func  + "\"");
+			return nullopt;
+		}
+	}
+
+
+	// TODO: переписать всё что ниже начисто
 	// 0 - функцию надо исключить из последовательности
 	// 1 - функция остается в последовательности
 	// 2 - функция(Delinearize или DeAnnote) принимает на вход Regex
@@ -583,9 +595,14 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 	for (; i < end && lexems[i].type == Lexem::name; i++) {
 		func_names.push_back(lexems[i].value);
 		i++;
-		if (lexems[i].type != Lexem::dot) {
+		if (i >= end || lexems[i].type != Lexem::dot) {
 			break;
 		}
+	}
+
+	// Если функций нет - ошибка
+	if (func_names.size() == 0) {
+		return nullopt;
 	}
 
 	reverse(func_names.begin(), func_names.end());
@@ -595,9 +612,12 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 	vector<ObjectType> argument_types;
 	vector<Expression> arguments;
 	while (i < end && lexems[i].type) {
-		if (const auto& expr = scan_Expression(lexems, i, end); expr.has_value()) {
+		if (const auto& expr = scan_Expression(lexems, i, end);
+			expr.has_value()) {
 			argument_types.push_back((*expr).type);
 			arguments.push_back(*expr);
+		} else {
+			return nullopt;
 		}
 	}
 
@@ -657,11 +677,12 @@ optional<Interpreter::Expression> Interpreter::scan_Expression(
 	}
 	// FunctionSequence
 	int i = pos;
-	if (const auto& seq = scan_FunctionSequence(lexems, i, end); seq.has_value()) {
+	if (const auto& seq = scan_FunctionSequence(lexems, i, end);
+		seq.has_value()) {
 		Expression expr;
 		expr.type = (*seq).functions[0].output;
 		expr.value = *seq;
-		pos = i + 1;
+		pos = i;
 		return expr;
 	}
 	return nullopt;
@@ -691,7 +712,8 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	i++;
 
 	// Expression
-	if (const auto& expr = scan_Expression(lexems, i, lexems.size()); expr.has_value()) {
+	if (const auto& expr = scan_Expression(lexems, i, lexems.size());
+		expr.has_value()) {
 		decl.expr = *expr;
 	} else {
 		return nullopt;
@@ -705,7 +727,7 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 
 	id_types[decl.id] = decl.expr.type;
 
-  	pos = i;
+	pos = i;
 	return decl;
 }
 
@@ -754,7 +776,20 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems,
 
 optional<Interpreter::Predicate> Interpreter::scan_predicate(
 	const vector<Lexem>& lexems, int& pos) {
-	// TODO scan predicate
+
+	int i = pos;
+	Predicate pred;
+
+	if (auto seq = scan_FunctionSequence(lexems, pos, lexems.size());
+		seq.has_value() && (*seq).functions.size() == 1 &&
+		(*seq).functions[0].output == ObjectType::Boolean) {
+
+		pred.predicate = (*seq).functions[0];
+		pred.arguments = (*seq).parameters;
+		pos = i + 1;
+		return pred;
+	}
+
 	return nullopt;
 }
 
