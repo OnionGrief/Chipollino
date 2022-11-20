@@ -143,6 +143,8 @@ class Regex : BaseObject {
 	void regex_star(Regex* a);
 
 	void regex_eps();
+
+	void normalize_lang(set<alphabet_symbol> cur_alphabet, int i);
 	// TODO: there may be some *to-automat* methods
 	// like to_glushkov, to_antimirov, etc
 

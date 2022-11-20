@@ -429,6 +429,24 @@ void Regex::make_language() {
 	language = shared_ptr<Language>(new Language(alphabet));
 }
 
+void Regex::normalize_lang(set<alphabet_symbol> cur_alphabet, int i) {
+	if (i == 0) {
+		this->alphabet = cur_alphabet;
+		this->make_language();
+	} else {
+		set<alphabet_symbol> st{};
+		this->alphabet = st;
+		this->make_language();
+	}
+
+	if (this->term_l) {
+		this->term_l->normalize_lang(cur_alphabet, i + 1);
+	}
+	if (this->term_r) {
+		this->term_r->normalize_lang(cur_alphabet, i + 1);
+	}
+}
+
 void Regex::clear() {
 	if (term_l != nullptr) {
 		// term_l->clear();
@@ -591,6 +609,14 @@ string Regex::tree_rec(int* count) {
 		break;
 	}
 	ss << *count << " [label = \"" << type_str << "\", shape = circle]\n\t";
+	if (language) {
+		set<alphabet_symbol> alphabets = language->get_alphabet();
+		for (auto iter = alphabets.begin(); iter != alphabets.end(); ++iter) {
+			ss << *iter << " ";
+		}
+		ss << "\n\t";
+	}
+
 	string str1 = "", str2 = "";
 
 	if (this->term_l) {
@@ -1595,8 +1621,10 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 	Logger::init_step("Equiv");
 	Logger::log("Первое регулярное выражение", r1.to_txt());
 	Logger::log("Второе регулярное выражение", r2.to_txt());
+	cout << r1.to_txt() << " " << r2.to_txt() << "\n";
 	FiniteAutomaton fa1 = r1.to_ilieyu();
 	FiniteAutomaton fa2 = r2.to_ilieyu();
+	cout << fa1.to_txt() << fa2.to_txt();
 	bool result = FiniteAutomaton::equivalent(fa1, fa2);
 	if (result)
 		Logger::log("Результат Equiv", "true");
