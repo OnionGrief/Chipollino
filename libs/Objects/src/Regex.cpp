@@ -4,11 +4,11 @@
 #include "Objects/Logger.h"
 #include <set>
 
-Lexem::Lexem(Type type, alphabet_symbol symbol, int number)
+Regex::Lexem::Lexem(Type type, alphabet_symbol symbol, int number)
 	: type(type), symbol(symbol), number(number) {}
 
-vector<Lexem> Regex::parse_string(string str) {
-	vector<Lexem> lexems;
+vector<Regex::Lexem> Regex::parse_string(string str) {
+	vector<Regex::Lexem> lexems;
 	lexems = {};
 	bool flag_alt = false;
 	auto is_symbol = [](char c) {
@@ -18,30 +18,30 @@ vector<Lexem> Regex::parse_string(string str) {
 	// for (const char& c : str) {
 	for (size_t index = 0; index < str.size(); index++) {
 		char c = str[index];
-		Lexem lexem;
+		Regex::Lexem lexem;
 		switch (c) {
 		case '(':
-			lexem.type = Lexem::parL;
+			lexem.type = Regex::Lexem::parL;
 			flag_alt = true;
 			break;
 		case ')':
-			lexem.type = Lexem::parR;
-			if (lexems.back().type == Lexem::parL || flag_alt) {
-				lexem.type = Lexem::error;
+			lexem.type = Regex::Lexem::parR;
+			if (lexems.back().type == Regex::Lexem::parL || flag_alt) {
+				lexem.type = Regex::Lexem::error;
 				lexems = {};
 				lexems.push_back(lexem);
 				return lexems;
 			}
 			break;
 		case '|':
-			lexem.type = Lexem::alt;
+			lexem.type = Regex::Lexem::alt;
 			break;
 		case '*':
-			lexem.type = Lexem::star;
+			lexem.type = Regex::Lexem::star;
 			break;
 		default:
 			if (is_symbol(c)) {
-				lexem.type = Lexem::symb;
+				lexem.type = Regex::Lexem::symb;
 				string number;
 				for (size_t i = index + 1; i < str.size(); i++) {
 					if (str[i] >= '0' && str[i] <= '9') {
@@ -56,7 +56,7 @@ vector<Lexem> Regex::parse_string(string str) {
 				flag_alt = false;
 
 			} else {
-				lexem.type = Lexem::error;
+				lexem.type = Regex::Lexem::error;
 				lexems = {};
 				lexems.push_back(lexem);
 				return lexems;
@@ -66,69 +66,69 @@ vector<Lexem> Regex::parse_string(string str) {
 
 		if (lexems.size() &&
 			(
-				// Lexem left
-				lexems.back().type == Lexem::symb ||
-				lexems.back().type == Lexem::star ||
-				lexems.back().type == Lexem::parR) &&
+				// Regex::Lexem left
+				lexems.back().type == Regex::Lexem::symb ||
+				lexems.back().type == Regex::Lexem::star ||
+				lexems.back().type == Regex::Lexem::parR) &&
 			(
-				// Lexem right
-				lexem.type == Lexem::symb || lexem.type == Lexem::parL)) {
+				// Regex::Lexem right
+				lexem.type == Regex::Lexem::symb || lexem.type == Regex::Lexem::parL)) {
 
 			// We place . between
-			lexems.push_back({Lexem::conc});
+			lexems.push_back({Regex::Lexem::conc});
 		}
 
 		if (lexems.size() &&
-			((lexems.back().type == Lexem::parL &&
-			  (lexem.type == Lexem::parR || lexem.type == Lexem::alt)) ||
-			 (lexems.back().type == Lexem::alt && lexem.type == Lexem::parR) ||
-			 (lexems.back().type == Lexem::alt && lexem.type == Lexem::alt))) {
+			((lexems.back().type == Regex::Lexem::parL &&
+			  (lexem.type == Regex::Lexem::parR || lexem.type == Regex::Lexem::alt)) ||
+			 (lexems.back().type == Regex::Lexem::alt && lexem.type == Regex::Lexem::parR) ||
+			 (lexems.back().type == Regex::Lexem::alt && lexem.type == Regex::Lexem::alt))) {
 			//  We place eps between
-			lexems.push_back({Lexem::eps});
+			lexems.push_back({Regex::Lexem::eps});
 		}
 
 		lexems.push_back(lexem);
 	}
 
-	if (lexems.size() && lexems[0].type == Lexem::alt) {
-		lexems.insert(lexems.begin(), {Lexem::eps});
+	if (lexems.size() && lexems[0].type == Regex::Lexem::alt) {
+		lexems.insert(lexems.begin(), {Regex::Lexem::eps});
 	}
 
-	if (lexems.back().type == Lexem::alt) {
-		lexems.push_back({Lexem::eps});
+	if (lexems.back().type == Regex::Lexem::alt) {
+		lexems.push_back({Regex::Lexem::eps});
 	}
 
 	int balance = 0;
 	for (size_t i = 0; i < lexems.size(); i++) {
-		if (lexems[i].type == Lexem::parL) {
+		if (lexems[i].type == Regex::Lexem::parL) {
 			balance++;
 		}
-		if (lexems[i].type == Lexem::parR) {
+		if (lexems[i].type == Regex::Lexem::parR) {
 			balance--;
 		}
 	}
 
 	if (balance != 0) {
 		lexems = {};
-		lexems.push_back({Lexem::error});
+		lexems.push_back({Regex::Lexem::error});
 		return lexems;
 	}
 
 	return lexems;
 }
 
-Regex* Regex::scan_conc(const vector<Lexem>& lexems, int index_start,
+Regex* Regex::scan_conc(const vector<Regex::Lexem>& lexems, int index_start,
 						int index_end) {
 	Regex* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (lexems[i].type == Lexem::parL) { // LEFT_BRACKET
+		if (lexems[i].type == Regex::Lexem::parL) { // LEFT_BRACKET
 			balance++;
 		}
-		if (lexems[i].type == Lexem::parR) { // RIGHT_BRACKET
+		if (lexems[i].type == Regex::Lexem::parR) { // RIGHT_BRACKET
 			balance--;
 		}
-		if (lexems[i].type == Lexem::conc && balance == 0) {
+		if (lexems[i].type == Regex::Lexem::conc && balance == 0) {
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
 
@@ -155,18 +155,18 @@ Regex* Regex::scan_conc(const vector<Lexem>& lexems, int index_start,
 	return nullptr;
 }
 
-Regex* Regex::scan_star(const vector<Lexem>& lexems, int index_start,
+Regex* Regex::scan_star(const vector<Regex::Lexem>& lexems, int index_start,
 						int index_end) {
 	Regex* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (lexems[i].type == Lexem::parL) { // LEFT_BRACKET
+		if (lexems[i].type == Regex::Lexem::parL) { // LEFT_BRACKET
 			balance++;
 		}
-		if (lexems[i].type == Lexem::parR) { // RIGHT_BRACKET
+		if (lexems[i].type == Regex::Lexem::parR) { // RIGHT_BRACKET
 			balance--;
 		}
-		if (lexems[i].type == Lexem::star && balance == 0) {
+		if (lexems[i].type == Regex::Lexem::star && balance == 0) {
 			Regex* l = expr(lexems, index_start, i);
 
 			if (l == nullptr || l->type == Regex::eps) {
@@ -189,18 +189,18 @@ Regex* Regex::scan_star(const vector<Lexem>& lexems, int index_start,
 	return nullptr;
 }
 
-Regex* Regex::scan_alt(const vector<Lexem>& lexems, int index_start,
+Regex* Regex::scan_alt(const vector<Regex::Lexem>& lexems, int index_start,
 					   int index_end) {
 	Regex* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (lexems[i].type == Lexem::parL) { // LEFT_BRACKET
+		if (lexems[i].type == Regex::Lexem::parL) { // LEFT_BRACKET
 			balance++;
 		}
-		if (lexems[i].type == Lexem::parR) { // RIGHT_BRACKET
+		if (lexems[i].type == Regex::Lexem::parR) { // RIGHT_BRACKET
 			balance--;
 		}
-		if (lexems[i].type == Lexem::alt && balance == 0) {
+		if (lexems[i].type == Regex::Lexem::alt && balance == 0) {
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
 			// cout << l->type << " " << r->type << "\n";
@@ -229,11 +229,11 @@ Regex* Regex::scan_alt(const vector<Lexem>& lexems, int index_start,
 	return nullptr;
 }
 
-Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
+Regex* Regex::scan_symb(const vector<Regex::Lexem>& lexems, int index_start,
 						int index_end) {
 	Regex* p = nullptr;
 	if ((lexems.size() <= index_start) ||
-		(lexems[index_start].type != Lexem::symb) ||
+		(lexems[index_start].type != Regex::Lexem::symb) ||
 		(index_end - index_start > 1)) {
 		return nullptr;
 	}
@@ -251,12 +251,12 @@ Regex* Regex::scan_symb(const vector<Lexem>& lexems, int index_start,
 	return p;
 }
 
-Regex* Regex::scan_eps(const vector<Lexem>& lexems, int index_start,
+Regex* Regex::scan_eps(const vector<Regex::Lexem>& lexems, int index_start,
 					   int index_end) {
 	Regex* p = nullptr;
 	// cout << lexems[index_start].type << "\n";
 	if (lexems.size() <= (index_start) ||
-		lexems[index_start].type != Lexem::eps) {
+		lexems[index_start].type != Regex::Lexem::eps) {
 		return nullptr;
 	}
 	p = new Regex;
@@ -272,19 +272,19 @@ Regex* Regex::scan_eps(const vector<Lexem>& lexems, int index_start,
 	return p;
 }
 
-Regex* Regex::scan_par(const vector<Lexem>& lexems, int index_start,
+Regex* Regex::scan_par(const vector<Regex::Lexem>& lexems, int index_start,
 					   int index_end) {
 	Regex* p = nullptr;
 
 	if (lexems.size() <= (index_end - 1) ||
-		(lexems[index_start].type != Lexem::parL ||
-		 lexems[index_end - 1].type != Lexem::parR)) {
+		(lexems[index_start].type != Regex::Lexem::parL ||
+		 lexems[index_end - 1].type != Regex::Lexem::parR)) {
 		return nullptr;
 	}
 	p = expr(lexems, index_start + 1, index_end - 1);
 	return p;
 }
-Regex* Regex::expr(const vector<Lexem>& lexems, int index_start,
+Regex* Regex::expr(const vector<Regex::Lexem>& lexems, int index_start,
 				   int index_end) {
 	Regex* p;
 	p = scan_alt(lexems, index_start, index_end);
@@ -338,7 +338,7 @@ bool Regex::from_string(string str) {
 		return false;
 	}
 
-	vector<Lexem> l = parse_string(str);
+	vector<Regex::Lexem> l = parse_string(str);
 	Regex* root = expr(l, 0, l.size());
 
 	if (root == nullptr || root->type == eps) {
@@ -802,9 +802,9 @@ int Regex::L() const {
 		return 0;
 	}
 }
-vector<Lexem>* Regex::first_state() const {
-	vector<Lexem>* l;
-	vector<Lexem>* r;
+vector<Regex::Lexem>* Regex::first_state() const {
+	vector<Regex::Lexem>* l;
+	vector<Regex::Lexem>* r;
 	switch (type) {
 	case Regex::alt:
 		l = term_l->first_state();
@@ -825,18 +825,18 @@ vector<Lexem>* Regex::first_state() const {
 		//
 		return l;
 	case Regex::eps:
-		l = new vector<Lexem>;
+		l = new vector<Regex::Lexem>;
 		return l;
 	default:
-		l = new vector<Lexem>;
+		l = new vector<Regex::Lexem>;
 		l->push_back(value);
 		return l;
 	}
 }
 
-vector<Lexem>* Regex::end_state() const {
-	vector<Lexem>* l;
-	vector<Lexem>* r;
+vector<Regex::Lexem>* Regex::end_state() const {
+	vector<Regex::Lexem>* l;
+	vector<Regex::Lexem>* r;
 	switch (type) {
 	case Regex::alt:
 		l = term_l->end_state();
@@ -857,10 +857,10 @@ vector<Lexem>* Regex::end_state() const {
 		}
 		return l;
 	case Regex::eps:
-		l = new vector<Lexem>;
+		l = new vector<Regex::Lexem>;
 		return l;
 	default:
-		l = new vector<Lexem>;
+		l = new vector<Regex::Lexem>;
 		l->push_back(value);
 		return l;
 	}
@@ -870,8 +870,8 @@ map<int, vector<int>> Regex::pairs() const {
 	map<int, vector<int>> l;
 	map<int, vector<int>> r;
 	map<int, vector<int>> p;
-	vector<Lexem>* rs;
-	vector<Lexem>* ps;
+	vector<Regex::Lexem>* rs;
+	vector<Regex::Lexem>* ps;
 	switch (type) {
 	case Regex::alt:
 		l = term_l->pairs();
@@ -945,7 +945,7 @@ vector<Regex*> Regex::pre_order_travers_vect() {
 	}
 	return r;
 }
-bool Regex::is_term(int number, const vector<Lexem>& list) const {
+bool Regex::is_term(int number, const vector<Regex::Lexem>& list) const {
 	for (size_t i = 0; i < list.size(); i++) {
 		if (list[i].number == number) {
 			return true;
@@ -986,8 +986,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = i;
 	}
-	vector<Lexem>* first = test.first_state(); // Множество начальных состояний
-	vector<Lexem>* end = test.end_state(); // Множество конечных состояний
+	vector<Regex::Lexem>* first = test.first_state(); // Множество начальных состояний
+	vector<Regex::Lexem>* end = test.end_state(); // Множество конечных состояний
 	int eps_in = test.L();
 	map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
 	vector<State> st; // Список состояний в автомате
@@ -1039,7 +1039,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 	}
 
 	for (size_t i = 0; i < list.size(); i++) {
-		Lexem elem = list[i]->value;
+		Regex::Lexem elem = list[i]->value;
 		tr = {};
 
 		for (size_t j = 0; j < p[elem.number].size(); j++) {

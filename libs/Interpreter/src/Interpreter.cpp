@@ -69,7 +69,7 @@ bool Interpreter::run_line(const string& line) {
 	Lexer lexer(*this);
 	log("running \"" + line + "\"");
 	auto lexems = lexer.parse_string(line);
-	if (const auto op = scan_operation(lexems); op.has_value()) {
+ 	if (const auto op = scan_operation(lexems); op.has_value()) {
 		run_operation(*op);
 	} else {
 		throw_error("failed to scan operation");
@@ -495,30 +495,30 @@ vector<GeneralObject> Interpreter::parameters_to_arguments(
 
 void Interpreter::run_declaration(const Declaration& decl) {
 	log("Running declaration...");
-	if (decl.show_result) {
+	/*if (decl.show_result) {
 		Logger::activate();
 		log("    logger is activated for this task");
 	} else {
 		Logger::deactivate();
 	}
 	objects[decl.id] = apply_function_sequence(
-		decl.function_sequence, parameters_to_arguments(decl.parameters));
-	log("    assigned to " + to_string(decl.id));
+		decl.function_sequence, parameters_to_arguments(decl.));
+	log("    assigned to " + to_string(decl.id));*/
 	Logger::deactivate();
 }
 
 void Interpreter::run_predicate(const Predicate& pred) {
 	log("Running predicate...");
-	Logger::activate();
+	/*Logger::activate();
 	auto res = apply_function(pred.predicate,
 							  parameters_to_arguments(pred.parameters));
-	log("    result: " + to_string(get<ObjectBoolean>(res).value));
+	log("    result: " + to_string(get<ObjectBoolean>(res).value));*/
 	Logger::deactivate();
 }
 
 void Interpreter::run_test(const Test& test) {
 	log("Running test...");
-	Logger::activate();
+	/*Logger::activate();
 	const Regex& reg =
 		holds_alternative<Regex>(test.test_set)
 			? get<Regex>(test.test_set)
@@ -526,7 +526,7 @@ void Interpreter::run_test(const Test& test) {
 
 	if (holds_alternative<Regex>(test.language)) {
 		Tester::test(get<Regex>(test.language), reg, test.iterations);
-	}
+	}*/
 	Logger::deactivate();
 }
 
@@ -540,177 +540,219 @@ void Interpreter::run_operation(const GeneralOperation& op) {
 	}
 }
 
-optional<Interpreter::Declaration> Interpreter::scan_declaration(
-	vector<Lexem> lexems) {
+optional<Interpreter::Id> Interpreter::scan_Id(const vector<Lexem>& lexems,
+											   int& pos) {
+	if (lexems.size() > pos && lexems[pos].type == Lexem::name) {
+		pos += 1;
+		return lexems[pos].value;
+	}
+	return nullopt;
+}
 
-	if (lexems.size() < 3) {
+optional<Regex> Interpreter::scan_Regex(const vector<Lexem>& lexems, int& pos) {
+	if (lexems.size() > pos && lexems[pos].type == Lexem::regex) {
+		pos += 1;
+		return Regex(lexems[pos].value);
+	}
+	return nullopt;
+}
+
+optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
+	const vector<Lexem>& lexems, int& pos) {
+
+	int i = pos;
+
+	// Открывающая скобка
+	if (lexems.size() <= i || lexems[i].type != Lexem::parL) {
 		return nullopt;
 	}
+	i++;
 
-	Declaration decl;
-	// [идентификатор]
-	if (lexems.size() < 1 ||
-		lexems[0].type != Lexem::id && lexems[0].type != Lexem::regex) {
-		return nullopt;
-	}
-	decl.id = lexems[0].value;
-
-	// =
-	if (lexems.size() < 2 || lexems[1].type != Lexem::equalSign) {
-		return nullopt;
-	}
-
+	// Функции
 	// ([функция].)*[функция]?
 	vector<string> func_names;
-	int i = 2;
-	for (; i < lexems.size() && lexems[i].type == Lexem::function; i++) {
+	for (; i < lexems.size() && lexems[i].type == Lexem::name; i++) {
 		func_names.push_back(lexems[i].value);
 		i++;
 		if (lexems[i].type != Lexem::dot) {
 			break;
 		}
 	}
+
 	reverse(func_names.begin(), func_names.end());
 
+	// Аргументы
 	// [объект]+
 	vector<ObjectType> argument_types;
-	vector<variant<string, GeneralObject>> arguments;
-	for (; i < lexems.size(); i++) {
-		if (lexems[i].type == Lexem::id || // TODO: аццкий костыль
-			lexems[i].type == Lexem::regex && id_types.count(lexems[i].value)) {
-			if (id_types.count(lexems[i].value)) {
-				argument_types.push_back(id_types[lexems[i].value]);
-				arguments.push_back(lexems[i].value);
-			} else {
-				log("Scan declaration: unknown id: " + lexems[i].value);
-				return nullopt;
-			}
-		} else if (lexems[i].type == Lexem::regex) {
-			argument_types.push_back(ObjectType::Regex);
-			arguments.push_back(ObjectRegex(lexems[i].reg));
-		} else {
-			break;
+	vector<Expression> arguments;
+	while (i < lexems.size() && lexems[i].type != Lexem::parR) {
+		if (const auto& expr = scan_Expression(lexems, i); expr.has_value()) {
+			argument_types.push_back((*expr).type);
+			arguments.push_back(*expr);
 		}
+	}
+
+	// Если аргументов нет - ошибка
+	if (arguments.size() == 0) {
+		return nullopt;
+	}
+
+	// Построение функциональной последовательности
+	if (const auto& functions =
+			build_function_sequence(func_names, argument_types);
+		functions.has_value()) {
+		FunctionSequence seq;
+		seq.functions = *functions;
+		seq.parameters = arguments;
+		i++; // Закрывающая скобка
+		pos = i;
+		return seq;
+	}
+
+	return nullopt;
+}
+
+optional<Interpreter::Expression> Interpreter::scan_Expression(
+	const vector<Lexem>& lexems, int& pos) {
+	// Int
+	if (lexems.size() > pos && lexems[pos].type == Lexem::number) {
+		Expression expr;
+		expr.type = ObjectType::Int;
+		expr.value = lexems[pos].num;
+		pos++;
+		return expr;
+	}
+	// Regex
+	if (lexems.size() > pos && lexems[pos].type == Lexem::regex) {
+		Expression expr;
+		expr.type = ObjectType::Regex;
+		expr.value = Regex(lexems[pos].value);
+		pos++;
+		return expr;
+	}
+	// Id
+	if (lexems.size() > pos && lexems[pos].type == Lexem::name &&
+		id_types.count(lexems[pos].value)) {
+		Expression expr;
+		expr.type = id_types[lexems[pos].value];
+		expr.value = lexems[pos].value;
+		pos++;
+		return expr;
+	}
+	// FunctionSequence
+	int i = pos;
+	if (const auto& seq = scan_FunctionSequence(lexems, i); seq.has_value()) {
+		Expression expr;
+		expr.type = (*seq).functions[0].output;
+		expr.value = *seq;
+		pos = i;
+		return expr;
+	}
+	return nullopt;
+}
+
+optional<Interpreter::Declaration> Interpreter::scan_declaration(
+	const vector<Lexem>& lexems, int& pos) {
+
+	if (lexems.size() < pos + 3) {
+		return nullopt;
+	}
+
+	int i = pos;
+
+	Declaration decl;
+	// [идентификатор]
+	if (lexems.size() < i || lexems[i].type != Lexem::name) {
+		return nullopt;
+	}
+	decl.id = lexems[i].value;
+	i++;
+
+	// =
+	if (lexems.size() < i || lexems[i].type != Lexem::equalSign) {
+		return nullopt;
+	}
+	i++;
+
+	// Expression
+	if (const auto& expr = scan_Expression(lexems, i); expr.has_value()) {
+		decl.expr = *expr;
+	} else {
+		return nullopt;
 	}
 
 	// (!!)
 	if (i < lexems.size() && lexems[i].type == Lexem::doubleExclamation) {
 		decl.show_result = true;
 	}
+	i++;
 
-	if (arguments.size() == 0) {
-		log("Scan declaration: no arguments given");
-		return nullopt;
-	}
+	id_types[decl.id] = decl.expr.type;
 
-	if (auto seq = build_function_sequence(func_names, argument_types);
-		seq.has_value()) {
-
-		decl.function_sequence = *seq;
-		decl.parameters = arguments;
-		id_types[decl.id] =
-			(*seq).size() ? (*seq).back().output : argument_types[0];
-		return decl;
-	}
-
-	log("Scan declaration: failed to build function sequence");
-	return nullopt;
+  	pos = i;
+	return decl;
 }
 
-optional<Interpreter::Test> Interpreter::scan_test(vector<Lexem> lexems) {
-	if (lexems.size() < 4) {
-		return nullopt;
-	}
+optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems,
+												   int& pos) {
+	int i = pos;
 
-	if (lexems[0].type != Lexem::test) {
+	if (lexems.size() < i + 1 || lexems[i].type != Lexem::name ||
+		lexems[i].value != "Test") {
 		return nullopt;
 	}
 
 	Test test;
-	if (lexems[1].type == Lexem::regex) {
-		test.language = lexems[1].reg;
-	} else if (lexems[1].type == Lexem::id) {
-		test.language = lexems[1].value;
+	// Language
+	if (const auto& expr = scan_Expression(lexems, i);
+		expr.has_value() &&
+		((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
+		 (*expr).type == ObjectType::NFA)) {
+		test.language = *expr;
 	} else {
-		log("Scan test: wrong type at position 1, id or regex expeccted");
+		throw_error(
+			"Scan test: wrong type at position 1, nfa or regex expected");
 		return nullopt;
 	}
 
-	if (lexems[2].type == Lexem::regex) {
-		test.test_set = lexems[2].reg;
-	} else if (lexems[2].type == Lexem::id) {
-		test.test_set = lexems[2].value;
+	// Test set
+	if (const auto& expr = scan_Expression(lexems, i);
+		expr.has_value() && (*expr).type == ObjectType::Regex) {
+		test.test_set = *expr;
 	} else {
-		log("Scan test: wrong type at position 2, id or regex expeccted");
+		throw_error("Scan test: wrong type at position 2, regex expected");
 		return nullopt;
 	}
 
-	if (lexems[3].type == Lexem::number) {
-		test.iterations = lexems[3].num;
+	if (lexems.size() > i && lexems[i].type == Lexem::number) {
+		test.iterations = lexems[i].num;
 	} else {
 		log("Scan test: wrong type at position 3, number expected");
 		return nullopt;
 	}
+	i++;
 
+	pos = i;
 	return test;
 }
 
 optional<Interpreter::Predicate> Interpreter::scan_predicate(
-	vector<Lexem> lexems) {
-	if (lexems.size() < 2) {
-		return nullopt;
-	}
-
-	Predicate pred;
-
-	// [предикат]
-	if (lexems[0].type != Lexem::predicate) {
-		return nullopt;
-	}
-	auto prdeicat_name = lexems[0].value;
-
-	// [объект]+
-	vector<ObjectType> argument_types;
-	vector<variant<string, GeneralObject>> arguments;
-	for (int i = 1; i < lexems.size(); i++) {
-		if (lexems[i].type == Lexem::id || // TODO: аццкий костыль
-			lexems[i].type == Lexem::regex && id_types.count(lexems[i].value)) {
-			if (id_types.count(lexems[i].value)) {
-				argument_types.push_back(id_types[lexems[i].value]);
-				arguments.push_back(lexems[i].value);
-			} else {
-				log("Scan test: unknown id: " + lexems[i].value);
-				return nullopt;
-			}
-		} else if (lexems[i].type == Lexem::regex) {
-			argument_types.push_back(ObjectType::Regex);
-			arguments.push_back(ObjectRegex(lexems[i].reg));
-		} else {
-			break;
-		}
-	}
-
-	if (auto seq = build_function_sequence({prdeicat_name}, argument_types);
-		seq.has_value()) {
-
-		pred.predicate = (*seq)[0];
-		pred.parameters = arguments;
-		return pred;
-	}
-	log("Scan predicate: failed to build function sequence");
+	const vector<Lexem>& lexems, int& pos) {
+	// TODO scan predicate
 	return nullopt;
 }
 
 optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
-	vector<Lexem> lexems) {
-
-	if (auto declaration = scan_declaration(lexems); declaration.has_value()) {
+	const vector<Lexem>& lexems) {
+	int pos = 0;
+	if (auto declaration = scan_declaration(lexems, pos);
+		declaration.has_value()) {
 		return declaration;
 	}
-	if (auto predicate = scan_predicate(lexems); predicate.has_value()) {
+	if (auto predicate = scan_predicate(lexems, pos); predicate.has_value()) {
 		return predicate;
 	}
-	if (auto test = scan_test(lexems); test.has_value()) {
+	if (auto test = scan_test(lexems, pos); test.has_value()) {
 		return test;
 	}
 	return nullopt;
