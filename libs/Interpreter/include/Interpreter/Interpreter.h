@@ -99,11 +99,15 @@ class Interpreter {
 
 	struct Lexem;
 
-	optional<Id> scan_Id(const vector<Lexem>&, int& pos);
-	optional<Regex> scan_Regex(const vector<Lexem>&, int& pos);
+	// Находит парную закрывающую скобку
+	int find_closing_par(const vector<Lexem>&, size_t pos);
+
+	optional<Id> scan_Id(const vector<Lexem>&, int& pos, size_t end);
+	optional<Regex> scan_Regex(const vector<Lexem>&, int& pos, size_t end);
 	optional<FunctionSequence> scan_FunctionSequence(const vector<Lexem>&,
-													 int& pos);
-	optional<Expression> scan_Expression(const vector<Lexem>&, int& pos);
+													 int& pos, size_t end);
+	optional<Expression> scan_Expression(const vector<Lexem>&, int& pos,
+										 size_t end);
 
 	// Типизация идентификаторов. Нужна для корректного составления опреаций
 	map<string, ObjectType> id_types;
