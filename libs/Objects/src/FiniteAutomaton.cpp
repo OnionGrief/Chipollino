@@ -1926,16 +1926,20 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		out.push_back(temp);
 		while ((j < in.size()) && in[i].condition == in[j].condition) {
 			cond = true;
-			Regex* r = new Regex();
-			Regex* s1 = new Regex();
-			Regex* s2 = new Regex();
-			s1->regex_star(out[i].temp_regex);
-			s2->regex_star(in[j].temp_regex);
-			r->regex_union(s1, s2);
+			Regex* r;
+			/*if (out[i].temp_regex->to_txt() == "") {
+				r = in[j].temp_regex->copy();
+			} else if (in[j].temp_regex->to_txt() == "") {
+
+				r = out[i].temp_regex->copy();
+			} else {
+				r = new Regex();
+				r->regex_alt(out[i].temp_regex, in[j].temp_regex);
+			}*/
+			r = new Regex();
+			r->regex_alt(in[j].temp_regex, out[i].temp_regex);
 			delete out[out.size() - 1].temp_regex;
 			out[out.size() - 1].temp_regex = r;
-			delete s1;
-			delete s2;
 			j++;
 		}
 		if (cond) {
@@ -1976,8 +1980,13 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 		if (i != indexcur) {
 			Regex* r = new Regex();
 			r->regex_star(in[indexcur].temp_regex);
-			Regex* k = new Regex();
-			k->regex_union(in[i].temp_regex, r);
+			Regex* k;
+			if (in[i].temp_regex->to_txt() == "") {
+				k = r->copy();
+			} else {
+				k = new Regex();
+				k->regex_union(in[i].temp_regex, r);
+			}
 			expression_arden temp;
 
 			delete r;
@@ -1989,124 +1998,124 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	return out;
 }
 Regex FiniteAutomaton::nfa_to_regex() const {
-	Logger::init_step("Arden");
-	vector<int> endstate;
-	vector<vector<expression_arden>> data;
-	set<alphabet_symbol> alphabet = language->get_alphabet();
+	vector<int> end_state; //храним индексы принимающих состояний
+	vector<vector<expression_arden>> data; // все уравнения
+	set<alphabet_symbol> alphabet = language->get_alphabet(); //получаем Алфавит
 
 	for (int i = 0; i < states.size(); i++) {
 		vector<expression_arden> temp;
 		data.push_back(temp);
 	}
-	Regex* r = new Regex;
-	expression_arden temp;
-	temp.condition = -1;
-	string str = "";
+
+	Regex* r = new Regex; //Заполняем вход в начальное состояние
+	expression_arden initial_arden;
+	initial_arden.condition = -1;
 	r->regex_eps();
-	temp.temp_regex = r;
-	data[initial_state].push_back(temp);
-	for (int i = 0; i < states.size(); i++) {
-		State a = states[i];
-		if (a.is_terminal) {
-			endstate.push_back(i);
+	initial_arden.temp_regex = r;
+	data[initial_state].push_back(initial_arden);
+
+	for (int i = 0; i < states.size();
+		 i++) { //Для всех состояний автомата заполняем уравнения
+		if (states[i].is_terminal) {
+			end_state.push_back(i);
 		}
-		if (a.transitions["eps"].size()) {
-			set<int> trans = a.transitions.at("eps");
+		if (states[i].transitions.count("eps")) { //для переходов по eps
+			set<int> trans = states[i].transitions.at("eps");
 			for (set<int>::iterator itt = trans.begin(); itt != trans.end();
 				 itt++) {
 				Regex* r = new Regex;
-				expression_arden temp;
-				temp.condition = i;
-
+				expression_arden temp_expression;
+				temp_expression.condition = i;
 				r->regex_eps();
-				temp.temp_regex = r;
-				data[*itt].push_back(temp);
+				temp_expression.temp_regex = r;
+				data[*itt].push_back(temp_expression);
 			}
 		}
 		for (set<alphabet_symbol>::iterator it = alphabet.begin();
-			 it != alphabet.end(); it++) {
-			if (a.transitions[*it].size()) {
-				set<int> trans = a.transitions.at(*it);
+			 it != alphabet.end(); it++) { //для переходов по символам алфавита
+			if (states[i].transitions.count(*it)) {
+				set<int> trans = states[i].transitions.at(*it);
 				for (set<int>::iterator itt = trans.begin(); itt != trans.end();
 					 itt++) {
-					expression_arden temp;
-					temp.condition = i;
+					expression_arden temp_expression;
+					temp_expression.condition = i;
 					string str = "";
 					str += *it;
 					Regex* r = new Regex(str);
-					temp.temp_regex = r;
-					data[*itt].push_back(temp);
+					temp_expression.temp_regex = r;
+					data[*itt].push_back(temp_expression);
 				}
 			}
 		}
 	}
-	// //сортируем
+	if (end_state.size() ==
+		0) { //если нет принимающих состояний - то регулярки не будет
+		Regex* f = new Regex("eps");
+		Regex temp1 = *f;
+		delete f;
+		return temp1;
+	}
+	// // вывод всех уравнений
+	// for (int i = 0; i < data.size(); i++) {
+	// 	cout << i << " = ";
+	// 	for (int j = 0; j < data[i].size(); j++) {
+	// 		cout << data[i][j].condition << " "
+	// 			 << data[i][j].temp_regex->to_txt() << " ";
+	// 	}
+	// 	cout << "\n";
+	// }
 
-	for (int i = data.size() - 1; i >= 0; i--) {
+	//сортируем
+	Logger::init_step("Arden");
 
-		vector<expression_arden> tempdata;
+	for (int i = 0; i < data.size();
+		 i++) { // c конца начинаем переписывать уравнения
+		vector<expression_arden> temp_data;
 		for (int j = 0; j < data[i].size(); j++) {
-			if (data[i][j].condition > i) {
+			if (data[i][j].condition <= i && data[i][j].condition != -1) {
 				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
-					expression_arden temp;
-					Regex* r = new Regex;
-					r->regex_union(data[data[i][j].condition][k].temp_regex,
-								   data[i][j].temp_regex);
-					temp.temp_regex = r;
-					temp.condition = data[data[i][j].condition][k].condition;
-					tempdata.push_back(temp);
+					expression_arden temp_expression;
+					Regex* r;
+					if (data[i][j].temp_regex->to_txt() == "") {
+						r = data[data[i][j].condition][k]
+								.temp_regex->copy(); //тут 0
+					} else if (data[data[i][j].condition][k]
+								   .temp_regex->to_txt() == "") {
+						r = data[i][j].temp_regex->copy(); //тут б
+														   //	continue;
+					} else {
+						r = new Regex;
+						r->regex_union(
+
+							data[data[i][j].condition][k].temp_regex,
+							data[i][j].temp_regex);
+					}
+					temp_expression.temp_regex = r;
+					temp_expression.condition =
+						data[data[i][j].condition][k].condition;
+					temp_data.push_back(temp_expression);
 				}
 			} else {
-				expression_arden temp;
+				expression_arden temp_expression;
 				Regex* r = new Regex(*data[i][j].temp_regex);
-				temp.temp_regex = r;
-				temp.condition = data[i][j].condition;
-				tempdata.push_back(temp);
+				temp_expression.temp_regex = r;
+				temp_expression.condition = data[i][j].condition;
+				temp_data.push_back(temp_expression);
 			}
 		}
-
 		sort(data[i].begin(), data[i].end(), compare);
 		for (int o = 0; o < data[i].size(); o++) {
 			delete data[i][o].temp_regex;
 		}
 		data[i].clear();
-		vector<expression_arden> tempdata1 = arden_minimize(tempdata);
-		vector<expression_arden> tempdata2 = arden(tempdata1, i);
-		for (int o = 0; o < tempdata.size(); o++) {
-			delete tempdata[o].temp_regex;
+		vector<expression_arden> tempdata2 = arden(temp_data, i);
+		vector<expression_arden> tempdata3 = arden_minimize(tempdata2);
+		for (int o = 0; o < temp_data.size(); o++) {
+			delete temp_data[o].temp_regex;
 		}
-		for (int o = 0; o < tempdata1.size(); o++) {
-			delete tempdata1[o].temp_regex;
-		}
-
 		for (int o = 0; o < tempdata2.size(); o++) {
+			delete tempdata2[o].temp_regex;
 		}
-		data[i] = tempdata2;
-	}
-	if (data[0].size() > 1) {
-		// cout << "error";
-		Regex* f = new Regex("");
-		Regex temp1 = *f;
-		delete f;
-		return temp1;
-	}
-	for (int i = 0; i < data.size(); i++) {
-		for (int j = 0; j < data[i].size(); j++) {
-			if (data[i][j].condition != -1) {
-				Regex* ra = new Regex;
-				ra->regex_union(data[data[i][j].condition][0].temp_regex,
-								data[i][j].temp_regex);
-				data[i][j].condition = -1;
-				delete data[i][j].temp_regex;
-				data[i][j].temp_regex = ra;
-			}
-		}
-
-		vector<expression_arden> tempdata3 = arden_minimize(data[i]);
-		for (int o = 0; o < data[i].size(); o++) {
-			delete data[i][o].temp_regex;
-		}
-		data[i].clear();
 		data[i] = tempdata3;
 		Logger::log("State ", std::to_string(i));
 		for (int j = 0; j < data[i].size(); j++) {
@@ -2115,29 +2124,50 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
 		}
 	}
-	if (endstate.size() == 0) {
-		Regex* f = new Regex("");
-		Regex temp1 = *f;
-		delete f;
-		return temp1;
-	}
-	if (endstate.size() < 2) {
+
+	// for (int i = 0; i < data.size(); i++) {
+	// 	for (int j = 0; j < data[i].size(); j++) {
+	// 		if (data[i][j].condition != -1) {
+	// 			Regex* ra = new Regex;
+	// 			ra->regex_union(data[data[i][j].condition][0].temp_regex,
+	// 							data[i][j].temp_regex);
+	// 			data[i][j].condition = -1;
+	// 			delete data[i][j].temp_regex;
+	// 			data[i][j].temp_regex = ra;
+	// 		}
+	// 	}
+
+	// 	vector<expression_arden> tempdata3 = arden_minimize(data[i]);
+	// 	for (int o = 0; o < data[i].size(); o++) {
+	// 		delete data[i][o].temp_regex;
+	// 	}
+	// 	data[i].clear();
+	// 	data[i] = tempdata3;
+
+	Logger::finish_step();
+
+	if (end_state.size() < 2) {
 		Regex* r1;
-		r1 = data[endstate[0]][0].temp_regex->copy();
+		r1 = data[end_state[0]][0].temp_regex->copy();
+
 		for (int i = 0; i < data.size(); i++) {
 			for (int j = 0; j < data[i].size(); j++) {
 				delete data[i][j].temp_regex;
 			}
 		}
-		Regex temp = *r;
-		delete r;
+
+		r1->normalize_lang(alphabet, 0);
+
+		Regex temp = *r1;
+		delete r1;
 		return temp;
 	}
+
 	Regex* r1;
-	r1 = data[endstate[0]][0].temp_regex->copy();
-	for (int i = 1; i < endstate.size(); i++) {
+	r1 = data[end_state[0]][0].temp_regex->copy();
+	for (int i = 1; i < end_state.size(); i++) {
 		Regex* r2 = new Regex;
-		r2->regex_alt(r1, data[endstate[i]][0].temp_regex);
+		r2->regex_alt(r1, data[end_state[i]][0].temp_regex);
 		delete r1;
 		r1 = r2;
 	}
@@ -2146,9 +2176,8 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			delete data[i][j].temp_regex;
 		}
 	}
+	r1->normalize_lang(alphabet, 0);
 	Regex temp1 = *r1;
 	delete r1;
-	Logger::finish_step();
 	return temp1;
-	// return r1;
 }
