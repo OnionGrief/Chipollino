@@ -124,10 +124,10 @@ class Interpreter {
 		const vector<variant<string, GeneralObject>>& parameters);
 
 	// Исполнение операций
-	void run_declaration(const Declaration&);
-	void run_predicate(const Predicate&);
-	void run_test(const Test&);
-	void run_operation(const GeneralOperation&);
+	bool run_declaration(const Declaration&);
+	bool run_predicate(const Predicate&);
+	bool run_test(const Test&);
+	bool run_operation(const GeneralOperation&);
 
 	// Список опреаций для последовательного выполнения
 	vector<GeneralOperation> operations;

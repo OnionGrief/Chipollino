@@ -69,13 +69,15 @@ bool Interpreter::run_line(const string& line) {
 	Lexer lexer(*this);
 	log("running \"" + line + "\"");
 	auto lexems = lexer.parse_string(line);
+	bool success = false;
 	if (const auto op = scan_operation(lexems); op.has_value()) {
-		run_operation(*op);
+		success = run_operation(*op);
 	} else {
 		throw_error("failed to scan operation");
-		return false;
+		success = false;
 	}
-	return true;
+	log("");
+	return success;
 }
 
 bool Interpreter::run_file(const string& path) {
@@ -505,7 +507,7 @@ vector<GeneralObject> Interpreter::parameters_to_arguments(
 	return arguments;
 }
 
-void Interpreter::run_declaration(const Declaration& decl) {
+bool Interpreter::run_declaration(const Declaration& decl) {
 	log("Running declaration...");
 	/*if (decl.show_result) {
 		Logger::activate();
@@ -517,18 +519,20 @@ void Interpreter::run_declaration(const Declaration& decl) {
 		decl.function_sequence, parameters_to_arguments(decl.));
 	log("    assigned to " + to_string(decl.id));*/
 	Logger::deactivate();
+	return true;
 }
 
-void Interpreter::run_predicate(const Predicate& pred) {
+bool Interpreter::run_predicate(const Predicate& pred) {
 	log("Running predicate...");
 	/*Logger::activate();
 	auto res = apply_function(pred.predicate,
 							  parameters_to_arguments(pred.parameters));
 	log("    result: " + to_string(get<ObjectBoolean>(res).value));*/
 	Logger::deactivate();
+	return true;
 }
 
-void Interpreter::run_test(const Test& test) {
+bool Interpreter::run_test(const Test& test) {
 	log("Running test...");
 	/*Logger::activate();
 	const Regex& reg =
@@ -540,9 +544,10 @@ void Interpreter::run_test(const Test& test) {
 		Tester::test(get<Regex>(test.language), reg, test.iterations);
 	}*/
 	Logger::deactivate();
+	return true;
 }
 
-void Interpreter::run_operation(const GeneralOperation& op) {
+bool Interpreter::run_operation(const GeneralOperation& op) {
 	if (holds_alternative<Declaration>(op)) {
 		run_declaration(get<Declaration>(op));
 	} else if (holds_alternative<Predicate>(op)) {
@@ -550,6 +555,7 @@ void Interpreter::run_operation(const GeneralOperation& op) {
 	} else if (holds_alternative<Test>(op)) {
 		run_test(get<Test>(op));
 	}
+	return true;
 }
 
 int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {
