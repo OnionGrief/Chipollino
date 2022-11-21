@@ -1621,10 +1621,8 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 	Logger::init_step("Equiv");
 	Logger::log("Первое регулярное выражение", r1.to_txt());
 	Logger::log("Второе регулярное выражение", r2.to_txt());
-	cout << r1.to_txt() << " " << r2.to_txt() << "\n";
 	FiniteAutomaton fa1 = r1.to_ilieyu();
 	FiniteAutomaton fa2 = r2.to_ilieyu();
-	cout << fa1.to_txt() << fa2.to_txt();
 	bool result = FiniteAutomaton::equivalent(fa1, fa2);
 	if (result)
 		Logger::log("Результат Equiv", "true");

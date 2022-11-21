@@ -411,7 +411,7 @@ void Example::step_interection() {
 }
 
 void Example::arden_test() {
-	string regl = "a";
+	string regl = "a(a)*ab(bb)*baa";
 	Regex r;
 	if (!r.from_string(regl)) {
 		cout << "ERROR\n";
@@ -422,7 +422,7 @@ void Example::arden_test() {
 	cout << a.to_txt();
 	d = a;
 	Regex temp = d.nfa_to_regex();
-	cout << temp.to_txt();
+	cout << temp.to_txt() << "\n";
 	cout << temp.to_tompson().to_txt();
 }
 
@@ -746,10 +746,10 @@ void Example::test_arden() {
 	Regex r3("(ab)*a");
 	Regex r4("a(a)*ab(bb)*baa");
 
-	// assert(Regex::equivalent(r1, r1.to_tompson().nfa_to_regex()));
-	// assert(Regex::equivalent(r2, r2.to_tompson().nfa_to_regex()));
-	// assert(Regex::equivalent(r3, r3.to_tompson().nfa_to_regex()));
-	// assert(Regex::equivalent(r4, r4.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r1, r1.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r2, r2.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r3, r3.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r4, r4.to_tompson().nfa_to_regex()));
 }
 
 void Example::test_pump_length() {
