@@ -774,8 +774,13 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	}
 	i++;
 
+	auto end = lexems.size();
+	if (lexems[end - 1].type == Lexem::doubleExclamation) {
+		end--;
+	}
+
 	// Expression
-	if (const auto& expr = scan_Expression(lexems, i, lexems.size());
+	if (const auto& expr = scan_Expression(lexems, i, end);
 		expr.has_value()) {
 		decl.expr = *expr;
 	} else {
