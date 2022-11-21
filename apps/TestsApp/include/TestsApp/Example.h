@@ -7,6 +7,7 @@
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
+#include "Interpreter/Interpreter.h"
 #include <cassert>
 #include <iostream>
 /*
@@ -50,4 +51,5 @@ class Example {
 	static void test_arden();
 	static void test_pump_length();
 	static void test_is_one_unambiguous();
+	static void test_interpreter();
 };

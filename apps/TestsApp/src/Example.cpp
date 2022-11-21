@@ -536,7 +536,8 @@ void Example::test_all() {
 	// test_arden();
 	test_pump_length();
 	test_is_one_unambiguous();
-	cout << "all tests passed" << endl;
+	test_interpreter();
+	cout << "all tests passed\n\n";
 }
 
 void Example::test_fa_equal() {
@@ -775,3 +776,14 @@ void Example::test_is_one_unambiguous() {
 	// doesn't fulfills the orbit property
 	assert(!r5.to_glushkov().is_one_unambiguous());
 };
+
+void Example::test_interpreter() {
+	Interpreter interpreter;
+	interpreter.set_log_mode(Interpreter::LogMode::nothing);
+	assert(!interpreter.run_line("A = Annote (Glushkova {a})"));
+	assert(interpreter.run_line("N1 = ((Glushkov ({ab|a})))"));
+	assert(interpreter.run_line("N2 =  (Annote N1)"));
+	assert(!interpreter.run_line("N2 =  (Glushkov N1)"));
+	assert(!interpreter.run_line("Equiv N1 N3"));
+	assert(interpreter.run_line("Equiv ((N1)) ((Reverse.Reverse (N2)))"));
+}
