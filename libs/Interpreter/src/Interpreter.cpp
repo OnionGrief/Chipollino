@@ -552,12 +552,25 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 
 bool Interpreter::run_predicate(const Predicate& pred) {
 	log("Running predicate...");
-	/*Logger::activate();
-	auto res = apply_function(pred.predicate,
-							  parameters_to_arguments(pred.parameters));
-	log("    result: " + to_string(get<ObjectBoolean>(res).value));*/
+	Logger::activate();
+
+	FunctionSequence seq;
+	seq.functions = {pred.predicate};
+	seq.parameters = pred.arguments;
+
+	auto res = eval_function_sequence(seq);
+	bool success = false;
+
+	if (res.has_value() && holds_alternative<ObjectBoolean>(*res)) {
+		log("    result: " + to_string(get<ObjectBoolean>(*res).value));
+		success = true;
+	} else {
+		throw_error("while running predicate: invalid expression");
+		success = false;
+	}
+	
 	Logger::deactivate();
-	return true;
+	return success;
 }
 
 bool Interpreter::run_test(const Test& test) {
