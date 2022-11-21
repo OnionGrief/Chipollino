@@ -1531,15 +1531,18 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 			for (int transition : elem.second)
 				min_adjacency_matrix[i][transition]++;
 	vector<Fraction> f1;
-	optional<Fraction> prev_val; // для проверки на константность
+	optional<Fraction> prev_f1_val; // для проверки на константность
+	Fraction prev_val; // значение calc_ambiguity
 	bool return_flag = true;
+	// для сохранения результатов calc_ambiguity
+	vector<vector<Fraction>> calculated(s + i + 1, vector<Fraction>(N));
+	vector<vector<char>> is_calculated(s + i + 1, vector<char>(N, 0));
 	for (int k = 1; k < N + 1; k++) {
 		for (int v = 0; v < s; v++) {
 			for (int i = 0; i < s; i++) {
 				d[k][v] += InfInt(adjacency_matrix[i][v]) * d[k - 1][i];
 			}
-			if (fa.states[v].is_terminal)
-				paths_number[k - 1] = paths_number[k - 1] + d[k][v];
+			if (fa.states[v].is_terminal) paths_number[k - 1] += d[k][v];
 		}
 		for (int v = 0; v < min_s; v++) {
 			for (int i = 0; i < min_s; i++) {
@@ -1547,93 +1550,135 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 					InfInt(min_adjacency_matrix[i][v]) * min_d[k - 1][i];
 			}
 			if (min_fa.states[v].is_terminal)
-				min_paths_number[k - 1] = min_paths_number[k - 1] + min_d[k][v];
+				min_paths_number[k - 1] += min_d[k][v];
 		}
-		if (min_paths_number[k - 1] == 0) continue;
-		f1.push_back(Fraction(paths_number[k - 1], min_paths_number[k - 1]));
+		Fraction new_f1_value;
+		if (min_paths_number[k - 1] == 0) {
+			new_f1_value = Fraction();
+			// continue;
+		} else {
+			new_f1_value =
+				Fraction(paths_number[k - 1], min_paths_number[k - 1]);
 
-		if (!prev_val) {
-			prev_val = f1[f1.size() - 1];
-			continue;
+			if (!prev_f1_val) {
+				prev_f1_val = new_f1_value;
+			} else {
+				if (!(new_f1_value == *prev_f1_val)) {
+					return_flag = false;
+				}
+				prev_f1_val = new_f1_value;
+			}
 		}
-		if (!(f1[f1.size() - 1] == *prev_val)) {
-			return_flag = false;
+		vector<Fraction> f1_check = f1;
+		f1_check.push_back(new_f1_value);
+		// cout << "> " << k << " " << N << endl;
+		// cout << "F1 " << new_f1_value << endl;
+
+		if (f1_check.size() >= 3) {
+			int new_s = floor(
+				double(-1 + sqrt((1 - 4 * (i + 1)) + 4 * f1_check.size())) / 2);
+			int delta = f1_check.size() - (new_s * new_s + new_s + i + 1);
+
+			vector<vector<Fraction>> calculated_check = calculated;
+			vector<vector<char>> is_calculated_check = is_calculated;
+			Fraction val =
+				calc_ambiguity(new_s + i, new_s * new_s + delta, f1_check,
+							   calculated_check, is_calculated_check);
+			// cout << "Val: " << val << endl;
+			if (Fraction() > val || Fraction() == val) continue;
+			// cout << new_s << " " << s << " " << f1_check.size() << " d" <<
+			// delta
+			// 	 << " " << N << endl;
+			calculated = calculated_check;
+			is_calculated = is_calculated_check;
+			f1.push_back(new_f1_value);
+			prev_val = val;
+		} else {
+			f1.push_back(new_f1_value);
 		}
-		prev_val = f1[f1.size() - 1];
 	}
 
 	if (return_flag) {
-		if (*prev_val == Fraction(1, 1))
+		if (*prev_f1_val == Fraction(1, 1))
 			return FiniteAutomaton::unambigious;
 		else
 			return FiniteAutomaton::almost_unambigious;
 	}
-
-	// в f1 только ненулевые результаты
-	if (f1.size() < 3) return FiniteAutomaton::polynomially_ambigious;
-	// считаю new_s, чтобы удовлетворяло
-	// new_s * new_s + new_s + i + 1 <= f1.size()
-	int new_s = floor(double(-1 + sqrt(-11 + 4 * f1.size())) / 2);
-	i += f1.size() - (new_s * new_s + new_s + i + 1);
-
-	// для сохранения результатов calc_ambiguity
-	vector<vector<Fraction>> calculated(new_s + i + 1,
-										vector<Fraction>(f1.size()));
-	vector<vector<char>> is_calculated(new_s + i + 1,
-									   vector<char>(f1.size(), 0));
-	Fraction val =
-		calc_ambiguity(new_s + i, new_s * new_s, f1, calculated, is_calculated);
-	prev_val = val;
-	while (val > Fraction()) {
-		i++;
-		int return_counter = 0;
-		// цикл ищет новое ненулевое значение
-		do {
-			if (return_counter == s)
-				return FiniteAutomaton::polynomially_ambigious;
-			N++;
-			d.push_back(vector<InfInt>(s));
-			paths_number.push_back(0);
-			for (int v = 0; v < s; v++) {
-				for (int i = 0; i < s; i++) {
-					d[N][v] += InfInt(adjacency_matrix[i][v]) * d[N - 1][i];
-				}
-				if (fa.states[v].is_terminal) paths_number[N - 1] += d[N][v];
+	cout << "Cycle" << endl;
+	int k = N;
+	int return_counter = 0;
+	while (1) {
+		if (return_counter == s) break;
+		k++;
+		d.push_back(vector<InfInt>(s));
+		paths_number.push_back(0);
+		for (int v = 0; v < s; v++) {
+			for (int i = 0; i < s; i++) {
+				d[k][v] += InfInt(adjacency_matrix[i][v]) * d[k - 1][i];
 			}
-			min_d.push_back(vector<InfInt>(s));
-			min_paths_number.push_back(0);
-			for (int v = 0; v < min_s; v++) {
-				for (int i = 0; i < min_s; i++) {
-					min_d[N][v] +=
-						InfInt(min_adjacency_matrix[i][v]) * min_d[N - 1][i];
-				}
-				if (min_fa.states[v].is_terminal)
-					min_paths_number[N - 1] += min_d[N][v];
-			}
-			return_counter++;
-		} while (min_paths_number[N - 1] == 0);
-		f1.push_back(Fraction(paths_number[N - 1], min_paths_number[N - 1]));
-		for (int j = 0; j < calculated.size(); j++) {
-			calculated[j].push_back(Fraction());
-			is_calculated[j].push_back(0);
+			if (fa.states[v].is_terminal) paths_number[k - 1] += d[k][v];
 		}
-		calculated.push_back(vector<Fraction>(f1.size()));
-		is_calculated.push_back(vector<char>(f1.size(), 0));
-		// увеличил i на 1, увеличил f1 и другие массивы на 1
-		// можем снова считать
-		val = calc_ambiguity(new_s + i, new_s * new_s, f1, calculated,
-							 is_calculated);
-		if (val > *prev_val || val == *prev_val)
+		min_d.push_back(vector<InfInt>(s));
+		min_paths_number.push_back(0);
+		for (int v = 0; v < min_s; v++) {
+			for (int i = 0; i < min_s; i++) {
+				min_d[k][v] +=
+					InfInt(min_adjacency_matrix[i][v]) * min_d[k - 1][i];
+			}
+			if (min_fa.states[v].is_terminal)
+				min_paths_number[k - 1] += min_d[k][v];
+		}
+		Fraction new_f1_value;
+		if (min_paths_number[k - 1] == 0) {
+			new_f1_value = Fraction();
+			// continue;
+		} else {
+			new_f1_value =
+				Fraction(paths_number[k - 1], min_paths_number[k - 1]);
+		}
+		// cout << "F1 " << new_f1_value << endl;
+		vector<Fraction> f1_check = f1;
+		f1_check.push_back(new_f1_value);
+
+		int new_s = floor(
+			double(-1 + sqrt((1 - 4 * (i + 1)) + 4 * f1_check.size())) / 2);
+		int delta = f1_check.size() - (new_s * new_s + new_s + i + 1);
+
+		vector<vector<Fraction>> calculated_check = calculated;
+		vector<vector<char>> is_calculated_check = is_calculated;
+
+		for (int j = 0; j < calculated_check.size(); j++) {
+			calculated_check[j].push_back(Fraction());
+			is_calculated_check[j].push_back(0);
+		}
+		calculated_check.push_back(vector<Fraction>(f1.size()));
+		is_calculated_check.push_back(vector<char>(f1.size(), 0));
+		Fraction val =
+			calc_ambiguity(new_s + i, new_s * new_s + delta, f1_check,
+						   calculated_check, is_calculated_check);
+		// cout << "Val: " << val << endl;
+		if (Fraction() > val || Fraction() == val) {
+			return_counter++;
+			continue;
+		}
+		// cout << new_s << " " << s << " " << f1_check.size() << " d" <<
+		// delta << " " << N << endl;
+		if (val > prev_val || val == prev_val)
 			return FiniteAutomaton::exponentially_ambiguous;
+		return_counter = 0;
+		calculated = calculated_check;
+		is_calculated = is_calculated_check;
+		f1.push_back(new_f1_value);
 		prev_val = val;
 	}
+
 	return FiniteAutomaton::polynomially_ambigious;
 }
 
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	Logger::init_step("Ambiguity");
 	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
-	Logger::log("Автомат:", *this);
+	Logger::log("Автомат", *this);
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
 		Logger::log("Результат Ambiguity", "Exponentially ambiguous");

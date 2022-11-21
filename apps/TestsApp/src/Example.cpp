@@ -726,19 +726,32 @@ void Example::test_regex_equal() {
 }
 
 void Example::test_ambiguity() {
-	FiniteAutomaton fa1 = Regex("(a*)*").to_tompson();
-	FiniteAutomaton fa2 = Regex("b|a|aa").to_tompson();
-	FiniteAutomaton fa3 = Regex("abc").to_tompson();
-	FiniteAutomaton fa4 = Regex("b|a").to_tompson();
-	FiniteAutomaton fa5 = Regex("(aa|aa)*").to_glushkov();
-	FiniteAutomaton fa6 = Regex("(aab|aab)*").to_glushkov();
+	Regex r1("(a*)*");
+	Regex r2("b|a|aa");
+	Regex r3("abc");
+	Regex r4("b|a");
+	Regex r5("(aa|aa)*");
+	Regex r6("(aab|aab)*");
+	Regex r7("a*a*((a)*)*");
+	Regex r8("a*(b*)*");
+	Regex r9("a*((ab)*)*");
 
-	assert(fa1.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
-	assert(fa2.ambiguity() == FiniteAutomaton::polynomially_ambigious);
-	assert(fa3.ambiguity() == FiniteAutomaton::unambigious);
-	assert(fa4.ambiguity() == FiniteAutomaton::almost_unambigious);
-	assert(fa5.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
-	assert(fa6.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
+	assert(r1.to_tompson().ambiguity() ==
+		   FiniteAutomaton::exponentially_ambiguous);
+	assert(r2.to_tompson().ambiguity() ==
+		   FiniteAutomaton::polynomially_ambigious);
+	assert(r3.to_tompson().ambiguity() == FiniteAutomaton::unambigious);
+	assert(r4.to_tompson().ambiguity() == FiniteAutomaton::almost_unambigious);
+	assert(r5.to_glushkov().ambiguity() ==
+		   FiniteAutomaton::exponentially_ambiguous);
+	assert(r7.to_glushkov().ambiguity() ==
+		   FiniteAutomaton::polynomially_ambigious);
+	assert(r7.to_tompson().ambiguity() ==
+		   FiniteAutomaton::exponentially_ambiguous);
+	assert(r8.to_tompson().ambiguity() ==
+		   FiniteAutomaton::exponentially_ambiguous);
+	assert(r9.to_tompson().ambiguity() ==
+		   FiniteAutomaton::exponentially_ambiguous);
 }
 
 void Example::test_arden() {
