@@ -1,6 +1,7 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "FiniteAutomaton.h"
+#include "TransformationMonoid.h"
 #include <iostream>
 #include <map>
 #include <set>
@@ -28,6 +29,9 @@ struct GrammarItem {
 // для отладки
 ostream& operator<<(ostream& os, const GrammarItem& item);
 class Grammar {
+  private:
+	string to_str(vector<string>);
+
   public:
 	// обновляет значение class_number для каждого нетерминала
 	static void update_classes(
@@ -64,8 +68,7 @@ class Grammar {
 		vector<vector<vector<GrammarItem*>>>& rules,
 		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
 		int initial_state);
-	static vector<vector<GrammarItem>> fa_to_prefix_grammar(
-		const FiniteAutomaton&);
+	vector<vector<GrammarItem>> fa_to_prefix_grammar(const FiniteAutomaton&);
 	static int fa_to_g(const FiniteAutomaton&, string, int, int,
-					   map<int, GrammarItem*>);
+					   map<int, GrammarItem*>, set<string>);
 };

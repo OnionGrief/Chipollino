@@ -206,10 +206,28 @@ void Example::parsing_regex(string str) {
 }
 
 void Example::transformation_monoid_example() {
-	FiniteAutomaton fa = Regex("ababa").to_tompson();
-	TransformationMonoid a(fa);
-	a.get_equalence_classes_txt();
-	a.get_rewriting_rules_txt();
+	FiniteAutomaton fa = Regex("(ba)*bc").to_ilieyu();
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	// states1[0].set_transition(0, "b");
+	states1[0].set_transition(1, "a");
+	states1[1].set_transition(0, "b");
+	states1[0].set_transition(1, "c");
+	states1[1].set_transition(2, "c");
+	states1[2].is_terminal = true;
+	// states1[2].set_transition(2, "a");
+	// states1[2].set_transition(2, "b");
+	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b", "c"});
+	cout << "-----\n";
+	cout << dfa1.to_txt();
+	cout << "-----\n";
+	TransformationMonoid a(dfa1);
+	cout << a.get_equalence_classes_txt() << endl;
+	cout << a.get_rewriting_rules_txt() << endl;
 	a.class_card();
 	a.class_length();
 	a.is_minimal();
@@ -758,10 +776,30 @@ void Example::test_pump_length() {
 
 void Example::fa_to_pgrammar() {
 	FiniteAutomaton a1 =
-		Regex("b*a(a|c)*b(b|c)*")
-			.to_ilieyu(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
-	cout << a1.to_txt();
+		Regex("(ba)*bc").to_ilieyu(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
+	// cout << a1.to_txt();
+
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	states1[0].set_transition(0, "b");
+	states1[0].set_transition(1, "a");
+	states1[1].set_transition(1, "a");
+	states1[1].set_transition(1, "c");
+	states1[1].set_transition(2, "b");
+	states1[2].set_transition(1, "a");
+	states1[2].set_transition(2, "c");
+	states1[2].set_transition(2, "b");
+	states1[2].is_terminal = true;
+	// states1[2].set_transition(2, "a");
+	// states1[2].set_transition(2, "b");
+	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b", "c"});
 
 	Grammar g;
+	FiniteAutomaton test = a1.annote();
+	cout << a1.to_txt();
 	g.fa_to_prefix_grammar(a1);
 }
