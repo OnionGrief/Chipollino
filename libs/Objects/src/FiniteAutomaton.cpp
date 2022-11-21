@@ -1671,14 +1671,17 @@ TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
 
 void find_maximum_identity_matrix(vector<vector<bool>>& table, int& res,
 								  vector<bool> used_x, vector<bool> used_y,
-								  int size, int row) {
-	if (res == min(table.size(), table[0].size())) return;
+								  int unused_x, int unused_y, int size,
+								  int row) {
+	if (unused_x <= (res - size)) return;
+	if (unused_y < (res - size)) return;
 	vector<int> true_indexes_x;
 	for (int i = 0; i < table[row].size(); i++) {
 		if (used_x[i]) continue;
 		if (table[row][i] == 1) {
 			true_indexes_x.push_back(i);
 			used_x[i] = true;
+			unused_x--;
 		}
 	}
 	if (true_indexes_x.empty()) {
@@ -1687,12 +1690,14 @@ void find_maximum_identity_matrix(vector<vector<bool>>& table, int& res,
 	}
 	for (int x : true_indexes_x) {
 		vector<bool> new_used_y = used_y;
+		int new_unused_y = unused_y;
 		vector<int> false_indexes_y;
 		for (int i = 0; i < table.size(); i++) {
 			if (new_used_y[i]) continue;
-			if (table[i][x] == 1)
+			if (table[i][x] == 1) {
 				new_used_y[i] = true;
-			else {
+				new_unused_y--;
+			} else {
 				false_indexes_y.push_back(i);
 			}
 		}
@@ -1703,7 +1708,8 @@ void find_maximum_identity_matrix(vector<vector<bool>>& table, int& res,
 		for (int y : false_indexes_y) {
 			new_used_y[y] = true;
 			find_maximum_identity_matrix(table, res, used_x, new_used_y,
-										 size + 1, y);
+										 unused_x, new_unused_y - 1, size + 1,
+										 y);
 			new_used_y[y] = false;
 		}
 	}
@@ -1718,15 +1724,16 @@ bool FiniteAutomaton::minimality_test_GlaisterShallit() const {
 		get_syntactic_monoid().get_equivalence_classes_table();
 
 	int result = -1;
-	vector<bool> used_x(equivalence_classes_table[0].size());
-	vector<bool> used_y(equivalence_classes_table.size());
+	int m = equivalence_classes_table[0].size(),
+		n = equivalence_classes_table.size();
+	vector<bool> used_x(m);
+	vector<bool> used_y(n);
 	for (int i = 0; i < equivalence_classes_table.size(); i++) {
 		find_maximum_identity_matrix(equivalence_classes_table, result, used_x,
-									 used_y, 0, i);
+									 used_y, m, n, 0, i);
 	}
 	// кэширование
 	language->set_nfa_minimum_size(result);
-	cout << result << endl;
 	return result == states_number();
 }
 
