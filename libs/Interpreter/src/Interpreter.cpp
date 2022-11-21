@@ -356,11 +356,10 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	// Проверка корректности названий
 	for (const auto& func : function_names) {
 		if (!names_to_functions.count(func)) {
-			throw_error("unknown function name \"" + func  + "\"");
+			throw_error("unknown function name \"" + func + "\"");
 			return nullopt;
 		}
 	}
-
 
 	// TODO: переписать всё что ниже начисто
 	// 0 - функцию надо исключить из последовательности
@@ -493,31 +492,60 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	return finalfuncs;
 }
 
-vector<GeneralObject> Interpreter::parameters_to_arguments(
-	const vector<variant<string, GeneralObject>>& parameters) {
-
-	vector<GeneralObject> arguments;
-	for (const auto& p : parameters) {
-		if (holds_alternative<GeneralObject>(p)) {
-			arguments.push_back(get<GeneralObject>(p));
+optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
+	if (holds_alternative<int>(expr.value)) {
+		return ObjectInt(get<int>(expr.value));
+	}
+	if (holds_alternative<Regex>(expr.value)) {
+		return ObjectRegex(get<Regex>(expr.value));
+	}
+	if (holds_alternative<Id>(expr.value)) {
+		Id id = get<Id>(expr.value);
+		if (objects.count(id)) {
+			return objects[id];
 		} else {
-			arguments.push_back(objects[get<string>(p)]);
+			throw_error("evaluating expression: unknown id \"" + id + "\"");
+		}
+		return nullopt;
+	}
+	if (holds_alternative<FunctionSequence>(expr.value)) {
+		return eval_function_sequence(get<FunctionSequence>(expr.value));
+	}
+	return nullopt;
+}
+
+optional<GeneralObject> Interpreter::eval_function_sequence(
+	const FunctionSequence& seq) {
+
+	vector<GeneralObject> args;
+	for (const auto& expr : seq.parameters) {
+		if (const auto& arg = eval_expression(expr); arg.has_value()) {
+			args.push_back(*arg);
+		} else {
+			throw_error(
+				"while evaluating function sequence: invalid expression");
+			return nullopt;
 		}
 	}
-	return arguments;
+
+	return apply_function_sequence(seq.functions, args);
 }
 
 bool Interpreter::run_declaration(const Declaration& decl) {
 	log("Running declaration...");
-	/*if (decl.show_result) {
+	if (decl.show_result) {
 		Logger::activate();
 		log("    logger is activated for this task");
 	} else {
 		Logger::deactivate();
 	}
-	objects[decl.id] = apply_function_sequence(
-		decl.function_sequence, parameters_to_arguments(decl.));
-	log("    assigned to " + to_string(decl.id));*/
+	if (const auto& expr = eval_expression(decl.expr); expr.has_value()) {
+		objects[decl.id] = *expr;
+	} else {
+		throw_error("while running declaration: invalid expression");
+		return false;
+	}
+	log("    assigned to " + to_string(decl.id));
 	Logger::deactivate();
 	return true;
 }

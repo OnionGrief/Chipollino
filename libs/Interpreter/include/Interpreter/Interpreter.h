@@ -119,9 +119,11 @@ class Interpreter {
 
 	//== Исполнение комманд ===================================================
 
-	// Преобразование списка параметров в список аргументов
-	vector<GeneralObject> parameters_to_arguments(
-		const vector<variant<string, GeneralObject>>& parameters);
+	// Вычисление выражения
+	optional<GeneralObject> eval_expression(const Expression& expr);
+
+	// Вычисление последовательности функций
+	optional<GeneralObject> eval_function_sequence(const FunctionSequence& seq);
 
 	// Исполнение операций
 	bool run_declaration(const Declaration&);
@@ -141,6 +143,8 @@ class Interpreter {
 
 	// Соответствие между названиями функций и сигнатурами
 	map<string, vector<Function>> names_to_functions;
+
+	//== Лексер ===============================================================
 
 	struct Lexem {
 		enum Type { // TODO добавить тип строки (для filename)
