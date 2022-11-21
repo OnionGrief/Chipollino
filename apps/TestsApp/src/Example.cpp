@@ -387,17 +387,25 @@ void Example::step_interection() {
 }
 
 void Example::arden_test() {
-	string regl = "a(a)*ab(bb)*baa";
-	Regex r;
-	if (!r.from_string(regl)) {
-		cout << "ERROR\n";
-		return;
+	vector<State> states1;
+	for (int i = 0; i < 4; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
 	}
-	FiniteAutomaton a, d, c;
-	a = r.to_tompson();
-	// cout << a.to_txt();
-	d = a;
-	Regex temp = d.nfa_to_regex();
+	states1[0].set_transition(1, "a");
+	states1[1].set_transition(1, "a");
+	states1[1].set_transition(2, "b");
+	states1[2].set_transition(1, "a");
+	states1[2].set_transition(3, "b");
+	states1[3].set_transition(3, "b");
+	states1[3].set_transition(1, "a");
+	states1[0].is_terminal = true;
+	states1[1].is_terminal = true;
+	states1[2].is_terminal = true;
+	FiniteAutomaton fa1(0, states1, {"a", "b"});
+	// cout << fa1.to_txt();
+	Regex temp = fa1.nfa_to_regex();
 	// cout << temp.to_txt() << "\n";
 	// cout << temp.to_tompson().to_txt();
 }
