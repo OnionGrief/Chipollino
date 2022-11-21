@@ -786,4 +786,5 @@ void Example::test_interpreter() {
 	assert(!interpreter.run_line("N2 =  (Glushkov N1)"));
 	assert(!interpreter.run_line("Equiv N1 N3"));
 	assert(interpreter.run_line("Equiv ((N1)) ((Reverse.Reverse (N2)))"));
+	assert(interpreter.run_line("Test (Glushkov {a*}) {a*} 1"));
 }

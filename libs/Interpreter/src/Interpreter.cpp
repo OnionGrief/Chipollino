@@ -575,17 +575,33 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 
 bool Interpreter::run_test(const Test& test) {
 	log("Running test...");
-	/*Logger::activate();
-	const Regex& reg =
-		holds_alternative<Regex>(test.test_set)
-			? get<Regex>(test.test_set)
-			: get<ObjectRegex>(objects[get<string>(test.test_set)]).value;
+	Logger::activate();
 
-	if (holds_alternative<Regex>(test.language)) {
-		Tester::test(get<Regex>(test.language), reg, test.iterations);
-	}*/
+	auto language = eval_expression(test.language);
+	auto test_set = eval_expression(test.test_set);
+	bool success = false;
+
+	if (language.has_value() && test_set.has_value()) {
+		auto reg = get<ObjectRegex>(*test_set).value;
+
+		if (holds_alternative<ObjectRegex>(*language)) {
+			Tester::test(get<ObjectRegex>(*language).value, reg, test.iterations);
+		} else if (holds_alternative<ObjectNFA>(*language)) {
+			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations);
+		} else if (holds_alternative<ObjectDFA>(*language)) {
+			Tester::test(get<ObjectDFA>(*language).value, reg, test.iterations);
+		} else {
+			throw_error("while running test: invalid language expression");
+			success = false;
+		}
+	} else {
+		throw_error("while running test: invalid arguments");
+		success = false;
+	}
+
+	
 	Logger::deactivate();
-	return true;
+	return success;
 }
 
 bool Interpreter::run_operation(const GeneralOperation& op) {
@@ -786,6 +802,7 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems,
 		lexems[i].value != "Test") {
 		return nullopt;
 	}
+	i++;
 
 	Test test;
 	// Language
@@ -847,11 +864,11 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 		declaration.has_value()) {
 		return declaration;
 	}
-	if (auto predicate = scan_predicate(lexems, pos); predicate.has_value()) {
-		return predicate;
-	}
 	if (auto test = scan_test(lexems, pos); test.has_value()) {
 		return test;
+	}
+	if (auto predicate = scan_predicate(lexems, pos); predicate.has_value()) {
+		return predicate;
 	}
 	return nullopt;
 }
