@@ -15,7 +15,7 @@ using namespace std;
 class Regex;
 class Language;
 struct expression_arden {
-	int condition; //индекс состояния на которое ссылаемся
+	int fa_state_number; //индекс состояния на которое ссылаемся
 	Regex* temp_regex; // Regex
 };
 struct State {

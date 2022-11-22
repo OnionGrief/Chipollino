@@ -1916,13 +1916,13 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 	//Загоняем все в map, потом пишем в вектор (обьединяем переходы из 1
 	//состояния)
 	for (int i = 0; i < in.size(); i++) {
-		if (!out_map.count(in[i].condition)) {
-			out_map[in[i].condition] = in[i].temp_regex->copy();
+		if (!out_map.count(in[i].fa_state_number)) {
+			out_map[in[i].fa_state_number] = in[i].temp_regex->copy();
 		} else {
 			Regex* temp = new Regex();
-			temp->regex_alt(in[i].temp_regex, out_map[in[i].condition]);
-			delete out_map[in[i].condition];
-			out_map[in[i].condition] = temp;
+			temp->regex_alt(in[i].temp_regex, out_map[in[i].fa_state_number]);
+			delete out_map[in[i].fa_state_number];
+			out_map[in[i].fa_state_number] = temp;
 		}
 	}
 	vector<expression_arden> out;
@@ -1930,7 +1930,7 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 		 it++) {
 		expression_arden temp;
 		temp.temp_regex = it->second;
-		temp.condition = it->first;
+		temp.fa_state_number = it->first;
 		out.push_back(temp);
 	}
 	return out;
@@ -1941,7 +1941,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	//ищем переход из текущего состояния
 	int indexcur = -1;
 	for (int i = 0; (i < in.size() && indexcur == -1); i++) {
-		if (in[i].condition == index) {
+		if (in[i].fa_state_number == index) {
 			indexcur = i;
 		}
 	}
@@ -1951,7 +1951,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			Regex* r = in[i].temp_regex->copy();
 			expression_arden temp;
 			temp.temp_regex = r;
-			temp.condition = in[i].condition;
+			temp.fa_state_number = in[i].fa_state_number;
 			out.push_back(temp);
 		}
 		return out;
@@ -1962,7 +1962,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 		r->regex_star(in[0].temp_regex);
 		expression_arden temp;
 		temp.temp_regex = r;
-		temp.condition = -1;
+		temp.fa_state_number = -1;
 		out.push_back(temp);
 		return out;
 	}
@@ -1981,7 +1981,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 			expression_arden temp;
 			delete r;
 			temp.temp_regex = k;
-			temp.condition = in[i].condition;
+			temp.fa_state_number = in[i].fa_state_number;
 			out.push_back(temp);
 		}
 	}
@@ -1999,7 +1999,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 
 	Regex* r = new Regex; //Заполняем вход в начальное состояние
 	expression_arden initial_arden;
-	initial_arden.condition = -1;
+	initial_arden.fa_state_number = -1;
 	r->regex_eps();
 	initial_arden.temp_regex = r;
 	data[initial_state].push_back(initial_arden);
@@ -2015,7 +2015,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 				 itt++) {
 				Regex* r = new Regex;
 				expression_arden temp_expression;
-				temp_expression.condition = i;
+				temp_expression.fa_state_number = i;
 				r->regex_eps();
 				temp_expression.temp_regex = r;
 				data[*itt].push_back(temp_expression);
@@ -2028,7 +2028,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 				for (set<int>::iterator itt = trans.begin(); itt != trans.end();
 					 itt++) {
 					expression_arden temp_expression;
-					temp_expression.condition = i;
+					temp_expression.fa_state_number = i;
 					string str = "";
 					str += *it;
 					Regex* r = new Regex(str);
@@ -2049,7 +2049,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	// for (int i = 0; i < data.size(); i++) {
 	// 	cout << i << " = ";
 	// 	for (int j = 0; j < data[i].size(); j++) {
-	// 		cout << data[i][j].condition << " "
+	// 		cout << data[i][j].fa_state_number << " "
 	// 			 << data[i][j].temp_regex->to_txt() << " ";
 	// 	}
 	// 	cout << "\n";
@@ -2062,15 +2062,17 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		 i++) { // c конца начинаем переписывать уравнения
 		vector<expression_arden> temp_data;
 		for (int j = 0; j < data[i].size(); j++) {
-			if (data[i][j].condition < i && data[i][j].condition != -1) {
+			if (data[i][j].fa_state_number < i &&
+				data[i][j].fa_state_number != -1) {
 				//если ссылаемся на какие-либо еще переходы
-				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
+				for (int k = 0; k < data[data[i][j].fa_state_number].size();
+					 k++) {
 					expression_arden temp_expression;
 					Regex* r;
 					if (data[i][j].temp_regex->to_txt() == "") {
-						r = data[data[i][j].condition][k]
+						r = data[data[i][j].fa_state_number][k]
 								.temp_regex->copy(); //тут 0
-					} else if (data[data[i][j].condition][k]
+					} else if (data[data[i][j].fa_state_number][k]
 								   .temp_regex->to_txt() == "") {
 						r = data[i][j].temp_regex->copy(); //тут б
 														   //	continue;
@@ -2078,19 +2080,19 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 						r = new Regex;
 						r->regex_union(
 
-							data[data[i][j].condition][k].temp_regex,
+							data[data[i][j].fa_state_number][k].temp_regex,
 							data[i][j].temp_regex);
 					}
 					temp_expression.temp_regex = r;
-					temp_expression.condition =
-						data[data[i][j].condition][k].condition;
+					temp_expression.fa_state_number =
+						data[data[i][j].fa_state_number][k].fa_state_number;
 					temp_data.push_back(temp_expression);
 				}
 			} else { //если не ссылаемся
 				expression_arden temp_expression;
 				Regex* r = new Regex(*data[i][j].temp_regex);
 				temp_expression.temp_regex = r;
-				temp_expression.condition = data[i][j].condition;
+				temp_expression.fa_state_number = data[i][j].fa_state_number;
 				temp_data.push_back(temp_expression);
 			}
 		}
@@ -2117,7 +2119,8 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		Logger::log("State ", std::to_string(i));
 		for (int j = 0; j < data[i].size(); j++) {
 
-			Logger::log("from state ", std::to_string(data[i][j].condition));
+			Logger::log("from state ",
+						std::to_string(data[i][j].fa_state_number));
 			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
 		}
 	}
@@ -2125,11 +2128,11 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	//исправляем)
 	for (int i = data.size() - 1; i >= 0; i--) {
 		for (int j = 0; j < data[i].size(); j++) {
-			if (data[i][j].condition != -1) {
+			if (data[i][j].fa_state_number != -1) {
 				Regex* ra = new Regex;
-				ra->regex_union(data[data[i][j].condition][0].temp_regex,
+				ra->regex_union(data[data[i][j].fa_state_number][0].temp_regex,
 								data[i][j].temp_regex);
-				data[i][j].condition = -1;
+				data[i][j].fa_state_number = -1;
 				delete data[i][j].temp_regex;
 				data[i][j].temp_regex = ra;
 			}
