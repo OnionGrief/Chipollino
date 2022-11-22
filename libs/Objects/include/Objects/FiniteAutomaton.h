@@ -14,10 +14,6 @@ using namespace std;
 
 class Regex;
 class Language;
-struct expression_arden {
-	int fa_state_number; //индекс состояния на которое ссылаемся
-	Regex* regex_from_state; // Regex по которому переходят из состояния
-};
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов

@@ -14,6 +14,11 @@
 #include <stack>
 using namespace std;
 
+struct expression_arden {
+	int fa_state_number; //индекс состояния на которое ссылаемся
+	Regex* regex_from_state; // Regex по которому переходят из состояния
+};
+
 State::State() : index(0), is_terminal(false), identifier("") {}
 
 State::State(int index, set<int> label, string identifier, bool is_terminal,
@@ -2159,7 +2164,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			}
 		}
 		//заполняем алфавит и lang (нужно для преобразований в автоматы)
-		r1->normalize_lang(alphabet, 0);
+		r1->update_alphabet(alphabet, 0);
 		Regex temp = *r1;
 		delete r1;
 		return temp;
@@ -2178,7 +2183,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			delete data[i][j].regex_from_state;
 		}
 	}
-	r1->normalize_lang(alphabet, 0);
+	r1->update_alphabet(alphabet, 0);
 	Regex temp1 = *r1;
 	delete r1;
 	return temp1;
