@@ -722,10 +722,22 @@ void Example::test_arden() {
 	Regex r2("a*");
 	Regex r3("(ab)*a");
 	Regex r4("a(a)*ab(bb)*baa");
+	Regex r5("(b)*(b)");
+	Regex r6("a*|");
+	Regex r7("|b((b((a)*)(a(|(a))))*)");
+	Regex r8("(((a*)))(((a(b|)|a)*||b))");
+	Regex r9("((b(((ba|b)|||(b))*)))");
+	Regex r10("(((((a*)((a*)|bb)(((|||((b)))))))))");
 	assert(Regex::equivalent(r1, r1.to_tompson().nfa_to_regex()));
 	assert(Regex::equivalent(r2, r2.to_tompson().nfa_to_regex()));
 	assert(Regex::equivalent(r3, r3.to_tompson().nfa_to_regex()));
 	assert(Regex::equivalent(r4, r4.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r5, r5.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r6, r6.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r7, r7.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r8, r8.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r9, r9.to_tompson().nfa_to_regex()));
+	assert(Regex::equivalent(r10, r10.to_tompson().nfa_to_regex()));
 }
 
 void Example::test_pump_length() {
