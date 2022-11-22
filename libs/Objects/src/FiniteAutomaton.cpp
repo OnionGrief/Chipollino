@@ -1932,11 +1932,10 @@ vector<expression_arden> arden_minimize(const vector<expression_arden>& in) {
 		}
 	}
 	vector<expression_arden> out;
-	for (map<int, Regex*>::iterator it = out_map.begin(); it != out_map.end();
-		 it++) {
+	for (const auto& it : out_map) {
 		expression_arden temp;
-		temp.regex_from_state = it->second;
-		temp.fa_state_number = it->first;
+		temp.regex_from_state = it.second;
+		temp.fa_state_number = it.first;
 		out.push_back(temp);
 	}
 	return out;
