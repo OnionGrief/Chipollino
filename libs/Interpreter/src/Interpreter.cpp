@@ -132,6 +132,8 @@ GeneralObject Interpreter::apply_function_sequence(
 
 GeneralObject Interpreter::apply_function(
 	const Function& function, const vector<GeneralObject>& arguments) {
+	log("running function \"" + function.name + "\"");
+
 	// Можээт прыгодыытся
 	const auto nfa = ObjectType::NFA;
 	const auto dfa = ObjectType::DFA;
@@ -307,15 +309,15 @@ GeneralObject Interpreter::apply_function(
 			holds_alternative<ObjectRegex>(predres)) {
 			if (Regex::equal(get<ObjectRegex>(resval).value,
 							 get<ObjectRegex>(predres).value))
-				cerr << "Function " + function.name + " do nothing. Sadness("
-					 << endl;
+				log("function \"" + function.name +
+					"\" has left regex unchanged");
 		}
 
 		if (is_automaton(resval) && is_automaton(predres))
 			if (FiniteAutomaton::equal(get_automaton(resval),
 									   get_automaton(predres))) {
-				cerr << "Function " + function.name + " do nothing. Sadness("
-					 << endl;
+				log("function \"" + function.name +
+					"\" has left automaton unchanged");
 			}
 
 		Logger::deactivate_step_counter();
@@ -568,7 +570,7 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 		throw_error("while running predicate: invalid expression");
 		success = false;
 	}
-	
+
 	Logger::deactivate();
 	return success;
 }
@@ -585,7 +587,8 @@ bool Interpreter::run_test(const Test& test) {
 		auto reg = get<ObjectRegex>(*test_set).value;
 
 		if (holds_alternative<ObjectRegex>(*language)) {
-			Tester::test(get<ObjectRegex>(*language).value, reg, test.iterations);
+			Tester::test(get<ObjectRegex>(*language).value, reg,
+						 test.iterations);
 		} else if (holds_alternative<ObjectNFA>(*language)) {
 			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations);
 		} else if (holds_alternative<ObjectDFA>(*language)) {
@@ -599,7 +602,6 @@ bool Interpreter::run_test(const Test& test) {
 		success = false;
 	}
 
-	
 	Logger::deactivate();
 	return success;
 }
@@ -743,7 +745,7 @@ optional<Interpreter::Expression> Interpreter::scan_Expression(
 	if (const auto& seq = scan_FunctionSequence(lexems, i, end);
 		seq.has_value()) {
 		Expression expr;
-		expr.type = (*seq).functions[0].output;
+		expr.type = (*seq).functions.back().output;
 		expr.value = *seq;
 		pos = i;
 		return expr;
@@ -780,8 +782,7 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	}
 
 	// Expression
-	if (const auto& expr = scan_Expression(lexems, i, end);
-		expr.has_value()) {
+	if (const auto& expr = scan_Expression(lexems, i, end); expr.has_value()) {
 		decl.expr = *expr;
 	} else {
 		return nullopt;

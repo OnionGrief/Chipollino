@@ -33,11 +33,11 @@ class Interpreter {
 	void throw_error(const string& str);
 
 	// Применение цепочки функций к набору аргументов
-	static GeneralObject apply_function_sequence(
+	GeneralObject apply_function_sequence(
 		const vector<Function>& functions, vector<GeneralObject> arguments);
 
 	// Применение функции к набору аргументов
-	static GeneralObject apply_function(const Function& function,
+	GeneralObject apply_function(const Function& function,
 										const vector<GeneralObject>& arguments);
 
 	// Тут хранятся объекты по их id
