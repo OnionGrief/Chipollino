@@ -16,7 +16,7 @@ class Regex;
 class Language;
 struct expression_arden {
 	int fa_state_number; //индекс состояния на которое ссылаемся
-	Regex* temp_regex; // Regex
+	Regex* regex_from_state; // Regex по которому переходят из состояния
 };
 struct State {
 	int index;
