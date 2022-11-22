@@ -716,28 +716,22 @@ void Example::test_ambiguity() {
 	assert(fa5.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
 	assert(fa6.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
 }
-
 void Example::test_arden() {
-	Regex r1("a");
-	Regex r2("a*");
-	Regex r3("(ab)*a");
-	Regex r4("a(a)*ab(bb)*baa");
-	Regex r5("(b)*(b)");
-	Regex r6("a*|");
-	Regex r7("|b((b((a)*)(a(|(a))))*)");
-	Regex r8("(((a*)))(((a(b|)|a)*||b))");
-	Regex r9("((b(((ba|b)|||(b))*)))");
-	Regex r10("(((((a*)((a*)|bb)(((|||((b)))))))))");
-	assert(Regex::equivalent(r1, r1.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r2, r2.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r3, r3.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r4, r4.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r5, r5.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r6, r6.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r7, r7.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r8, r8.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r9, r9.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r10, r10.to_tompson().nfa_to_regex()));
+	auto test_equivalence = [](string rgx_str) {
+		Regex reg(rgx_str);
+		assert(Regex::equivalent(reg, reg.to_tompson().nfa_to_regex()));
+	};
+
+	test_equivalence("a");
+	test_equivalence("a*");
+	test_equivalence("(ab)*a");
+	test_equivalence("a(a)*ab(bb)*baa");
+	test_equivalence("(b)*(b)");
+	test_equivalence("a*|");
+	test_equivalence("|b((b((a)*)(a(|(a))))*)");
+	test_equivalence("(((a*)))(((a(b|)|a)*||b))");
+	test_equivalence("((b(((ba|b)|||(b))*)))");
+	test_equivalence("(((((a*)((a*)|bb)(((|||((b)))))))))");
 }
 
 void Example::test_pump_length() {
