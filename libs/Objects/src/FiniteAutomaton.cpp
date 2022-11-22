@@ -1911,10 +1911,6 @@ int FiniteAutomaton::states_number() const {
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
 
-bool compare(expression_arden a, expression_arden b) {
-	return (a.condition < b.condition);
-}
-
 vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 	map<int, Regex*> out_map;
 	//Загоняем все в map, потом пишем в вектор (обьединяем переходы из 1
