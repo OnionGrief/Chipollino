@@ -2157,7 +2157,7 @@ Regex FiniteAutomaton::to_regex() const {
 			}
 		}
 		//заполняем алфавит и lang (нужно для преобразований в автоматы)
-		r1->update_alphabet(alphabet, 0);
+		r1->update_alphabet(alphabet);
 		Regex temp = *r1;
 		delete r1;
 		Logger::log("Result ", temp.to_txt());
@@ -2178,7 +2178,7 @@ Regex FiniteAutomaton::to_regex() const {
 			delete data[i][j].regex_from_state;
 		}
 	}
-	r1->update_alphabet(alphabet, 0);
+	r1->update_alphabet(alphabet);
 	Regex temp1 = *r1;
 	delete r1;
 
