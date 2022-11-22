@@ -1932,10 +1932,10 @@ vector<expression_arden> arden_minimize(const vector<expression_arden>& in) {
 		}
 	}
 	vector<expression_arden> out;
-	for (const auto& it : out_map) {
+	for (const auto& cur_elem : out_map) {
 		expression_arden temp;
-		temp.regex_from_state = it.second;
-		temp.fa_state_number = it.first;
+		temp.regex_from_state = cur_elem.second;
+		temp.fa_state_number = cur_elem.first;
 		out.push_back(temp);
 	}
 	return out;
@@ -2016,26 +2016,27 @@ Regex FiniteAutomaton::to_regex() const {
 		}
 		if (states[i].transitions.count("eps")) { //для переходов по eps
 			set<int> trans = states[i].transitions.at("eps");
-			for (const auto& itt : trans) {
+			for (const int& index : trans) {
 				Regex* r = new Regex;
 				expression_arden temp_expression;
 				temp_expression.fa_state_number = i;
 				r->regex_eps();
 				temp_expression.regex_from_state = r;
-				data[itt].push_back(temp_expression);
+				data[index].push_back(temp_expression);
 			}
 		}
-		for (const auto& it : alphabet) { //для переходов по символам алфавита
-			if (states[i].transitions.count(it)) {
-				set<int> trans = states[i].transitions.at(it);
-				for (const auto& itt : trans) {
+		for (const alphabet_symbol& as :
+			 alphabet) { //для переходов по символам алфавита
+			if (states[i].transitions.count(as)) {
+				set<int> trans = states[i].transitions.at(as);
+				for (const int& index : trans) {
 					expression_arden temp_expression;
 					temp_expression.fa_state_number = i;
 					string str = "";
-					str += it;
+					str += as;
 					Regex* r = new Regex(str);
 					temp_expression.regex_from_state = r;
-					data[itt].push_back(temp_expression);
+					data[index].push_back(temp_expression);
 				}
 			}
 		}
