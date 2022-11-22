@@ -29,16 +29,32 @@ class Interpreter {
 
 	// Вывод
 	LogMode log_mode = LogMode::all;
-	void log(const string& str);
-	void throw_error(const string& str);
+	int log_nesting = 0;
+
+	class InterpreterLogger {
+	  public:
+		InterpreterLogger(Interpreter& parent) : parent(parent) {
+			parent.log_nesting++;
+		}
+		~InterpreterLogger() {
+			parent.log_nesting--;
+		}
+		void log(const string& str);
+		void throw_error(const string& str);
+
+	  private:
+		Interpreter& parent;
+	};
+
+	InterpreterLogger init_log();
 
 	// Применение цепочки функций к набору аргументов
-	GeneralObject apply_function_sequence(
-		const vector<Function>& functions, vector<GeneralObject> arguments);
+	GeneralObject apply_function_sequence(const vector<Function>& functions,
+										  vector<GeneralObject> arguments);
 
 	// Применение функции к набору аргументов
 	GeneralObject apply_function(const Function& function,
-										const vector<GeneralObject>& arguments);
+								 const vector<GeneralObject>& arguments);
 
 	// Тут хранятся объекты по их id
 	map<string, GeneralObject> objects;
