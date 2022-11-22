@@ -1749,25 +1749,9 @@ void Regex::print_tree() {
 	cout << r_v << endl;
 	print_subtree(term_r, 1);
 }
-void Regex::update_alphabet_rec() {
-	set<alphabet_symbol> st{};
-	this->alphabet = st;
-	if (this->term_l) {
-		this->term_l->update_alphabet_rec();
-	}
-	if (this->term_r) {
-		this->term_r->update_alphabet_rec();
-	}
-}
+
 void Regex::update_alphabet(const set<alphabet_symbol>& cur_alphabet) {
 
 	this->alphabet = cur_alphabet;
 	this->make_language();
-
-	if (this->term_l) {
-		this->term_l->update_alphabet_rec();
-	}
-	if (this->term_r) {
-		this->term_r->update_alphabet_rec();
-	}
 }

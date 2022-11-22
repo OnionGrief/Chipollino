@@ -101,7 +101,6 @@ class Regex : BaseObject {
 
 	void pre_order_travers() const;
 	void clear();
-	void update_alphabet_rec();
 
   public:
 	Regex();
