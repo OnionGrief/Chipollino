@@ -154,7 +154,7 @@ GeneralObject Interpreter::apply_function(
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_antimirov());
 	}
 	if (function.name == "Arden") {
-		return ObjectRegex((get_automaton(arguments[0]).nfa_to_regex()));
+		return ObjectRegex((get_automaton(arguments[0]).to_regex()));
 	}
 	if (function.name == "Thompson") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_tompson());

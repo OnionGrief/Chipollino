@@ -134,7 +134,7 @@ class FiniteAutomaton : public BaseObject {
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
 	// метод Arden
-	Regex nfa_to_regex() const;
+	Regex to_regex() const;
 	friend class Regex;
 	friend class TransformationMonoid;
 };

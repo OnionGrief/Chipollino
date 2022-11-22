@@ -1703,7 +1703,7 @@ bool FiniteAutomaton::semdet_entry(bool annoted) const {
 		Regex reg;
 		// Получение языка из производной регулярки автомата по префиксу:
 		//		this -> reg (arden?)
-		reg = nfa_to_regex();
+		reg = to_regex();
 		//  cout << "State: " << i << "\n";
 		//  cout << "Prefix: " << prefix.value() << "\n";
 		//  cout << "Regex: " << reg.to_txt() << "\n";
@@ -1992,7 +1992,7 @@ vector<expression_arden> arden(const vector<expression_arden>& in, int index) {
 	}
 	return out;
 }
-Regex FiniteAutomaton::nfa_to_regex() const {
+Regex FiniteAutomaton::to_regex() const {
 	vector<int> end_state; //храним индексы принимающих состояний
 	vector<vector<expression_arden>> data; // все уравнения
 	set<alphabet_symbol> alphabet = language->get_alphabet(); //получаем Алфавит

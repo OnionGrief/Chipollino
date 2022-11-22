@@ -153,7 +153,7 @@ void Example::regex_parsing() {
 
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
 
-	// cout << a.nfa_to_regex().to_txt();
+	// cout << a.to_regex().to_txt();
 }
 
 void Example::parsing_nfa() {
@@ -390,7 +390,7 @@ void Example::arden_example() {
 
 	Regex r1("b((b(b|)ab*))*");
 	// cout << r1.to_tompson().to_txt();
-	Regex temp = r1.to_tompson().nfa_to_regex();
+	Regex temp = r1.to_tompson().to_regex();
 	// cout << temp.to_txt() << "\n";
 	//  cout << temp.to_tompson().to_txt();
 }
@@ -719,7 +719,7 @@ void Example::test_ambiguity() {
 void Example::test_arden() {
 	auto test_equivalence = [](string rgx_str) {
 		Regex reg(rgx_str);
-		assert(Regex::equivalent(reg, reg.to_tompson().nfa_to_regex()));
+		assert(Regex::equivalent(reg, reg.to_tompson().to_regex()));
 	};
 
 	test_equivalence("a");
