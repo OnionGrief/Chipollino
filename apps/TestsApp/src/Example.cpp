@@ -779,7 +779,7 @@ void Example::test_is_one_unambiguous() {
 
 void Example::test_interpreter() {
 	Interpreter interpreter;
-	//interpreter.set_log_mode(Interpreter::LogMode::nothing);
+	interpreter.set_log_mode(Interpreter::LogMode::nothing);
 	assert(!interpreter.run_line("A = Annote (Glushkova {a})"));
 	assert(interpreter.run_line("N1 = ((Glushkov ({ab|a})))"));
 	assert(interpreter.run_line("N2 =  (Annote N1)"));

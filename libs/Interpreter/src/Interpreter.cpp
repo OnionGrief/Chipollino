@@ -110,8 +110,10 @@ void Interpreter::set_log_mode(LogMode mode) {
 }
 
 void Interpreter::InterpreterLogger::log(const string& str) {
-	for (int i = 1; i < parent.log_nesting; i++) {
-		cout << "  ";
+	if (parent.log_mode == LogMode::all) {
+		for (int i = 1; i < parent.log_nesting; i++) {
+			cout << "|  ";
+		}
 	}
 	if (parent.log_mode == LogMode::all) {
 		cout << str << "\n";
@@ -119,8 +121,10 @@ void Interpreter::InterpreterLogger::log(const string& str) {
 }
 
 void Interpreter::InterpreterLogger::throw_error(const string& str) {
-	for (int i = 1; i < parent.log_nesting; i++) {
-		cout << "  ";
+	if (parent.log_mode == LogMode::all) {
+		for (int i = 1; i < parent.log_nesting; i++) {
+			cout << "|  ";
+		}
 	}
 	if (parent.log_mode != LogMode::nothing) {
 		cout << "ERROR: " << str << "\n";
@@ -365,7 +369,6 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	vector<string> function_names, vector<ObjectType> first_type) {
 
 	auto logger = init_log();
-	logger.log("building function sequence");
 
 	// Если функций нет - возвращаем пустой вектор
 	if (!function_names.size()) {
@@ -512,7 +515,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 }
 
 optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
-	auto logger = init_log();
+	
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
@@ -524,6 +527,7 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 		if (objects.count(id)) {
 			return objects[id];
 		} else {
+			auto logger = init_log();
 			logger.throw_error("evaluating expression: unknown id \"" + id +
 							   "\"");
 		}
@@ -553,11 +557,14 @@ optional<GeneralObject> Interpreter::eval_function_sequence(
 		}
 	}
 
-	return apply_function_sequence(seq.functions, args);
+	const auto& expr = apply_function_sequence(seq.functions, args);
+	logger.log("function sequence evaluated");
+	return expr;
 }
 
 bool Interpreter::run_declaration(const Declaration& decl) {
 	auto logger = init_log();
+	logger.log("");
 	logger.log("Running declaration...");
 	if (decl.show_result) {
 		Logger::activate();
@@ -578,6 +585,7 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 
 bool Interpreter::run_predicate(const Predicate& pred) {
 	auto logger = init_log();
+	logger.log("");
 	logger.log("Running predicate...");
 	Logger::activate();
 
@@ -602,6 +610,7 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 
 bool Interpreter::run_test(const Test& test) {
 	auto logger = init_log();
+	logger.log("");
 	logger.log("Running test...");
 	Logger::activate();
 
@@ -678,6 +687,7 @@ optional<Regex> Interpreter::scan_Regex(const vector<Lexem>& lexems, int& pos,
 
 optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 	const vector<Lexem>& lexems, int& pos, size_t end) {
+	auto logger = init_log();
 
 	int i = pos;
 
@@ -719,6 +729,7 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 	}
 
 	// Построение функциональной последовательности
+	logger.log("building function sequence");
 	if (const auto& functions =
 			build_function_sequence(func_names, argument_types);
 		functions.has_value()) {
@@ -727,6 +738,8 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 		seq.parameters = arguments;
 		pos = i;
 		return seq;
+	} else {
+		logger.throw_error("failed to build function sequence");
 	}
 
 	return nullopt;
