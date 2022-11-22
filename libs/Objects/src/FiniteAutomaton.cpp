@@ -2016,29 +2016,26 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		}
 		if (states[i].transitions.count("eps")) { //для переходов по eps
 			set<int> trans = states[i].transitions.at("eps");
-			for (set<int>::iterator itt = trans.begin(); itt != trans.end();
-				 itt++) {
+			for (const auto& itt : trans) {
 				Regex* r = new Regex;
 				expression_arden temp_expression;
 				temp_expression.fa_state_number = i;
 				r->regex_eps();
 				temp_expression.regex_from_state = r;
-				data[*itt].push_back(temp_expression);
+				data[itt].push_back(temp_expression);
 			}
 		}
-		for (set<alphabet_symbol>::iterator it = alphabet.begin();
-			 it != alphabet.end(); it++) { //для переходов по символам алфавита
-			if (states[i].transitions.count(*it)) {
-				set<int> trans = states[i].transitions.at(*it);
-				for (set<int>::iterator itt = trans.begin(); itt != trans.end();
-					 itt++) {
+		for (const auto& it : alphabet) { //для переходов по символам алфавита
+			if (states[i].transitions.count(it)) {
+				set<int> trans = states[i].transitions.at(it);
+				for (const auto& itt : trans) {
 					expression_arden temp_expression;
 					temp_expression.fa_state_number = i;
 					string str = "";
-					str += *it;
+					str += it;
 					Regex* r = new Regex(str);
 					temp_expression.regex_from_state = r;
-					data[*itt].push_back(temp_expression);
+					data[itt].push_back(temp_expression);
 				}
 			}
 		}
