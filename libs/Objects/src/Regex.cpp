@@ -323,16 +323,6 @@ Regex::Regex(string str) : Regex() {
 	}
 }
 
-Regex Regex::normalize_regex(const string& file) const {
-	Logger::init_step("Normalize");
-	Regex regex = *this;
-	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
-	regex.normalize_this_regex(file);
-	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
-	Logger::finish_step();
-	return regex;
-}
-
 bool Regex::from_string(string str) {
 	if (!str.size()) {
 		return false;
@@ -455,44 +445,25 @@ void Regex::make_language() {
 	language = make_shared<Language>(alphabet);
 }
 
-int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
-							  Regex* original) {
-	int cond = 0;
-	if (equal(replacing, *original)) {
-		Regex* temp = new Regex(replaced_by);
-		cond++;
-		if (original->term_p && original->term_p->term_l &&
-			original->term_p->term_l == original) {
-			temp->term_p = original->term_p;
-			original->term_p->term_l = temp;
-		} else {
-			if (original->term_p && original->term_p->term_r &&
-				original->term_p->term_r == original) {
-				temp->term_p = original->term_p;
-				original->term_p->term_r = temp;
-			}
-		}
-		delete original;
-	} else {
-		if (original->term_l) {
-			cond +=
-				search_replace_rec(replacing, replaced_by, original->term_l);
-		}
-		if (original->term_r) {
-			cond +=
-				search_replace_rec(replacing, replaced_by, original->term_r);
+Regex* Regex::search_replace_rec(vector<Regex> all_rules, int* counter) {
+	Regex* cur = this->copy();
+	for (int i = 0; i < all_rules.size(); i += 2) {
+		if (equal(*cur, all_rules[i])) {
+			cout << cur->to_txt() << " " << all_rules[i].to_txt() << "\n";
+			(*counter)++;
+			return all_rules[i + 1].copy();
 		}
 	}
-	return cond;
-	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
-	//обоняния.
+	if (cur->term_l)
+		cur->term_l = cur->term_l->search_replace_rec(all_rules, counter);
+	if (cur->term_r)
+		cur->term_r = cur->term_r->search_replace_rec(all_rules, counter);
+	return cur;
 }
-void Regex::normalize_this_regex(const string& file) {
-	struct Rules {
-		Regex from;
-		Regex to;
-	};
-	vector<Rules> all_rules;
+//Привычка зарубать себе на носу довела Буратино до самоампутации органа
+//обоняния.
+Regex Regex::normalize_regex(const string& file) const {
+	vector<Regex> all_rules;
 	string line;
 	std::ifstream in(file);
 	if (in.is_open()) {
@@ -514,23 +485,23 @@ void Regex::normalize_this_regex(const string& file) {
 			}
 			if (v1 == "" || v2 == "") {
 				cout << "error rewriting rules read from file";
-				return;
+				return Regex();
 			}
 			Regex a(v1);
 			Regex b(v2);
-
-			Rules temp = {a, b};
-			all_rules.push_back(temp);
+			all_rules.push_back(a);
+			all_rules.push_back(b);
 		}
 	}
 	in.close();
-	for (int i = 0; i < all_rules.size(); i++) {
-		int cond = 0;
-		cond += search_replace_rec(all_rules[i].from, all_rules[i].to, this);
-		if (cond != 0) {
-			i--;
-		}
+	Regex regex = *this;
+	int counter = 10;
+	while (counter > 0) {
+		cout << regex.to_txt() << "\n";
+		counter = 0;
+		regex = *regex.search_replace_rec(all_rules, &counter);
 	}
+	return regex;
 }
 
 void Regex::pre_order_travers() const {
