@@ -389,10 +389,10 @@ void Example::step_interection() {
 void Example::arden_test() {
 
 	Regex r1("b((b(b|)ab*))*");
-	cout << r1.to_tompson().to_txt();
+	// cout << r1.to_tompson().to_txt();
 	Regex temp = r1.to_tompson().nfa_to_regex();
-	cout << temp.to_txt() << "\n";
-	// cout << temp.to_tompson().to_txt();
+	// cout << temp.to_txt() << "\n";
+	//  cout << temp.to_tompson().to_txt();
 }
 
 void Example::table() {

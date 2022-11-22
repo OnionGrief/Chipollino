@@ -1916,9 +1916,9 @@ bool compare(expression_arden a, expression_arden b) {
 }
 
 vector<expression_arden> arden_minimize(vector<expression_arden> in) {
-	cout << "minimize\n";
 	map<int, Regex*> out_map;
-	//Загоняем все в map, потом пишем в вектор
+	//Загоняем все в map, потом пишем в вектор (обьединяем переходы из 1
+	//состояния)
 	for (int i = 0; i < in.size(); i++) {
 		if (!out_map.count(in[i].condition)) {
 			out_map[in[i].condition] = in[i].temp_regex->copy();
@@ -1942,12 +1942,14 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 
 vector<expression_arden> arden(vector<expression_arden> in, int index) {
 	vector<expression_arden> out;
+	//ищем переход из текущего состояния
 	int indexcur = -1;
 	for (int i = 0; (i < in.size() && indexcur == -1); i++) {
 		if (in[i].condition == index) {
 			indexcur = i;
 		}
 	}
+	//если таких переходов нет
 	if (indexcur == -1) {
 		for (int i = 0; i < in.size(); i++) {
 			Regex* r = in[i].temp_regex->copy();
@@ -1958,6 +1960,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 		}
 		return out;
 	}
+	//если есть только такой переход
 	if (in.size() < 2) {
 		Regex* r = new Regex();
 		r->regex_star(in[0].temp_regex);
@@ -1967,6 +1970,7 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 		out.push_back(temp);
 		return out;
 	}
+	//добавляем (текущий переход)* к всем остальным
 	for (int i = 0; i < in.size(); i++) {
 		if (i != indexcur) {
 			Regex* r = new Regex();
@@ -1979,7 +1983,6 @@ vector<expression_arden> arden(vector<expression_arden> in, int index) {
 				k->regex_union(in[i].temp_regex, r);
 			}
 			expression_arden temp;
-
 			delete r;
 			temp.temp_regex = k;
 			temp.condition = in[i].condition;
@@ -2056,20 +2059,15 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	// 	cout << "\n";
 	// }
 
-	//сортируем
+	//переносим прошлые переходы и обьединяем (работаем с уравнениями)
 	Logger::init_step("Arden");
 
 	for (int i = 0; i < data.size();
 		 i++) { // c конца начинаем переписывать уравнения
 		vector<expression_arden> temp_data;
-		cout << i << " (-1) = ";
-		for (int j = 0; j < data[i].size(); j++) {
-			cout << data[i][j].condition << " "
-				 << data[i][j].temp_regex->to_txt() << " ";
-		}
-		cout << "\n";
 		for (int j = 0; j < data[i].size(); j++) {
 			if (data[i][j].condition < i && data[i][j].condition != -1) {
+				//если ссылаемся на какие-либо еще переходы
 				for (int k = 0; k < data[data[i][j].condition].size(); k++) {
 					expression_arden temp_expression;
 					Regex* r;
@@ -2092,7 +2090,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 						data[data[i][j].condition][k].condition;
 					temp_data.push_back(temp_expression);
 				}
-			} else {
+			} else { //если не ссылаемся
 				expression_arden temp_expression;
 				Regex* r = new Regex(*data[i][j].temp_regex);
 				temp_expression.temp_regex = r;
@@ -2104,37 +2102,17 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			delete data[i][o].temp_regex;
 		}
 		data[i].clear();
-		// sort(temp_data.begin(), temp_data.end(), compare); //не работал
-		cout << i << " (0) = ";
-		for (int j = 0; j < temp_data.size(); j++) {
-			cout << temp_data[j].condition << " "
-				 << temp_data[j].temp_regex->to_txt() << " ";
-		}
-		cout << "\n";
-
+		//обьединяем одинаковые состояния
 		vector<expression_arden> tempdata1 = arden_minimize(temp_data);
-		cout << i << " (0-1) = ";
-		for (int j = 0; j < tempdata1.size(); j++) {
-			cout << tempdata1[j].condition << " "
-				 << tempdata1[j].temp_regex->to_txt() << " ";
-		}
-		cout << "\n";
+		//применяем арден
 		vector<expression_arden> tempdata2 = arden(tempdata1, i);
-		cout << i << " (1) = ";
-		for (int j = 0; j < tempdata2.size(); j++) {
-			cout << tempdata2[j].condition << " "
-				 << tempdata2[j].temp_regex->to_txt() << " ";
-		}
-		cout << "\n";
+		//обьединяем одинаковые состояния
 		vector<expression_arden> tempdata3 = arden_minimize(tempdata2);
-		cout << i << " (1) = ";
-		for (int j = 0; j < tempdata3.size(); j++) {
-			cout << tempdata3[j].condition << " "
-				 << tempdata3[j].temp_regex->to_txt() << " ";
-		}
-		cout << "\n";
 		for (int o = 0; o < temp_data.size(); o++) {
 			delete temp_data[o].temp_regex;
+		}
+		for (int o = 0; o < tempdata1.size(); o++) {
+			delete tempdata1[o].temp_regex;
 		}
 		for (int o = 0; o < tempdata2.size(); o++) {
 			delete tempdata2[o].temp_regex;
@@ -2147,7 +2125,8 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
 		}
 	}
-
+	//работа с уравнениями (могли остаться ссылки на другие состояния,
+	//исправляем)
 	for (int i = data.size() - 1; i >= 0; i--) {
 		for (int j = 0; j < data[i].size(); j++) {
 			if (data[i][j].condition != -1) {
@@ -2159,7 +2138,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 				data[i][j].temp_regex = ra;
 			}
 		}
-
+		//обьединяем состояния
 		vector<expression_arden> tempdata3 = arden_minimize(data[i]);
 		for (int o = 0; o < data[i].size(); o++) {
 			delete data[i][o].temp_regex;
@@ -2167,35 +2146,23 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		data[i].clear();
 		data[i] = tempdata3;
 	}
-	cout << "AXAX\n";
-	for (int i = 0; i < data.size(); i++) {
-		cout << i << " = ";
-		for (int j = 0; j < data[i].size(); j++) {
-			cout << data[i][j].condition << " "
-				 << data[i][j].temp_regex->to_txt() << " ";
-		}
-		cout << "\n";
-	}
-
 	Logger::finish_step();
-
+	//если у нас 1 принимающее состояние
 	if (end_state.size() < 2) {
 		Regex* r1;
 		r1 = data[end_state[0]][0].temp_regex->copy();
-
 		for (int i = 0; i < data.size(); i++) {
 			for (int j = 0; j < data[i].size(); j++) {
 				delete data[i][j].temp_regex;
 			}
 		}
-
+		//заполняем алфавит и lang (нужно для преобразований в автоматы)
 		r1->normalize_lang(alphabet, 0);
-
 		Regex temp = *r1;
 		delete r1;
 		return temp;
 	}
-
+	//если принимающих состояний несколько - обьединяем через альтернативу
 	Regex* r1;
 	r1 = data[end_state[0]][0].temp_regex->copy();
 	for (int i = 1; i < end_state.size(); i++) {
