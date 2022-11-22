@@ -1749,7 +1749,7 @@ void Regex::print_tree() {
 	cout << r_v << endl;
 	print_subtree(term_r, 1);
 }
-void Regex::normalize_lang(set<alphabet_symbol> cur_alphabet, int i) {
+void Regex::update_alphabet(set<alphabet_symbol> cur_alphabet, int i) {
 	if (i == 0) {
 		this->alphabet = cur_alphabet;
 		this->make_language();
@@ -1760,9 +1760,9 @@ void Regex::normalize_lang(set<alphabet_symbol> cur_alphabet, int i) {
 	}
 
 	if (this->term_l) {
-		this->term_l->normalize_lang(cur_alphabet, i + 1);
+		this->term_l->update_alphabet(cur_alphabet, i + 1);
 	}
 	if (this->term_r) {
-		this->term_r->normalize_lang(cur_alphabet, i + 1);
+		this->term_r->update_alphabet(cur_alphabet, i + 1);
 	}
 }
