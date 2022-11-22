@@ -190,6 +190,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 			ss << "\\{" << state.identifier << "\\} ";
 		}
 		Logger::log("Эквивалентные классы", ss.str());
+		Logger::log("Эквивалентные классы", Logger::math_mode(ss.str()));
 		Logger::finish_step();
 		return *language_min_dfa; // TODO Нужно решить, что делаем с
 								  // идентификаторами
@@ -307,6 +308,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 		ss << "\\{" << state.identifier << "\\} ";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
+	Logger::log("Эквивалентные классы", Logger::math_mode(ss.str()));
 	Logger::finish_step();
 	return minimized_dfa;
 }
@@ -1157,6 +1159,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 		ss << elem.second[elem.second.size() - 1]->name << "\\}";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
+	Logger::log("Эквивалентные классы", Logger::math_mode(ss.str()));
 	Logger::finish_step();
 	return result_fa;
 }
@@ -1250,6 +1253,7 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 		ss << elem.second[elem.second.size() - 1] << "\\}";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
+	Logger::log("Эквивалентные классы", Logger::math_mode(ss.str()));
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
@@ -1633,7 +1637,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	Logger::init_step("Ambiguity");
 	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
-	Logger::log("Автомат:", *this);
+	Logger::log("Автомат", *this);
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
 		Logger::log("Результат Ambiguity", "Exponentially ambiguous");
@@ -1703,12 +1707,16 @@ bool FiniteAutomaton::semdet_entry(bool annoted) const {
 		// cout << "Prefix: " << prefix.value() << "\n";
 		// cout << "Regex: " << reg.to_txt() << "\n";
 		Logger::log("State", to_string(i));
+		Logger::log("Prefix", Logger::math_mode(prefix.value()));
 		Logger::log("Prefix", prefix.value());
+		Logger::log("Regex", Logger::math_mode(reg.to_txt()));
 		Logger::log("Regex", reg.to_txt());
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
 		state_languages[i] = derevative.value();
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
+		Logger::log("Derevative",
+					Logger::math_mode(state_languages[i].to_txt()));
 		Logger::log("Derevative", state_languages[i].to_txt());
 		state_languages[i].make_language();
 	}
@@ -2112,7 +2120,8 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		for (int j = 0; j < data[i].size(); j++) {
 
 			Logger::log("from state ", std::to_string(data[i][j].condition));
-			Logger::log("with regex ", data[i][j].temp_regex->to_txt());
+			Logger::log("with regex ",
+						Logger::math_mode(data[i][j].temp_regex->to_txt()));
 		}
 	}
 	if (endstate.size() == 0) {

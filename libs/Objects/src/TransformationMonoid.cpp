@@ -217,15 +217,18 @@ string TransformationMonoid::get_equalence_classes_txt() {
 	Logger::init_step("Equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
 
-		Logger::log("class " + to_str(terms[i].name),
+		Logger::log("class " + Logger::math_mode(to_str(terms[i].name)),
 					terms[i].isFinal ? "in lang" : "not in lang");
 		ss << "Term	" << to_str(terms[i].name) << "	in	language	"
 		   << terms[i].isFinal << "\n";
 		for (int j = 0; j < terms[i].transitions.size(); j++) {
 			Logger::log(
 				"transition " +
-					automat.states[terms[i].transitions[j].first].identifier,
-				automat.states[terms[i].transitions[j].second].identifier);
+					Logger::math_mode(
+						automat.states[terms[i].transitions[j].first]
+							.identifier),
+				Logger::math_mode(
+					automat.states[terms[i].transitions[j].second].identifier));
 			ss << automat.states[terms[i].transitions[j].first].identifier
 			   << "	->	"
 			   << automat.states[terms[i].transitions[j].second].identifier
@@ -241,8 +244,8 @@ string TransformationMonoid::get_rewriting_rules_txt() {
 	Logger::init_step("Rewriting Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
-			Logger::log("rewriting " + to_str(item.first),
-						to_str(item.second[i]));
+			Logger::log("rewriting " + Logger::math_mode(to_str(item.first)),
+						Logger::math_mode(to_str(item.second[i])));
 			ss << to_str(item.first) << "	->	" << to_str(item.second[i])
 			   << "\n";
 		}
@@ -359,8 +362,7 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 //состояния	с	которым синхронизирован
 int TransformationMonoid::is_synchronized(const Term& w) {
 	Logger::init_step("Is synchronized word?");
-	Logger::log("word " + to_str(w.name));
-
+	Logger::log("word " + Logger::math_mode(to_str(w.name)));
 	if (w.transitions.size() == 0) {
 		Logger::log("not synchronized");
 		Logger::finish_step();
@@ -392,7 +394,7 @@ int TransformationMonoid::class_length() {
 	Logger::init_step("Longest word in the class");
 	Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
 	Logger::log("One of the correct words",
-				to_str(terms[terms.size() - 1].name));
+				Logger::math_mode(to_str(terms[terms.size() - 1].name)));
 	Logger::finish_step();
 	return terms[terms.size() - 1].name.size();
 }
@@ -472,7 +474,7 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 		ss << "\n";
 	}
 	Logger::init_step("MyhillNerode TABLE");
-	Logger::log(ss.str());
+	Logger::log(Logger::math_mode(ss.str()));
 	Logger::finish_step();
 	return ss.str();
 }

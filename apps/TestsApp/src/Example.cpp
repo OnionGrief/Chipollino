@@ -469,7 +469,7 @@ void Example::all_examples() {
 	// remove_eps();
 	// minimize();
 	// intersection();
-	// regex_parsing();
+	regex_parsing();
 	// regex_generating();
 	// random_regex_parsing();
 	// tasks_generating();
@@ -481,9 +481,9 @@ void Example::all_examples() {
 	// fa_subset_check();
 	// arden_test();
 	// to_image();
-	tester();
+	// tester();
 	// step_interection();
-	table();
+	// table();
 	// fa_semdet_check();
 	// Regex("abaa").pump_length();
 	cout << "all the examlples are successful" << endl;
@@ -498,7 +498,7 @@ void Example::test_all() {
 	test_regex_subset();
 	test_regex_equal();
 	test_ambiguity();
-	// test_arden();
+	test_arden();
 	test_pump_length();
 	test_is_one_unambiguous();
 	cout << "all tests passed" << endl;

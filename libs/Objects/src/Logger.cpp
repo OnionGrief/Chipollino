@@ -31,6 +31,14 @@ void Logger::init() {
 		out << "\\usepackage[T2A]{fontenc}" << endl;
 		out << "\\usepackage[utf8]{inputenc}" << endl;
 		out << "\\usepackage[russian]{babel}" << endl;
+		// out << "\\usepackage{geometry}" << endl;
+		// out <<
+		// "\\geometry{a4paper,tmargin=2cm,bmargin=2cm,lmargin=3cm,rmargin="
+		// 	   "1cm}"
+		// 	<< endl;
+		// out << "\\sloppy" << endl;
+		// out << "\\clubpenalty=10000" << endl;
+		// out << "\\widowpenalty=10000" << endl;
 		out << "\\title{Отчет}" << endl;
 		out << "\\author{Чиполлино}" << endl;
 		out << "\\date{Москва, 2022}" << endl;
@@ -273,4 +281,55 @@ void Logger::finish() {
 	char cmd[1024];
 	sprintf(cmd, "pdflatex \"./resources/report.tex\"");
 	system(cmd);
+}
+
+string Logger::math_mode(string str) {
+	cout << str << endl;
+	string str_math = "";
+	// bool spases = false;
+	// auto is_symbol = [](char c) {
+	// 	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
+	// };
+	auto is_number = [](char c) { return c >= '0' && c <= '9'; };
+	for (size_t index = 0; index < str.size(); index++) {
+		char c = str[index];
+		cout << "-------------" + index << endl;
+		cout << c << endl;
+		if (c == ' ' && index != str.size() - 1) {
+			str_math += ", ";
+			// spases = true;
+		} else if (c == '*') {
+			str_math += "^*";
+			cout << "c is *" << endl;
+			cout << "str_math " + str_math << endl;
+		} else if (is_number(c)) {
+			cout << "c number" << endl;
+			string num = "";
+			// size_t j;
+			for (index; index < str.size() && is_number(str[index]); index++) {
+				// cout << "str[j] " + str[index] << endl;
+				num += str[index];
+				cout << "num " + num << endl;
+			}
+			num = "_{" + num + "}";
+			str_math += num;
+			// index += j - 2;
+			// cout << "j " + j << endl;
+			index--;
+			cout << "index " + to_string(index) << endl;
+			cout << "str_math " + str_math << endl;
+		} else {
+			str_math += c;
+			cout << "c else" << endl;
+			cout << "str_math " + str_math << endl;
+		}
+		// break;
+		// }
+	}
+	cout << str_math << endl;
+	// if (spases) {
+	// 	str_math = "\\{" + str_math + "\\}";
+	// }
+	str_math = "$" + str_math + "$";
+	return str_math;
 }

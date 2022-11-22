@@ -1,5 +1,6 @@
 #pragma once
 #include "AutomatonToImage/AutomatonToImage.h"
+#include "Language.h"
 #include "Objects/FiniteAutomaton.h"
 #include <string>
 #include <vector>
@@ -53,4 +54,5 @@ class Logger {
 	static void finish_step();
 	// завершение записи в файл
 	static void finish();
+	static string math_mode(string str);
 };

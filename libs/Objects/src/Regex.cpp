@@ -326,8 +326,12 @@ Regex::Regex(string str) : Regex() {
 Regex Regex::normalize_regex(const string& file) const {
 	Logger::init_step("Normalize");
 	Regex regex = *this;
+	Logger::log("Регулярное выражение до нормализации",
+				Logger::math_mode(regex.to_txt()));
 	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
 	regex.normalize_this_regex(file);
+	Logger::log("Регулярное выражение после нормализации",
+				Logger::math_mode(regex.to_txt()));
 	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
 	Logger::finish_step();
 	return regex;
@@ -772,7 +776,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 
 FiniteAutomaton Regex::to_tompson() const {
 	Logger::init_step("Автомат Томпсона");
-	Logger::log("Регулярное выражение", to_txt());
+	Logger::log("Регулярное выражение", Logger::math_mode(to_txt()));
 	FiniteAutomaton fa(0, get_tompson(-1).first, language);
 	Logger::log("Автомат", fa);
 	Logger::finish_step();
@@ -953,6 +957,7 @@ Regex Regex::linearize() const {
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = i;
 	}
+	Logger::log(Logger::math_mode(test.to_txt()));
 	Logger::log(test.to_txt());
 	Logger::finish_step();
 	return test;
@@ -965,6 +970,7 @@ Regex Regex::delinearize() const {
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = 0;
 	}
+	Logger::log(Logger::math_mode(test.to_txt()));
 	Logger::log(test.to_txt());
 	Logger::finish_step();
 	return test;
@@ -1016,10 +1022,10 @@ FiniteAutomaton Regex::to_glushkov() const {
 	// cout << "End " << str_end << endl;
 	// cout << "Pairs " << str_pair << endl;
 
-	Logger::log("Регулярка", test.to_str_log());
-	Logger::log("First", str_firs);
-	Logger::log("End", str_end);
-	Logger::log("Pairs", str_pair);
+	Logger::log("Регулярка", Logger::math_mode(test.to_str_log()));
+	Logger::log("First", Logger::math_mode(str_firs));
+	Logger::log("End", Logger::math_mode(str_end));
+	Logger::log("Pairs", Logger::math_mode(str_pair));
 
 	for (size_t i = 0; i < first->size(); i++) {
 		tr[(*first)[i].symbol].insert((*first)[i].number + 1);
@@ -1102,8 +1108,9 @@ FiniteAutomaton Regex::to_ilieyu() const {
 
 	// cout << str_follow;
 
-	Logger::log("Регулярное выражение", to_txt());
+	Logger::log("Регулярное выражение", Logger::math_mode(to_txt()));
 	Logger::log("Автомат Глушкова", glushkov);
+	Logger::log("Follow-отношения", Logger::math_mode(str_follow));
 	Logger::log("Follow-отношения", str_follow);
 
 	for (size_t i = 0; i < new_states.size(); i++) {
@@ -1550,7 +1557,9 @@ bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 
 bool Regex::equal(const Regex& r1, const Regex& r2) {
 	Logger::init_step("Equal");
+	Logger::log("Первое регулярное выражение", Logger::math_mode(r1.to_txt()));
 	Logger::log("Первое регулярное выражение", r1.to_txt());
+	Logger::log("Второе регулярное выражение", Logger::math_mode(r2.to_txt()));
 	Logger::log("Второе регулярное выражение", r2.to_txt());
 	bool result = equality_checker(&r1, &r2);
 	if (result)
@@ -1563,8 +1572,10 @@ bool Regex::equal(const Regex& r1, const Regex& r2) {
 
 bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 	Logger::init_step("Equiv");
+	Logger::log("Первое регулярное выражение", Logger::math_mode(r1.to_txt()));
 	Logger::log("Первое регулярное выражение", r1.to_txt());
-	Logger::log("Второе регулярное выражение", r2.to_txt());
+	Logger::log("Второе регулярное выражение", Logger::math_mode(r2.to_txt()));
+	Logger::log("Первое регулярное выражение", r1.to_txt());
 	FiniteAutomaton fa1 = r1.to_ilieyu();
 	FiniteAutomaton fa2 = r2.to_ilieyu();
 	bool result = FiniteAutomaton::equivalent(fa1, fa2);
@@ -1578,7 +1589,9 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 
 bool Regex::subset(const Regex& r) const {
 	Logger::init_step("Subset");
+	Logger::log("Первое регулярное выражение", Logger::math_mode(to_txt()));
 	Logger::log("Первое регулярное выражение", to_txt());
+	Logger::log("Второе регулярное выражение", Logger::math_mode(r.to_txt()));
 	Logger::log("Второе регулярное выражение", r.to_txt());
 	bool result = to_ilieyu().subset(r.to_ilieyu());
 	if (result)
@@ -1591,7 +1604,7 @@ bool Regex::subset(const Regex& r) const {
 
 FiniteAutomaton Regex::to_antimirov() const {
 	Logger::init_step("Автомат Антимирова");
-	Logger::log("Регулярное выражение", to_txt());
+	Logger::log("Регулярное выражение", Logger::math_mode(to_txt()));
 	map<set<string>, set<string>> trans;
 	vector<Regex> states;
 	vector<Regex> alph_regex;
@@ -1642,7 +1655,10 @@ FiniteAutomaton Regex::to_antimirov() const {
 			// cout << out[j][2].to_txt() << endl;
 			derev_log = out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
 						" = " + out[j][1].to_txt() + "\\";
-			Logger::log(derev_log);
+			// Logger::log(Logger::math_mode(derev_log));
+			Logger::log(Logger::math_mode(out[j][2].to_txt() + "(" +
+										  out[j][0].to_txt() + ")") +
+						" = " + Logger::math_mode(out[j][1].to_txt()) + "\\");
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
 							  out[j][1].to_txt());
@@ -1659,12 +1675,13 @@ FiniteAutomaton Regex::to_antimirov() const {
 	}
 	string str_state = "State: ";
 	for (size_t i = 0; i < automat_state.size(); i++) {
-		str_state += automat_state[i].identifier + " ";
+		str_state += automat_state[i].identifier;
 	}
 
 	// cout << derev_log;
 	// cout << str_state << endl;
 	// Logger::log(derev_log, str_state);
+	Logger::log(Logger::math_mode(str_state));
 	Logger::log(str_state);
 
 	FiniteAutomaton fa(0, automat_state, language);
@@ -1706,6 +1723,8 @@ string Regex::to_str_log() const {
 Regex Regex::deannote() const {
 	Logger::init_step("DeAnnote");
 	Regex old_regex(*this);
+	Logger::log("Регулярное выражение до преобразования",
+				Logger::math_mode(old_regex.to_txt()));
 	Logger::log("Регулярное выражение до преобразования", old_regex.to_txt());
 	string with_number = old_regex.to_txt();
 	string new_string;
@@ -1715,6 +1734,8 @@ Regex Regex::deannote() const {
 		}
 	}
 	Regex new_regex(new_string);
+	Logger::log("Регулярное выражение после преобразования",
+				Logger::math_mode(new_regex.to_txt()));
 	Logger::log("Регулярное выражение после преобразования",
 				new_regex.to_txt());
 	Logger::finish_step();
