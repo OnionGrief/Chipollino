@@ -386,7 +386,7 @@ void Example::step_interection() {
 	Logger::deactivate();
 }
 
-void Example::arden_test() {
+void Example::arden_example() {
 
 	Regex r1("b((b(b|)ab*))*");
 	// cout << r1.to_tompson().to_txt();
@@ -490,7 +490,7 @@ void Example::all_examples() {
 	// step();
 	parsing_nfa();
 	fa_subset_check();
-	arden_test();
+	arden_example();
 	//  to_image();
 	//  tester();
 	//  step_interection();
