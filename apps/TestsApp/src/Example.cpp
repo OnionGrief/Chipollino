@@ -717,69 +717,24 @@ void Example::test_ambiguity() {
 	assert(fa6.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
 }
 void Example::test_arden() {
-	auto test_equivalence_tompson = [](string rgx_str) {
+	auto test_equivalence = [](string rgx_str) {
 		Regex reg(rgx_str);
 		assert(Regex::equivalent(reg, reg.to_tompson().to_regex()));
-	};
-
-	test_equivalence_tompson("a");
-	test_equivalence_tompson("a*");
-	test_equivalence_tompson("(ab)*a");
-	test_equivalence_tompson("a(a)*ab(bb)*baa");
-	test_equivalence_tompson("(b)*(b)");
-	test_equivalence_tompson("a*|");
-	test_equivalence_tompson("|b((b((a)*)(a(|(a))))*)");
-	test_equivalence_tompson("(((a*)))(((a(b|)|a)*||b))");
-	test_equivalence_tompson("((b(((ba|b)|||(b))*)))");
-	test_equivalence_tompson("(((((a*)((a*)|bb)(((|||((b)))))))))");
-
-	auto test_equivalence_glushkov = [](string rgx_str) {
-		Regex reg(rgx_str);
 		assert(Regex::equivalent(reg, reg.to_glushkov().to_regex()));
-	};
-
-	test_equivalence_glushkov("a");
-	test_equivalence_glushkov("a*");
-	test_equivalence_glushkov("(ab)*a");
-	test_equivalence_glushkov("a(a)*ab(bb)*baa");
-	test_equivalence_glushkov("(b)*(b)");
-	test_equivalence_glushkov("a*|");
-	test_equivalence_glushkov("|b((b((a)*)(a(|(a))))*)");
-	test_equivalence_glushkov("(((a*)))(((a(b|)|a)*||b))");
-	test_equivalence_glushkov("((b(((ba|b)|||(b))*)))");
-	test_equivalence_glushkov("(((((a*)((a*)|bb)(((|||((b)))))))))");
-
-	auto test_equivalence_ilieyu = [](string rgx_str) {
-		Regex reg(rgx_str);
 		assert(Regex::equivalent(reg, reg.to_ilieyu().to_regex()));
-	};
-
-	test_equivalence_ilieyu("a");
-	test_equivalence_ilieyu("a*");
-	test_equivalence_ilieyu("(ab)*a");
-	test_equivalence_ilieyu("a(a)*ab(bb)*baa");
-	test_equivalence_ilieyu("(b)*(b)");
-	test_equivalence_ilieyu("a*|");
-	test_equivalence_ilieyu("|b((b((a)*)(a(|(a))))*)");
-	test_equivalence_ilieyu("(((a*)))(((a(b|)|a)*||b))");
-	test_equivalence_ilieyu("((b(((ba|b)|||(b))*)))");
-	test_equivalence_ilieyu("(((((a*)((a*)|bb)(((|||((b)))))))))");
-
-	auto test_equivalence_antimirov = [](string rgx_str) {
-		Regex reg(rgx_str);
 		assert(Regex::equivalent(reg, reg.to_antimirov().to_regex()));
 	};
 
-	test_equivalence_antimirov("a");
-	test_equivalence_antimirov("a*");
-	test_equivalence_antimirov("(ab)*a");
-	test_equivalence_antimirov("a(a)*ab(bb)*baa");
-	test_equivalence_antimirov("(b)*(b)");
-	test_equivalence_antimirov("a*|");
-	test_equivalence_antimirov("|b((b((a)*)(a(|(a))))*)");
-	test_equivalence_antimirov("(((a*)))(((a(b|)|a)*||b))");
-	test_equivalence_antimirov("((b(((ba|b)|||(b))*)))");
-	test_equivalence_antimirov("(((((a*)((a*)|bb)(((|||((b)))))))))");
+	test_equivalence("a");
+	test_equivalence("a*");
+	test_equivalence("(ab)*a");
+	test_equivalence("a(a)*ab(bb)*baa");
+	test_equivalence("(b)*(b)");
+	test_equivalence("a*|");
+	test_equivalence("|b((b((a)*)(a(|(a))))*)");
+	test_equivalence("(((a*)))(((a(b|)|a)*||b))");
+	test_equivalence("((b(((ba|b)|||(b))*)))");
+	test_equivalence("(((((a*)((a*)|bb)(((|||((b)))))))))");
 }
 
 void Example::test_pump_length() {
