@@ -144,7 +144,7 @@ class Regex : BaseObject {
 	// Слово, в котором все итерации Клини раскрыты n раз
 	string get_iterated_word(int n) const;
 	//Проходит по дереву и кладет в корень алфавит
-	void update_alphabet(set<alphabet_symbol> cur_alphabet);
+	void update_alphabet(const set<alphabet_symbol>& cur_alphabet);
 	void regex_union(Regex* a, Regex* b);
 	void regex_alt(Regex* a, Regex* b);
 	void regex_star(Regex* a);

@@ -1752,7 +1752,6 @@ void Regex::print_tree() {
 void Regex::update_alphabet_rec() {
 	set<alphabet_symbol> st{};
 	this->alphabet = st;
-	this->make_language();
 	if (this->term_l) {
 		this->term_l->update_alphabet_rec();
 	}
@@ -1760,7 +1759,7 @@ void Regex::update_alphabet_rec() {
 		this->term_r->update_alphabet_rec();
 	}
 }
-void Regex::update_alphabet(set<alphabet_symbol> cur_alphabet) {
+void Regex::update_alphabet(const set<alphabet_symbol>& cur_alphabet) {
 
 	this->alphabet = cur_alphabet;
 	this->make_language();
