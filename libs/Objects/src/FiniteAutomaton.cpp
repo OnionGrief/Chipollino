@@ -1916,7 +1916,7 @@ int FiniteAutomaton::states_number() const {
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
 
-vector<expression_arden> arden_minimize(vector<expression_arden> in) {
+vector<expression_arden> arden_minimize(const vector<expression_arden>& in) {
 	map<int, Regex*> out_map;
 	//Загоняем все в map, потом пишем в вектор (обьединяем переходы из 1
 	//состояния)
@@ -1942,7 +1942,7 @@ vector<expression_arden> arden_minimize(vector<expression_arden> in) {
 	return out;
 }
 
-vector<expression_arden> arden(vector<expression_arden> in, int index) {
+vector<expression_arden> arden(const vector<expression_arden>& in, int index) {
 	vector<expression_arden> out;
 	//ищем переход из текущего состояния
 	int indexcur = -1;
