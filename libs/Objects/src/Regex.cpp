@@ -454,7 +454,7 @@ void Regex::make_language() {
 	language = make_shared<Language>(alphabet);
 }
 
-void Regex::update_language(const set<alphabet_symbol>& _alphabet) {
+void Regex::set_language(const set<alphabet_symbol>& _alphabet) {
 	alphabet = _alphabet;
 	language = make_shared<Language>(alphabet);
 }

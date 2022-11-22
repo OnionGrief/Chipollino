@@ -119,8 +119,8 @@ class Regex : BaseObject {
 	Regex(const Regex&);
 	Regex& operator=(const Regex& other);
 
-	// Обновление алфавита в языке
-	void update_language(const set<alphabet_symbol>& _alphabet);
+	// создает новый язык с алфавитом
+	void set_language(const set<alphabet_symbol>& _alphabet);
 	// Генерация языка из алфавита
 	void make_language();
 	// Переписывание regex по пользовательским правилам
