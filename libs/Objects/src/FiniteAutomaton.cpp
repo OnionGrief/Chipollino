@@ -2116,13 +2116,6 @@ Regex FiniteAutomaton::to_regex() const {
 			delete tempdata2[o].regex_from_state;
 		}
 		data[i] = tempdata3;
-		Logger::log("State ", std::to_string(i));
-		for (int j = 0; j < data[i].size(); j++) {
-
-			Logger::log("from state ",
-						std::to_string(data[i][j].fa_state_number));
-			Logger::log("with regex ", data[i][j].regex_from_state->to_txt());
-		}
 	}
 	//работа с уравнениями (могли остаться ссылки на другие состояния,
 	//исправляем)
@@ -2146,7 +2139,14 @@ Regex FiniteAutomaton::to_regex() const {
 		data[i].clear();
 		data[i] = tempdata3;
 	}
-	Logger::finish_step();
+	//вывод итоговых regex
+	for (int i = 0; i < data.size(); i++) {
+		Logger::log("State ", std::to_string(i));
+		for (int j = 0; j < data[i].size(); j++) {
+			Logger::log("regex in this state",
+						data[i][j].regex_from_state->to_txt());
+		}
+	}
 	//если у нас 1 принимающее состояние
 	if (end_state.size() < 2) {
 		Regex* r1;
@@ -2160,6 +2160,8 @@ Regex FiniteAutomaton::to_regex() const {
 		r1->update_alphabet(alphabet, 0);
 		Regex temp = *r1;
 		delete r1;
+		Logger::log("Result ", temp.to_txt());
+		Logger::finish_step();
 		return temp;
 	}
 	//если принимающих состояний несколько - обьединяем через альтернативу
@@ -2179,5 +2181,8 @@ Regex FiniteAutomaton::to_regex() const {
 	r1->update_alphabet(alphabet, 0);
 	Regex temp1 = *r1;
 	delete r1;
+
+	Logger::log("Result ", temp1.to_txt());
+	Logger::finish_step();
 	return temp1;
 }
