@@ -449,7 +449,7 @@ Regex* Regex::search_replace_rec(vector<Regex> all_rules, int* counter) {
 	Regex* cur = this->copy();
 	for (int i = 0; i < all_rules.size(); i += 2) {
 		if (equal(*cur, all_rules[i])) {
-			cout << cur->to_txt() << " " << all_rules[i].to_txt() << "\n";
+			// cout << cur->to_txt() << " " << all_rules[i].to_txt() << "\n";
 			(*counter)++;
 			return all_rules[i + 1].copy();
 		}
@@ -497,7 +497,6 @@ Regex Regex::normalize_regex(const string& file) const {
 	Regex regex = *this;
 	int counter = 10;
 	while (counter > 0) {
-		cout << regex.to_txt() << "\n";
 		counter = 0;
 		regex = *regex.search_replace_rec(all_rules, &counter);
 	}
@@ -1500,7 +1499,7 @@ int Regex::pump_length() const {
 
 bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 	if (r1 == nullptr && r2 == nullptr) return true;
-	if (r1 == nullptr || r2 == nullptr) return true;
+	if (r1 == nullptr || r2 == nullptr) return false;
 	alphabet_symbol r1_value, r2_value;
 	if (r1->value.symbol != "")
 		r1_value = r1->value.symbol;
