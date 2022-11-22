@@ -1,5 +1,5 @@
-#include <iostream>
 #include "TestsApp/Example.h"
+#include <iostream>
 using namespace std;
 
 int main() {

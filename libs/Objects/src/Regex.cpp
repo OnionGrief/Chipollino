@@ -451,7 +451,11 @@ void Regex::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 
 void Regex::make_language() {
 	generate_alphabet(alphabet);
+	language = make_shared<Language>(alphabet);
+}
 
+void Regex::set_language(const set<alphabet_symbol>& _alphabet) {
+	alphabet = _alphabet;
 	language = make_shared<Language>(alphabet);
 }
 
@@ -1597,9 +1601,8 @@ FiniteAutomaton Regex::to_antimirov() const {
 	vector<Regex> alph_regex;
 	vector<vector<Regex>> out;
 	set<string> check;
-	for (set<alphabet_symbol>::iterator i = alphabet.begin();
-		 i != alphabet.end(); i++) {
-		string symbol = *i;
+	for (const alphabet_symbol& as : language->get_alphabet()) {
+		string symbol = as;
 		Regex r(symbol);
 		alph_regex.push_back(r);
 	}

@@ -119,6 +119,8 @@ class Regex : BaseObject {
 	Regex(const Regex&);
 	Regex& operator=(const Regex& other);
 
+	// создает новый язык с алфавитом
+	void set_language(const set<alphabet_symbol>& _alphabet);
 	// Генерация языка из алфавита
 	void make_language();
 	// Переписывание regex по пользовательским правилам
@@ -142,7 +144,6 @@ class Regex : BaseObject {
 	int pump_length() const;
 	// Слово, в котором все итерации Клини раскрыты n раз
 	string get_iterated_word(int n) const;
-
 	void regex_union(Regex* a, Regex* b);
 	void regex_alt(Regex* a, Regex* b);
 	void regex_star(Regex* a);

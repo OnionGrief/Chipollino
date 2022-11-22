@@ -14,10 +14,6 @@ using namespace std;
 
 class Regex;
 class Language;
-struct expression_arden {
-	int condition;
-	Regex* temp_regex;
-};
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
@@ -138,7 +134,7 @@ class FiniteAutomaton : public BaseObject {
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
 	// метод Arden
-	Regex nfa_to_regex() const;
+	Regex to_regex() const;
 	friend class Regex;
 	friend class TransformationMonoid;
 };
