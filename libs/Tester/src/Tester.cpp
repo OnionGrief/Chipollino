@@ -28,10 +28,8 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 
 		if (time >= 180) break;
 	}
-	Logger::log("Язык, основанный на регулярке", lang.to_txt());
 	Logger::log("Язык, основанный на регулярке",
 				Logger::math_mode(lang.to_txt()));
-	Logger::log("Слова порождаются регуляркой", regex.to_txt());
 	Logger::log("Слова порождаются регуляркой",
 				Logger::math_mode(regex.to_txt()));
 	Logger::log("Шаг итерации", to_string(step));
@@ -64,7 +62,6 @@ void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step) {
 	}
 
 	Logger::log("Автомат", lang);
-	Logger::log("Слова порождаются регуляркой", regex.to_txt());
 	Logger::log("Слова порождаются регуляркой",
 				Logger::math_mode(regex.to_txt()));
 	Logger::log("Шаг итерации", to_string(step));

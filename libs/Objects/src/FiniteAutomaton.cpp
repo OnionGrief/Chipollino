@@ -1708,16 +1708,13 @@ bool FiniteAutomaton::semdet_entry(bool annoted) const {
 		// cout << "Regex: " << reg.to_txt() << "\n";
 		Logger::log("State", to_string(i));
 		Logger::log("Prefix", Logger::math_mode(prefix.value()));
-		Logger::log("Prefix", prefix.value());
 		Logger::log("Regex", Logger::math_mode(reg.to_txt()));
-		Logger::log("Regex", reg.to_txt());
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
 		state_languages[i] = derevative.value();
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 		Logger::log("Derevative",
 					Logger::math_mode(state_languages[i].to_txt()));
-		Logger::log("Derevative", state_languages[i].to_txt());
 		state_languages[i].make_language();
 	}
 	for (int i = 0; i < states.size(); i++) {
@@ -2116,11 +2113,11 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 		}
 		data[i].clear();
 		data[i] = tempdata3;
-		Logger::log("State ", std::to_string(i));
+		Logger::log("State", std::to_string(i));
 		for (int j = 0; j < data[i].size(); j++) {
 
-			Logger::log("from state ", std::to_string(data[i][j].condition));
-			Logger::log("with regex ",
+			Logger::log("from state", std::to_string(data[i][j].condition));
+			Logger::log("with regex",
 						Logger::math_mode(data[i][j].temp_regex->to_txt()));
 		}
 	}

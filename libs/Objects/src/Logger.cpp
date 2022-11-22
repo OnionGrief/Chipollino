@@ -31,14 +31,13 @@ void Logger::init() {
 		out << "\\usepackage[T2A]{fontenc}" << endl;
 		out << "\\usepackage[utf8]{inputenc}" << endl;
 		out << "\\usepackage[russian]{babel}" << endl;
-		// out << "\\usepackage{geometry}" << endl;
-		// out <<
-		// "\\geometry{a4paper,tmargin=2cm,bmargin=2cm,lmargin=3cm,rmargin="
-		// 	   "1cm}"
-		// 	<< endl;
-		// out << "\\sloppy" << endl;
-		// out << "\\clubpenalty=10000" << endl;
-		// out << "\\widowpenalty=10000" << endl;
+		out << "\\usepackage{geometry}" << endl;
+		out << "\\geometry{a4paper,tmargin=2cm,bmargin=2cm,lmargin=3cm,rmargin="
+			   "1cm}"
+			<< endl;
+		out << "\\sloppy" << endl;
+		out << "\\clubpenalty=10000" << endl;
+		out << "\\widowpenalty=10000" << endl;
 		out << "\\title{Отчет}" << endl;
 		out << "\\author{Чиполлино}" << endl;
 		out << "\\date{Москва, 2022}" << endl;
@@ -57,7 +56,9 @@ void Logger::init_step(string step_name) {
 	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
-		out << step_name + "\n" << endl;
+		out << "\\begin{center}" << endl;
+		out << "\\textbf{" + step_name + "}" << endl;
+		out << "\\end{center}" << endl;
 	}
 	out.close();
 }
@@ -67,7 +68,7 @@ void Logger::log(string text) {
 	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
-		out << text + "\n" << endl;
+		out << text + "\\\\" << endl;
 	}
 	out.close();
 }
@@ -78,7 +79,7 @@ void Logger::log(string text, string val) {
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
 		out << text + ": ";
-		out << val + "\n" << endl;
+		out << val + "\\\\" << endl;
 	}
 	out.close();
 }
@@ -91,11 +92,11 @@ void Logger::log(string a1, const FiniteAutomaton& fa1) {
 	if (out.is_open()) {
 		image_number += 1;
 		AutomatonToImage::to_image(f1, image_number);
-		out << a1 + ":\n" << endl;
+		out << a1 + ":\\\\" << endl;
 		char si[256];
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{output%d.png}\n",
+				"keepaspectratio]{output%d.png}\\\\",
 				image_number);
 		out << si << endl;
 	}
@@ -112,20 +113,20 @@ void Logger::log(string a1, string a2, const FiniteAutomaton& fa1,
 	if (out.is_open()) {
 		image_number += 1;
 		AutomatonToImage::to_image(f1, image_number);
-		out << a1 + ":\n" << endl;
+		out << a1 + ":\\\\" << endl;
 		char si[256];
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{output%d.png}\n",
+				"keepaspectratio]{output%d.png}\\\\",
 				image_number);
 		out << si << endl;
 
 		image_number += 1;
 		AutomatonToImage::to_image(f2, image_number);
-		out << a2 + ":\n" << endl;
+		out << a2 + ":\\\\" << endl;
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{output%d.png}\n",
+				"keepaspectratio]{output%d.png}\\\\",
 				image_number);
 		out << si << endl;
 	}
@@ -143,29 +144,29 @@ void Logger::log(string a1, string a2, string a3, const FiniteAutomaton& fa1,
 	if (out.is_open()) {
 		image_number += 1;
 		AutomatonToImage::to_image(f1, image_number);
-		out << a1 + ":\n" << endl;
+		out << a1 + ":\\\\" << endl;
 		char si[256];
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{output%d.png}\n",
+				"keepaspectratio]{output%d.png}\\\\",
 				image_number);
 		out << si << endl;
 
 		image_number += 1;
 		AutomatonToImage::to_image(f2, image_number);
-		out << a2 + ":\n" << endl;
+		out << a2 + ":\\\\" << endl;
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{output%d.png}\n",
+				"keepaspectratio]{output%d.png}\\\\",
 				image_number);
 		out << si << endl;
 
 		image_number += 1;
 		AutomatonToImage::to_image(f3, image_number);
-		out << a3 + ":\n" << endl;
+		out << a3 + ":\\" << endl;
 		sprintf(si,
 				"\\includegraphics[width=5in, "
-				"keepaspectratio]{output%d.png}\n",
+				"keepaspectratio]{output%d.png}\\\\",
 				image_number);
 		out << si << endl;
 	}
@@ -178,7 +179,7 @@ void Logger::log(int step, vector<int> lengths, vector<double> times,
 	if (step_counter > 1) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
-		out << "\\begin{tabular}{llll}\n" << endl;
+		out << "\\begin{tabular}{llll}" << endl;
 		string s1 = "Количество итераций";
 		s1 = s1 + " & ";
 		s1 = s1 + "Длина строки";
@@ -206,7 +207,7 @@ void Logger::log(int step, vector<int> lengths, vector<double> times,
 				out << w1 + " & " + w2 + " & " + w3 + " & " + w4 << endl;
 			}
 		}
-		out << "\\end{tabular}\n" << endl;
+		out << "\\end{tabular}" << endl;
 	}
 	out.close();
 }
@@ -256,7 +257,7 @@ void Logger::log_table(vector<string> rows, vector<string> columns,
 			}
 			out << row << endl;
 		}
-		out << "\\end{tabular}\n" << endl;
+		out << "\\end{tabular}" << endl;
 	}
 	out.close();
 }
@@ -267,7 +268,7 @@ void Logger::finish_step() {
 	if (step_counter > 0) return;
 	ofstream out("./resources/report.tex", ios::app);
 	if (out.is_open()) {
-		out << "\\newpage\n" << endl;
+		out << "\\newpage" << endl;
 	}
 	out.close();
 }
@@ -284,6 +285,9 @@ void Logger::finish() {
 }
 
 string Logger::math_mode(string str) {
+	if (str.empty()) {
+		return str;
+	}
 	cout << str << endl;
 	string str_math = "";
 	// bool spases = false;

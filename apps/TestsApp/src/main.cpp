@@ -7,8 +7,8 @@ int main() {
 	Logger::init();
 	Logger::activate();
 	// Тестирование
-	// Example::test_all();
-	Example::all_examples();
+	Example::test_all();
+	// Example::all_examples();
 	Logger::finish();
 	Logger::deactivate();
 }
