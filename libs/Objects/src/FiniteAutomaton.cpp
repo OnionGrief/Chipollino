@@ -187,10 +187,9 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 					*this, *language_min_dfa);
 		stringstream ss;
 		for (const auto& state : language_min_dfa->states) {
-			ss << "\\{" << state.identifier << "\\} ";
+			ss << "\\{" << Logger::math_mode(state.identifier) << "\\} ";
 		}
 		Logger::log("Эквивалентные классы", ss.str());
-		Logger::log("Эквивалентные классы", Logger::math_mode(ss.str()));
 		Logger::finish_step();
 		return *language_min_dfa; // TODO Нужно решить, что делаем с
 								  // идентификаторами
@@ -305,10 +304,9 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 				minimized_dfa);
 	stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
-		ss << "\\{" << state.identifier << "\\} ";
+		ss << "\\{" << Logger::math_mode(state.identifier) << "\\} ";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
-	Logger::log("Эквивалентные классы", Logger::math_mode(ss.str()));
 	Logger::finish_step();
 	return minimized_dfa;
 }
@@ -1155,11 +1153,11 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 	for (auto& elem : class_to_nonterminals) {
 		ss << "\\{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
-			ss << elem.second[i]->name << ",";
-		ss << elem.second[elem.second.size() - 1]->name << "\\}";
+			ss << Logger::math_mode(elem.second[i]->name) << ",";
+		ss << Logger::math_mode(elem.second[elem.second.size() - 1]->name)
+		   << "\\}";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
-	Logger::log("Эквивалентные классы", Logger::math_mode(ss.str()));
 	Logger::finish_step();
 	return result_fa;
 }
@@ -1249,11 +1247,10 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 	for (auto& elem : class_to_nonterminals_names) {
 		ss << "\\{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
-			ss << elem.second[i] << ",";
-		ss << elem.second[elem.second.size() - 1] << "\\}";
+			ss << Logger::math_mode(elem.second[i]) << ",";
+		ss << Logger::math_mode(elem.second[elem.second.size() - 1]) << "\\}";
 	}
 	Logger::log("Эквивалентные классы", ss.str());
-	Logger::log("Эквивалентные классы", Logger::math_mode(ss.str()));
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=

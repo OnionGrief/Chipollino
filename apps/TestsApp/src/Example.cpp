@@ -467,7 +467,7 @@ void Example::fa_semdet_check() {
 void Example::all_examples() {
 	// determinize();
 	// remove_eps();
-	// minimize();
+	minimize();
 	// intersection();
 	// regex_parsing();
 	// regex_generating();
@@ -484,23 +484,23 @@ void Example::all_examples() {
 	// tester();
 	// step_interection();
 	// table();
-	fa_semdet_check();
+	// fa_semdet_check();
 	Regex("abaa").pump_length();
 	cout << "all the examlples are successful" << endl;
 }
 // TEST
 
 void Example::test_all() {
-	test_fa_equal();
-	test_fa_equiv();
+	// test_fa_equal();
+	// test_fa_equiv();
 	test_bisimilar();
 	test_merge_bisimilar();
-	test_regex_subset();
-	test_regex_equal();
-	test_ambiguity();
+	// test_regex_subset();
+	// test_regex_equal();
+	// test_ambiguity();
 	// test_arden();
-	test_pump_length();
-	test_is_one_unambiguous();
+	// test_pump_length();
+	// test_is_one_unambiguous();
 	cout << "all tests passed" << endl;
 }
 

@@ -1094,19 +1094,20 @@ FiniteAutomaton Regex::to_ilieyu() const {
 	string str_follow;
 	for (size_t i = 0; i < new_states.size(); i++) {
 		int state_ind = new_states[i].index;
-		str_follow = str_follow + states[state_ind].identifier + ": ";
+		str_follow =
+			str_follow + Logger::math_mode(states[state_ind].identifier) + ": ";
 		for (auto j = states[state_ind].label.begin();
 			 j != states[state_ind].label.end(); j++) {
-			str_follow = str_follow + states[*j].identifier + " ";
+			str_follow =
+				str_follow + Logger::math_mode(states[*j].identifier) + " ";
 		}
-		str_follow = str_follow + ";\n";
+		str_follow = str_follow + "; ";
 	}
 
 	// cout << str_follow;
 
 	Logger::log("Регулярное выражение", Logger::math_mode(to_txt()));
 	Logger::log("Автомат Глушкова", glushkov);
-	Logger::log("Follow-отношения", Logger::math_mode(str_follow));
 	Logger::log("Follow-отношения", str_follow);
 
 	for (size_t i = 0; i < new_states.size(); i++) {
