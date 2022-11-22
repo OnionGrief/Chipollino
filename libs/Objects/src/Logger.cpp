@@ -280,7 +280,8 @@ void Logger::finish() {
 	}
 	out.close();
 	char cmd[1024];
-	sprintf(cmd, "pdflatex \"./resources/report.tex\"");
+	sprintf(cmd, "pdflatex \"./resources/report.tex\" > pdflatex.txt");
+	// sprintf(cmd, "pdflatex \"./resources/report.tex\"");
 	system(cmd);
 }
 
