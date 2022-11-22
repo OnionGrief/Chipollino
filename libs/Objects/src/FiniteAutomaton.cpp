@@ -2042,10 +2042,7 @@ Regex FiniteAutomaton::nfa_to_regex() const {
 	}
 	if (end_state.size() ==
 		0) { //если нет принимающих состояний - то регулярки не будет
-		Regex* f = new Regex("eps");
-		Regex temp1 = *f;
-		delete f;
-		return temp1;
+		return Regex();
 	}
 	// // вывод всех уравнений
 	// for (int i = 0; i < data.size(); i++) {
