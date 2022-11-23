@@ -153,7 +153,7 @@ void Example::regex_parsing() {
 
 	//  cout << FiniteAutomaton::equal(b.minimize(), c.minimize()) << endl;
 
-	// cout << a.nfa_to_regex().to_txt();
+	// cout << a.to_regex().to_txt();
 }
 
 void Example::parsing_nfa() {
@@ -386,37 +386,13 @@ void Example::step_interection() {
 	Logger::deactivate();
 }
 
-void Example::arden_test() {
-	vector<State> states;
-	for (int i = 0; i < 8; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states.push_back(s);
-	}
-	states[0].set_transition(1, "a");
-	states[0].set_transition(4, "b");
-	states[1].set_transition(1, "a");
-	states[1].set_transition(2, "b");
-	states[2].set_transition(1, "a");
-	states[2].set_transition(3, "b");
-	states[3].set_transition(1, "a");
-	states[3].set_transition(3, "b");
-	states[4].set_transition(1, "a");
-	states[4].set_transition(5, "b");
-	states[5].set_transition(6, "a");
-	states[5].set_transition(5, "b");
-	states[6].set_transition(6, "a");
-	states[6].set_transition(7, "b");
-	states[7].set_transition(6, "a");
-	states[7].set_transition(5, "b");
-	states[0].is_terminal = true;
-	states[1].is_terminal = true;
-	states[2].is_terminal = true;
-	states[4].is_terminal = true;
-	states[5].is_terminal = true;
+void Example::arden_example() {
 
-	FiniteAutomaton NDM(0, states, {"a", "b"});
-	cout << NDM.nfa_to_regex().to_txt() + "\n";
+	Regex r1("b((b(b|)ab*))*");
+	// cout << r1.to_tompson().to_txt();
+	Regex temp = r1.to_tompson().to_regex();
+	// cout << temp.to_txt() << "\n";
+	//  cout << temp.to_tompson().to_txt();
 }
 
 void Example::table() {
@@ -477,14 +453,14 @@ void Example::all_examples() {
 	// transformation_monoid_example();
 	// normalize_regex();
 	// step();
-	// parsing_nfa();
-	// fa_subset_check();
-	// arden_test();
-	// to_image();
-	// tester();
-	// step_interection();
-	// table();
-	// fa_semdet_check();
+	parsing_nfa();
+	fa_subset_check();
+	arden_example();
+	//  to_image();
+	//  tester();
+	//  step_interection();
+	//  table();
+	fa_semdet_check();
 	Regex("abaa").pump_length();
 	cout << "all the examlples are successful" << endl;
 }
@@ -495,13 +471,14 @@ void Example::test_all() {
 	// test_fa_equiv();
 	test_bisimilar();
 	test_merge_bisimilar();
-	// test_regex_subset();
-	// test_regex_equal();
-	// test_ambiguity();
-	// test_arden();
-	// test_pump_length();
-	// test_is_one_unambiguous();
-	cout << "all tests passed" << endl;
+	test_regex_subset();
+	test_regex_equal();
+	test_ambiguity();
+	test_arden();
+	test_pump_length();
+	test_is_one_unambiguous();
+	test_interpreter();
+	cout << "all tests passed\n\n";
 }
 
 void Example::test_fa_equal() {
@@ -705,17 +682,25 @@ void Example::test_ambiguity() {
 	assert(fa5.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
 	assert(fa6.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
 }
-
 void Example::test_arden() {
-	Regex r1("a");
-	Regex r2("a*");
-	Regex r3("(ab)*a");
-	Regex r4("a(a)*ab(bb)*baa");
+	auto test_equivalence = [](string rgx_str) {
+		Regex reg(rgx_str);
+		assert(Regex::equivalent(reg, reg.to_tompson().to_regex()));
+		assert(Regex::equivalent(reg, reg.to_glushkov().to_regex()));
+		assert(Regex::equivalent(reg, reg.to_ilieyu().to_regex()));
+		assert(Regex::equivalent(reg, reg.to_antimirov().to_regex()));
+	};
 
-	assert(Regex::equivalent(r1, r1.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r2, r2.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r3, r3.to_tompson().nfa_to_regex()));
-	assert(Regex::equivalent(r4, r4.to_tompson().nfa_to_regex()));
+	test_equivalence("a");
+	test_equivalence("a*");
+	test_equivalence("(ab)*a");
+	test_equivalence("a(a)*ab(bb)*baa");
+	test_equivalence("(b)*(b)");
+	test_equivalence("a*|");
+	test_equivalence("|b((b((a)*)(a(|(a))))*)");
+	test_equivalence("(((a*)))(((a(b|)|a)*||b))");
+	test_equivalence("((b(((ba|b)|||(b))*)))");
+	test_equivalence("(((((a*)((a*)|bb)(((|||((b)))))))))");
 }
 
 void Example::test_pump_length() {
@@ -740,3 +725,22 @@ void Example::test_is_one_unambiguous() {
 	// doesn't fulfills the orbit property
 	assert(!r5.to_glushkov().is_one_unambiguous());
 };
+
+// void Example::test_interpreter() {
+// 	Interpreter interpreter;
+// 	interpreter.set_log_mode(Interpreter::LogMode::nothing);
+// 	assert(!interpreter.run_line("A = Annote (Glushkova {a})"));
+// 	assert(interpreter.run_line("N1 = ((Glushkov ({ab|a})))"));
+// 	assert(interpreter.run_line("N2 =  (Annote N1)"));
+// 	assert(!interpreter.run_line("N2 =  (Glushkov N1)"));
+// 	assert(!interpreter.run_line("Equiv N1 N3"));
+// 	assert(interpreter.run_line("Equiv ((N1)) ((Reverse.Reverse (N2)))"));
+// 	assert(interpreter.run_line("Test (Glushkov {a*}) {a*} 1"));
+
+// 	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a}"));
+// 	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a})"));
+// 	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a}))"));
+// 	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a} !!"));
+// 	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!"));
+// 	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
+// }

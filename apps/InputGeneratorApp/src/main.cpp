@@ -33,10 +33,7 @@ int main() {
 	TG.write_to_file("test.txt");
 
 	// Загружаем в интерпретатор файл с коммандами
-	interpreter.load_file("test.txt");
-
-	// Выполняем коммнады
-	interpreter.run_all();
+	interpreter.run_file("test.txt");
 
 	// Гененрируем выходной документ, завершаем работу логгера
 	Logger::finish();
