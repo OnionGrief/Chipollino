@@ -16,26 +16,26 @@ class Language;
 class FiniteAutomaton;
 struct State;
 
-struct Lexem {
-	enum Type {
-		error,
-		parL, // (
-		parR, // )
-		alt,  // |
-		conc, // .
-		star, // *
-		symb, // alphabet symbol
-		eps,  // Epsilon
-	};
-
-	Type type = error;
-	alphabet_symbol symbol = "";
-	int number = 0;
-	Lexem(Type type = error, alphabet_symbol symbol = "", int number = 0);
-};
-
 class Regex : BaseObject {
   private:
+	struct Lexem {
+		enum Type {
+			error,
+			parL, // (
+			parR, // )
+			alt,  // |
+			conc, // .
+			star, // *
+			symb, // alphabet symbol
+			eps,  // Epsilon
+		};
+
+		Type type = error;
+		alphabet_symbol symbol = "";
+		int number = 0;
+		Lexem(Type type = error, alphabet_symbol symbol = "", int number = 0);
+	};
+
 	enum Type {
 		// Epsilon
 		eps,

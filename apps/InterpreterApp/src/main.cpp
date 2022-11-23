@@ -20,10 +20,7 @@ int main(int argc, char* argv[]) {
 	// Загружаем в интерпретатор файл с коммандами
 	string load_file = "test.txt";
 	if (argc > 1) load_file = argv[1];
-	interpreter.load_file(load_file);
-
-	// Выполняем коммнады
-	interpreter.run_all();
+	interpreter.run_file(load_file);
 
 	// Гененрируем выходной документ, завершаем работу логгера
 	Logger::finish();
