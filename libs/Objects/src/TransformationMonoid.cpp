@@ -2,8 +2,9 @@
 
 #include <iostream>
 using namespace std;
-vector<string> union_words(vector<string> a, vector<string> b) {
-	vector<string> newword;
+vector<alphabet_symbol> union_words(vector<alphabet_symbol> a,
+									vector<alphabet_symbol> b) {
+	vector<alphabet_symbol> newword;
 	for (int i = 0; i < a.size(); i++) {
 		newword.push_back(a[i]);
 	}
@@ -14,7 +15,7 @@ vector<string> union_words(vector<string> a, vector<string> b) {
 }
 
 // vector<string> to string
-string to_str(vector<string> in) {
+string to_str(vector<alphabet_symbol> in) {
 	string out = "";
 	for (int i = 0; i < in.size(); i++) {
 		out += in[i];
@@ -22,24 +23,25 @@ string to_str(vector<string> in) {
 	return out;
 }
 //получаем	все	перестановки	алфавита	длины	len
-vector<vector<string>> get_comb_alphabet(int len,
-										 const set<alphabet_symbol>& alphabet) {
+vector<vector<alphabet_symbol>> get_comb_alphabet(
+	int len, const set<alphabet_symbol>& alphabet) {
 
-	vector<vector<string>> newcomb;
+	vector<vector<alphabet_symbol>> newcomb;
 	if (len == 0) {
 		return newcomb;
 	}
 	for (set<alphabet_symbol>::iterator it = alphabet.begin();
 		 it != alphabet.end(); it++) {
-		vector<string> new_symbol;
+		vector<alphabet_symbol> new_symbol;
 		new_symbol.push_back(*it);
 		newcomb.push_back(new_symbol);
 	}
 	if (len == 1) {
 		return newcomb;
 	}
-	vector<vector<string>> comb;
-	vector<vector<string>> oldcomb = get_comb_alphabet(len - 1, alphabet);
+	vector<vector<alphabet_symbol>> comb;
+	vector<vector<alphabet_symbol>> oldcomb =
+		get_comb_alphabet(len - 1, alphabet);
 	for (int i = 0; i < newcomb.size(); i++) {
 		for (int j = 0; j < oldcomb.size(); j++) {
 			comb.push_back(union_words(newcomb[i], oldcomb[j]));
@@ -49,7 +51,7 @@ vector<vector<string>> get_comb_alphabet(int len,
 }
 
 //Проверяем	встречался	ли	терм	раньше
-vector<string> was_term(
+vector<alphabet_symbol> was_term(
 	vector<TransformationMonoid::Term> all_terms,
 	vector<TransformationMonoid::Transition> cur_transition) {
 	bool met_term = true;
@@ -78,17 +80,18 @@ vector<string> was_term(
 TransformationMonoid::TransformationMonoid(){};
 
 //переписывание терма
-vector<string> rewriting(vector<string> in,
-						 map<vector<string>, vector<vector<string>>> rules) {
+vector<alphabet_symbol> rewriting(
+	vector<alphabet_symbol> in,
+	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> rules) {
 	if (in.size() < 2) {
 		return in;
 	}
-	vector<string> out;
-	vector<string> out1;
+	vector<alphabet_symbol> out;
+	vector<alphabet_symbol> out1;
 	bool not_rewrite = true;
 	int counter = 0;
 	for (int k = 2; not_rewrite && (k <= in.size()); k++) {
-		vector<string> new_symbol;
+		vector<alphabet_symbol> new_symbol;
 		for (int y = 0; y < k; y++) {
 			new_symbol.push_back(in[y]);
 		}
@@ -102,14 +105,14 @@ vector<string> rewriting(vector<string> in,
 		}
 	}
 	if (!not_rewrite) {
-		vector<string> rec_in = {in.begin() + counter, in.end()};
+		vector<alphabet_symbol> rec_in = {in.begin() + counter, in.end()};
 		out1 = rewriting(rec_in, rules);
 		for (int y = 0; y < out1.size(); y++) {
 			out.push_back(out1[y]);
 		}
 		return out;
 	} else {
-		vector<string> rec_in = {in.begin() + 1, in.end()};
+		vector<alphabet_symbol> rec_in = {in.begin() + 1, in.end()};
 		out.push_back(in[0]);
 		out1 = rewriting(rec_in, rules);
 		for (int y = 0; y < out1.size(); y++) {
@@ -130,7 +133,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	bool cond_get_transactions = true;
 	while (cond_get_transactions) {
 		i++;
-		vector<vector<string>> various =
+		vector<vector<alphabet_symbol>> various =
 			get_comb_alphabet(i, automat.language->get_alphabet());
 		bool cond_rule_len = true;
 		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
@@ -174,7 +177,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 					}
 				}
 			}
-			vector<string> eqv = was_term(terms, current.transitions);
+			vector<alphabet_symbol> eqv = was_term(terms, current.transitions);
 			if (eqv.size() == 0) //Если	не	встретился	в
 								 //Эквивалентных классах
 			{
@@ -207,8 +210,8 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	return terms;
 }
 
-map<vector<string>, vector<vector<string>>> TransformationMonoid::
-	get_rewriting_rules() {
+map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
+TransformationMonoid::get_rewriting_rules() {
 	return rules;
 }
 
@@ -415,7 +418,7 @@ int TransformationMonoid::classes_number_MyhillNerode() {
 
 //Вычисление Минимальности (1 если минимальный)
 bool TransformationMonoid::is_minimal() {
-	map<vector<string>, int>
+	map<vector<alphabet_symbol>, int>
 		data; //храним ссылку на Терм (быстрее и проще искать)
 	for (int i = 0; i < terms.size(); i++) {
 		data[terms[i].name] = i;

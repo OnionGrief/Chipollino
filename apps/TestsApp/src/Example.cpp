@@ -257,7 +257,8 @@ void Example::normalize_regex() {
 void Example::to_image() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<string, set<int>>()};
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -778,4 +779,4 @@ void Example::test_interpreter() {
 	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a} !!"));
 	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!"));
 	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
-} 
+}
