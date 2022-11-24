@@ -58,7 +58,7 @@ string FiniteAutomaton::to_txt() const {
 		for (const auto& elem : state.transitions) {
 			for (int transition_to : elem.second) {
 				ss << "\t" << state.index << " -> " << transition_to
-				   << " [label = \"" << to_string(elem.first) << "\"]\n";
+				   << " [label = \"" << string(elem.first) << "\"]\n";
 			}
 		}
 	}
@@ -72,7 +72,8 @@ void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
 		 set<int>& reachable, bool use_epsilons_only) {
 	if (reachable.find(index) == reachable.end()) {
 		reachable.insert(index);
-		for (int transition_to : states[index].transitions[epsilon()]) {
+		for (int transition_to :
+			 states[index].transitions[alphabet_symbol::epsilon()]) {
 			dfs(states, alphabet, transition_to, reachable, use_epsilons_only);
 		}
 		if (!use_epsilons_only) {
@@ -575,7 +576,7 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 				enfa.states[i].is_terminal = false;
 				if (final_states_counter > 1) {
 					enfa.states[enfa.initial_state]
-						.transitions[epsilon()]
+						.transitions[alphabet_symbol::epsilon()]
 						.insert(i);
 				} else {
 					enfa.initial_state = i;
@@ -767,8 +768,7 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 			if (elem.second.size() > 1) {
 				int counter = 1;
 				for (int transition_to : elem.second) {
-					alphabet_symbol new_symb =
-						to_string(elem.first) + to_string(counter);
+					alphabet_symbol new_symb = elem.first + counter;
 					new_transitions[i][new_symb].insert(transition_to);
 					new_alphabet.insert(new_symb);
 					counter++;
@@ -776,7 +776,7 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 			} else {
 				new_transitions[i][elem.first] =
 					new_fa.states[i].transitions[elem.first];
-				if (!is_epsilon(elem.first)) {
+				if (!elem.first.is_epsilon()) {
 					new_alphabet.insert(elem.first);
 				}
 			}
@@ -802,8 +802,9 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	for (int i = 0; i < new_fa.states.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
 			if (elem.first.size() > 1) {
-				alphabet_symbol symb = remove_numbers(elem.first);
-				if (!is_epsilon(symb)) {
+				alphabet_symbol symb = elem.first;
+				symb.remove_numbers();
+				if (!symb.is_epsilon()) {
 					new_alphabet.insert(symb);
 				}
 				for (int transition_to : elem.second) {
@@ -1556,7 +1557,6 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		}
 		if (min_paths_number[k - 1] == 0) continue;
 		f1.push_back(Fraction(paths_number[k - 1], min_paths_number[k - 1]));
-
 		if (!prev_val) {
 			prev_val = f1[f1.size() - 1];
 			continue;
@@ -1761,7 +1761,8 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 		return true;
 	}
 	set<int> tr_eps =
-		state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
+		state.transitions
+			[alphabet_symbol::epsilon()]; // char_to_alphabet_symbol('\0')];
 	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
 	int n;
 	// tr_eps = {};
@@ -1776,7 +1777,7 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 		return false;
 	}
 
-	alphabet_symbol elem = char_to_alphabet_symbol(s[0]);
+	alphabet_symbol elem(s[0]);
 	set<int> tr = state.transitions[elem];
 	vector<int> trans{tr.begin(), tr.end()};
 	// tr = {};
@@ -1819,11 +1820,12 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 		stac_state.pop();
 		stack_s.pop();
 		stack_index.pop();
-		alphabet_symbol elem = char_to_alphabet_symbol(s[index]);
+		alphabet_symbol elem(s[index]);
 		set<int> tr = state.transitions[elem];
 		vector<int> trans{tr.begin(), tr.end()};
 		set<int> tr_eps =
-			state.transitions[epsilon()]; // char_to_alphabet_symbol('\0')];
+			state.transitions
+				[alphabet_symbol::epsilon()]; // char_to_alphabet_symbol('\0')];
 		vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
 		// tr = {};
 		// cout << elem << " " << state.identifier << " " << index << " "
@@ -2032,8 +2034,7 @@ Regex FiniteAutomaton::to_regex() const {
 				for (const int& index : trans) {
 					expression_arden temp_expression;
 					temp_expression.fa_state_number = i;
-					string str = "";
-					str += as;
+					string str = as;
 					Regex* r = new Regex(str);
 					temp_expression.regex_from_state = r;
 					data[index].push_back(temp_expression);

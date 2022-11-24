@@ -37,7 +37,7 @@ class TransformationMonoid : public BaseObject {
 		const Term& w); //получаем термы, что wv - в языке
 	vector<TermDouble> get_equalence_classes_vwv(
 		const Term& w); //получаем термы, что vwv - в языке
-	map<vector<string>, vector<vector<string>>>
+	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 	get_rewriting_rules(); //получаем правила переписывания
 	string get_equalence_classes_txt(); //вывод эквивалентных классов
 	string get_rewriting_rules_txt(); //вывод правил переписывания
@@ -53,6 +53,7 @@ class TransformationMonoid : public BaseObject {
   private:
 	FiniteAutomaton automat; //Автомат
 	vector<Term> terms;		 //Эквивалентные классы
-	map<vector<string>, vector<vector<string>>> rules; //Правила переписывания
+	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
+		rules; //Правила переписывания
 	vector<vector<bool>> equivalence_class_table; //таблица М-Н
 };

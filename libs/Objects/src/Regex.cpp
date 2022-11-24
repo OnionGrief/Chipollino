@@ -72,17 +72,20 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 				lexems.back().type == Regex::Lexem::parR) &&
 			(
 				// Regex::Lexem right
-				lexem.type == Regex::Lexem::symb || lexem.type == Regex::Lexem::parL)) {
+				lexem.type == Regex::Lexem::symb ||
+				lexem.type == Regex::Lexem::parL)) {
 
 			// We place . between
 			lexems.push_back({Regex::Lexem::conc});
 		}
 
-		if (lexems.size() &&
-			((lexems.back().type == Regex::Lexem::parL &&
-			  (lexem.type == Regex::Lexem::parR || lexem.type == Regex::Lexem::alt)) ||
-			 (lexems.back().type == Regex::Lexem::alt && lexem.type == Regex::Lexem::parR) ||
-			 (lexems.back().type == Regex::Lexem::alt && lexem.type == Regex::Lexem::alt))) {
+		if (lexems.size() && ((lexems.back().type == Regex::Lexem::parL &&
+							   (lexem.type == Regex::Lexem::parR ||
+								lexem.type == Regex::Lexem::alt)) ||
+							  (lexems.back().type == Regex::Lexem::alt &&
+							   lexem.type == Regex::Lexem::parR) ||
+							  (lexems.back().type == Regex::Lexem::alt &&
+							   lexem.type == Regex::Lexem::alt))) {
 			//  We place eps between
 			lexems.push_back({Regex::Lexem::eps});
 		}
@@ -552,7 +555,6 @@ void Regex::pre_order_travers() const {
 }
 
 string Regex::to_txt() const {
-
 	string str1 = "", str2 = "";
 	if (term_l) {
 		str1 = term_l->to_txt();
@@ -622,7 +624,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 		max_index = ar.second;
 
 		str = "q" + to_string(max_index + 1);
-		m[epsilon()] = {1, int(al.first.size()) + 1};
+		m[alphabet_symbol::epsilon()] = {1, int(al.first.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
 		for (size_t i = 0; i < al.first.size(); i++) {
@@ -637,7 +639,8 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 			}
 
 			if (test.is_terminal) {
-				map_l[epsilon()] = {int(al.first.size() + ar.first.size()) + 1};
+				map_l[alphabet_symbol::epsilon()] = {
+					int(al.first.size() + ar.first.size()) + 1};
 			}
 			s.push_back(State(al.first[i].index + 1, {}, al.first[i].identifier,
 							  false, map_l));
@@ -655,7 +658,8 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 				map_r[elem] = trans;
 			}
 			if (test.is_terminal) {
-				map_r[epsilon()] = {offset + int(ar.first.size())};
+				map_r[alphabet_symbol::epsilon()] = {offset +
+													 int(ar.first.size())};
 			}
 
 			s.push_back(State(ar.first[i].index + offset, {},
@@ -723,7 +727,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 		max_index = al.second;
 
 		str = "q" + to_string(max_index + 1);
-		m[epsilon()] = {1, int(al.first.size()) + 1};
+		m[alphabet_symbol::epsilon()] = {1, int(al.first.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
 		for (size_t i = 0; i < al.first.size(); i++) {
@@ -739,7 +743,8 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 			}
 
 			if (test.is_terminal) {
-				map_l[epsilon()] = {1, int(al.first.size()) + 1};
+				map_l[alphabet_symbol::epsilon()] = {1,
+													 int(al.first.size()) + 1};
 			}
 			s.push_back(State(al.first[i].index + 1, {}, al.first[i].identifier,
 							  false, map_l));
@@ -754,7 +759,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 	case Regex::eps:
 		str = "q" + to_string(max_index + 1);
 
-		m[epsilon()] = {1};
+		m[alphabet_symbol::epsilon()] = {1};
 		s.push_back(State(0, {}, str, false, m));
 		str = "q" + to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
@@ -994,19 +999,19 @@ FiniteAutomaton Regex::to_glushkov() const {
 	string str_end = "";
 	string str_pair = "";
 	for (size_t i = 0; i < first->size(); i++) {
-		str_firs = str_firs + (*first)[i].symbol +
+		str_firs = str_firs + string((*first)[i].symbol) +
 				   to_string((*first)[i].number + 1) + " ";
 	}
 
 	for (size_t i = 0; i < end->size(); i++) {
-		str_end =
-			str_end + (*end)[i].symbol + to_string((*end)[i].number + 1) + " ";
+		str_end = str_end + string((*end)[i].symbol) +
+				  to_string((*end)[i].number + 1) + " ";
 	}
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
-			str_pair = str_pair + list[it1.first]->value.symbol +
+			str_pair = str_pair + string(list[it1.first]->value.symbol) +
 					   to_string(list[it1.first]->value.number + 1) +
-					   list[it1.second[i]]->value.symbol +
+					   string(list[it1.second[i]]->value.symbol) +
 					   to_string(list[it1.second[i]]->value.number + 1) + " ";
 		}
 	}
