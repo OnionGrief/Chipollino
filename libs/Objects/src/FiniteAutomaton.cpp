@@ -1531,9 +1531,15 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 			for (int transition : elem.second)
 				min_adjacency_matrix[i][transition]++;
 	vector<Fraction> f1;
-	optional<Fraction> prev_f1_val; // для проверки на константность
+	Fraction max_checker; // максимальное значение для проверки
+						  // на однозначность
+	bool max_return_flag = true;
+	optional<Fraction> prev_f1_val;
+	Fraction max_delta_checker; // максимальный прирост для
+								// проверки на однозначность
 	Fraction prev_val; // значение calc_ambiguity
-	bool return_flag = true;
+	bool max_delta_return_flag = true;
+	bool unambigious_return_flag = true;
 	// для сохранения результатов calc_ambiguity
 	vector<vector<Fraction>> calculated(s + i + 1, vector<Fraction>(N));
 	vector<vector<char>> is_calculated(s + i + 1, vector<char>(N, 0));
@@ -1553,26 +1559,36 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 				min_paths_number[k - 1] += min_d[k][v];
 		}
 		Fraction new_f1_value;
-		if (min_paths_number[k - 1] == 0) {
+		if (min_paths_number[k - 1] == 0)
 			new_f1_value = Fraction();
-			// continue;
-		} else {
+		else {
 			new_f1_value =
 				Fraction(paths_number[k - 1], min_paths_number[k - 1]);
-
-			if (!prev_f1_val) {
-				prev_f1_val = new_f1_value;
-			} else {
-				if (!(new_f1_value == *prev_f1_val)) {
-					return_flag = false;
+			// обработка проверок на однозначность
+			if (!(new_f1_value == Fraction(1, 1)))
+				unambigious_return_flag = false;
+			if (k <= (s + 1) * 3) {
+				if (new_f1_value > max_checker) max_checker = new_f1_value;
+				if (!prev_f1_val) {
+					prev_f1_val = new_f1_value;
+				} else {
+					Fraction delta = new_f1_value - *prev_f1_val;
+					if (delta > max_delta_checker) max_delta_checker = delta;
+					prev_f1_val = new_f1_value;
 				}
+			} else if (max_return_flag && max_delta_return_flag) {
+				if (new_f1_value > max_checker) max_return_flag = false;
+				Fraction delta = new_f1_value - *prev_f1_val;
+				if (delta > max_delta_checker) max_delta_return_flag = false;
 				prev_f1_val = new_f1_value;
 			}
 		}
+		if (k > s * s && unambigious_return_flag) {
+			return FiniteAutomaton::unambigious;
+		}
+
 		vector<Fraction> f1_check = f1;
 		f1_check.push_back(new_f1_value);
-		// cout << "> " << k << " " << N << endl;
-		// cout << "F1 " << new_f1_value << endl;
 
 		if (f1_check.size() >= 3) {
 			int new_s = floor(
@@ -1584,11 +1600,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 			Fraction val =
 				calc_ambiguity(new_s + i, new_s * new_s + delta, f1_check,
 							   calculated_check, is_calculated_check);
-			// cout << "Val: " << val << endl;
 			if (Fraction() > val || Fraction() == val) continue;
-			// cout << new_s << " " << s << " " << f1_check.size() << " d" <<
-			// delta
-			// 	 << " " << N << endl;
 			calculated = calculated_check;
 			is_calculated = is_calculated_check;
 			f1.push_back(new_f1_value);
@@ -1598,13 +1610,10 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		}
 	}
 
-	if (return_flag) {
-		if (*prev_f1_val == Fraction(1, 1))
-			return FiniteAutomaton::unambigious;
-		else
-			return FiniteAutomaton::almost_unambigious;
+	if (max_return_flag || max_delta_return_flag) {
+		return FiniteAutomaton::almost_unambigious;
 	}
-	cout << "Cycle" << endl;
+
 	int k = N;
 	int return_counter = 0;
 	while (1) {
@@ -1629,14 +1638,12 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 				min_paths_number[k - 1] += min_d[k][v];
 		}
 		Fraction new_f1_value;
-		if (min_paths_number[k - 1] == 0) {
+		if (min_paths_number[k - 1] == 0)
 			new_f1_value = Fraction();
-			// continue;
-		} else {
+		else
 			new_f1_value =
 				Fraction(paths_number[k - 1], min_paths_number[k - 1]);
-		}
-		// cout << "F1 " << new_f1_value << endl;
+
 		vector<Fraction> f1_check = f1;
 		f1_check.push_back(new_f1_value);
 
@@ -1656,13 +1663,10 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		Fraction val =
 			calc_ambiguity(new_s + i, new_s * new_s + delta, f1_check,
 						   calculated_check, is_calculated_check);
-		// cout << "Val: " << val << endl;
 		if (Fraction() > val || Fraction() == val) {
 			return_counter++;
 			continue;
 		}
-		// cout << new_s << " " << s << " " << f1_check.size() << " d" <<
-		// delta << " " << N << endl;
 		if (val > prev_val || val == prev_val)
 			return FiniteAutomaton::exponentially_ambiguous;
 		return_counter = 0;
