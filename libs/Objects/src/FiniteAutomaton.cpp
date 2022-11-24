@@ -2034,8 +2034,7 @@ Regex FiniteAutomaton::to_regex() const {
 				for (const int& index : trans) {
 					expression_arden temp_expression;
 					temp_expression.fa_state_number = i;
-					string str = "";
-					str += as;
+					string str = as;
 					Regex* r = new Regex(str);
 					temp_expression.regex_from_state = r;
 					data[index].push_back(temp_expression);
