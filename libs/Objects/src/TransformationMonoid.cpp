@@ -448,7 +448,7 @@ bool TransformationMonoid::is_minimal() {
 
 	Logger::init_step("Is minimal");
 
-	Logger::log(((log2(terms.size()) + 1) <= counter) ? "true" : "false");
+	Logger::log(((log2(terms.size()) + 1) <= counter) ? "True" : "False");
 	Logger::finish_step();
 	return (log2(terms.size()) + 1) <= counter;
 }

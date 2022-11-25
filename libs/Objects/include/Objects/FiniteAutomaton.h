@@ -59,6 +59,7 @@ class FiniteAutomaton : public BaseObject {
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
 	AmbiguityValue get_ambiguity_value() const;
+	optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
 	std::optional<std::string> get_prefix(int state_beg, int state_end,

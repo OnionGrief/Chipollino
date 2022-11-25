@@ -1714,7 +1714,12 @@ void find_maximum_identity_matrix(vector<vector<bool>>& table, int& res,
 }
 
 int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
+	Logger::init_step("GlaisterShallit");
 	if (language->nfa_minimum_size_cached()) {
+		Logger::log(
+			"Количество диагональных классов по методу Глейстера-Шаллита",
+			to_string(language->get_nfa_minimum_size()));
+		Logger::finish_step();
 		return language->get_nfa_minimum_size();
 	}
 
@@ -1732,24 +1737,44 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
 	}
 	// кэширование
 	language->set_nfa_minimum_size(result);
+	Logger::log("Количество диагональных классов по методу Глейстера-Шаллита",
+				to_string(result));
+	Logger::finish_step();
 	return result;
 }
 
-optional<bool> FiniteAutomaton::is_nfa_minimal() const {
-	optional<int> language_pump_length = language->get_pump_length();
-	if (!language_pump_length) return nullopt;
+optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
+	if (!language->pump_length_cached()) return nullopt;
+	int language_pump_length = language->get_pump_length();
 
-	int transition_states_counter = 0;
+	/*int transition_states_counter = 0;
 	for (const State& state : states)
 		if (state.transitions.size() > 0) transition_states_counter++;
 	if (language_pump_length == transition_states_counter)
-		return true;
-	else if (language_pump_length < transition_states_counter)
-		return states_number() == get_classes_number_GlaisterShallit();
+		return true;*/
+	if (states.size() > language_pump_length)
+		return states.size() == get_classes_number_GlaisterShallit();
+
+	return nullopt;
+}
+
+optional<bool> FiniteAutomaton::is_nfa_minimal() const {
+	Logger::init_step("Minimal");
+	optional<bool> result = get_nfa_minimality_value();
+	if (result.has_value())
+		Logger::log(result.value() ? "True" : "False");
+	else
+		Logger::log("Unknown");
+	Logger::finish_step();
+	return result;
 }
 
 bool FiniteAutomaton::is_dfa_minimal() const {
-	return states_number() == minimize().states_number();
+	Logger::init_step("Minimal");
+	bool result = states.size() == minimize().states.size();
+	Logger::log(result ? "True" : "False");
+	Logger::finish_step();
+	return result;
 }
 
 std::optional<std::string> FiniteAutomaton::get_prefix(

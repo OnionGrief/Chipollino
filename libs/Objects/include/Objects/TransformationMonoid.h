@@ -12,7 +12,7 @@ using namespace std;
 class Language;
 class FiniteAutomaton;
 
-class TransformationMonoid : public BaseObject {
+class TransformationMonoid {
   public:
 	struct Transition { //переход (индекс состояния - индекс состояния)
 		int first;
@@ -41,7 +41,7 @@ class TransformationMonoid : public BaseObject {
 	get_rewriting_rules(); //получаем правила переписывания
 	string get_equalence_classes_txt(); //вывод эквивалентных классов
 	string get_rewriting_rules_txt(); //вывод правил переписывания
-	string to_txt() const override;
+	string to_txt() const;
 	int is_synchronized(
 		const Term& w); //Вернет	-1	если	не	синхронизирован	или
 	//номер состояния	с	которым синхронизирован
