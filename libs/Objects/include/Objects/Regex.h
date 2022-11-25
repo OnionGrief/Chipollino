@@ -110,7 +110,7 @@ class Regex : BaseObject {
 	void print_tree();
 
 	FiniteAutomaton to_tompson() const;
-	FiniteAutomaton to_glushkov() const;
+	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_ilieyu() const;
 	FiniteAutomaton to_antimirov() const;
 

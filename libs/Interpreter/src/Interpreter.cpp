@@ -109,6 +109,10 @@ void Interpreter::set_log_mode(LogMode mode) {
 	log_mode = mode;
 }
 
+void Interpreter::generate_log(const string& filename) {
+	tex_logger.render_to_file(filename);
+}
+
 void Interpreter::InterpreterLogger::log(const string& str) {
 	if (parent.log_mode == LogMode::all) {
 		for (int i = 1; i < parent.log_nesting; i++) {
@@ -140,14 +144,17 @@ GeneralObject Interpreter::apply_function_sequence(
 	const vector<Function>& functions, vector<GeneralObject> arguments) {
 
 	for (const auto& func : functions) {
-		arguments = {apply_function(func, arguments)};
+		LogTemplate log_template;
+		arguments = {apply_function(func, arguments, log_template)};
+		tex_logger.add_log(log_template);
 	}
 
 	return arguments[0];
 }
 
 GeneralObject Interpreter::apply_function(
-	const Function& function, const vector<GeneralObject>& arguments) {
+	const Function& function, const vector<GeneralObject>& arguments,
+	LogTemplate& log_template) {
 
 	auto logger = init_log();
 	logger.log("running function \"" + function.name + "\"");
@@ -176,8 +183,11 @@ GeneralObject Interpreter::apply_function(
 			   holds_alternative<ObjectDFA>(obj);
 	};
 
+	log_template.set_parameter("name", function.name);
+
 	if (function.name == "Glushkov") {
-		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_glushkov());
+		return ObjectNFA(
+			get<ObjectRegex>(arguments[0]).value.to_glushkov(&log_template));
 	}
 
 	if (function.name == "IlieYu") {
@@ -321,7 +331,7 @@ GeneralObject Interpreter::apply_function(
 
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
-		//Logger::activate_step_counter();
+		// Logger::activate_step_counter();
 
 		if (holds_alternative<ObjectRegex>(resval) &&
 			holds_alternative<ObjectRegex>(predres)) {
@@ -338,7 +348,7 @@ GeneralObject Interpreter::apply_function(
 						   "\" has left automaton unchanged");
 			}
 
-		//Logger::deactivate_step_counter();
+		// Logger::deactivate_step_counter();
 		return res.value();
 	}
 
@@ -515,7 +525,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 }
 
 optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
-	
+
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
@@ -567,10 +577,10 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 	logger.log("");
 	logger.log("Running declaration...");
 	if (decl.show_result) {
-		//Logger::activate();
+		// Logger::activate();
 		logger.log("logger is activated for this task");
 	} else {
-		//Logger::deactivate();
+		// Logger::deactivate();
 	}
 	if (const auto& expr = eval_expression(decl.expr); expr.has_value()) {
 		objects[decl.id] = *expr;
@@ -579,7 +589,7 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 		return false;
 	}
 	logger.log("assigned to " + to_string(decl.id));
-	//Logger::deactivate();
+	// Logger::deactivate();
 	return true;
 }
 
@@ -587,7 +597,7 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running predicate...");
-	//Logger::activate();
+	// Logger::activate();
 
 	FunctionSequence seq;
 	seq.functions = {pred.predicate};
@@ -604,7 +614,7 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 		success = false;
 	}
 
-	//Logger::deactivate();
+	// Logger::deactivate();
 	return success;
 }
 
@@ -612,7 +622,7 @@ bool Interpreter::run_test(const Test& test) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running test...");
-	//Logger::activate();
+	// Logger::activate();
 
 	auto language = eval_expression(test.language);
 	auto test_set = eval_expression(test.test_set);
@@ -638,7 +648,7 @@ bool Interpreter::run_test(const Test& test) {
 		success = false;
 	}
 
-	//Logger::deactivate();
+	// Logger::deactivate();
 	return success;
 }
 

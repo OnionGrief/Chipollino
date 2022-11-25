@@ -21,6 +21,7 @@ int main(int argc, char* argv[]) {
 	string load_file = "test.txt";
 	if (argc > 1) load_file = argv[1];
 	interpreter.run_file(load_file);
+	interpreter.generate_log("log.txt");
 
 	// Гененрируем выходной документ, завершаем работу логгера
 	//Logger::finish();

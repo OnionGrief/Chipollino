@@ -15,7 +15,7 @@ class LogTemplate : public iLogTemplate {
 	void set_parameter(const string& key, int value) override;
 
 	// Рендерит все логи, возвращает строку
-	string render();
+	string render() const;
 
   private:
 	// LaTeX-шаблон

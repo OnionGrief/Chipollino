@@ -974,7 +974,7 @@ Regex Regex::delinearize() const {
 	return test;
 }
 
-FiniteAutomaton Regex::to_glushkov() const {
+FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 	//Logger::init_step("Автомат Глушкова");
 
@@ -1024,6 +1024,13 @@ FiniteAutomaton Regex::to_glushkov() const {
 	//Logger::log("First", str_firs);
 	//Logger::log("End", str_end);
 	//Logger::log("Pairs", str_pair);
+
+	if (log) {
+		log->set_parameter("regex", test);
+		log->set_parameter("first", str_firs);
+		log->set_parameter("end", str_end);
+		log->set_parameter("pairs", str_pair);
+	}
 
 	for (size_t i = 0; i < first->size(); i++) {
 		tr[(*first)[i].symbol].insert((*first)[i].number + 1);

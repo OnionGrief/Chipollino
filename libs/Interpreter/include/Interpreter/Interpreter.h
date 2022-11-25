@@ -1,9 +1,9 @@
 #pragma once
 #include "Interpreter/Typization.h"
+#include "Logger/Logger.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
-#include "Logger/Logger.h"
 #include <deque>
 #include <fstream>
 #include <map>
@@ -23,8 +23,13 @@ class Interpreter {
 	bool run_file(const string& path);
 	// Установит режим логгирования в консоль
 	void set_log_mode(LogMode mode);
+	// Выгружает лог в файл
+	void generate_log(const string& filename);
 
   private:
+	// Логгер для преобразований
+	Logger tex_logger;
+
 	// true, если во время исполнения произошла ошибка
 	bool error = false;
 
@@ -48,14 +53,6 @@ class Interpreter {
 	};
 
 	InterpreterLogger init_log();
-
-	// Применение цепочки функций к набору аргументов
-	GeneralObject apply_function_sequence(const vector<Function>& functions,
-										  vector<GeneralObject> arguments);
-
-	// Применение функции к набору аргументов
-	GeneralObject apply_function(const Function& function,
-								 const vector<GeneralObject>& arguments);
 
 	// Тут хранятся объекты по их id
 	map<string, GeneralObject> objects;
@@ -148,8 +145,17 @@ class Interpreter {
 	bool run_test(const Test&);
 	bool run_operation(const GeneralOperation&);
 
+	// Применение цепочки функций к набору аргументов
+	GeneralObject apply_function_sequence(const vector<Function>& functions,
+										  vector<GeneralObject> arguments);
+
+	// Применение функции к набору аргументов
+	GeneralObject apply_function(const Function& function,
+								 const vector<GeneralObject>& arguments,
+								 LogTemplate& log_template);
+
 	// Список опреаций для последовательного выполнения
-	vector<GeneralOperation> operations;
+	// vector<GeneralOperation> operations;
 
 	// Сравнение типов ожидаемых и полученных входных данных
 	bool typecheck(vector<ObjectType> func_input_type,
