@@ -7,6 +7,7 @@
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
+#include "Interpreter/Interpreter.h"
 #include <cassert>
 #include <iostream>
 /*
@@ -32,7 +33,7 @@ class Example {
 	static void step();
 	static void parsing_nfa();
 	static void fa_subset_check();
-	static void arden_test();
+	static void arden_example();
 	static void to_image();
 	static void tester();
 	static void step_interection();
@@ -50,4 +51,5 @@ class Example {
 	static void test_arden();
 	static void test_pump_length();
 	static void test_is_one_unambiguous();
+	static void test_interpreter();
 };
