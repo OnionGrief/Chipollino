@@ -182,18 +182,18 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 
 FiniteAutomaton FiniteAutomaton::minimize() const {
 	Logger::init_step("Minimize");
-	optional<FiniteAutomaton> language_min_dfa = language->get_min_dfa();
-	if (language_min_dfa) {
+	if (language->min_dfa_cached()) {
+		FiniteAutomaton language_min_dfa = language->get_min_dfa();
 		Logger::log("Автомат до минимизации", "Автомат после минимизации",
-					*this, *language_min_dfa);
+					*this, language_min_dfa);
 		stringstream ss;
-		for (const auto& state : language_min_dfa->states) {
+		for (const auto& state : language_min_dfa.states) {
 			ss << "\\{" << state.identifier << "\\} ";
 		}
 		Logger::log("Эквивалентные классы", ss.str());
 		Logger::finish_step();
-		return *language_min_dfa; // TODO Нужно решить, что делаем с
-								  // идентификаторами
+		return language_min_dfa; // TODO Нужно решить, что делаем с
+								 // идентификаторами
 	}
 	// минимизация
 	FiniteAutomaton dfa = determinize();
@@ -1656,10 +1656,8 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 }
 
 TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
-	optional<TransformationMonoid> language_syntactic_monoid =
-		language->get_syntactic_monoid();
-	if (language_syntactic_monoid) {
-		return *language_syntactic_monoid;
+	if (language->syntactic_monoid_cached()) {
+		return language->get_syntactic_monoid();
 	}
 	FiniteAutomaton min_dfa = minimize();
 	TransformationMonoid syntactic_monoid(min_dfa);
@@ -1715,9 +1713,9 @@ void find_maximum_identity_matrix(vector<vector<bool>>& table, int& res,
 	}
 }
 
-bool FiniteAutomaton::minimality_test_GlaisterShallit() const {
-	if (language->get_nfa_minimum_size()) {
-		return *language->get_nfa_minimum_size() == states_number();
+int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
+	if (language->nfa_minimum_size_cached()) {
+		return language->get_nfa_minimum_size();
 	}
 
 	vector<vector<bool>> equivalence_classes_table =
