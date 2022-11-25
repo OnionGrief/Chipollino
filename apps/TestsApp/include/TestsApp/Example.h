@@ -3,7 +3,7 @@
 #include "InputGenerator/TasksGenerator.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
-#include "Objects/Logger.h"
+#include "Objects/iLogTemplate.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"

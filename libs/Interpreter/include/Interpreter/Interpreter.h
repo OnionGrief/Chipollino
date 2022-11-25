@@ -3,6 +3,7 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
+#include "Logger/Logger.h"
 #include <deque>
 #include <fstream>
 #include <map>

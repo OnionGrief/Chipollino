@@ -20,8 +20,8 @@ int main() {
 	*/
 
 	cout << "Input generator\n";
-	Logger::init();
-	Logger::activate();
+	//Logger::init();
+	//Logger::activate();
 
 	// Инициализируем интерпретатор
 	Interpreter interpreter;
@@ -36,6 +36,6 @@ int main() {
 	interpreter.run_file("test.txt");
 
 	// Гененрируем выходной документ, завершаем работу логгера
-	Logger::finish();
-	Logger::deactivate();
+	//Logger::finish();
+	//Logger::deactivate();
 }

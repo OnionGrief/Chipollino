@@ -321,7 +321,7 @@ GeneralObject Interpreter::apply_function(
 
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
-		Logger::activate_step_counter();
+		//Logger::activate_step_counter();
 
 		if (holds_alternative<ObjectRegex>(resval) &&
 			holds_alternative<ObjectRegex>(predres)) {
@@ -338,7 +338,7 @@ GeneralObject Interpreter::apply_function(
 						   "\" has left automaton unchanged");
 			}
 
-		Logger::deactivate_step_counter();
+		//Logger::deactivate_step_counter();
 		return res.value();
 	}
 
@@ -567,10 +567,10 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 	logger.log("");
 	logger.log("Running declaration...");
 	if (decl.show_result) {
-		Logger::activate();
+		//Logger::activate();
 		logger.log("logger is activated for this task");
 	} else {
-		Logger::deactivate();
+		//Logger::deactivate();
 	}
 	if (const auto& expr = eval_expression(decl.expr); expr.has_value()) {
 		objects[decl.id] = *expr;
@@ -579,7 +579,7 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 		return false;
 	}
 	logger.log("assigned to " + to_string(decl.id));
-	Logger::deactivate();
+	//Logger::deactivate();
 	return true;
 }
 
@@ -587,7 +587,7 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running predicate...");
-	Logger::activate();
+	//Logger::activate();
 
 	FunctionSequence seq;
 	seq.functions = {pred.predicate};
@@ -604,7 +604,7 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 		success = false;
 	}
 
-	Logger::deactivate();
+	//Logger::deactivate();
 	return success;
 }
 
@@ -612,7 +612,7 @@ bool Interpreter::run_test(const Test& test) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running test...");
-	Logger::activate();
+	//Logger::activate();
 
 	auto language = eval_expression(test.language);
 	auto test_set = eval_expression(test.test_set);
@@ -638,7 +638,7 @@ bool Interpreter::run_test(const Test& test) {
 		success = false;
 	}
 
-	Logger::deactivate();
+	//Logger::deactivate();
 	return success;
 }
 

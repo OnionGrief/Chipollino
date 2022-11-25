@@ -122,10 +122,10 @@ vector<string> rewriting(vector<string> in,
 
 //Получаем ДКА и строим моноид
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
-	Logger::activate_step_counter();
+	//Logger::activate_step_counter();
 	automat = in.remove_trap_states();
 	automat.remove_unreachable_states();
-	Logger::deactivate_step_counter();
+	//Logger::deactivate_step_counter();
 	int i = 0;
 	bool cond_get_transactions = true;
 	while (cond_get_transactions) {
@@ -214,40 +214,40 @@ map<vector<string>, vector<vector<string>>> TransformationMonoid::
 
 string TransformationMonoid::get_equalence_classes_txt() {
 	stringstream ss;
-	Logger::init_step("Equivalence classes");
+	//Logger::init_step("Equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
 
-		Logger::log("class " + to_str(terms[i].name),
-					terms[i].isFinal ? "in lang" : "not in lang");
+		//Logger::log("class " + to_str(terms[i].name),
+					//terms[i].isFinal ? "in lang" : "not in lang");
 		ss << "Term	" << to_str(terms[i].name) << "	in	language	"
 		   << terms[i].isFinal << "\n";
 		for (int j = 0; j < terms[i].transitions.size(); j++) {
-			Logger::log(
+			/*Logger::log(
 				"transition " +
 					automat.states[terms[i].transitions[j].first].identifier,
-				automat.states[terms[i].transitions[j].second].identifier);
+				automat.states[terms[i].transitions[j].second].identifier);*/
 			ss << automat.states[terms[i].transitions[j].first].identifier
 			   << "	->	"
 			   << automat.states[terms[i].transitions[j].second].identifier
 			   << "\n";
 		}
 	}
-	Logger::finish_step();
+	//Logger::finish_step();
 	return ss.str();
 }
 
 string TransformationMonoid::get_rewriting_rules_txt() {
 	stringstream ss;
-	Logger::init_step("Rewriting Rules");
+	//Logger::init_step("Rewriting Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
-			Logger::log("rewriting " + to_str(item.first),
+			/*Logger::log("rewriting " + to_str(item.first),
 						to_str(item.second[i]));
 			ss << to_str(item.first) << "	->	" << to_str(item.second[i])
-			   << "\n";
+			   << "\n";*/
 		}
 	}
-	Logger::finish_step();
+	//Logger::finish_step();
 	return ss.str();
 }
 
@@ -358,42 +358,42 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 //Вернет	-1	если	не	синхронизирован	или	номер
 //состояния	с	которым синхронизирован
 int TransformationMonoid::is_synchronized(const Term& w) {
-	Logger::init_step("Is synchronized word?");
-	Logger::log("word " + to_str(w.name));
+	//Logger::init_step("Is synchronized word?");
+	//Logger::log("word " + to_str(w.name));
 
 	if (w.transitions.size() == 0) {
-		Logger::log("not synchronized");
-		Logger::finish_step();
+		//Logger::log("not synchronized");
+		//Logger::finish_step();
 		return -1;
 	}
 	int state = w.transitions[0].second;
 	for (int i = 1; i < w.transitions.size(); i++) {
 		if (w.transitions[i].second != state) {
-			Logger::log("not synchronized");
-			Logger::finish_step();
+			//Logger::log("not synchronized");
+			//Logger::finish_step();
 			return -1;
 		}
 	}
-	Logger::log("synchronized");
-	Logger::finish_step();
+	//Logger::log("synchronized");
+	//Logger::finish_step();
 	return state;
 }
 
 //Вернет число классов эквивалентности
 int TransformationMonoid::class_card() {
-	Logger::init_step("Number of equivalence classes");
-	Logger::log(to_string(terms.size()));
-	Logger::finish_step();
+	//Logger::init_step("Number of equivalence classes");
+	//Logger::log(to_string(terms.size()));
+	//Logger::finish_step();
 	return terms.size();
 }
 
 //Вернет самое длинное слово в классе
 int TransformationMonoid::class_length() {
-	Logger::init_step("Longest word in the class");
-	Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
-	Logger::log("One of the correct words",
-				to_str(terms[terms.size() - 1].name));
-	Logger::finish_step();
+	//Logger::init_step("Longest word in the class");
+	//Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
+	//Logger::log("One of the correct words",
+				//to_str(terms[terms.size() - 1].name));
+	//Logger::finish_step();
 	return terms[terms.size() - 1].name.size();
 }
 
@@ -407,9 +407,9 @@ int TransformationMonoid::classes_number_MyhillNerode() {
 			}
 		}
 	}
-	Logger::init_step("Myhill-Nerode сlasses number");
-	Logger::log(to_string(sum));
-	Logger::finish_step();
+	//Logger::init_step("Myhill-Nerode сlasses number");
+	//Logger::log(to_string(sum));
+	//Logger::finish_step();
 	return sum;
 }
 
@@ -444,10 +444,10 @@ bool TransformationMonoid::is_minimal() {
 		}
 	}
 
-	Logger::init_step("Is minimal");
+	//Logger::init_step("Is minimal");
 
-	Logger::log(((log2(terms.size()) + 1) <= counter) ? "true" : "false");
-	Logger::finish_step();
+	//Logger::log(((log2(terms.size()) + 1) <= counter) ? "true" : "false");
+	//Logger::finish_step();
 	return (log2(terms.size()) + 1) <= counter;
 }
 
@@ -471,9 +471,9 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 		}
 		ss << "\n";
 	}
-	Logger::init_step("MyhillNerode TABLE");
-	Logger::log(ss.str());
-	Logger::finish_step();
+	//Logger::init_step("MyhillNerode TABLE");
+	//Logger::log(ss.str());
+	//Logger::finish_step();
 	return ss.str();
 }
 //В психиатрической больнице люди по настоящему заботятся о своём здоровье. Они

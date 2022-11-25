@@ -8,8 +8,8 @@ int main(int argc, char* argv[]) {
 	cout << "Chipollino :-)\n";
 
 	// Инициализируем логгер
-	Logger::init();
-	Logger::activate();
+	//Logger::init();
+	//Logger::activate();
 
 	// Example::all_examples();
 
@@ -23,6 +23,6 @@ int main(int argc, char* argv[]) {
 	interpreter.run_file(load_file);
 
 	// Гененрируем выходной документ, завершаем работу логгера
-	Logger::finish();
-	Logger::deactivate();
+	//Logger::finish();
+	//Logger::deactivate();
 }

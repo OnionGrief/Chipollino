@@ -2,7 +2,7 @@
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
 #include "Language.h"
-#include "Logger.h"
+#include "iLogTemplate.h"
 #include <algorithm>
 #include <iostream>
 #include <map>

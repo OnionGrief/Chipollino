@@ -3,7 +3,7 @@
 #include "InfInt/InfInt.h"
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
-#include "Objects/Logger.h"
+#include "Objects/iLogTemplate.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -96,11 +96,11 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 }
 
 FiniteAutomaton FiniteAutomaton::determinize() const {
-	Logger::init_step("Determinize");
+	//Logger::init_step("Determinize");
 	if (states.size() == 1) {
-		Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
-					*this, *this);
-		Logger::finish_step();
+		//Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
+		//			*this, *this);
+		//Logger::finish_step();
 		return *this;
 	}
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
@@ -178,24 +178,24 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
-	Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
-				*this, dfa);
-	Logger::finish_step();
+	//Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
+				//*this, dfa);
+	//Logger::finish_step();
 	return dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::minimize() const {
-	Logger::init_step("Minimize");
+	//Logger::init_step("Minimize");
 	optional<FiniteAutomaton> language_min_dfa = language->get_min_dfa();
 	if (language_min_dfa) {
-		Logger::log("Автомат до минимизации", "Автомат после минимизации",
-					*this, *language_min_dfa);
+		//Logger::log("Автомат до минимизации", "Автомат после минимизации",
+					//*this, *language_min_dfa);
 		stringstream ss;
 		for (const auto& state : language_min_dfa->states) {
 			ss << "\\{" << state.identifier << "\\} ";
 		}
-		Logger::log("Эквивалентные классы", ss.str());
-		Logger::finish_step();
+		//Logger::log("Эквивалентные классы", ss.str());
+		//Logger::finish_step();
 		return *language_min_dfa; // TODO Нужно решить, что делаем с
 								  // идентификаторами
 	}
@@ -305,19 +305,19 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	// кэширование
 	language->set_min_dfa(minimized_dfa.initial_state, minimized_dfa.states,
 						  minimized_dfa.language);
-	Logger::log("Автомат до минимизации", "Автомат после минимизации", *this,
-				minimized_dfa);
+	//Logger::log("Автомат до минимизации", "Автомат после минимизации", *this,
+				//minimized_dfa);
 	stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
 		ss << "\\{" << state.identifier << "\\} ";
 	}
-	Logger::log("Эквивалентные классы", ss.str());
-	Logger::finish_step();
+	//Logger::log("Эквивалентные классы", ss.str());
+	//Logger::finish_step();
 	return minimized_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_eps() const {
-	Logger::init_step("RemEps");
+	//Logger::init_step("RemEps");
 	FiniteAutomaton new_nfa(initial_state, states, language);
 
 	for (auto& state : new_nfa.states)
@@ -352,15 +352,15 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 		}
 	}
 	new_nfa = new_nfa.remove_unreachable_states();
-	Logger::log("Автомат до удаления eps-переходов",
-				"Автомат после удаления eps-переходов", *this, new_nfa);
-	Logger::finish_step();
+	//Logger::log("Автомат до удаления eps-переходов",
+				//"Автомат после удаления eps-переходов", *this, new_nfa);
+	//Logger::finish_step();
 	return new_nfa;
 }
 
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 											  const FiniteAutomaton& fa2) {
-	Logger::init_step("Intersection");
+	//Logger::init_step("Intersection");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -418,15 +418,15 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 		new_dfa.states[i].transitions = new_transitions;
 	}
 	new_dfa = new_dfa.remove_unreachable_states();
-	Logger::log("Первый автомат", "Второй автомат", "Результат пересечения",
-				fa1, fa2, new_dfa);
-	Logger::finish_step();
+	//Logger::log("Первый автомат", "Второй автомат", "Результат пересечения",
+				//fa1, fa2, new_dfa);
+	//Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 										const FiniteAutomaton& fa2) {
-	Logger::init_step("Union");
+	//Logger::init_step("Union");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -467,15 +467,15 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 		}
 	}
 	new_dfa = new_dfa.remove_unreachable_states();
-	Logger::log("Первый автомат", "Второй автомат", "Результат объединения",
-				fa1, fa2, new_dfa);
-	Logger::finish_step();
+	//Logger::log("Первый автомат", "Второй автомат", "Результат объединения",
+				//fa1, fa2, new_dfa);
+	//Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 											const FiniteAutomaton& fa2) {
-	Logger::init_step("Difference");
+	//Logger::init_step("Difference");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -527,14 +527,14 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 		new_dfa.states[i].transitions = new_transitions;
 	}
 	new_dfa = new_dfa.remove_unreachable_states();
-	Logger::log("Первый автомат", "Второй автомат", "Результат разности", fa1,
-				fa2, new_dfa);
-	Logger::finish_step();
+	//Logger::log("Первый автомат", "Второй автомат", "Результат разности", fa1,
+				//fa2, new_dfa);
+	//Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::complement() const {
-	Logger::init_step("Complement");
+	//Logger::init_step("Complement");
 	FiniteAutomaton new_dfa =
 		FiniteAutomaton(initial_state, states, language->get_alphabet());
 	new_dfa = new_dfa.add_trap_state();
@@ -545,13 +545,13 @@ FiniteAutomaton FiniteAutomaton::complement() const {
 	for (int i = 0; i < new_dfa.states.size(); i++)
 		if (new_dfa.states[i].is_terminal) final_states_counter++;
 	if (!final_states_counter) new_dfa = new_dfa.minimize();
-	Logger::log("Автомат до дополнения", "Автомат после дополнения", *this,
-				new_dfa);
-	Logger::finish_step();
+	//Logger::log("Автомат до дополнения", "Автомат после дополнения", *this,
+				//new_dfa);
+	//Logger::finish_step();
 	return new_dfa;
 }
 FiniteAutomaton FiniteAutomaton::reverse() const {
-	Logger::init_step("Reverse");
+	//Logger::init_step("Reverse");
 	FiniteAutomaton enfa =
 		FiniteAutomaton(states.size(), states, language->get_alphabet());
 	int final_states_counter = 0;
@@ -599,13 +599,13 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 	} else
 		enfa.initial_state = initial_state;
 	enfa = enfa.remove_unreachable_states();
-	Logger::log("Автомат до обращения", "Автомат после обращения", *this, enfa);
-	Logger::finish_step();
+	//Logger::log("Автомат до обращения", "Автомат после обращения", *this, enfa);
+	//Logger::finish_step();
 	return enfa;
 }
 
 FiniteAutomaton FiniteAutomaton::add_trap_state() const {
-	Logger::init_step("AddTrapState");
+	//Logger::init_step("AddTrapState");
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
 	int count = new_dfa.states.size();
@@ -636,14 +636,14 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 				new_dfa.states.size() - 1);
 		}
 	}
-	Logger::log("Автомат до добавления ловушки",
-				"Автомат после добавления ловушки", *this, new_dfa);
-	Logger::finish_step();
+	//Logger::log("Автомат до добавления ловушки",
+				//"Автомат после добавления ловушки", *this, new_dfa);
+	//Logger::finish_step();
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
-	Logger::init_step("RemoveTrapState");
+	//Logger::init_step("RemoveTrapState");
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
@@ -698,9 +698,9 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 			count--;
 		}
 	}
-	Logger::log("Автомат до удаления ловушек", "Автомат после удаления ловушек",
-				*this, new_dfa);
-	Logger::finish_step();
+	//Logger::log("Автомат до удаления ловушек", "Автомат после удаления ловушек",
+				//*this, new_dfa);
+	//Logger::finish_step();
 	return new_dfa;
 }
 
@@ -756,7 +756,7 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 }
 
 FiniteAutomaton FiniteAutomaton::annote() const {
-	Logger::init_step("Annote");
+	//Logger::init_step("Annote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
@@ -786,14 +786,14 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
-	Logger::log("Автомат до навешивания разметки",
-				"Автомат после навешивания разметки", *this, new_fa);
-	Logger::finish_step();
+	//Logger::log("Автомат до навешивания разметки",
+				//"Автомат после навешивания разметки", *this, new_fa);
+	//Logger::finish_step();
 	return new_fa;
 }
 
 FiniteAutomaton FiniteAutomaton::deannote() const {
-	Logger::init_step("DeAnnote");
+	//Logger::init_step("DeAnnote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
@@ -821,9 +821,9 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
 	new_fa = new_fa.remove_trap_states();
-	Logger::log("Автомат до удаления разметки",
-				"Автомат после удаления разметки", *this, new_fa);
-	Logger::finish_step();
+	//Logger::log("Автомат до удаления разметки",
+				//"Автомат после удаления разметки", *this, new_fa);
+	//Logger::finish_step();
 	return new_fa;
 }
 
@@ -1133,7 +1133,7 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 }
 
 FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
-	Logger::init_step("MergeBisim");
+	//Logger::init_step("MergeBisim");
 
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
@@ -1152,8 +1152,8 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 		classes.push_back(nont->class_number);
 	FiniteAutomaton result_fa = merge_equivalent_classes(classes);
 
-	Logger::log("Автомат до преобразования", "Автомат после преобразования",
-				*this, result_fa);
+	//Logger::log("Автомат до преобразования", "Автомат после преобразования",
+				//*this, result_fa);
 	stringstream ss;
 	for (auto& elem : class_to_nonterminals) {
 		ss << "\\{";
@@ -1161,8 +1161,8 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 			ss << elem.second[i]->name << ",";
 		ss << elem.second[elem.second.size() - 1]->name << "\\}";
 	}
-	Logger::log("Эквивалентные классы", ss.str());
-	Logger::finish_step();
+	//Logger::log("Эквивалентные классы", ss.str());
+	//Logger::finish_step();
 	return result_fa;
 }
 
@@ -1254,7 +1254,7 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 			ss << elem.second[i] << ",";
 		ss << elem.second[elem.second.size() - 1] << "\\}";
 	}
-	Logger::log("Эквивалентные классы", ss.str());
+	//Logger::log("Эквивалентные классы", ss.str());
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
@@ -1268,15 +1268,15 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 
 bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
 								const FiniteAutomaton& fa2) {
-	Logger::init_step("Bisimilar");
-	Logger::log("Автоматы:");
-	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
+	//Logger::init_step("Bisimilar");
+	//Logger::log("Автоматы:");
+	//Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
 	bool result = bisimilarity_checker(fa1, fa2);
-	if (result)
+	/*if (result)
 		Logger::log("Результат Bisimilar", "true");
 	else
 		Logger::log("Результат Bisimilar", "false");
-	Logger::finish_step();
+	Logger::finish_step();*/
 	return result;
 }
 
@@ -1447,43 +1447,43 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1,
 
 bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
 							const FiniteAutomaton& fa2) {
-	Logger::init_step("Equal");
-	Logger::log("Автоматы:");
-	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
+	//Logger::init_step("Equal");
+	//Logger::log("Автоматы:");
+	//Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
 	bool result = equality_checker(fa1, fa2);
-	if (result)
-		Logger::log("Результат Equal", "true");
-	else
-		Logger::log("Результат Equal", "false");
-	Logger::finish_step();
+	//if (result)
+		//Logger::log("Результат Equal", "true");
+	//else
+		//Logger::log("Результат Equal", "false");
+	//Logger::finish_step();
 	return result;
 }
 
 bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 								 const FiniteAutomaton& fa2) {
-	Logger::init_step("Equiv");
-	Logger::log("Автоматы:");
-	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
+	//Logger::init_step("Equiv");
+	//Logger::log("Автоматы:");
+	//Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
 	bool result = equal(fa1.minimize(), fa2.minimize());
-	if (result)
+	/*if (result)
 		Logger::log("Результат Equiv", "true");
 	else
 		Logger::log("Результат Equiv", "false");
-	Logger::finish_step();
+	Logger::finish_step();*/
 	return result;
 }
 
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa) const {
-	Logger::init_step("Subset");
-	Logger::log("Автоматы:");
-	Logger::log("Первый автомат", "Второй автомат", *this, fa);
+	//Logger::init_step("Subset");
+	//Logger::log("Автоматы:");
+	//Logger::log("Первый автомат", "Второй автомат", *this, fa);
 	FiniteAutomaton fa_instersection(intersection(*this, fa));
 	bool result = equivalent(fa_instersection, fa);
-	if (result)
-		Logger::log("Результат Subset", "true");
-	else
-		Logger::log("Результат Subset", "false");
-	Logger::finish_step();
+	//if (result)
+		//Logger::log("Результат Subset", "true");
+	//else
+		//Logger::log("Результат Subset", "false");
+	//Logger::finish_step();
 	return result;
 }
 
@@ -1636,26 +1636,26 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 }
 
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
-	Logger::init_step("Ambiguity");
+	//Logger::init_step("Ambiguity");
 	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
-	Logger::log("Автомат:", *this);
+	//Logger::log("Автомат:", *this);
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
-		Logger::log("Результат Ambiguity", "Exponentially ambiguous");
+		//Logger::log("Результат Ambiguity", "Exponentially ambiguous");
 		break;
 	case FiniteAutomaton::almost_unambigious:
-		Logger::log("Результат Ambiguity", "Almost unambigious");
+		//Logger::log("Результат Ambiguity", "Almost unambigious");
 		break;
 	case FiniteAutomaton::unambigious:
-		Logger::log("Результат Ambiguity", "Unambigious");
+		//Logger::log("Результат Ambiguity", "Unambigious");
 		break;
 	case FiniteAutomaton::polynomially_ambigious:
-		Logger::log("Результат Ambiguity", "Polynomially ambiguous");
+		//Logger::log("Результат Ambiguity", "Polynomially ambiguous");
 		break;
 	default:
 		break;
 	}
-	Logger::finish_step();
+	//Logger::finish_step();
 	return result;
 }
 
@@ -1686,8 +1686,8 @@ bool FiniteAutomaton::semdet_entry(bool annoted) const {
 	if (!annoted) {
 		return annote().semdet_entry(true);
 	}
-	Logger::log(
-		"Получение языка из производной регулярки автомата по префиксу");
+	//Logger::log(
+		//"Получение языка из производной регулярки автомата по префиксу");
 	std::map<int, bool> was;
 	std::vector<int> final_states;
 	for (int i = 0; i < states.size(); i++) {
@@ -1707,14 +1707,14 @@ bool FiniteAutomaton::semdet_entry(bool annoted) const {
 		//  cout << "State: " << i << "\n";
 		//  cout << "Prefix: " << prefix.value() << "\n";
 		//  cout << "Regex: " << reg.to_txt() << "\n";
-		Logger::log("State", to_string(i));
-		Logger::log("Prefix", prefix.value());
-		Logger::log("Regex", reg.to_txt());
+		//Logger::log("State", to_string(i));
+		//Logger::log("Prefix", prefix.value());
+		//Logger::log("Regex", reg.to_txt());
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
 		state_languages[i] = derevative.value();
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
-		Logger::log("Derevative", state_languages[i].to_txt());
+		//Logger::log("Derevative", state_languages[i].to_txt());
 		state_languages[i].make_language();
 	}
 	for (int i = 0; i < states.size(); i++) {
@@ -1736,21 +1736,21 @@ bool FiniteAutomaton::semdet_entry(bool annoted) const {
 					verified_ambiguity |= reliability;
 				}
 				if (!verified_ambiguity) {
-					Logger::log("Результат SemDet", "false");
-					Logger::finish_step();
+					//Logger::log("Результат SemDet", "false");
+					//Logger::finish_step();
 					return false;
 				}
 			}
 		}
 	}
-	Logger::log("Результат SemDet", "true");
+	//Logger::log("Результат SemDet", "true");
 	return true;
 }
 
 bool FiniteAutomaton::semdet() const {
-	Logger::init_step("SemDet");
+	//Logger::init_step("SemDet");
 	return semdet_entry();
-	Logger::finish_step();
+	//Logger::finish_step();
 }
 
 bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
@@ -1884,9 +1884,9 @@ int FiniteAutomaton::get_initial() {
 }
 
 int FiniteAutomaton::states_number() const {
-	Logger::init_step("States");
-	Logger::log(to_string(states.size()));
-	Logger::finish_step();
+	//Logger::init_step("States");
+	//Logger::log(to_string(states.size()));
+	//Logger::finish_step();
 	return states.size();
 }
 
@@ -2056,7 +2056,7 @@ Regex FiniteAutomaton::to_regex() const {
 	// }
 
 	//переносим прошлые переходы и обьединяем (работаем с уравнениями)
-	Logger::init_step("Arden");
+	//Logger::init_step("Arden");
 
 	for (int i = 0; i < data.size();
 		 i++) { // c конца начинаем переписывать уравнения
@@ -2142,10 +2142,10 @@ Regex FiniteAutomaton::to_regex() const {
 	}
 	//вывод итоговых regex
 	for (int i = 0; i < data.size(); i++) {
-		Logger::log("State ", std::to_string(i));
+		//Logger::log("State ", std::to_string(i));
 		for (int j = 0; j < data[i].size(); j++) {
-			Logger::log("regex in this state",
-						data[i][j].regex_from_state->to_txt());
+			//Logger::log("regex in this state",
+						//data[i][j].regex_from_state->to_txt());
 		}
 	}
 	//если у нас 1 принимающее состояние
@@ -2161,8 +2161,8 @@ Regex FiniteAutomaton::to_regex() const {
 		r1->set_language(alphabet);
 		Regex temp = *r1;
 		delete r1;
-		Logger::log("Result ", temp.to_txt());
-		Logger::finish_step();
+		//Logger::log("Result ", temp.to_txt());
+		//Logger::finish_step();
 		return temp;
 	}
 	//если принимающих состояний несколько - обьединяем через альтернативу
@@ -2183,7 +2183,7 @@ Regex FiniteAutomaton::to_regex() const {
 	Regex temp1 = *r1;
 	delete r1;
 
-	Logger::log("Result ", temp1.to_txt());
-	Logger::finish_step();
+	//Logger::log("Result ", temp1.to_txt());
+	//Logger::finish_step();
 	return temp1;
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
-#include "Logger.h"
+#include "iLogTemplate.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>

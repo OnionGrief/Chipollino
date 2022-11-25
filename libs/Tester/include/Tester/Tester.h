@@ -1,7 +1,7 @@
 #pragma once
 #include "Objects/BaseObject.h"
 #include "Objects/FiniteAutomaton.h"
-#include "Objects/Logger.h"
+#include "Objects/iLogTemplate.h"
 #include "Objects/Regex.h"
 #include <chrono>
 #include <iostream>

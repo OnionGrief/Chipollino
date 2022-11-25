@@ -1,5 +1,5 @@
 #include "Objects/Grammar.h"
-#include "Objects/Logger.h"
+#include "Objects/iLogTemplate.h"
 #include <sstream>
 
 GrammarItem::GrammarItem()
