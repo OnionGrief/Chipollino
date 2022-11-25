@@ -1988,7 +1988,7 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 bool FiniteAutomaton::is_deterministic() const {
 	for (int i = 0; i < states.size(); i++) {
 		for (auto elem : states[i].transitions) {
-			if (elem.first == epsilon()) {
+			if (elem.first == alphabet_symbol::epsilon()) {
 				return false;
 			}
 			if (elem.second.size() > 1) {
