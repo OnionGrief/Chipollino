@@ -48,7 +48,7 @@ class TransformationMonoid : public BaseObject {
 	int class_card(); //Вернет число классов эквивалентности
 	int class_length(); //Вернет самое длинное слово в классе
 	bool is_minimal(); //Вычисление Минимальности по М-Н(1 если минимальный)
-	int classes_number_MyhillNerode(); //Вычисление размера по М-Н
+	int get_classes_number_MyhillNerode(); //Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); //вывод таблицы М-Н
 	const vector<vector<bool>>& get_equivalence_classes_table(); // возвращает
 																 // таблицу М-Н

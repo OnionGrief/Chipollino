@@ -224,7 +224,7 @@ GeneralObject Interpreter::apply_function(
 	}*/
 	if (function.name == "MyhillNerode") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
-		return ObjectInt(trmon.classes_number_MyhillNerode());
+		return ObjectInt(trmon.get_classes_number_MyhillNerode());
 	}
 
 	/*

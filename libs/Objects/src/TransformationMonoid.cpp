@@ -400,7 +400,7 @@ int TransformationMonoid::class_length() {
 }
 
 //Вычисление
-int TransformationMonoid::classes_number_MyhillNerode() {
+int TransformationMonoid::get_classes_number_MyhillNerode() {
 	int sum = 0;
 	for (int i = 0; i < equivalence_classes_table.size(); i++) {
 		for (int j = 0; j < equivalence_classes_table[i].size(); j++) {

@@ -141,9 +141,13 @@ class FiniteAutomaton : public BaseObject {
 	// метод Arden
 	Regex nfa_to_regex() const;
 	// определение минимальности НКА по Глейстеру-Шаллиту
-	bool minimality_test_GlaisterShallit() const;
+	int get_classes_number_GlaisterShallit() const;
 	// построение синтаксического моноида по автомату
 	TransformationMonoid get_syntactic_monoid() const;
+	// предикат для нка
+	optional<bool> is_nfa_minimal() const;
+	// предикат для дка
+	bool is_dfa_minimal() const;
 
 	friend class Regex;
 	friend class TransformationMonoid;

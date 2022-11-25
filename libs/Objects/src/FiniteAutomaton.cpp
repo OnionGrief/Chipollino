@@ -1732,7 +1732,24 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
 	}
 	// кэширование
 	language->set_nfa_minimum_size(result);
-	return result == states_number();
+	return result;
+}
+
+optional<bool> FiniteAutomaton::is_nfa_minimal() const {
+	optional<int> language_pump_length = language->get_pump_length();
+	if (!language_pump_length) return nullopt;
+
+	int transition_states_counter = 0;
+	for (const State& state : states)
+		if (state.transitions.size() > 0) transition_states_counter++;
+	if (language_pump_length == transition_states_counter)
+		return true;
+	else if (language_pump_length < transition_states_counter)
+		return states_number() == get_classes_number_GlaisterShallit();
+}
+
+bool FiniteAutomaton::is_dfa_minimal() const {
+	return states_number() == minimize().states_number();
 }
 
 std::optional<std::string> FiniteAutomaton::get_prefix(

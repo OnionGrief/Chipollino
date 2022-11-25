@@ -213,7 +213,7 @@ void Example::transformation_monoid_example() {
 	a.class_card();
 	a.class_length();
 	a.is_minimal();
-	a.classes_number_MyhillNerode();
+	a.get_classes_number_MyhillNerode();
 }
 
 void Example::fa_subset_check() {
