@@ -776,30 +776,36 @@ void Example::test_pump_length() {
 
 void Example::fa_to_pgrammar() {
 	FiniteAutomaton a1 =
-		Regex("(ba)*bc").to_ilieyu(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
+		Regex("(c1(ab*a|b*)*d1)|(c2(ba*b|a*)*d2)")
+			.to_glushkov()
+			.merge_bisimilar(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
 	// cout << a1.to_txt();
 
 	vector<State> states1;
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 5; i++) {
 		State s = {
 			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
-	states1[0].set_transition(0, "b");
-	states1[0].set_transition(1, "a");
-	states1[1].set_transition(1, "a");
-	states1[1].set_transition(1, "c");
+	// states1[0].set_transition(0, "b");
+	states1[4].set_transition(1, "a");
+	// states1[0].set_transition(1, "c");
+	//  states1[1].set_transition(1, "a");
+	//  states1[1].set_transition(1, "c");
 	states1[1].set_transition(2, "b");
-	states1[2].set_transition(1, "a");
-	states1[2].set_transition(2, "c");
+	states1[1].set_transition(4, "c");
+	// states1[2].set_transition(2, "c");
 	states1[2].set_transition(2, "b");
+	states1[2].set_transition(2, "c");
 	states1[2].is_terminal = true;
-	// states1[2].set_transition(2, "a");
-	// states1[2].set_transition(2, "b");
+	states1[3].set_transition(4, "c");
+	states1[0].set_transition(3, "a");
+	states1[0].set_transition(3, "b");
+	states1[4].is_terminal = true;
 	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b", "c"});
 
 	Grammar g;
 	FiniteAutomaton test = a1.annote();
-	cout << a1.to_txt();
-	g.fa_to_prefix_grammar(a1);
+	// cout << dfa1.to_txt();
+	g.fa_to_prefix_grammar(dfa1);
 }

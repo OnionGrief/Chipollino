@@ -69,6 +69,7 @@ class Grammar {
 		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
 		int initial_state);
 	vector<vector<GrammarItem>> fa_to_prefix_grammar(const FiniteAutomaton&);
-	static int fa_to_g(const FiniteAutomaton&, string, int, int,
-					   map<int, GrammarItem*>, set<string>);
+	int fa_to_g(const FiniteAutomaton&, string, int, int,
+				map<int, GrammarItem*>, set<string>, string,
+				map<vector<string>, vector<vector<string>>>, map<int, bool>);
 };

@@ -78,8 +78,8 @@ vector<string> was_term(
 TransformationMonoid::TransformationMonoid(){};
 
 //переписывание терма
-vector<string> rewriting(vector<string> in,
-						 map<vector<string>, vector<vector<string>>> rules) {
+vector<string> TransformationMonoid::rewriting(
+	vector<string> in, map<vector<string>, vector<vector<string>>> rules) {
 	if (in.size() < 2) {
 		return in;
 	}

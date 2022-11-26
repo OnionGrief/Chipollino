@@ -220,7 +220,9 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 // vector<vector<GrammarItem>>
 int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 					 int index_back, map<int, GrammarItem*> grammer_items,
-					 set<string> monoid_rules) {
+					 set<string> monoid_rules, string word,
+					 map<vector<string>, vector<vector<string>>> rules,
+					 map<int, bool> is_visit) {
 	// int index = st.index;
 	State st = fa.states[index];
 	State st_back = fa.states[index_back];
@@ -234,31 +236,63 @@ int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 		}
 	}
 	*/
-	for (const auto& equ : g->equivalence_class) {
-		if (monoid_rules.find(equ) != monoid_rules.end()) {
-			return 0;
-		}
+	// cout << st.identifier << word << endl;
+	vector<string> test;
+	for (size_t i = 0; i < word.size(); i++) {
+		test.push_back(string(1, word[i]));
 	}
+	// TransformationMonoid q;
+	//  for (const auto& equ : g->equivalence_class) {
+	//   cout << equ << " ";
+	//  cout << this->to_str(q.rewriting(test, rules)) << " " <<
+	//  this->to_str(test)
+	//	 << endl;
+	if (/*monoid_rules.find(equ) != monoid_rules.end() and*/
+		/*monoid_rules.find(word) != monoid_rules.end()*/
+		TransformationMonoid::rewriting(test, rules) != test) {
+		// return 0;
+	}
+	//}
+	// cout << "----" << endl;
+	// if (is_visit[index]) {
+	//	return 0;
+	//}
 
 	g->rules[w].insert(index_back);
 	for (const auto& equ : equivalence_class_back) {
 		if (monoid_rules.find(equ) == monoid_rules.end()) {
-			g->equivalence_class.insert(equ + w);
+			// cout << equ + w << " TT";
+			//  g->equivalence_class.insert(equ + w);
+			g->equivalence_class.insert(word + w);
 		}
 	}
-
+	// cout << "----" << endl;
+	if (is_visit[index]) {
+		return 0;
+	}
 	for (const auto& elem : st.transitions) {
 		alphabet_symbol alpha = elem.first;
 		set<int> transitions = elem.second;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : transitions) {
-			if (st.is_terminal) {
+			if (is_epsilon(alpha)) {
+				alpha = "";
+			}
+			if (st.is_terminal and false) {
 				if (index == ind) {
 					g->rules[alpha].insert(index);
 				}
 			} else {
 				if (index != ind) {
-					fa_to_g(fa, alpha, ind, index, grammer_items, monoid_rules);
+					// if (is_epsilon(alpha)) {
+					//	alpha = "";
+					// }
+					// cout << alpha << endl;
+
+					is_visit[index] = true;
+					fa_to_g(fa, alpha, ind, index, grammer_items, monoid_rules,
+							word + w, rules, is_visit);
+
 				} else {
 					g->rules[alpha].insert(index);
 				}
@@ -282,9 +316,13 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 	vector<State> states = fa.states;
 
 	TransformationMonoid a(fa.minimize());
+	// cout << fa.minimize().to_txt();
 	map<vector<string>, vector<vector<string>>> monoid_rules =
 		a.get_rewriting_rules();
 	set<string> m_r;
+	// cout << a.get_equalence_classes_txt() << "\n--------" << endl;
+	//   cout << a.get_rewriting_rules_txt() << "\n--------" << endl;
+	// a.get_equalence_classes();
 	for (auto& item : monoid_rules) {
 		// for (int i = 0; i < item.second.size(); i++) {
 		//	Logger::log("rewriting " + to_str(item.first),
@@ -295,14 +333,16 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 		// cout << this->to_str(item.first) << endl;
 		m_r.insert(this->to_str(item.first));
 	}
-
+	// cout << "Test\n";
 	State st0 = states[fa.initial_state];
 	map<int, GrammarItem*> grammer_items;
 	map<int, GrammarItem> gr_it;
+	map<int, bool> is_visit;
 	for (size_t i = 0; i < states.size(); i++) {
 		gr_it[states[i].index].state_index = i;
 		grammer_items[states[i].index] =
 			&gr_it[states[i].index]; // new GrammarItem();
+		is_visit[states[i].index] = false;
 		// grammer_items[states[i].index]->state_index = i; // states[i].index;
 	}
 	GrammarItem* g = grammer_items[fa.initial_state];
@@ -313,6 +353,9 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : transitions) {
 			if (fa.initial_state == ind) {
+				if (is_epsilon(alpha)) {
+					alpha = "";
+				}
 				g->rules[alpha].insert(fa.initial_state);
 				// g->equivalence_class.insert("");
 			}
@@ -324,7 +367,11 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : transitions) {
 			if (fa.initial_state != ind) {
-				fa_to_g(fa, alpha, ind, fa.initial_state, grammer_items, m_r);
+				if (is_epsilon(alpha)) {
+					alpha = "";
+				}
+				fa_to_g(fa, alpha, ind, fa.initial_state, grammer_items, m_r,
+						"", monoid_rules, is_visit);
 			}
 		}
 	}
@@ -342,7 +389,7 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 		}
 	}
 
-	cout << "---------" << endl;
+	// cout << "---------" << endl;
 	set<string> out;
 	for (int i = 0; i < states.size(); i++) {
 		GrammarItem g = gr_it[i];
@@ -361,8 +408,12 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 						if (wt == "") {
 							wt = "eps";
 						}
+						if (a == "") {
+							a = "eps";
+						}
 						// cout << wt << " -> " << eq << " " << a << endl;
-						if (m_r.find(wt) == m_r.end()) {
+						if (m_r.find(wt) == m_r.end() &&
+							(wt != eq && a != "eps")) {
 							out.insert(wt + " -> " + eq + " " + a);
 						}
 					}

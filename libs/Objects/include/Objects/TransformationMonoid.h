@@ -50,6 +50,9 @@ class TransformationMonoid : public BaseObject {
 	bool is_minimal(); //Вычисление Минимальности по М-Н(1 если минимальный)
 	int classes_number_MyhillNerode(); //Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); //вывод таблицы М-Н
+	static vector<string> rewriting(
+		vector<string>, map<vector<string>, vector<vector<string>>>);
+
   private:
 	FiniteAutomaton automat; //Автомат
 	vector<Term> terms;		 //Эквивалентные классы
