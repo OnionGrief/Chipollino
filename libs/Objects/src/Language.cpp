@@ -40,3 +40,11 @@ optional<FiniteAutomaton> Language::get_min_dfa() {
 			min_dfa->initial_state, min_dfa->states, min_dfa->language.lock()));
 	return min_fa_opt;
 }
+
+void Language::set_one_unambiguity_flag(bool is_one_unambiguous_flag) {
+	is_one_unambiguous.emplace(is_one_unambiguous_flag);
+}
+
+bool Language::get_one_unambiguity_flag() {
+	return is_one_unambiguous.has_value();
+}

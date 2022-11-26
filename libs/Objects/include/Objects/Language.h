@@ -23,6 +23,8 @@ class Language {
 	// классы эквивалентности минимального дка TODO
 	// синтаксический моноид TODO
 	// аппроксимации минимальных НКА и регулярок TODO
+	optional<bool> is_one_unambiguous;
+
   public:
 	Language();
 	Language(set<alphabet_symbol> alphabet);
@@ -34,5 +36,7 @@ class Language {
 	void set_min_dfa(int initial_state, const vector<State>& states,
 					 shared_ptr<Language> Language);
 	optional<FiniteAutomaton> get_min_dfa();
+	void set_one_unambiguity_flag(bool);
+	bool get_one_unambiguity_flag();
 	// и тд
 };

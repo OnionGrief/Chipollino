@@ -1757,3 +1757,8 @@ void Regex::print_tree() {
 	cout << r_v << endl;
 	print_subtree(term_r, 1);
 }
+
+bool Regex::is_one_unambiguous() const {
+	FiniteAutomaton d = to_glushkov();
+	return d.is_deterministic();
+}
