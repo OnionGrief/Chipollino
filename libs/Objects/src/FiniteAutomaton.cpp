@@ -828,7 +828,7 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	return new_fa;
 }
 
-bool FiniteAutomaton::is_one_unambiguous() {
+bool FiniteAutomaton::is_one_unambiguous() const {
 	if (language->is_one_unambiguity_flag_cached()) {
 		return language->get_one_unambiguity_flag();
 	}
@@ -1106,6 +1106,162 @@ bool FiniteAutomaton::is_one_unambiguous() {
 	}
 	language->set_one_unambiguity_flag(true);
 	return true;
+}
+
+optional<Regex> FiniteAutomaton::get_one_unambiguous_regex() const {
+	string regl;
+	if (is_one_unambiguous()) {
+		FiniteAutomaton min_fa;
+		if (states.size() == 1)
+			min_fa = minimize();
+		else
+			min_fa = minimize().remove_trap_states();
+
+		set<map<alphabet_symbol, set<int>>> final_states_transitions;
+		for (int i = 0; i < min_fa.states.size(); i++) {
+			if (min_fa.states[i].is_terminal) {
+				final_states_transitions.insert(min_fa.states[i].transitions);
+			}
+		}
+
+		set<alphabet_symbol> min_fa_consistent;
+		// calculate a set of min_fa_consistent symbols
+		for (alphabet_symbol symb : min_fa.language->get_alphabet()) {
+			set<int> reachable_by_symb;
+			bool is_symb_min_fa_consistent = true;
+			for (int i = 0; i < min_fa.states.size(); i++) {
+				for (const auto& transition : min_fa.states[i].transitions) {
+					if (transition.first == symb) {
+						for (int elem : transition.second) {
+							reachable_by_symb.insert(elem);
+						}
+					}
+				}
+			}
+			for (int elem : reachable_by_symb) {
+				is_symb_min_fa_consistent = true;
+				for (auto final_state_transitions : final_states_transitions) {
+					if (find(final_state_transitions[symb].begin(),
+							 final_state_transitions[symb].end(),
+							 elem) == final_state_transitions[symb].end()) {
+						is_symb_min_fa_consistent = false;
+						break;
+					}
+				}
+				if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
+			}
+		}
+
+		FiniteAutomaton min_fa_cut = FiniteAutomaton(
+			min_fa.initial_state, min_fa.states, min_fa.language);
+
+		for (int i = 0; i < min_fa.states.size(); i++) {
+			if (min_fa.states[i].is_terminal) {
+				map<alphabet_symbol, set<int>> new_transitions;
+				for (const auto& transition : min_fa.states[i].transitions) {
+					if (find(min_fa_consistent.begin(), min_fa_consistent.end(),
+							 transition.first) == min_fa_consistent.end()) {
+						new_transitions[transition.first] = transition.second;
+					}
+				}
+				min_fa_cut.states[i].transitions = new_transitions;
+			}
+		}
+
+		min_fa_cut = min_fa_cut.remove_unreachable_states();
+		regl = min_fa_cut.to_regex().to_txt();
+
+		int counter = 0;
+		for (alphabet_symbol consistent_symb : min_fa_consistent) {
+			if (!counter)
+				regl += "(" + consistent_symb.value;
+			else
+				regl += "|" + consistent_symb.value + "(";
+			set<int> reachable_by_consistent_symb;
+			for (int i = 0; i < min_fa.states.size(); i++) {
+				for (int consistent_symb_transition :
+					 min_fa.states[i].transitions[consistent_symb]) {
+					reachable_by_consistent_symb.insert(
+						consistent_symb_transition);
+				}
+			}
+			for (int elem : reachable_by_consistent_symb) {
+				FiniteAutomaton consistent_symb_automaton(
+					0, {}, make_shared<Language>());
+				set<int> reachable_states = min_fa.closure({elem}, false);
+				vector<int> inserted_states_indices;
+				for (int j = 0; j < reachable_states.size(); j++) {
+					if (elem == j) {
+						consistent_symb_automaton.initial_state = j;
+					}
+					consistent_symb_automaton.states.push_back(
+						min_fa.states[j]);
+					inserted_states_indices.push_back(j);
+				}
+				set<alphabet_symbol> consistent_symb_automaton_alphabet;
+				for (int j = 0; j < consistent_symb_automaton.states.size();
+					 j++) {
+					consistent_symb_automaton.states[j].index = j;
+					map<alphabet_symbol, set<int>>
+						consistent_symb_automaton_state_transitions;
+					for (const auto& symb_transition :
+						 consistent_symb_automaton.states[j].transitions) {
+						for (int transition : symb_transition.second) {
+							for (int k = 0; k < inserted_states_indices.size();
+								 k++) {
+								if (inserted_states_indices[k] == transition) {
+									consistent_symb_automaton_state_transitions
+										[symb_transition.first]
+											.insert(k);
+									consistent_symb_automaton_alphabet.insert(
+										symb_transition.first);
+								}
+							}
+						}
+					}
+					if (consistent_symb_automaton_state_transitions.size()) {
+						consistent_symb_automaton.states[j].transitions =
+							consistent_symb_automaton_state_transitions;
+					}
+				}
+				consistent_symb_automaton.language =
+					make_shared<Language>(consistent_symb_automaton_alphabet);
+
+				FiniteAutomaton consistent_symb_automaton_cut =
+					FiniteAutomaton(consistent_symb_automaton.initial_state,
+									consistent_symb_automaton.states,
+									consistent_symb_automaton.language);
+
+				for (int j = 0; j < consistent_symb_automaton.states.size();
+					 j++) {
+					if (consistent_symb_automaton.states[j].is_terminal) {
+						map<alphabet_symbol, set<int>> new_transitions;
+						for (const auto& transition :
+							 consistent_symb_automaton.states[j].transitions) {
+							if (find(min_fa_consistent.begin(),
+									 min_fa_consistent.end(),
+									 transition.first) ==
+								min_fa_consistent.end()) {
+								new_transitions[transition.first] =
+									transition.second;
+							}
+						}
+						consistent_symb_automaton_cut.states[j].transitions =
+							new_transitions;
+					}
+				}
+				consistent_symb_automaton_cut =
+					consistent_symb_automaton_cut.remove_unreachable_states();
+				string consistent_symb_automaton_cut_to_regex =
+					consistent_symb_automaton_cut.to_regex().to_txt();
+				if (!consistent_symb_automaton_cut_to_regex.empty())
+					regl += consistent_symb_automaton_cut_to_regex + ")";
+			}
+			counter++;
+		}
+		if (counter) regl += ")*";
+	}
+	return optional<Regex>(regl);
 }
 
 FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
