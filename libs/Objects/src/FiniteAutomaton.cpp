@@ -829,7 +829,10 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 }
 
 bool FiniteAutomaton::is_one_unambiguous() const {
+	Logger::init_step("OneUnambiguity");
 	if (language->is_one_unambiguous_flag_cached()) {
+		Logger::log(language->get_one_unambiguous_flag() ? "True" : "False");
+		Logger::finish_step();
 		return language->get_one_unambiguous_flag();
 	}
 	FiniteAutomaton min_fa;
@@ -907,6 +910,8 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 	// return true if it exists
 	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1) {
 		language->set_one_unambiguous_flag(true);
+		Logger::log("True");
+		Logger::finish_step();
 		return true;
 	}
 
@@ -916,6 +921,8 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 	if (min_fa_orbits.size() == 1 && !states_with_trivial_orbit.size() &&
 		!min_fa_consistent.size()) {
 		language->set_one_unambiguous_flag(false);
+		Logger::log("False");
+		Logger::finish_step();
 		return false;
 	}
 
@@ -1048,6 +1055,8 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 	}
 	if (!is_min_fa_cut_has_an_orbit_property) {
 		language->set_one_unambiguous_flag(false);
+		Logger::log("False");
+		Logger::finish_step();
 		return false;
 	}
 
@@ -1101,6 +1110,8 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 				make_shared<Language>(orbit_automaton_alphabet);
 			if (!orbit_automaton.is_one_unambiguous()) {
 				language->set_one_unambiguous_flag(false);
+				Logger::log("False");
+				Logger::finish_step();
 				return false;
 			}
 			orbit_automaton_initial_state++;
@@ -1108,6 +1119,8 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 		i++;
 	}
 	language->set_one_unambiguous_flag(true);
+	Logger::log("True");
+	Logger::finish_step();
 	return true;
 }
 

@@ -1759,6 +1759,10 @@ void Regex::print_tree() {
 }
 
 bool Regex::is_one_unambiguous() const {
+	Logger::init_step("OneUnambiguity");
 	FiniteAutomaton d = to_glushkov();
+	bool res = d.is_deterministic();
+	Logger::log(res ? "True" : "False");
+	Logger::finish_step();
 	return d.is_deterministic();
 }
