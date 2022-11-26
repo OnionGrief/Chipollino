@@ -829,6 +829,9 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 }
 
 bool FiniteAutomaton::is_one_unambiguous() {
+	if (language->is_one_unambiguity_flag_cached()) {
+		return language->get_one_unambiguity_flag();
+	}
 	FiniteAutomaton min_fa;
 	if (states.size() == 1)
 		min_fa = minimize();
@@ -902,15 +905,19 @@ bool FiniteAutomaton::is_one_unambiguous() {
 
 	// check if min_fa has a single, trivial orbit
 	// return true if it exists
-	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1)
+	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1) {
+		language->set_one_unambiguity_flag(true);
 		return true;
+	}
 
 	// check if min_fa has a single, nontrivial orbit and
 	// min_fa_consistent.size() is 0
 	// return true if it exists
 	if (min_fa_orbits.size() == 1 && !states_with_trivial_orbit.size() &&
-		!min_fa_consistent.size())
+		!min_fa_consistent.size()) {
+		language->set_one_unambiguity_flag(false);
 		return false;
+	}
 
 	// construct a min_fa_consistent cut of min_fa
 	// to construct it, we will remove for each symb in min_fa_consistent
@@ -1039,7 +1046,10 @@ bool FiniteAutomaton::is_one_unambiguous() {
 			++it1;
 		}
 	}
-	if (!is_min_fa_cut_has_an_orbit_property) return false;
+	if (!is_min_fa_cut_has_an_orbit_property) {
+		language->set_one_unambiguity_flag(false);
+		return false;
+	}
 
 	// check if all orbit languages of min_fa_cut are 1-unambiguous
 	int i = 0;
@@ -1094,6 +1104,7 @@ bool FiniteAutomaton::is_one_unambiguous() {
 		}
 		i++;
 	}
+	language->set_one_unambiguity_flag(true);
 	return true;
 }
 

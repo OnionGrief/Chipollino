@@ -41,10 +41,14 @@ optional<FiniteAutomaton> Language::get_min_dfa() {
 	return min_fa_opt;
 }
 
+bool Language::is_one_unambiguity_flag_cached() {
+	return is_one_unambiguous.has_value();
+}
+
 void Language::set_one_unambiguity_flag(bool is_one_unambiguous_flag) {
 	is_one_unambiguous.emplace(is_one_unambiguous_flag);
 }
 
 bool Language::get_one_unambiguity_flag() {
-	return is_one_unambiguous.has_value();
+	return is_one_unambiguous.value();
 }
