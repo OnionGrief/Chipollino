@@ -41,14 +41,26 @@ optional<FiniteAutomaton> Language::get_min_dfa() {
 	return min_fa_opt;
 }
 
-bool Language::is_one_unambiguity_flag_cached() {
+bool Language::is_one_unambiguous_flag_cached() {
 	return is_one_unambiguous.has_value();
 }
 
-void Language::set_one_unambiguity_flag(bool is_one_unambiguous_flag) {
+void Language::set_one_unambiguous_flag(bool is_one_unambiguous_flag) {
 	is_one_unambiguous.emplace(is_one_unambiguous_flag);
 }
 
-bool Language::get_one_unambiguity_flag() {
+bool Language::get_one_unambiguous_flag() {
 	return is_one_unambiguous.value();
+}
+
+bool Language::is_one_unambiguous_regex_cached() {
+	return one_unambiguous_regex.has_value();
+}
+
+void Language::set_one_unambiguous_regex(Regex one_unamiguous_regex_value) {
+	one_unambiguous_regex.emplace(one_unamiguous_regex_value);
+}
+
+Regex Language::get_one_unambiguous_regex() {
+	return one_unambiguous_regex.value();
 }

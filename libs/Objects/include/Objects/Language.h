@@ -24,6 +24,7 @@ class Language {
 	// синтаксический моноид TODO
 	// аппроксимации минимальных НКА и регулярок TODO
 	optional<bool> is_one_unambiguous;
+	optional<Regex> one_unambiguous_regex;
 
   public:
 	Language();
@@ -36,8 +37,11 @@ class Language {
 	void set_min_dfa(int initial_state, const vector<State>& states,
 					 shared_ptr<Language> Language);
 	optional<FiniteAutomaton> get_min_dfa();
-	bool is_one_unambiguity_flag_cached();
-	void set_one_unambiguity_flag(bool);
-	bool get_one_unambiguity_flag();
+	bool is_one_unambiguous_flag_cached();
+	void set_one_unambiguous_flag(bool);
+	bool get_one_unambiguous_flag();
+	bool is_one_unambiguous_regex_cached();
+	void set_one_unambiguous_regex(Regex);
+	Regex get_one_unambiguous_regex();
 	// и тд
 };
