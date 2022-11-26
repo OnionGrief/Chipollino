@@ -1125,9 +1125,20 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 }
 
 optional<Regex> FiniteAutomaton::get_one_unambiguous_regex() const {
+	Logger::init_step("OneUnambiguityRegex");
+	if (language->is_one_unambiguous_regex_cached()) {
+		Logger::log("1-однозначное регулярное выражение, описывающее язык",
+					language->get_one_unambiguous_regex().to_txt());
+		Logger::finish_step();
+		return language->get_one_unambiguous_regex();
+	}
 	string regl;
 	if (!language->is_one_unambiguous_flag_cached()) is_one_unambiguous();
-	if (!language->get_one_unambiguous_flag()) return nullopt;
+	if (!language->get_one_unambiguous_flag()) {
+		Logger::log("Описываемый язык не является 1-однозначным");
+		Logger::finish_step();
+		return nullopt;
+	}
 	FiniteAutomaton min_fa;
 	if (states.size() == 1)
 		min_fa = minimize();
@@ -1277,6 +1288,8 @@ optional<Regex> FiniteAutomaton::get_one_unambiguous_regex() const {
 		counter++;
 	}
 	if (counter) regl += ")*";
+	Logger::log("1-однозначное регулярное выражение, описывающее язык", regl);
+	Logger::finish_step();
 	language->set_one_unambiguous_regex(Regex(regl));
 	return Regex(regl);
 }
