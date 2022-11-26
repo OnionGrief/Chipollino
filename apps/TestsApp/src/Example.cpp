@@ -727,7 +727,7 @@ void Example::test_regex_equal() {
 
 void Example::test_ambiguity() {
 	Regex r1("(a*)*");
-	Regex r2("b|a|aa");
+	Regex r2("a*a*");
 	Regex r3("abc");
 	Regex r4("b|a");
 	Regex r5("(aa|aa)*");
@@ -743,11 +743,14 @@ void Example::test_ambiguity() {
 	Regex r14("(ac*|ad*)*");
 	Regex r15("(a|b|c)*(a|b|c|d)(a|b|c)*|(a|b)*ca*");
 	Regex r16("(a|b|c)*(a|b|c|d)(a|b|c)*|(ac*|ad*)*");
+	Regex r17("(abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*");
+	Regex r18("(abab)*abab(abab)*|(aac)*(aac)*");
+	Regex r19("(abab)*abab(abab)*");
 
 	assert(r1.to_tompson().ambiguity() ==
 		   FiniteAutomaton::exponentially_ambiguous);
-	// assert(r2.to_tompson().ambiguity() ==
-	// 	   FiniteAutomaton::polynomially_ambigious);
+	assert(r2.to_glushkov().ambiguity() ==
+		   FiniteAutomaton::polynomially_ambigious);
 	assert(r3.to_tompson().ambiguity() == FiniteAutomaton::unambigious);
 	assert(r4.to_tompson().ambiguity() == FiniteAutomaton::almost_unambigious);
 	assert(r5.to_glushkov().ambiguity() ==
@@ -773,6 +776,12 @@ void Example::test_ambiguity() {
 	// 	   FiniteAutomaton::almost_unambigious);
 	// assert(r16.to_glushkov().ambiguity() ==
 	// 	   FiniteAutomaton::almost_unambigious);
+	assert(r17.to_glushkov().ambiguity() ==
+		   FiniteAutomaton::almost_unambigious);
+	assert(r18.to_glushkov().ambiguity() ==
+		   FiniteAutomaton::polynomially_ambigious);
+	assert(r19.to_glushkov().ambiguity() ==
+		   FiniteAutomaton::polynomially_ambigious);
 }
 
 void Example::test_arden() {

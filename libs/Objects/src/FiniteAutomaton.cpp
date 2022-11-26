@@ -1576,15 +1576,20 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 					if (delta > max_delta_checker) max_delta_checker = delta;
 					prev_f1_val = new_f1_value;
 				}
-			} else if (max_return_flag && max_delta_return_flag) {
+			} else if (max_return_flag || max_delta_return_flag) {
 				if (new_f1_value > max_checker) max_return_flag = false;
 				Fraction delta = new_f1_value - *prev_f1_val;
-				if (delta > max_delta_checker) max_delta_return_flag = false;
+				if (delta > max_delta_checker || delta == max_delta_checker)
+					max_delta_return_flag = false;
 				prev_f1_val = new_f1_value;
 			}
 		}
 		if (k > s * s && unambigious_return_flag) {
 			return FiniteAutomaton::unambigious;
+		}
+		if (k > s * s && k > (s + 1) * 3 &&
+			(max_return_flag || max_delta_return_flag)) {
+			return FiniteAutomaton::almost_unambigious;
 		}
 
 		vector<Fraction> f1_check = f1;
@@ -1608,10 +1613,6 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		} else {
 			f1.push_back(new_f1_value);
 		}
-	}
-
-	if (max_return_flag || max_delta_return_flag) {
-		return FiniteAutomaton::almost_unambigious;
 	}
 
 	int k = N;
@@ -1643,7 +1644,6 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		else
 			new_f1_value =
 				Fraction(paths_number[k - 1], min_paths_number[k - 1]);
-
 		vector<Fraction> f1_check = f1;
 		f1_check.push_back(new_f1_value);
 
