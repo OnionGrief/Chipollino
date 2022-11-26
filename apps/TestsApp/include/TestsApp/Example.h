@@ -1,13 +1,13 @@
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "InputGenerator/TasksGenerator.h"
+#include "Interpreter/Interpreter.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
-#include "Interpreter/Interpreter.h"
 #include <cassert>
 #include <iostream>
 /*
@@ -39,6 +39,7 @@ class Example {
 	static void step_interection();
 	static void table();
 	static void fa_semdet_check();
+	static void get_one_unambiguous_regex();
 	// запуск всех тестов
 	static void test_all();
 	static void test_fa_equal();
