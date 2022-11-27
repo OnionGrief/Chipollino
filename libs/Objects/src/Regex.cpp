@@ -72,17 +72,20 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 				lexems.back().type == Regex::Lexem::parR) &&
 			(
 				// Regex::Lexem right
-				lexem.type == Regex::Lexem::symb || lexem.type == Regex::Lexem::parL)) {
+				lexem.type == Regex::Lexem::symb ||
+				lexem.type == Regex::Lexem::parL)) {
 
 			// We place . between
 			lexems.push_back({Regex::Lexem::conc});
 		}
 
-		if (lexems.size() &&
-			((lexems.back().type == Regex::Lexem::parL &&
-			  (lexem.type == Regex::Lexem::parR || lexem.type == Regex::Lexem::alt)) ||
-			 (lexems.back().type == Regex::Lexem::alt && lexem.type == Regex::Lexem::parR) ||
-			 (lexems.back().type == Regex::Lexem::alt && lexem.type == Regex::Lexem::alt))) {
+		if (lexems.size() && ((lexems.back().type == Regex::Lexem::parL &&
+							   (lexem.type == Regex::Lexem::parR ||
+								lexem.type == Regex::Lexem::alt)) ||
+							  (lexems.back().type == Regex::Lexem::alt &&
+							   lexem.type == Regex::Lexem::parR) ||
+							  (lexems.back().type == Regex::Lexem::alt &&
+							   lexem.type == Regex::Lexem::alt))) {
 			//  We place eps between
 			lexems.push_back({Regex::Lexem::eps});
 		}
@@ -1667,7 +1670,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 			automat_state.push_back({int(i), {}, state, false, transit});
 		}
 	}
-	string str_state = "State: ";
+	string str_state = "";
 	for (size_t i = 0; i < automat_state.size(); i++) {
 		str_state += automat_state[i].identifier;
 	}
@@ -1675,7 +1678,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 	// cout << derev_log;
 	// cout << str_state << endl;
 	// Logger::log(derev_log, str_state);
-	Logger::log(Logger::math_mode(str_state));
+	Logger::log("State", Logger::math_mode(str_state));
 
 	FiniteAutomaton fa(0, automat_state, language);
 	Logger::log("Автомат", fa);

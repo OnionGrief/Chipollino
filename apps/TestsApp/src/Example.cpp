@@ -443,7 +443,7 @@ void Example::fa_semdet_check() {
 void Example::all_examples() {
 	// determinize();
 	// remove_eps();
-	minimize();
+	// minimize();
 	// intersection();
 	// regex_parsing();
 	// regex_generating();
@@ -453,15 +453,24 @@ void Example::all_examples() {
 	// transformation_monoid_example();
 	// normalize_regex();
 	// step();
-	parsing_nfa();
-	fa_subset_check();
-	arden_example();
+	// parsing_nfa();
+	// fa_subset_check();
+	// arden_example();
 	//  to_image();
 	//  tester();
 	//  step_interection();
 	//  table();
-	fa_semdet_check();
-	Regex("abaa").pump_length();
+	// fa_semdet_check();
+	// Regex("abaa").pump_length();
+	// Regex("(a|b)*b").to_ilieyu();
+	// Regex("(a|b)*b").to_glushkov();
+	// Regex("(a|b)*b").to_tompson();
+	// Regex("eps").to_tompson();
+	// Regex("a").to_tompson();
+	// Regex("s|t").to_tompson();
+	// Regex("st").to_tompson();
+	// Regex("s*").to_tompson();
+	Regex("(a|ba)*b").to_antimirov();
 	cout << "all the examlples are successful" << endl;
 }
 // TEST
@@ -477,7 +486,7 @@ void Example::test_all() {
 	test_arden();
 	test_pump_length();
 	test_is_one_unambiguous();
-	test_interpreter();
+	// test_interpreter();
 	cout << "all tests passed\n\n";
 }
 

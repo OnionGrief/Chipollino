@@ -1,7 +1,7 @@
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "InputGenerator/TasksGenerator.h"
-#include "Interpreter/Interpreter.h"
+// #include "Interpreter/Interpreter.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
