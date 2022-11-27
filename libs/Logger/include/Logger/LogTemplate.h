@@ -1,6 +1,6 @@
-#include "Objects/iLogTemplate.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
+#include "Objects/iLogTemplate.h"
 #include <map>
 #include <string>
 #include <variant>

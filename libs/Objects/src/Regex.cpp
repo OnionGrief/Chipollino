@@ -72,17 +72,20 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 				lexems.back().type == Regex::Lexem::parR) &&
 			(
 				// Regex::Lexem right
-				lexem.type == Regex::Lexem::symb || lexem.type == Regex::Lexem::parL)) {
+				lexem.type == Regex::Lexem::symb ||
+				lexem.type == Regex::Lexem::parL)) {
 
 			// We place . between
 			lexems.push_back({Regex::Lexem::conc});
 		}
 
-		if (lexems.size() &&
-			((lexems.back().type == Regex::Lexem::parL &&
-			  (lexem.type == Regex::Lexem::parR || lexem.type == Regex::Lexem::alt)) ||
-			 (lexems.back().type == Regex::Lexem::alt && lexem.type == Regex::Lexem::parR) ||
-			 (lexems.back().type == Regex::Lexem::alt && lexem.type == Regex::Lexem::alt))) {
+		if (lexems.size() && ((lexems.back().type == Regex::Lexem::parL &&
+							   (lexem.type == Regex::Lexem::parR ||
+								lexem.type == Regex::Lexem::alt)) ||
+							  (lexems.back().type == Regex::Lexem::alt &&
+							   lexem.type == Regex::Lexem::parR) ||
+							  (lexems.back().type == Regex::Lexem::alt &&
+							   lexem.type == Regex::Lexem::alt))) {
 			//  We place eps between
 			lexems.push_back({Regex::Lexem::eps});
 		}
@@ -323,13 +326,17 @@ Regex::Regex(string str) : Regex() {
 	}
 }
 
-Regex Regex::normalize_regex(const string& file) const {
-	//Logger::init_step("Normalize");
+Regex Regex::normalize_regex(const string& file, iLogTemplate* log) const {
+	// Logger::init_step("Normalize");
 	Regex regex = *this;
-	//Logger::log("Регулярное выражение до нормализации", regex.to_txt());
+	// Logger::log("Регулярное выражение до нормализации", regex.to_txt());
 	regex.normalize_this_regex(file);
-	//Logger::log("Регулярное выражение после нормализации", regex.to_txt());
-	//Logger::finish_step();
+	if (log) {
+		log->set_parameter("oldregex", *this);
+		log->set_parameter("newregex", regex);
+	}
+	// Logger::log("Регулярное выражение после нормализации", regex.to_txt());
+	// Logger::finish_step();
 	return regex;
 }
 
@@ -774,12 +781,16 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 	return {};
 }
 
-FiniteAutomaton Regex::to_tompson() const {
-	//Logger::init_step("Автомат Томпсона");
-	//Logger::log("Регулярное выражение", to_txt());
+FiniteAutomaton Regex::to_tompson(iLogTemplate* log) const {
+	// Logger::init_step("Автомат Томпсона");
+	// Logger::log("Регулярное выражение", to_txt());
 	FiniteAutomaton fa(0, get_tompson(-1).first, language);
-	//Logger::log("Автомат", fa);
-	//Logger::finish_step();
+	if (log) {
+		log->set_parameter("regex", *this);
+		log->set_parameter("automaton", fa);
+	}
+	// Logger::log("Автомат", fa);
+	// Logger::finish_step();
 	return fa;
 }
 
@@ -950,33 +961,41 @@ bool Regex::is_term(int number, const vector<Regex::Lexem>& list) const {
 	}
 	return false;
 }
-Regex Regex::linearize() const {
-	//Logger::init_step("Linearise");
+Regex Regex::linearize(iLogTemplate* log) const {
+	// Logger::init_step("Linearise");
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = i;
 	}
-	//Logger::log(test.to_txt());
-	//Logger::finish_step();
+	if (log) {
+		log->set_parameter("oldregex", *this);
+		log->set_parameter("newregex", test);
+	}
+	// Logger::log(test.to_txt());
+	// Logger::finish_step();
 	return test;
 }
 
-Regex Regex::delinearize() const {
-	//Logger::init_step("DeLinearise");
+Regex Regex::delinearize(iLogTemplate* log) const {
+	// Logger::init_step("DeLinearise");
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = 0;
 	}
-	//Logger::log(test.to_txt());
-	//Logger::finish_step();
+	if (log) {
+		log->set_parameter("oldregex", *this);
+		log->set_parameter("newregex", test);
+	}
+	// Logger::log(test.to_txt());
+	// Logger::finish_step();
 	return test;
 }
 
 FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
-	//Logger::init_step("Автомат Глушкова");
+	// Logger::init_step("Автомат Глушкова");
 
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
@@ -1020,17 +1039,10 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	// cout << "End " << str_end << endl;
 	// cout << "Pairs " << str_pair << endl;
 
-	//Logger::log("Регулярка", test.to_str_log());
-	//Logger::log("First", str_firs);
-	//Logger::log("End", str_end);
-	//Logger::log("Pairs", str_pair);
-
-	if (log) {
-		log->set_parameter("regex", test);
-		log->set_parameter("first", str_firs);
-		log->set_parameter("end", str_end);
-		log->set_parameter("pairs", str_pair);
-	}
+	// Logger::log("Регулярка", test.to_str_log());
+	// Logger::log("First", str_firs);
+	// Logger::log("End", str_end);
+	// Logger::log("Pairs", str_pair);
 
 	for (size_t i = 0; i < first->size(); i++) {
 		tr[(*first)[i].symbol].insert((*first)[i].number + 1);
@@ -1056,13 +1068,20 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	delete first;
 	delete end;
 	FiniteAutomaton fa(0, st, language);
-	//Logger::log("Автомат", fa);
-	//Logger::finish_step();
+	if (log) {
+		log->set_parameter("regex", test);
+		log->set_parameter("first", str_firs);
+		log->set_parameter("end", str_end);
+		log->set_parameter("pairs", str_pair);
+		log->set_parameter("automaton", fa);
+	}
+	// Logger::log("Автомат", fa);
+	// Logger::finish_step();
 	return fa;
 }
 
-FiniteAutomaton Regex::to_ilieyu() const {
-	//Logger::init_step("Автомат Илия–Ю");
+FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
+	// Logger::init_step("Автомат Илия–Ю");
 	FiniteAutomaton glushkov = this->to_glushkov();
 	vector<State> states = glushkov.states;
 	vector<int> follow;
@@ -1112,10 +1131,9 @@ FiniteAutomaton Regex::to_ilieyu() const {
 	}
 
 	// cout << str_follow;
-
-	//Logger::log("Регулярное выражение", to_txt());
-	//Logger::log("Автомат Глушкова", glushkov);
-	//Logger::log("Follow-отношения", str_follow);
+	// Logger::log("Регулярное выражение", to_txt());
+	// Logger::log("Автомат Глушкова", glushkov);
+	// Logger::log("Follow-отношения", str_follow);
 
 	for (size_t i = 0; i < new_states.size(); i++) {
 		State v1 = new_states[i];
@@ -1140,8 +1158,14 @@ FiniteAutomaton Regex::to_ilieyu() const {
 		new_states[i].index = i;
 	}
 	FiniteAutomaton fa(0, new_states, glushkov.language);
-	//Logger::log("Автомат", fa);
-	//Logger::finish_step();
+	if (log) {
+		log->set_parameter("regex", *this);
+		log->set_parameter("automaton1", glushkov);
+		log->set_parameter("follow", str_follow);
+		log->set_parameter("automaton2", fa);
+	}
+	// Logger::log("Автомат", fa);
+	// Logger::finish_step();
 	return fa;
 }
 bool Regex::is_eps_possible() {
@@ -1477,13 +1501,17 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 	return ans;
 }
 // Длина накачки
-int Regex::pump_length() const {
-	//Logger::init_step("PumpLength");
+int Regex::pump_length(iLogTemplate* log) const {
+	// Logger::init_step("PumpLength");
 	if (language->get_pump_length()) {
 		/*Logger::log("Длина накачки",
 					to_string(language->get_pump_length().value()));
-		Logger::finish_step();
-		return language->get_pump_length().value();*/
+		Logger::finish_step();*/
+		if (log) {
+			log->set_parameter("pumplength",
+							   language->get_pump_length().value());
+		}
+		return language->get_pump_length().value();
 	}
 	std::map<std::string, bool> checked_prefixes;
 	for (int i = 1;; i++) {
@@ -1494,6 +1522,9 @@ int Regex::pump_length() const {
 			/*Logger::log(
 				"Длина накачки совпадает с длиной регулярного выражения");
 			Logger::finish_step();*/
+			if (log) {
+				log->set_parameter("pumplength", i);
+			}
 			return i;
 		}
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
@@ -1528,8 +1559,11 @@ int Regex::pump_length() const {
 						cout << subset(pumping) << "\n";
 						Regex pump2;
 						cout << subset(pump2);*/
-						//Logger::log("Длина накачки", to_string(i));
-						//Logger::finish_step();
+						// Logger::log("Длина накачки", to_string(i));
+						// Logger::finish_step();
+						if (log) {
+							log->set_parameter("pumplength", i);
+						}
 						return i;
 					}
 				}
@@ -1559,23 +1593,28 @@ bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 			   equality_checker(r1->term_l, r2->term_r);
 }
 
-bool Regex::equal(const Regex& r1, const Regex& r2) {
-	//Logger::init_step("Equal");
-	//Logger::log("Первое регулярное выражение", r1.to_txt());
-	//Logger::log("Второе регулярное выражение", r2.to_txt());
+bool Regex::equal(const Regex& r1, const Regex& r2, iLogTemplate* log) {
+	// Logger::init_step("Equal");
+	// Logger::log("Первое регулярное выражение", r1.to_txt());
+	// Logger::log("Второе регулярное выражение", r2.to_txt());
 	bool result = equality_checker(&r1, &r2);
 	/*if (result)
 		Logger::log("Результат Equal", "true");
 	else
 		Logger::log("Результат Equal", "false");
 	Logger::finish_step();*/
+	if (log) {
+		log->set_parameter("regex1", r1);
+		log->set_parameter("regex2", r2);
+		log->set_parameter("result", result);
+	}
 	return result;
 }
 
-bool Regex::equivalent(const Regex& r1, const Regex& r2) {
-	//Logger::init_step("Equiv");
-	//Logger::log("Первое регулярное выражение", r1.to_txt());
-	//Logger::log("Второе регулярное выражение", r2.to_txt());
+bool Regex::equivalent(const Regex& r1, const Regex& r2, iLogTemplate* log) {
+	// Logger::init_step("Equiv");
+	// Logger::log("Первое регулярное выражение", r1.to_txt());
+	// Logger::log("Второе регулярное выражение", r2.to_txt());
 	FiniteAutomaton fa1 = r1.to_ilieyu();
 	FiniteAutomaton fa2 = r2.to_ilieyu();
 	bool result = FiniteAutomaton::equivalent(fa1, fa2);
@@ -1584,25 +1623,35 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 	else
 		Logger::log("Результат Equiv", "false");
 	Logger::finish_step();*/
+	if (log) {
+		log->set_parameter("regex1", r1);
+		log->set_parameter("regex2", r2);
+		log->set_parameter("result", result);
+	}
 	return result;
 }
 
-bool Regex::subset(const Regex& r) const {
-	//Logger::init_step("Subset");
-	//Logger::log("Первое регулярное выражение", to_txt());
-	//Logger::log("Второе регулярное выражение", r.to_txt());
+bool Regex::subset(const Regex& r, iLogTemplate* log) const {
+	// Logger::init_step("Subset");
+	// Logger::log("Первое регулярное выражение", to_txt());
+	// Logger::log("Второе регулярное выражение", r.to_txt());
 	bool result = to_ilieyu().subset(r.to_ilieyu());
 	/*if (result)
 		Logger::log("Результат Subset", "true");
 	else
 		Logger::log("Результат Subset", "false");
 	Logger::finish_step();*/
+	if (log) {
+		log->set_parameter("regex1", *this);
+		log->set_parameter("regex2", r);
+		log->set_parameter("result", result);
+	}
 	return result;
 }
 
-FiniteAutomaton Regex::to_antimirov() const {
-	//Logger::init_step("Автомат Антимирова");
-	//Logger::log("Регулярное выражение", to_txt());
+FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
+	// Logger::init_step("Автомат Антимирова");
+	// Logger::log("Регулярное выражение", to_txt());
 	map<set<string>, set<string>> trans;
 	vector<Regex> states;
 	vector<Regex> alph_regex;
@@ -1652,7 +1701,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 			// cout << out[j][2].to_txt() << endl;
 			derev_log = out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
 						" = " + out[j][1].to_txt() + "\\";
-			//Logger::log(derev_log);
+			// Logger::log(derev_log);
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
 							  out[j][1].to_txt());
@@ -1667,7 +1716,7 @@ FiniteAutomaton Regex::to_antimirov() const {
 			automat_state.push_back({int(i), {}, state, false, transit});
 		}
 	}
-	string str_state = "State: ";
+	string str_state = "";
 	for (size_t i = 0; i < automat_state.size(); i++) {
 		str_state += automat_state[i].identifier + " ";
 	}
@@ -1675,11 +1724,17 @@ FiniteAutomaton Regex::to_antimirov() const {
 	// cout << derev_log;
 	// cout << str_state << endl;
 	// //Logger::log(derev_log, str_state);
-	//Logger::log(str_state);
+	// Logger::log(str_state);
 
 	FiniteAutomaton fa(0, automat_state, language);
-	//Logger::log("Автомат", fa);
-	//Logger::finish_step();
+	if (log) {
+		log->set_parameter("regex", *this);
+		log->set_parameter("derev", derev_log);
+		log->set_parameter("state", str_state);
+		log->set_parameter("automaton", fa);
+	}
+	// Logger::log("Автомат", fa);
+	// Logger::finish_step();
 	return fa;
 }
 
@@ -1713,10 +1768,11 @@ string Regex::to_str_log() const {
 	return str1 + symb + str2;
 }
 
-Regex Regex::deannote() const {
-	//Logger::init_step("DeAnnote");
+Regex Regex::deannote(iLogTemplate* log) const {
+	// Logger::init_step("DeAnnote");
 	Regex old_regex(*this);
-	//Logger::log("Регулярное выражение до преобразования", old_regex.to_txt());
+	// Logger::log("Регулярное выражение до преобразования",
+	// old_regex.to_txt());
 	string with_number = old_regex.to_txt();
 	string new_string;
 	for (size_t i = 0; i < with_number.size(); i++) {
@@ -1728,6 +1784,10 @@ Regex Regex::deannote() const {
 	/*Logger::log("Регулярное выражение после преобразования",
 				new_regex.to_txt());
 	Logger::finish_step();*/
+	if (log) {
+		log->set_parameter("oldregex", old_regex);
+		log->set_parameter("newregex", new_regex);
+	}
 	return new_regex;
 }
 

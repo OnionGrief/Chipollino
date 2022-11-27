@@ -191,20 +191,25 @@ GeneralObject Interpreter::apply_function(
 	}
 
 	if (function.name == "IlieYu") {
-		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_ilieyu());
+		return ObjectNFA(
+			get<ObjectRegex>(arguments[0]).value.to_ilieyu(&log_template));
 	}
 	if (function.name == "Antimirov") {
-		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_antimirov());
+		return ObjectNFA(
+			get<ObjectRegex>(arguments[0]).value.to_antimirov(&log_template));
 	}
 	if (function.name == "Arden") {
-		return ObjectRegex((get_automaton(arguments[0]).to_regex()));
+		return ObjectRegex(
+			(get_automaton(arguments[0]).to_regex(&log_template)));
 	}
 	if (function.name == "Thompson") {
-		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_tompson());
+		return ObjectNFA(
+			get<ObjectRegex>(arguments[0]).value.to_tompson(&log_template));
 	}
 	if (function.name == "Bisimilar") {
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
-			get_automaton(arguments[0]), get_automaton(arguments[1])));
+			get_automaton(arguments[0]), get_automaton(arguments[1]),
+			&log_template));
 	}
 	TransformationMonoid trmon;
 	if (function.name == "Minimal") {
@@ -213,8 +218,9 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
-			return ObjectBoolean((get_automaton(arguments[0])
-									  .subset(get_automaton(arguments[1]))));
+			return ObjectBoolean(
+				(get_automaton(arguments[0])
+					 .subset(get_automaton(arguments[1]), &log_template)));
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
@@ -225,42 +231,47 @@ GeneralObject Interpreter::apply_function(
 		vector<ObjectType> n = {nfa, nfa};
 		if (function.input == n) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
-				get_automaton(arguments[0]), get_automaton(arguments[1])));
+				get_automaton(arguments[0]), get_automaton(arguments[1]),
+				&log_template));
 		} else {
-			return ObjectBoolean(
-				Regex::equivalent(get<ObjectRegex>(arguments[0]).value,
-								  get<ObjectRegex>(arguments[1]).value));
+			return ObjectBoolean(Regex::equivalent(
+				get<ObjectRegex>(arguments[0]).value,
+				get<ObjectRegex>(arguments[1]).value, &log_template));
 		}
 	}
 	if (function.name == "Equal") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
 			return ObjectBoolean(FiniteAutomaton::equal(
-				get_automaton(arguments[0]), get_automaton(arguments[1])));
+				get_automaton(arguments[0]), get_automaton(arguments[1]),
+				&log_template));
 		} else {
-			return ObjectBoolean(
-				Regex::equal(get<ObjectRegex>(arguments[0]).value,
-							 get<ObjectRegex>(arguments[1]).value));
+			return ObjectBoolean(Regex::equal(
+				get<ObjectRegex>(arguments[0]).value,
+				get<ObjectRegex>(arguments[1]).value, &log_template));
 		}
 	}
 	if (function.name == "SemDet") {
-		return ObjectBoolean(get_automaton(arguments[0]).semdet());
+		return ObjectBoolean(get_automaton(arguments[0]).semdet(&log_template));
 	}
 	if (function.name == "PumpLength") {
-		return ObjectInt(get<ObjectRegex>(arguments[0]).value.pump_length());
+		return ObjectInt(
+			get<ObjectRegex>(arguments[0]).value.pump_length(&log_template));
 	}
 	if (function.name == "ClassLength") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
 		return ObjectInt(trmon.class_length());
 	}
 	if (function.name == "States") {
-		return ObjectInt(get_automaton(arguments[0]).states_number());
+		return ObjectInt(
+			get_automaton(arguments[0]).states_number(&log_template));
 	}
 	if (function.name == "ClassCard") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
 		return ObjectInt(trmon.class_card());
 	}
 	if (function.name == "Ambiguity") {
-		return ObjectValue(get_automaton(arguments[0]).ambiguity());
+		return ObjectValue(
+			get_automaton(arguments[0]).ambiguity(&log_template));
 	}
 	/*if (function.name == "Width") {
 		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
@@ -279,51 +290,58 @@ GeneralObject Interpreter::apply_function(
 	optional<GeneralObject> res;
 
 	if (function.name == "Determinize") {
-		res = ObjectDFA(get_automaton(arguments[0]).determinize());
+		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template));
 	}
 	if (function.name == "Minimize") {
-		res = ObjectDFA(get_automaton(arguments[0]).minimize());
+		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template));
 	}
 	if (function.name == "Annote") {
-		res = ObjectDFA(get_automaton(arguments[0]).annote());
+		res = ObjectDFA(get_automaton(arguments[0]).annote(&log_template));
 	}
 	if (function.name == "RemEps") {
-		res = ObjectNFA(get_automaton(arguments[0]).remove_eps());
+		res = ObjectNFA(get_automaton(arguments[0]).remove_eps(&log_template));
 	}
 	if (function.name == "Linearize") {
-		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.linearize());
+		res = ObjectRegex(
+			get<ObjectRegex>(arguments[0]).value.linearize(&log_template));
 	}
 	if (function.name == "Reverse") {
-		res = ObjectNFA(get_automaton(arguments[0]).reverse());
+		res = ObjectNFA(get_automaton(arguments[0]).reverse(&log_template));
 	}
 	if (function.name == "DeLinearize") {
 		if (function.output == regex) {
-			res =
-				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
+			res = ObjectRegex(get<ObjectRegex>(arguments[0])
+								  .value.delinearize(&log_template));
 		} else {
 			// пусть будет так
-			res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
+			res = ObjectNFA(
+				get<ObjectNFA>(arguments[0]).value.deannote(&log_template));
 		}
 	}
 	if (function.name == "Complement") {
 		// FiniteAutomaton fa = get_automaton(arguments[0]);
 		// if (fa.is_deterministic())
-		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
+		res = ObjectDFA(
+			get<ObjectDFA>(arguments[0]).value.complement(&log_template));
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == nfa) {
-			res = ObjectNFA(get_automaton(arguments[0]).deannote());
+			res =
+				ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 		} else {
-			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
+			res = ObjectRegex(
+				get<ObjectRegex>(arguments[0]).value.deannote(&log_template));
 		}
 	}
 	if (function.name == "MergeBisim") {
-		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar());
+		res = ObjectNFA(
+			get_automaton(arguments[0]).merge_bisimilar(&log_template));
 	}
 	if (function.name == "Normalize") {
-		res = ObjectRegex(get<ObjectRegex>(arguments[0])
-							  .value.normalize_regex(
-								  get<ObjectFileName>(arguments[1]).value));
+		res = ObjectRegex(
+			get<ObjectRegex>(arguments[0])
+				.value.normalize_regex(get<ObjectFileName>(arguments[1]).value,
+									   &log_template));
 	}
 	/*if (function.name == "Simplify") {
 		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);

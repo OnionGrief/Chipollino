@@ -109,10 +109,10 @@ class Regex : BaseObject {
 	// вывод дерева для дебага
 	void print_tree();
 
-	FiniteAutomaton to_tompson() const;
+	FiniteAutomaton to_tompson(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;
-	FiniteAutomaton to_ilieyu() const;
-	FiniteAutomaton to_antimirov() const;
+	FiniteAutomaton to_ilieyu(iLogTemplate* log = nullptr) const;
+	FiniteAutomaton to_antimirov(iLogTemplate* log = nullptr) const;
 
 	~Regex();
 	Regex* copy() const;
@@ -124,14 +124,16 @@ class Regex : BaseObject {
 	// Генерация языка из алфавита
 	void make_language();
 	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const string& file) const;
+	Regex normalize_regex(const string& file,
+						  iLogTemplate* log = nullptr) const;
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
-	static bool equal(const Regex&, const Regex&);
+	static bool equal(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на эквивалентность
-	static bool equivalent(const Regex&, const Regex&);
+	static bool equivalent(const Regex&, const Regex&,
+						   iLogTemplate* log = nullptr);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
-	bool subset(const Regex&) const; // TODO
+	bool subset(const Regex&, iLogTemplate* log = nullptr) const; // TODO
 
 	// Производная по символу
 	std::optional<Regex> symbol_derevative(const Regex& respected_sym) const;
@@ -141,7 +143,7 @@ class Regex : BaseObject {
 	// Производная по префиксу
 	std::optional<Regex> prefix_derevative(std::string respected_str) const;
 	// Длина накачки
-	int pump_length() const;
+	int pump_length(iLogTemplate* log = nullptr) const;
 	// Слово, в котором все итерации Клини раскрыты n раз
 	string get_iterated_word(int n) const;
 	void regex_union(Regex* a, Regex* b);
@@ -149,9 +151,9 @@ class Regex : BaseObject {
 	void regex_star(Regex* a);
 	void regex_eps();
 
-	Regex linearize() const;
-	Regex delinearize() const;
-	Regex deannote() const;
+	Regex linearize(iLogTemplate* log = nullptr) const;
+	Regex delinearize(iLogTemplate* log = nullptr) const;
+	Regex deannote(iLogTemplate* log = nullptr) const;
 };
 
 /*

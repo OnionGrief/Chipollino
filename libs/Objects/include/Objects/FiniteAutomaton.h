@@ -1,6 +1,7 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
+#include "iLogTemplate.h"
 #include <functional>
 #include <iostream>
 #include <map>
@@ -60,7 +61,7 @@ class FiniteAutomaton : public BaseObject {
 										  map<int, bool>& was) const;
 
 	// функция проверки на семантическую детерминированность
-	bool semdet_entry(bool annoted = false) const;
+	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
 
   public:
 	FiniteAutomaton();
@@ -72,69 +73,76 @@ class FiniteAutomaton : public BaseObject {
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
-	FiniteAutomaton determinize() const;
+	FiniteAutomaton determinize(iLogTemplate* log = nullptr) const;
 	// построение eps-замыкания
-	FiniteAutomaton remove_eps() const;
+	FiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize() const;
+	FiniteAutomaton minimize(iLogTemplate* log = nullptr) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
-	static FiniteAutomaton intersection(const FiniteAutomaton&,
-										const FiniteAutomaton&); // меняет язык
+	static FiniteAutomaton intersection(
+		const FiniteAutomaton&, const FiniteAutomaton&,
+		iLogTemplate* log = nullptr); // меняет язык
 	// объединение НКА (на выходе - автомат, распознающий слова объединенеия
 	// языков L1 и L2)
 	static FiniteAutomaton uunion(const FiniteAutomaton&,
-								  const FiniteAutomaton&); // меняет язык
+								  const FiniteAutomaton&,
+								  iLogTemplate* log = nullptr); // меняет язык
 	// разность НКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
-	static FiniteAutomaton difference(const FiniteAutomaton&,
-									  const FiniteAutomaton&); // меняет язык
+	static FiniteAutomaton difference(
+		const FiniteAutomaton&, const FiniteAutomaton&,
+		iLogTemplate* log = nullptr); // меняет язык
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
-	FiniteAutomaton complement() const; // меняет язык
+	FiniteAutomaton complement(
+		iLogTemplate* log = nullptr) const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
-	FiniteAutomaton reverse() const; // меняет язык
+	FiniteAutomaton reverse(iLogTemplate* log = nullptr) const; // меняет язык
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
 	// себя)
-	FiniteAutomaton add_trap_state() const;
+	FiniteAutomaton add_trap_state(iLogTemplate* log = nullptr) const;
 	// удаление ловушек
-	FiniteAutomaton remove_trap_states() const;
+	FiniteAutomaton remove_trap_states(iLogTemplate* log = nullptr) const;
 	// навешивание разметки на все буквы в автомате, стоящие на
 	// недетерминированных переходах (если ветвление содержит eps-переходы, то
 	// eps размечаются как буквы). ДКА не меняется
-	FiniteAutomaton annote() const;
+	FiniteAutomaton annote(iLogTemplate* log = nullptr) const;
 	// снятие разметки с букв
-	FiniteAutomaton deannote() const;
+	FiniteAutomaton deannote(iLogTemplate* log = nullptr) const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
 	// states.size()) i-й элемент хранит номер класса i-го состояния
 	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
 	// объединение эквивалентных по бисимуляции состояний
-	FiniteAutomaton merge_bisimilar() const;
+	FiniteAutomaton merge_bisimilar(iLogTemplate* log = nullptr) const;
 	// проверка автоматов на эквивалентность
-	static bool equivalent(const FiniteAutomaton&,
-						   const FiniteAutomaton&); // TODO
+	static bool equivalent(const FiniteAutomaton&, const FiniteAutomaton&,
+						   iLogTemplate* log = nullptr); // TODO
 	// проверка автоматов на равентсво(буквальное)
-	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&);
+	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&,
+					  iLogTemplate* log = nullptr);
 	// проверка автоматов на бисимилярность
-	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
+	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&,
+						  iLogTemplate* log = nullptr);
 	// проверка автомата на детерминированность
 	bool is_deterministic();
 	// проверка НКА на семантический детерминизм
-	bool semdet() const;
+	bool semdet(iLogTemplate* log = nullptr) const;
 	// проверяет, распознаёт ли автомат слово
 	bool parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
-	bool subset(const FiniteAutomaton&) const; // TODO
-											   // и тд
+	bool subset(const FiniteAutomaton&,
+				iLogTemplate* log = nullptr) const; // TODO
+													// и тд
 	//начальное состояние
 	int get_initial();
 	// определяет меру неоднозначности
-	AmbiguityValue ambiguity() const;
+	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
 	bool is_one_unambiguous();
 	// возвращает количество состояний (пердикат States)
-	int states_number() const;
+	int states_number(iLogTemplate* log = nullptr) const;
 	// метод Arden
-	Regex to_regex() const;
+	Regex to_regex(iLogTemplate* log = nullptr) const;
 	friend class Regex;
 	friend class TransformationMonoid;
 };
