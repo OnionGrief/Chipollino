@@ -1672,49 +1672,92 @@ TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
 	return syntactic_monoid;
 }
 
-void find_maximum_identity_matrix(vector<vector<bool>>& table, int& res,
+void find_maximum_identity_matrix(vector<vector<bool>>& table, int& result,
+								  vector<bool> used_x, vector<bool> used_y,
+								  int unused_x, int unused_y, int size,
+								  int row);
+
+void go_to_rows(vector<int>& rows, vector<vector<bool>>& table, int& result,
+				vector<bool> used_x, vector<bool> used_y, int unused_x,
+				int unused_y, int size) {
+	if (rows.empty()) {
+		result = max(result, size);
+		return;
+	}
+	int n = table.size(), m = table[0].size();
+	vector<int> y_ind(n, -1);
+	vector<int> x_ind(m, -1);
+	for (int i = 0; i < n; i++) {
+		if (used_y[i]) continue;
+		for (int j = 0; j < m; j++) {
+			if (used_x[j]) continue;
+			if (!table[i][j]) continue;
+			if (y_ind[i] == -1)
+				y_ind[i] = j;
+			else
+				y_ind[i] = -2;
+			if (x_ind[j] == -1)
+				x_ind[j] = i;
+			else
+				x_ind[j] = -2;
+		}
+	}
+	for (int i = 0; i < n; i++) {
+		if (y_ind[i] > 0 && x_ind[y_ind[i]] == i) {
+			used_x[y_ind[i]] = true;
+			used_y[i] = true;
+			unused_y--;
+			unused_x--;
+			size++;
+		}
+	}
+
+	if (unused_y == 0) {
+		result = max(result, size);
+		return;
+	}
+	for (auto row : rows) {
+		if (used_y[row]) continue;
+		used_y[row] = true;
+		find_maximum_identity_matrix(table, result, used_x, used_y, unused_x,
+									 unused_y - 1, size, row);
+		used_y[row] = false;
+	}
+}
+
+void find_maximum_identity_matrix(vector<vector<bool>>& table, int& result,
 								  vector<bool> used_x, vector<bool> used_y,
 								  int unused_x, int unused_y, int size,
 								  int row) {
-	if (unused_x <= (res - size)) return;
-	if (unused_y < (res - size)) return;
-	vector<int> true_indexes_x;
+	if (unused_x <= (result - size)) return;
+	if (unused_y < (result - size)) return;
+	vector<int> true_x;
 	for (int i = 0; i < table[row].size(); i++) {
 		if (used_x[i]) continue;
-		if (table[row][i] == 1) {
-			true_indexes_x.push_back(i);
-			used_x[i] = true;
-			unused_x--;
-		}
+		if (!table[row][i]) continue;
+		true_x.push_back(i);
+		used_x[i] = true;
+		unused_x--;
 	}
-	if (true_indexes_x.empty()) {
-		res = max(res, size);
+	if (true_x.empty()) {
+		result = max(result, size);
 		return;
 	}
-	for (int x : true_indexes_x) {
+	for (int x : true_x) {
 		vector<bool> new_used_y = used_y;
 		int new_unused_y = unused_y;
-		vector<int> false_indexes_y;
+		vector<int> false_y;
 		for (int i = 0; i < table.size(); i++) {
 			if (new_used_y[i]) continue;
 			if (table[i][x] == 1) {
 				new_used_y[i] = true;
 				new_unused_y--;
 			} else {
-				false_indexes_y.push_back(i);
+				false_y.push_back(i);
 			}
 		}
-		if (false_indexes_y.empty()) {
-			res = max(res, size + 1);
-			continue;
-		}
-		for (int y : false_indexes_y) {
-			new_used_y[y] = true;
-			find_maximum_identity_matrix(table, res, used_x, new_used_y,
-										 unused_x, new_unused_y - 1, size + 1,
-										 y);
-			new_used_y[y] = false;
-		}
+		go_to_rows(false_y, table, result, used_x, new_used_y, unused_x,
+				   new_unused_y, size + 1);
 	}
 }
 
@@ -1736,10 +1779,11 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
 		n = equivalence_classes_table.size();
 	vector<bool> used_x(m);
 	vector<bool> used_y(n);
-	for (int i = 0; i < equivalence_classes_table.size(); i++) {
-		find_maximum_identity_matrix(equivalence_classes_table, result, used_x,
-									 used_y, m, n, 0, i);
-	}
+	vector<int> rows;
+	for (int i = 0; i < n; i++)
+		rows.push_back(i);
+	go_to_rows(rows, equivalence_classes_table, result, used_x, used_y, m, n,
+			   0);
 	// кэширование
 	language->set_nfa_minimum_size(result);
 	Logger::log("Количество диагональных классов по методу Глейстера-Шаллита",
@@ -1752,11 +1796,10 @@ optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
 	if (!language->pump_length_cached()) return nullopt;
 	int language_pump_length = language->get_pump_length();
 
-	/*int transition_states_counter = 0;
+	int transition_states_counter = 0;
 	for (const State& state : states)
 		if (state.transitions.size() > 0) transition_states_counter++;
-	if (language_pump_length == transition_states_counter)
-		return true;*/
+	if (language_pump_length == transition_states_counter + 1) return true;
 	if (states.size() > language_pump_length)
 		return states.size() == get_classes_number_GlaisterShallit();
 

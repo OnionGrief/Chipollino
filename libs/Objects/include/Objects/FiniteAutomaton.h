@@ -138,7 +138,7 @@ class FiniteAutomaton : public BaseObject {
 	int states_number() const;
 	// метод Arden
 	Regex to_regex() const;
-	// определение минимальности НКА по Глейстеру-Шаллиту
+	// возвращает число диагональных классов по методу Глейстера-Шаллита
 	int get_classes_number_GlaisterShallit() const;
 	// построение синтаксического моноида по автомату
 	TransformationMonoid get_syntactic_monoid() const;

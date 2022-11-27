@@ -476,6 +476,16 @@ void Example::fa_semdet_check() {
 	cout << "Semdet?: " << sdet << "\n";
 }
 
+void Example::classes_number_GlaisterShallit() {
+	Regex r("abc");
+	r.pump_length();
+	FiniteAutomaton fa = r.to_glushkov();
+	TransformationMonoid sm = fa.get_syntactic_monoid();
+	cout << sm.to_txt_MyhillNerode() << endl;
+	cout << fa.get_classes_number_GlaisterShallit() << endl;
+	fa.is_nfa_minimal();
+}
+
 void Example::all_examples() {
 	// determinize();
 	// remove_eps();
