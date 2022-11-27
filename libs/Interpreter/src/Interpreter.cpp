@@ -214,7 +214,7 @@ GeneralObject Interpreter::apply_function(
 	TransformationMonoid trmon;
 	if (function.name == "Minimal") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
-		return ObjectBoolean(trmon.is_minimal());
+		return ObjectBoolean(trmon.is_minimal(&log_template));
 	}
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
@@ -259,7 +259,7 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "ClassLength") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
-		return ObjectInt(trmon.class_length());
+		return ObjectInt(trmon.class_length(&log_template));
 	}
 	if (function.name == "States") {
 		return ObjectInt(
@@ -267,7 +267,7 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "ClassCard") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
-		return ObjectInt(trmon.class_card());
+		return ObjectInt(trmon.class_card(&log_template));
 	}
 	if (function.name == "Ambiguity") {
 		return ObjectValue(
@@ -278,7 +278,7 @@ GeneralObject Interpreter::apply_function(
 	}*/
 	if (function.name == "MyhillNerode") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
-		return ObjectInt(trmon.classes_number_MyhillNerode());
+		return ObjectInt(trmon.classes_number_MyhillNerode(&log_template));
 	}
 
 	/*

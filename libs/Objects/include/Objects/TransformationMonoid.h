@@ -45,10 +45,14 @@ class TransformationMonoid : public BaseObject {
 	int is_synchronized(
 		const Term& w); //Вернет	-1	если	не	синхронизирован	или
 	//номер состояния	с	которым синхронизирован
-	int class_card(); //Вернет число классов эквивалентности
-	int class_length(); //Вернет самое длинное слово в классе
-	bool is_minimal(); //Вычисление Минимальности по М-Н(1 если минимальный)
-	int classes_number_MyhillNerode(); //Вычисление размера по М-Н
+	int class_card(
+		iLogTemplate* log = nullptr); //Вернет число классов эквивалентности
+	int class_length(
+		iLogTemplate* log = nullptr); //Вернет самое длинное слово в классе
+	bool is_minimal(iLogTemplate* log = nullptr); //Вычисление Минимальности по
+												  //М-Н(1 если минимальный)
+	int classes_number_MyhillNerode(
+		iLogTemplate* log = nullptr); //Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); //вывод таблицы М-Н
   private:
 	FiniteAutomaton automat; //Автомат
