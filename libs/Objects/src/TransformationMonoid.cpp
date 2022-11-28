@@ -162,6 +162,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 					} else {
 						a = automat.states[final_state];
 					}
+
 					if (a.transitions.count(current.name[k])) {
 						set<int> temp_transitions =
 							a.transitions.at(current.name[k]);
@@ -498,29 +499,24 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 		is_minimal();
 	}
 	stringstream ss;
-	ss << "    e   ";
+	int maxlen = terms[terms.size() - 1].name.size();
+	ss << string(maxlen + 2, ' ') << "e" << string(maxlen + 1, ' ');
 	for (int i = 0; i < terms.size(); i++) {
-		ss << to_str(terms[i].name) << string(4 - terms[i].name.size(), ' ');
+		ss << to_str(terms[i].name)
+		   << string(maxlen + 2 - terms[i].name.size(), ' ');
 	}
 	ss << "\n";
 
-	// eps
-	ss << "e   ";
-	for (int j = 0; j < equivalence_class_table[0].size();
-		 j++) { //вывод матрицы
-		ss << equivalence_class_table[0][j] << "   ";
-	}
-	ss << "\n";
 	for (int i = 0; i <= table_classes.size(); i++) { //вывод матрицы
 		if (i == 0) {
-			ss << "e   ";
+			ss << "e" << string(maxlen + 1, ' ');
 		} else {
 			ss << to_str(table_classes[i - 1].name)
-			   << string(4 - table_classes[i - 1].name.size(), ' ');
+			   << string(maxlen + 2 - table_classes[i - 1].name.size(), ' ');
 		}
 		for (int j = 0; j < equivalence_class_table[0].size();
 			 j++) { //вывод матрицы
-			ss << equivalence_class_table[i][j] << "   ";
+			ss << equivalence_class_table[i][j] << string(maxlen + 1, ' ');
 		}
 		ss << "\n";
 	}
