@@ -278,7 +278,7 @@ int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 			if (is_epsilon(alpha)) {
 				alpha = "";
 			}
-			if (st.is_terminal and false) {
+			if (st.is_terminal && false) {
 				if (index == ind) {
 					g->rules[alpha].insert(index);
 				}
