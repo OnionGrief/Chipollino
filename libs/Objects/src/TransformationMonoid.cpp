@@ -414,70 +414,74 @@ int TransformationMonoid::classes_number_MyhillNerode() {
 	if (table_classes.size() == 0) {
 		is_minimal();
 	}
-	int sum = 0;
+	map<vector<bool>, bool> wasvec;
+	int counter = 0;
 	for (int i = 0; i < equivalence_class_table.size(); i++) {
-		for (int j = 0; j < equivalence_class_table[i].size(); j++) {
-			if (equivalence_class_table[i][j]) {
-				sum++;
-			}
+		if (!wasvec.count(equivalence_class_table[i])) {
+			wasvec[equivalence_class_table[i]] = true;
+			counter++;
 		}
 	}
 	Logger::init_step("Myhill-Nerode сlasses number");
-	Logger::log(to_string(sum));
+	Logger::log(to_string(counter));
 	Logger::finish_step();
-	return sum;
+	return counter;
 }
 
 //Вычисление Минимальности (1 если минимальный)
 bool TransformationMonoid::is_minimal() {
-	map<vector<alphabet_symbol>, int>
-		data; //храним ссылку на Терм (быстрее и проще искать)
-	for (int i = 0; i < terms.size(); i++) {
-		data[terms[i].name] = i;
-	}
-	int sizetable = 0;
-	set<int> templeft;
-	for (int i = 0; i < terms.size(); i++) {
-		vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
-		for (int j = 0; j < cur.size(); j++) {
-			templeft.insert(data[cur[j].name]);
-			// table_classes.insert(cur[j]);
+	if (table_classes.size() == 0) {
+		map<vector<alphabet_symbol>, int>
+			data; //храним ссылку на Терм (быстрее и проще искать)
+		for (int i = 0; i < terms.size(); i++) {
+			data[terms[i].name] = i;
 		}
-	}
-	for (auto i : templeft) {
-		table_classes.push_back(terms[i]);
-	}
-	map<vector<alphabet_symbol>, int>
-		data_table; //храним ссылку на Терм из таблицы М-Н (быстрее и проще
-					//искать)
-	for (int i = 0; i < table_classes.size(); i++) {
-		data_table[table_classes[i].name] = i;
-	}
-	for (int i = 0; i <= table_classes.size(); i++) { //заполняем матрицу нулями
-		vector<bool> vector_first(terms.size() + 1);
-		equivalence_class_table.push_back(vector_first);
+		int sizetable = 0;
+		set<int> templeft;
+		for (int i = 0; i < terms.size(); i++) {
+			vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
+			for (int j = 0; j < cur.size(); j++) {
+				templeft.insert(data[cur[j].name]);
+				// table_classes.insert(cur[j]);
+			}
+		}
+		for (auto i : templeft) {
+			table_classes.push_back(terms[i]);
+		}
+		map<vector<alphabet_symbol>, int>
+			data_table; //храним ссылку на Терм из таблицы М-Н (быстрее и проще
+						//искать)
+		for (int i = 0; i < table_classes.size(); i++) {
+			data_table[table_classes[i].name] = i;
+		}
+		for (int i = 0; i <= table_classes.size();
+			 i++) { //заполняем матрицу нулями
+			vector<bool> vector_first(terms.size() + 1);
+			equivalence_class_table.push_back(vector_first);
+		}
+
+		//заполняем с eps
+
+		vector<Term>::iterator it = table_classes.begin();
+		for (int i = 1; it != table_classes.end(); i++, it++) {
+			if ((*it).isFinal) {
+				equivalence_class_table[i][0] = true;
+			}
+		}
+		for (int i = 0; i < terms.size(); i++) {
+			if (terms[i].isFinal) {
+				equivalence_class_table[0][i + 1] = true;
+			}
+		}
+		for (int i = 0; i < terms.size(); i++) {
+			vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
+			for (int j = 0; j < cur.size(); j++) {
+				equivalence_class_table[data_table.at(cur[j].name) + 1][i + 1] =
+					true;
+			}
+		}
 	}
 
-	//заполняем с eps
-
-	vector<Term>::iterator it = table_classes.begin();
-	for (int i = 1; it != table_classes.end(); i++, it++) {
-		if ((*it).isFinal) {
-			equivalence_class_table[i][0] = true;
-		}
-	}
-	for (int i = 0; i < terms.size(); i++) {
-		if (terms[i].isFinal) {
-			equivalence_class_table[0][i + 1] = true;
-		}
-	}
-	for (int i = 0; i < terms.size(); i++) {
-		vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
-		for (int j = 0; j < cur.size(); j++) {
-			equivalence_class_table[data_table.at(cur[j].name) + 1][i + 1] =
-				true;
-		}
-	}
 	map<vector<bool>, bool> wasvec;
 	int counter = 0;
 	for (int i = 0; i < equivalence_class_table.size(); i++) {
