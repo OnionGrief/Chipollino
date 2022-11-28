@@ -413,7 +413,7 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 						}
 						// cout << wt << " -> " << eq << " " << a << endl;
 						if (m_r.find(wt) == m_r.end() &&
-							(wt != eq && a != "eps")) {
+							!(wt == eq && a == "eps")) {
 							out.insert(wt + " -> " + eq + " " + a);
 						}
 					}
