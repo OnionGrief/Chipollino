@@ -410,6 +410,9 @@ int TransformationMonoid::class_length() {
 
 //Вычисление
 int TransformationMonoid::classes_number_MyhillNerode() {
+	if (table_classes.size() == 0) {
+		is_minimal();
+	}
 	int sum = 0;
 	for (int i = 0; i < equivalence_class_table.size(); i++) {
 		for (int j = 0; j < equivalence_class_table[i].size(); j++) {
@@ -431,9 +434,36 @@ bool TransformationMonoid::is_minimal() {
 	for (int i = 0; i < terms.size(); i++) {
 		data[terms[i].name] = i;
 	}
-	for (int i = 0; i <= terms.size(); i++) { //заполняем матрицу нулями
+	int sizetable = 0;
+	set<int> templeft;
+	for (int i = 0; i < terms.size(); i++) {
+		vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
+		for (int j = 0; j < cur.size(); j++) {
+			templeft.insert(data[cur[j].name]);
+			// table_classes.insert(cur[j]);
+		}
+	}
+	for (auto i : templeft) {
+		table_classes.push_back(terms[i]);
+	}
+	map<vector<alphabet_symbol>, int>
+		data_table; //храним ссылку на Терм из таблицы М-Н (быстрее и проще
+					//искать)
+	for (int i = 0; i < table_classes.size(); i++) {
+		data_table[table_classes[i].name] = i;
+	}
+	for (int i = 0; i <= table_classes.size(); i++) { //заполняем матрицу нулями
 		vector<bool> vector_first(terms.size() + 1);
 		equivalence_class_table.push_back(vector_first);
+	}
+
+	//заполняем с eps
+
+	vector<Term>::iterator it = table_classes.begin();
+	for (int i = 1; it != table_classes.end(); i++, it++) {
+		if ((*it).isFinal) {
+			equivalence_class_table[i][0] = true;
+		}
 	}
 	for (int i = 0; i < terms.size(); i++) {
 		if (terms[i].isFinal) {
@@ -443,7 +473,8 @@ bool TransformationMonoid::is_minimal() {
 	for (int i = 0; i < terms.size(); i++) {
 		vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
 		for (int j = 0; j < cur.size(); j++) {
-			equivalence_class_table[i + 1][data.at(cur[j].name) + 1] = true;
+			equivalence_class_table[data_table.at(cur[j].name) + 1][i + 1] =
+				true;
 		}
 	}
 	map<vector<bool>, bool> wasvec;
@@ -463,22 +494,33 @@ bool TransformationMonoid::is_minimal() {
 }
 
 string TransformationMonoid::to_txt_MyhillNerode() {
+	if (table_classes.size() == 0) {
+		is_minimal();
+	}
 	stringstream ss;
 	ss << "    e   ";
 	for (int i = 0; i < terms.size(); i++) {
 		ss << to_str(terms[i].name) << string(4 - terms[i].name.size(), ' ');
 	}
 	ss << "\n";
-	for (int i = 0; i < equivalence_class_table.size(); i++) { //вывод матрицы
+
+	// eps
+	ss << "e   ";
+	for (int j = 0; j < equivalence_class_table[0].size();
+		 j++) { //вывод матрицы
+		ss << equivalence_class_table[0][j] << "   ";
+	}
+	ss << "\n";
+	for (int i = 0; i <= table_classes.size(); i++) { //вывод матрицы
 		if (i == 0) {
 			ss << "e   ";
 		} else {
-			ss << to_str(terms[i - 1].name)
-			   << string(4 - terms[i - 1].name.size(), ' ');
+			ss << to_str(table_classes[i - 1].name)
+			   << string(4 - table_classes[i - 1].name.size(), ' ');
 		}
 		for (int j = 0; j < equivalence_class_table[0].size();
 			 j++) { //вывод матрицы
-			ss << equivalence_class_table[j][i] << "   ";
+			ss << equivalence_class_table[i][j] << "   ";
 		}
 		ss << "\n";
 	}
@@ -487,5 +529,5 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	Logger::finish_step();
 	return ss.str();
 }
-//В психиатрической больнице люди по настоящему заботятся о своём здоровье. Они
-//переходят с электронных сигарет на воображаемые.
+//В психиатрической больнице люди по настоящему заботятся о своём здоровье.
+//Они переходят с электронных сигарет на воображаемые.
