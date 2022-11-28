@@ -102,15 +102,15 @@ vector<alphabet_symbol> rewriting(
 			}
 			counter = k;
 			not_rewrite = false;
+			break;
 		}
 	}
 	if (!not_rewrite) {
-		vector<alphabet_symbol> rec_in = {in.begin() + counter, in.end()};
-		out1 = rewriting(rec_in, rules);
-		for (int y = 0; y < out1.size(); y++) {
-			out.push_back(out1[y]);
+		for (int i = counter; i < in.size(); i++) {
+			out.push_back(in[i]);
 		}
-		return out;
+		out1 = rewriting(out, rules);
+		return out1;
 	} else {
 		vector<alphabet_symbol> rec_in = {in.begin() + 1, in.end()};
 		out.push_back(in[0]);
@@ -135,15 +135,19 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 		i++;
 		vector<vector<alphabet_symbol>> various =
 			get_comb_alphabet(i, automat.language->get_alphabet());
-		bool cond_rule_len = true;
-		for (int j = 0; j < various.size(); j++) //Для	всех	комбинаций
+		int cond_rule_len = 0;
+		map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> temp_rule;
+		for (int j = 0; j < various.size() && cond_get_transactions;
+			 j++) //Для	всех	комбинаций
 		{
 			Term current;
 			current.name = various[j];
-			current.name = rewriting(various[j], rules);
-			if (current.name.size() != i) {
-				cond_rule_len = false;
+			vector<alphabet_symbol> temp_word;
+			while (temp_word != current.name) {
+				if (temp_word.size()) current.name = temp_word;
+				temp_word = rewriting(current.name, rules);
 			}
+			if (current.name.size() < various[j].size()) continue;
 			for (int t = 0; t < automat.states.size(); t++) {
 				int final_state = -1;
 				Transition g;
@@ -188,15 +192,19 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 						current.isFinal = true;
 					}
 				}
+				cond_rule_len++;
 				terms.push_back(current);
+
 			} else {
 				if (!rules.count(current.name) && current.name != eqv) {
 					rules[current.name].push_back(eqv);
 				}
 			}
 		}
-		if (!cond_rule_len) {
+		if (cond_rule_len == 0) {
 			cond_get_transactions = false;
+			continue;
+		} else {
 		}
 	}
 }
