@@ -5,6 +5,7 @@
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <math.h>
@@ -1502,7 +1503,10 @@ Fraction calc_ambiguity(int i, int n, const vector<Fraction>& f1,
 	return d1 - d2;
 }
 
-FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
+	optional<int>& word_length) const {
+	int time_limit = 3000;
+
 	FiniteAutomaton fa = remove_eps();
 	FiniteAutomaton min_fa = fa.minimize().remove_trap_states();
 	fa = fa.remove_trap_states();
@@ -1543,7 +1547,8 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 	// для сохранения результатов calc_ambiguity
 	vector<vector<Fraction>> calculated(i);
 	vector<vector<char>> is_calculated(i);
-	for (int k = 0; k < N; k++) {
+	int return_counter = 0;
+	for (int k = 0; true; k++) {
 		paths_number = 0;
 		min_paths_number = 0;
 		d[(k + 1) % 2] = vector<InfInt>(s);
@@ -1588,13 +1593,11 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 				prev_f1_val = new_f1_value;
 			}
 		}
-		if (k >= s * s && unambigious_return_flag) {
+		if (k >= s * s && unambigious_return_flag)
 			return FiniteAutomaton::unambigious;
-		}
 		if (k >= s * s && k >= (s + 1) * 3 &&
-			(max_return_flag || max_delta_return_flag)) {
+			(max_return_flag || max_delta_return_flag))
 			return FiniteAutomaton::almost_unambigious;
-		}
 
 		vector<Fraction> f1_check = f1;
 		f1_check.push_back(new_f1_value);
@@ -1611,10 +1614,38 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 			}
 			calculated_check.push_back(vector<Fraction>(f1_check.size()));
 			is_calculated_check.push_back(vector<char>(f1_check.size(), 0));
+			const auto start = std::chrono::high_resolution_clock::now();
 			Fraction val =
 				calc_ambiguity(new_s + i, new_s * new_s + delta, f1_check,
 							   calculated_check, is_calculated_check);
-			if (Fraction() > val || Fraction() == val) continue;
+			const auto end = std::chrono::high_resolution_clock::now();
+			const double elapsed =
+				std::chrono::duration_cast<std::chrono::milliseconds>(end -
+																	  start)
+					.count();
+
+			if (Fraction() > val || Fraction() == val) {
+				return_counter++;
+				if (k >= N && return_counter >= s) break;
+				continue;
+			}
+
+			if (k >= N && (val > prev_val || val == prev_val))
+				return FiniteAutomaton::exponentially_ambiguous;
+
+			if (elapsed >= time_limit) {
+				word_length = k;
+				if (k >= s * s && unambigious_return_flag)
+					return FiniteAutomaton::unambigious;
+				if (k >= s * s && k >= (s + 1) * 3 &&
+					(max_return_flag || max_delta_return_flag))
+					return FiniteAutomaton::almost_unambigious;
+				if (val > prev_val || val == prev_val)
+					return FiniteAutomaton::exponentially_ambiguous;
+				return FiniteAutomaton::exponentially_ambiguous;
+			}
+
+			return_counter = 0;
 			calculated = calculated_check;
 			is_calculated = is_calculated_check;
 			f1.push_back(new_f1_value);
@@ -1624,75 +1655,17 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 		}
 	}
 
-	int k = N - 1;
-	int return_counter = 0;
-	while (1) {
-		if (return_counter == s) break;
-		k++;
-		paths_number = 0;
-		min_paths_number = 0;
-		d[(k + 1) % 2] = vector<InfInt>(s);
-		min_d[(k + 1) % 2] = vector<InfInt>(min_s);
-		for (int v = 0; v < s; v++) {
-			for (int i = 0; i < s; i++) {
-				d[(k + 1) % 2][v] +=
-					InfInt(adjacency_matrix[i][v]) * d[k % 2][i];
-			}
-			if (fa.states[v].is_terminal) paths_number += d[(k + 1) % 2][v];
-		}
-		for (int v = 0; v < min_s; v++) {
-			for (int i = 0; i < min_s; i++) {
-				min_d[(k + 1) % 2][v] +=
-					InfInt(min_adjacency_matrix[i][v]) * min_d[k % 2][i];
-			}
-			if (min_fa.states[v].is_terminal)
-				min_paths_number += min_d[(k + 1) % 2][v];
-		}
-		Fraction new_f1_value;
-		if (min_paths_number == 0)
-			new_f1_value = Fraction();
-		else {
-			new_f1_value = Fraction(paths_number, min_paths_number);
-		}
-		vector<Fraction> f1_check = f1;
-		f1_check.push_back(new_f1_value);
-
-		int new_s = floor(
-			double(-1 + sqrt((1 - 4 * (i + 1)) + 4 * f1_check.size())) / 2);
-		int delta = f1_check.size() - (new_s * new_s + new_s + i + 1);
-
-		vector<vector<Fraction>> calculated_check = calculated;
-		vector<vector<char>> is_calculated_check = is_calculated;
-
-		for (int j = 0; j < calculated_check.size(); j++) {
-			calculated_check[j].push_back(Fraction());
-			is_calculated_check[j].push_back(0);
-		}
-		calculated_check.push_back(vector<Fraction>(f1.size()));
-		is_calculated_check.push_back(vector<char>(f1.size(), 0));
-		Fraction val =
-			calc_ambiguity(new_s + i, new_s * new_s + delta, f1_check,
-						   calculated_check, is_calculated_check);
-		if (Fraction() > val || Fraction() == val) {
-			return_counter++;
-			continue;
-		}
-		if (val > prev_val || val == prev_val)
-			return FiniteAutomaton::exponentially_ambiguous;
-		return_counter = 0;
-		calculated = calculated_check;
-		is_calculated = is_calculated_check;
-		f1.push_back(new_f1_value);
-		prev_val = val;
-	}
-
 	return FiniteAutomaton::polynomially_ambigious;
 }
 
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	Logger::init_step("Ambiguity");
-	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
+	optional<int> word_length;
+	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value(word_length);
 	Logger::log("Автомат", *this);
+	if (word_length.has_value()) {
+		Logger::log("Для максимальной длины слова", to_string(*word_length));
+	}
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
 		Logger::log("Результат Ambiguity", "Exponentially ambiguous");

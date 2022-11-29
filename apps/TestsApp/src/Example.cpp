@@ -746,6 +746,7 @@ void Example::test_ambiguity() {
 	Regex r17("(abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*");
 	Regex r18("(abab)*abab(abab)*|(aac)*(aac)*");
 	Regex r19("(abab)*abab(abab)*");
+	Regex r20("(a|b)*(f*)*q");
 
 	assert(r1.to_tompson().ambiguity() ==
 		   FiniteAutomaton::exponentially_ambiguous);
@@ -754,6 +755,8 @@ void Example::test_ambiguity() {
 	assert(r3.to_tompson().ambiguity() == FiniteAutomaton::unambigious);
 	assert(r4.to_tompson().ambiguity() == FiniteAutomaton::almost_unambigious);
 	assert(r5.to_glushkov().ambiguity() ==
+		   FiniteAutomaton::exponentially_ambiguous);
+	assert(r6.to_glushkov().ambiguity() ==
 		   FiniteAutomaton::exponentially_ambiguous);
 	assert(r7.to_glushkov().ambiguity() ==
 		   FiniteAutomaton::polynomially_ambigious);
@@ -782,6 +785,8 @@ void Example::test_ambiguity() {
 		   FiniteAutomaton::polynomially_ambigious);
 	assert(r19.to_glushkov().ambiguity() ==
 		   FiniteAutomaton::polynomially_ambigious);
+	assert(r20.to_tompson().ambiguity() ==
+		   FiniteAutomaton::exponentially_ambiguous);
 }
 
 void Example::test_arden() {
