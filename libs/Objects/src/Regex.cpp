@@ -1477,11 +1477,10 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 // Длина накачки
 int Regex::pump_length() const {
 	Logger::init_step("PumpLength");
-	if (language->get_pump_length()) {
-		Logger::log("Длина накачки",
-					to_string(language->get_pump_length().value()));
+	if (language->pump_length_cached()) {
+		Logger::log("Длина накачки", to_string(language->get_pump_length()));
 		Logger::finish_step();
-		return language->get_pump_length().value();
+		return language->get_pump_length();
 	}
 	std::map<std::string, bool> checked_prefixes;
 	for (int i = 1;; i++) {

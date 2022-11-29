@@ -1,7 +1,5 @@
 #pragma once
 #include "BaseObject.h"
-#include "FiniteAutomaton.h"
-#include "Language.h"
 #include "Logger.h"
 #include <algorithm>
 #include <iostream>
@@ -11,8 +9,10 @@
 #include <vector>
 using namespace std;
 
-class TransformationMonoid : public BaseObject {
+class Language;
+class FiniteAutomaton;
 
+class TransformationMonoid {
   public:
 	struct Transition { //переход (индекс состояния - индекс состояния)
 		int first;
@@ -42,20 +42,23 @@ class TransformationMonoid : public BaseObject {
 	get_rewriting_rules(); //получаем правила переписывания
 	string get_equalence_classes_txt(); //вывод эквивалентных классов
 	string get_rewriting_rules_txt(); //вывод правил переписывания
-	string to_txt() const override;
+	string to_txt() const;
 	int is_synchronized(
 		const Term& w); //Вернет	-1	если	не	синхронизирован	или
 	//номер состояния	с	которым синхронизирован
 	int class_card(); //Вернет число классов эквивалентности
 	int class_length(); //Вернет самое длинное слово в классе
 	bool is_minimal(); //Вычисление Минимальности по М-Н(1 если минимальный)
-	int classes_number_MyhillNerode(); //Вычисление размера по М-Н
+	int get_classes_number_MyhillNerode(); //Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); //вывод таблицы М-Н
+	vector<vector<bool>> get_equivalence_classes_table(); // возвращает
+														  // таблицу М-Н
+
   private:
 	FiniteAutomaton automat; //Автомат
 	vector<Term> terms;		 //Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
-		rules;					//Правила переписывания
-	vector<Term> table_classes; //левая часть таблицы М-Н
-	vector<vector<bool>> equivalence_class_table; //таблица М-Н
+		rules; //Правила переписывания
+	map<vector<alphabet_symbol>, vector<bool>>
+		equivalence_classes_table; //таблица М-Н
 };
