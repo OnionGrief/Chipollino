@@ -411,26 +411,21 @@ int TransformationMonoid::class_length() {
 
 //Вычисление
 int TransformationMonoid::classes_number_MyhillNerode() {
-	if (table_classes.size() == 0) {
+	if (equivalence_class_table.size() == 0) {
 		is_minimal();
 	}
-	map<vector<bool>, bool> wasvec;
-	int counter = 0;
-	for (int i = 0; i < equivalence_class_table.size(); i++) {
-		if (!wasvec.count(equivalence_class_table[i])) {
-			wasvec[equivalence_class_table[i]] = true;
-			counter++;
-		}
-	}
 	Logger::init_step("Myhill-Nerode сlasses number");
-	Logger::log(to_string(counter));
+	Logger::log(to_string(equivalence_class_table.size()));
 	Logger::finish_step();
-	return counter;
+	return equivalence_class_table.size();
 }
 
 //Вычисление Минимальности (1 если минимальный)
 bool TransformationMonoid::is_minimal() {
-	if (table_classes.size() == 0) {
+	//временные данные
+	vector<Term> table_classes;
+	vector<vector<bool>> equivalence_class_table_temp;
+	if (equivalence_class_table.size() == 0) {
 		map<vector<alphabet_symbol>, int>
 			data; //храним ссылку на Терм (быстрее и проще искать)
 		for (int i = 0; i < terms.size(); i++) {
@@ -457,70 +452,72 @@ bool TransformationMonoid::is_minimal() {
 		for (int i = 0; i <= table_classes.size();
 			 i++) { //заполняем матрицу нулями
 			vector<bool> vector_first(terms.size() + 1);
-			equivalence_class_table.push_back(vector_first);
+			equivalence_class_table_temp.push_back(vector_first);
 		}
 
 		//заполняем с eps
-
+		if (automat.states[automat.initial_state].is_terminal) {
+			equivalence_class_table_temp[0][0] = true;
+		}
 		vector<Term>::iterator it = table_classes.begin();
 		for (int i = 1; it != table_classes.end(); i++, it++) {
 			if ((*it).isFinal) {
-				equivalence_class_table[i][0] = true;
+				equivalence_class_table_temp[i][0] = true;
 			}
 		}
 		for (int i = 0; i < terms.size(); i++) {
 			if (terms[i].isFinal) {
-				equivalence_class_table[0][i + 1] = true;
+				equivalence_class_table_temp[0][i + 1] = true;
 			}
 		}
 		for (int i = 0; i < terms.size(); i++) {
 			vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
 			for (int j = 0; j < cur.size(); j++) {
-				equivalence_class_table[data_table.at(cur[j].name) + 1][i + 1] =
-					true;
+				equivalence_class_table_temp[data_table.at(cur[j].name) + 1]
+											[i + 1] = true;
 			}
 		}
 	}
 
 	map<vector<bool>, bool> wasvec;
 	int counter = 0;
-	for (int i = 0; i < equivalence_class_table.size(); i++) {
-		if (!wasvec.count(equivalence_class_table[i])) {
-			wasvec[equivalence_class_table[i]] = true;
+	for (int i = 0; i < equivalence_class_table_temp.size(); i++) {
+		if (!wasvec.count(equivalence_class_table_temp[i])) {
+			wasvec[equivalence_class_table_temp[i]] = true;
+			if (i == 0) {
+				equivalence_class_table[{" "}] =
+					equivalence_class_table_temp[i];
+			} else {
+				equivalence_class_table[table_classes[i - 1].name] =
+					equivalence_class_table_temp[i];
+			}
 			counter++;
 		}
 	}
-
 	Logger::init_step("Is minimal");
-
 	Logger::log(((log2(terms.size()) + 1) <= counter) ? "true" : "false");
 	Logger::finish_step();
 	return (log2(terms.size()) + 1) <= counter;
 }
 
 string TransformationMonoid::to_txt_MyhillNerode() {
-	if (table_classes.size() == 0) {
+	if (equivalence_class_table.size() == 0) {
 		is_minimal();
 	}
 	stringstream ss;
 	int maxlen = terms[terms.size() - 1].name.size();
-	ss << string(maxlen + 2, ' ') << "e" << string(maxlen + 1, ' ');
+	ss << string(maxlen + 2, ' ') << " " << string(maxlen + 1, ' ');
 	for (int i = 0; i < terms.size(); i++) {
 		ss << to_str(terms[i].name)
 		   << string(maxlen + 2 - terms[i].name.size(), ' ');
 	}
 	ss << "\n";
 
-	for (int i = 0; i <= table_classes.size(); i++) { //вывод матрицы
-		if (i == 0) {
-			ss << "e" << string(maxlen + 1, ' ');
-		} else {
-			ss << to_str(table_classes[i - 1].name)
-			   << string(maxlen + 2 - table_classes[i - 1].name.size(), ' ');
-		}
-		for (int j = 0; j < equivalence_class_table[0].size();
-			 j++) { //вывод матрицы
-			ss << equivalence_class_table[i][j] << string(maxlen + 1, ' ');
+	for (auto it = equivalence_class_table.begin();
+		 it != equivalence_class_table.end(); it++) {
+		ss << to_str(it->first) << string(maxlen + 2 - it->first.size(), ' ');
+		for (int j = 0; j < it->second.size(); j++) { //вывод матрицы
+			ss << it->second[j] << string(maxlen + 1, ' ');
 		}
 		ss << "\n";
 	}
