@@ -1,13 +1,13 @@
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "InputGenerator/TasksGenerator.h"
+#include "Interpreter/Interpreter.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
-#include "Interpreter/Interpreter.h"
 #include <cassert>
 #include <iostream>
 /*
@@ -52,4 +52,5 @@ class Example {
 	static void test_pump_length();
 	static void test_is_one_unambiguous();
 	static void test_interpreter();
+	static void test_TransformationMonoid();
 };
