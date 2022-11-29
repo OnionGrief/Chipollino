@@ -23,6 +23,7 @@ class TransformationMonoid {
 		vector<alphabet_symbol> name;
 		vector<Transition> transitions;
 	};
+
 	struct TermDouble { //двойной терм
 		Term first;
 		Term second;
@@ -57,6 +58,7 @@ class TransformationMonoid {
 	FiniteAutomaton automat; //Автомат
 	vector<Term> terms;		 //Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
-		rules; //Правила переписывания
+		rules;					//Правила переписывания
+	vector<Term> table_classes; //левая часть таблицы М-Н
 	vector<vector<bool>> equivalence_classes_table; //таблица М-Н
 };
