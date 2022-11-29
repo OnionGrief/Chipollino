@@ -58,7 +58,7 @@ class TransformationMonoid {
 	FiniteAutomaton automat; //Автомат
 	vector<Term> terms;		 //Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
-		rules;					//Правила переписывания
-	vector<Term> table_classes; //левая часть таблицы М-Н
-	vector<vector<bool>> equivalence_classes_table; //таблица М-Н
+		rules; //Правила переписывания
+	map<vector<alphabet_symbol>, vector<bool>>
+		equivalence_classes_table; //таблица М-Н
 };
