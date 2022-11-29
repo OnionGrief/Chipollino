@@ -153,7 +153,10 @@ class Regex : BaseObject {
 	Regex delinearize() const;
 	Regex deannote() const;
 
+	// проверка регулярки на 1-однозначность
 	bool is_one_unambiguous() const;
+	// извлечение 1-однозначной регулярки методом орбит Брюггеман-Вуда
+	Regex get_one_unambiguous_regex() const;
 };
 
 /*
