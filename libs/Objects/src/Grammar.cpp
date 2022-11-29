@@ -121,11 +121,10 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
 	map<alphabet_symbol, int> terminal_index;
 	fa_items[item_ind] = (GrammarItem(GrammarItem::terminal, "\0"));
 	terminals.push_back(&fa_items[item_ind]);
-	terminal_index[epsilon()] = 0;
+	terminal_index[alphabet_symbol::epsilon()] = 0;
 	item_ind++;
 	for (alphabet_symbol symb : alphabet) {
-		fa_items[item_ind] =
-			(GrammarItem(GrammarItem::terminal, to_string(symb)));
+		fa_items[item_ind] = (GrammarItem(GrammarItem::terminal, symb));
 		terminals.push_back(&fa_items[item_ind]);
 		terminal_index[symb] = item_ind - nonterminals.size();
 		item_ind++;

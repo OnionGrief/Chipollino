@@ -1,6 +1,7 @@
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "InputGenerator/TasksGenerator.h"
+#include "Interpreter/Interpreter.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
@@ -32,12 +33,13 @@ class Example {
 	static void step();
 	static void parsing_nfa();
 	static void fa_subset_check();
-	static void arden_test();
+	static void arden_example();
 	static void to_image();
 	static void tester();
 	static void step_interection();
 	static void table();
 	static void fa_semdet_check();
+	static void classes_number_GlaisterShallit();
 	// запуск всех тестов
 	static void test_all();
 	static void test_fa_equal();
@@ -50,4 +52,7 @@ class Example {
 	static void test_arden();
 	static void test_pump_length();
 	static void test_is_one_unambiguous();
+	static void test_interpreter();
+	static void test_TransformationMonoid();
+	static void test_GlaisterShallit();
 };
