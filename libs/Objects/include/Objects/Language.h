@@ -56,7 +56,7 @@ class Language {
 	int get_pump_length();
 	// минимальный дка
 	void set_min_dfa(int initial_state, const vector<State>& states,
-					 shared_ptr<Language> Language);
+					 shared_ptr<Language>& Language);
 	bool min_dfa_cached();
 	FiniteAutomaton get_min_dfa();
 	// синтаксический моноид
@@ -67,8 +67,7 @@ class Language {
 	void set_nfa_minimum_size(int);
 	bool nfa_minimum_size_cached();
 	int get_nfa_minimum_size();
-  	optional<FiniteAutomaton> get_min_dfa();
-  // 1-однозначная регулярка
+	// 1-однозначная регулярка
 	bool is_one_unambiguous_flag_cached();
 	void set_one_unambiguous_flag(bool);
 	bool get_one_unambiguous_flag();

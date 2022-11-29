@@ -105,7 +105,7 @@ class Regex : BaseObject {
   public:
 	Regex();
 	Regex(const string&);
-	Regex(const string&, shared_ptr<Language>);
+	Regex(const string&, const shared_ptr<Language>&);
 	string to_txt() const override;
 	// вывод дерева для дебага
 	void print_tree();

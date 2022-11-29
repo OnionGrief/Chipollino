@@ -40,14 +40,6 @@ void Language::set_min_dfa(int initial_state, const vector<State>& states,
 	min_dfa.emplace(FA_structure(initial_state, states, language));
 }
 
-optional<FiniteAutomaton> Language::get_min_dfa() {
-	optional<FiniteAutomaton> min_fa_opt;
-	if (min_dfa)
-		min_fa_opt.emplace(FiniteAutomaton(
-			min_dfa->initial_state, min_dfa->states, min_dfa->language.lock()));
-	return min_fa_opt;
-}
-
 bool Language::min_dfa_cached() {
 	return min_dfa.has_value();
 }
@@ -80,6 +72,7 @@ bool Language::nfa_minimum_size_cached() {
 
 int Language::get_nfa_minimum_size() {
 	return nfa_minimum_size.value();
+}
 
 bool Language::is_one_unambiguous_flag_cached() {
 	return is_one_unambiguous.has_value();

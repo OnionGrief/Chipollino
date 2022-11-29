@@ -326,7 +326,8 @@ Regex::Regex(const string& str) : Regex() {
 	}
 }
 
-Regex::Regex(const string& str, shared_ptr<Language> new_language) : Regex() {
+Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
+	: Regex() {
 	try {
 		bool res = from_string(str);
 		if (!res) {
@@ -336,7 +337,7 @@ Regex::Regex(const string& str, shared_ptr<Language> new_language) : Regex() {
 		cout << re.what() << endl;
 		exit(EXIT_FAILURE);
 	}
-	language = make_shared<Language>(language->get_alphabet());
+	language = new_language;
 }
 
 Regex Regex::normalize_regex(const string& file) const {
