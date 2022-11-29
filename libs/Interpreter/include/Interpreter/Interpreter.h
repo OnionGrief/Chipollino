@@ -76,7 +76,7 @@ class Interpreter {
 	// Общий вид выражения
 	struct Expression {
 		ObjectType type;
-		variant<FunctionSequence, int, Regex, Id> value;
+		variant<FunctionSequence, int, Regex, string> value;
 	};
 
 	// Операция объявления
@@ -121,7 +121,7 @@ class Interpreter {
 	optional<Id> scan_id(const vector<Lexem>&, int& pos, size_t end);
 	optional<Regex> scan_regex(const vector<Lexem>&, int& pos, size_t end);
 	optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&,
-													 int& pos, size_t end);
+													  int& pos, size_t end);
 	optional<Expression> scan_expression(const vector<Lexem>&, int& pos,
 										 size_t end);
 
@@ -172,6 +172,7 @@ class Interpreter {
 			dot,
 			number,
 			regex,
+			stringval,
 			name
 		};
 
@@ -227,6 +228,7 @@ class Interpreter {
 		Lexem scan_parR();
 		Lexem scan_dot();
 		Lexem scan_number();
+		Lexem scan_stringval();
 		Lexem scan_name();
 		Lexem scan_regex();
 		Lexem scan_lexem();

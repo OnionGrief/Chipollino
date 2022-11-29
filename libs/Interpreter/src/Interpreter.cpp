@@ -37,7 +37,7 @@ Interpreter::Interpreter() {
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
 		{"Normalize",
 		 {{"Normalize",
-		   {ObjectType::Regex, ObjectType::FileName},
+		   {ObjectType::Regex, ObjectType::String},
 		   ObjectType::Regex}}},
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
 		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
@@ -157,7 +157,7 @@ GeneralObject Interpreter::apply_function(
 	const auto dfa = ObjectType::DFA;
 	const auto regex = ObjectType::Regex;
 	const auto integer = ObjectType::Int;
-	const auto filename = ObjectType::FileName;
+	const auto filename = ObjectType::String;
 	const auto boolean = ObjectType::Boolean;
 	const auto value = ObjectType::Value;
 
@@ -311,9 +311,9 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar());
 	}
 	if (function.name == "Normalize") {
-		res = ObjectRegex(get<ObjectRegex>(arguments[0])
-							  .value.normalize_regex(
-								  get<ObjectFileName>(arguments[1]).value));
+		res = ObjectRegex(
+			get<ObjectRegex>(arguments[0])
+				.value.normalize_regex(get<ObjectString>(arguments[1]).value));
 	}
 	/*if (function.name == "Simplify") {
 		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
@@ -782,6 +782,14 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 		pos++;
 		return expr;
 	}
+	// String
+	if (end > pos && lexems[pos].type == Lexem::stringval) {
+		Expression expr;
+		expr.type = ObjectType::String;
+		expr.value = lexems[pos].value;
+		pos++;
+		return expr;
+	}
 	// FunctionSequence
 	int i = pos;
 	if (const auto& seq = scan_function_sequence(lexems, i, end);
@@ -819,7 +827,8 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	i++;
 
 	// Expression
-	if (const auto& expr = scan_expression(lexems, i, lexems.size()); expr.has_value()) {
+	if (const auto& expr = scan_expression(lexems, i, lexems.size());
+		expr.has_value()) {
 		decl.expr = *expr;
 	} else {
 		return nullopt;

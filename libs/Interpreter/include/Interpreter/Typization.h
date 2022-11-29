@@ -12,13 +12,13 @@ namespace Typization {
 
 // Перечисление типов объектов
 enum class ObjectType {
-	NFA,	  // недетерминированный КА
-	DFA,	  // детерминированный КА
-	Regex,	  // регулярное выражение
-	Int,	  // целое число
-	FileName, // имя файла для чтения
-	Boolean,  // true/false
-	Value	  // yes/no/ы
+	NFA,	 // недетерминированный КА
+	DFA,	 // детерминированный КА
+	Regex,	 // регулярное выражение
+	Int,	 // целое число
+	String,	 // имя файла для чтения
+	Boolean, // true/false
+	Value	 // yes/no/ы
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -37,7 +37,7 @@ using ObjectNFA = ObjectHolder<ObjectType::NFA, FiniteAutomaton>;
 using ObjectDFA = ObjectHolder<ObjectType::DFA, FiniteAutomaton>;
 using ObjectRegex = ObjectHolder<ObjectType::Regex, Regex>;
 using ObjectInt = ObjectHolder<ObjectType::Int, int>;
-using ObjectFileName = ObjectHolder<ObjectType::FileName, string>;
+using ObjectString = ObjectHolder<ObjectType::String, string>;
 using ObjectBoolean = ObjectHolder<ObjectType::Boolean, bool>;
 using ObjectValue = ObjectHolder<ObjectType::Value, optional<bool>>;
 
@@ -46,7 +46,7 @@ using GeneralObject = variant<ObjectHolder<ObjectType::NFA, FiniteAutomaton>,
 							  ObjectHolder<ObjectType::DFA, FiniteAutomaton>,
 							  ObjectHolder<ObjectType::Regex, Regex>,
 							  ObjectHolder<ObjectType::Int, int>,
-							  ObjectHolder<ObjectType::FileName, string>,
+							  ObjectHolder<ObjectType::String, string>,
 							  ObjectHolder<ObjectType::Boolean, bool>,
 							  ObjectHolder<ObjectType::Value, optional<bool>>>;
 

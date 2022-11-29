@@ -114,6 +114,15 @@ Interpreter::Lexem Interpreter::Lexer::scan_name() {
 	return Lexem(Lexem::error);
 }
 
+Interpreter::Lexem Interpreter::Lexer::scan_stringval() {
+	if (scan_word("\"")) {
+		string val = scan_until('\"');
+		scan_word("\"");
+		return Lexem(Lexem::stringval, val);
+	}
+	return Lexem(Lexem::error);
+}
+
 Interpreter::Lexem Interpreter::Lexer::scan_regex() {
 	if (scan_word("{")) {
 		string val = scan_until('}');
@@ -134,6 +143,9 @@ Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
 		return lex;
 	}
 	if (Lexem lex = scan_regex(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_stringval(); lex.type) {
 		return lex;
 	}
 	if (Lexem lex = scan_number(); lex.type) {
