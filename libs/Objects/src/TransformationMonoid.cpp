@@ -529,9 +529,7 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	return ss.str();
 }
 
-const vector<vector<bool>>& TransformationMonoid::
-	get_equivalence_classes_table() {
-
+vector<vector<bool>> TransformationMonoid::get_equivalence_classes_table() {
 	if (equivalence_classes_table.size() == 0) {
 		is_minimal();
 	}

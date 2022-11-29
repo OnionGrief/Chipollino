@@ -46,7 +46,7 @@ class Language {
 	int get_pump_length();
 	//минимальный дка
 	void set_min_dfa(int initial_state, const vector<State>& states,
-					 shared_ptr<Language> Language);
+					 shared_ptr<Language>& Language);
 	bool min_dfa_cached();
 	FiniteAutomaton get_min_dfa();
 	// синтаксический моноид

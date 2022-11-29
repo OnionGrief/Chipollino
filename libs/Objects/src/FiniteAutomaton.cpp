@@ -1666,8 +1666,8 @@ TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
 	}
 	FiniteAutomaton min_dfa = minimize();
 	TransformationMonoid syntactic_monoid(min_dfa);
-	syntactic_monoid.is_minimal();
-	// кэширование
+	// syntactic_monoid.is_minimal(); ТМ делает это автоматически
+	//  кэширование
 	language->set_syntactic_monoid(syntactic_monoid);
 	return syntactic_monoid;
 }
@@ -1771,8 +1771,10 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
 		return language->get_nfa_minimum_size();
 	}
 
+	TransformationMonoid sm = get_syntactic_monoid();
+	cout << sm.to_txt_MyhillNerode() << endl;
 	vector<vector<bool>> equivalence_classes_table =
-		get_syntactic_monoid().get_equivalence_classes_table();
+		sm.get_equivalence_classes_table();
 
 	int result = -1;
 	int m = equivalence_classes_table[0].size(),

@@ -525,6 +525,7 @@ void Example::test_all() {
 	test_is_one_unambiguous();
 	test_interpreter();
 	test_TransformationMonoid();
+	test_GlaisterShallit();
 	cout << "all tests passed\n\n";
 }
 
@@ -817,4 +818,14 @@ void Example::test_TransformationMonoid() {
 	assert(a1.class_length() == 4);
 	assert(a1.is_minimal() == 1);
 	assert(a1.get_classes_number_MyhillNerode() == 5);
+}
+
+void Example::test_GlaisterShallit() {
+	assert(Regex("abc").to_glushkov().get_classes_number_GlaisterShallit() ==
+		   3);
+	assert(Regex("a*b*c*").to_glushkov().get_classes_number_GlaisterShallit() ==
+		   1);
+	assert(
+		Regex("aa*bb*cc*").to_glushkov().get_classes_number_GlaisterShallit() ==
+		3);
 }

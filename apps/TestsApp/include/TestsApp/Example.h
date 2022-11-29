@@ -54,4 +54,5 @@ class Example {
 	static void test_is_one_unambiguous();
 	static void test_interpreter();
 	static void test_TransformationMonoid();
+	static void test_GlaisterShallit();
 };
