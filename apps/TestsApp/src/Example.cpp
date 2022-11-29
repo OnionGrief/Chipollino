@@ -779,4 +779,8 @@ void Example::test_interpreter() {
 	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a} !!"));
 	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!"));
 	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
+	assert(
+		interpreter.run_line("B = Annote (Glushkov {a} !!)"));
+	assert(
+		interpreter.run_line("B = Annote (Glushkov(DeAnnote {a} !!) !!) !!"));
 }

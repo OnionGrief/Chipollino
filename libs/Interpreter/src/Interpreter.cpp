@@ -566,12 +566,6 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running declaration...");
-	if (decl.show_result) {
-		Logger::activate();
-		logger.log("logger is activated for this task");
-	} else {
-		Logger::deactivate();
-	}
 	if (const auto& expr = eval_expression(decl.expr); expr.has_value()) {
 		objects[decl.id] = *expr;
 	} else {
@@ -691,6 +685,13 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 
 	int i = pos;
 
+	// !!
+	bool show_res = false;
+	if (lexems[end - 1].type == Lexem::doubleExclamation) {
+		show_res = true;
+		end--;
+	}
+
 	// Функции
 	// ([функция].)*[функция]?
 	vector<string> func_names;
@@ -736,7 +737,8 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 		FunctionSequence seq;
 		seq.functions = *functions;
 		seq.parameters = arguments;
-		pos = i;
+		seq.show_result = show_res;
+		pos = i + show_res;
 		return seq;
 	} else {
 		logger.throw_error("failed to build function sequence");
@@ -816,23 +818,12 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	}
 	i++;
 
-	auto end = lexems.size();
-	if (lexems[end - 1].type == Lexem::doubleExclamation) {
-		end--;
-	}
-
 	// Expression
-	if (const auto& expr = scan_Expression(lexems, i, end); expr.has_value()) {
+	if (const auto& expr = scan_Expression(lexems, i, lexems.size()); expr.has_value()) {
 		decl.expr = *expr;
 	} else {
 		return nullopt;
 	}
-
-	// (!!)
-	if (i < lexems.size() && lexems[i].type == Lexem::doubleExclamation) {
-		decl.show_result = true;
-	}
-	i++;
 
 	id_types[decl.id] = decl.expr.type;
 

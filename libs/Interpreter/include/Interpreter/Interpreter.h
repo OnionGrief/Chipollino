@@ -69,6 +69,8 @@ class Interpreter {
 		vector<Function> functions;
 		// Параметры композиции функций (1 или более)
 		vector<Expression> parameters;
+		// Надо ли отображать результат
+		bool show_result = 0;
 	};
 
 	// Общий вид выражения
@@ -84,8 +86,6 @@ class Interpreter {
 		Id id;
 		// Выражение
 		Expression expr;
-		// Надо ли отображать результат
-		bool show_result = 0;
 	};
 
 	// Специальная форма test
