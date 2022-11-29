@@ -104,7 +104,8 @@ class Regex : BaseObject {
 
   public:
 	Regex();
-	Regex(string);
+	Regex(const string&);
+	Regex(const string&, shared_ptr<Language>);
 	string to_txt() const override;
 	// вывод дерева для дебага
 	void print_tree();
@@ -125,7 +126,7 @@ class Regex : BaseObject {
 	void make_language();
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const string& file) const;
-	bool from_string(string);
+	bool from_string(const string&);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);
 	// проверка регулярок на эквивалентность

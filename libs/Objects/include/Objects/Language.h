@@ -15,6 +15,13 @@ struct FA_structure {
 				 weak_ptr<Language> language);
 };
 
+struct Regex_structure {
+	string str;
+	weak_ptr<Language> language;
+
+	Regex_structure(string str, weak_ptr<Language> language);
+};
+
 class Language {
   private:
 	set<alphabet_symbol> alphabet;
@@ -24,7 +31,7 @@ class Language {
 	// синтаксический моноид TODO
 	// аппроксимации минимальных НКА и регулярок TODO
 	optional<bool> is_one_unambiguous;
-	optional<Regex> one_unambiguous_regex;
+	optional<Regex_structure> one_unambiguous_regex;
 
   public:
 	Language();
@@ -41,7 +48,7 @@ class Language {
 	void set_one_unambiguous_flag(bool);
 	bool get_one_unambiguous_flag();
 	bool is_one_unambiguous_regex_cached();
-	void set_one_unambiguous_regex(Regex);
+	void set_one_unambiguous_regex(string, shared_ptr<Language>&);
 	Regex get_one_unambiguous_regex();
 	// и тд
 };

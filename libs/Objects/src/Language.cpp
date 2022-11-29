@@ -4,6 +4,9 @@ FA_structure::FA_structure(int initial_state, vector<State> states,
 						   weak_ptr<Language> language)
 	: initial_state(initial_state), states(states), language(language) {}
 
+Regex_structure::Regex_structure(string str, weak_ptr<Language> language)
+	: str(str), language(language) {}
+
 Language::Language() {}
 
 Language::Language(set<alphabet_symbol> alphabet) : alphabet(alphabet) {}
@@ -57,10 +60,12 @@ bool Language::is_one_unambiguous_regex_cached() {
 	return one_unambiguous_regex.has_value();
 }
 
-void Language::set_one_unambiguous_regex(Regex one_unamiguous_regex_value) {
-	one_unambiguous_regex.emplace(one_unamiguous_regex_value);
+void Language::set_one_unambiguous_regex(string str,
+										 shared_ptr<Language>& language) {
+	one_unambiguous_regex.emplace(Regex_structure(str, language));
 }
 
 Regex Language::get_one_unambiguous_regex() {
-	return one_unambiguous_regex.value();
+	return Regex(one_unambiguous_regex->str,
+				 one_unambiguous_regex->language.lock());
 }

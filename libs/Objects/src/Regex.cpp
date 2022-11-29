@@ -314,7 +314,7 @@ Regex::Regex() {
 	term_r = nullptr;
 }
 
-Regex::Regex(string str) : Regex() {
+Regex::Regex(const string& str) : Regex() {
 	try {
 		bool res = from_string(str);
 		if (!res) {
@@ -324,6 +324,19 @@ Regex::Regex(string str) : Regex() {
 		cout << re.what() << endl;
 		exit(EXIT_FAILURE);
 	}
+}
+
+Regex::Regex(const string& str, shared_ptr<Language> new_language) : Regex() {
+	try {
+		bool res = from_string(str);
+		if (!res) {
+			throw runtime_error("from_string ERROR");
+		}
+	} catch (const runtime_error& re) {
+		cout << re.what() << endl;
+		exit(EXIT_FAILURE);
+	}
+	language = make_shared<Language>(language->get_alphabet());
 }
 
 Regex Regex::normalize_regex(const string& file) const {
@@ -336,7 +349,7 @@ Regex Regex::normalize_regex(const string& file) const {
 	return regex;
 }
 
-bool Regex::from_string(string str) {
+bool Regex::from_string(const string& str) {
 	if (!str.size()) {
 		return false;
 	}
@@ -1934,6 +1947,6 @@ Regex Regex::get_one_unambiguous_regex() const {
 	if (counter) regl += ")*";
 	Logger::log("1-однозначное регулярное выражение, описывающее язык", regl);
 	Logger::finish_step();
-	language->set_one_unambiguous_regex(Regex(regl));
-	return Regex(regl);
+	language->set_one_unambiguous_regex(regl, fa.language);
+	return language->get_one_unambiguous_regex();
 }
