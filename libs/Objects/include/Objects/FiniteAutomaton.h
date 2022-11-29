@@ -14,6 +14,8 @@ using namespace std;
 
 class Regex;
 class Language;
+class TransformationMonoid;
+
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
@@ -54,6 +56,7 @@ class FiniteAutomaton : public BaseObject {
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
 	AmbiguityValue get_ambiguity_value() const;
+	optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
 	std::optional<std::string> get_prefix(int state_beg, int state_end,
@@ -117,7 +120,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автомата на детерминированность
-	bool is_deterministic();
+	bool is_deterministic() const;
 	// проверка НКА на семантический детерминизм
 	bool semdet() const;
 	// проверяет, распознаёт ли автомат слово
@@ -135,6 +138,15 @@ class FiniteAutomaton : public BaseObject {
 	int states_number() const;
 	// метод Arden
 	Regex to_regex() const;
+	// возвращает число диагональных классов по методу Глейстера-Шаллита
+	int get_classes_number_GlaisterShallit() const;
+	// построение синтаксического моноида по автомату
+	TransformationMonoid get_syntactic_monoid() const;
+	// предикат для нка
+	optional<bool> is_nfa_minimal() const;
+	// предикат для дка
+	bool is_dfa_minimal() const;
+
 	friend class Regex;
 	friend class TransformationMonoid;
 };

@@ -213,7 +213,7 @@ void Example::transformation_monoid_example() {
 	a.class_card();
 	a.class_length();
 	a.is_minimal();
-	a.classes_number_MyhillNerode();
+	a.get_classes_number_MyhillNerode();
 }
 
 void Example::fa_subset_check() {
@@ -476,6 +476,16 @@ void Example::fa_semdet_check() {
 	cout << "Semdet?: " << sdet << "\n";
 }
 
+void Example::classes_number_GlaisterShallit() {
+	Regex r("abc");
+	r.pump_length();
+	FiniteAutomaton fa = r.to_glushkov();
+	TransformationMonoid sm = fa.get_syntactic_monoid();
+	cout << sm.to_txt_MyhillNerode() << endl;
+	cout << fa.get_classes_number_GlaisterShallit() << endl;
+	fa.is_nfa_minimal();
+}
+
 void Example::all_examples() {
 	// determinize();
 	// remove_eps();
@@ -534,6 +544,8 @@ void Example::test_all() {
 	test_pump_length();
 	test_is_one_unambiguous();
 	test_interpreter();
+	test_TransformationMonoid();
+	test_GlaisterShallit();
 	cout << "all tests passed\n\n";
 }
 
@@ -758,7 +770,6 @@ void Example::test_arden() {
 	test_equivalence("((b(((ba|b)|||(b))*)))");
 	test_equivalence("(((((a*)((a*)|bb)(((|||((b)))))))))");
 }
-
 void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
 }
@@ -799,4 +810,42 @@ void Example::test_interpreter() {
 	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a} !!"));
 	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!"));
 	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
+}
+void Example::test_TransformationMonoid() {
+	FiniteAutomaton fa = Regex("a*b*c*").to_tompson().minimize();
+	TransformationMonoid a(fa);
+	assert(a.class_card() == 7);
+	assert(a.class_length() == 2);
+	assert(a.is_minimal() == 0);
+	assert(a.get_classes_number_MyhillNerode() == 3);
+	vector<State> states;
+	for (int i = 0; i < 5; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states.push_back(s);
+	}
+	states[0].set_transition(1, "a");
+	states[1].set_transition(2, "c");
+	states[2].set_transition(3, "a");
+	states[3].set_transition(2, "c");
+	states[3].set_transition(4, "b");
+	states[4].set_transition(4, "b");
+	states[4].set_transition(4, "c");
+	states[4].is_terminal = true;
+	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
+	TransformationMonoid a1(fa1);
+	assert(a1.class_card() == 12);
+	assert(a1.class_length() == 4);
+	assert(a1.is_minimal() == 1);
+	assert(a1.get_classes_number_MyhillNerode() == 5);
+}
+
+void Example::test_GlaisterShallit() {
+	assert(Regex("abc").to_glushkov().get_classes_number_GlaisterShallit() ==
+		   3);
+	assert(Regex("a*b*c*").to_glushkov().get_classes_number_GlaisterShallit() ==
+		   1);
+	assert(
+		Regex("aa*bb*cc*").to_glushkov().get_classes_number_GlaisterShallit() ==
+		3);
 }

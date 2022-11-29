@@ -27,12 +27,16 @@ void Language::set_pump_length(int pump_length_value) {
 	pump_length.emplace(pump_length_value);
 };
 
-const optional<int>& Language::get_pump_length() {
-	return pump_length;
+bool Language::pump_length_cached() {
+	return pump_length.has_value();
+}
+
+int Language::get_pump_length() {
+	return pump_length.value();
 }
 
 void Language::set_min_dfa(int initial_state, const vector<State>& states,
-						   shared_ptr<Language> language) {
+						   shared_ptr<Language>& language) {
 	min_dfa.emplace(FA_structure(initial_state, states, language));
 }
 
@@ -43,6 +47,39 @@ optional<FiniteAutomaton> Language::get_min_dfa() {
 			min_dfa->initial_state, min_dfa->states, min_dfa->language.lock()));
 	return min_fa_opt;
 }
+
+bool Language::min_dfa_cached() {
+	return min_dfa.has_value();
+}
+
+FiniteAutomaton Language::get_min_dfa() {
+	return FiniteAutomaton(min_dfa->initial_state, min_dfa->states,
+						   min_dfa->language.lock());
+}
+
+void Language::set_syntactic_monoid(
+	TransformationMonoid syntactic_monoid_value) {
+	syntactic_monoid.emplace(syntactic_monoid_value);
+}
+
+bool Language::syntactic_monoid_cached() {
+	return syntactic_monoid.has_value();
+}
+
+TransformationMonoid Language::get_syntactic_monoid() {
+	return syntactic_monoid.value();
+}
+
+void Language::set_nfa_minimum_size(int nfa_minimum_size_value) {
+	nfa_minimum_size.emplace(nfa_minimum_size_value);
+};
+
+bool Language::nfa_minimum_size_cached() {
+	return nfa_minimum_size.has_value();
+}
+
+int Language::get_nfa_minimum_size() {
+	return nfa_minimum_size.value();
 
 bool Language::is_one_unambiguous_flag_cached() {
 	return is_one_unambiguous.has_value();
