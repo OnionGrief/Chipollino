@@ -510,15 +510,15 @@ void Example::get_one_unambiguous_regex() {
 	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
 
 	// ok
-	cout << r1.get_one_unambiguous_regex().to_txt();
+	cout << r1.get_one_unambiguous_regex().to_txt() << endl;
 	// doesn't fulfills the orbit property
-	cout << r2.get_one_unambiguous_regex().to_txt();
+	cout << r2.get_one_unambiguous_regex().to_txt() << endl;
 	// consists of a single orbit, but neither a nor b is consistent
-	cout << r3.get_one_unambiguous_regex().to_txt();
+	cout << r3.get_one_unambiguous_regex().to_txt() << endl;
 	// ok
-	cout << r4.get_one_unambiguous_regex().to_txt();
+	cout << r4.get_one_unambiguous_regex().to_txt() << endl;
 	// doesn't fulfills the orbit property
-	cout << r5.get_one_unambiguous_regex().to_txt();
+	cout << r5.get_one_unambiguous_regex().to_txt() << endl;
 }
 // TEST
 
