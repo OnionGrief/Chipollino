@@ -503,27 +503,22 @@ void Example::all_examples() {
 }
 
 void Example::get_one_unambiguous_regex() {
-	Regex reg1("(a|b)*a");
-	Regex reg2("(a|b)*(ac|bd)");
-	Regex reg3("(a|b)*a(a|b)");
-	Regex reg4("(c(a|b)*c)*");
-	Regex reg5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
+	Regex r1("(a|b)*a");
+	Regex r2("(a|b)*(ac|bd)");
+	Regex r3("(a|b)*a(a|b)");
+	Regex r4("(c(a|b)*c)*");
+	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
 
 	// ok
-	optional<Regex> regl1 = reg1.to_glushkov().get_one_unambiguous_regex();
-	if (regl1.has_value()) cout << regl1->to_txt() << endl;
+	cout << r1.get_one_unambiguous_regex().to_txt();
 	// doesn't fulfills the orbit property
-	optional<Regex> regl2 = reg2.to_glushkov().get_one_unambiguous_regex();
-	if (regl2.has_value()) cout << regl2->to_txt() << endl;
+	cout << r2.get_one_unambiguous_regex().to_txt();
 	// consists of a single orbit, but neither a nor b is consistent
-	optional<Regex> regl3 = reg3.to_glushkov().get_one_unambiguous_regex();
-	if (regl3.has_value()) cout << regl3->to_txt() << endl;
+	cout << r3.get_one_unambiguous_regex().to_txt();
 	// ok
-	optional<Regex> regl4 = reg4.to_glushkov().get_one_unambiguous_regex();
-	if (regl4.has_value()) cout << regl4->to_txt() << endl;
+	cout << r4.get_one_unambiguous_regex().to_txt();
 	// doesn't fulfills the orbit property
-	optional<Regex> regl5 = reg5.to_glushkov().get_one_unambiguous_regex();
-	if (regl5.has_value()) cout << regl5->to_txt() << endl;
+	cout << r5.get_one_unambiguous_regex().to_txt();
 }
 // TEST
 
