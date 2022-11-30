@@ -397,7 +397,7 @@ int TransformationMonoid::is_synchronized(const Term& w) {
 //Вернет число классов эквивалентности
 int TransformationMonoid::class_card() {
 	Logger::init_step("Number of equivalence classes");
-	Logger::log(to_string(terms.size()));
+	Logger::log("Number of equivalence classes ", to_string(terms.size()));
 	Logger::finish_step();
 	return terms.size();
 }
@@ -406,7 +406,7 @@ int TransformationMonoid::class_card() {
 int TransformationMonoid::class_length() {
 	Logger::init_step("Longest word in the class");
 	Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
-	Logger::log("One of the correct words",
+	Logger::log("One of the longest words",
 				to_str(terms[terms.size() - 1].name));
 	Logger::finish_step();
 	return terms[terms.size() - 1].name.size();
