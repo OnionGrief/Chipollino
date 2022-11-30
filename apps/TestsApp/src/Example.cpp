@@ -796,7 +796,7 @@ void Example::test_TransformationMonoid() {
 	TransformationMonoid a(fa);
 	assert(a.class_card() == 7);
 	assert(a.class_length() == 2);
-	assert(a.is_minimal() == 0);
+	assert(a.is_minimal() == 1);
 	assert(a.get_classes_number_MyhillNerode() == 3);
 	vector<State> states;
 	for (int i = 0; i < 5; i++) {

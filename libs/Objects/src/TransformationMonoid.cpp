@@ -128,6 +128,7 @@ vector<alphabet_symbol> rewriting(
 //Получаем ДКА и строим моноид
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	Logger::activate_step_counter();
+	states_size = in.states.size();
 	automat = in.remove_trap_states();
 	automat.remove_unreachable_states();
 	Logger::deactivate_step_counter();
@@ -499,7 +500,7 @@ bool TransformationMonoid::is_minimal() {
 	Logger::init_step("Is minimal");
 	Logger::log(((log2(terms.size()) + 1) <= counter) ? "true" : "false");
 	Logger::finish_step();
-	return (log2(terms.size()) + 1) <= counter;
+	return (log2(states_size) + 1) <= counter;
 }
 
 string TransformationMonoid::to_txt_MyhillNerode() {
