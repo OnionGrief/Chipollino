@@ -257,7 +257,9 @@ int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 	// if (is_visit[index]) {
 	//	return 0;
 	//}
-
+	if (is_visit[index]) {
+		return 0;
+	}
 	g->rules[w].insert(index_back);
 	for (const auto& equ : equivalence_class_back) {
 		if (monoid_rules.find(equ) == monoid_rules.end()) {
@@ -267,9 +269,7 @@ int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 		}
 	}
 	// cout << "----" << endl;
-	if (is_visit[index]) {
-		return 0;
-	}
+
 	for (const auto& elem : st.transitions) {
 		alphabet_symbol alpha = elem.first;
 		set<int> transitions = elem.second;
@@ -423,6 +423,18 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 	}
 	for (const auto& elem : out) {
 		cout << elem << endl;
+	}
+	cout << "base words" << endl;
+
+	for (int i = 0; i < states.size(); i++) {
+		if (states[i].is_terminal) {
+			GrammarItem g = gr_it[i];
+			cout << states[i].identifier << ":\n";
+			for (const auto& w : g.equivalence_class) {
+				cout << w << " ";
+			}
+			cout << endl;
+		}
 	}
 
 	return {};
