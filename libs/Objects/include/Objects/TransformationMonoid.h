@@ -56,7 +56,8 @@ class TransformationMonoid {
 
   private:
 	FiniteAutomaton automat; //Автомат
-	vector<Term> terms;		 //Эквивалентные классы
+	int states_size;
+	vector<Term> terms; //Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 		rules; //Правила переписывания
 	map<vector<alphabet_symbol>, vector<bool>>
