@@ -807,5 +807,6 @@ void Example::fa_to_pgrammar() {
 	Grammar g;
 	FiniteAutomaton test = a1.annote();
 	// cout << dfa1.to_txt();
+
 	g.fa_to_prefix_grammar(dfa1);
 }
