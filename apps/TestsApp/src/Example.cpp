@@ -508,7 +508,27 @@ void Example::all_examples() {
 	//  table();
 	fa_semdet_check();
 	Regex("abaa").pump_length();
+	get_one_unambiguous_regex();
 	cout << "all the examlples are successful" << endl;
+}
+
+void Example::get_one_unambiguous_regex() {
+	Regex r1("(a|b)*a");
+	Regex r2("(a|b)*(ac|bd)");
+	Regex r3("(a|b)*a(a|b)");
+	Regex r4("(c(a|b)*c)*");
+	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
+
+	// ok
+	cout << r1.get_one_unambiguous_regex().to_txt() << endl;
+	// doesn't fulfills the orbit property
+	cout << r2.get_one_unambiguous_regex().to_txt() << endl;
+	// consists of a single orbit, but neither a nor b is consistent
+	cout << r3.get_one_unambiguous_regex().to_txt() << endl;
+	// ok
+	cout << r4.get_one_unambiguous_regex().to_txt() << endl;
+	// doesn't fulfills the orbit property
+	cout << r5.get_one_unambiguous_regex().to_txt() << endl;
 }
 // TEST
 

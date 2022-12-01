@@ -314,7 +314,7 @@ Regex::Regex() {
 	term_r = nullptr;
 }
 
-Regex::Regex(string str) : Regex() {
+Regex::Regex(const string& str) : Regex() {
 	try {
 		bool res = from_string(str);
 		if (!res) {
@@ -324,6 +324,20 @@ Regex::Regex(string str) : Regex() {
 		cout << re.what() << endl;
 		exit(EXIT_FAILURE);
 	}
+}
+
+Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
+	: Regex() {
+	try {
+		bool res = from_string(str);
+		if (!res) {
+			throw runtime_error("from_string ERROR");
+		}
+	} catch (const runtime_error& re) {
+		cout << re.what() << endl;
+		exit(EXIT_FAILURE);
+	}
+	language = new_language;
 }
 
 Regex Regex::normalize_regex(const string& file) const {
@@ -336,7 +350,7 @@ Regex Regex::normalize_regex(const string& file) const {
 	return regex;
 }
 
-bool Regex::from_string(string str) {
+bool Regex::from_string(const string& str) {
 	if (!str.size()) {
 		return false;
 	}
@@ -1755,4 +1769,184 @@ void Regex::print_tree() {
 		r_v = to_string(type);
 	cout << r_v << endl;
 	print_subtree(term_r, 1);
+}
+
+bool Regex::is_one_unambiguous() const {
+	Logger::init_step("OneUnambiguity");
+	FiniteAutomaton fa = to_glushkov();
+	bool res = fa.is_deterministic();
+	Logger::log(res ? "True" : "False");
+	Logger::finish_step();
+	return fa.is_deterministic();
+}
+
+Regex Regex::get_one_unambiguous_regex() const {
+	Logger::init_step("OneUnambiguityRegex");
+	FiniteAutomaton fa = to_glushkov();
+	if (fa.language->is_one_unambiguous_regex_cached()) {
+		Logger::log("1-однозначное регулярное выражение, описывающее язык",
+					fa.language->get_one_unambiguous_regex().to_txt());
+		Logger::finish_step();
+		return fa.language->get_one_unambiguous_regex();
+	}
+	if (!fa.language->is_one_unambiguous_flag_cached()) fa.is_one_unambiguous();
+	if (!fa.language->get_one_unambiguous_flag()) {
+		Logger::log("Язык не является 1-однозначным");
+		Logger::finish_step();
+		return *this;
+	}
+	string regl;
+	FiniteAutomaton min_fa;
+	if (fa.states.size() == 1)
+		min_fa = fa.minimize();
+	else
+		min_fa = fa.minimize().remove_trap_states();
+
+	set<map<alphabet_symbol, set<int>>> final_states_transitions;
+	for (int i = 0; i < min_fa.states.size(); i++) {
+		if (min_fa.states[i].is_terminal) {
+			final_states_transitions.insert(min_fa.states[i].transitions);
+		}
+	}
+
+	set<alphabet_symbol> min_fa_consistent;
+	// calculate a set of min_fa_consistent symbols
+	for (alphabet_symbol symb : min_fa.language->get_alphabet()) {
+		set<int> reachable_by_symb;
+		bool is_symb_min_fa_consistent = true;
+		for (int i = 0; i < min_fa.states.size(); i++) {
+			for (const auto& transition : min_fa.states[i].transitions) {
+				if (transition.first == symb) {
+					for (int elem : transition.second) {
+						reachable_by_symb.insert(elem);
+					}
+				}
+			}
+		}
+		for (int elem : reachable_by_symb) {
+			is_symb_min_fa_consistent = true;
+			for (auto final_state_transitions : final_states_transitions) {
+				if (find(final_state_transitions[symb].begin(),
+						 final_state_transitions[symb].end(),
+						 elem) == final_state_transitions[symb].end()) {
+					is_symb_min_fa_consistent = false;
+					break;
+				}
+			}
+			if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
+		}
+	}
+
+	FiniteAutomaton min_fa_cut =
+		FiniteAutomaton(min_fa.initial_state, min_fa.states, min_fa.language);
+
+	for (int i = 0; i < min_fa.states.size(); i++) {
+		if (min_fa.states[i].is_terminal) {
+			map<alphabet_symbol, set<int>> new_transitions;
+			for (const auto& transition : min_fa.states[i].transitions) {
+				if (find(min_fa_consistent.begin(), min_fa_consistent.end(),
+						 transition.first) == min_fa_consistent.end()) {
+					new_transitions[transition.first] = transition.second;
+				}
+			}
+			min_fa_cut.states[i].transitions = new_transitions;
+		}
+	}
+
+	min_fa_cut = min_fa_cut.remove_unreachable_states();
+	regl = min_fa_cut.to_regex().to_txt();
+
+	int counter = 0;
+	for (alphabet_symbol consistent_symb : min_fa_consistent) {
+		bool alternate_flag = 0;
+		if (!counter)
+			regl += "(" + consistent_symb.value;
+		else {
+			regl += "|" + consistent_symb.value + "(";
+			alternate_flag = true;
+		}
+		set<int> reachable_by_consistent_symb;
+		for (int i = 0; i < min_fa.states.size(); i++) {
+			for (int consistent_symb_transition :
+				 min_fa.states[i].transitions[consistent_symb]) {
+				reachable_by_consistent_symb.insert(consistent_symb_transition);
+			}
+		}
+		for (int elem : reachable_by_consistent_symb) {
+			FiniteAutomaton consistent_symb_automaton(0, {},
+													  make_shared<Language>());
+			set<int> reachable_states = min_fa.closure({elem}, false);
+			vector<int> inserted_states_indices;
+			for (int j = 0; j < reachable_states.size(); j++) {
+				if (elem == j) {
+					consistent_symb_automaton.initial_state = j;
+				}
+				consistent_symb_automaton.states.push_back(min_fa.states[j]);
+				inserted_states_indices.push_back(j);
+			}
+			set<alphabet_symbol> consistent_symb_automaton_alphabet;
+			for (int j = 0; j < consistent_symb_automaton.states.size(); j++) {
+				consistent_symb_automaton.states[j].index = j;
+				map<alphabet_symbol, set<int>>
+					consistent_symb_automaton_state_transitions;
+				for (const auto& symb_transition :
+					 consistent_symb_automaton.states[j].transitions) {
+					for (int transition : symb_transition.second) {
+						for (int k = 0; k < inserted_states_indices.size();
+							 k++) {
+							if (inserted_states_indices[k] == transition) {
+								consistent_symb_automaton_state_transitions
+									[symb_transition.first]
+										.insert(k);
+								consistent_symb_automaton_alphabet.insert(
+									symb_transition.first);
+							}
+						}
+					}
+				}
+				if (consistent_symb_automaton_state_transitions.size()) {
+					consistent_symb_automaton.states[j].transitions =
+						consistent_symb_automaton_state_transitions;
+				}
+			}
+			consistent_symb_automaton.language =
+				make_shared<Language>(consistent_symb_automaton_alphabet);
+
+			FiniteAutomaton consistent_symb_automaton_cut =
+				FiniteAutomaton(consistent_symb_automaton.initial_state,
+								consistent_symb_automaton.states,
+								consistent_symb_automaton.language);
+
+			for (int j = 0; j < consistent_symb_automaton.states.size(); j++) {
+				if (consistent_symb_automaton.states[j].is_terminal) {
+					map<alphabet_symbol, set<int>> new_transitions;
+					for (const auto& transition :
+						 consistent_symb_automaton.states[j].transitions) {
+						if (find(min_fa_consistent.begin(),
+								 min_fa_consistent.end(),
+								 transition.first) == min_fa_consistent.end()) {
+							new_transitions[transition.first] =
+								transition.second;
+						}
+					}
+					consistent_symb_automaton_cut.states[j].transitions =
+						new_transitions;
+				}
+			}
+			consistent_symb_automaton_cut =
+				consistent_symb_automaton_cut.remove_unreachable_states();
+			string consistent_symb_automaton_cut_to_regex =
+				consistent_symb_automaton_cut.to_regex().to_txt();
+			if (!consistent_symb_automaton_cut_to_regex.empty()) {
+				regl += consistent_symb_automaton_cut_to_regex;
+				if (alternate_flag) regl += ")";
+			}
+		}
+		counter++;
+	}
+	if (counter) regl += ")*";
+	Logger::log("1-однозначное регулярное выражение, описывающее язык", regl);
+	Logger::finish_step();
+	language->set_one_unambiguous_regex(regl, fa.language);
+	return language->get_one_unambiguous_regex();
 }

@@ -830,6 +830,12 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 }
 
 bool FiniteAutomaton::is_one_unambiguous() const {
+	Logger::init_step("OneUnambiguity");
+	if (language->is_one_unambiguous_flag_cached()) {
+		Logger::log(language->get_one_unambiguous_flag() ? "True" : "False");
+		Logger::finish_step();
+		return language->get_one_unambiguous_flag();
+	}
 	FiniteAutomaton min_fa;
 	if (states.size() == 1)
 		min_fa = minimize();
@@ -903,15 +909,23 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 
 	// check if min_fa has a single, trivial orbit
 	// return true if it exists
-	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1)
+	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1) {
+		language->set_one_unambiguous_flag(true);
+		Logger::log("True");
+		Logger::finish_step();
 		return true;
+	}
 
 	// check if min_fa has a single, nontrivial orbit and
 	// min_fa_consistent.size() is 0
 	// return true if it exists
 	if (min_fa_orbits.size() == 1 && !states_with_trivial_orbit.size() &&
-		!min_fa_consistent.size())
+		!min_fa_consistent.size()) {
+		language->set_one_unambiguous_flag(false);
+		Logger::log("False");
+		Logger::finish_step();
 		return false;
+	}
 
 	// construct a min_fa_consistent cut of min_fa
 	// to construct it, we will remove for each symb in min_fa_consistent
@@ -1040,7 +1054,12 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 			++it1;
 		}
 	}
-	if (!is_min_fa_cut_has_an_orbit_property) return false;
+	if (!is_min_fa_cut_has_an_orbit_property) {
+		language->set_one_unambiguous_flag(false);
+		Logger::log("False");
+		Logger::finish_step();
+		return false;
+	}
 
 	// check if all orbit languages of min_fa_cut are 1-unambiguous
 	int i = 0;
@@ -1090,11 +1109,19 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 			}
 			orbit_automaton.language =
 				make_shared<Language>(orbit_automaton_alphabet);
-			if (!orbit_automaton.is_one_unambiguous()) return false;
+			if (!orbit_automaton.is_one_unambiguous()) {
+				language->set_one_unambiguous_flag(false);
+				Logger::log("False");
+				Logger::finish_step();
+				return false;
+			}
 			orbit_automaton_initial_state++;
 		}
 		i++;
 	}
+	language->set_one_unambiguous_flag(true);
+	Logger::log("True");
+	Logger::finish_step();
 	return true;
 }
 

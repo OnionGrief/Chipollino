@@ -18,6 +18,13 @@ struct FA_structure {
 				 weak_ptr<Language> language);
 };
 
+struct Regex_structure {
+	string str;
+	weak_ptr<Language> language;
+
+	Regex_structure(string str, weak_ptr<Language> language);
+};
+
 class Language {
   private:
 	set<alphabet_symbol> alphabet;
@@ -30,6 +37,9 @@ class Language {
 	optional<int> nfa_minimum_size;
 	// классы эквивалентности минимального дка TODO
 	// аппроксимации минимальных НКА и регулярок TODO
+	optional<bool> is_one_unambiguous;
+	optional<Regex_structure> one_unambiguous_regex;
+
   public:
 	Language();
 	Language(set<alphabet_symbol> alphabet);
@@ -44,7 +54,7 @@ class Language {
 	void set_pump_length(int);
 	bool pump_length_cached();
 	int get_pump_length();
-	//минимальный дка
+	// минимальный дка
 	void set_min_dfa(int initial_state, const vector<State>& states,
 					 shared_ptr<Language>& Language);
 	bool min_dfa_cached();
@@ -57,5 +67,12 @@ class Language {
 	void set_nfa_minimum_size(int);
 	bool nfa_minimum_size_cached();
 	int get_nfa_minimum_size();
+	// 1-однозначная регулярка
+	bool is_one_unambiguous_flag_cached();
+	void set_one_unambiguous_flag(bool);
+	bool get_one_unambiguous_flag();
+	bool is_one_unambiguous_regex_cached();
+	void set_one_unambiguous_regex(string, shared_ptr<Language>&);
+	Regex get_one_unambiguous_regex();
 	//  и тд
 };

@@ -104,7 +104,8 @@ class Regex : BaseObject {
 
   public:
 	Regex();
-	Regex(string);
+	Regex(const string&);
+	Regex(const string&, const shared_ptr<Language>&);
 	string to_txt() const override;
 	// вывод дерева для дебага
 	void print_tree();
@@ -125,7 +126,7 @@ class Regex : BaseObject {
 	void make_language();
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const string& file) const;
-	bool from_string(string);
+	bool from_string(const string&);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);
 	// проверка регулярок на эквивалентность
@@ -152,6 +153,11 @@ class Regex : BaseObject {
 	Regex linearize() const;
 	Regex delinearize() const;
 	Regex deannote() const;
+
+	// проверка регулярки на 1-однозначность
+	bool is_one_unambiguous() const;
+	// извлечение 1-однозначной регулярки методом орбит Брюггеман-Вуда
+	Regex get_one_unambiguous_regex() const;
 };
 
 /*
