@@ -480,52 +480,52 @@ bool TransformationMonoid::is_minimal() {
 											  [i + 1] = true;
 			}
 		}
+		map<vector<bool>, bool> wasvec;
+		int counter = 0;
+		for (int i = 0; i < equivalence_classes_table_temp.size(); i++) {
+			if (!wasvec.count(equivalence_classes_table_temp[i])) {
+				wasvec[equivalence_classes_table_temp[i]] = true;
+				equivalence_classes_table_bool.push_back(
+					equivalence_classes_table_temp[i]);
+				if (i == 0) {
+					equivalence_classes_table_left.push_back(" ");
+				} else {
+					equivalence_classes_table_left.push_back(
+						to_str(table_classes[i - 1].name));
+				}
+			}
+		}
+		equivalence_classes_table_top.push_back(" ");
+		for (int i = 0; i < terms.size(); i++) {
+			equivalence_classes_table_top.push_back(to_str(terms[i].name));
+		}
+		//проходим по таблице и удаляем одинаковые столбцы
+		vector<int> delete_column_index;
+		set<vector<bool>> for_find_same_column;
+		for (int j = 0; j < equivalence_classes_table_bool[0].size(); j++) {
+			vector<bool> temp;
+			int size_set = for_find_same_column.size();
+			for (int i = 0; i < equivalence_classes_table_bool.size(); i++) {
+				temp.push_back(equivalence_classes_table_bool[i][j]);
+			}
+			for_find_same_column.insert(temp);
+			if (size_set == for_find_same_column.size()) {
+				delete_column_index.push_back(j);
+			}
+		}
+		for (int i = delete_column_index.size() - 1; i >= 0; i--) {
+			equivalence_classes_table_top.erase(
+				equivalence_classes_table_top.begin() + delete_column_index[i]);
+			for (int j = 0; j < equivalence_classes_table_bool.size(); j++) {
+				equivalence_classes_table_bool[j].erase(
+					equivalence_classes_table_bool[j].begin() +
+					delete_column_index[i]);
+			}
+		}
 	}
 
-	map<vector<bool>, bool> wasvec;
-	int counter = 0;
-	for (int i = 0; i < equivalence_classes_table_temp.size(); i++) {
-		if (!wasvec.count(equivalence_classes_table_temp[i])) {
-			wasvec[equivalence_classes_table_temp[i]] = true;
-			equivalence_classes_table_bool.push_back(
-				equivalence_classes_table_temp[i]);
-			if (i == 0) {
-				equivalence_classes_table_left.push_back(" ");
-			} else {
-				equivalence_classes_table_left.push_back(
-					to_str(table_classes[i - 1].name));
-			}
-			counter++;
-		}
-	}
-	equivalence_classes_table_top.push_back(" ");
-	for (int i = 0; i < terms.size(); i++) {
-		equivalence_classes_table_top.push_back(to_str(terms[i].name));
-	}
-	//проходим по таблице и удаляем одинаковые столбцы
-	vector<int> delete_column_index;
-	set<vector<bool>> for_find_same_column;
-	for (int j = 0; j < equivalence_classes_table_bool[0].size(); j++) {
-		vector<bool> temp;
-		int size_set = for_find_same_column.size();
-		for (int i = 0; i < equivalence_classes_table_bool.size(); i++) {
-			temp.push_back(equivalence_classes_table_bool[i][j]);
-		}
-		for_find_same_column.insert(temp);
-		if (size_set == for_find_same_column.size()) {
-			delete_column_index.push_back(j);
-		}
-	}
-	for (int i = delete_column_index.size() - 1; i >= 0; i--) {
-		equivalence_classes_table_top.erase(
-			equivalence_classes_table_top.begin() + delete_column_index[i]);
-		for (int j = 0; j < equivalence_classes_table_bool.size(); j++) {
-			equivalence_classes_table_bool[j].erase(
-				equivalence_classes_table_bool[j].begin() +
-				delete_column_index[i]);
-		}
-	}
-	bool is_minimal_bool = (log2(states_size) + 1) <= counter;
+	bool is_minimal_bool =
+		(log2(states_size) + 1) <= equivalence_classes_table_bool.size();
 	Logger::init_step("Is minimal");
 	Logger::log(is_minimal_bool ? "true" : "false");
 	Logger::finish_step();
