@@ -30,8 +30,14 @@ struct GrammarItem {
 ostream& operator<<(ostream& os, const GrammarItem& item);
 class Grammar {
   private:
-	string to_str(vector<string>);
 	map<int, GrammarItem> prefix_grammar;
+	const string to_str(
+		vector<string>); // Для преобразования правил ТМ в строку, потом,
+						 // возможно, можно юудет убрать
+	const int fa_to_g(
+		const FiniteAutomaton&, string, int, int, map<int, GrammarItem*>,
+		set<string>, string,
+		/*map<vector<string>, vector<vector<string>>>,*/ map<int, bool>);
 
   public:
 	// обновляет значение class_number для каждого нетерминала
@@ -70,8 +76,6 @@ class Grammar {
 		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
 		int initial_state);
 	vector<vector<GrammarItem>> fa_to_prefix_grammar(const FiniteAutomaton&);
-	int fa_to_g(const FiniteAutomaton&, string, int, int,
-				map<int, GrammarItem*>, set<string>, string,
-				map<vector<string>, vector<vector<string>>>, map<int, bool>);
-	string pg_to_txt();
+
+	const string pg_to_txt();
 };
