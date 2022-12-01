@@ -38,3 +38,43 @@ string LogTemplate::render() const {
 	}
 	return outstr;
 }
+
+string LogTemplate::math_mode(string str) {
+	if (str.empty()) {
+		return str;
+	}
+	// cout << str << endl;
+	string str_math = "";
+	auto is_number = [](char c) { return c >= '0' && c <= '9'; };
+	for (size_t index = 0; index < str.size(); index++) {
+		char c = str[index];
+		// cout << "-------------" + index << endl;
+		// cout << c << endl;
+		if (c == ' ' && index != str.size() - 1) {
+			str_math += ", ";
+		} else if (c == '*') {
+			str_math += "^*";
+			// cout << "c is *" << endl;
+			// cout << "str_math " + str_math << endl;
+		} else if (is_number(c)) {
+			// cout << "c number" << endl;
+			string num = "";
+			for (index; index < str.size() && is_number(str[index]); index++) {
+				num += str[index];
+				// cout << "num " + num << endl;
+			}
+			num = "_{" + num + "}";
+			str_math += num;
+			index--;
+			// cout << "index " + to_string(index) << endl;
+			// cout << "str_math " + str_math << endl;
+		} else {
+			str_math += c;
+			cout << "c else" << endl;
+			cout << "str_math " + str_math << endl;
+		}
+	}
+	// cout << str_math << endl;
+	str_math = "$" + str_math + "$";
+	return str_math;
+}

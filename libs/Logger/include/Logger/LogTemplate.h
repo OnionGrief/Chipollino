@@ -28,4 +28,6 @@ class LogTemplate : public iLogTemplate {
 
 	// Параметры
 	map<string, LogParameter> parameters;
+	// math mode
+	string math_mode(string str);
 };
