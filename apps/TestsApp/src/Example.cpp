@@ -480,8 +480,6 @@ void Example::classes_number_GlaisterShallit() {
 	Regex r("abc");
 	r.pump_length();
 	FiniteAutomaton fa = r.to_glushkov();
-	TransformationMonoid sm = fa.get_syntactic_monoid();
-	cout << sm.to_txt_MyhillNerode() << endl;
 	cout << fa.get_classes_number_GlaisterShallit() << endl;
 	fa.is_nfa_minimal();
 }
@@ -792,12 +790,13 @@ void Example::test_interpreter() {
 	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
 }
 void Example::test_TransformationMonoid() {
-	FiniteAutomaton fa = Regex("a*b*c*").to_tompson().minimize();
-	TransformationMonoid a(fa);
-	assert(a.class_card() == 7);
-	assert(a.class_length() == 2);
-	assert(a.is_minimal() == 1);
-	assert(a.get_classes_number_MyhillNerode() == 3);
+	FiniteAutomaton fa1 = Regex("a*b*c*").to_tompson().minimize();
+	TransformationMonoid tm1(fa1);
+	assert(tm1.class_card() == 7);
+	assert(tm1.class_length() == 2);
+	assert(tm1.is_minimal());
+	assert(tm1.get_classes_number_MyhillNerode() == 3);
+
 	vector<State> states;
 	for (int i = 0; i < 5; i++) {
 		State s = {
@@ -812,12 +811,24 @@ void Example::test_TransformationMonoid() {
 	states[4].set_transition(4, "b");
 	states[4].set_transition(4, "c");
 	states[4].is_terminal = true;
-	FiniteAutomaton fa1(0, states, {"a", "b", "c"});
-	TransformationMonoid a1(fa1);
-	assert(a1.class_card() == 12);
-	assert(a1.class_length() == 4);
-	assert(a1.is_minimal() == 1);
-	assert(a1.get_classes_number_MyhillNerode() == 5);
+	FiniteAutomaton fa2(0, states, {"a", "b", "c"});
+	TransformationMonoid tm2(fa2);
+	assert(tm2.class_card() == 12);
+	assert(tm2.class_length() == 4);
+	assert(tm2.is_minimal() == 1);
+	assert(tm2.get_classes_number_MyhillNerode() == 5);
+
+	FiniteAutomaton fa3 = Regex("ab|b").to_glushkov().minimize();
+	TransformationMonoid tm3(fa3);
+	assert(tm3.is_minimal());
+
+	FiniteAutomaton fa4 = Regex("a").to_glushkov().minimize();
+	TransformationMonoid tm4(fa4);
+	assert(tm4.is_minimal());
+
+	FiniteAutomaton fa5 = Regex("b*a*").to_tompson().minimize();
+	TransformationMonoid tm5(fa5);
+	assert(tm5.is_minimal());
 }
 
 void Example::test_GlaisterShallit() {

@@ -480,8 +480,8 @@ bool TransformationMonoid::is_minimal() {
 											  [i + 1] = true;
 			}
 		}
+
 		map<vector<bool>, bool> wasvec;
-		int counter = 0;
 		for (int i = 0; i < equivalence_classes_table_temp.size(); i++) {
 			if (!wasvec.count(equivalence_classes_table_temp[i])) {
 				wasvec[equivalence_classes_table_temp[i]] = true;
