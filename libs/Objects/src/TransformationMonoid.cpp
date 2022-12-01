@@ -525,10 +525,11 @@ bool TransformationMonoid::is_minimal() {
 				delete_column_index[i]);
 		}
 	}
+	bool is_minimal_bool = (log2(states_size) + 1) <= counter;
 	Logger::init_step("Is minimal");
-	Logger::log(((log2(states_size) + 1) <= counter) ? "true" : "false");
+	Logger::log(is_minimal_bool ? "true" : "false");
 	Logger::finish_step();
-	return (log2(states_size) + 1) <= counter;
+	return is_minimal_bool;
 }
 
 string TransformationMonoid::to_txt_MyhillNerode() {
