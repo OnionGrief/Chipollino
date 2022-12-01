@@ -1783,9 +1783,10 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
 	TransformationMonoid sm = get_syntactic_monoid();
 	cout << sm.to_txt_MyhillNerode() << endl;
 
-	vector<vector<alphabet_symbol>> table_rows;
+	vector<string> table_rows;
+	vector<string> table_columns;
 	vector<vector<bool>> equivalence_classes_table =
-		sm.get_equivalence_classes_table(table_rows);
+		sm.get_equivalence_classes_table(table_rows, table_columns);
 
 	int result = -1;
 	vector<pair<int, int>> result_yx;
@@ -1799,33 +1800,20 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
 	find_maximum_identity_matrix(rows, equivalence_classes_table, result, 0,
 								 result_yx, {}, used_x, used_y, m, n);
 
-	vector<TransformationMonoid::Term> table_columns =
-		sm.get_equalence_classes();
-
-	int maxlen = table_columns[table_columns.size() - 1].name.size();
+	int maxlen = table_columns[table_columns.size() - 1].size();
 	cout << string(maxlen + 2, ' ');
 	for (int i = 0; i < result_yx.size(); i++) {
-		if (result_yx[i].second == 0) {
-			cout << "Eps" << string(maxlen + 1, ' ');
-			continue;
-		}
-		for (auto i : table_columns[result_yx[i].second - 1].name)
+		for (auto i : table_columns[result_yx[i].second])
 			cout << i;
-		cout << string(maxlen + 2 -
-						   table_columns[result_yx[i].second - 1].name.size(),
+		cout << string(maxlen + 2 - table_columns[result_yx[i].second].size(),
 					   ' ');
 	}
 	cout << endl;
 
 	for (int i = 0; i < result_yx.size(); i++) {
-		if (result_yx[i].first == 0)
-			cout << "Eps" << string(maxlen - 1, ' ');
-		else {
-			for (auto i : table_rows[result_yx[i].first])
-				cout << i;
-			cout << string(maxlen + 2 - table_rows[result_yx[i].first].size(),
-						   ' ');
-		}
+		for (auto i : table_rows[result_yx[i].first])
+			cout << i;
+		cout << string(maxlen + 2 - table_rows[result_yx[i].first].size(), ' ');
 		for (int j = 0; j < result_yx.size(); j++) {
 			cout << equivalence_classes_table[result_yx[i].first]
 											 [result_yx[j].second]

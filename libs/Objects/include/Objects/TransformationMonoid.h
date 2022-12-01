@@ -52,8 +52,9 @@ class TransformationMonoid {
 	int get_classes_number_MyhillNerode(); //Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); //вывод таблицы М-Н
 	vector<vector<bool>> get_equivalence_classes_table(
-		vector<vector<alphabet_symbol>>& table_rows); // возвращает
-													  // таблицу М-Н
+		vector<string>& table_rows,
+		vector<string>& table_columns); // возвращает
+										// таблицу М-Н
 
   private:
 	FiniteAutomaton automat; //Автомат
@@ -61,6 +62,13 @@ class TransformationMonoid {
 	vector<Term> terms; //Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 		rules; //Правила переписывания
-	map<vector<alphabet_symbol>, vector<bool>>
-		equivalence_classes_table; //таблица М-Н
+	vector<vector<bool>> equivalence_classes_table_bool; // Taблица М-Н
+	vector<string> equivalence_classes_table_left; //Левая часть таблицы
+	vector<string> equivalence_classes_table_top; //шапка таблицы
+
+	//   | t o p
+	// l |--------
+	// e | 0 1 0 0
+	// f | 0 bool0
+	// t | 1 0 1 1
 };
