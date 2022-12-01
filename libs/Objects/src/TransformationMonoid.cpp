@@ -414,13 +414,13 @@ int TransformationMonoid::class_length() {
 
 //Вычисление
 int TransformationMonoid::get_classes_number_MyhillNerode() {
-	if (equivalence_classes_table.size() == 0) {
+	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
 	Logger::init_step("Myhill-Nerode сlasses number");
-	Logger::log(to_string(equivalence_classes_table.size()));
+	Logger::log(to_string(equivalence_classes_table_bool.size()));
 	Logger::finish_step();
-	return equivalence_classes_table.size();
+	return equivalence_classes_table_bool.size();
 }
 
 //Вычисление Минимальности (1 если минимальный)
@@ -428,7 +428,7 @@ bool TransformationMonoid::is_minimal() {
 	//временные данные
 	vector<Term> table_classes;
 	vector<vector<bool>> equivalence_classes_table_temp;
-	if (equivalence_classes_table.size() == 0) {
+	if (equivalence_classes_table_bool.size() == 0) {
 		map<vector<alphabet_symbol>, int>
 			data; //храним ссылку на Терм (быстрее и проще искать)
 		for (int i = 0; i < terms.size(); i++) {
@@ -532,7 +532,7 @@ bool TransformationMonoid::is_minimal() {
 }
 
 string TransformationMonoid::to_txt_MyhillNerode() {
-	if (equivalence_classes_table.size() == 0) {
+	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
 	stringstream ss;
@@ -563,13 +563,7 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 }
 
 vector<vector<bool>> TransformationMonoid::get_equivalence_classes_table() {
-	if (equivalence_classes_table.size() == 0) {
-		is_minimal();
-	}
-	vector<vector<bool>> result_table;
-	for (const auto& item : equivalence_classes_table)
-		result_table.push_back(item.second);
-	return result_table;
+	return equivalence_classes_table_bool;
 }
 
 //В психиатрической больнице люди по настоящему заботятся о своём здоровье.

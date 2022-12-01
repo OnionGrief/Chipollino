@@ -60,8 +60,6 @@ class TransformationMonoid {
 	vector<Term> terms; //Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 		rules; //Правила переписывания
-	map<vector<alphabet_symbol>, vector<bool>>
-		equivalence_classes_table;						 //таблица М-Н
 	vector<vector<bool>> equivalence_classes_table_bool; // Taблица М-Н
 	vector<string> equivalence_classes_table_left; //Левая часть таблицы
 	vector<string> equivalence_classes_table_top; //шапка таблицы
