@@ -51,8 +51,9 @@ class TransformationMonoid {
 	bool is_minimal(); //Вычисление Минимальности по М-Н(1 если минимальный)
 	int get_classes_number_MyhillNerode(); //Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); //вывод таблицы М-Н
-	vector<vector<bool>> get_equivalence_classes_table(); // возвращает
-														  // таблицу М-Н
+	vector<vector<bool>> get_equivalence_classes_table(
+		vector<vector<alphabet_symbol>>& table_rows); // возвращает
+													  // таблицу М-Н
 
   private:
 	FiniteAutomaton automat; //Автомат

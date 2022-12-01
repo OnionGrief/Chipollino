@@ -530,13 +530,16 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	return ss.str();
 }
 
-vector<vector<bool>> TransformationMonoid::get_equivalence_classes_table() {
+vector<vector<bool>> TransformationMonoid::get_equivalence_classes_table(
+	vector<vector<alphabet_symbol>>& table_rows) {
 	if (equivalence_classes_table.size() == 0) {
 		is_minimal();
 	}
 	vector<vector<bool>> result_table;
-	for (const auto& item : equivalence_classes_table)
+	for (const auto& item : equivalence_classes_table) {
+		table_rows.push_back(item.first);
 		result_table.push_back(item.second);
+	}
 	return result_table;
 }
 
