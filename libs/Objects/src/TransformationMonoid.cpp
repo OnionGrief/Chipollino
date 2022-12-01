@@ -487,14 +487,42 @@ bool TransformationMonoid::is_minimal() {
 	for (int i = 0; i < equivalence_classes_table_temp.size(); i++) {
 		if (!wasvec.count(equivalence_classes_table_temp[i])) {
 			wasvec[equivalence_classes_table_temp[i]] = true;
+			equivalence_classes_table_bool.push_back(
+				equivalence_classes_table_temp[i]);
 			if (i == 0) {
-				equivalence_classes_table[{" "}] =
-					equivalence_classes_table_temp[i];
+				equivalence_classes_table_left.push_back(" ");
 			} else {
-				equivalence_classes_table[table_classes[i - 1].name] =
-					equivalence_classes_table_temp[i];
+				equivalence_classes_table_left.push_back(
+					to_str(table_classes[i - 1].name));
 			}
 			counter++;
+		}
+	}
+	equivalence_classes_table_top.push_back(" ");
+	for (int i = 0; i < terms.size(); i++) {
+		equivalence_classes_table_top.push_back(to_str(terms[i].name));
+	}
+	//проходим по таблице и удаляем одинаковые столбцы
+	vector<int> delete_column_index;
+	set<vector<bool>> for_find_same_column;
+	for (int j = 0; j < equivalence_classes_table_bool[0].size(); j++) {
+		vector<bool> temp;
+		int size_set = for_find_same_column.size();
+		for (int i = 0; i < equivalence_classes_table_bool.size(); i++) {
+			temp.push_back(equivalence_classes_table_bool[i][j]);
+		}
+		for_find_same_column.insert(temp);
+		if (size_set == for_find_same_column.size()) {
+			delete_column_index.push_back(j);
+		}
+	}
+	for (int i = delete_column_index.size() - 1; i >= 0; i--) {
+		equivalence_classes_table_top.erase(
+			equivalence_classes_table_top.begin() + delete_column_index[i]);
+		for (int j = 0; j < equivalence_classes_table_bool.size(); j++) {
+			equivalence_classes_table_bool[j].erase(
+				equivalence_classes_table_bool[j].begin() +
+				delete_column_index[i]);
 		}
 	}
 	Logger::init_step("Is minimal");
@@ -509,21 +537,25 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	}
 	stringstream ss;
 	int maxlen = terms[terms.size() - 1].name.size();
-	ss << string(maxlen + 2, ' ') << " " << string(maxlen + 1, ' ');
-	for (int i = 0; i < terms.size(); i++) {
-		ss << to_str(terms[i].name)
+	ss << string(maxlen + 2, ' ');
+	for (int i = 0; i < equivalence_classes_table_top.size(); i++) {
+		ss << equivalence_classes_table_top[i]
 		   << string(maxlen + 2 - terms[i].name.size(), ' ');
 	}
 	ss << "\n";
 
-	for (auto it = equivalence_classes_table.begin();
-		 it != equivalence_classes_table.end(); it++) {
-		ss << to_str(it->first) << string(maxlen + 2 - it->first.size(), ' ');
-		for (int j = 0; j < it->second.size(); j++) { //вывод матрицы
-			ss << it->second[j] << string(maxlen + 1, ' ');
+	for (int i = 0; i < equivalence_classes_table_left.size(); i++) {
+		ss << equivalence_classes_table_left[i]
+		   << string(maxlen + 2 - equivalence_classes_table_left[i].size(),
+					 ' ');
+		for (int j = 0; j < equivalence_classes_table_bool[i].size();
+			 j++) { //вывод матрицы
+			ss << equivalence_classes_table_bool[i][j]
+			   << string(maxlen + 1, ' ');
 		}
 		ss << "\n";
 	}
+
 	Logger::init_step("MyhillNerode TABLE");
 	Logger::log(ss.str());
 	Logger::finish_step();
