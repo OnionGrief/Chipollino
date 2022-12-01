@@ -809,4 +809,6 @@ void Example::fa_to_pgrammar() {
 	// cout << dfa1.to_txt();
 
 	g.fa_to_prefix_grammar(dfa1);
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.pg_to_txt();
 }

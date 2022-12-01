@@ -31,6 +31,7 @@ ostream& operator<<(ostream& os, const GrammarItem& item);
 class Grammar {
   private:
 	string to_str(vector<string>);
+	map<int, GrammarItem> prefix_grammar;
 
   public:
 	// обновляет значение class_number для каждого нетерминала
@@ -72,4 +73,5 @@ class Grammar {
 	int fa_to_g(const FiniteAutomaton&, string, int, int,
 				map<int, GrammarItem*>, set<string>, string,
 				map<vector<string>, vector<vector<string>>>, map<int, bool>);
+	string pg_to_txt();
 };

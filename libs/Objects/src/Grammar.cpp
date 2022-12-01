@@ -340,8 +340,13 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 	map<int, bool> is_visit;
 	for (size_t i = 0; i < states.size(); i++) {
 		gr_it[states[i].index].state_index = i;
+		if (!states[i].is_terminal) {
+			gr_it[states[i].index].type = GrammarItem::nonterminal;
+		}
+
 		grammer_items[states[i].index] =
 			&gr_it[states[i].index]; // new GrammarItem();
+
 		is_visit[states[i].index] = false;
 		// grammer_items[states[i].index]->state_index = i; // states[i].index;
 	}
@@ -391,7 +396,7 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 
 	// cout << "---------" << endl;
 	set<string> out;
-	for (int i = 0; i < states.size(); i++) {
+	for (int i = 0; i < gr_it.size(); i++) {
 		GrammarItem g = gr_it[i];
 		for (const auto& w : g.equivalence_class) {
 			for (const auto& elem : g.rules) {
@@ -426,8 +431,8 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 	}
 	cout << "base words" << endl;
 
-	for (int i = 0; i < states.size(); i++) {
-		if (states[i].is_terminal) {
+	for (int i = 0; i < gr_it.size(); i++) {
+		if (/*states[i].is_terminal*/ gr_it[i].type == GrammarItem::terminal) {
 			GrammarItem g = gr_it[i];
 			cout << states[i].identifier << ":\n";
 			for (const auto& w : g.equivalence_class) {
@@ -436,6 +441,60 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 			cout << endl;
 		}
 	}
-
+	this->prefix_grammar = gr_it;
 	return {};
+}
+
+string Grammar::pg_to_txt() {
+	set<string> out;
+	stringstream ss;
+	map<int, GrammarItem> gr_it = prefix_grammar;
+	for (int i = 0; i < gr_it.size(); i++) {
+		GrammarItem g = gr_it[i];
+		for (const auto& w : g.equivalence_class) {
+			for (const auto& elem : g.rules) {
+				alphabet_symbol a = elem.first;
+				// int index = elem.second;
+				for (const auto& w_back : elem.second) {
+					for (const auto& eq_back :
+						 gr_it[w_back].equivalence_class) {
+						string eq = eq_back;
+						string wt = w;
+						if (eq == "") {
+							eq = "eps";
+						}
+						if (wt == "") {
+							wt = "eps";
+						}
+						if (a == "") {
+							a = "eps";
+						}
+						// cout << wt << " -> " << eq << " " << a << endl;
+						if (/*m_r.find(wt) == m_r.end() &&*/
+							!(wt == eq && a == "eps")) {
+							out.insert(wt + " -> " + eq + " " + a);
+						}
+					}
+				}
+			}
+		}
+	}
+	for (const auto& elem : out) {
+		ss << elem << endl;
+	}
+	out.insert("base words");
+	ss << "------------ base words ------------" << endl;
+
+	for (int i = 0; i < gr_it.size(); i++) {
+		if (/*states[i].is_terminal*/ gr_it[i].type == GrammarItem::terminal) {
+			GrammarItem g = gr_it[i];
+			// cout << states[i].identifier << ":\n";
+			for (const auto& w : g.equivalence_class) {
+				ss << w << " ";
+			}
+			ss << endl;
+		}
+	}
+	// this->prefix_grammar = gr_it;
+	return ss.str();
 }
