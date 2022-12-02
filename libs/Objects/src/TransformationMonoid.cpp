@@ -437,6 +437,9 @@ bool TransformationMonoid::is_minimal() {
 		int sizetable = 0;
 		set<int> templeft;
 		for (int i = 0; i < terms.size(); i++) {
+			if (terms[i].isFinal) {
+				templeft.insert(data[terms[i].name]);
+			}
 			vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
 			for (int j = 0; j < cur.size(); j++) {
 				templeft.insert(data[cur[j].name]);
@@ -480,7 +483,6 @@ bool TransformationMonoid::is_minimal() {
 											  [i + 1] = true;
 			}
 		}
-
 		map<vector<bool>, bool> wasvec;
 		for (int i = 0; i < equivalence_classes_table_temp.size(); i++) {
 			if (!wasvec.count(equivalence_classes_table_temp[i])) {
