@@ -1729,7 +1729,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 	FiniteAutomaton fa(0, automat_state, language);
 	if (log) {
 		log->set_parameter("regex", *this);
-		log->set_parameter("derev", derev_log);
+		log->set_parameter("deverative", derev_log);
 		log->set_parameter("state", str_state);
 		log->set_parameter("automaton", fa);
 	}

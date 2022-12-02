@@ -308,22 +308,22 @@ void Example::step() {
 	FiniteAutomaton fa3 = fa2.remove_eps();
 	// string f3 = fa3.to_txt();
 	string s = "merge\\_bisimilar";
-	//Logger::activate();
-	//Logger::init();
-	//Logger::init_step(s);
-	//Logger::log("Автомат1", "Автомат2", fa1, fa2);
-	//Logger::finish_step();
+	// Logger::activate();
+	// Logger::init();
+	// Logger::init_step(s);
+	// Logger::log("Автомат1", "Автомат2", fa1, fa2);
+	// Logger::finish_step();
 	s = "skip";
-	//Logger::activate();
-	//Logger::init_step(s);
-	//Logger::log("Автомат1", "Автомат2", fa1, fa1);
-	//Logger::finish_step();
+	// Logger::activate();
+	// Logger::init_step(s);
+	// Logger::log("Автомат1", "Автомат2", fa1, fa1);
+	// Logger::finish_step();
 	s = "remove\\_eps";
-	//Logger::init_step(s);
-	//Logger::log("Автомат1", "Автомат2", fa2, fa3);
-	//Logger::finish_step();
-	//Logger::finish();
-	//Logger::deactivate();
+	// Logger::init_step(s);
+	// Logger::log("Автомат1", "Автомат2", fa2, fa3);
+	// Logger::finish_step();
+	// Logger::finish();
+	// Logger::deactivate();
 }
 
 void Example::tester() {
@@ -376,14 +376,14 @@ void Example::step_interection() {
 	// string f2 = dfa2.to_txt();
 	FiniteAutomaton dfa3 = FiniteAutomaton::intersection(dfa1, dfa2);
 	string s = "interection";
-	//Logger::activate();
-	//Logger::init();
-	//Logger::init_step(s);
-	//Logger::log("Автомат1", "Автомат2", "Пересечение автоматов", dfa1, dfa2,
+	// Logger::activate();
+	// Logger::init();
+	// Logger::init_step(s);
+	// Logger::log("Автомат1", "Автомат2", "Пересечение автоматов", dfa1, dfa2,
 	//			dfa3);
-	//Logger::finish_step();
-	//Logger::finish();
-	//Logger::deactivate();
+	// Logger::finish_step();
+	// Logger::finish();
+	// Logger::deactivate();
 }
 
 void Example::arden_example() {
@@ -441,13 +441,13 @@ void Example::table() {
 	// 	});
 	// }
 	// string s = "test";
-	//Logger::activate();
-	//Logger::init();
+	// Logger::activate();
+	// Logger::init();
 	// //Logger::init_step(s);
 	tester();
 	// //Logger::finish_step();
-	//Logger::finish();
-	//Logger::deactivate();
+	// Logger::finish();
+	// Logger::deactivate();
 }
 
 void Example::fa_semdet_check() {
@@ -476,6 +476,8 @@ void Example::fa_semdet_check() {
 }
 
 void Example::all_examples() {
+	LogTemplate log_template;
+	Logger tex_logger;
 	// determinize();
 	// remove_eps();
 	// minimize();
@@ -486,17 +488,20 @@ void Example::all_examples() {
 	// tasks_generating();
 	// parsing_regex("b(ab)*b");
 	// transformation_monoid_example();
-	normalize_regex();
+	// normalize_regex();
 	// step();
-	parsing_nfa();
-	fa_subset_check();
-	arden_example();
+	// parsing_nfa();
+	// fa_subset_check();
+	// arden_example();
 	//  to_image();
 	//  tester();
 	//  step_interection();
 	//  table();
-	fa_semdet_check();
-	Regex("abaa").pump_length();
+	// fa_semdet_check();
+	Regex("abaa").pump_length(&log_template);
+	Regex("(a|b)*b").to_glushkov(&log_template);
+	tex_logger.add_log(log_template);
+	tex_logger.render_to_file("log.tex");
 	cout << "all the examlples are successful" << endl;
 }
 // TEST
@@ -778,4 +783,4 @@ void Example::test_interpreter() {
 	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a} !!"));
 	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!"));
 	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
-} 
+}

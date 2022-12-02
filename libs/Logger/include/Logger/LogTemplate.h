@@ -1,3 +1,4 @@
+#include "AutomatonToImage/AutomatonToImage.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
@@ -29,5 +30,7 @@ class LogTemplate : public iLogTemplate {
 	// Параметры
 	map<string, LogParameter> parameters;
 	// math mode
-	string math_mode(string str);
+	static string math_mode(string str);
+	// счетчик картинок
+	inline static int image_number = 0;
 };

@@ -1735,27 +1735,27 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity(
 		// Logger::log("Результат Ambiguity", "Exponentially ambiguous");
 		if (log) {
 			log->set_parameter("automaton", *this);
-			log->set_parameter("ambiguity", "Exponentially ambiguous");
+			log->set_parameter("result", "Exponentially ambiguous");
 		}
 		break;
 	case FiniteAutomaton::almost_unambigious:
 		if (log) {
 			log->set_parameter("automaton", *this);
-			log->set_parameter("ambiguity", "Almost unambigious");
+			log->set_parameter("result", "Almost unambigious");
 		}
 		// Logger::log("Результат Ambiguity", "Almost unambigious");
 		break;
 	case FiniteAutomaton::unambigious:
 		if (log) {
 			log->set_parameter("automaton", *this);
-			log->set_parameter("ambiguity", "Unambigious");
+			log->set_parameter("result", "Unambigious");
 		}
 		// Logger::log("Результат Ambiguity", "Unambigious");
 		break;
 	case FiniteAutomaton::polynomially_ambigious:
 		if (log) {
 			log->set_parameter("automaton", *this);
-			log->set_parameter("ambiguity", "Polynomially ambiguous");
+			log->set_parameter("result", "Polynomially ambiguous");
 		}
 		// Logger::log("Результат Ambiguity", "Polynomially ambiguous");
 		break;
