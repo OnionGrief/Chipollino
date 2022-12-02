@@ -128,7 +128,6 @@ vector<alphabet_symbol> rewriting(
 //Получаем ДКА и строим моноид
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	Logger::activate_step_counter();
-	states_size = in.states.size();
 	automat = in.remove_trap_states();
 	automat.remove_unreachable_states();
 	Logger::deactivate_step_counter();
