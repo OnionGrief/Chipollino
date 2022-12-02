@@ -483,6 +483,7 @@ bool TransformationMonoid::is_minimal() {
 											  [i + 1] = true;
 			}
 		}
+
 		map<vector<bool>, bool> wasvec;
 		for (int i = 0; i < equivalence_classes_table_temp.size(); i++) {
 			if (!wasvec.count(equivalence_classes_table_temp[i])) {
@@ -525,9 +526,9 @@ bool TransformationMonoid::is_minimal() {
 			}
 		}
 	}
-
-	bool is_minimal_bool =
-		(log2(states_size) + 1) <= equivalence_classes_table_bool.size();
+	//не уверен что правильно
+	bool is_minimal_bool = (log2(automat.states.size()) + 1) <=
+						   equivalence_classes_table_bool.size();
 	Logger::init_step("Is minimal");
 	Logger::log(is_minimal_bool ? "true" : "false");
 	Logger::finish_step();
@@ -543,7 +544,7 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	ss << string(maxlen + 2, ' ');
 	for (int i = 0; i < equivalence_classes_table_top.size(); i++) {
 		ss << equivalence_classes_table_top[i]
-		   << string(maxlen + 2 - terms[i].name.size(), ' ');
+		   << string(maxlen + 2 - equivalence_classes_table_top[i].size(), ' ');
 	}
 	ss << "\n";
 
