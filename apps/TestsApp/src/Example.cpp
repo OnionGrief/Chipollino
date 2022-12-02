@@ -833,7 +833,7 @@ void Example::test_TransformationMonoid() {
 
 void Example::test_GlaisterShallit() {
 	assert(Regex("abc").to_glushkov().get_classes_number_GlaisterShallit() ==
-		   3);
+		   4);
 	assert(Regex("a*b*c*").to_glushkov().get_classes_number_GlaisterShallit() ==
 		   1);
 	assert(
