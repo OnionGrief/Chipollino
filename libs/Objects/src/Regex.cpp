@@ -142,8 +142,6 @@ Regex* Regex::scan_conc(const vector<Regex::Lexem>& lexems, int index_start,
 			}
 
 			p = new Regex;
-			l->term_p = p;
-			r->term_p = p;
 			p->term_l = l;
 			p->term_r = r;
 			p->value = lexems[i];
@@ -177,7 +175,6 @@ Regex* Regex::scan_star(const vector<Regex::Lexem>& lexems, int index_start,
 			}
 
 			p = new Regex;
-			l->term_p = p;
 			p->term_l = l;
 
 			p->term_r = nullptr;
@@ -214,8 +211,6 @@ Regex* Regex::scan_alt(const vector<Regex::Lexem>& lexems, int index_start,
 			}
 
 			p = new Regex;
-			l->term_p = p;
-			r->term_p = p;
 			p->term_l = l;
 			p->term_r = r;
 
@@ -344,8 +339,6 @@ Regex Regex::normalize_regex(const string& file) const {
 	Logger::init_step("Normalize");
 	Regex regex = *this;
 	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
-	regex.normalize_this_regex(file);
-	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
 	Logger::finish_step();
 	return regex;
 }
@@ -369,11 +362,9 @@ bool Regex::from_string(const string& str) {
 	language = make_shared<Language>(alphabet);
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
-		term_l->term_p = this;
 	}
 	if (root->term_r != nullptr) {
 		term_r = root->term_r->copy();
-		term_r->term_p = this;
 	}
 	delete root;
 	return true;
@@ -419,10 +410,8 @@ Regex* Regex::copy() const {
 	c->language = language;
 	if (type != Regex::eps && type != Regex::symb) {
 		c->term_l = term_l->copy();
-		c->term_l->term_p = c;
 		if (type != Regex::star) {
 			c->term_r = term_r->copy();
-			c->term_r->term_p = c;
 		}
 	}
 	return c;
@@ -430,11 +419,9 @@ Regex* Regex::copy() const {
 
 Regex::Regex(const Regex& reg)
 	: BaseObject(reg.language), type(reg.type), value(reg.value),
-	  term_p(nullptr), alphabet(reg.alphabet),
+	  alphabet(reg.alphabet),
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
 	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {
-	if (term_l) term_l->term_p = this;
-	if (term_r) term_r->term_p = this;
 }
 
 Regex& Regex::operator=(const Regex& reg) {
@@ -445,11 +432,9 @@ Regex& Regex::operator=(const Regex& reg) {
 	alphabet = reg.alphabet;
 	if (reg.term_l) {
 		term_l = reg.term_l->copy();
-		term_l->term_p = this;
 	}
 	if (reg.term_r) {
 		term_r = reg.term_r->copy();
-		term_r->term_p = this;
 	}
 	return *this;
 }
@@ -476,84 +461,6 @@ void Regex::set_language(const set<alphabet_symbol>& _alphabet) {
 	language = make_shared<Language>(alphabet);
 }
 
-int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
-							  Regex* original) {
-	int cond = 0;
-	if (equal(replacing, *original)) {
-		Regex* temp = new Regex(replaced_by);
-		cond++;
-		if (original->term_p && original->term_p->term_l &&
-			original->term_p->term_l == original) {
-			temp->term_p = original->term_p;
-			original->term_p->term_l = temp;
-		} else {
-			if (original->term_p && original->term_p->term_r &&
-				original->term_p->term_r == original) {
-				temp->term_p = original->term_p;
-				original->term_p->term_r = temp;
-			}
-		}
-		delete original;
-	} else {
-		if (original->term_l) {
-			cond +=
-				search_replace_rec(replacing, replaced_by, original->term_l);
-		}
-		if (original->term_r) {
-			cond +=
-				search_replace_rec(replacing, replaced_by, original->term_r);
-		}
-	}
-	return cond;
-	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
-	//обоняния.
-}
-void Regex::normalize_this_regex(const string& file) {
-	struct Rules {
-		Regex from;
-		Regex to;
-	};
-	vector<Rules> all_rules;
-	string line;
-	std::ifstream in(file);
-	if (in.is_open()) {
-		while (getline(in, line)) {
-			string v1, v2;
-			int ind = -1;
-			for (char c : line) {
-				if (c == '=') {
-					ind = v1.size();
-					continue;
-				}
-				if (c != ' ') {
-					if (ind == -1) {
-						v1 += c;
-					} else {
-						v2 += c;
-					}
-				}
-			}
-			if (v1 == "" || v2 == "") {
-				cout << "error rewriting rules read from file";
-				return;
-			}
-			Regex a(v1);
-			Regex b(v2);
-
-			Rules temp = {a, b};
-			all_rules.push_back(temp);
-		}
-	}
-	in.close();
-	for (int i = 0; i < all_rules.size(); i++) {
-		int cond = 0;
-		cond += search_replace_rec(all_rules[i].from, all_rules[i].to, this);
-		if (cond != 0) {
-			i--;
-		}
-	}
-}
-
 void Regex::pre_order_travers() const {
 	if (type == Regex::symb /*&& value.symbol*/) {
 		cout << value.symbol << " ";
@@ -577,16 +484,17 @@ string Regex::to_txt() const {
 		str2 = term_r->to_txt();
 	}
 	string symb;
-	if (type == Type::symb /*value.symbol*/) symb = value.symbol;
-	if (type == Type::eps) symb = "";
-	if (type == Type::alt) {
-		symb = '|';
-		if (term_p != nullptr && term_p->type == Type::conc) {
-			str1 = "(" + str1;
-			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
-							   // конкатенации a(a|b)a
+	if (type == Type::conc) {
+		if (term_l && term_l->type == Type::alt) {
+			str1 = "(" + str1 + ")";
+		}
+		if (term_r && term_r->type == Type::alt) {
+			str2 = "(" + str2 + ")";
 		}
 	}
+	if (type == Type::symb /*value.symbol*/) symb = value.symbol;
+	if (type == Type::eps) symb = "";
+	if (type == Type::alt) symb = '|';
 	if (type == Type::star) {
 		symb = '*';
 		if (term_l->type != Type::symb)
@@ -1703,17 +1611,18 @@ string Regex::to_str_log() const {
 		str2 = term_r->to_str_log();
 	}
 	string symb;
+	if (type == Type::conc) {
+		if (term_l && term_l->type == Type::alt) {
+			str1 = "(" + str1 + ")";
+		}
+		if (term_r && term_r->type == Type::alt) {
+			str2 = "(" + str2 + ")";
+		}
+	}
 	if (type == Type::symb /*value.symbol*/)
 		symb = value.symbol + to_string(value.number + 1);
 	if (type == Type::eps) symb = "";
-	if (type == Type::alt) {
-		symb = '|';
-		if (term_p != nullptr && term_p->type == Type::conc) {
-			str1 = "(" + str1;
-			str2 = str2 + ")"; // ставим скобки при альтернативах внутри
-							   // конкатенации a(a|b)a
-		}
-	}
+	if (type == Type::alt) symb = '|';
 	if (type == Type::star) {
 		symb = '*';
 		if (term_l->type != Type::symb)
