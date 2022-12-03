@@ -798,17 +798,19 @@ void Example::fa_to_pgrammar() {
 	states1[2].set_transition(2, "b");
 	states1[2].set_transition(2, "c");
 	states1[2].is_terminal = true;
-	states1[3].set_transition(4, "c");
-	states1[0].set_transition(3, "a");
-	states1[0].set_transition(3, "b");
+	states1[0].set_transition(4, "c");
+	states1[3].set_transition(0, "a");
+	states1[3].set_transition(0, "b");
 	states1[4].is_terminal = true;
-	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b", "c"});
+	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
 
 	Grammar g;
 	FiniteAutomaton test = a1.annote();
-	// cout << dfa1.to_txt();
+	cout << dfa1.to_txt();
 
 	g.fa_to_prefix_grammar(dfa1);
 	cout << "+++++++++++++++++++++++++++++" << endl;
 	cout << g.pg_to_txt();
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.prefix_grammar_to_automaton().to_txt();
 }

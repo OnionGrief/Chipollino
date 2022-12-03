@@ -13,8 +13,9 @@ struct GrammarItem {
 		terminal,
 		nonterminal
 	};
+	bool is_started = false;
 	Type type = terminal;
-	bool is_started = false; //
+	// bool is_started = false; //
 	int state_index = -1, class_number = -1;
 	set<string> equivalence_class;
 	map<alphabet_symbol, set<int>> rules;
@@ -76,6 +77,6 @@ class Grammar {
 		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
 		int initial_state);
 	vector<vector<GrammarItem>> fa_to_prefix_grammar(const FiniteAutomaton&);
-
+	FiniteAutomaton prefix_grammar_to_automaton();
 	const string pg_to_txt();
 };
