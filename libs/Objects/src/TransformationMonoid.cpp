@@ -124,7 +124,19 @@ vector<alphabet_symbol> rewriting(
 	}
 	return in;
 }
-
+set<int> TransformationMonoid::search_transition_by_word(
+	vector<alphabet_symbol> word, int init_state) {
+	set<int> out;
+	if (word.size() <= 0) {
+		return {init_state};
+	}
+	for (auto temp : automat.states[init_state].transitions[word[0]]) {
+		word.erase(word.begin());
+		set<int> res = search_transition_by_word(word, temp);
+		out.insert(res.begin(), res.end());
+	}
+	return out;
+}
 //Получаем ДКА и строим моноид
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	Logger::activate_step_counter();
@@ -151,37 +163,15 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 			}
 			if (current.name.size() < various[j].size()) continue;
 			for (int t = 0; t < automat.states.size(); t++) {
-				int final_state = -1;
-				Transition g;
-				g.first = t;
-				bool not_final_state = true;
-				for (int k = 0; k < current.name.size();
-					 k++) //Для	каждого	символа	перехода
-				{
-					State a;
-					if (final_state == -1) {
-						a = automat.states[g.first];
-					} else {
-						a = automat.states[final_state];
-					}
 
-					if (a.transitions.count(current.name[k])) {
-						set<int> temp_transitions =
-							a.transitions.at(current.name[k]);
-						if (temp_transitions.size()) {
-							final_state = *temp_transitions.begin();
-						} else {
-							not_final_state = false;
-						}
-					} else {
-						not_final_state = false;
-					}
-				}
-				if (final_state != -1) {
-					g.second = final_state;
-					if (not_final_state) {
-						current.transitions.push_back(g);
-					}
+				set<int> res = search_transition_by_word(current.name, t);
+				for (auto temp : res) {
+					Transition g;
+					g.first = t;
+					g.second = temp;
+					// cout << to_str(current.name) << " " << t << " " << temp
+					// 	 << "\n";
+					current.transitions.push_back(g);
 				}
 			}
 			vector<alphabet_symbol> eqv = was_term(terms, current.transitions);

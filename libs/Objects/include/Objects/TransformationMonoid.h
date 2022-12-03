@@ -57,6 +57,8 @@ class TransformationMonoid {
 										// таблицу М-Н
 
   private:
+	set<int> search_transition_by_word(vector<alphabet_symbol> word,
+									   int init_state);
 	FiniteAutomaton automat; //Автомат
 	vector<Term> terms;		 //Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
