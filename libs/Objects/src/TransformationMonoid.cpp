@@ -126,12 +126,14 @@ vector<alphabet_symbol> rewriting(
 }
 set<int> TransformationMonoid::search_transition_by_word(
 	vector<alphabet_symbol> word, int init_state) {
-	set<int> out;
+	set<int> out = {};
 	if (word.size() <= 0) {
 		return {init_state};
 	}
-	for (auto temp : automat.states[init_state].transitions[word[0]]) {
-		word.erase(word.begin());
+	alphabet_symbol symbol_transition = word[0];
+	word.erase(word.begin());
+	for (auto temp :
+		 automat.states[init_state].transitions[symbol_transition]) {
 		set<int> res = search_transition_by_word(word, temp);
 		out.insert(res.begin(), res.end());
 	}
@@ -169,8 +171,9 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 					Transition g;
 					g.first = t;
 					g.second = temp;
-					// cout << to_str(current.name) << " " << t << " " << temp
-					// 	 << "\n";
+					// cout << "test " << to_str(current.name) << " " << t << "
+					// "
+					// 	 << temp << "\n";
 					current.transitions.push_back(g);
 				}
 			}
