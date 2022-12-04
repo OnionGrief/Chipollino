@@ -410,9 +410,7 @@ Regex* Regex::copy() const {
 	c->language = language;
 	if (type != Regex::eps && type != Regex::symb) {
 		c->term_l = term_l->copy();
-		if (type != Regex::star) {
-			c->term_r = term_r->copy();
-		}
+		if (type != Regex::star) c->term_r = term_r->copy();
 	}
 	return c;
 }
@@ -421,8 +419,7 @@ Regex::Regex(const Regex& reg)
 	: BaseObject(reg.language), type(reg.type), value(reg.value),
 	  alphabet(reg.alphabet),
 	  term_l(reg.term_l == nullptr ? nullptr : reg.term_l->copy()),
-	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {
-}
+	  term_r(reg.term_r == nullptr ? nullptr : reg.term_r->copy()) {}
 
 Regex& Regex::operator=(const Regex& reg) {
 	clear();
@@ -430,12 +427,8 @@ Regex& Regex::operator=(const Regex& reg) {
 	type = reg.type;
 	value = reg.value;
 	alphabet = reg.alphabet;
-	if (reg.term_l) {
-		term_l = reg.term_l->copy();
-	}
-	if (reg.term_r) {
-		term_r = reg.term_r->copy();
-	}
+	if (reg.term_l) term_l = reg.term_l->copy();
+	if (reg.term_r) term_r = reg.term_r->copy();
 	return *this;
 }
 
@@ -1347,17 +1340,16 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 	// cout << "start getting derevative for prefix " << str << " in "
 	//	 << reg_e->to_txt() << "\n";
 	for (int i = 0; i < str.size(); i++) {
-		auto sym = new Regex();
-		sym->type = Type::symb;
-		sym->value.symbol = str[i];
+		Regex sym;
+		sym.type = Type::symb;
+		sym.value.symbol = str[i];
 		next.clear();
-		success &= derevative_with_respect_to_sym(sym, &cur, next);
+		success &= derevative_with_respect_to_sym(&sym, &cur, next);
 		// cout << "derevative for prefix " << sym->to_txt() << " in "
 		//	 << cur.to_txt() << " is " << next.to_txt() << "\n";
 		if (!success) {
 			return false;
 		}
-		delete sym;
 		cur = next;
 	}
 	result = next;
@@ -1431,7 +1423,9 @@ int Regex::pump_length() const {
 					pumped_prefix += it->substr(0, j);
 					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
 					pumped_prefix += it->substr(k, it->size() - k + j);
-					pumping.regex_union(new Regex(pumped_prefix), new Regex);
+					Regex a(pumped_prefix);
+					Regex b;
+					pumping.regex_union(&a, &b);
 					if (!derevative_with_respect_to_str(*it, this,
 														*pumping.term_r))
 						continue;
