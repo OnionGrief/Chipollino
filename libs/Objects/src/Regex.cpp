@@ -4,7 +4,7 @@
 #include "Objects/Logger.h"
 #include <set>
 
-Regex::Lexem::Lexem(Type type, alphabet_symbol symbol, int number)
+Regex::Lexem::Lexem(Type type, const alphabet_symbol& symbol, int number)
 	: type(type), symbol(symbol), number(number) {}
 
 vector<Regex::Lexem> Regex::parse_string(string str) {
