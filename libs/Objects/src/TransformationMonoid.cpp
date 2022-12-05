@@ -243,6 +243,35 @@ string TransformationMonoid::get_equalence_classes_txt() {
 	return ss.str();
 }
 
+map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
+	map<string, vector<string>> ss;
+	Logger::init_step("Equivalence classes");
+	for (int i = 0; i < terms.size(); i++) {
+
+		// Logger::log("class " + to_str(terms[i].name),
+		//			terms[i].isFinal ? "in lang" : "not in lang");
+		// ss << "Term	" << to_str(terms[i].name) << "	in	language	"
+		//   << terms[i].isFinal << "\n";
+		string term = to_str(terms[i].name);
+		for (int j = 0; j < terms[i].transitions.size(); j++) {
+			// Logger::log(
+			//	"transition " +
+			//		automat.states[terms[i].transitions[j].first].identifier,
+			//	automat.states[terms[i].transitions[j].second].identifier);
+			// ss << automat.states[terms[i].transitions[j].first].identifier
+			//   << "	->	"
+			//   << automat.states[terms[i].transitions[j].second].identifier
+			//   << "\n";
+			ss[term].push_back(
+				automat.states[terms[i].transitions[j].first].identifier);
+			ss[term].push_back(
+				automat.states[terms[i].transitions[j].second].identifier);
+		}
+	}
+	// Logger::finish_step();
+	return ss;
+}
+
 string TransformationMonoid::get_rewriting_rules_txt() {
 	stringstream ss;
 	Logger::init_step("Rewriting Rules");

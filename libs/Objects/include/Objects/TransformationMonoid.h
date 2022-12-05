@@ -42,6 +42,7 @@ class TransformationMonoid {
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 	get_rewriting_rules(); //получаем правила переписывания
 	string get_equalence_classes_txt(); //вывод эквивалентных классов
+	map<string, vector<string>> get_equalence_classes_map();
 	string get_rewriting_rules_txt(); //вывод правил переписывания
 	string to_txt() const;
 	int is_synchronized(

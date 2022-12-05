@@ -39,6 +39,10 @@ class Grammar {
 		const FiniteAutomaton&, string, int, int, map<int, GrammarItem*>,
 		set<string>, string,
 		/*map<vector<string>, vector<vector<string>>>,*/ map<int, bool>);
+	const int fa_to_g_TM(
+		const FiniteAutomaton&, string, int, int, map<int, GrammarItem*>,
+		set<string>, string,
+		/*map<vector<string>, vector<vector<string>>>,*/ map<int, bool>);
 
   public:
 	// обновляет значение class_number для каждого нетерминала
@@ -77,6 +81,7 @@ class Grammar {
 		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
 		int initial_state);
 	vector<vector<GrammarItem>> fa_to_prefix_grammar(const FiniteAutomaton&);
+	vector<vector<GrammarItem>> fa_to_prefix_grammar_TM(const FiniteAutomaton&);
 	FiniteAutomaton prefix_grammar_to_automaton();
 	const string pg_to_txt();
 };

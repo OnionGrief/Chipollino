@@ -809,6 +809,11 @@ void Example::fa_to_pgrammar() {
 	cout << g.pg_to_txt();
 	cout << "+++++++++++++++++++++++++++++" << endl;
 	cout << g.prefix_grammar_to_automaton().to_txt();
+	g.fa_to_prefix_grammar_TM(dfa1);
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.pg_to_txt();
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.prefix_grammar_to_automaton().to_txt();
 }
 void Example::test_is_one_unambiguous() {
 	Regex r1("(a|b)*a");
