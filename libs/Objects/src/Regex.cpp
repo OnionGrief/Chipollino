@@ -216,14 +216,8 @@ Regex* Regex::scan_alt(const vector<Regex::Lexem>& lexems, int index_start,
 				(l->type == Regex::eps &&
 				 r->type == Regex::eps)*/) { // Проверка на адекватность)
 
-				if (r != nullptr) {
-					cout << 1 << endl;
-					delete r;
-				}
-				if (l != nullptr) {
-					cout << 2 << endl;
-					delete l;
-				}
+				if (r != nullptr) delete r;
+				if (l != nullptr) delete l;
 				return nullptr;
 			}
 
@@ -361,10 +355,7 @@ bool Regex::from_string(const string& str) {
 	Regex* root = expr(l, 0, l.size());
 
 	if (root == nullptr || root->type == eps) {
-		if (root != nullptr) {
-			cout << 3 << endl;
-			delete root;
-		}
+		if (root != nullptr) delete root;
 
 		return false;
 	}
