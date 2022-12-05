@@ -382,16 +382,14 @@ const string Grammar::pg_to_txt() {
 	ss << "------------ base words ------------" << endl;
 
 	for (int i = 0; i < gr_it.size(); i++) {
-		if (/*states[i].is_terminal*/ gr_it[i].type == GrammarItem::terminal) {
+		if (gr_it[i].type == GrammarItem::terminal) {
 			GrammarItem g = gr_it[i];
-			// cout << states[i].identifier << ":\n";
 			for (const auto& w : g.equivalence_class) {
 				ss << w << " ";
 			}
 			ss << endl;
 		}
 	}
-	// this->prefix_grammar = gr_it;
 	return ss.str();
 }
 
@@ -478,7 +476,6 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar_TM(
 	const FiniteAutomaton& fa) {
 	vector<State> states = fa.states;
 	TransformationMonoid a(fa);
-	// cout << a.get_equalence_classes_txt();
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
 		a.get_rewriting_rules();
 	set<string> m_r;
@@ -550,7 +547,6 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar_TM(
 		set<int> transitions = elem.second;
 		for (const auto& ind : transitions) {
 			if (fa.initial_state == ind) {
-				//		g->equivalence_class.insert(alpha);
 				g->equivalence_class.erase("");
 			}
 		}

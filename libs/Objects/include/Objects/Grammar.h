@@ -34,15 +34,16 @@ class Grammar {
 	map<int, GrammarItem> prefix_grammar;
 	const string to_str(
 		vector<alphabet_symbol>); // Для преобразования правил ТМ в строку,
-								  // потом, возможно, можно юудет убрать
-	const int fa_to_g(
-		const FiniteAutomaton&, string, int, int, map<int, GrammarItem*>,
-		set<string>, string,
-		/*map<vector<string>, vector<vector<string>>>,*/ map<int, bool>);
+								  // потом, возможно, можно будет убрать
+	const int fa_to_g(const FiniteAutomaton&, string, int, int,
+					  map<int, GrammarItem*>, // вспомогательная функции для
+											  // получения префиксной грамматики
+					  set<string>, string, map<int, bool>);
 	const int fa_to_g_TM(
 		const FiniteAutomaton&, string, int, int, map<int, GrammarItem*>,
 		set<string>, string,
-		/*map<vector<string>, vector<vector<string>>>,*/ map<int, bool>);
+		map<int, bool>); //вспомогательная функции для
+						 // получения префиксной грамматики через ТМ
 
   public:
 	// обновляет значение class_number для каждого нетерминала
@@ -80,8 +81,11 @@ class Grammar {
 		vector<vector<vector<GrammarItem*>>>& rules,
 		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
 		int initial_state);
-	vector<vector<GrammarItem>> fa_to_prefix_grammar(const FiniteAutomaton&);
-	vector<vector<GrammarItem>> fa_to_prefix_grammar_TM(const FiniteAutomaton&);
-	FiniteAutomaton prefix_grammar_to_automaton();
-	const string pg_to_txt();
+	vector<vector<GrammarItem>> fa_to_prefix_grammar(
+		const FiniteAutomaton&); // создание пр грамматики по НКА
+	vector<vector<GrammarItem>> fa_to_prefix_grammar_TM(
+		const FiniteAutomaton&); // создание пр грамматики по НКА с помощью ТМ
+	FiniteAutomaton prefix_grammar_to_automaton(); // создает автомат по пр
+												   // грамматике
+	const string pg_to_txt(); // вывод пр грамматики в формате string
 };
