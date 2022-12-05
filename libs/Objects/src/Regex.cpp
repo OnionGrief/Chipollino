@@ -223,7 +223,7 @@ Regex* Regex::scan_alt(const vector<Regex::Lexem>& lexems, int index_start,
 					delete r;
 				}
 				if (l != nullptr) {
-					delete r;
+					delete l;
 				}
 				return nullptr;
 			}
