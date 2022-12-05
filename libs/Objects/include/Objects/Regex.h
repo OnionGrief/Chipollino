@@ -16,26 +16,26 @@ class Language;
 class FiniteAutomaton;
 struct State;
 
-struct Lexem {
-	enum Type {
-		error,
-		parL, // (
-		parR, // )
-		alt,  // |
-		conc, // .
-		star, // *
-		symb, // alphabet symbol
-		eps,  // Epsilon
-	};
-
-	Type type = error;
-	alphabet_symbol symbol = "";
-	int number = 0;
-	Lexem(Type type = error, alphabet_symbol symbol = "", int number = 0);
-};
-
 class Regex : BaseObject {
   private:
+	struct Lexem {
+		enum Type {
+			error,
+			parL, // (
+			parR, // )
+			alt,  // |
+			conc, // .
+			star, // *
+			symb, // alphabet symbol
+			eps,  // Epsilon
+		};
+
+		Type type = error;
+		alphabet_symbol symbol = "";
+		int number = 0;
+		Lexem(Type type = error, alphabet_symbol symbol = "", int number = 0);
+	};
+
 	enum Type {
 		// Epsilon
 		eps,
@@ -80,7 +80,7 @@ class Regex : BaseObject {
 	pair<vector<State>, int> get_tompson(int) const;
 
 	vector<Lexem>* first_state() const; // начальные состояния для to_glushkov
-	int L() const; //проверяет, входит ли eps в дерево regex
+	bool contains_eps() const; // проверяет, входит ли eps в дерево regex
 	vector<Lexem>* end_state() const; // конечные состояния для to_glushkov
 	map<int, vector<int>> pairs() const;
 	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex
@@ -119,6 +119,8 @@ class Regex : BaseObject {
 	Regex(const Regex&);
 	Regex& operator=(const Regex& other);
 
+	// создает новый язык с алфавитом
+	void set_language(const set<alphabet_symbol>& _alphabet);
 	// Генерация языка из алфавита
 	void make_language();
 	// Переписывание regex по пользовательским правилам
@@ -142,7 +144,6 @@ class Regex : BaseObject {
 	int pump_length() const;
 	// Слово, в котором все итерации Клини раскрыты n раз
 	string get_iterated_word(int n) const;
-
 	void regex_union(Regex* a, Regex* b);
 	void regex_alt(Regex* a, Regex* b);
 	void regex_star(Regex* a);

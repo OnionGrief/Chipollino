@@ -38,8 +38,18 @@ string Interpreter::Lexer::scan_until_space() {
 	string acc = "";
 	skip_spaces();
 	while (!eof() && current_symbol() != ' ' && current_symbol() != '\n' &&
-		   current_symbol() != '\t') {
+		   current_symbol() != '\t' && current_symbol() != '.' &&
+		   current_symbol() != '(' && current_symbol() != ')') {
 
+		acc += current_symbol();
+		next_symbol();
+	}
+	return acc;
+}
+
+string Interpreter::Lexer::scan_until(char symbol) {
+	string acc = "";
+	while (!eof() && current_symbol() != symbol) {
 		acc += current_symbol();
 		next_symbol();
 	}
@@ -60,22 +70,16 @@ Interpreter::Lexem Interpreter::Lexer::scan_doubleExclamation() {
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexem Interpreter::Lexer::scan_function() {
-	for (const auto& function : functions) {
-		if (scan_word(function)) {
-			return Lexem(Lexem::function, function);
-		}
+Interpreter::Lexem Interpreter::Lexer::scan_parL() {
+	if (scan_word("(")) {
+		return Lexem(Lexem::parL);
 	}
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexem Interpreter::Lexer::scan_id() {
-	// TODO: сделать проверки на корректность имени, чтобы не
-	// начиналось с цифры, не было коллизий с именами функций
-	string id_name = scan_until_space();
-	if (id_name.size()) {
-		ids.insert(id_name);
-		return Lexem(Lexem::id, id_name);
+Interpreter::Lexem Interpreter::Lexer::scan_parR() {
+	if (scan_word(")")) {
+		return Lexem(Lexem::parR);
 	}
 	return Lexem(Lexem::error);
 }
@@ -84,24 +88,6 @@ Interpreter::Lexem Interpreter::Lexer::scan_dot() {
 	if (scan_word(".")) {
 		return Lexem(Lexem::dot);
 	}
-	return Lexem(Lexem::error);
-}
-
-Interpreter::Lexem Interpreter::Lexer::scan_regex() {
-	input.save();
-	string word = scan_until_space();
-	Regex regex;
-	if (regex.from_string(word)) {
-		Lexem lex(Lexem::regex);
-		// TODO: это отвратительный костыль, надо использовать operator= как
-		// будет готов
-		lex.reg.from_string(word);
-		// TODO: А это отвратительный костыль, который нужен, чтобы потом
-		// превратить regex в id
-		lex.value = word;
-		return lex;
-	}
-	input.restore();
 	return Lexem(Lexem::error);
 }
 
@@ -120,24 +106,34 @@ Interpreter::Lexem Interpreter::Lexer::scan_number() {
 	return Lexem(stoi(acc));
 }
 
-Interpreter::Lexem Interpreter::Lexer::scan_predicate() {
-	for (const auto& predicate : predicates) {
-		if (scan_word(predicate)) {
-			return Lexem(Lexem::predicate, predicate);
-		}
+Interpreter::Lexem Interpreter::Lexer::scan_name() {
+	string name = scan_until_space();
+	if (name.size()) {
+		return Lexem(Lexem::name, name);
 	}
 	return Lexem(Lexem::error);
 }
 
-Interpreter::Lexem Interpreter::Lexer::scan_test() {
-	if (scan_word("Test")) {
-		return Lexem(Lexem::test);
+Interpreter::Lexem Interpreter::Lexer::scan_regex() {
+	if (scan_word("{")) {
+		string val = scan_until('}');
+		scan_word("}");
+		return Lexem(Lexem::regex, val);
 	}
 	return Lexem(Lexem::error);
 }
 
 Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
+	if (Lexem lex = scan_parL(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_parR(); lex.type) {
+		return lex;
+	}
 	if (Lexem lex = scan_dot(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_regex(); lex.type) {
 		return lex;
 	}
 	if (Lexem lex = scan_number(); lex.type) {
@@ -149,22 +145,11 @@ Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
 	if (Lexem lex = scan_doubleExclamation(); lex.type) {
 		return lex;
 	}
-	if (Lexem lex = scan_function(); lex.type) {
+	if (Lexem lex = scan_name(); lex.type) {
 		return lex;
 	}
-	if (Lexem lex = scan_predicate(); lex.type) {
-		return lex;
-	}
-	if (Lexem lex = scan_test(); lex.type) {
-		return lex;
-	}
-	if (Lexem lex = scan_regex(); lex.type) {
-		return lex;
-	}
-	if (Lexem lex = scan_id(); lex.type) {
-		return lex;
-	}
-	parent.log("Lexer: failed to scan \"" +
+	auto logger = parent.init_log();
+	logger.log("Lexer: failed to scan \"" +
 			   input.str.substr(input.pos, input.str.size()) + "\"");
 	return Lexem(Lexem::error);
 }
@@ -174,10 +159,11 @@ Interpreter::Lexem::Lexem(Type type, string value) : type(type), value(value) {}
 Interpreter::Lexem::Lexem(int num) : num(num), type(number) {}
 
 vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
-	parent.log("Lexer: loading file " + path);
+	auto logger = parent.init_log();
+	logger.log("Lexer: loading file " + path);
 	ifstream input_file(path);
 	if (!input_file) {
-		parent.throw_error("Error: failed to open " + to_string(path));
+		logger.throw_error("Error: failed to open " + path);
 	}
 	// Сюда будем записывать строки из лексем
 	vector<vector<Lexem>> lexem_lines = {};
@@ -185,10 +171,10 @@ vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
 	while (getline(input_file, str)) {
 		if (auto lexems = parse_string(str); lexems.size()) {
 			lexem_lines.push_back(lexems);
-			parent.log("scanned line: " + str);
+			logger.log("scanned line: " + str);
 		}
 	}
-	parent.log("Lexer: file loaded");
+	logger.log("Lexer: file loaded");
 	return lexem_lines;
 }
 

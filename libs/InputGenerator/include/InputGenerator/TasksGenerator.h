@@ -63,24 +63,18 @@ class TasksGenerator {
 		{"DeAnnote", {REGEX}, REGEX},
 		{"MergeBisim", {NFA}, NFA},
 		{"PumpLength", {REGEX}, INT},
-		//{"ClassLength", {DFA}, INT},
+		{"ClassLength", {DFA}, INT},
 		//{"Normalize", {REGEX, FILENAME}, REGEX},
 		{"States", {NFA}, INT},
-		//{"ClassCard", {DFA}, INT},
+		{"ClassCard", {DFA}, INT},
 		{"Ambiguity", {NFA}, VALUE},
-		//{"Width", {NFA}, INT},
-		//{"MyhillNerode", {DFA}, INT},
-		//{"Simplify", {REGEX}, REGEX}
+		{"MyhillNerode", {DFA}, INT},
 	};
 
 	vector<Function> predicates = {
-		{"Bisimilar", {NFA, NFA}, BOOLEAN},
-		{"Subset", {REGEX, REGEX}, BOOLEAN},
-		{"Subset", {NFA, NFA}, BOOLEAN},
-		{"Equiv", {NFA, NFA}, BOOLEAN},
-		{"Equiv", {REGEX, REGEX}, BOOLEAN},
-		//{"Minimal", {DFA}, BOOLEAN},
-		//{"Minimal", {NFA}, BOOLEAN},
+		{"Subset", {REGEX, REGEX}, BOOLEAN}, {"Subset", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {NFA, NFA}, BOOLEAN},		 {"Equiv", {REGEX, REGEX}, BOOLEAN},
+		{"Bisimilar", {NFA, NFA}, BOOLEAN},	 {"Minimal", {DFA}, BOOLEAN},
 		{"Equal", {NFA, NFA}, BOOLEAN},
 		//{"SemDet", {NFA}, BOOLEAN},
 	};

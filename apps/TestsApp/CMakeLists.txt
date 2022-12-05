@@ -15,6 +15,12 @@ target_include_directories( ${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
  	InputGenerator
+ 	Interpreter
  	Tester
  	Objects
 )
+
+enable_testing()
+
+add_test(NAME UnitTests
+         COMMAND ${PROJECT_NAME})

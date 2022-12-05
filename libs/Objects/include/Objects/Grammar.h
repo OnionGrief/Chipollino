@@ -33,8 +33,8 @@ class Grammar {
   private:
 	map<int, GrammarItem> prefix_grammar;
 	const string to_str(
-		vector<string>); // Для преобразования правил ТМ в строку, потом,
-						 // возможно, можно юудет убрать
+		vector<alphabet_symbol>); // Для преобразования правил ТМ в строку,
+								  // потом, возможно, можно юудет убрать
 	const int fa_to_g(
 		const FiniteAutomaton&, string, int, int, map<int, GrammarItem*>,
 		set<string>, string,

@@ -127,11 +127,10 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
 	map<alphabet_symbol, int> terminal_index;
 	fa_items[item_ind] = (GrammarItem(GrammarItem::terminal, "\0"));
 	terminals.push_back(&fa_items[item_ind]);
-	terminal_index[epsilon()] = 0;
+	terminal_index[alphabet_symbol::epsilon()] = 0;
 	item_ind++;
 	for (alphabet_symbol symb : alphabet) {
-		fa_items[item_ind] =
-			(GrammarItem(GrammarItem::terminal, to_string(symb)));
+		fa_items[item_ind] = (GrammarItem(GrammarItem::terminal, symb));
 		terminals.push_back(&fa_items[item_ind]);
 		terminal_index[symb] = item_ind - nonterminals.size();
 		item_ind++;
@@ -243,7 +242,7 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 		set<int> transitions = elem.second;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : transitions) {
-			if (is_epsilon(alpha)) {
+			if (alpha.is_epsilon()) {
 				alpha = "";
 			}
 			if (index != ind) {
@@ -259,7 +258,7 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 	return 0;
 }
 
-const string Grammar::to_str(vector<string> in) {
+const string Grammar::to_str(vector<alphabet_symbol> in) {
 	string out = "";
 	for (int i = 0; i < in.size(); i++) {
 		out += in[i];
@@ -271,7 +270,7 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 	const FiniteAutomaton& fa) {
 	vector<State> states = fa.states;
 	TransformationMonoid a(fa.minimize());
-	map<vector<string>, vector<vector<string>>> monoid_rules =
+	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
 		a.get_rewriting_rules();
 	set<string> m_r;
 	for (auto& item : monoid_rules) {
@@ -303,7 +302,7 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : transitions) {
 			if (fa.initial_state == ind) {
-				if (is_epsilon(alpha)) {
+				if (alpha.is_epsilon()) {
 					alpha = "";
 				}
 				g->rules[alpha].insert(fa.initial_state);
@@ -316,7 +315,7 @@ vector<vector<GrammarItem>> Grammar::fa_to_prefix_grammar(
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : transitions) {
 			if (fa.initial_state != ind) {
-				if (is_epsilon(alpha)) {
+				if (alpha.is_epsilon()) {
 					alpha = "";
 				}
 				fa_to_g(fa, alpha, ind, fa.initial_state, grammer_items, m_r,
@@ -366,7 +365,11 @@ const string Grammar::pg_to_txt() {
 						}
 						if (/*m_r.find(wt) == m_r.end() &&*/
 							!(wt == eq && a == "eps")) {
-							out.insert(wt + " -> " + eq + " " + a);
+							string test = wt;
+							test += " -> ";
+							test += eq + " ";
+							test += a;
+							out.insert(test); // wt + " -> " + eq + " " + a);
 						}
 					}
 				}
@@ -427,7 +430,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() {
 				states[trans].transitions[alpha].insert(i);
 			}
 			if (alpha == "") {
-				alpha = epsilon();
+				alpha = alphabet_symbol::epsilon();
 			}
 			symbols.insert(alpha);
 		}
