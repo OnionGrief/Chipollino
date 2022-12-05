@@ -137,7 +137,6 @@ Regex* Regex::scan_conc(const vector<Regex::Lexem>& lexems, int index_start,
 
 			if (l == nullptr || r == nullptr || r->type == Regex::eps ||
 				l->type == Regex::eps) { // Проверка на адекватность)
-				cout << "Test\n";
 				if (r != nullptr) {
 					delete r;
 				}
@@ -216,13 +215,16 @@ Regex* Regex::scan_alt(const vector<Regex::Lexem>& lexems, int index_start,
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
 			// cout << l->type << " " << r->type << "\n";
-			if (((l == nullptr) || (r == nullptr)) ||
+			if (((l == nullptr) || (r == nullptr))/* ||
 				(l->type == Regex::eps &&
-				 r->type == Regex::eps)) { // Проверка на адекватность)
+				 r->type == Regex::eps)*/) { // Проверка на адекватность)
+
 				if (r != nullptr) {
+					cout << 1 << endl;
 					delete r;
 				}
 				if (l != nullptr) {
+					cout << 2 << endl;
 					delete l;
 				}
 				return nullptr;
@@ -255,6 +257,7 @@ Regex* Regex::scan_symb(const vector<Regex::Lexem>& lexems, int index_start,
 		(index_end - index_start > 1)) {
 		return nullptr;
 	}
+
 	p = new Regex;
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
@@ -273,7 +276,7 @@ Regex* Regex::scan_eps(const vector<Regex::Lexem>& lexems, int index_start,
 					   int index_end) {
 	Regex* p = nullptr;
 	// cout << lexems[index_start].type << "\n";
-	if (lexems.size() <= (index_start) ||
+	if (lexems.size() <= (index_start) || (index_end - index_start != 1) ||
 		lexems[index_start].type != Regex::Lexem::eps) {
 		return nullptr;
 	}
@@ -375,6 +378,7 @@ bool Regex::from_string(const string& str) {
 
 	if (root == nullptr || root->type == eps) {
 		if (root != nullptr) {
+			cout << 3 << endl;
 			delete root;
 		}
 
