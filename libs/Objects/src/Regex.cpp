@@ -336,7 +336,7 @@ Regex::Regex(const string& str) : Regex() {
 	try {
 		bool res = from_string(str);
 		if (!res) {
-			throw runtime_error("from_string ERROR");
+			throw runtime_error("Regex::from_string() ERROR");
 		}
 	} catch (const runtime_error& re) {
 		cout << re.what() << endl;
@@ -345,16 +345,7 @@ Regex::Regex(const string& str) : Regex() {
 }
 
 Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
-	: Regex() {
-	try {
-		bool res = from_string(str);
-		if (!res) {
-			throw runtime_error("from_string ERROR");
-		}
-	} catch (const runtime_error& re) {
-		cout << re.what() << endl;
-		exit(EXIT_FAILURE);
-	}
+	: Regex(str) {
 	language = new_language;
 }
 
