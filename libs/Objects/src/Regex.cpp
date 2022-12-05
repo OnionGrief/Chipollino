@@ -138,6 +138,12 @@ Regex* Regex::scan_conc(const vector<Regex::Lexem>& lexems, int index_start,
 			if (l == nullptr || r == nullptr || r->type == Regex::eps ||
 				l->type == Regex::eps) { // Проверка на адекватность)
 				cout << "Test\n";
+				if (r != nullptr) {
+					delete r;
+				}
+				if (l != nullptr) {
+					delete l;
+				}
 				return p;
 			}
 
@@ -173,6 +179,9 @@ Regex* Regex::scan_star(const vector<Regex::Lexem>& lexems, int index_start,
 			Regex* l = expr(lexems, index_start, i);
 
 			if (l == nullptr || l->type == Regex::eps) {
+				if (l != nullptr) {
+					delete l;
+				}
 				return p;
 			}
 
@@ -210,6 +219,12 @@ Regex* Regex::scan_alt(const vector<Regex::Lexem>& lexems, int index_start,
 			if (((l == nullptr) || (r == nullptr)) ||
 				(l->type == Regex::eps &&
 				 r->type == Regex::eps)) { // Проверка на адекватность)
+				if (r != nullptr) {
+					delete r;
+				}
+				if (l != nullptr) {
+					delete r;
+				}
 				return nullptr;
 			}
 
