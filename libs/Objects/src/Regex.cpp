@@ -374,6 +374,10 @@ bool Regex::from_string(const string& str) {
 	Regex* root = expr(l, 0, l.size());
 
 	if (root == nullptr || root->type == eps) {
+		if (root != nullptr) {
+			delete root;
+		}
+
 		return false;
 	}
 
