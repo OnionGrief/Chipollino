@@ -27,7 +27,7 @@ State::State(int index, set<int> label, string identifier, bool is_terminal,
 	: index(index), label(label), identifier(identifier),
 	  is_terminal(is_terminal), transitions(transitions) {}
 
-void State::set_transition(int to, alphabet_symbol symbol) {
+void State::set_transition(int to, const alphabet_symbol& symbol) {
 	transitions[symbol].insert(to);
 }
 

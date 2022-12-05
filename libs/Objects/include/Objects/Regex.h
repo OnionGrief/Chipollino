@@ -33,7 +33,7 @@ class Regex : BaseObject {
 		Type type = error;
 		alphabet_symbol symbol = "";
 		int number = 0;
-		Lexem(Type type = error, alphabet_symbol symbol = "", int number = 0);
+		Lexem(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
 	};
 
 	enum Type {
@@ -50,7 +50,6 @@ class Regex : BaseObject {
 	set<alphabet_symbol> alphabet;
 	Type type;
 	Lexem value;
-	Regex* term_p = nullptr;
 	Regex* term_l = nullptr;
 	Regex* term_r = nullptr;
 	// Turns string into lexem vector
@@ -87,11 +86,6 @@ class Regex : BaseObject {
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
 	static bool equality_checker(const Regex*, const Regex*);
-	int search_replace_rec(
-		const Regex& replacing, const Regex& replaced_by,
-		Regex* original); //рекурсивный поиск заменяемого листа дерева
-	void normalize_this_regex(
-		const string& file); //переписывание regex по пользовательским правилам
 	string to_str_log() const;
 
 	// Рекурсивная генерация алфавита

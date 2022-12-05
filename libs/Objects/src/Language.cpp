@@ -36,7 +36,7 @@ int Language::get_pump_length() {
 }
 
 void Language::set_min_dfa(int initial_state, const vector<State>& states,
-						   shared_ptr<Language>& language) {
+						   const shared_ptr<Language>& language) {
 	min_dfa.emplace(FA_structure(initial_state, states, language));
 }
 
@@ -91,7 +91,7 @@ bool Language::is_one_unambiguous_regex_cached() {
 }
 
 void Language::set_one_unambiguous_regex(string str,
-										 shared_ptr<Language>& language) {
+										 const shared_ptr<Language>& language) {
 	one_unambiguous_regex.emplace(Regex_structure(str, language));
 }
 
