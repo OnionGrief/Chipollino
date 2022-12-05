@@ -137,7 +137,12 @@ Regex* Regex::scan_conc(const vector<Regex::Lexem>& lexems, int index_start,
 
 			if (l == nullptr || r == nullptr || r->type == Regex::eps ||
 				l->type == Regex::eps) { // Проверка на адекватность)
-				cout << "Test\n";
+				if (r != nullptr) {
+					delete r;
+				}
+				if (l != nullptr) {
+					delete l;
+				}
 				return p;
 			}
 
@@ -171,6 +176,9 @@ Regex* Regex::scan_star(const vector<Regex::Lexem>& lexems, int index_start,
 			Regex* l = expr(lexems, index_start, i);
 
 			if (l == nullptr || l->type == Regex::eps) {
+				if (l != nullptr) {
+					delete l;
+				}
 				return p;
 			}
 
@@ -204,9 +212,12 @@ Regex* Regex::scan_alt(const vector<Regex::Lexem>& lexems, int index_start,
 			Regex* l = expr(lexems, index_start, i);
 			Regex* r = expr(lexems, i + 1, index_end);
 			// cout << l->type << " " << r->type << "\n";
-			if (((l == nullptr) || (r == nullptr)) ||
+			if (((l == nullptr) || (r == nullptr))/* ||
 				(l->type == Regex::eps &&
-				 r->type == Regex::eps)) { // Проверка на адекватность)
+				 r->type == Regex::eps)*/) { // Проверка на адекватность)
+
+				if (r != nullptr) delete r;
+				if (l != nullptr) delete l;
 				return nullptr;
 			}
 
@@ -235,6 +246,7 @@ Regex* Regex::scan_symb(const vector<Regex::Lexem>& lexems, int index_start,
 		(index_end - index_start > 1)) {
 		return nullptr;
 	}
+
 	p = new Regex;
 	p->value = lexems[index_start];
 	p->type = Regex::symb;
@@ -253,7 +265,7 @@ Regex* Regex::scan_eps(const vector<Regex::Lexem>& lexems, int index_start,
 					   int index_end) {
 	Regex* p = nullptr;
 	// cout << lexems[index_start].type << "\n";
-	if (lexems.size() <= (index_start) ||
+	if (lexems.size() <= (index_start) || (index_end - index_start != 1) ||
 		lexems[index_start].type != Regex::Lexem::eps) {
 		return nullptr;
 	}
@@ -313,7 +325,7 @@ Regex::Regex(const string& str) : Regex() {
 	try {
 		bool res = from_string(str);
 		if (!res) {
-			throw runtime_error("from_string ERROR");
+			throw runtime_error("Regex::from_string() ERROR");
 		}
 	} catch (const runtime_error& re) {
 		cout << re.what() << endl;
@@ -322,16 +334,7 @@ Regex::Regex(const string& str) : Regex() {
 }
 
 Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
-	: Regex() {
-	try {
-		bool res = from_string(str);
-		if (!res) {
-			throw runtime_error("from_string ERROR");
-		}
-	} catch (const runtime_error& re) {
-		cout << re.what() << endl;
-		exit(EXIT_FAILURE);
-	}
+	: Regex(str) {
 	language = new_language;
 }
 
@@ -352,6 +355,8 @@ bool Regex::from_string(const string& str) {
 	Regex* root = expr(l, 0, l.size());
 
 	if (root == nullptr || root->type == eps) {
+		if (root != nullptr) delete root;
+
 		return false;
 	}
 
