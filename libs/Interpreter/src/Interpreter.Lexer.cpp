@@ -84,6 +84,20 @@ Interpreter::Lexem Interpreter::Lexer::scan_parR() {
 	return Lexem(Lexem::error);
 }
 
+Interpreter::Lexem Interpreter::Lexer::scan_bracketL() {
+	if (scan_word("[")) {
+		return Lexem(Lexem::bracketL);
+	}
+	return Lexem(Lexem::error);
+}
+
+Interpreter::Lexem Interpreter::Lexer::scan_bracketR() {
+	if (scan_word("]")) {
+		return Lexem(Lexem::bracketR);
+	}
+	return Lexem(Lexem::error);
+}
+
 Interpreter::Lexem Interpreter::Lexer::scan_dot() {
 	if (scan_word(".")) {
 		return Lexem(Lexem::dot);
@@ -137,6 +151,12 @@ Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
 		return lex;
 	}
 	if (Lexem lex = scan_parR(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_bracketL(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_bracketR(); lex.type) {
 		return lex;
 	}
 	if (Lexem lex = scan_dot(); lex.type) {

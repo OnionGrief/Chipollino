@@ -169,6 +169,8 @@ class Interpreter {
 			doubleExclamation,
 			parL,
 			parR,
+			bracketL,
+			bracketR,
 			dot,
 			number,
 			regex,
@@ -226,6 +228,8 @@ class Interpreter {
 		Lexem scan_doubleExclamation();
 		Lexem scan_parL();
 		Lexem scan_parR();
+		Lexem scan_bracketL();
+		Lexem scan_bracketR();
 		Lexem scan_dot();
 		Lexem scan_number();
 		Lexem scan_stringval();
