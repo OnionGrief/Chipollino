@@ -18,7 +18,8 @@ enum class ObjectType {
 	Int,	 // целое число
 	String,	 // имя файла для чтения
 	Boolean, // true/false
-	Value	 // yes/no/ы
+	Value,	 // yes/no/ы
+	Array	 // массив
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -27,28 +28,40 @@ template <ObjectType T, class V> struct ObjectHolder {
 	ObjectType type() const {
 		return T;
 	};
-	// Кэширование
-	optional<bool> minimal; // и так далее
-	ObjectHolder(){};
-	ObjectHolder(V value) : value(value){};
+
+	explicit ObjectHolder(){};
+	explicit ObjectHolder(V value) : value(value){};
 };
 
-using ObjectNFA = ObjectHolder<ObjectType::NFA, FiniteAutomaton>;
-using ObjectDFA = ObjectHolder<ObjectType::DFA, FiniteAutomaton>;
-using ObjectRegex = ObjectHolder<ObjectType::Regex, Regex>;
-using ObjectInt = ObjectHolder<ObjectType::Int, int>;
-using ObjectString = ObjectHolder<ObjectType::String, string>;
-using ObjectBoolean = ObjectHolder<ObjectType::Boolean, bool>;
-using ObjectValue = ObjectHolder<ObjectType::Value, optional<bool>>;
+// Сами структуры
+struct ObjectNFA;
+struct ObjectDFA;
+struct ObjectRegex;
+struct ObjectInt;
+struct ObjectString;
+struct ObjectBoolean;
+struct ObjectValue;
+struct ObjectArray;
 
 // Универсальный объект
-using GeneralObject = variant<ObjectHolder<ObjectType::NFA, FiniteAutomaton>,
-							  ObjectHolder<ObjectType::DFA, FiniteAutomaton>,
-							  ObjectHolder<ObjectType::Regex, Regex>,
-							  ObjectHolder<ObjectType::Int, int>,
-							  ObjectHolder<ObjectType::String, string>,
-							  ObjectHolder<ObjectType::Boolean, bool>,
-							  ObjectHolder<ObjectType::Value, optional<bool>>>;
+using GeneralObject =
+	variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString,
+			ObjectBoolean, ObjectValue, ObjectArray>;
+
+#define OBJECT_DEFINITION(type, value)                                         \
+	struct Object##type : public ObjectHolder<ObjectType::##type, ##value> {   \
+		using ObjectHolder::ObjectHolder;                                      \
+	};
+
+// Определение структур объектов
+OBJECT_DEFINITION(NFA, FiniteAutomaton)
+OBJECT_DEFINITION(DFA, FiniteAutomaton)
+OBJECT_DEFINITION(Regex, Regex)
+OBJECT_DEFINITION(Int, int)
+OBJECT_DEFINITION(String, string)
+OBJECT_DEFINITION(Boolean, bool)
+OBJECT_DEFINITION(Value, optional<bool>)
+OBJECT_DEFINITION(Array, vector<GeneralObject>)
 
 // Функция, состоит из имени и сигнатуры
 // Предикат - тоже функция, но на выходе boolean
