@@ -24,13 +24,17 @@ class Interpreter {
 	void set_log_mode(LogMode mode);
 
   private:
+	//== Внутреннее логгирование ==============================================
 	// true, если во время исполнения произошла ошибка
 	bool error = false;
 
-	// Вывод
+	// Режим вывода
 	LogMode log_mode = LogMode::all;
+
+	// Уровень вложенности логов
 	int log_nesting = 0;
 
+	// Внутренний логгер. Контролирует уровень вложенности с учётом скопа
 	class InterpreterLogger {
 	  public:
 		InterpreterLogger(Interpreter& parent) : parent(parent) {
@@ -46,15 +50,8 @@ class Interpreter {
 		Interpreter& parent;
 	};
 
+	// Инициалиризирует внутренний логгер
 	InterpreterLogger init_log();
-
-	// Применение цепочки функций к набору аргументов
-	GeneralObject apply_function_sequence(const vector<Function>& functions,
-										  vector<GeneralObject> arguments);
-
-	// Применение функции к набору аргументов
-	GeneralObject apply_function(const Function& function,
-								 const vector<GeneralObject>& arguments);
 
 	// Тут хранятся объекты по их id
 	map<string, GeneralObject> objects;
@@ -62,6 +59,22 @@ class Interpreter {
 	//== Элементы грамматики интерпретатора ===================================
 	using Id = string;
 	struct Expression;
+
+	// Функция, состоит из имени и сигнатуры
+	// Предикат - тоже функция, но на выходе boolean
+	struct Function {
+		// Имя функции
+		string name;
+		// Типы входных аргументов
+		vector<ObjectType> input;
+		// Тип выходного аргумента
+		ObjectType output;
+		Function(){};
+		Function(string name, vector<ObjectType> input, ObjectType output)
+			: name(name), input(input), output(output){};
+	};
+
+	friend bool operator==(const Function& l, const Function& r);
 
 	// Композиция функций и аргументы к ней
 	struct FunctionSequence {
@@ -134,6 +147,14 @@ class Interpreter {
 	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
 
 	//== Исполнение комманд ===================================================
+
+	// Применение цепочки функций к набору аргументов
+	GeneralObject apply_function_sequence(const vector<Function>& functions,
+										  vector<GeneralObject> arguments);
+
+	// Применение функции к набору аргументов
+	GeneralObject apply_function(const Function& function,
+								 const vector<GeneralObject>& arguments);
 
 	// Вычисление выражения
 	optional<GeneralObject> eval_expression(const Expression& expr);

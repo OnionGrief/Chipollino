@@ -62,21 +62,6 @@ OBJECT_DEFINITION(String, string)
 OBJECT_DEFINITION(Boolean, bool)
 OBJECT_DEFINITION(Value, optional<bool>)
 OBJECT_DEFINITION(Array, vector<GeneralObject>)
-
-// Функция, состоит из имени и сигнатуры
-// Предикат - тоже функция, но на выходе boolean
-struct Function {
-	// Имя функции
-	string name;
-	// Типы входных аргументов
-	vector<ObjectType> input;
-	// Тип выходного аргумента
-	ObjectType output;
-	Function(){};
-	Function(string name, vector<ObjectType> input, ObjectType output)
-		: name(name), input(input), output(output){};
-};
-
 }; // namespace Typization
 
 /*

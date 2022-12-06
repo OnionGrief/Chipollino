@@ -7,7 +7,8 @@
 
 using namespace std;
 
-bool operator==(const Function& l, const Function& r) {
+bool operator==(const Interpreter::Function& l,
+				const Interpreter::Function& r) {
 	return l.name == r.name && l.input == r.input && l.output == r.output;
 }
 
@@ -365,7 +366,7 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 	return true;
 }
 
-optional<vector<Function>> Interpreter::build_function_sequence(
+optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 	vector<string> function_names, vector<ObjectType> first_type) {
 
 	auto logger = init_log();
