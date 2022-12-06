@@ -25,6 +25,7 @@ Fraction Fraction::operator+(const Fraction& f) {
 Fraction Fraction::operator-(const Fraction& f) {
 	InfInt n = numerator * f.denominator - f.numerator * denominator;
 	InfInt d = denominator * f.denominator;
+	last_number_of_digits = n.numberOfDigits() + d.numberOfDigits();
 
 	Fraction ff(n, d);
 	return ff;

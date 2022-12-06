@@ -6,7 +6,6 @@
 #include "Objects/Logger.h"
 #include "Objects/TransformationMonoid.h"
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <math.h>
@@ -1511,9 +1510,7 @@ Fraction calc_ambiguity(int i, int n, const vector<Fraction>& f1,
 }
 
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
-	optional<int>& word_length) const {
-	int time_limit = 3000;
-
+	int digits_number_limit, optional<int>& word_length) const {
 	FiniteAutomaton fa = remove_eps();
 	FiniteAutomaton min_fa = fa.minimize().remove_trap_states();
 	fa = fa.remove_trap_states();
@@ -1621,15 +1618,24 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 			}
 			calculated_check.push_back(vector<Fraction>(f1_check.size()));
 			is_calculated_check.push_back(vector<char>(f1_check.size(), 0));
-			const auto start = std::chrono::high_resolution_clock::now();
 			Fraction val =
 				calc_ambiguity(new_s + i, new_s * new_s + delta, f1_check,
 							   calculated_check, is_calculated_check);
-			const auto end = std::chrono::high_resolution_clock::now();
-			const double elapsed =
-				std::chrono::duration_cast<std::chrono::milliseconds>(end -
-																	  start)
-					.count();
+			// limit check
+			if (Fraction::last_number_of_digits >= digits_number_limit ||
+				double(paths_number.numberOfDigits() +
+					   min_paths_number.numberOfDigits()) >=
+					double(digits_number_limit) / 2) {
+				word_length = k;
+				if (unambigious_return_flag)
+					return FiniteAutomaton::unambigious;
+				if (k >= (s + 1) * 3 &&
+					(max_return_flag || max_delta_return_flag))
+					return FiniteAutomaton::almost_unambigious;
+				if (val > prev_val || val == prev_val)
+					return FiniteAutomaton::exponentially_ambiguous;
+				return FiniteAutomaton::polynomially_ambigious;
+			}
 
 			if (Fraction() > val || Fraction() == val) {
 				return_counter++;
@@ -1639,18 +1645,6 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 
 			if (k >= N && (val > prev_val || val == prev_val))
 				return FiniteAutomaton::exponentially_ambiguous;
-
-			if (elapsed >= time_limit) {
-				word_length = k;
-				if (k >= s * s && unambigious_return_flag)
-					return FiniteAutomaton::unambigious;
-				if (k >= s * s && k >= (s + 1) * 3 &&
-					(max_return_flag || max_delta_return_flag))
-					return FiniteAutomaton::almost_unambigious;
-				if (val > prev_val || val == prev_val)
-					return FiniteAutomaton::exponentially_ambiguous;
-				return FiniteAutomaton::exponentially_ambiguous;
-			}
 
 			return_counter = 0;
 			calculated = calculated_check;
@@ -1668,7 +1662,8 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	Logger::init_step("Ambiguity");
 	optional<int> word_length;
-	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value(word_length);
+	FiniteAutomaton::AmbiguityValue result =
+		get_ambiguity_value(400, word_length);
 	Logger::log("Автомат", *this);
 	if (word_length.has_value()) {
 		Logger::log("Для максимальной длины слова", to_string(*word_length));

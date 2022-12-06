@@ -8,6 +8,7 @@ class Fraction {
 	InfInt denominator;
 
   public:
+	inline static unsigned long long last_number_of_digits = 0;
 	Fraction();
 	Fraction(InfInt n, InfInt d);
 	~Fraction();
