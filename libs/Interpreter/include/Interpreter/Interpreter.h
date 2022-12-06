@@ -86,10 +86,12 @@ class Interpreter {
 		bool show_result = 0;
 	};
 
+	using Array = vector<Expression>;
+
 	// Общий вид выражения
 	struct Expression {
 		ObjectType type;
-		variant<FunctionSequence, int, Regex, string> value;
+		variant<FunctionSequence, int, Regex, string, Array> value;
 	};
 
 	// Операция объявления
@@ -135,6 +137,8 @@ class Interpreter {
 	optional<Regex> scan_regex(const vector<Lexem>&, int& pos, size_t end);
 	optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&,
 													  int& pos, size_t end);
+	optional<Array> scan_array(const vector<Lexem>&, int& pos,
+										  size_t end);
 	optional<Expression> scan_expression(const vector<Lexem>&, int& pos,
 										 size_t end);
 

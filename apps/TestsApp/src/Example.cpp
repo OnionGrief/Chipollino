@@ -783,4 +783,14 @@ void Example::test_interpreter() {
 		interpreter.run_line("B = Annote (Glushkov {a} !!)"));
 	assert(
 		interpreter.run_line("B = Annote (Glushkov(DeAnnote {a} !!) !!) !!"));
+
+	// Arrays
+	assert(interpreter.run_line("A = []"));
+	assert(interpreter.run_line("A = [[] []]"));
+	assert(interpreter.run_line("A = [{a} {b}]"));
+	assert(interpreter.run_line("A = [[(([{a}]))] [{a} []]]"));
+	assert(!interpreter.run_line("A = [[(([{a}])] [{a} []]]"));
+	assert(!interpreter.run_line("A = [[([{a}]))] [{a} []]]"));
+	assert(!interpreter.run_line("A = [[(([{a}]))] [{a} []]"));
+	assert(!interpreter.run_line("A = [[(([a}]))] [{a} []]]"));
 }

@@ -748,6 +748,42 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_function_sequence(
 	return nullopt;
 }
 
+optional<Interpreter::Array> Interpreter::scan_array(const vector<Lexem>& lexems,
+													 int& pos, size_t end) {
+	auto logger = init_log();
+
+	int i = pos;
+
+	// Начинается с [
+	if (lexems[i].type == Lexem::bracketL) {
+		i++;
+	} else {
+		return nullopt;
+	}
+	
+	Array arr;
+	while (i < end && lexems[i].type != Lexem::bracketR) {
+		if (auto expr = scan_expression(lexems, i, end); expr.has_value()) {
+			arr.push_back(*expr);
+		} else {
+			logger.throw_error("unable to scan expression in array");
+			return nullopt;
+		}
+	}
+
+	// Кончается на ]
+	if (i < end && lexems[i].type == Lexem::bracketR) {
+		i++;
+	} else {
+		logger.throw_error("unable to scan array: \"]\" expected");
+		return nullopt;
+	}
+
+	pos = i;
+
+	return arr;
+}
+
 optional<Interpreter::Expression> Interpreter::scan_expression(
 	const vector<Lexem>& lexems, int& pos, size_t end) {
 	// ( Expr )
@@ -798,6 +834,15 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 		Expression expr;
 		expr.type = (*seq).functions.back().output;
 		expr.value = *seq;
+		pos = i;
+		return expr;
+	}
+	i = pos;
+	// String
+	if (const auto& arr = scan_array(lexems, i, end); arr.has_value()) {
+		Expression expr;
+		expr.type = ObjectType::Array;
+		expr.value = *arr;
 		pos = i;
 		return expr;
 	}
