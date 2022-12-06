@@ -1770,7 +1770,7 @@ Regex Regex::get_one_unambiguous_regex() const {
 		if (!counter)
 			regl += "(" + consistent_symb.value;
 		else {
-			regl += "|" + consistent_symb.value + "(";
+			regl += "|" + consistent_symb.value;
 			alternate_flag = true;
 		}
 		set<int> reachable_by_consistent_symb;
@@ -1785,12 +1785,15 @@ Regex Regex::get_one_unambiguous_regex() const {
 													  make_shared<Language>());
 			set<int> reachable_states = min_fa.closure({elem}, false);
 			vector<int> inserted_states_indices;
-			for (int j = 0; j < reachable_states.size(); j++) {
-				if (elem == j) {
-					consistent_symb_automaton.initial_state = j;
-				}
-				consistent_symb_automaton.states.push_back(min_fa.states[j]);
-				inserted_states_indices.push_back(j);
+			int consistent_symb_automaton_initial_state = 0;
+			for (int reachable_state : reachable_states) {
+				if (reachable_state == elem)
+					consistent_symb_automaton.initial_state =
+						consistent_symb_automaton_initial_state;
+				consistent_symb_automaton.states.push_back(
+					min_fa.states[reachable_state]);
+				inserted_states_indices.push_back(reachable_state);
+				consistent_symb_automaton_initial_state++;
 			}
 			set<alphabet_symbol> consistent_symb_automaton_alphabet;
 			for (int j = 0; j < consistent_symb_automaton.states.size(); j++) {
@@ -1819,12 +1822,10 @@ Regex Regex::get_one_unambiguous_regex() const {
 			}
 			consistent_symb_automaton.language =
 				make_shared<Language>(consistent_symb_automaton_alphabet);
-
 			FiniteAutomaton consistent_symb_automaton_cut =
 				FiniteAutomaton(consistent_symb_automaton.initial_state,
 								consistent_symb_automaton.states,
 								consistent_symb_automaton.language);
-
 			for (int j = 0; j < consistent_symb_automaton.states.size(); j++) {
 				if (consistent_symb_automaton.states[j].is_terminal) {
 					map<alphabet_symbol, set<int>> new_transitions;
@@ -1846,6 +1847,7 @@ Regex Regex::get_one_unambiguous_regex() const {
 			string consistent_symb_automaton_cut_to_regex =
 				consistent_symb_automaton_cut.to_regex().to_txt();
 			if (!consistent_symb_automaton_cut_to_regex.empty()) {
+				if (alternate_flag) regl += "(";
 				regl += consistent_symb_automaton_cut_to_regex;
 				if (alternate_flag) regl += ")";
 			}

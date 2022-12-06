@@ -707,6 +707,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
+	if (states.size() == 1) return *this;
 	FiniteAutomaton new_dfa(initial_state, states, language);
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
