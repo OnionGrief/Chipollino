@@ -17,6 +17,8 @@ class LogTemplate : public iLogTemplate {
 
 	// Рендерит все логи, возвращает строку
 	string render() const;
+	// загрузка шаблона
+	void load_tex_template(string filename);
 
   private:
 	// LaTeX-шаблон

@@ -1,0 +1,80 @@
+\documentclass[mathserif]{beamer} 
+\usepackage{eulervm} %красивый математический шрифт - по желанию
+\usepackage{ulem} %зачёркивания
+\usepackage{bm} %особо жирный математический
+\usepackage{schemata} %для красивых блочных переходов, пользуюсь редко
+\usepackage{mathtools} %улучшенная работа с типографией в math mode
+\setbeamertemplate{navigation symbols}{} %отключает управляющие символы в правом нижнем углу
+\usefonttheme{professionalfonts}
+\usepackage{cmap} %чтобы были работающие гиперссылки
+\usepackage{makeidx,fancybox,tikz}
+\usetikzlibrary{automata, positioning, arrows,patterns}
+\usetikzlibrary{arrows.meta}
+\usepackage{tempora} %по желанию -- русские штрифты с засечками
+
+\mode<presentation>
+{
+  \usetheme{CambridgeUS}
+  \usecolortheme{dove}
+}
+\usepackage[T1,T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath,mathrsfs} %ещё больше математических символов
+\usepackage{amstext}
+\usepackage{graphicx,relsize}
+\graphicspath{ {./resources/} }
+
+\usepackage{color}
+\definecolor{gray}{rgb}{0.4,.4,0.4} %здесь можно определить собственные цвета
+\definecolor{grey80}{rgb}{0.8,.8,0.8}
+\definecolor{grey90}{rgb}{0.9,.9,0.9}
+\definecolor{grey95}{rgb}{0.95,.95,0.95}
+\newcommand\redstroke{\bgroup\markoverwith
+{\textcolor{red}{\rule[0.5ex]{2pt}{1.5pt}}}\ULon} %зачёркивание жирной красной чертой
+
+\newcommand\reduline{\bgroup\markoverwith
+{\textcolor{red}{\rule[-0.5ex]{2pt}{1.5pt}}}\ULon}%подчёркивание жирной красной чертой
+
+\newcommand\bluline{\bgroup\markoverwith
+{\textcolor{blue}{\rule[-0.5ex]{2pt}{1.5pt}}}\ULon}
+
+\newcommand\bolduline{\bgroup\markoverwith
+{\textcolor{white}{\rule[-0.5ex]{2pt}{1.5pt}}}\ULon}
+
+\title[] {Логи}
+
+\author[Chipollino]{Лучшая команда разработчиков по ТФЯ} % :))
+\date[] 
+{2022 г.}
+\subject{Computer Science}
+
+\newcommand{\Lang}{\mathscr{L}} %макрос для языка регулярки или автомата
+\def\logor{\mathrel{\vee}} %отрендеренные логические операторы (с правильными интервалами)
+\def\logimpl{\mathrel{\Rightarrow}}
+\def\Linearize{\mathtt{Linearize}} %названия операций интерпретатора записываем моноширинным
+\def\First{\mathrm{First}} %названия прочих операций записываем обычным шрифтом, но не тем, который в math mode по умолчанию
+\def\Last{\mathrm{Last}}
+\def\Follow{\mathrm{Follow}}
+\def\IlieYu{\mathrm{IlieYu}}
+\def\Glushkov{\mathtt{Glushkov}}
+\def\Thompson{\mathtt{Thompson}}
+\def\logand{\mathrel{\&}}
+\def\lognot{\mathop{\neg}}
+\def\iff{\mathrel{\Leftrightarrow}}
+\def\quantall#1{\mathop{\forall #1}}
+\def\quantex#1{\mathop{\exists #1}} 
+\def\alter{\ensuremath{\mathrel{\vert}}}%отрендеренные регулярные операторы 
+\def\star{\ensuremath{^{*}}}%отрендеренные регулярные операторы 
+\def\regexpstr#1{\mathtt{#1}}%буквы внутри регулярок переписываются в моноширинный
+\newcommand{\Nat}{\mathbb N}
+\newcommand{\empt}{\varepsilon} %пустое слово
+\newcommand{\bottom}{\bot} %противоречие
+\newcommand{\rar}{\rightarrow} %стрелка вправо. Для экономии букв.
+\newcommand{\RegExp}{\mathcal{RE}} %макрос для обозначения множества всех регулярок
+%в преамбулу можно и нужно добавлять свои макросы
+
+\begin{document}
+
+\maketitle
+

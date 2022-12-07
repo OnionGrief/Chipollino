@@ -16,95 +16,128 @@ void LogTemplate::set_parameter(const string& key, int value) {
 	parameters[key].value = value;
 }
 
+void LogTemplate::load_tex_template(string filename) {
+	tex_template = filename;
+}
+
 string LogTemplate::render() const {
 	// TODO: заполнять здесь шаблон
-	// That's just a demo
+	ifstream infile(tex_template);
 	string outstr = "";
-	for (const auto& p : parameters) {
-		// outstr += "    " + p.first + " : ";
-		if (holds_alternative<string>(p.second.value)) {
-			if (p.first == "first") {
-				outstr += "First: " + math_mode(get<string>(p.second.value));
-			} else if (p.first == "end") {
-				outstr += "End: " + math_mode(get<string>(p.second.value));
-			} else if (p.first == "pairs") {
-				outstr += "Pairs: " + math_mode(get<string>(p.second.value));
-			} else if (p.first == "state") {
-				outstr += "States: " + math_mode(get<string>(p.second.value));
-			} else if (p.first == "follow") {
-				outstr += "Follow-отношения: " +
-						  math_mode(get<string>(p.second.value));
-			} else if (p.first == "deverative") {
-				outstr +=
-					"Производные:\n" + math_mode(get<string>(p.second.value));
-			} else if (p.first == "prefix") {
-				outstr += "Префикс: " + math_mode(get<string>(p.second.value));
-			} else if (p.first == "result") {
-				outstr += "Результат: " + get<string>(p.second.value);
-			} else if (p.first == "equivclasses") {
-				outstr +=
-					"Классы эквивалентности: " + get<string>(p.second.value);
-			}
-
-			// outstr += get<string>(p.second.value);
-		}
-		if (holds_alternative<int>(p.second.value)) {
-			if (p.first == "pumplength") {
-				outstr +=
-					"Длина накачки: " + to_string(get<int>(p.second.value));
-			} else if (p.first == "result") {
-				outstr += "Результат: " + get<string>(p.second.value);
-			} else if (p.first == "state") {
-				outstr += "State: " + get<string>(p.second.value);
-			} else if (p.first == "statesnum") {
-				outstr +=
-					"Количество состояний: " + get<string>(p.second.value);
-			}
-			// outstr += to_string(get<int>(p.second.value));
-		}
-		if (holds_alternative<FiniteAutomaton>(p.second.value)) {
-			// outstr += get<FiniteAutomaton>(p.second.value).to_txt();
-			if (p.first == "automaton") {
-				outstr += "Автомат: \n";
-			} else if (p.first == "automaton1") {
-				outstr += "Первый автомат: \n";
-			} else if (p.first == "automaton2") {
-				outstr += "Второй автомат: \n";
-			} else if (p.first == "oldautomaton") {
-				outstr += "Автомат до преобразования: \n";
-			} else if (p.first == "newautomaton") {
-				outstr += "Автомат после преобразования: \n";
-			} else if (p.first == "result") {
-				outstr += "Результат: \n";
-			}
+	string s;
+	for (; !infile.eof();) {
+		getline(infile, s);
+		if (s.find("template_initial_regex") != -1) {
+			const auto& p = parameters.find("regex");
+			outstr +=
+				math_mode(get<Regex>(p->second.value)
+							  .to_txt()); // поменять на выключенный стиль!!
+		} else if (s.find("template_linearised_regex") != -1) {
+			const auto& p = parameters.find("linearisedregex");
+			outstr += math_mode(get<Regex>(p->second.value).to_txt());
+		} else if (s.find("template_glushkov") != -1) {
+			const auto& p = parameters.find("automaton");
 			image_number += 1;
 			AutomatonToImage::to_image(
-				get<FiniteAutomaton>(p.second.value).to_txt(), image_number);
+				get<FiniteAutomaton>(p->second.value).to_txt(), image_number);
 			char si[256];
 			sprintf(si,
-					"\\includegraphics[width=5in, "
-					"keepaspectratio]{output%d.svg}\n",
+					"\\includegraphics[width=2in, "
+					"keepaspectratio]{output%d.png}\n",
 					image_number);
 			outstr += si;
-		}
-		if (holds_alternative<Regex>(p.second.value)) {
-			if (p.first == "oldregex") {
-				outstr += "Регулярное выражение до преобразования: \n";
-			} else if (p.first == "newregex") {
-				outstr += "Регулярное выражение после преобразования: \n";
-			} else if (p.first == "regex") {
-				outstr += "Регулярное выражение: \n";
-			} else if (p.first == "regex1") {
-				outstr += "Первое регулярное выражение: \n";
-			} else if (p.first == "regex2") {
-				outstr += "Второе регулярное выражение: \n";
-			} else if (p.first == "result") {
-				outstr += "Результат: \n";
-			}
-			outstr += math_mode(get<Regex>(p.second.value).to_txt());
+		} else {
+			outstr += s;
 		}
 		outstr += "\n";
 	}
+	infile.close();
+	// That's just a demo
+	// for (const auto& p : parameters) {
+	// 	// outstr += "    " + p.first + " : ";
+	// 	if (holds_alternative<string>(p.second.value)) {
+	// 		if (p.first == "first") {
+	// 			outstr += "First: " + math_mode(get<string>(p.second.value));
+	// 		} else if (p.first == "end") {
+	// 			outstr += "End: " + math_mode(get<string>(p.second.value));
+	// 		} else if (p.first == "pairs") {
+	// 			outstr += "Pairs: " + math_mode(get<string>(p.second.value));
+	// 		} else if (p.first == "state") {
+	// 			outstr += "States: " + math_mode(get<string>(p.second.value));
+	// 		} else if (p.first == "follow") {
+	// 			outstr += "Follow-отношения: " +
+	// 					  math_mode(get<string>(p.second.value));
+	// 		} else if (p.first == "deverative") {
+	// 			outstr +=
+	// 				"Производные:\n" + math_mode(get<string>(p.second.value));
+	// 		} else if (p.first == "prefix") {
+	// 			outstr += "Префикс: " + math_mode(get<string>(p.second.value));
+	// 		} else if (p.first == "result") {
+	// 			outstr += "Результат: " + get<string>(p.second.value);
+	// 		} else if (p.first == "equivclasses") {
+	// 			outstr +=
+	// 				"Классы эквивалентности: " + get<string>(p.second.value);
+	// 		}
+
+	// 		// outstr += get<string>(p.second.value);
+	// 	}
+	// 	if (holds_alternative<int>(p.second.value)) {
+	// 		if (p.first == "pumplength") {
+	// 			outstr +=
+	// 				"Длина накачки: " + to_string(get<int>(p.second.value));
+	// 		} else if (p.first == "result") {
+	// 			outstr += "Результат: " + get<string>(p.second.value);
+	// 		} else if (p.first == "state") {
+	// 			outstr += "State: " + get<string>(p.second.value);
+	// 		} else if (p.first == "statesnum") {
+	// 			outstr +=
+	// 				"Количество состояний: " + get<string>(p.second.value);
+	// 		}
+	// 		// outstr += to_string(get<int>(p.second.value));
+	// 	}
+	// 	if (holds_alternative<FiniteAutomaton>(p.second.value)) {
+	// 		// outstr += get<FiniteAutomaton>(p.second.value).to_txt();
+	// 		if (p.first == "automaton") {
+	// 			outstr += "Автомат: \n";
+	// 		} else if (p.first == "automaton1") {
+	// 			outstr += "Первый автомат: \n";
+	// 		} else if (p.first == "automaton2") {
+	// 			outstr += "Второй автомат: \n";
+	// 		} else if (p.first == "oldautomaton") {
+	// 			outstr += "Автомат до преобразования: \n";
+	// 		} else if (p.first == "newautomaton") {
+	// 			outstr += "Автомат после преобразования: \n";
+	// 		} else if (p.first == "result") {
+	// 			outstr += "Результат: \n";
+	// 		}
+	// 		image_number += 1;
+	// 		AutomatonToImage::to_image(
+	// 			get<FiniteAutomaton>(p.second.value).to_txt(), image_number);
+	// 		char si[256];
+	// 		sprintf(si,
+	// 				"\\includegraphics[width=5in, "
+	// 				"keepaspectratio]{output%d.png}\n",
+	// 				image_number);
+	// 		outstr += si;
+	// 	}
+	// 	if (holds_alternative<Regex>(p.second.value)) {
+	// 		if (p.first == "oldregex") {
+	// 			outstr += "Регулярное выражение до преобразования: \n";
+	// 		} else if (p.first == "newregex") {
+	// 			outstr += "Регулярное выражение после преобразования: \n";
+	// 		} else if (p.first == "regex") {
+	// 			outstr += "Регулярное выражение: \n";
+	// 		} else if (p.first == "regex1") {
+	// 			outstr += "Первое регулярное выражение: \n";
+	// 		} else if (p.first == "regex2") {
+	// 			outstr += "Второе регулярное выражение: \n";
+	// 		} else if (p.first == "result") {
+	// 			outstr += "Результат: \n";
+	// 		}
+	// 		outstr += math_mode(get<Regex>(p.second.value).to_txt());
+	// 	}
+	// 	outstr += "\n";
+	// }
 	return outstr;
 }
 

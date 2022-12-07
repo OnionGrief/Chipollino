@@ -498,7 +498,8 @@ void Example::all_examples() {
 	//  step_interection();
 	//  table();
 	// fa_semdet_check();
-	Regex("abaa").pump_length(&log_template);
+	log_template.load_tex_template("./resources/glushkov-template.tex");
+	// Regex("abaa").pump_length(&log_template);
 	Regex("(a|b)*b").to_glushkov(&log_template);
 	tex_logger.add_log(log_template);
 	tex_logger.render_to_file("log.tex");

@@ -495,8 +495,8 @@ int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
 		}
 	}
 	return cond;
-	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
-	//обоняния.
+	// Привычка зарубать себе на носу довела Буратино до самоампутации органа
+	// обоняния.
 }
 void Regex::normalize_this_regex(const string& file) {
 	struct Rules {
@@ -613,8 +613,8 @@ string Regex::get_iterated_word(int n) const {
 
 // возвращает пару <вектор сотсояний, max_index>
 pair<vector<State>, int> Regex::get_tompson(int max_index) const {
-	string str;			  //идентификатор состояния
-	vector<State> s = {}; //вектор состояний нового автомата
+	string str;			  // идентификатор состояния
+	vector<State> s = {}; // вектор состояний нового автомата
 	map<alphabet_symbol, set<int>> m, p, map_l, map_r; // словари автоматов
 	set<int> trans; // новые транзишены
 	int offset; // сдвиг для старых индексов состояний в новом автомате
@@ -1070,6 +1070,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	FiniteAutomaton fa(0, st, language);
 	if (log) {
 		log->set_parameter("regex", test);
+		log->set_parameter("linearisedregex", test.linearize());
 		log->set_parameter("first", str_firs);
 		log->set_parameter("end", str_end);
 		log->set_parameter("pairs", str_pair);
