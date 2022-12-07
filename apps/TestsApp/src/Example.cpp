@@ -765,20 +765,20 @@ void Example::test_is_one_unambiguous() {
 void Example::test_interpreter() {
 	Interpreter interpreter;
 	interpreter.set_log_mode(Interpreter::LogMode::nothing);
-	assert(!interpreter.run_line("A = Annote (Glushkova {a})"));
-	assert(interpreter.run_line("N1 = ((Glushkov ({ab|a})))"));
-	assert(interpreter.run_line("N2 =  (Annote N1)"));
+	assert(!interpreter.run_line("A =	 Annote (Glushkova {a})"));
+	assert(interpreter.run_line("  N1 =	(   (   Glushkov ({ab|a})    ))      "));
+	assert(interpreter.run_line(" N2 =  (Annote N1)"));
 	assert(!interpreter.run_line("N2 =  (Glushkov N1)"));
 	assert(!interpreter.run_line("Equiv N1 N3"));
-	assert(interpreter.run_line("Equiv ((N1)) ((Reverse.Reverse (N2)))"));
+	assert(interpreter.run_line("  Equiv ((  N1)) (   (Reverse   .Reverse (N2) !!		))"));
 	assert(interpreter.run_line("Test (Glushkov {a*}) {a*} 1"));
 
 	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a}"));
 	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a})"));
 	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a}))"));
-	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a} !!"));
-	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!"));
-	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
+	assert(interpreter.run_line("A = Annote   .Glushkov.   DeAnnote {a} !!  "));
+	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!   "));
+	assert(interpreter.run_line("B = Annote (   Glushkov(DeAnnote {a})) !! "));
 	assert(
 		interpreter.run_line("B = Annote (Glushkov {a} !!)"));
 	assert(
@@ -792,5 +792,5 @@ void Example::test_interpreter() {
 	assert(!interpreter.run_line("A = [[(([{a}])] [{a} []]]"));
 	assert(!interpreter.run_line("A = [[([{a}]))] [{a} []]]"));
 	assert(!interpreter.run_line("A = [[(([{a}]))] [{a} []]"));
-	assert(!interpreter.run_line("A = [[(([a}]))] [{a} []]]"));
+	assert(!interpreter.run_line("A = [[(([a}]))] [{a} (Glushkov(DeAnnote {a} !!) !!) []]]"));
 }

@@ -218,6 +218,7 @@ vector<Interpreter::Lexem> Interpreter::Lexer::parse_string(string str) {
 	while (!eof()) {
 		auto lexem = scan_lexem();
 		lexems.push_back(lexem);
+		skip_spaces();
 	}
 	return lexems;
 }
