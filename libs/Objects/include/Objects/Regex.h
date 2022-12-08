@@ -91,7 +91,8 @@ class Regex : BaseObject {
 		const Regex& replacing, const Regex& replaced_by,
 		Regex* original); //рекурсивный поиск заменяемого листа дерева
 	void normalize_this_regex(
-		const string& file); //переписывание regex по пользовательским правилам
+		const vector<pair<Regex, Regex>>&); //переписывание regex по
+											//пользовательским правилам
 	string to_str_log() const;
 
 	// Рекурсивная генерация алфавита
@@ -124,7 +125,7 @@ class Regex : BaseObject {
 	// Генерация языка из алфавита
 	void make_language();
 	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const string& file) const;
+	Regex normalize_regex(const vector<pair<Regex, Regex>>&) const;
 	bool from_string(string);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);

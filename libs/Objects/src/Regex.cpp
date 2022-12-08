@@ -326,11 +326,11 @@ Regex::Regex(string str) : Regex() {
 	}
 }
 
-Regex Regex::normalize_regex(const string& file) const {
+Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 	Logger::init_step("Normalize");
 	Regex regex = *this;
 	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
-	regex.normalize_this_regex(file);
+	regex.normalize_this_regex(rules);
 	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
 	Logger::finish_step();
 	return regex;
@@ -494,46 +494,10 @@ int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
 	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
 	//обоняния.
 }
-void Regex::normalize_this_regex(const string& file) {
-	struct Rules {
-		Regex from;
-		Regex to;
-	};
-	vector<Rules> all_rules;
-	string line;
-	std::ifstream in(file);
-	if (in.is_open()) {
-		while (getline(in, line)) {
-			string v1, v2;
-			int ind = -1;
-			for (char c : line) {
-				if (c == '=') {
-					ind = v1.size();
-					continue;
-				}
-				if (c != ' ') {
-					if (ind == -1) {
-						v1 += c;
-					} else {
-						v2 += c;
-					}
-				}
-			}
-			if (v1 == "" || v2 == "") {
-				cout << "error rewriting rules read from file";
-				return;
-			}
-			Regex a(v1);
-			Regex b(v2);
-
-			Rules temp = {a, b};
-			all_rules.push_back(temp);
-		}
-	}
-	in.close();
-	for (int i = 0; i < all_rules.size(); i++) {
+void Regex::normalize_this_regex(const vector<pair<Regex, Regex>>& rules) {
+	for (int i = 0; i < rules.size(); i++) {
 		int cond = 0;
-		cond += search_replace_rec(all_rules[i].from, all_rules[i].to, this);
+		cond += search_replace_rec(rules[i].first, rules[i].second, this);
 		if (cond != 0) {
 			i--;
 		}

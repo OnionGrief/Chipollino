@@ -251,8 +251,10 @@ void Example::normalize_regex() {
 	regl = regl + regr;
 	// regl = "abc"; //"bbb*(aaa*bbb*)*";
 	Regex r(regl);
-	r.normalize_regex("./../temp/Rules.txt");
-	cout << r.to_txt();
+
+	cout << "\nNormalize\nBefore: " << r.to_txt() << "\n";
+	r.normalize_regex({{{"a"}, {"b"}}});
+	cout << "After: " << r.to_txt() << "\n";
 }
 void Example::to_image() {
 	vector<State> states1;
@@ -793,4 +795,8 @@ void Example::test_interpreter() {
 	assert(!interpreter.run_line("A = [[([{a}]))] [{a} []]]"));
 	assert(!interpreter.run_line("A = [[(([{a}]))] [{a} []]"));
 	assert(!interpreter.run_line("A = [[(([a}]))] [{a} (Glushkov(DeAnnote {a} !!) !!) []]]"));
+
+	// Normalize
+	assert(interpreter.run_line("A = Normalize {abc} [[{a} {b}]]"));
+	// assert(!!interpreter.run_line("A = Normalize {abc} [[{a} []]]")); TODO: uncomment
 }

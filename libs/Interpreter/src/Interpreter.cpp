@@ -38,7 +38,7 @@ Interpreter::Interpreter() {
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
 		{"Normalize",
 		 {{"Normalize",
-		   {ObjectType::Regex, ObjectType::String},
+		   {ObjectType::Regex, ObjectType::Array},
 		   ObjectType::Regex}}},
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
 		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
@@ -312,9 +312,26 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar());
 	}
 	if (function.name == "Normalize") {
-		res = ObjectRegex(
-			get<ObjectRegex>(arguments[0])
-				.value.normalize_regex(get<ObjectString>(arguments[1]).value));
+		// Преобразуем array в массив пар
+		const auto& arr = get<ObjectArray>(arguments[1]).value;
+		vector<pair<Regex, Regex>> rules;
+		for (const auto& object : arr) {
+			if (holds_alternative<ObjectArray>(object)) {
+				const auto& rule = get<ObjectArray>(object).value;
+				if (rule.size() == 2 &&
+					holds_alternative<ObjectRegex>(rule[0]) &&
+					holds_alternative<ObjectRegex>(rule[1])) {
+					rules.push_back({get<ObjectRegex>(rule[0]).value,
+									 get<ObjectRegex>(rule[1]).value});
+				} else {
+					logger.throw_error("Normalize: invalid inner array");
+				}
+			} else {
+				logger.throw_error("Normalize: invalid array");
+			}
+		}
+		res =
+			ObjectRegex(get<ObjectRegex>(arguments[0]).value.normalize_regex(rules));
 	}
 	/*if (function.name == "Simplify") {
 		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
@@ -516,12 +533,25 @@ optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 }
 
 optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
+	auto logger = init_log();
+	logger.log("Evaluating expression");
 
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
 	if (holds_alternative<Regex>(expr.value)) {
 		return ObjectRegex(get<Regex>(expr.value));
+	}
+	if (holds_alternative<Array>(expr.value)) {
+		vector<GeneralObject> arr;
+		for (const auto& e : get<Array>(expr.value)) {
+			if (const auto& object = eval_expression(e); object.has_value()) {
+				arr.push_back(*object);
+			} else {
+				logger.throw_error("invalid array member");
+			}
+		}
+		return ObjectArray(arr);
 	}
 	if (holds_alternative<Id>(expr.value)) {
 		Id id = get<Id>(expr.value);
@@ -537,6 +567,7 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	if (holds_alternative<FunctionSequence>(expr.value)) {
 		return eval_function_sequence(get<FunctionSequence>(expr.value));
 	}
+	logger.throw_error("unknown expression type");
 	return nullopt;
 }
 
@@ -748,8 +779,8 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_function_sequence(
 	return nullopt;
 }
 
-optional<Interpreter::Array> Interpreter::scan_array(const vector<Lexem>& lexems,
-													 int& pos, size_t end) {
+optional<Interpreter::Array> Interpreter::scan_array(
+	const vector<Lexem>& lexems, int& pos, size_t end) {
 	auto logger = init_log();
 
 	int i = pos;
@@ -760,7 +791,7 @@ optional<Interpreter::Array> Interpreter::scan_array(const vector<Lexem>& lexems
 	} else {
 		return nullopt;
 	}
-	
+
 	Array arr;
 	while (i < end && lexems[i].type != Lexem::bracketR) {
 		if (auto expr = scan_expression(lexems, i, end); expr.has_value()) {
@@ -838,7 +869,7 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 		return expr;
 	}
 	i = pos;
-	// String
+	// Array
 	if (const auto& arr = scan_array(lexems, i, end); arr.has_value()) {
 		Expression expr;
 		expr.type = ObjectType::Array;
