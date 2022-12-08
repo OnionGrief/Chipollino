@@ -57,4 +57,5 @@ class Example {
 	static void test_interpreter();
 	static void test_TransformationMonoid();
 	static void test_GlaisterShallit();
+	static void test_fa_to_pgrammar();
 };

@@ -8,17 +8,29 @@
 #include <vector>
 using namespace std;
 
-struct GrammarItem {
+struct PrefixGrammarItem {
 	enum Type {
 		terminal,
 		nonterminal
 	};
 	bool is_started = false;
 	Type type = terminal;
-	// bool is_started = false; //
-	int state_index = -1, class_number = -1;
+	int state_index = -1;
+	// классы эквивалентности у состояния в автомате
 	set<string> equivalence_class;
+	// правила переписывания для данного состояния
 	map<alphabet_symbol, set<int>> rules;
+	PrefixGrammarItem();
+	PrefixGrammarItem(Type type, int state_index);
+};
+
+struct GrammarItem {
+	enum Type {
+		terminal,
+		nonterminal
+	};
+	Type type = terminal;
+	int state_index = -1, class_number = -1;
 	string name = "";
 	GrammarItem();
 	GrammarItem(Type type, string name, int state_index, int class_number);
@@ -31,16 +43,17 @@ struct GrammarItem {
 ostream& operator<<(ostream& os, const GrammarItem& item);
 class Grammar {
   private:
-	map<int, GrammarItem> prefix_grammar;
+	vector<PrefixGrammarItem> prefix_grammar;
 	const string to_str(
 		vector<alphabet_symbol>); // Для преобразования правил ТМ в строку,
 								  // потом, возможно, можно будет убрать
-	const int fa_to_g(const FiniteAutomaton&, string, int, int,
-					  map<int, GrammarItem*>, // вспомогательная функции для
-											  // получения префиксной грамматики
-					  set<string>, string, map<int, bool>);
+	const int fa_to_g(
+		const FiniteAutomaton&, string, int, int,
+		vector<PrefixGrammarItem*>, // вспомогательная функции для
+									// получения префиксной грамматики
+		set<string>, string, map<int, bool>);
 	const int fa_to_g_TM(
-		const FiniteAutomaton&, string, int, int, map<int, GrammarItem*>,
+		const FiniteAutomaton&, string, int, int, vector<PrefixGrammarItem*>,
 		set<string>, string,
 		map<int, bool>); //вспомогательная функции для
 						 // получения префиксной грамматики через ТМ
@@ -81,11 +94,12 @@ class Grammar {
 		vector<vector<vector<GrammarItem*>>>& rules,
 		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
 		int initial_state);
-	vector<vector<GrammarItem>> fa_to_prefix_grammar(
-		const FiniteAutomaton&); // создание пр грамматики по НКА
-	vector<vector<GrammarItem>> fa_to_prefix_grammar_TM(
-		const FiniteAutomaton&); // создание пр грамматики по НКА с помощью ТМ
-	FiniteAutomaton prefix_grammar_to_automaton(); // создает автомат по пр
-												   // грамматике
-	const string pg_to_txt(); // вывод пр грамматики в формате string
+	// создание пр грамматики по НКА
+	void fa_to_prefix_grammar(const FiniteAutomaton&);
+	// создание пр грамматики по НКА с помощью ТМ
+	void fa_to_prefix_grammar_TM(const FiniteAutomaton&);
+	// создает автомат по пр грамматике
+	FiniteAutomaton prefix_grammar_to_automaton();
+	// вывод пр грамматики в формате string
+	const string pg_to_txt();
 };
