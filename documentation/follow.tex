@@ -59,6 +59,10 @@
 \def\IlieYu{\mathrm{IlieYu}}
 \def\Glushkov{\mathtt{Glushkov}}
 \def\Thompson{\mathtt{Thompson}}
+\def\RemEps{\mathtt{RemEps}}
+\def\DeAnnote{\mathtt{DeAnnote}}
+\def\Annote{\mathtt{Annote}}
+\def\Minimize{\mathtt{Minimize}}
 \def\logand{\mathrel{\&}}
 \def\lognot{\mathop{\neg}}
 \def\iff{\mathrel{\Leftrightarrow}}
@@ -134,8 +138,12 @@
             \item Является частным от позиционного автомата.
         \end{itemize}
     \end{block}
+    \begin{block}{\bf Связь с автоматом Томпсона}
+        Follow-автомат (IlieYu) может быть получен из автомата Томпсона путем последовательного применения к нему следующих операций:
+        \[\DeAnnote(\Minimize(\RemEps(\Annote(\Thompson(r)))))\] % the formula IlieYu placeholder displaystyle
+    \end{block}
     \begin{block}{\bf Теорема}
-        Пусть $r$ -- взвешенное регулярное выражение над $K$. Если $K$ является $k$-замкнутым для автомата $\Thompson(r)$, то $\IlieYu(r)$ может быть вычислен за $O(mn)$ путем применения $\empt$-удаления с последующей взвешенной минимизацией к  $\Thompson(r)$.
+        Пусть $r$ -- взвешенное регулярное выражение над $K$. Если $K$ является $k$-замкнутым для автомата $\Thompson(r)$, то $\IlieYu(r)$ может быть вычислен за $O(mn)$ путем применения удаления $\empt$-переходов с последующей взвешенной минимизацией к  $\Thompson(r)$.
     \end{block}
 \end{frame}
 \end{document}
