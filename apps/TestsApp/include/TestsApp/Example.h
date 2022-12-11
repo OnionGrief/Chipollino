@@ -39,6 +39,9 @@ class Example {
 	static void step_interection();
 	static void table();
 	static void fa_semdet_check();
+	static void get_one_unambiguous_regex();
+	static void classes_number_GlaisterShallit();
+
 	// запуск всех тестов
 	static void test_all();
 	static void test_fa_equal();
@@ -52,4 +55,6 @@ class Example {
 	static void test_pump_length();
 	static void test_is_one_unambiguous();
 	static void test_interpreter();
+	static void test_TransformationMonoid();
+	static void test_GlaisterShallit();
 };

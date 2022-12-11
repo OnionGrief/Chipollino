@@ -213,7 +213,7 @@ void Example::transformation_monoid_example() {
 	a.class_card();
 	a.class_length();
 	a.is_minimal();
-	a.classes_number_MyhillNerode();
+	a.get_classes_number_MyhillNerode();
 }
 
 void Example::fa_subset_check() {
@@ -257,7 +257,8 @@ void Example::normalize_regex() {
 void Example::to_image() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<string, set<int>>()};
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -396,23 +397,58 @@ void Example::arden_example() {
 }
 
 void Example::table() {
-	vector<string> rows;
-	vector<string> columns;
-	vector<string> data;
-	string s;
-	string r = "r";
-	string c = "c";
-	for (int i; i < 3; i++) {
-		s = to_string(i);
-		rows.push_back(r);
-		columns.push_back(c);
-		data.push_back(s);
-		data.push_back(s);
-		data.push_back(s);
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
 	}
-	Logger::init_step("table");
-	Logger::log_table(rows, columns, data);
-	Logger::finish_step();
+	vector<State> states2;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states2.push_back(s);
+	}
+
+	states1[0].set_transition(0, "b");
+	states1[0].set_transition(1, "a");
+	states1[1].set_transition(1, "b");
+	states1[1].set_transition(2, "a");
+	states1[2].set_transition(2, "a");
+	states1[2].set_transition(2, "b");
+
+	states1[1].is_terminal = true;
+
+	states2[0].set_transition(0, "a");
+	states2[0].set_transition(1, "b");
+	states2[1].set_transition(1, "a");
+	states2[1].set_transition(2, "b");
+	states2[2].set_transition(2, "a");
+	states2[2].set_transition(2, "b");
+
+	states2[1].is_terminal = true;
+
+	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b"});
+	FiniteAutomaton dfa2 = FiniteAutomaton(0, states2, {"a", "b"});
+
+	// string f1 = dfa1.to_txt();
+	// string f2 = dfa2.to_txt();
+	FiniteAutomaton dfa3 = FiniteAutomaton::intersection(dfa1, dfa2);
+
+	// vector<Tester::word> words;
+	// for(int i=0; i<12;i++) {
+	// 	words.push_back({
+	// 		i, i*100, true
+	// 	});
+	// }
+	// string s = "test";
+	Logger::activate();
+	Logger::init();
+	// Logger::init_step(s);
+	tester();
+	// Logger::finish_step();
+	Logger::finish();
+	Logger::deactivate();
 }
 
 void Example::fa_semdet_check() {
@@ -440,6 +476,14 @@ void Example::fa_semdet_check() {
 	cout << "Semdet?: " << sdet << "\n";
 }
 
+void Example::classes_number_GlaisterShallit() {
+	Regex r("abc");
+	r.pump_length();
+	FiniteAutomaton fa = r.to_glushkov();
+	cout << fa.get_classes_number_GlaisterShallit() << endl;
+	fa.is_nfa_minimal();
+}
+
 void Example::all_examples() {
 	// determinize();
 	// remove_eps();
@@ -464,6 +508,25 @@ void Example::all_examples() {
 	Regex("abaa").pump_length();
 	get_one_unambiguous_regex();
 	cout << "all the examlples are successful" << endl;
+}
+
+void Example::get_one_unambiguous_regex() {
+	Regex r1("(a|b)*a");
+	Regex r2("(a|b)*(ac|bd)");
+	Regex r3("(a|b)*a(a|b)");
+	Regex r4("(c(a|b)*c)*");
+	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
+
+	// ok
+	cout << r1.get_one_unambiguous_regex().to_txt() << endl;
+	// doesn't fulfills the orbit property
+	cout << r2.get_one_unambiguous_regex().to_txt() << endl;
+	// consists of a single orbit, but neither a nor b is consistent
+	cout << r3.get_one_unambiguous_regex().to_txt() << endl;
+	// ok
+	cout << r4.get_one_unambiguous_regex().to_txt() << endl;
+	// doesn't fulfills the orbit property
+	cout << r5.get_one_unambiguous_regex().to_txt() << endl;
 }
 // TEST
 
@@ -705,7 +768,6 @@ void Example::test_arden() {
 	test_equivalence("((b(((ba|b)|||(b))*)))");
 	test_equivalence("(((((a*)((a*)|bb)(((|||((b)))))))))");
 }
-
 void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
 }
