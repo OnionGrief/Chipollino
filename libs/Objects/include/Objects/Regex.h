@@ -33,7 +33,8 @@ class Regex : BaseObject {
 		Type type = error;
 		alphabet_symbol symbol = "";
 		int number = 0;
-		Lexem(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
+		Lexem(Type type = error, const alphabet_symbol& symbol = "",
+			  int number = 0);
 	};
 
 	enum Type {

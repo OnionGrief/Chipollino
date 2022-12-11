@@ -8,7 +8,10 @@
 using namespace std;
 
 struct GrammarItem {
-	enum Type { terminal, nonterminal };
+	enum Type {
+		terminal,
+		nonterminal
+	};
 	Type type = terminal;
 	int state_index = -1, class_number = -1;
 	string name = "";

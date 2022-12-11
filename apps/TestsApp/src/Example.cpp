@@ -460,11 +460,11 @@ void Example::all_examples() {
 	// tasks_generating();
 	// parsing_regex("b(ab)*b");
 	// transformation_monoid_example();
-	// normalize_regex();
+	normalize_regex();
 	// step();
-	// parsing_nfa();
-	// fa_subset_check();
-	// arden_example();
+	parsing_nfa();
+	fa_subset_check();
+	arden_example();
 	//  to_image();
 	//  tester();
 	//  step_interection();
@@ -496,8 +496,8 @@ void Example::get_one_unambiguous_regex() {
 // TEST
 
 void Example::test_all() {
-	// test_fa_equal();
-	// test_fa_equiv();
+	test_fa_equal();
+	test_fa_equiv();
 	test_bisimilar();
 	test_merge_bisimilar();
 	test_regex_subset();
@@ -756,23 +756,23 @@ void Example::test_is_one_unambiguous() {
 	assert(!r5.to_glushkov().is_one_unambiguous());
 };
 
-// void Example::test_interpreter() {
-// 	Interpreter interpreter;
-// 	interpreter.set_log_mode(Interpreter::LogMode::nothing);
-// 	assert(!interpreter.run_line("A = Annote (Glushkova {a})"));
-// 	assert(interpreter.run_line("N1 = ((Glushkov ({ab|a})))"));
-// 	assert(interpreter.run_line("N2 =  (Annote N1)"));
-// 	assert(!interpreter.run_line("N2 =  (Glushkov N1)"));
-// 	assert(!interpreter.run_line("Equiv N1 N3"));
-// 	assert(interpreter.run_line("Equiv ((N1)) ((Reverse.Reverse (N2)))"));
-// 	assert(interpreter.run_line("Test (Glushkov {a*}) {a*} 1"));
+void Example::test_interpreter() {
+	Interpreter interpreter;
+	interpreter.set_log_mode(Interpreter::LogMode::nothing);
+	assert(!interpreter.run_line("A = Annote (Glushkova {a})"));
+	assert(interpreter.run_line("N1 = ((Glushkov ({ab|a})))"));
+	assert(interpreter.run_line("N2 =  (Annote N1)"));
+	assert(!interpreter.run_line("N2 =  (Glushkov N1)"));
+	assert(!interpreter.run_line("Equiv N1 N3"));
+	assert(interpreter.run_line("Equiv ((N1)) ((Reverse.Reverse (N2)))"));
+	assert(interpreter.run_line("Test (Glushkov {a*}) {a*} 1"));
 
-assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a}"));
-assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a})"));
-assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a}))"));
-assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a} !!"));
-assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!"));
-assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
+	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a}"));
+	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a})"));
+	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a}))"));
+	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a} !!"));
+	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!"));
+	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
 }
 void Example::test_TransformationMonoid() {
 	FiniteAutomaton fa1 = Regex("a*b*c*").to_tompson().minimize();

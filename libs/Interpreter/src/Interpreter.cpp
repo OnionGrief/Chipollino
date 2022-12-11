@@ -32,7 +32,7 @@ Interpreter::Interpreter() {
 		 {{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
 		  {"DeAnnote", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
-		//Многосортные функции
+		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
 		{"Normalize",
@@ -44,7 +44,7 @@ Interpreter::Interpreter() {
 		{"Ambiguity", {{"Ambiguity", {ObjectType::NFA}, ObjectType::Value}}},
 		{"MyhillNerode",
 		 {{"MyhillNerode", {ObjectType::DFA}, ObjectType::Int}}},
-		//Предикаты
+		// Предикаты
 		{"Bisimilar",
 		 {{"Bisimilar",
 		   {ObjectType::NFA, ObjectType::NFA},

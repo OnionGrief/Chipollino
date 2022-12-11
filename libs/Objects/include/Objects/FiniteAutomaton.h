@@ -128,7 +128,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
-	//начальное состояние
+	// начальное состояние
 	int get_initial();
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity() const;

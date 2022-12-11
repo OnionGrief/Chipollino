@@ -316,8 +316,8 @@ string Logger::math_mode(string str) {
 			// cout << "str_math " + str_math << endl;
 		} else {
 			str_math += c;
-			cout << "c else" << endl;
-			cout << "str_math " + str_math << endl;
+			// cout << "c else" << endl;
+			// cout << "str_math " + str_math << endl;
 		}
 	}
 	// cout << str_math << endl;
