@@ -14,7 +14,7 @@
 
 \mode<presentation>
 {
-  \usetheme{CambridgeUS} 
+  \usetheme{CambridgeUS}
   \usecolortheme{dove} 
 }
 \usepackage[T1,T2A]{fontenc}
@@ -23,7 +23,7 @@
 \usepackage{amsmath,mathrsfs} %ещё больше математических символов
 \usepackage{amstext}
 \usepackage{graphicx,relsize}
-\graphicspath{ {./documentation/} }
+\graphicspath{ {./../images/} }
 
 \usepackage{color}
 \definecolor{gray}{rgb}{0.4,.4,0.4} %здесь можно определить собственные цвета
@@ -42,7 +42,7 @@
 \newcommand\bolduline{\bgroup\markoverwith
 {\textcolor{white}{\rule[-0.5ex]{2pt}{1.5pt}}}\ULon}
 
-\title[] {Follow-автомат (IlieYu)}
+\title[] {Автомат Антимирова}
 
 \author[Chipollino]{Лучшая команда разработчиков по ТФЯ} % :))
 \date[] 
@@ -59,6 +59,7 @@
 \def\IlieYu{\mathrm{IlieYu}}
 \def\Glushkov{\mathtt{Glushkov}}
 \def\Thompson{\mathtt{Thompson}}
+\def\Antimirov{\mathtt{Antimirov}}
 \def\RemEps{\mathtt{RemEps}}
 \def\DeAnnote{\mathtt{DeAnnote}}
 \def\Annote{\mathtt{Annote}}
@@ -81,69 +82,51 @@
 \begin{document}
 
 \maketitle
-% descriptive documentation :section
+% descriptive documentation : section
 \section{Основные понятия}
-\begin{frame}{Follow-эквивалентность}
-    \begin{block}{\bf Определение}
-        Пусть $R$ --- регулярное выражение. Положим $follow(a_{i}) = \{a_{j} | \exists w, u(wa_{i}a_{j}u \in\Lang(R))\}$.
-
-        Follow-эквивалентность: состояния автомата Глушкова $a_{i}$ и $a_{j}$ follow-эквивалентны, если $follow(a_{i}) = follow(a_{j})$, и либо $a_{i}$, $a_{j}$ оба финальные, либо они оба не финальные.
-    \end{block} % descriptive documentation
-\end{frame}
-
-\section{Follow-автомат (IlieYu)}
-% descriptive documentation : frame
-\begin{frame}{Конструкция автомата Илия-Ю (или follow-автомата)}
-    \begin{block}{\bf Алгоритм построения $\IlieYu(r)$}
-        \begin{itemize}
-            \item Построить автомат Глушкова ($\Glushkov$);
-            \item Объединить follow-эквивалентные состояния.
-        \end{itemize}
-    \end{block} % descriptive documentation
-\end{frame}
-
-\begin{frame}{Пример Follow-автомата (IlieYu)}\only<3> {\vspace{-5pt}}
+\begin{frame}{Частичные производные}
     \vspace{-5pt}
-    \only<1-3> {
-        Исходное регулярное выражение:
+    $\alpha_{c}(R)$ — это регулярное выражение $R'$ такое, что если $w \in \Lang(R')$, то $cw \in \Lang(R)$. Обратное не обязательно выполняется. Вычислить частичные производные можно по следующему рекурсивному алгоритму.
+    \[\alpha_{c}(c) = \{\empt\}\] % the Derivative placeholder 1 % the Derivative placeholder displaystyle
+    \[\alpha_{c}(c') = \varnothing\] % the Derivative placeholder 2 % the Derivative placeholder displaystyle
+    \[\alpha_{c}(\empt) = \varnothing\] % the Derivative placeholder 3 % the Derivative placeholder displaystyle
+    \begin{equation*}
+        \alpha_{c}(r_{1} r_{2}) =
+        \begin{cases}
+            \{r r_{2} | r \in \alpha_{c}(r_{1})\} \cup \alpha_{c}(r_{2}) & \text {если} \empt \in \Lang(r_{1}) \\ % the Derivative placeholder 4 % the Derivative placeholder displaystyle
+            \{r r_{2} | r \in \alpha_{c}(r_{1})\}                        & \text {иначе}                       % the Derivative placeholder 5 % the Derivative placeholder displaystyle
+        \end{cases}
+    \end{equation*}
+    \[\alpha_{c}(\bot) = \varnothing\] % the Derivative placeholder 6 % the Derivative placeholder displaystyle
+    \[\alpha_{c}(r_{1}|r_{2}) = \alpha_{c}(r_{1}) \cup \alpha_{c}(r_{2})\] % the Derivative placeholder 7 % the Derivative placeholder displaystyle
+    \[\alpha_{c}(r\star) = \{r'r\star | r' \in \alpha_{c}(r)\}\] % the Derivative placeholder 8 % the Derivative placeholder displaystyle
+    Автомат Антимирова аналогичен автомату Брзозовски, но состояния представляют собой элементы $\alpha_{w}$, а не $\delta_{w}$. Упрощать по ACI состояния не требуется — их множество и так конечно.
+\end{frame} % descriptive documentation
 
-        \[(\regexpstr{a}\alter \regexpstr{b})\star\regexpstr{b}\] % the initial regexp placeholder displaystyle
-    }
-    \only<1> {
-        Автомат Глушкова:
+\section{Автомат Антимирова}
+\begin{frame}{Пример автомата Антимирова}
+    \vspace{-5pt}
+    Положим $R_{1} = (\regexpstr{ab} \alter \regexpstr{b})\star \regexpstr{ba}$. % the initial regexp placeholder
 
-        \includegraphics[width=4in, keepaspectratio]{follow1.png} % the Glushkov diagram placeholder
-    }
-    \only<2> {
-        Follow-отношения:
-        \begin{itemize}
-            \item $S$: $a_{1}$ $b_{2}$ ; % the follow-relationships placeholder 1
-            \item $b_{3}$: ; % the follow-relationships placeholder 2
-        \end{itemize}
-    }
-    \only<3>{
-        Follow-автомат:
+    Тогда (производные, равные пустому множеству, здесь опущены):\\
+    $\alpha_{a}(R_{1}) = \{\regexpstr{b}(\regexpstr{b}\alter \regexpstr{b})\star\regexpstr{ba}\}$ -- положим $R_{2} = \regexpstr{b}(\regexpstr{ab}\alter \regexpstr{b})\star\regexpstr{ba}$\\  % the Derivative placeholder 1
+    $\alpha_{b}(R_{1}) = \{(\regexpstr{ab}\alter \regexpstr{b})\star\regexpstr{ba}, \regexpstr{a}\}$ -- положим $R_{3} = \regexpstr{a}$\\  % the Derivative placeholder 2
+    $\alpha_{b}(R_{2}) = \{(\regexpstr{ab}\alter \regexpstr{b})\star \regexpstr{ba}\}$ -- тут ничего нового\\  % the Derivative placeholder 3
+    $\alpha_{a}(R_{3}) = \{\empt\}$ — положим $R_{4} = \empt$\\  % the Derivative placeholder 4
+    Соответствующий автомат имеет состояния $R_{i}$ и один недетерминированный переход.
 
-        \includegraphics[width=3in, keepaspectratio]{follow2.png} % the IlieYu diagram placeholder
-    }
+    \includegraphics[width=2in, keepaspectratio]{antimirov1.png} % the Antimirov diagram placeholder
 \end{frame}
 
 % overall documentation : section 
 \section{Обсуждение}
 \begin{frame}{Дополнительные сведения}
-    \begin{block}{\bf }
-        \begin{itemize}
-            \item Меньше позиционного автомата и, в среднем, быстрее вычисляется.
-            \item Может быть вычислен за квдратичное время.
-            \item Является частным от позиционного автомата.
-        \end{itemize}
-    \end{block}
     \begin{block}{\bf Связь с автоматом Томпсона}
-        Follow-автомат (IlieYu) может быть получен из автомата Томпсона путем последовательного применения к нему следующих операций:
-        \[\DeAnnote(\Minimize(\RemEps(\Annote(\Thompson(r)))))\] % the formula IlieYu placeholder displaystyle
+        Автомат Антимирова может быть получен из автомата Томпсона путем последовательного применения к нему следующих операций:
+        \[\RemEps(\DeAnnote(\Minimize(\RemEps(\Annote(\Thompson(r))))))\] % the formula Antimirov placeholder displaystyle
     \end{block}
     \begin{block}{\bf Теорема}
-        Пусть $r$ -- взвешенное регулярное выражение над $K$. Если $K$ является $k$-замкнутым для автомата $\Thompson(r)$, то $\IlieYu(r)$ может быть вычислен за $O(mn)$ путем применения удаления $\empt$-переходов с последующей взвешенной минимизацией к  $\Thompson(r)$.
+        Пусть $r$ -- взвешенное регулярное выражение над $K$. Если $K$ является $null-k$-замкнутым для $r$, то $\Antimirov(r)$ может быть вычислен за $O(m log m + mn)$ путем применения удаления $\empt$-переходов и минимизации.
     \end{block}
 \end{frame}
 \end{document}
