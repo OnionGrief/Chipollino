@@ -163,7 +163,7 @@ vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
 	logger.log("Lexer: loading file " + path);
 	ifstream input_file(path);
 	if (!input_file) {
-		logger.throw_error("Error: failed to open " + path);
+		logger.throw_error("Error: failed to open " + to_string(path));
 	}
 	// Сюда будем записывать строки из лексем
 	vector<vector<Lexem>> lexem_lines = {};

@@ -1,5 +1,7 @@
 #pragma once
 #include "BaseObject.h"
+#include "FiniteAutomaton.h"
+#include "Language.h"
 #include "Logger.h"
 #include <algorithm>
 #include <iostream>
@@ -9,10 +11,8 @@
 #include <vector>
 using namespace std;
 
-class Language;
-class FiniteAutomaton;
+class TransformationMonoid : public BaseObject {
 
-class TransformationMonoid {
   public:
 	struct Transition { // переход (индекс состояния - индекс состояния)
 		int first;

@@ -213,7 +213,7 @@ void Example::transformation_monoid_example() {
 	a.class_card();
 	a.class_length();
 	a.is_minimal();
-	a.get_classes_number_MyhillNerode();
+	a.classes_number_MyhillNerode();
 }
 
 void Example::fa_subset_check() {
@@ -257,8 +257,7 @@ void Example::normalize_regex() {
 void Example::to_image() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<string, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -441,14 +440,6 @@ void Example::fa_semdet_check() {
 	cout << "Semdet?: " << sdet << "\n";
 }
 
-void Example::classes_number_GlaisterShallit() {
-	Regex r("abc");
-	r.pump_length();
-	FiniteAutomaton fa = r.to_glushkov();
-	cout << fa.get_classes_number_GlaisterShallit() << endl;
-	fa.is_nfa_minimal();
-}
-
 void Example::all_examples() {
 	// determinize();
 	// remove_eps();
@@ -473,25 +464,6 @@ void Example::all_examples() {
 	Regex("abaa").pump_length();
 	get_one_unambiguous_regex();
 	cout << "all the examlples are successful" << endl;
-}
-
-void Example::get_one_unambiguous_regex() {
-	Regex r1("(a|b)*a");
-	Regex r2("(a|b)*(ac|bd)");
-	Regex r3("(a|b)*a(a|b)");
-	Regex r4("(c(a|b)*c)*");
-	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
-
-	// ok
-	cout << r1.get_one_unambiguous_regex().to_txt() << endl;
-	// doesn't fulfills the orbit property
-	cout << r2.get_one_unambiguous_regex().to_txt() << endl;
-	// consists of a single orbit, but neither a nor b is consistent
-	cout << r3.get_one_unambiguous_regex().to_txt() << endl;
-	// ok
-	cout << r4.get_one_unambiguous_regex().to_txt() << endl;
-	// doesn't fulfills the orbit property
-	cout << r5.get_one_unambiguous_regex().to_txt() << endl;
 }
 // TEST
 
@@ -733,6 +705,7 @@ void Example::test_arden() {
 	test_equivalence("((b(((ba|b)|||(b))*)))");
 	test_equivalence("(((((a*)((a*)|bb)(((|||((b)))))))))");
 }
+
 void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
 }

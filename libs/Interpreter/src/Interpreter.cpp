@@ -86,7 +86,7 @@ bool Interpreter::run_file(const string& path) {
 	logger.log("opening file " + path);
 	ifstream input_file(path);
 	if (!input_file) {
-		logger.throw_error("failed to open " + path);
+		logger.throw_error("failed to open " + to_string(path));
 		return false;
 	}
 	logger.log("file opened");
@@ -257,7 +257,7 @@ GeneralObject Interpreter::apply_function(
 	}*/
 	if (function.name == "MyhillNerode") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
-		return ObjectInt(trmon.get_classes_number_MyhillNerode());
+		return ObjectInt(trmon.classes_number_MyhillNerode());
 	}
 
 	/*
@@ -515,7 +515,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 }
 
 optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
-
+	
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
@@ -578,7 +578,7 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 		logger.throw_error("while running declaration: invalid expression");
 		return false;
 	}
-	logger.log("assigned to " + decl.id);
+	logger.log("assigned to " + to_string(decl.id));
 	Logger::deactivate();
 	return true;
 }
