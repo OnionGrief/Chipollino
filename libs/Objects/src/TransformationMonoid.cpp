@@ -1,9 +1,12 @@
 #include "Objects/TransformationMonoid.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Language.h"
 
 #include <iostream>
 using namespace std;
-vector<string> union_words(vector<string> a, vector<string> b) {
-	vector<string> newword;
+vector<alphabet_symbol> union_words(vector<alphabet_symbol> a,
+									vector<alphabet_symbol> b) {
+	vector<alphabet_symbol> newword;
 	for (int i = 0; i < a.size(); i++) {
 		newword.push_back(a[i]);
 	}
@@ -14,7 +17,7 @@ vector<string> union_words(vector<string> a, vector<string> b) {
 }
 
 // vector<string> to string
-string to_str(vector<string> in) {
+string to_str(vector<alphabet_symbol> in) {
 	string out = "";
 	for (int i = 0; i < in.size(); i++) {
 		out += in[i];
@@ -25,21 +28,22 @@ string to_str(vector<string> in) {
 vector<vector<alphabet_symbol>> get_comb_alphabet(
 	int len, const set<alphabet_symbol>& alphabet) {
 
-	vector<vector<string>> newcomb;
+	vector<vector<alphabet_symbol>> newcomb;
 	if (len == 0) {
 		return newcomb;
 	}
 	for (set<alphabet_symbol>::iterator it = alphabet.begin();
 		 it != alphabet.end(); it++) {
-		vector<string> new_symbol;
+		vector<alphabet_symbol> new_symbol;
 		new_symbol.push_back(*it);
 		newcomb.push_back(new_symbol);
 	}
 	if (len == 1) {
 		return newcomb;
 	}
-	vector<vector<string>> comb;
-	vector<vector<string>> oldcomb = get_comb_alphabet(len - 1, alphabet);
+	vector<vector<alphabet_symbol>> comb;
+	vector<vector<alphabet_symbol>> oldcomb =
+		get_comb_alphabet(len - 1, alphabet);
 	for (int i = 0; i < newcomb.size(); i++) {
 		for (int j = 0; j < oldcomb.size(); j++) {
 			comb.push_back(union_words(newcomb[i], oldcomb[j]));
@@ -84,12 +88,12 @@ vector<alphabet_symbol> rewriting(
 	if (in.size() < 2) {
 		return in;
 	}
-	vector<string> out;
-	vector<string> out1;
+	vector<alphabet_symbol> out;
+	vector<alphabet_symbol> out1;
 	bool not_rewrite = true;
 	int counter = 0;
 	for (int k = 2; not_rewrite && (k <= in.size()); k++) {
-		vector<string> new_symbol;
+		vector<alphabet_symbol> new_symbol;
 		for (int y = 0; y < k; y++) {
 			new_symbol.push_back(in[y]);
 		}
@@ -100,17 +104,17 @@ vector<alphabet_symbol> rewriting(
 			}
 			counter = k;
 			not_rewrite = false;
+			break;
 		}
 	}
 	if (!not_rewrite) {
-		vector<string> rec_in = {in.begin() + counter, in.end()};
-		out1 = rewriting(rec_in, rules);
-		for (int y = 0; y < out1.size(); y++) {
-			out.push_back(out1[y]);
+		for (int i = counter; i < in.size(); i++) {
+			out.push_back(in[i]);
 		}
-		return out;
+		out1 = rewriting(out, rules);
+		return out1;
 	} else {
-		vector<string> rec_in = {in.begin() + 1, in.end()};
+		vector<alphabet_symbol> rec_in = {in.begin() + 1, in.end()};
 		out.push_back(in[0]);
 		out1 = rewriting(rec_in, rules);
 		for (int y = 0; y < out1.size(); y++) {
@@ -131,7 +135,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	bool cond_get_transactions = true;
 	while (cond_get_transactions) {
 		i++;
-		vector<vector<string>> various =
+		vector<vector<alphabet_symbol>> various =
 			get_comb_alphabet(i, automat.language->get_alphabet());
 		int cond_rule_len = 0;
 		map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> temp_rule;
@@ -140,10 +144,12 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 		{
 			Term current;
 			current.name = various[j];
-			current.name = rewriting(various[j], rules);
-			if (current.name.size() != i) {
-				cond_rule_len = false;
+			vector<alphabet_symbol> temp_word;
+			while (temp_word != current.name) {
+				if (temp_word.size()) current.name = temp_word;
+				temp_word = rewriting(current.name, rules);
 			}
+			if (current.name.size() < various[j].size()) continue;
 			for (int t = 0; t < automat.states.size(); t++) {
 				int final_state = -1;
 				Transition g;
@@ -158,6 +164,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 					} else {
 						a = automat.states[final_state];
 					}
+
 					if (a.transitions.count(current.name[k])) {
 						set<int> temp_transitions =
 							a.transitions.at(current.name[k]);
@@ -188,15 +195,19 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 						current.isFinal = true;
 					}
 				}
+				cond_rule_len++;
 				terms.push_back(current);
+
 			} else {
 				if (!rules.count(current.name) && current.name != eqv) {
 					rules[current.name].push_back(eqv);
 				}
 			}
 		}
-		if (!cond_rule_len) {
+		if (cond_rule_len == 0) {
 			cond_get_transactions = false;
+			continue;
+		} else {
 		}
 	}
 }
@@ -210,8 +221,8 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	return terms;
 }
 
-map<vector<string>, vector<vector<string>>> TransformationMonoid::
-	get_rewriting_rules() {
+map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
+TransformationMonoid::get_rewriting_rules() {
 	return rules;
 }
 
@@ -220,18 +231,15 @@ string TransformationMonoid::get_equalence_classes_txt() {
 	Logger::init_step("Equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
 
-		Logger::log("class " + Logger::math_mode(to_str(terms[i].name)),
+		Logger::log("class " + to_str(terms[i].name),
 					terms[i].isFinal ? "in lang" : "not in lang");
 		ss << "Term	" << to_str(terms[i].name) << "	in	language	"
 		   << terms[i].isFinal << "\n";
 		for (int j = 0; j < terms[i].transitions.size(); j++) {
 			Logger::log(
 				"transition " +
-					Logger::math_mode(
-						automat.states[terms[i].transitions[j].first]
-							.identifier),
-				Logger::math_mode(
-					automat.states[terms[i].transitions[j].second].identifier));
+					automat.states[terms[i].transitions[j].first].identifier,
+				automat.states[terms[i].transitions[j].second].identifier);
 			ss << automat.states[terms[i].transitions[j].first].identifier
 			   << "	->	"
 			   << automat.states[terms[i].transitions[j].second].identifier
@@ -247,8 +255,8 @@ string TransformationMonoid::get_rewriting_rules_txt() {
 	Logger::init_step("Rewriting Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
-			Logger::log("rewriting " + Logger::math_mode(to_str(item.first)),
-						Logger::math_mode(to_str(item.second[i])));
+			Logger::log("rewriting " + to_str(item.first),
+						to_str(item.second[i]));
 			ss << to_str(item.first) << "	->	" << to_str(item.second[i])
 			   << "\n";
 		}
@@ -365,7 +373,8 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 // состояния	с	которым синхронизирован
 int TransformationMonoid::is_synchronized(const Term& w) {
 	Logger::init_step("Is synchronized word?");
-	Logger::log("word " + Logger::math_mode(to_str(w.name)));
+	Logger::log("word " + to_str(w.name));
+
 	if (w.transitions.size() == 0) {
 		Logger::log("not synchronized");
 		Logger::finish_step();
@@ -387,7 +396,7 @@ int TransformationMonoid::is_synchronized(const Term& w) {
 // Вернет число классов эквивалентности
 int TransformationMonoid::class_card() {
 	Logger::init_step("Number of equivalence classes");
-	Logger::log(to_string(terms.size()));
+	Logger::log("Number of equivalence classes ", to_string(terms.size()));
 	Logger::finish_step();
 	return terms.size();
 }
@@ -397,7 +406,7 @@ int TransformationMonoid::class_length() {
 	Logger::init_step("Longest word in the class");
 	Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
 	Logger::log("One of the longest words",
-				Logger::math_mode(to_str(terms[terms.size() - 1].name)));
+				to_str(terms[terms.size() - 1].name));
 	Logger::finish_step();
 	return terms[terms.size() - 1].name.size();
 }
@@ -408,9 +417,9 @@ int TransformationMonoid::get_classes_number_MyhillNerode() {
 		is_minimal();
 	}
 	Logger::init_step("Myhill-Nerode сlasses number");
-	Logger::log(to_string(sum));
+	Logger::log(to_string(equivalence_classes_table_bool.size()));
 	Logger::finish_step();
-	return sum;
+	return equivalence_classes_table_bool.size();
 }
 
 // Вычисление Минимальности (1 если минимальный)
@@ -520,17 +529,21 @@ bool TransformationMonoid::is_minimal() {
 	bool is_minimal_bool = (log2(automat.states.size()) + 1) <=
 						   equivalence_classes_table_bool.size();
 	Logger::init_step("Is minimal");
-
-	Logger::log(((log2(terms.size()) + 1) <= counter) ? "true" : "false");
+	Logger::log(is_minimal_bool ? "true" : "false");
 	Logger::finish_step();
-	return (log2(terms.size()) + 1) <= counter;
+	return is_minimal_bool;
 }
 
 string TransformationMonoid::to_txt_MyhillNerode() {
+	if (equivalence_classes_table_bool.size() == 0) {
+		is_minimal();
+	}
 	stringstream ss;
-	ss << "    e   ";
-	for (int i = 0; i < terms.size(); i++) {
-		ss << to_str(terms[i].name) << string(4 - terms[i].name.size(), ' ');
+	int maxlen = terms[terms.size() - 1].name.size();
+	ss << string(maxlen + 2, ' ');
+	for (int i = 0; i < equivalence_classes_table_top.size(); i++) {
+		ss << equivalence_classes_table_top[i]
+		   << string(maxlen + 2 - equivalence_classes_table_top[i].size(), ' ');
 	}
 	ss << "\n";
 
@@ -545,8 +558,9 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 		}
 		ss << "\n";
 	}
+
 	Logger::init_step("MyhillNerode TABLE");
-	Logger::log(Logger::math_mode(ss.str()));
+	Logger::log(ss.str());
 	Logger::finish_step();
 	return ss.str();
 }
