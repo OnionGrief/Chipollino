@@ -39,7 +39,9 @@ class Example {
 	static void step_interection();
 	static void table();
 	static void fa_semdet_check();
+	static void get_one_unambiguous_regex();
 	static void classes_number_GlaisterShallit();
+
 	// запуск всех тестов
 	static void test_all();
 	static void test_fa_equal();

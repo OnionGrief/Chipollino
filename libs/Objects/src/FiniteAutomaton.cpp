@@ -27,7 +27,7 @@ State::State(int index, set<int> label, string identifier, bool is_terminal,
 	: index(index), label(label), identifier(identifier),
 	  is_terminal(is_terminal), transitions(transitions) {}
 
-void State::set_transition(int to, alphabet_symbol symbol) {
+void State::set_transition(int to, const alphabet_symbol& symbol) {
 	transitions[symbol].insert(to);
 }
 
@@ -830,6 +830,12 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 }
 
 bool FiniteAutomaton::is_one_unambiguous() const {
+	Logger::init_step("OneUnambiguity");
+	if (language->is_one_unambiguous_flag_cached()) {
+		Logger::log(language->get_one_unambiguous_flag() ? "True" : "False");
+		Logger::finish_step();
+		return language->get_one_unambiguous_flag();
+	}
 	FiniteAutomaton min_fa;
 	if (states.size() == 1)
 		min_fa = minimize();
@@ -903,15 +909,23 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 
 	// check if min_fa has a single, trivial orbit
 	// return true if it exists
-	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1)
+	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1) {
+		language->set_one_unambiguous_flag(true);
+		Logger::log("True");
+		Logger::finish_step();
 		return true;
+	}
 
 	// check if min_fa has a single, nontrivial orbit and
 	// min_fa_consistent.size() is 0
 	// return true if it exists
 	if (min_fa_orbits.size() == 1 && !states_with_trivial_orbit.size() &&
-		!min_fa_consistent.size())
+		!min_fa_consistent.size()) {
+		language->set_one_unambiguous_flag(false);
+		Logger::log("False");
+		Logger::finish_step();
 		return false;
+	}
 
 	// construct a min_fa_consistent cut of min_fa
 	// to construct it, we will remove for each symb in min_fa_consistent
@@ -1040,7 +1054,12 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 			++it1;
 		}
 	}
-	if (!is_min_fa_cut_has_an_orbit_property) return false;
+	if (!is_min_fa_cut_has_an_orbit_property) {
+		language->set_one_unambiguous_flag(false);
+		Logger::log("False");
+		Logger::finish_step();
+		return false;
+	}
 
 	// check if all orbit languages of min_fa_cut are 1-unambiguous
 	int i = 0;
@@ -1090,11 +1109,19 @@ bool FiniteAutomaton::is_one_unambiguous() const {
 			}
 			orbit_automaton.language =
 				make_shared<Language>(orbit_automaton_alphabet);
-			if (!orbit_automaton.is_one_unambiguous()) return false;
+			if (!orbit_automaton.is_one_unambiguous()) {
+				language->set_one_unambiguous_flag(false);
+				Logger::log("False");
+				Logger::finish_step();
+				return false;
+			}
 			orbit_automaton_initial_state++;
 		}
 		i++;
 	}
+	language->set_one_unambiguous_flag(true);
+	Logger::log("True");
+	Logger::finish_step();
 	return true;
 }
 
@@ -1700,16 +1727,21 @@ TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
 	return syntactic_monoid;
 }
 
-void find_maximum_identity_matrix(vector<vector<bool>>& table, int& result,
+void set_result(int& res, int size, vector<pair<int, int>>& result_yx,
+				vector<pair<int, int>>& temp_result_yx) {
+	if (size > res) {
+		res = size;
+		result_yx = temp_result_yx;
+	}
+}
+void find_maximum_identity_matrix(vector<int>& rows,
+								  vector<vector<bool>>& table, int& res,
+								  int size, vector<pair<int, int>>& result_yx,
+								  vector<pair<int, int>> temp_result_yx,
 								  vector<bool> used_x, vector<bool> used_y,
-								  int unused_x, int unused_y, int size,
-								  int row);
-
-void go_to_rows(vector<int>& rows, vector<vector<bool>>& table, int& result,
-				vector<bool> used_x, vector<bool> used_y, int unused_x,
-				int unused_y, int size) {
+								  int unused_x, int unused_y) {
 	if (rows.empty()) {
-		result = max(result, size);
+		set_result(res, size, result_yx, temp_result_yx);
 		return;
 	}
 	int n = table.size(), m = table[0].size();
@@ -1730,62 +1762,66 @@ void go_to_rows(vector<int>& rows, vector<vector<bool>>& table, int& result,
 				x_ind[j] = -2;
 		}
 	}
-	for (int i = 0; i < n; i++) {
+	// отмечаю строки и стобцы с единственной единицей
+	for (int i = 0; i < n; i++)
 		if (y_ind[i] > 0 && x_ind[y_ind[i]] == i) {
 			used_x[y_ind[i]] = true;
 			used_y[i] = true;
 			unused_y--;
 			unused_x--;
 			size++;
+			temp_result_yx.emplace_back(i, y_ind[i]);
 		}
-	}
-
 	if (unused_y == 0) {
-		result = max(result, size);
+		set_result(res, size, result_yx, temp_result_yx);
 		return;
 	}
+	unused_y--;
 	for (auto row : rows) {
 		if (used_y[row]) continue;
 		used_y[row] = true;
-		find_maximum_identity_matrix(table, result, used_x, used_y, unused_x,
-									 unused_y - 1, size, row);
-		used_y[row] = false;
-	}
-}
-
-void find_maximum_identity_matrix(vector<vector<bool>>& table, int& result,
-								  vector<bool> used_x, vector<bool> used_y,
-								  int unused_x, int unused_y, int size,
-								  int row) {
-	if (unused_x <= (result - size)) return;
-	if (unused_y < (result - size)) return;
-	vector<int> true_x;
-	for (int i = 0; i < table[row].size(); i++) {
-		if (used_x[i]) continue;
-		if (!table[row][i]) continue;
-		true_x.push_back(i);
-		used_x[i] = true;
-		unused_x--;
-	}
-	if (true_x.empty()) {
-		result = max(result, size);
-		return;
-	}
-	for (int x : true_x) {
-		vector<bool> new_used_y = used_y;
-		int new_unused_y = unused_y;
-		vector<int> false_y;
-		for (int i = 0; i < table.size(); i++) {
-			if (new_used_y[i]) continue;
-			if (table[i][x] == 1) {
-				new_used_y[i] = true;
-				new_unused_y--;
-			} else {
-				false_y.push_back(i);
-			}
+		// ищу новую 1-цу на каждой строке
+		if (unused_x <= (res - size)) return;
+		if (unused_y < (res - size)) return;
+		vector<bool> new_used_x = used_x;
+		int new_unused_x = unused_x;
+		vector<int> true_x;
+		for (int i = 0; i < table[row].size(); i++) {
+			if (new_used_x[i]) continue;
+			if (!table[row][i]) continue;
+			true_x.push_back(i);
+			new_used_x[i] = true;
+			new_unused_x--;
 		}
-		go_to_rows(false_y, table, result, used_x, new_used_y, unused_x,
-				   new_unused_y, size + 1);
+		// если нет 1-цы завершаюсь
+		if (true_x.empty()) {
+			set_result(res, size, result_yx, temp_result_yx);
+			used_y[row] = false;
+			continue;
+		}
+		for (int x : true_x) {
+			vector<bool> new_used_y = used_y;
+			int new_unused_y = unused_y;
+			vector<int> false_y;
+			for (int i = 0; i < table.size(); i++) {
+				if (new_used_y[i]) continue;
+				if (table[i][x] == 1) {
+					new_used_y[i] = true;
+					new_unused_y--;
+				} else {
+					false_y.push_back(i);
+				}
+			}
+			vector<pair<int, int>> new_result_yx = temp_result_yx;
+			new_result_yx.emplace_back(row, x);
+			vector<bool> temp_used_x = new_used_x;
+			// перехожу на все строки, в которых 0
+			find_maximum_identity_matrix(
+				false_y, table, res, size + 1, result_yx, new_result_yx,
+				temp_used_x, new_used_y, new_unused_x, new_unused_y);
+		}
+		//
+		used_y[row] = false;
 	}
 }
 
@@ -1801,10 +1837,14 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
 
 	TransformationMonoid sm = get_syntactic_monoid();
 	cout << sm.to_txt_MyhillNerode() << endl;
+
+	vector<string> table_rows;
+	vector<string> table_columns;
 	vector<vector<bool>> equivalence_classes_table =
-		sm.get_equivalence_classes_table();
+		sm.get_equivalence_classes_table(table_rows, table_columns);
 
 	int result = -1;
+	vector<pair<int, int>> result_yx;
 	int m = equivalence_classes_table[0].size(),
 		n = equivalence_classes_table.size();
 	vector<bool> used_x(m);
@@ -1812,8 +1852,31 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit() const {
 	vector<int> rows;
 	for (int i = 0; i < n; i++)
 		rows.push_back(i);
-	go_to_rows(rows, equivalence_classes_table, result, used_x, used_y, m, n,
-			   0);
+	find_maximum_identity_matrix(rows, equivalence_classes_table, result, 0,
+								 result_yx, {}, used_x, used_y, m, n);
+
+	int maxlen = table_columns[table_columns.size() - 1].size();
+	cout << string(maxlen + 2, ' ');
+	for (int i = 0; i < result_yx.size(); i++) {
+		for (auto i : table_columns[result_yx[i].second])
+			cout << i;
+		cout << string(maxlen + 2 - table_columns[result_yx[i].second].size(),
+					   ' ');
+	}
+	cout << endl;
+
+	for (int i = 0; i < result_yx.size(); i++) {
+		for (auto i : table_rows[result_yx[i].first])
+			cout << i;
+		cout << string(maxlen + 2 - table_rows[result_yx[i].first].size(), ' ');
+		for (int j = 0; j < result_yx.size(); j++) {
+			cout << equivalence_classes_table[result_yx[i].first]
+											 [result_yx[j].second]
+				 << string(maxlen + 1, ' ');
+		}
+		cout << endl;
+	}
+
 	// кэширование
 	language->set_nfa_minimum_size(result);
 	Logger::log("Количество диагональных классов по методу Глейстера-Шаллита",
