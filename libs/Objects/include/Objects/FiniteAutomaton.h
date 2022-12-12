@@ -55,6 +55,8 @@ class FiniteAutomaton : public BaseObject {
 								 const FiniteAutomaton& fa2);
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
+	// принимает в качетве лимита максимальное количество в цифр ы
+	// числителе + знаменателе дроби, которая моэет встретиться при вычислениях
 	AmbiguityValue get_ambiguity_value(int digits_number_limit,
 									   optional<int>& word_length) const;
 	optional<bool> get_nfa_minimality_value() const;
@@ -129,7 +131,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
-	//начальное состояние
+	// начальное состояние
 	int get_initial();
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity() const;
