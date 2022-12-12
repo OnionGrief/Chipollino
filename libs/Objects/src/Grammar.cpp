@@ -346,6 +346,36 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 		}
 	}
 
+	set<string> equal_classes;
+	int count = 0;
+	for (size_t i = 0; i < gr_it.size(); i++) {
+		for (const auto& elem : gr_it[i].equivalence_class) {
+			equal_classes.insert(elem);
+			count++;
+		}
+	}
+
+	if (count != equal_classes.size()) {
+		// в логер то что неопределенность и детерменизируем
+		fa_to_prefix_grammar(fa.determinize());
+		return;
+	}
+	vector<State> states_fa = fa.states;
+	vector<State> states_not_trap = fa.remove_trap_states().states;
+
+	for (size_t i = 0; i < gr_it.size(); i++) {
+		bool check = false;
+		for (size_t j = 0; j < states_not_trap.size(); j++) {
+			if (states_not_trap[j].identifier == states_fa[i].identifier) {
+				check = true;
+				break;
+			}
+		}
+		if (!check) {
+			gr_it[i].equivalence_class = {};
+		}
+	}
+
 	this->prefix_grammar = gr_it;
 	return;
 }
@@ -373,6 +403,9 @@ const string Grammar::pg_to_txt() {
 						}
 						if (a == "") {
 							a = "eps";
+						}
+						if (!g.is_started && gr_it[w_back].is_started) {
+							eq = "eps";
 						}
 						if (/*m_r.find(wt) == m_r.end() &&*/
 							!(wt == eq && a == "eps")) {
@@ -524,7 +557,21 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 			grammar_items[states[i].index]->is_started = true;
 		}
 	}
-
+	//---------------------------
+	set<string> equal_classes;
+	int count = 0;
+	for (size_t i = 0; i < gr_it.size(); i++) {
+		for (const auto& elem : gr_it[i].equivalence_class) {
+			equal_classes.insert(elem);
+			count++;
+		}
+	}
+	if (count != equal_classes.size()) {
+		// в логер то что неопределенность и детерменизируем
+		fa_to_prefix_grammar_TM(fa.determinize());
+		return;
+	}
+	//----------------------------
 	PrefixGrammarItem* g = grammar_items[fa.initial_state];
 	g->equivalence_class.insert("");
 	for (const auto& elem : st0.transitions) {
