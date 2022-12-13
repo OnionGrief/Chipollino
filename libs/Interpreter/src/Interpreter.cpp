@@ -330,8 +330,8 @@ GeneralObject Interpreter::apply_function(
 				logger.throw_error("Normalize: invalid array");
 			}
 		}
-		res =
-			ObjectRegex(get<ObjectRegex>(arguments[0]).value.normalize_regex(rules));
+		res = ObjectRegex(
+			get<ObjectRegex>(arguments[0]).value.normalize_regex(rules));
 	}
 	/*if (function.name == "Simplify") {
 		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
@@ -534,7 +534,7 @@ optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 
 optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	auto logger = init_log();
-	logger.log("Evaluating expression");
+	logger.log("Evaluating expression \"" + expr.to_txt() + "\"");
 
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
@@ -677,6 +677,42 @@ bool Interpreter::run_operation(const GeneralOperation& op) {
 		run_test(get<Test>(op));
 	}
 	return true;
+}
+
+string Interpreter::FunctionSequence::to_txt() const {
+	string str = "(";
+	for (int i = 0; i < functions.size(); i++) {
+		str += functions[i].name + (i == functions.size() - 1 ? " " : ".");
+	}
+	for (int i = 0; i < parameters.size(); i++) {
+		str += parameters[i].to_txt() + (i == parameters.size() - 1 ? "" : " ");
+	}
+	str += ")";
+	return str;
+}
+
+string Interpreter::Expression::to_txt() const {
+	if (const auto* pval = get_if<FunctionSequence>(&value)) {
+		return pval->to_txt();
+	}
+	if (const auto* pval = get_if<int>(&value)) {
+		return to_string(*pval);
+	}
+	if (const auto* pval = get_if<Regex>(&value)) {
+		return "{" + pval->to_txt() + "}";
+	}
+	if (const auto* pval = get_if<string>(&value)) {
+		return *pval;
+	}
+	if (const auto* pval = get_if<Array>(&value)) {
+		string str = "[";
+		for (int i = 0; i < pval->size(); i++) {
+			str += (*pval)[i].to_txt() + (i == pval->size() - 1 ? "" : " ");
+		}
+		str += "]";
+		return str;
+	}
+	return "";
 }
 
 int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {

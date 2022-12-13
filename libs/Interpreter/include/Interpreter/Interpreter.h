@@ -84,6 +84,8 @@ class Interpreter {
 		vector<Expression> parameters;
 		// Надо ли отображать результат
 		bool show_result = 0;
+		// Преобразование в текст
+		string to_txt() const;
 	};
 
 	using Array = vector<Expression>;
@@ -92,6 +94,8 @@ class Interpreter {
 	struct Expression {
 		ObjectType type;
 		variant<FunctionSequence, int, Regex, string, Array> value;
+		// Преобразование в текст
+		string to_txt() const;
 	};
 
 	// Операция объявления
