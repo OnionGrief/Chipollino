@@ -21,6 +21,7 @@ class Fraction {
 	Fraction operator++(int);
 	bool operator>(const Fraction& f);
 	bool operator==(const Fraction& f);
+	bool operator>=(const Fraction& f);
 	friend ostream& operator<<(ostream& output, const Fraction& f);
 
   private:

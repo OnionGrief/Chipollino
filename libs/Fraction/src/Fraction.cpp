@@ -84,6 +84,11 @@ bool Fraction::operator==(const Fraction& f) {
 	return n == 0;
 }
 
+bool Fraction::operator>=(const Fraction& f) {
+	InfInt n = numerator * f.denominator - f.numerator * denominator;
+	return n >= 0;
+}
+
 ostream& operator<<(ostream& output, const Fraction& f) {
 	output << "(" << f.numerator << "/" << f.denominator << ")";
 	return output;
