@@ -284,26 +284,27 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 	State st0 = states[fa.initial_state];
 	vector<PrefixGrammarItem*> grammar_items;
 	vector<PrefixGrammarItem> gr_it;
+	gr_it.resize(states.size());
 	map<int, bool> is_visit;
-	for (size_t i = 0; i < states.size(); i++) {
 
-		if (!states[i].is_terminal) {
-			gr_it.push_back(PrefixGrammarItem(PrefixGrammarItem::nonterminal,
-											  states[i].index));
-		} else {
-			gr_it.push_back(PrefixGrammarItem(PrefixGrammarItem::terminal,
-											  states[i].index));
-		}
-		is_visit[states[i].index] = false;
-	}
 	for (size_t i = 0; i < states.size(); i++) {
 
 		grammar_items.push_back(&gr_it[i]);
+		if (!states[i].is_terminal) {
+			grammar_items[states[i].index]->type =
+				PrefixGrammarItem::nonterminal;
+
+		} else {
+			grammar_items[states[i].index]->type = PrefixGrammarItem::terminal;
+		}
+		is_visit[states[i].index] = false;
+		grammar_items[states[i].index]->state_index = states[i].index;
 		grammar_items[states[i].index]->equivalence_class = {};
 		grammar_items[states[i].index]->rules = {};
 		if (i == fa.initial_state) {
 			grammar_items[states[i].index]->is_started = true;
 		}
+		is_visit[states[i].index] = false;
 	}
 	PrefixGrammarItem* g = grammar_items[fa.initial_state];
 	g->equivalence_class.insert("");
@@ -383,16 +384,16 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 const string Grammar::pg_to_txt() {
 	set<string> out;
 	stringstream ss;
-	vector<PrefixGrammarItem> gr_it = prefix_grammar;
-	for (int i = 0; i < gr_it.size(); i++) {
-		PrefixGrammarItem g = gr_it[i];
+	// vector<PrefixGrammarItem> gr_it = prefix_grammar;
+	for (int i = 0; i < prefix_grammar.size(); i++) {
+		PrefixGrammarItem g = prefix_grammar[i];
 		for (const auto& w : g.equivalence_class) {
 			for (const auto& elem : g.rules) {
 				alphabet_symbol a = elem.first;
 				// int index = elem.second;
 				for (const auto& w_back : elem.second) {
 					for (const auto& eq_back :
-						 gr_it[w_back].equivalence_class) {
+						 prefix_grammar[w_back].equivalence_class) {
 						string eq = eq_back;
 						string wt = w;
 						if (eq == "") {
@@ -404,7 +405,8 @@ const string Grammar::pg_to_txt() {
 						if (a == "") {
 							a = "eps";
 						}
-						if (!g.is_started && gr_it[w_back].is_started) {
+						if (!g.is_started &&
+							prefix_grammar[w_back].is_started) {
 							eq = "eps";
 						}
 						if (/*m_r.find(wt) == m_r.end() &&*/
@@ -425,9 +427,9 @@ const string Grammar::pg_to_txt() {
 	}
 	ss << "------------ base words ------------" << endl;
 
-	for (int i = 0; i < gr_it.size(); i++) {
-		if (gr_it[i].type == PrefixGrammarItem::terminal) {
-			PrefixGrammarItem g = gr_it[i];
+	for (int i = 0; i < prefix_grammar.size(); i++) {
+		if (prefix_grammar[i].type == PrefixGrammarItem::terminal) {
+			PrefixGrammarItem g = prefix_grammar[i];
 			for (const auto& w : g.equivalence_class) {
 				ss << w << " ";
 			}
@@ -530,32 +532,35 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	State st0 = states[fa.initial_state];
 	vector<PrefixGrammarItem*> grammar_items;
 	vector<PrefixGrammarItem> gr_it;
+	gr_it.resize(states.size());
 	map<int, bool> is_visit;
+
 	for (size_t i = 0; i < states.size(); i++) {
+		grammar_items.push_back(&gr_it[i]);
 		if (!states[i].is_terminal) {
-			gr_it.push_back(PrefixGrammarItem(PrefixGrammarItem::nonterminal,
-											  states[i].index));
+			grammar_items[states[i].index]->type =
+				PrefixGrammarItem::nonterminal;
+
 		} else {
-			gr_it.push_back(PrefixGrammarItem(PrefixGrammarItem::terminal,
-											  states[i].index));
+			grammar_items[states[i].index]->type = PrefixGrammarItem::terminal;
+		}
+		if (i == fa.initial_state) {
+			grammar_items[states[i].index]->is_started = true;
 		}
 		for (const auto& elem : terms) {
 			string term = elem.first;
 			for (size_t j = 0; j < elem.second.size(); j += 2) {
 				if (elem.second[j] == st0.identifier &&
 					elem.second[j + 1] == states[i].identifier) {
-					gr_it[states[i].index].equivalence_class.insert(term);
+					grammar_items[states[i].index]->equivalence_class.insert(
+						term);
 				}
 			}
 		}
-		is_visit[states[i].index] = false;
-	}
-
-	for (size_t i = 0; i < states.size(); i++) {
-		grammar_items.push_back(&gr_it[i]);
 		if (i == fa.initial_state) {
 			grammar_items[states[i].index]->is_started = true;
 		}
+		is_visit[states[i].index] = false;
 	}
 	//---------------------------
 	set<string> equal_classes;
