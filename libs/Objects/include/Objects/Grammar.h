@@ -9,19 +9,18 @@
 using namespace std;
 
 struct PrefixGrammarItem {
-	enum Type {
-		terminal,
-		nonterminal
-	};
+	// конечное состояние автомата
+	bool is_terminal = false;
+	// начальное состояние автомата
 	bool is_started = false;
-	Type type = terminal;
+	// Type type = terminal;
 	int state_index = -1;
 	// классы эквивалентности у состояния в автомате
 	set<string> equivalence_class;
 	// правила переписывания для данного состояния
 	map<alphabet_symbol, set<int>> rules;
 	PrefixGrammarItem();
-	PrefixGrammarItem(Type type, int state_index);
+	// PrefixGrammarItem(Type type, int state_index);
 };
 
 struct GrammarItem {
@@ -51,12 +50,12 @@ class Grammar {
 		const FiniteAutomaton&, string, int, int,
 		vector<PrefixGrammarItem*>, // вспомогательная функции для
 									// получения префиксной грамматики
-		set<string>, string, map<int, bool>);
+		const set<string>&, string, vector<bool>);
 	const int fa_to_g_TM(
 		const FiniteAutomaton&, string, int, int, vector<PrefixGrammarItem*>,
-		set<string>, string,
-		map<int, bool>); //вспомогательная функции для
-						 // получения префиксной грамматики через ТМ
+		const set<string>&, string,
+		vector<bool>); // вспомогательная функции для
+					   //  получения префиксной грамматики через ТМ
 
   public:
 	// обновляет значение class_number для каждого нетерминала
