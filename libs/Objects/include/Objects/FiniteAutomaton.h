@@ -28,7 +28,7 @@ struct State {
 	State();
 	State(int index, set<int> label, string identifier, bool is_terminal,
 		  map<alphabet_symbol, set<int>> transitions);
-	void set_transition(int, alphabet_symbol);
+	void set_transition(int, const alphabet_symbol&);
 };
 
 class FiniteAutomaton : public BaseObject {
