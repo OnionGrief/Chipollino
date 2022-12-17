@@ -67,6 +67,13 @@ alphabet_symbol alphabet_symbol::remove_numbers() {
 	return str_without_numbers;
 }
 
+string alphabet_symbol::vector_to_str(const vector<alphabet_symbol>& in) {
+	string out = "";
+	for (const auto& i : in)
+		out += i.value;
+	return out;
+}
+
 int alphabet_symbol::size() const {
 	return value.size();
 }

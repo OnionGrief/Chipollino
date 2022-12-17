@@ -43,17 +43,15 @@ ostream& operator<<(ostream& os, const GrammarItem& item);
 class Grammar {
   private:
 	vector<PrefixGrammarItem> prefix_grammar;
-	const string to_str(
-		vector<alphabet_symbol>); // Для преобразования правил ТМ в строку,
-								  // потом, возможно, можно будет убрать
+
 	const int fa_to_g(
 		const FiniteAutomaton&, string, int, int,
-		vector<PrefixGrammarItem*>, // вспомогательная функции для
-									// получения префиксной грамматики
+		const vector<PrefixGrammarItem*>&, // вспомогательная функции для
+										   // получения префиксной грамматики
 		const set<string>&, string, vector<bool>);
 	const int fa_to_g_TM(
-		const FiniteAutomaton&, string, int, int, vector<PrefixGrammarItem*>,
-		const set<string>&, string,
+		const FiniteAutomaton&, string, int, int,
+		const vector<PrefixGrammarItem*>&, const set<string>&, string,
 		vector<bool>); // вспомогательная функции для
 					   //  получения префиксной грамматики через ТМ
 

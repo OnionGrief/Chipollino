@@ -131,10 +131,10 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
 	terminals.push_back(&fa_items[item_ind]);
 	terminal_index[alphabet_symbol::epsilon()] = 0;
 	item_ind++;
-	for (alphabet_symbol symb : alphabet) {
-		fa_items[item_ind] = (GrammarItem(GrammarItem::terminal, symb));
+	for (alphabet_symbol alpha : alphabet) {
+		fa_items[item_ind] = (GrammarItem(GrammarItem::terminal, alpha));
 		terminals.push_back(&fa_items[item_ind]);
-		terminal_index[symb] = item_ind - nonterminals.size();
+		terminal_index[alpha] = item_ind - nonterminals.size();
 		item_ind++;
 	}
 
@@ -221,14 +221,14 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 // vector<vector<GrammarItem>>
 const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 						   int index_back,
-						   vector<PrefixGrammarItem*> grammar_items,
+						   const vector<PrefixGrammarItem*>& grammar_items,
 						   const set<string>& monoid_rules, string word,
 						   vector<bool> is_visit) {
-
-	State st = fa.states[index];
-	State st_back = fa.states[index_back];
+	const State& st = fa.states[index];
+	const State& st_back = fa.states[index_back];
 	PrefixGrammarItem* g = grammar_items[index];
-	set equivalence_class_back = grammar_items[index_back]->equivalence_class;
+	const set<string>& equivalence_class_back =
+		grammar_items[index_back]->equivalence_class;
 
 	g->rules[w].insert(index_back);
 	if (is_visit[index]) {
@@ -242,9 +242,8 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 
 	for (const auto& elem : st.transitions) {
 		alphabet_symbol alpha = elem.first;
-		set<int> transitions = elem.second;
 		// if st.is_terminal то учитываем только переходы в себя
-		for (const auto& ind : transitions) {
+		for (const auto& ind : elem.second) {
 			if (alpha.is_epsilon()) {
 				alpha = "";
 			}
@@ -261,14 +260,6 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 	return 0;
 }
 
-const string Grammar::to_str(vector<alphabet_symbol> in) {
-	string out = "";
-	for (int i = 0; i < in.size(); i++) {
-		out += in[i];
-	}
-	return out;
-}
-
 void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 	const vector<State>& states = fa.states;
 	TransformationMonoid a(fa.minimize());
@@ -276,7 +267,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 		a.get_rewriting_rules();
 	set<string> m_r;
 	for (auto& item : monoid_rules) {
-		m_r.insert(this->to_str(item.first));
+		m_r.insert(alphabet_symbol::vector_to_str(item.first));
 	}
 
 	const State& st0 = states[fa.initial_state];
@@ -300,9 +291,8 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 	g->equivalence_class.insert("");
 	for (const auto& elem : st0.transitions) {
 		alphabet_symbol alpha = elem.first;
-		set<int> transitions = elem.second;
 		// if st.is_terminal то учитываем только переходы в себя
-		for (const auto& ind : transitions) {
+		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
 				if (alpha.is_epsilon()) {
 					alpha = "";
@@ -313,9 +303,8 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 	}
 	for (const auto& elem : st0.transitions) {
 		alphabet_symbol alpha = elem.first;
-		set<int> transitions = elem.second;
 		// if st.is_terminal то учитываем только переходы в себя
-		for (const auto& ind : transitions) {
+		for (const auto& ind : elem.second) {
 			if (fa.initial_state != ind) {
 				if (alpha.is_epsilon()) {
 					alpha = "";
@@ -328,8 +317,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 
 	for (const auto& elem : st0.transitions) {
 		alphabet_symbol alpha = elem.first;
-		set<int> transitions = elem.second;
-		for (const auto& ind : transitions) {
+		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
 				g->equivalence_class.insert(alpha);
 				g->equivalence_class.erase("");
@@ -373,7 +361,7 @@ const string Grammar::pg_to_txt() {
 	stringstream ss;
 	// vector<PrefixGrammarItem> prefix_grammar = prefix_grammar;
 	for (int i = 0; i < prefix_grammar.size(); i++) {
-		PrefixGrammarItem g = prefix_grammar[i];
+		const PrefixGrammarItem& g = prefix_grammar[i];
 		for (const auto& w : g.equivalence_class) {
 			for (const auto& elem : g.rules) {
 				alphabet_symbol a = elem.first;
@@ -416,7 +404,7 @@ const string Grammar::pg_to_txt() {
 
 	for (int i = 0; i < prefix_grammar.size(); i++) {
 		if (prefix_grammar[i].is_terminal) {
-			PrefixGrammarItem g = prefix_grammar[i];
+			const PrefixGrammarItem& g = prefix_grammar[i];
 			for (const auto& w : g.equivalence_class) {
 				ss << w << " ";
 			}
@@ -427,7 +415,6 @@ const string Grammar::pg_to_txt() {
 }
 
 FiniteAutomaton Grammar::prefix_grammar_to_automaton() {
-
 	set<alphabet_symbol> symbols;
 	vector<State> states;
 	int initial_state;
@@ -456,8 +443,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() {
 
 		for (const auto& elem : gr.rules) {
 			alphabet_symbol alpha = elem.first;
-			set<int> transition = elem.second;
-			for (const auto& trans : transition) {
+			for (const auto& trans : elem.second) {
 				states[trans].transitions[alpha].insert(i);
 			}
 			if (alpha == "") {
@@ -472,11 +458,10 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() {
 
 const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 							  int index_back,
-							  vector<PrefixGrammarItem*> grammar_items,
+							  const vector<PrefixGrammarItem*>& grammar_items,
 							  const set<string>& monoid_rules, string word,
 							  vector<bool> is_visit) {
-
-	State st = fa.states[index];
+	const State& st = fa.states[index];
 	PrefixGrammarItem* g = grammar_items[index];
 
 	g->rules[w].insert(index_back);
@@ -486,9 +471,8 @@ const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 
 	for (const auto& elem : st.transitions) {
 		alphabet_symbol alpha = elem.first;
-		set<int> transitions = elem.second;
 		// if st.is_terminal то учитываем только переходы в себя
-		for (const auto& ind : transitions) {
+		for (const auto& ind : elem.second) {
 			if (alpha.is_epsilon()) {
 				alpha = "";
 			}
@@ -512,7 +496,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 		a.get_rewriting_rules();
 	set<string> m_r;
 	for (auto& item : monoid_rules) {
-		m_r.insert(this->to_str(item.first));
+		m_r.insert(alphabet_symbol::vector_to_str(item.first));
 	}
 
 	map<string, vector<string>> terms = a.get_equalence_classes_map();
@@ -562,9 +546,8 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	g->equivalence_class.insert("");
 	for (const auto& elem : st0.transitions) {
 		alphabet_symbol alpha = elem.first;
-		set<int> transitions = elem.second;
 		// if st.is_terminal то учитываем только переходы в себя
-		for (const auto& ind : transitions) {
+		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
 				if (alpha.is_epsilon()) {
 					alpha = "";
@@ -575,9 +558,8 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	}
 	for (const auto& elem : st0.transitions) {
 		alphabet_symbol alpha = elem.first;
-		set<int> transitions = elem.second;
 		// if st.is_terminal то учитываем только переходы в себя
-		for (const auto& ind : transitions) {
+		for (const auto& ind : elem.second) {
 			if (fa.initial_state != ind) {
 				if (alpha.is_epsilon()) {
 					alpha = "";
@@ -589,9 +571,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	}
 
 	for (const auto& elem : st0.transitions) {
-		alphabet_symbol alpha = elem.first;
-		set<int> transitions = elem.second;
-		for (const auto& ind : transitions) {
+		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
 				g->equivalence_class.erase("");
 			}
