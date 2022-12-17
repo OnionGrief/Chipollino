@@ -1659,6 +1659,8 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 				if (k >= (s + 1) * 3 &&
 					(max_return_flag || max_delta_return_flag))
 					return FiniteAutomaton::almost_unambigious;
+				if (val > Fraction() && val >= prev_val)
+					return FiniteAutomaton::exponentially_ambiguous;
 				if (is_exponentially_ambiguous)
 					return FiniteAutomaton::exponentially_ambiguous;
 				return FiniteAutomaton::polynomially_ambigious;
