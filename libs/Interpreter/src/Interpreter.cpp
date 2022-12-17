@@ -137,17 +137,22 @@ Interpreter::InterpreterLogger Interpreter::init_log() {
 	return InterpreterLogger(*this);
 }
 
-GeneralObject Interpreter::apply_function_sequence(
+optional<GeneralObject> Interpreter::apply_function_sequence(
 	const vector<Function>& functions, vector<GeneralObject> arguments) {
 
 	for (const auto& func : functions) {
-		arguments = {apply_function(func, arguments)};
+		const auto& f = apply_function(func, arguments);
+		if (f.has_value()) {
+			arguments = {*f};
+		} else {
+			return nullopt;
+		}
 	}
 
 	return arguments[0];
 }
 
-GeneralObject Interpreter::apply_function(
+optional<GeneralObject> Interpreter::apply_function(
 	const Function& function, const vector<GeneralObject>& arguments) {
 
 	auto logger = init_log();
@@ -325,9 +330,11 @@ GeneralObject Interpreter::apply_function(
 									 get<ObjectRegex>(rule[1]).value});
 				} else {
 					logger.throw_error("Normalize: invalid inner array");
+					return nullopt;
 				}
 			} else {
 				logger.throw_error("Normalize: invalid array");
+				return nullopt;
 			}
 		}
 		res = ObjectRegex(
@@ -642,7 +649,7 @@ bool Interpreter::run_test(const Test& test) {
 
 	auto language = eval_expression(test.language);
 	auto test_set = eval_expression(test.test_set);
-	bool success = false;
+	bool success = true;
 
 	if (language.has_value() && test_set.has_value()) {
 		auto reg = get<ObjectRegex>(*test_set).value;
@@ -670,11 +677,11 @@ bool Interpreter::run_test(const Test& test) {
 
 bool Interpreter::run_operation(const GeneralOperation& op) {
 	if (holds_alternative<Declaration>(op)) {
-		run_declaration(get<Declaration>(op));
+		return run_declaration(get<Declaration>(op));
 	} else if (holds_alternative<Predicate>(op)) {
-		run_predicate(get<Predicate>(op));
+		return run_predicate(get<Predicate>(op));
 	} else if (holds_alternative<Test>(op)) {
-		run_test(get<Test>(op));
+		return run_test(get<Test>(op));
 	}
 	return true;
 }

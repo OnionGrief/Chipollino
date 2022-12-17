@@ -141,8 +141,7 @@ class Interpreter {
 	optional<Regex> scan_regex(const vector<Lexem>&, int& pos, size_t end);
 	optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&,
 													  int& pos, size_t end);
-	optional<Array> scan_array(const vector<Lexem>&, int& pos,
-										  size_t end);
+	optional<Array> scan_array(const vector<Lexem>&, int& pos, size_t end);
 	optional<Expression> scan_expression(const vector<Lexem>&, int& pos,
 										 size_t end);
 
@@ -157,12 +156,12 @@ class Interpreter {
 	//== Исполнение комманд ===================================================
 
 	// Применение цепочки функций к набору аргументов
-	GeneralObject apply_function_sequence(const vector<Function>& functions,
-										  vector<GeneralObject> arguments);
+	optional<GeneralObject> apply_function_sequence(
+		const vector<Function>& functions, vector<GeneralObject> arguments);
 
 	// Применение функции к набору аргументов
-	GeneralObject apply_function(const Function& function,
-								 const vector<GeneralObject>& arguments);
+	optional<GeneralObject> apply_function(
+		const Function& function, const vector<GeneralObject>& arguments);
 
 	// Вычисление выражения
 	optional<GeneralObject> eval_expression(const Expression& expr);
