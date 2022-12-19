@@ -852,11 +852,18 @@ void Example::test_TransformationMonoid() {
 }
 
 void Example::test_GlaisterShallit() {
-	assert(Regex("abc").to_glushkov().get_classes_number_GlaisterShallit() ==
-		   4);
-	assert(Regex("a*b*c*").to_glushkov().get_classes_number_GlaisterShallit() ==
-		   1);
-	assert(
-		Regex("aa*bb*cc*").to_glushkov().get_classes_number_GlaisterShallit() ==
-		3);
+	auto check_classes_number = [](string rgx_str, int num) {
+		assert(
+			Regex(rgx_str).to_glushkov().get_classes_number_GlaisterShallit() ==
+			num);
+	};
+	check_classes_number("abc", 4);
+	check_classes_number("a*b*c*", 3);
+	check_classes_number("aa*bb*cc*", 4);
+	check_classes_number("ab|abc", 4);
+	check_classes_number("a(a|b)*(a|b)", 3);
+	check_classes_number("a((a|b)*)*(b|c)", 3);
+	check_classes_number("a(b|c)(a|b)(b|c)", 5);
+	check_classes_number("abc|bca", 6);
+	check_classes_number("abc|bbc", 4);
 }

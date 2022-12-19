@@ -16,7 +16,7 @@
 using namespace std;
 
 struct expression_arden {
-	int fa_state_number; //индекс состояния на которое ссылаемся
+	int fa_state_number; // индекс состояния на которое ссылаемся
 	Regex* regex_from_state; // Regex по которому переходят из состояния
 };
 
@@ -68,7 +68,7 @@ string FiniteAutomaton::to_txt() const {
 	return ss.str();
 }
 
-//обход автомата в глубину
+// обход автомата в глубину
 void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
 		 set<int>& reachable, bool use_epsilons_only) {
 	if (reachable.find(index) == reachable.end()) {
@@ -1717,33 +1717,29 @@ void find_maximum_identity_matrix(vector<int>& rows,
 		return;
 	}
 	int n = table.size(), m = table[0].size();
-	vector<int> y_ind(n, -1);
-	vector<int> x_ind(m, -1);
-	for (int i = 0; i < n; i++) {
-		if (used_y[i]) continue;
-		for (int j = 0; j < m; j++) {
-			if (used_x[j]) continue;
+	vector<int> y_ind(m, -1);
+	for (int j = 0; j < m; j++) {
+		if (used_x[j]) continue;
+		for (int i = 0; i < n; i++) {
+			if (used_y[i]) continue;
 			if (!table[i][j]) continue;
-			if (y_ind[i] == -1)
-				y_ind[i] = j;
+			if (y_ind[j] == -1)
+				y_ind[j] = i;
 			else
-				y_ind[i] = -2;
-			if (x_ind[j] == -1)
-				x_ind[j] = i;
-			else
-				x_ind[j] = -2;
+				y_ind[j] = -2;
 		}
 	}
-	// отмечаю строки и стобцы с единственной единицей
-	for (int i = 0; i < n; i++)
-		if (y_ind[i] > 0 && x_ind[y_ind[i]] == i) {
-			used_x[y_ind[i]] = true;
-			used_y[i] = true;
+	// отмечаю стобцы с единственной единицей
+	for (int j = 0; j < m; j++) {
+		if (y_ind[j] >= 0) {
+			used_x[j] = true;
+			used_y[y_ind[j]] = true;
 			unused_y--;
 			unused_x--;
 			size++;
-			temp_result_yx.emplace_back(i, y_ind[i]);
+			temp_result_yx.emplace_back(y_ind[j], j);
 		}
+	}
 	if (unused_y == 0) {
 		set_result(res, size, result_yx, temp_result_yx);
 		return;
@@ -1777,17 +1773,12 @@ void find_maximum_identity_matrix(vector<int>& rows,
 			vector<int> false_y;
 			for (int i = 0; i < table.size(); i++) {
 				if (new_used_y[i]) continue;
-				if (table[i][x] == 1) {
-					new_used_y[i] = true;
-					new_unused_y--;
-				} else {
-					false_y.push_back(i);
-				}
+				false_y.push_back(i);
 			}
 			vector<pair<int, int>> new_result_yx = temp_result_yx;
 			new_result_yx.emplace_back(row, x);
 			vector<bool> temp_used_x = new_used_x;
-			// перехожу на все строки, в которых 0
+			// перехожу на все свободные строки
 			find_maximum_identity_matrix(
 				false_y, table, res, size + 1, result_yx, new_result_yx,
 				temp_used_x, new_used_y, new_unused_x, new_unused_y);
@@ -2151,8 +2142,8 @@ int FiniteAutomaton::states_number() const {
 
 vector<expression_arden> arden_minimize(const vector<expression_arden>& in) {
 	map<int, Regex*> out_map;
-	//Загоняем все в map, потом пишем в вектор (обьединяем переходы из 1
-	//состояния)
+	// Загоняем все в map, потом пишем в вектор (обьединяем переходы из 1
+	// состояния)
 	for (int i = 0; i < in.size(); i++) {
 		if (!out_map.count(in[i].fa_state_number)) {
 			out_map[in[i].fa_state_number] = in[i].regex_from_state->copy();
@@ -2176,14 +2167,14 @@ vector<expression_arden> arden_minimize(const vector<expression_arden>& in) {
 
 vector<expression_arden> arden(const vector<expression_arden>& in, int index) {
 	vector<expression_arden> out;
-	//ищем переход из текущего состояния
+	// ищем переход из текущего состояния
 	int indexcur = -1;
 	for (int i = 0; (i < in.size() && indexcur == -1); i++) {
 		if (in[i].fa_state_number == index) {
 			indexcur = i;
 		}
 	}
-	//если таких переходов нет
+	// если таких переходов нет
 	if (indexcur == -1) {
 		for (int i = 0; i < in.size(); i++) {
 			Regex* r = in[i].regex_from_state->copy();
@@ -2194,7 +2185,7 @@ vector<expression_arden> arden(const vector<expression_arden>& in, int index) {
 		}
 		return out;
 	}
-	//если есть только такой переход
+	// если есть только такой переход
 	if (in.size() < 2) {
 		Regex* r = new Regex();
 		r->regex_star(in[0].regex_from_state);
@@ -2204,7 +2195,7 @@ vector<expression_arden> arden(const vector<expression_arden>& in, int index) {
 		out.push_back(temp);
 		return out;
 	}
-	//добавляем (текущий переход)* к всем остальным
+	// добавляем (текущий переход)* к всем остальным
 	for (int i = 0; i < in.size(); i++) {
 		if (i != indexcur) {
 			Regex* r = new Regex();
@@ -2226,16 +2217,17 @@ vector<expression_arden> arden(const vector<expression_arden>& in, int index) {
 	return out;
 }
 Regex FiniteAutomaton::to_regex() const {
-	vector<int> end_state; //храним индексы принимающих состояний
+	vector<int> end_state; // храним индексы принимающих состояний
 	vector<vector<expression_arden>> data; // все уравнения
-	set<alphabet_symbol> alphabet = language->get_alphabet(); //получаем Алфавит
+	set<alphabet_symbol> alphabet = language->get_alphabet(); // получаем
+															  // Алфавит
 
 	for (int i = 0; i < states.size(); i++) {
 		vector<expression_arden> temp;
 		data.push_back(temp);
 	}
 
-	Regex* r = new Regex; //Заполняем вход в начальное состояние
+	Regex* r = new Regex; // Заполняем вход в начальное состояние
 	expression_arden initial_arden;
 	initial_arden.fa_state_number = -1;
 	r->regex_eps();
@@ -2243,11 +2235,11 @@ Regex FiniteAutomaton::to_regex() const {
 	data[initial_state].push_back(initial_arden);
 
 	for (int i = 0; i < states.size();
-		 i++) { //Для всех состояний автомата заполняем уравнения
+		 i++) { // Для всех состояний автомата заполняем уравнения
 		if (states[i].is_terminal) {
 			end_state.push_back(i);
 		}
-		if (states[i].transitions.count("eps")) { //для переходов по eps
+		if (states[i].transitions.count("eps")) { // для переходов по eps
 			set<int> trans = states[i].transitions.at("eps");
 			for (const int& index : trans) {
 				Regex* r = new Regex;
@@ -2259,7 +2251,7 @@ Regex FiniteAutomaton::to_regex() const {
 			}
 		}
 		for (const alphabet_symbol& as :
-			 alphabet) { //для переходов по символам алфавита
+			 alphabet) { // для переходов по символам алфавита
 			if (states[i].transitions.count(as)) {
 				set<int> trans = states[i].transitions.at(as);
 				for (const int& index : trans) {
@@ -2274,7 +2266,7 @@ Regex FiniteAutomaton::to_regex() const {
 		}
 	}
 	if (end_state.size() ==
-		0) { //если нет принимающих состояний - то регулярки не будет
+		0) { // если нет принимающих состояний - то регулярки не будет
 		return Regex();
 	}
 	// // вывод всех уравнений
@@ -2287,7 +2279,7 @@ Regex FiniteAutomaton::to_regex() const {
 	// 	cout << "\n";
 	// }
 
-	//переносим прошлые переходы и обьединяем (работаем с уравнениями)
+	// переносим прошлые переходы и обьединяем (работаем с уравнениями)
 	Logger::init_step("Arden");
 
 	for (int i = 0; i < data.size();
@@ -2296,17 +2288,17 @@ Regex FiniteAutomaton::to_regex() const {
 		for (int j = 0; j < data[i].size(); j++) {
 			if (data[i][j].fa_state_number < i &&
 				data[i][j].fa_state_number != -1) {
-				//если ссылаемся на какие-либо еще переходы
+				// если ссылаемся на какие-либо еще переходы
 				for (int k = 0; k < data[data[i][j].fa_state_number].size();
 					 k++) {
 					expression_arden temp_expression;
 					Regex* r;
 					if (data[i][j].regex_from_state->to_txt() == "") {
 						r = data[data[i][j].fa_state_number][k]
-								.regex_from_state->copy(); //тут 0
+								.regex_from_state->copy(); // тут 0
 					} else if (data[data[i][j].fa_state_number][k]
 								   .regex_from_state->to_txt() == "") {
-						r = data[i][j].regex_from_state->copy(); //тут б
+						r = data[i][j].regex_from_state->copy(); // тут б
 																 //	continue;
 					} else {
 						r = new Regex;
@@ -2321,7 +2313,7 @@ Regex FiniteAutomaton::to_regex() const {
 						data[data[i][j].fa_state_number][k].fa_state_number;
 					temp_data.push_back(temp_expression);
 				}
-			} else { //если не ссылаемся
+			} else { // если не ссылаемся
 				expression_arden temp_expression;
 				Regex* r = new Regex(*data[i][j].regex_from_state);
 				temp_expression.regex_from_state = r;
@@ -2333,11 +2325,11 @@ Regex FiniteAutomaton::to_regex() const {
 			delete data[i][o].regex_from_state;
 		}
 		data[i].clear();
-		//обьединяем одинаковые состояния
+		// обьединяем одинаковые состояния
 		vector<expression_arden> tempdata1 = arden_minimize(temp_data);
-		//применяем арден
+		// применяем арден
 		vector<expression_arden> tempdata2 = arden(tempdata1, i);
-		//обьединяем одинаковые состояния
+		// обьединяем одинаковые состояния
 		vector<expression_arden> tempdata3 = arden_minimize(tempdata2);
 		for (int o = 0; o < temp_data.size(); o++) {
 			delete temp_data[o].regex_from_state;
@@ -2350,8 +2342,8 @@ Regex FiniteAutomaton::to_regex() const {
 		}
 		data[i] = tempdata3;
 	}
-	//работа с уравнениями (могли остаться ссылки на другие состояния,
-	//исправляем)
+	// работа с уравнениями (могли остаться ссылки на другие состояния,
+	// исправляем)
 	for (int i = data.size() - 1; i >= 0; i--) {
 		for (int j = 0; j < data[i].size(); j++) {
 			if (data[i][j].fa_state_number != -1) {
@@ -2364,7 +2356,7 @@ Regex FiniteAutomaton::to_regex() const {
 				data[i][j].regex_from_state = ra;
 			}
 		}
-		//обьединяем состояния
+		// обьединяем состояния
 		vector<expression_arden> tempdata3 = arden_minimize(data[i]);
 		for (int o = 0; o < data[i].size(); o++) {
 			delete data[i][o].regex_from_state;
@@ -2372,7 +2364,7 @@ Regex FiniteAutomaton::to_regex() const {
 		data[i].clear();
 		data[i] = tempdata3;
 	}
-	//вывод итоговых regex
+	// вывод итоговых regex
 	for (int i = 0; i < data.size(); i++) {
 		Logger::log("State ", std::to_string(i));
 		for (int j = 0; j < data[i].size(); j++) {
@@ -2380,7 +2372,7 @@ Regex FiniteAutomaton::to_regex() const {
 						data[i][j].regex_from_state->to_txt());
 		}
 	}
-	//если у нас 1 принимающее состояние
+	// если у нас 1 принимающее состояние
 	if (end_state.size() < 2) {
 		Regex* r1;
 		r1 = data[end_state[0]][0].regex_from_state->copy();
@@ -2389,7 +2381,7 @@ Regex FiniteAutomaton::to_regex() const {
 				delete data[i][j].regex_from_state;
 			}
 		}
-		//заполняем алфавит и lang (нужно для преобразований в автоматы)
+		// заполняем алфавит и lang (нужно для преобразований в автоматы)
 		r1->set_language(alphabet);
 		Regex temp = *r1;
 		delete r1;
@@ -2397,7 +2389,7 @@ Regex FiniteAutomaton::to_regex() const {
 		Logger::finish_step();
 		return temp;
 	}
-	//если принимающих состояний несколько - обьединяем через альтернативу
+	// если принимающих состояний несколько - обьединяем через альтернативу
 	Regex* r1;
 	r1 = data[end_state[0]][0].regex_from_state->copy();
 	for (int i = 1; i < end_state.size(); i++) {
