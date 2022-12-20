@@ -1732,6 +1732,8 @@ void find_maximum_identity_matrix(vector<int>& rows,
 	// отмечаю стобцы с единственной единицей
 	for (int j = 0; j < m; j++) {
 		if (y_ind[j] >= 0) {
+			if (used_y[y_ind[j]]) continue;
+			if (used_x[j]) continue;
 			used_x[j] = true;
 			used_y[y_ind[j]] = true;
 			unused_y--;
