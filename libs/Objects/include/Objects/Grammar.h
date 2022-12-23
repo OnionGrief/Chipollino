@@ -62,8 +62,7 @@ class Grammar {
 		vector<GrammarItem*>& bisimilar_nonterminals,
 		map<int, vector<GrammarItem*>>& class_to_nonterminals);
 	// преобразование конечного автомата в грамматику
-	// в векторе терминалов по 0му индексу лежит epsilon,
-	// по terminals.size()-1 лежит initial
+	// в векторе терминалов по 0му индексу лежит epsilon
 	static vector<vector<vector<GrammarItem*>>> fa_to_grammar(
 		const vector<State>& states, const set<alphabet_symbol>& alphabet,
 		vector<GrammarItem>& fa_items, vector<GrammarItem*>& nonterminals,

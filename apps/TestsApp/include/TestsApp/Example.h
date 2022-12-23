@@ -10,6 +10,7 @@
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
 #include <cassert>
+#include <functional>
 #include <iostream>
 /*
 Это статический класс, где вы можете писать примеры
@@ -40,7 +41,13 @@ class Example {
 	static void step_interection();
 	static void table();
 	static void fa_semdet_check();
+	static void get_one_unambiguous_regex();
 	static void classes_number_GlaisterShallit();
+	static void testing_with_generator(
+		int regex_length, int star_num, int star_nesting, int alphabet_size,
+		const function<void(string& rgx_str)>& check_function);
+	static void arden_lemma_testing();
+
 	// запуск всех тестов
 	static void test_all();
 	static void test_fa_equal();
