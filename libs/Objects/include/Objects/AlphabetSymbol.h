@@ -26,6 +26,7 @@ struct alphabet_symbol {
 	bool operator!=(const alphabet_symbol& other) const;
 	bool operator<(const alphabet_symbol& other) const;
 	alphabet_symbol operator+(const alphabet_symbol& other) const;
+	alphabet_symbol operator+(const string& s) const;
 	// возвращает символ эпсилон
 	static alphabet_symbol epsilon();
 	bool is_epsilon() const;
