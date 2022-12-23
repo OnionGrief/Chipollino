@@ -31,6 +31,17 @@ class Interpreter {
 	LogMode log_mode = LogMode::all;
 	int log_nesting = 0;
 
+	// типы:
+
+	ObjectType NFA_type = ObjectType::NFA;
+	ObjectType DFA_type = ObjectType::DFA;
+	ObjectType REGEX_type = ObjectType::Regex;
+	ObjectType INT_type = ObjectType::Int;
+	ObjectType FILENAME_type = ObjectType::FileName;
+	ObjectType BOOL_type = ObjectType::Boolean;
+	ObjectType VALUE_type = ObjectType::Value;
+	// (не уверена, нужен ли const, в перспективе можно приписать DFA_type = NFA_type для динамического тайпчека)
+
 	class InterpreterLogger {
 	  public:
 		InterpreterLogger(Interpreter& parent) : parent(parent) {
