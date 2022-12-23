@@ -528,6 +528,41 @@ void Example::get_one_unambiguous_regex() {
 	// doesn't fulfills the orbit property
 	cout << r5.get_one_unambiguous_regex().to_txt() << endl;
 }
+
+void Example::testing_with_generator(
+	int regex_length, int star_num, int star_nesting, int alphabet_size,
+	const function<void(string&)>& check_function) {
+	RegexGenerator RG(regex_length, star_num, star_nesting, alphabet_size);
+	for (int i = 0; i < 100; i++) {
+		string s = RG.generate_regex();
+		s.erase(s.size() - 1);
+		s.erase(0, 1);
+		cout << "> " << i << endl;
+		check_function(s);
+	}
+}
+
+void Example::arden_lemma_testing() {
+	testing_with_generator(3, 3, 3, 3, [](string& s) {
+		Regex r1(s);
+		cout << s << endl;
+		FiniteAutomaton fa1 = Regex(s).to_glushkov();
+		cout << fa1.states_number() << endl;
+		int a1 = fa1.ambiguity();
+		cout << "A " << a1 << endl;
+
+		Regex r2 = fa1.to_regex();
+		cout << r2.to_txt() << endl;
+		FiniteAutomaton fa2 = r2.to_glushkov();
+		cout << fa2.states_number() << endl;
+		int a2 = fa2.ambiguity();
+		cout << "A " << a2 << endl;
+
+		cout << "Eq " << Regex::equivalent(r1, r2) << endl;
+		assert(a1 == a2);
+	});
+}
+
 // TEST
 
 void Example::test_all() {
@@ -734,19 +769,65 @@ void Example::test_regex_equal() {
 }
 
 void Example::test_ambiguity() {
-	FiniteAutomaton fa1 = Regex("(a*)*").to_tompson();
-	FiniteAutomaton fa2 = Regex("b|a|aa").to_tompson();
-	FiniteAutomaton fa3 = Regex("abc").to_tompson();
-	FiniteAutomaton fa4 = Regex("b|a").to_tompson();
-	FiniteAutomaton fa5 = Regex("(aa|aa)*").to_glushkov();
-	FiniteAutomaton fa6 = Regex("(aab|aab)*").to_glushkov();
+	enum AutomatonType {
+		tompson,
+		glushkov,
+		ilieyu
+	};
+	using Test =
+		tuple<int, string, AutomatonType, FiniteAutomaton::AmbiguityValue>;
+	vector<Test> tests = {
+		{0, "(a*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{1, "a*a*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		{2, "abc", tompson, FiniteAutomaton::unambigious},
+		{3, "b|a", tompson, FiniteAutomaton::almost_unambigious},
+		{4, "(aa|aa)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{5, "(aab|aab)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{6, "a*a*((a)*)*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		{7, "a*a*((a)*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{8, "a*(b*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{9, "a*((ab)*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{10, "(aa|aa)(aa|bb)*|a(ba)*", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{11, "(aaa)*(a|)(a|)", ilieyu, FiniteAutomaton::almost_unambigious},
+		{12, "(a|)(ab|aaa|baa)*(a|)", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{13, "(a|b|c)*(d|d)*(a|b|c|d)*", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{14, "(ac*|ad*)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{15, "(a|b|c)*(a|b|c|d)(a|b|c)*|(a|b)*ca*", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{16, "(a|b|c)*(a|b|c|d)(a|b|c)*|(ac*|ad*)*", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{17,
+		 "(ab)*ab(ab)*|(ac)*(ac)*|(d|c)*", // (abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*
+		 glushkov, FiniteAutomaton::almost_unambigious},
+		{18, "(abab)*abab(abab)*|(aac)*(aac)*", glushkov,
+		 FiniteAutomaton::polynomially_ambigious},
+		{19, "(ab)*ab(ab)*", // (abab)*abab(abab)*
+		 glushkov, FiniteAutomaton::polynomially_ambigious},
+		{20, "(ab)*ab(ab)*|(ac)*(ac)*", glushkov,
+		 FiniteAutomaton::polynomially_ambigious},
+		{21, "(a|b)*(f*)*q", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{22, "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*", glushkov,
+		 FiniteAutomaton::exponentially_ambiguous},
+	};
 
-	assert(fa1.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
-	assert(fa2.ambiguity() == FiniteAutomaton::polynomially_ambigious);
-	assert(fa3.ambiguity() == FiniteAutomaton::unambigious);
-	assert(fa4.ambiguity() == FiniteAutomaton::almost_unambigious);
-	assert(fa5.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
-	assert(fa6.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [test_number, reg_string, type, expected_res] = test;
+		// cout << test_number << endl;
+		switch (type) {
+		case tompson:
+			assert(Regex(reg_string).to_tompson().ambiguity() == expected_res);
+			break;
+		case glushkov:
+			assert(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
+			break;
+		case ilieyu:
+			assert(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
+			break;
+		}
+	});
 }
 void Example::test_arden() {
 	auto test_equivalence = [](string rgx_str) {
