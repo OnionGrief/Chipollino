@@ -587,8 +587,8 @@ void Example::test_all() {
 	test_fa_equal();
 	test_fa_equiv();
 	test_bisimilar();
-	test_merge_bisimilar();
 	test_regex_subset();
+	test_merge_bisimilar();
 	test_regex_equal();
 	test_ambiguity();
 	test_arden();

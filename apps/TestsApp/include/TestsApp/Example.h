@@ -47,6 +47,7 @@ class Example {
 		int regex_length, int star_num, int star_nesting, int alphabet_size,
 		const function<void(string& rgx_str)>& check_function);
 	static void arden_lemma_testing();
+	static void fa_to_pgrammar();
 
 	// запуск всех тестов
 	static void test_all();
@@ -59,7 +60,6 @@ class Example {
 	static void test_ambiguity();
 	static void test_arden();
 	static void test_pump_length();
-	static void fa_to_pgrammar();
 	static void test_is_one_unambiguous();
 	static void test_interpreter();
 	static void test_TransformationMonoid();
