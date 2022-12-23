@@ -228,8 +228,7 @@ GeneralObject Interpreter::apply_function(
 				get_automaton(arguments[0]).is_one_unambiguous());
 		} else {
 			return ObjectBoolean(
-				Regex::equal(get<ObjectRegex>(arguments[0]).value,
-							 get<ObjectRegex>(arguments[1]).value));
+				get<ObjectRegex>(arguments[0]).value.is_one_unambiguous());
 		}
 	}
 	if (function.name == "SemDet") {

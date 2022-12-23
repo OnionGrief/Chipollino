@@ -53,6 +53,7 @@ class TasksGenerator {
 		{"Determinize", {NFA}, DFA},
 		{"RemEps", {NFA}, NFA},
 		{"Linearize", {REGEX}, REGEX},
+		{"Disambiguate", {REGEX}, REGEX},
 		{"Minimize", {NFA}, DFA},
 		{"Reverse", {NFA}, NFA},
 		{"Annote", {NFA}, DFA},
@@ -69,13 +70,21 @@ class TasksGenerator {
 		{"ClassCard", {DFA}, INT},
 		{"Ambiguity", {NFA}, VALUE},
 		{"MyhillNerode", {DFA}, INT},
+		{"GlaisterShallit", {DFA}, INT},
+		{"PrefixGrammar", {DFA}, VALUE},
+		// output: PG, но для генератора и так сойдет
 	};
 
 	vector<Function> predicates = {
-		{"Subset", {REGEX, REGEX}, BOOLEAN}, {"Subset", {NFA, NFA}, BOOLEAN},
-		{"Equiv", {NFA, NFA}, BOOLEAN},		 {"Equiv", {REGEX, REGEX}, BOOLEAN},
-		{"Bisimilar", {NFA, NFA}, BOOLEAN},	 {"Minimal", {DFA}, BOOLEAN},
-		{"Equal", {NFA, NFA}, BOOLEAN},
+		{"Subset", {REGEX, REGEX}, BOOLEAN},
+		{"Subset", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {REGEX, REGEX}, BOOLEAN},
+		{"OneUnambiguity", {NFA}, BOOLEAN},
+		{"OneUnambiguity", {REGEX}, BOOLEAN},
+		{"Bisimilar", {NFA, NFA}, BOOLEAN},
+		{"Minimal", {NFA}, BOOLEAN},
+		{"Equal", {NFA, NFA}, BOOLEAN}
 		//{"SemDet", {NFA}, BOOLEAN},
 	};
 
