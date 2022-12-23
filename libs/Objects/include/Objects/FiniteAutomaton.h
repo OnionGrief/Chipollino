@@ -14,6 +14,7 @@ using namespace std;
 
 class Regex;
 class Language;
+class Grammar;
 class TransformationMonoid;
 
 struct State {
@@ -152,4 +153,5 @@ class FiniteAutomaton : public BaseObject {
 
 	friend class Regex;
 	friend class TransformationMonoid;
+	friend class Grammar;
 };

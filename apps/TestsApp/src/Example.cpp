@@ -206,10 +206,28 @@ void Example::parsing_regex(string str) {
 }
 
 void Example::transformation_monoid_example() {
-	FiniteAutomaton fa = Regex("ababa").to_tompson();
-	TransformationMonoid a(fa);
-	a.get_equalence_classes_txt();
-	a.get_rewriting_rules_txt();
+	FiniteAutomaton fa = Regex("(ba)*bc").to_ilieyu();
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	// states1[0].set_transition(0, "b");
+	states1[0].set_transition(1, "a");
+	states1[1].set_transition(0, "b");
+	states1[0].set_transition(1, "c");
+	states1[1].set_transition(2, "c");
+	states1[2].is_terminal = true;
+	// states1[2].set_transition(2, "a");
+	// states1[2].set_transition(2, "b");
+	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b", "c"});
+	cout << "-----\n";
+	cout << dfa1.to_txt();
+	cout << "-----\n";
+	TransformationMonoid a(dfa1);
+	cout << a.get_equalence_classes_txt() << endl;
+	cout << a.get_rewriting_rules_txt() << endl;
 	a.class_card();
 	a.class_length();
 	a.is_minimal();
@@ -505,6 +523,7 @@ void Example::all_examples() {
 	//  step_interection();
 	//  table();
 	fa_semdet_check();
+	fa_to_pgrammar();
 	Regex("abaa").pump_length();
 	get_one_unambiguous_regex();
 	cout << "all the examlples are successful" << endl;
@@ -569,8 +588,8 @@ void Example::test_all() {
 	test_fa_equal();
 	test_fa_equiv();
 	test_bisimilar();
-	test_merge_bisimilar();
 	test_regex_subset();
+	test_merge_bisimilar();
 	test_regex_equal();
 	test_ambiguity();
 	test_arden();
@@ -579,6 +598,7 @@ void Example::test_all() {
 	test_interpreter();
 	test_TransformationMonoid();
 	test_GlaisterShallit();
+	test_fa_to_pgrammar();
 	cout << "all tests passed\n\n";
 }
 
@@ -851,6 +871,87 @@ void Example::test_arden() {
 }
 void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
+}
+
+void Example::fa_to_pgrammar() {
+	FiniteAutomaton a1 =
+		Regex("(c1(ab*a|b*)*d1)|(c2(ba*b|a*)*d2)")
+			.to_glushkov()
+			.merge_bisimilar(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
+	// cout << a1.to_txt();
+
+	vector<State> states1;
+	for (int i = 0; i < 5; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	// states1[0].set_transition(0, "b");
+	states1[4].set_transition(1, "a");
+	// states1[0].set_transition(1, "c");
+	//  states1[1].set_transition(1, "a");
+	//  states1[1].set_transition(1, "c");
+	states1[1].set_transition(2, "b");
+	states1[1].set_transition(4, "c");
+	// states1[2].set_transition(2, "c");
+	states1[2].set_transition(2, "b");
+	states1[2].set_transition(2, "c");
+	states1[2].is_terminal = true;
+	states1[0].set_transition(4, "c");
+	states1[3].set_transition(0, "a");
+	states1[3].set_transition(0, "b");
+	states1[4].is_terminal = true;
+	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
+
+	Grammar g;
+	FiniteAutomaton test = a1.annote();
+	cout << dfa1.to_txt();
+
+	g.fa_to_prefix_grammar(dfa1);
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.pg_to_txt();
+	cout << "+++++++++++++++++++++++++++++" << endl;
+
+	cout << g.prefix_grammar_to_automaton().to_txt();
+
+	g.fa_to_prefix_grammar_TM(dfa1);
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.pg_to_txt();
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.prefix_grammar_to_automaton().to_txt();
+}
+
+void Example::test_fa_to_pgrammar() {
+	cout << "fa to grammar\n";
+	vector<State> states1;
+	for (int i = 0; i < 5; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+
+	states1[4].set_transition(1, "a");
+	states1[1].set_transition(2, "b");
+	states1[1].set_transition(4, "c");
+	states1[2].set_transition(2, "b");
+	states1[2].set_transition(2, "c");
+	states1[2].is_terminal = true;
+	states1[0].set_transition(4, "c");
+	states1[3].set_transition(0, "a");
+	states1[3].set_transition(0, "b");
+	states1[4].is_terminal = true;
+	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
+
+	Grammar g;
+
+	cout << "1\n";
+	g.fa_to_prefix_grammar(dfa1);
+	cout << "2\n";
+	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
+	cout << "3\n";
+	g.fa_to_prefix_grammar_TM(dfa1);
+	cout << "4\n";
+	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
 }
 
 void Example::test_is_one_unambiguous() {

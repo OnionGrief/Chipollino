@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <vector>
 using namespace std;
 
 // using alphabet_symbol = string;
@@ -30,6 +31,8 @@ struct alphabet_symbol {
 	bool is_epsilon() const;
 	// возвращает символ без разметки
 	alphabet_symbol remove_numbers();
+	// преобразовывает вектор символов в одну строку
+	static string vector_to_str(const vector<alphabet_symbol>&);
 
 	int size() const;
 };
