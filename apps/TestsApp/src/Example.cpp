@@ -523,6 +523,7 @@ void Example::all_examples() {
 	//  step_interection();
 	//  table();
 	fa_semdet_check();
+	fa_to_pgrammar();
 	Regex("abaa").pump_length();
 	get_one_unambiguous_regex();
 	cout << "all the examlples are successful" << endl;
@@ -909,13 +910,44 @@ void Example::fa_to_pgrammar() {
 	cout << "+++++++++++++++++++++++++++++" << endl;
 	cout << g.pg_to_txt();
 	cout << "+++++++++++++++++++++++++++++" << endl;
+
 	cout << g.prefix_grammar_to_automaton().to_txt();
+
 	g.fa_to_prefix_grammar_TM(dfa1);
 	cout << "+++++++++++++++++++++++++++++" << endl;
 	cout << g.pg_to_txt();
 	cout << "+++++++++++++++++++++++++++++" << endl;
 	cout << g.prefix_grammar_to_automaton().to_txt();
 }
+
+void Example::test_fa_to_pgrammar() {
+	vector<State> states1;
+	for (int i = 0; i < 5; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+
+	states1[4].set_transition(1, "a");
+	states1[1].set_transition(2, "b");
+	states1[1].set_transition(4, "c");
+	states1[2].set_transition(2, "b");
+	states1[2].set_transition(2, "c");
+	states1[2].is_terminal = true;
+	states1[0].set_transition(4, "c");
+	states1[3].set_transition(0, "a");
+	states1[3].set_transition(0, "b");
+	states1[4].is_terminal = true;
+	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
+
+	Grammar g;
+
+	g.fa_to_prefix_grammar(dfa1);
+	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
+	g.fa_to_prefix_grammar_TM(dfa1);
+	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
+}
+
 void Example::test_is_one_unambiguous() {
 	Regex r1("(a|b)*a");
 	Regex r2("(a|b)*(ac|bd)");
