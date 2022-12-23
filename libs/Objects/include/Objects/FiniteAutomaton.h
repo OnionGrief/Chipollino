@@ -43,6 +43,7 @@ class FiniteAutomaton : public BaseObject {
   private:
 	int initial_state = 0;
 	vector<State> states;
+	bool is_trim = true;
 
 	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
 	bool parsing_nfa_for(const string&) const;
@@ -146,10 +147,12 @@ class FiniteAutomaton : public BaseObject {
 	int get_classes_number_GlaisterShallit() const;
 	// построение синтаксического моноида по автомату
 	TransformationMonoid get_syntactic_monoid() const;
-	// предикат для нка
+	// проверка на минимальность для нка
 	optional<bool> is_nfa_minimal() const;
-	// предикат для дка
+	// проверка на минимальность для дка
 	bool is_dfa_minimal() const;
+	// изменить  флаг is_trim на обратный
+	void neg_trim_flag() const;
 
 	friend class Regex;
 	friend class TransformationMonoid;

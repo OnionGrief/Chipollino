@@ -33,6 +33,7 @@ Interpreter::Interpreter() {
 		  {"DeAnnote", {NFA_type}, NFA_type}}},
 		{"MergeBisim", {{"MergeBisim", {NFA_type}, NFA_type}}},
 		{"Disambiguate", {{"Disambiguate", {REGEX_type}, REGEX_type}}},
+		{"isTrim", {{"isTrim", {NFA_type}, NFA_type}}},
 		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {REGEX_type}, INT_type}}},
 		{"ClassLength", {{"ClassLength", {DFA_type}, INT_type}}},
@@ -267,6 +268,11 @@ GeneralObject Interpreter::apply_function(
 		Grammar g;
 		g.fa_to_prefix_grammar(get_automaton(arguments[0]));
 		return ObjectPG(g); // возможно отстой
+	}
+
+	if (function.name == "isTrim") {
+		get_automaton(arguments[0]).neg_trim_flag();
+		return ObjectNFA(get_automaton(arguments[0]));
 	}
 
 	/*

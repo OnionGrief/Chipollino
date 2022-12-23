@@ -2446,3 +2446,7 @@ Regex FiniteAutomaton::to_regex() const {
 	Logger::finish_step();
 	return temp1;
 }
+
+void FiniteAutomaton::neg_trim_flag() const {
+	is_trim = !is_trim;
+}
