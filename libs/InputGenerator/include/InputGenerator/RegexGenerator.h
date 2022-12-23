@@ -16,7 +16,7 @@ class RegexGenerator {
 	int star_num = 0;
 	int cur_regex_length = 0;
 	int cur_star_num = 0;
-	int star_nesting = 0; //вложенность
+	int star_nesting = 0; // вложенность
 	int cur_nesting = 0;
 	bool all_alts_are_eps = true;
 	string res_str = "";

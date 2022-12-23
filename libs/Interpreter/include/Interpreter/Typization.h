@@ -1,5 +1,6 @@
 #pragma once
 #include "Objects/FiniteAutomaton.h"
+#include "Objects/Grammar.h"
 #include "Objects/Regex.h"
 #include <deque>
 #include <map>
@@ -18,7 +19,9 @@ enum class ObjectType {
 	Int,	  // целое число
 	FileName, // имя файла для чтения
 	Boolean,  // true/false
-	Value	  // yes/no/ы
+	OB,		  // optional<bool>
+	Value,	  // yes/no/ы/ь
+	PG		  // префиксная грамматика
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -39,19 +42,25 @@ using ObjectRegex = ObjectHolder<ObjectType::Regex, Regex>;
 using ObjectInt = ObjectHolder<ObjectType::Int, int>;
 using ObjectFileName = ObjectHolder<ObjectType::FileName, string>;
 using ObjectBoolean = ObjectHolder<ObjectType::Boolean, bool>;
-using ObjectValue = ObjectHolder<ObjectType::Value, optional<bool>>;
+using ObjectValue =
+	ObjectHolder<ObjectType::Value, FiniteAutomaton::AmbiguityValue>;
+using ObjectOB = ObjectHolder<ObjectType::OB, optional<bool>>;
+using ObjectPG = ObjectHolder<ObjectType::PG, Grammar>;
 
 // Универсальный объект
-using GeneralObject = variant<ObjectHolder<ObjectType::NFA, FiniteAutomaton>,
-							  ObjectHolder<ObjectType::DFA, FiniteAutomaton>,
-							  ObjectHolder<ObjectType::Regex, Regex>,
-							  ObjectHolder<ObjectType::Int, int>,
-							  ObjectHolder<ObjectType::FileName, string>,
-							  ObjectHolder<ObjectType::Boolean, bool>,
-							  ObjectHolder<ObjectType::Value, optional<bool>>>;
+using GeneralObject =
+	variant<ObjectHolder<ObjectType::NFA, FiniteAutomaton>,
+			ObjectHolder<ObjectType::DFA, FiniteAutomaton>,
+			ObjectHolder<ObjectType::Regex, Regex>,
+			ObjectHolder<ObjectType::Int, int>,
+			ObjectHolder<ObjectType::FileName, string>,
+			ObjectHolder<ObjectType::Boolean, bool>,
+			ObjectHolder<ObjectType::Value, FiniteAutomaton::AmbiguityValue>,
+			ObjectHolder<ObjectType::OB, optional<bool>>,
+			ObjectHolder<ObjectType::PG, Grammar>>;
 
 // Функция, состоит из имени и сигнатуры
-// Предикат - тоже функция, но на выходе boolean
+// Предикат - тоже функция, но на выходе booleanFiniteAutomaton::AmbiguityValue
 struct Function {
 	// Имя функции
 	string name;

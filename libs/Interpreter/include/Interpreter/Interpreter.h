@@ -14,7 +14,11 @@ using namespace Typization;
 
 class Interpreter {
   public:
-	enum class LogMode { all, errors, nothing };
+	enum class LogMode {
+		all,
+		errors,
+		nothing
+	};
 	Interpreter();
 	// Интерпретация строчки, возвращает true в случае успеха
 	bool run_line(const string& line);
@@ -39,8 +43,11 @@ class Interpreter {
 	ObjectType INT_type = ObjectType::Int;
 	ObjectType FILENAME_type = ObjectType::FileName;
 	ObjectType BOOL_type = ObjectType::Boolean;
+	ObjectType OPTBOOL_type = ObjectType::OB;
 	ObjectType VALUE_type = ObjectType::Value;
-	// (не уверена, нужен ли const, в перспективе можно приписать DFA_type = NFA_type для динамического тайпчека)
+	ObjectType PG_type = ObjectType::PG;
+	// (не уверена, нужен ли const, в перспективе можно приписать DFA_type =
+	// NFA_type для динамического тайпчека)
 
 	class InterpreterLogger {
 	  public:

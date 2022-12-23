@@ -32,36 +32,31 @@ Interpreter::Interpreter() {
 		 {{"DeAnnote", {REGEX_type}, REGEX_type},
 		  {"DeAnnote", {NFA_type}, NFA_type}}},
 		{"MergeBisim", {{"MergeBisim", {NFA_type}, NFA_type}}},
-		//Многосортные функции
+		{"Disambiguate", {{"Disambiguate", {REGEX_type}, REGEX_type}}},
+		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {REGEX_type}, INT_type}}},
 		{"ClassLength", {{"ClassLength", {DFA_type}, INT_type}}},
-		{"Normalize",
-		 {{"Normalize",
-		   {REGEX_type, FILENAME_type},
-		   REGEX_type}}},
+		{"Normalize", {{"Normalize", {REGEX_type, FILENAME_type}, REGEX_type}}},
 		{"States", {{"States", {NFA_type}, INT_type}}},
 		{"ClassCard", {{"ClassCard", {DFA_type}, INT_type}}},
 		{"Ambiguity", {{"Ambiguity", {NFA_type}, VALUE_type}}},
-		{"MyhillNerode",
-		 {{"MyhillNerode", {DFA_type}, INT_type}}},
-		//Предикаты
-		{"Bisimilar",
-		 {{"Bisimilar",
-		   {NFA_type, NFA_type},
-		   BOOL_type}}},
-		{"Minimal", {{"Minimal", {DFA_type}, BOOL_type}}},
+		{"MyhillNerode", {{"MyhillNerode", {DFA_type}, INT_type}}},
+		{"GlaisterShallit", {{"GlaisterShallit", {NFA_type}, INT_type}}},
+		{"PrefixGrammar", {{"PrefixGrammar", {NFA_type}, PG_type}}},
+		// Предикаты
+		{"Bisimilar", {{"Bisimilar", {NFA_type, NFA_type}, BOOL_type}}},
+		{"Minimal", {{"Minimal", {NFA_type}, OPTBOOL_type}}},
+		// для dfa - bool, для nfa - optional<bool>
 		{"Subset",
-		 {{"Subset",
-		   {REGEX_type, REGEX_type},
-		   BOOL_type},
+		 {{"Subset", {REGEX_type, REGEX_type}, BOOL_type},
 		  {"Subset", {NFA_type, NFA_type}, BOOL_type}}},
 		{"Equiv",
-		 {{"Equiv",
-		   {REGEX_type, REGEX_type},
-		   BOOL_type},
+		 {{"Equiv", {REGEX_type, REGEX_type}, BOOL_type},
 		  {"Equiv", {NFA_type, NFA_type}, BOOL_type}}},
-		{"Equal",
-		 {{"Equal", {NFA_type, NFA_type}, BOOL_type}}},
+		{"Equal", {{"Equal", {NFA_type, NFA_type}, BOOL_type}}},
+		{"OneUnambiguity",
+		 {{"OneUnambiguity", {REGEX_type}, BOOL_type},
+		  {"OneUnambiguity", {NFA_type}, BOOL_type}}},
 		{"SemDet", {{"SemDet", {NFA_type}, BOOL_type}}}};
 }
 
@@ -187,13 +182,16 @@ GeneralObject Interpreter::apply_function(
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
 			get_automaton(arguments[0]), get_automaton(arguments[1])));
 	}
-	TransformationMonoid trmon;
 	if (function.name == "Minimal") {
-		trmon = TransformationMonoid(get_automaton(arguments[0]));
-		return ObjectBoolean(trmon.is_minimal());
+		FiniteAutomaton a = get_automaton(arguments[0]);
+		if (a.is_deterministic())
+			return ObjectBoolean(a.is_dfa_minimal());
+		else
+			return ObjectOB(a.is_nfa_minimal());
 	}
 	if (function.name == "Subset") {
-		if (vector<ObjectType> sign = {NFA_type, NFA_type}; function.input == sign) {
+		if (vector<ObjectType> sign = {NFA_type, NFA_type};
+			function.input == sign) {
 			return ObjectBoolean((get_automaton(arguments[0])
 									  .subset(get_automaton(arguments[1]))));
 		} else {
@@ -214,9 +212,20 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equal") {
-		if (vector<ObjectType> sign = {NFA_type, NFA_type}; function.input == sign) {
+		if (vector<ObjectType> sign = {NFA_type, NFA_type};
+			function.input == sign) {
 			return ObjectBoolean(FiniteAutomaton::equal(
 				get_automaton(arguments[0]), get_automaton(arguments[1])));
+		} else {
+			return ObjectBoolean(
+				Regex::equal(get<ObjectRegex>(arguments[0]).value,
+							 get<ObjectRegex>(arguments[1]).value));
+		}
+	}
+	if (function.name == "OneUnambiguity") {
+		if (vector<ObjectType> sign = {NFA_type}; function.input == sign) {
+			return ObjectBoolean(
+				get_automaton(arguments[0]).is_one_unambiguous());
 		} else {
 			return ObjectBoolean(
 				Regex::equal(get<ObjectRegex>(arguments[0]).value,
@@ -229,6 +238,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "PumpLength") {
 		return ObjectInt(get<ObjectRegex>(arguments[0]).value.pump_length());
 	}
+	TransformationMonoid trmon;
 	if (function.name == "ClassLength") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
 		return ObjectInt(trmon.class_length());
@@ -250,11 +260,22 @@ GeneralObject Interpreter::apply_function(
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
 		return ObjectInt(trmon.get_classes_number_MyhillNerode());
 	}
+	if (function.name == "GlaisterShallit") {
+		return ObjectInt(
+			get_automaton(arguments[0]).get_classes_number_GlaisterShallit());
+	}
+	if (function.name == "PrefixGrammar") {
+		Grammar g;
+		g.fa_to_prefix_grammar(get_automaton(arguments[0]));
+		return ObjectPG(g); // возможно отстой
+	}
 
 	/*
 	* Идёт Глушков по лесу, видит -- регулярка.
 	Построил автомат и застрелился.
 	*/
+
+	// преобразования внутри класса:
 
 	GeneralObject predres = arguments[0];
 	optional<GeneralObject> res;
@@ -306,6 +327,10 @@ GeneralObject Interpreter::apply_function(
 							  .value.normalize_regex(
 								  get<ObjectFileName>(arguments[1]).value));
 	}
+	if (function.name == "Disambiguate") {
+		res = ObjectRegex(
+			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex());
+	}
 	/*if (function.name == "Simplify") {
 		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
 	}*/
@@ -349,8 +374,7 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 	if (input_type.size() != func_input_type.size()) return false;
 	for (int i = 0; i < input_type.size(); i++) {
 		if (!((input_type[i] == func_input_type[i]) ||
-			  (input_type[i] == DFA_type &&
-			   func_input_type[i] == NFA_type)))
+			  (input_type[i] == DFA_type && func_input_type[i] == NFA_type)))
 			return false;
 	}
 	return true;
@@ -411,8 +435,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 				if (names_to_functions[predfunc][0].output !=
 					names_to_functions[func][0].input[0]) {
 					vector<ObjectType> nfa_type = {NFA_type};
-					if (!(names_to_functions[predfunc][0].output ==
-							  DFA_type &&
+					if (!(names_to_functions[predfunc][0].output == DFA_type &&
 						  names_to_functions[func][0].input == nfa_type)) {
 						return nullopt;
 					} else {
@@ -459,8 +482,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			if (names_to_functions[func].size() == 2) {
 				// DeLinearize ~ DeAnnote
 				if (names_to_functions[predfunc].size() != 2) {
-					if (names_to_functions[predfunc][0].output ==
-						REGEX_type) {
+					if (names_to_functions[predfunc][0].output == REGEX_type) {
 						neededfuncs[i] = 2;
 					} else if (names_to_functions[predfunc][0].output ==
 								   NFA_type ||
@@ -886,7 +908,8 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 
 	if (auto seq = scan_FunctionSequence(lexems, pos, lexems.size());
 		seq.has_value() && (*seq).functions.size() == 1 &&
-		(*seq).functions[0].output == BOOL_type) {
+		((*seq).functions[0].output == BOOL_type ||
+		 (*seq).functions[0].output == OPTBOOL_type)) {
 
 		pred.predicate = (*seq).functions[0];
 		pred.arguments = (*seq).parameters;
