@@ -81,7 +81,6 @@ class TasksGenerator {
 
 	void distribute_functions();
 	Function generate_next_func(string, int);
-	string generate_op();
 	Function rand_func();
 	Function rand_pred();
 	void change_seed();
@@ -103,6 +102,8 @@ class TasksGenerator {
 	/* генерирует метод:
 	test (НКА | рег. выр-е, рег. выр-е без альтернатив, шаг итерации) */
 	string generate_test();
+	/* генерирует рандомную операцию: объявление, предикат или test*/
+	string generate_op();
 	/*запись теста в файл*/
 	void write_to_file(string filename);
 };
