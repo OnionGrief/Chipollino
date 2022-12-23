@@ -163,6 +163,14 @@ GeneralObject Interpreter::apply_function(
 			   holds_alternative<ObjectDFA>(obj);
 	};
 
+	//if (is_automaton(arguments[0])) get_automaton(arguments[0]).set_trim_flag(is_trim);
+	/*if (holds_alternative<ObjectNFA>(arguments[0])) {
+		get<ObjectNFA>(arguments[0]).value.set_trim_flag(is_trim);
+	}
+	if (holds_alternative<ObjectDFA>(arguments[0])) {
+		get<ObjectDFA>(arguments[0]).value.set_trim_flag(is_trim);
+	}*/
+
 	if (function.name == "Glushkov") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_glushkov());
 	}
@@ -271,7 +279,7 @@ GeneralObject Interpreter::apply_function(
 	}
 
 	if (function.name == "isTrim") {
-		get_automaton(arguments[0]).neg_trim_flag();
+		is_trim = !is_trim;
 		return ObjectNFA(get_automaton(arguments[0]));
 	}
 

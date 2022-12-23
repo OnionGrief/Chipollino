@@ -151,8 +151,8 @@ class FiniteAutomaton : public BaseObject {
 	optional<bool> is_nfa_minimal() const;
 	// проверка на минимальность для дка
 	bool is_dfa_minimal() const;
-	// изменить  флаг is_trim на обратный
-	void neg_trim_flag() const;
+	// установить  флаг is_trim
+	void set_trim_flag(bool trim_global);
 
 	friend class Regex;
 	friend class TransformationMonoid;

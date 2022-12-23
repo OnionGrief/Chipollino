@@ -30,6 +30,8 @@ class Interpreter {
   private:
 	// true, если во время исполнения произошла ошибка
 	bool error = false;
+	// для контролирования ловушек
+	bool is_trim = true;
 
 	// Вывод
 	LogMode log_mode = LogMode::all;

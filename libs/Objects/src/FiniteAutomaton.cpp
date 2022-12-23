@@ -2447,6 +2447,6 @@ Regex FiniteAutomaton::to_regex() const {
 	return temp1;
 }
 
-void FiniteAutomaton::neg_trim_flag() const {
-	is_trim = !is_trim;
+void FiniteAutomaton::set_trim_flag(bool is_trim_global) {
+	is_trim = is_trim_global;
 }
