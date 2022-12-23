@@ -598,6 +598,7 @@ void Example::test_all() {
 	test_interpreter();
 	test_TransformationMonoid();
 	test_GlaisterShallit();
+	test_fa_to_pgrammar();
 	cout << "all tests passed\n\n";
 }
 
@@ -921,6 +922,7 @@ void Example::fa_to_pgrammar() {
 }
 
 void Example::test_fa_to_pgrammar() {
+	cout << "fa to grammar\n";
 	vector<State> states1;
 	for (int i = 0; i < 5; i++) {
 		State s = {
@@ -942,9 +944,13 @@ void Example::test_fa_to_pgrammar() {
 
 	Grammar g;
 
+	cout << "1\n";
 	g.fa_to_prefix_grammar(dfa1);
+	cout << "2\n";
 	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
+	cout << "3\n";
 	g.fa_to_prefix_grammar_TM(dfa1);
+	cout << "4\n";
 	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
 }
 
