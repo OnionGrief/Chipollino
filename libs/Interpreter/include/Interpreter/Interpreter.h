@@ -30,8 +30,6 @@ class Interpreter {
   private:
 	// true, если во время исполнения произошла ошибка
 	bool error = false;
-	// глобальный флаг автоматов (отвечает за удаление ловушек)
-	bool is_trim = true;
 
 	// Вывод
 	LogMode log_mode = LogMode::all;
