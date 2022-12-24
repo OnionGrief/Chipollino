@@ -13,15 +13,15 @@ namespace Typization {
 
 // Перечисление типов объектов
 enum class ObjectType {
-	NFA,	  // недетерминированный КА
-	DFA,	  // детерминированный КА
-	Regex,	  // регулярное выражение
-	Int,	  // целое число
-	FileName, // имя файла для чтения
-	Boolean,  // true/false
-	OB,		  // optional<bool>
-	Value,	  // yes/no/ы/ь
-	PG		  // префиксная грамматика
+	NFA,			// недетерминированный КА
+	DFA,			// детерминированный КА
+	Regex,			// регулярное выражение
+	Int,			// целое число
+	FileName,		// имя файла для чтения
+	Boolean,		// true/false
+	OptionalBool,	// optional<bool>
+	AmbiguityValue, // yes/no/ы/ь
+	PrefixGramnar				// префиксная грамматика
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -43,9 +43,9 @@ using ObjectInt = ObjectHolder<ObjectType::Int, int>;
 using ObjectFileName = ObjectHolder<ObjectType::FileName, string>;
 using ObjectBoolean = ObjectHolder<ObjectType::Boolean, bool>;
 using ObjectValue =
-	ObjectHolder<ObjectType::Value, FiniteAutomaton::AmbiguityValue>;
-using ObjectOB = ObjectHolder<ObjectType::OB, optional<bool>>;
-using ObjectPG = ObjectHolder<ObjectType::PG, Grammar>;
+	ObjectHolder<ObjectType::AmbiguityValue, FiniteAutomaton::AmbiguityValue>;
+using ObjectOB = ObjectHolder<ObjectType::OptionalBool, optional<bool>>;
+using ObjectPG = ObjectHolder<ObjectType::PrefixGramnar, Grammar>;
 
 // Универсальный объект
 using GeneralObject =
@@ -55,12 +55,12 @@ using GeneralObject =
 			ObjectHolder<ObjectType::Int, int>,
 			ObjectHolder<ObjectType::FileName, string>,
 			ObjectHolder<ObjectType::Boolean, bool>,
-			ObjectHolder<ObjectType::Value, FiniteAutomaton::AmbiguityValue>,
-			ObjectHolder<ObjectType::OB, optional<bool>>,
-			ObjectHolder<ObjectType::PG, Grammar>>;
+			ObjectHolder<ObjectType::AmbiguityValue, FiniteAutomaton::AmbiguityValue>,
+			ObjectHolder<ObjectType::OptionalBool, optional<bool>>,
+			ObjectHolder<ObjectType::PrefixGramnar, Grammar>>;
 
 // Функция, состоит из имени и сигнатуры
-// Предикат - тоже функция, но на выходе booleanFiniteAutomaton::AmbiguityValue
+// Предикат - тоже функция, но на выходе boolean
 struct Function {
 	// Имя функции
 	string name;

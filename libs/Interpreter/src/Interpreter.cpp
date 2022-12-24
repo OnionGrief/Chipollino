@@ -13,52 +13,67 @@ bool operator==(const Function& l, const Function& r) {
 
 Interpreter::Interpreter() {
 	names_to_functions = {
-		{"Thompson", {{"Thompson", {REGEX_type}, NFA_type}}},
-		{"IlieYu", {{"IlieYu", {REGEX_type}, NFA_type}}},
-		{"Antimirov", {{"Antimirov", {REGEX_type}, NFA_type}}},
-		{"Arden", {{"Arden", {NFA_type}, REGEX_type}}},
-		{"Glushkov", {{"Glushkov", {REGEX_type}, NFA_type}}},
-		{"Determinize", {{"Determinize", {NFA_type}, DFA_type}}},
-		{"RemEps", {{"RemEps", {NFA_type}, NFA_type}}},
-		{"Linearize", {{"Linearize", {REGEX_type}, REGEX_type}}},
-		{"Minimize", {{"Minimize", {NFA_type}, DFA_type}}},
-		{"Reverse", {{"Reverse", {NFA_type}, NFA_type}}},
-		{"Annote", {{"Annote", {NFA_type}, DFA_type}}},
+		{"Thompson", {{"Thompson", {ObjectType::Regex}, ObjectType::NFA}}},
+		{"IlieYu", {{"IlieYu", {ObjectType::Regex}, ObjectType::NFA}}},
+		{"Antimirov", {{"Antimirov", {ObjectType::Regex}, ObjectType::NFA}}},
+		{"Arden", {{"Arden", {ObjectType::NFA}, ObjectType::Regex}}},
+		{"Glushkov", {{"Glushkov", {ObjectType::Regex}, ObjectType::NFA}}},
+		{"Determinize", {{"Determinize", {ObjectType::NFA}, ObjectType::DFA}}},
+		{"RemEps", {{"RemEps", {ObjectType::NFA}, ObjectType::NFA}}},
+		{"Linearize", {{"Linearize", {ObjectType::Regex}, ObjectType::Regex}}},
+		{"Minimize", {{"Minimize", {ObjectType::NFA}, ObjectType::DFA}}},
+		{"Reverse", {{"Reverse", {ObjectType::NFA}, ObjectType::NFA}}},
+		{"Annote", {{"Annote", {ObjectType::NFA}, ObjectType::DFA}}},
 		{"DeLinearize",
-		 {{"DeLinearize", {REGEX_type}, REGEX_type},
-		  {"DeLinearize", {NFA_type}, NFA_type}}},
-		{"Complement", {{"Complement", {DFA_type}, DFA_type}}},
+		 {{"DeLinearize", {ObjectType::Regex}, ObjectType::Regex},
+		  {"DeLinearize", {ObjectType::NFA}, ObjectType::NFA}}},
+		{"Complement", {{"Complement", {ObjectType::DFA}, ObjectType::DFA}}},
 		{"DeAnnote",
-		 {{"DeAnnote", {REGEX_type}, REGEX_type},
-		  {"DeAnnote", {NFA_type}, NFA_type}}},
-		{"MergeBisim", {{"MergeBisim", {NFA_type}, NFA_type}}},
-		{"Disambiguate", {{"Disambiguate", {REGEX_type}, REGEX_type}}},
-		{"isTrim", {{"isTrim", {NFA_type}, NFA_type}}},
+		 {{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
+		  {"DeAnnote", {ObjectType::NFA}, ObjectType::NFA}}},
+		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
+		{"Disambiguate",
+		 {{"Disambiguate", {ObjectType::Regex}, ObjectType::Regex}}},
 		// Многосортные функции
-		{"PumpLength", {{"PumpLength", {REGEX_type}, INT_type}}},
-		{"ClassLength", {{"ClassLength", {DFA_type}, INT_type}}},
-		{"Normalize", {{"Normalize", {REGEX_type, FILENAME_type}, REGEX_type}}},
-		{"States", {{"States", {NFA_type}, INT_type}}},
-		{"ClassCard", {{"ClassCard", {DFA_type}, INT_type}}},
-		{"Ambiguity", {{"Ambiguity", {NFA_type}, VALUE_type}}},
-		{"MyhillNerode", {{"MyhillNerode", {DFA_type}, INT_type}}},
-		{"GlaisterShallit", {{"GlaisterShallit", {NFA_type}, INT_type}}},
-		{"PrefixGrammar", {{"PrefixGrammar", {NFA_type}, PG_type}}},
+		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
+		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
+		{"Normalize",
+		 {{"Normalize",
+		   {ObjectType::Regex, ObjectType::FileName},
+		   ObjectType::Regex}}},
+		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
+		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
+		{"Ambiguity",
+		 {{"Ambiguity", {ObjectType::NFA}, ObjectType::AmbiguityValue}}},
+		{"MyhillNerode",
+		 {{"MyhillNerode", {ObjectType::DFA}, ObjectType::Int}}},
+		{"GlaisterShallit",
+		 {{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int}}},
+		{"PrefixGrammar",
+		 {{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGramnar}}},
 		// Предикаты
-		{"Bisimilar", {{"Bisimilar", {NFA_type, NFA_type}, BOOL_type}}},
-		{"Minimal", {{"Minimal", {NFA_type}, OPTBOOL_type}}},
+		{"Bisimilar",
+		 {{"Bisimilar",
+		   {ObjectType::NFA, ObjectType::NFA},
+		   ObjectType::Boolean}}},
+		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::OptionalBool}}},
 		// для dfa - bool, для nfa - optional<bool>
 		{"Subset",
-		 {{"Subset", {REGEX_type, REGEX_type}, BOOL_type},
-		  {"Subset", {NFA_type, NFA_type}, BOOL_type}}},
+		 {{"Subset",
+		   {ObjectType::Regex, ObjectType::Regex},
+		   ObjectType::Boolean},
+		  {"Subset", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equiv",
-		 {{"Equiv", {REGEX_type, REGEX_type}, BOOL_type},
-		  {"Equiv", {NFA_type, NFA_type}, BOOL_type}}},
-		{"Equal", {{"Equal", {NFA_type, NFA_type}, BOOL_type}}},
+		 {{"Equiv",
+		   {ObjectType::Regex, ObjectType::Regex},
+		   ObjectType::Boolean},
+		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
+		{"Equal",
+		 {{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"OneUnambiguity",
-		 {{"OneUnambiguity", {REGEX_type}, BOOL_type},
-		  {"OneUnambiguity", {NFA_type}, BOOL_type}}},
-		{"SemDet", {{"SemDet", {NFA_type}, BOOL_type}}}};
+		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
+		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
+		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
 }
 
 bool Interpreter::run_line(const string& line) {
@@ -199,7 +214,7 @@ GeneralObject Interpreter::apply_function(
 			return ObjectOB(a.is_nfa_minimal());
 	}
 	if (function.name == "Subset") {
-		if (vector<ObjectType> sign = {NFA_type, NFA_type};
+		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
 			function.input == sign) {
 			return ObjectBoolean((get_automaton(arguments[0])
 									  .subset(get_automaton(arguments[1]))));
@@ -210,7 +225,7 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equiv") {
-		vector<ObjectType> n = {NFA_type, NFA_type};
+		vector<ObjectType> n = {ObjectType::NFA, ObjectType::NFA};
 		if (function.input == n) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
 				get_automaton(arguments[0]), get_automaton(arguments[1])));
@@ -221,7 +236,7 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equal") {
-		if (vector<ObjectType> sign = {NFA_type, NFA_type};
+		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
 			function.input == sign) {
 			return ObjectBoolean(FiniteAutomaton::equal(
 				get_automaton(arguments[0]), get_automaton(arguments[1])));
@@ -232,7 +247,8 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	if (function.name == "OneUnambiguity") {
-		if (vector<ObjectType> sign = {NFA_type}; function.input == sign) {
+		if (vector<ObjectType> sign = {ObjectType::NFA};
+			function.input == sign) {
 			return ObjectBoolean(
 				get_automaton(arguments[0]).is_one_unambiguous());
 		} else {
@@ -275,12 +291,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "PrefixGrammar") {
 		Grammar g;
 		g.fa_to_prefix_grammar(get_automaton(arguments[0]));
-		return ObjectPG(g); // возможно отстой
-	}
-
-	if (function.name == "isTrim") {
-		is_trim = !is_trim;
-		return ObjectNFA(get_automaton(arguments[0]));
+		return ObjectPG(g);
 	}
 
 	/*
@@ -312,7 +323,7 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectNFA(get_automaton(arguments[0]).reverse());
 	}
 	if (function.name == "DeLinearize") {
-		if (function.output == REGEX_type) {
+		if (function.output == ObjectType::Regex) {
 			res =
 				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
 		} else {
@@ -326,7 +337,7 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
 	}
 	if (function.name == "DeAnnote") {
-		if (function.output == NFA_type) {
+		if (function.output == ObjectType::NFA) {
 			res = ObjectNFA(get_automaton(arguments[0]).deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
@@ -387,7 +398,8 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 	if (input_type.size() != func_input_type.size()) return false;
 	for (int i = 0; i < input_type.size(); i++) {
 		if (!((input_type[i] == func_input_type[i]) ||
-			  (input_type[i] == DFA_type && func_input_type[i] == NFA_type)))
+			  (input_type[i] == ObjectType::DFA &&
+			   func_input_type[i] == ObjectType::NFA)))
 			return false;
 	}
 	return true;
@@ -447,8 +459,9 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			if (names_to_functions[func][0].input.size() == 1) {
 				if (names_to_functions[predfunc][0].output !=
 					names_to_functions[func][0].input[0]) {
-					vector<ObjectType> nfa_type = {NFA_type};
-					if (!(names_to_functions[predfunc][0].output == DFA_type &&
+					vector<ObjectType> nfa_type = {ObjectType::NFA};
+					if (!(names_to_functions[predfunc][0].output ==
+							  ObjectType::DFA &&
 						  names_to_functions[func][0].input == nfa_type)) {
 						return nullopt;
 					} else {
@@ -456,7 +469,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 						// if ((func == "Determinize" || func == "Annote") &&
 						if (func == "Annote" &&
 							names_to_functions[predfunc][0].output ==
-								DFA_type) {
+								ObjectType::DFA) {
 							neededfuncs[i] = 0;
 						}
 						if (predfunc == "Minimize" &&
@@ -488,19 +501,20 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 			}
 		} else {
 
-			vector<ObjectType> regex_type = {REGEX_type};
-			vector<ObjectType> nfa_type = {NFA_type};
-			vector<ObjectType> dfa_type = {DFA_type};
+			vector<ObjectType> regex_type = {ObjectType::Regex};
+			vector<ObjectType> nfa_type = {ObjectType::NFA};
+			vector<ObjectType> dfa_type = {ObjectType::DFA};
 
 			if (names_to_functions[func].size() == 2) {
 				// DeLinearize ~ DeAnnote
 				if (names_to_functions[predfunc].size() != 2) {
-					if (names_to_functions[predfunc][0].output == REGEX_type) {
+					if (names_to_functions[predfunc][0].output ==
+						ObjectType::Regex) {
 						neededfuncs[i] = 2;
 					} else if (names_to_functions[predfunc][0].output ==
-								   NFA_type ||
+								   ObjectType::NFA ||
 							   names_to_functions[predfunc][0].output ==
-								   DFA_type) {
+								   ObjectType::DFA) {
 						neededfuncs[i] = 3;
 					} else {
 						return nullopt;
@@ -624,6 +638,14 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 
 	if (res.has_value() && holds_alternative<ObjectBoolean>(*res)) {
 		logger.log("result: " + to_string(get<ObjectBoolean>(*res).value));
+		success = true;
+	} else if (res.has_value() && holds_alternative<ObjectOB>(*res)) {
+		string result = "Unknown";
+		if (get<ObjectOB>(*res).value)
+			result = "1"; // true
+		else if (get<ObjectOB>(*res).value.has_value())
+			result = "0"; // false
+		logger.log("result: " + result);
 		success = true;
 	} else {
 		logger.throw_error("while running predicate: invalid expression");
@@ -784,7 +806,7 @@ optional<Interpreter::Expression> Interpreter::scan_Expression(
 	// Int
 	if (end > pos && lexems[pos].type == Lexem::number) {
 		Expression expr;
-		expr.type = INT_type;
+		expr.type = ObjectType::Int;
 		expr.value = lexems[pos].num;
 		pos++;
 		return expr;
@@ -792,7 +814,7 @@ optional<Interpreter::Expression> Interpreter::scan_Expression(
 	// Regex
 	if (end > pos && lexems[pos].type == Lexem::regex) {
 		Expression expr;
-		expr.type = REGEX_type;
+		expr.type = ObjectType::Regex;
 		expr.value = Regex(lexems[pos].value);
 		pos++;
 		return expr;
@@ -882,8 +904,8 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems,
 	// Language
 	if (const auto& expr = scan_Expression(lexems, i, lexems.size());
 		expr.has_value() &&
-		((*expr).type == REGEX_type || (*expr).type == DFA_type ||
-		 (*expr).type == NFA_type)) {
+		((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
+		 (*expr).type == ObjectType::NFA)) {
 		test.language = *expr;
 	} else {
 		logger.throw_error(
@@ -893,7 +915,7 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems,
 
 	// Test set
 	if (const auto& expr = scan_Expression(lexems, i, lexems.size());
-		expr.has_value() && (*expr).type == REGEX_type) {
+		expr.has_value() && (*expr).type == ObjectType::Regex) {
 		test.test_set = *expr;
 	} else {
 		logger.throw_error(
@@ -921,8 +943,8 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 
 	if (auto seq = scan_FunctionSequence(lexems, pos, lexems.size());
 		seq.has_value() && (*seq).functions.size() == 1 &&
-		((*seq).functions[0].output == BOOL_type ||
-		 (*seq).functions[0].output == OPTBOOL_type)) {
+		((*seq).functions[0].output == ObjectType::Boolean ||
+		 (*seq).functions[0].output == ObjectType::OptionalBool)) {
 
 		pred.predicate = (*seq).functions[0];
 		pred.arguments = (*seq).parameters;

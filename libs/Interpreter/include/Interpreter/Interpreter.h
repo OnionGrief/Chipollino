@@ -30,26 +30,12 @@ class Interpreter {
   private:
 	// true, если во время исполнения произошла ошибка
 	bool error = false;
-	// для контролирования ловушек
+	// глобальный флаг автоматов (отвечает за удаление ловушек)
 	bool is_trim = true;
 
 	// Вывод
 	LogMode log_mode = LogMode::all;
 	int log_nesting = 0;
-
-	// типы:
-
-	ObjectType NFA_type = ObjectType::NFA;
-	ObjectType DFA_type = ObjectType::DFA;
-	ObjectType REGEX_type = ObjectType::Regex;
-	ObjectType INT_type = ObjectType::Int;
-	ObjectType FILENAME_type = ObjectType::FileName;
-	ObjectType BOOL_type = ObjectType::Boolean;
-	ObjectType OPTBOOL_type = ObjectType::OB;
-	ObjectType VALUE_type = ObjectType::Value;
-	ObjectType PG_type = ObjectType::PG;
-	// (не уверена, нужен ли const, в перспективе можно приписать DFA_type =
-	// NFA_type для динамического тайпчека)
 
 	class InterpreterLogger {
 	  public:

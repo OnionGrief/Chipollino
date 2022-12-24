@@ -43,6 +43,11 @@ class FiniteAutomaton : public BaseObject {
   private:
 	int initial_state = 0;
 	vector<State> states;
+
+	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
+	// преобразованиях всегда удаляем в конце ловушки.
+	// Если isTrim = false, тогда после удаления ловушки в результате
+	// преобразований добавляем её обратно
 	bool is_trim = true;
 
 	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
