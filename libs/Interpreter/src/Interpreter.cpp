@@ -50,7 +50,7 @@ Interpreter::Interpreter() {
 		{"GlaisterShallit",
 		 {{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int}}},
 		{"PrefixGrammar",
-		 {{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGramnar}}},
+		 {{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGrammar}}},
 		// Предикаты
 		{"Bisimilar",
 		 {{"Bisimilar",
@@ -211,7 +211,7 @@ GeneralObject Interpreter::apply_function(
 		if (a.is_deterministic())
 			return ObjectBoolean(a.is_dfa_minimal());
 		else
-			return ObjectOB(a.is_nfa_minimal());
+			return ObjectOptionalBool(a.is_nfa_minimal());
 	}
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
@@ -275,7 +275,7 @@ GeneralObject Interpreter::apply_function(
 		return ObjectInt(trmon.class_card());
 	}
 	if (function.name == "Ambiguity") {
-		return ObjectValue(get_automaton(arguments[0]).ambiguity());
+		return ObjectAmbiguityValue(get_automaton(arguments[0]).ambiguity());
 	}
 	/*if (function.name == "Width") {
 		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
@@ -291,7 +291,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "PrefixGrammar") {
 		Grammar g;
 		g.fa_to_prefix_grammar(get_automaton(arguments[0]));
-		return ObjectPG(g);
+		return ObjectPrefixGramnar(g);
 	}
 
 	/*
@@ -639,11 +639,11 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 	if (res.has_value() && holds_alternative<ObjectBoolean>(*res)) {
 		logger.log("result: " + to_string(get<ObjectBoolean>(*res).value));
 		success = true;
-	} else if (res.has_value() && holds_alternative<ObjectOB>(*res)) {
+	} else if (res.has_value() && holds_alternative<ObjectOptionalBool>(*res)) {
 		string result = "Unknown";
-		if (get<ObjectOB>(*res).value)
+		if (get<ObjectOptionalBool>(*res).value)
 			result = "1"; // true
-		else if (get<ObjectOB>(*res).value.has_value())
+		else if (get<ObjectOptionalBool>(*res).value.has_value())
 			result = "0"; // false
 		logger.log("result: " + result);
 		success = true;
