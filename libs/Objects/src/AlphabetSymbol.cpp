@@ -46,8 +46,12 @@ bool alphabet_symbol::operator<(const alphabet_symbol& other) const {
 	return value < other.value;
 }
 
-alphabet_symbol alphabet_symbol::operator+(const alphabet_symbol& b) const {
-	return value + b.value;
+alphabet_symbol alphabet_symbol::operator+(const alphabet_symbol& other) const {
+	return value + other.value;
+}
+
+alphabet_symbol alphabet_symbol::operator+(const string& s) const {
+	return value + s;
 }
 
 bool alphabet_symbol::is_epsilon() const {

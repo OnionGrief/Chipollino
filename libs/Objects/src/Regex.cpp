@@ -528,8 +528,8 @@ string Regex::get_iterated_word(int n) const {
 
 // возвращает пару <вектор сотсояний, max_index>
 pair<vector<State>, int> Regex::get_tompson(int max_index) const {
-	string str;			  //идентификатор состояния
-	vector<State> s = {}; //вектор состояний нового автомата
+	string str;			  // идентификатор состояния
+	vector<State> s = {}; // вектор состояний нового автомата
 	map<alphabet_symbol, set<int>> m, p, map_l, map_r; // словари автоматов
 	set<int> trans; // новые транзишены
 	int offset; // сдвиг для старых индексов состояний в новом автомате

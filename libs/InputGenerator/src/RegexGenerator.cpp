@@ -58,8 +58,8 @@ string RegexGenerator::generate_regex() {
 void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt>
 										 // <regex> | <conc-regex> | пусто
 	int v;
-	if (all_alts_are_eps) //если нет ни одного не пустого слова то оно не
-						  //допустимо
+	if (all_alts_are_eps) // если нет ни одного не пустого слова то оно не
+						  // допустимо
 		v = rand() % 2;
 	else
 		v = rand() % 3; // выбираем какую из 3х альтернатив использовать
@@ -107,8 +107,8 @@ void RegexGenerator::
 		int v2;
 		if (cur_star_num) {
 			int star_chance = cur_regex_length /
-							  cur_star_num; //вероятность выпадения звезды при 2
-											//звездах на 20 букв = 1/10
+							  cur_star_num; // вероятность выпадения звезды при
+											// 2 звездах на 20 букв = 1/10
 			if (cur_regex_length > cur_star_num)
 				star_chance +=
 					cur_star_num /

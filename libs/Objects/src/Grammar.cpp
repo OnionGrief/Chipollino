@@ -261,6 +261,7 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 }
 
 void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
+	Logger::init_step("PrefixGrammar");
 	const vector<State>& states = fa.states;
 	TransformationMonoid a(fa.minimize());
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
@@ -353,6 +354,8 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 			prefix_grammar[i].equivalence_class = {};
 		}
 	}
+	Logger::log(pg_to_txt());
+	Logger::finish_step();
 	return;
 }
 

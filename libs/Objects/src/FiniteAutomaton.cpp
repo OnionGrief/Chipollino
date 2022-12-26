@@ -769,7 +769,7 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 			if (elem.second.size() > 1) {
 				int counter = 1;
 				for (int transition_to : elem.second) {
-					alphabet_symbol new_symb = elem.first + counter;
+					alphabet_symbol new_symb = elem.first + to_string(counter);
 					new_transitions[i][new_symb].insert(transition_to);
 					new_alphabet.insert(new_symb);
 					counter++;
@@ -2445,4 +2445,8 @@ Regex FiniteAutomaton::to_regex() const {
 	Logger::log("Result ", temp1.to_txt());
 	Logger::finish_step();
 	return temp1;
+}
+
+void FiniteAutomaton::set_trim_flag(bool is_trim_global) {
+	is_trim = is_trim_global;
 }
