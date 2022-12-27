@@ -222,8 +222,7 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 						   int index_back,
 						   const vector<PrefixGrammarItem*>& grammar_items,
-						   const set<string>& monoid_rules, string word,
-						   vector<bool> is_visit) {
+						   const set<string>& monoid_rules, string word) {
 	const State& st = fa.states[index];
 	const State& st_back = fa.states[index_back];
 	PrefixGrammarItem* g = grammar_items[index];
@@ -231,9 +230,10 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 		grammar_items[index_back]->equivalence_class;
 
 	g->rules[w].insert(index_back);
-	if (is_visit[index]) {
+	if (g->is_visit) {
 		return 0;
 	}
+	g->is_visit = true;
 	for (const auto& equ : equivalence_class_back) {
 		if (monoid_rules.find(equ) == monoid_rules.end()) {
 			g->equivalence_class.insert(word + w);
@@ -248,9 +248,8 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 				alpha = "";
 			}
 			if (index != ind) {
-				is_visit[index] = true;
 				fa_to_g(fa, alpha, ind, index, grammar_items, monoid_rules,
-						word + w, is_visit);
+						word + w);
 
 			} else {
 				g->rules[alpha].insert(index);
@@ -275,7 +274,6 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 	vector<PrefixGrammarItem*> grammar_items;
 	prefix_grammar.resize(states.size());
 	fill(prefix_grammar.begin(), prefix_grammar.end(), PrefixGrammarItem());
-	vector<bool> is_visit;
 
 	for (size_t i = 0; i < states.size(); i++) {
 		grammar_items.push_back(&prefix_grammar[i]);
@@ -286,7 +284,6 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 		if (i == fa.initial_state) {
 			grammar_items[states[i].index]->is_started = true;
 		}
-		is_visit.push_back(false);
 	}
 	PrefixGrammarItem* g = grammar_items[fa.initial_state];
 	g->equivalence_class.insert("");
@@ -311,7 +308,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 					alpha = "";
 				}
 				fa_to_g(fa, alpha, ind, fa.initial_state, grammar_items, m_r,
-						"", is_visit);
+						"");
 			}
 		}
 	}
@@ -462,16 +459,15 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() {
 const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 							  int index_back,
 							  const vector<PrefixGrammarItem*>& grammar_items,
-							  const set<string>& monoid_rules, string word,
-							  vector<bool> is_visit) {
+							  const set<string>& monoid_rules, string word) {
 	const State& st = fa.states[index];
 	PrefixGrammarItem* g = grammar_items[index];
 
 	g->rules[w].insert(index_back);
-	if (is_visit[index]) {
+	if (g->is_visit) {
 		return 0;
 	}
-
+	g->is_visit = true;
 	for (const auto& elem : st.transitions) {
 		alphabet_symbol alpha = elem.first;
 		// if st.is_terminal то учитываем только переходы в себя
@@ -480,9 +476,8 @@ const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 				alpha = "";
 			}
 			if (index != ind) {
-				is_visit[index] = true;
 				fa_to_g_TM(fa, alpha, ind, index, grammar_items, monoid_rules,
-						   word + w, is_visit);
+						   word + w);
 
 			} else {
 				g->rules[alpha].insert(index);
@@ -507,7 +502,6 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	vector<PrefixGrammarItem*> grammar_items;
 	prefix_grammar.resize(states.size());
 	fill(prefix_grammar.begin(), prefix_grammar.end(), PrefixGrammarItem());
-	vector<bool> is_visit;
 
 	for (size_t i = 0; i < states.size(); i++) {
 		grammar_items.push_back(&prefix_grammar[i]);
@@ -528,7 +522,6 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 		if (i == fa.initial_state) {
 			grammar_items[states[i].index]->is_started = true;
 		}
-		is_visit.push_back(false);
 	}
 	//---------------------------
 	set<string> equal_classes;
@@ -568,7 +561,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 					alpha = "";
 				}
 				fa_to_g_TM(fa, alpha, ind, fa.initial_state, grammar_items, m_r,
-						   "", is_visit);
+						   "");
 			}
 		}
 	}

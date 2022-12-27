@@ -15,6 +15,7 @@ struct PrefixGrammarItem {
 	bool is_started = false;
 	// Type type = terminal;
 	int state_index = -1;
+	bool is_visit = false;
 	// классы эквивалентности у состояния в автомате
 	set<string> equivalence_class;
 	// правила переписывания для данного состояния
@@ -48,12 +49,11 @@ class Grammar {
 		const FiniteAutomaton&, string, int, int,
 		const vector<PrefixGrammarItem*>&, // вспомогательная функции для
 										   // получения префиксной грамматики
-		const set<string>&, string, vector<bool>);
-	const int fa_to_g_TM(
-		const FiniteAutomaton&, string, int, int,
-		const vector<PrefixGrammarItem*>&, const set<string>&, string,
-		vector<bool>); // вспомогательная функции для
-					   //  получения префиксной грамматики через ТМ
+		const set<string>&, string);
+	const int fa_to_g_TM(const FiniteAutomaton&, string, int, int,
+						 const vector<PrefixGrammarItem*>&, const set<string>&,
+						 string); // вспомогательная функции для
+								  //  получения префиксной грамматики через ТМ
 
   public:
 	// обновляет значение class_number для каждого нетерминала
