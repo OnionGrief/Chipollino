@@ -37,6 +37,13 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 			lexem.type = Regex::Lexem::alt;
 			break;
 		case '*':
+			if (lexems.back().type == Regex::Lexem::star ||
+				lexems.back().type == Regex::Lexem::alt) {
+				lexem.type = Regex::Lexem::error;
+				lexems = {};
+				lexems.push_back(lexem);
+				return lexems;
+			}
 			lexem.type = Regex::Lexem::star;
 			break;
 		default:
