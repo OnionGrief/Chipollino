@@ -33,7 +33,7 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 				lexems = {};
 				lexems.push_back(lexem);
 				return lexems;
-			} else {
+			} else if (index == 0) {
 				lexem.type = Regex::Lexem::error;
 				lexems = {};
 				lexems.push_back(lexem);
@@ -50,7 +50,7 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 				lexems = {};
 				lexems.push_back(lexem);
 				return lexems;
-			} else {
+			} else if (index == 0) {
 				lexem.type = Regex::Lexem::error;
 				lexems = {};
 				lexems.push_back(lexem);
@@ -373,7 +373,11 @@ Regex Regex::normalize_regex(const string& file) const {
 
 bool Regex::from_string(const string& str) {
 	if (!str.size()) {
-		return false;
+		value = Regex::Lexem::eps;
+		type = Regex::eps;
+		alphabet = {};
+		language = make_shared<Language>(alphabet);
+		return true;
 	}
 
 	vector<Regex::Lexem> l = parse_string(str);
