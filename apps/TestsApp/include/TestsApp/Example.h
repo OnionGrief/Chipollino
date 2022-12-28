@@ -3,12 +3,14 @@
 #include "InputGenerator/TasksGenerator.h"
 #include "Interpreter/Interpreter.h"
 #include "Objects/FiniteAutomaton.h"
+#include "Objects/Grammar.h"
 #include "Objects/Language.h"
 #include "Objects/Logger.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
 #include <cassert>
+#include <functional>
 #include <iostream>
 /*
 Это статический класс, где вы можете писать примеры
@@ -41,6 +43,11 @@ class Example {
 	static void fa_semdet_check();
 	static void get_one_unambiguous_regex();
 	static void classes_number_GlaisterShallit();
+	static void testing_with_generator(
+		int regex_length, int star_num, int star_nesting, int alphabet_size,
+		const function<void(string& rgx_str)>& check_function);
+	static void arden_lemma_testing();
+	static void fa_to_pgrammar();
 
 	// запуск всех тестов
 	static void test_all();
@@ -57,4 +64,5 @@ class Example {
 	static void test_interpreter();
 	static void test_TransformationMonoid();
 	static void test_GlaisterShallit();
+	static void test_fa_to_pgrammar();
 };

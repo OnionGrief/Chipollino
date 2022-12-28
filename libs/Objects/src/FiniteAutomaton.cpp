@@ -769,7 +769,7 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 			if (elem.second.size() > 1) {
 				int counter = 1;
 				for (int transition_to : elem.second) {
-					alphabet_symbol new_symb = elem.first + counter;
+					alphabet_symbol new_symb = elem.first + to_string(counter);
 					new_transitions[i][new_symb].insert(transition_to);
 					new_alphabet.insert(new_symb);
 					counter++;
@@ -1536,7 +1536,8 @@ Fraction calc_ambiguity(int i, int n, const vector<Fraction>& f1,
 	return d1 - d2;
 }
 
-FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
+FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
+	int digits_number_limit, optional<int>& word_length) const {
 	FiniteAutomaton fa = remove_eps();
 	FiniteAutomaton min_fa = fa.minimize().remove_trap_states();
 	fa = fa.remove_trap_states();
@@ -1545,15 +1546,15 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 	int s = fa.states.size();
 	int min_s = min_fa.states.size();
 	int N = s * s + s + i + 1;
-	// количество путей длины n до финальных из начального
-	vector<InfInt> paths_number(N);
-	vector<InfInt> min_paths_number(N);
+	// количество путей до финальных из начального
+	InfInt paths_number;
+	InfInt min_paths_number;
 	// матрица смежности
 	vector<vector<int>> adjacency_matrix(s, vector<int>(s));
 	vector<vector<int>> min_adjacency_matrix(min_s, vector<int>(min_s));
 	// количество путей длины n до всех вершин из начальной
-	vector<vector<InfInt>> d(N + 1, vector<InfInt>(s));
-	vector<vector<InfInt>> min_d(N + 1, vector<InfInt>(min_s));
+	vector<vector<InfInt>> d(2, vector<InfInt>(s));
+	vector<vector<InfInt>> min_d(2, vector<InfInt>(min_s));
 	d[0][fa.initial_state] = 1;
 	min_d[0][min_fa.initial_state] = 1;
 	for (int i = 0; i < s; i++)
@@ -1565,108 +1566,140 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value() const {
 			for (int transition : elem.second)
 				min_adjacency_matrix[i][transition]++;
 	vector<Fraction> f1;
-	optional<Fraction> prev_val; // для проверки на константность
-	bool return_flag = true;
-	for (int k = 1; k < N + 1; k++) {
+	Fraction max_checker; // максимальное значение для проверки
+						  // на однозначность
+	bool max_return_flag = true;
+	optional<Fraction> prev_f1_val;
+	Fraction max_delta_checker; // максимальный прирост для
+								// проверки на однозначность
+	Fraction prev_val; // значение calc_ambiguity
+	bool max_delta_return_flag = true;
+	bool unambigious_return_flag = true;
+	bool is_exponentially_ambiguous = false;
+	// для сохранения результатов calc_ambiguity
+	vector<vector<Fraction>> calculated(i);
+	vector<vector<char>> is_calculated(i);
+	int return_counter = 0;
+	for (int k = 0; true; k++) {
+		paths_number = 0;
+		min_paths_number = 0;
+		d[(k + 1) % 2] = vector<InfInt>(s);
+		min_d[(k + 1) % 2] = vector<InfInt>(min_s);
 		for (int v = 0; v < s; v++) {
 			for (int i = 0; i < s; i++) {
-				d[k][v] += InfInt(adjacency_matrix[i][v]) * d[k - 1][i];
+				d[(k + 1) % 2][v] +=
+					InfInt(adjacency_matrix[i][v]) * d[k % 2][i];
 			}
-			if (fa.states[v].is_terminal)
-				paths_number[k - 1] = paths_number[k - 1] + d[k][v];
+			if (fa.states[v].is_terminal) paths_number += d[(k + 1) % 2][v];
 		}
 		for (int v = 0; v < min_s; v++) {
 			for (int i = 0; i < min_s; i++) {
-				min_d[k][v] +=
-					InfInt(min_adjacency_matrix[i][v]) * min_d[k - 1][i];
+				min_d[(k + 1) % 2][v] +=
+					InfInt(min_adjacency_matrix[i][v]) * min_d[k % 2][i];
 			}
 			if (min_fa.states[v].is_terminal)
-				min_paths_number[k - 1] = min_paths_number[k - 1] + min_d[k][v];
+				min_paths_number += min_d[(k + 1) % 2][v];
 		}
-		if (min_paths_number[k - 1] == 0) continue;
-		f1.push_back(Fraction(paths_number[k - 1], min_paths_number[k - 1]));
-		if (!prev_val) {
-			prev_val = f1[f1.size() - 1];
-			continue;
+		Fraction new_f1_value;
+		if (min_paths_number == 0)
+			new_f1_value = Fraction();
+		else {
+			new_f1_value = Fraction(paths_number, min_paths_number);
+			// обработка проверок на однозначность
+			if (!(new_f1_value == Fraction(1, 1)))
+				unambigious_return_flag = false;
+			if (k < (s + 1) * 3) {
+				if (new_f1_value > max_checker) max_checker = new_f1_value;
+				if (!prev_f1_val) {
+					prev_f1_val = new_f1_value;
+				} else {
+					Fraction delta = new_f1_value - *prev_f1_val;
+					if (delta > max_delta_checker) max_delta_checker = delta;
+					prev_f1_val = new_f1_value;
+				}
+			} else if (max_return_flag || max_delta_return_flag) {
+				if (new_f1_value > max_checker) max_return_flag = false;
+				Fraction delta = new_f1_value - *prev_f1_val;
+				if (delta >= max_delta_checker) max_delta_return_flag = false;
+				prev_f1_val = new_f1_value;
+			}
 		}
-		if (!(f1[f1.size() - 1] == *prev_val)) {
-			return_flag = false;
-		}
-		prev_val = f1[f1.size() - 1];
-	}
-
-	if (return_flag) {
-		if (*prev_val == Fraction(1, 1))
+		if (k >= s * s && unambigious_return_flag)
 			return FiniteAutomaton::unambigious;
-		else
+		if (k >= s * s && k >= (s + 1) * 3 &&
+			(max_return_flag || max_delta_return_flag))
 			return FiniteAutomaton::almost_unambigious;
-	}
 
-	// в f1 только ненулевые результаты
-	if (f1.size() < 3) return FiniteAutomaton::polynomially_ambigious;
-	// считаю new_s, чтобы удовлетворяло
-	// new_s * new_s + new_s + i + 1 <= f1.size()
-	int new_s = floor(double(-1 + sqrt(-11 + 4 * f1.size())) / 2);
-	i += f1.size() - (new_s * new_s + new_s + i + 1);
+		vector<Fraction> f1_check = f1;
+		f1_check.push_back(new_f1_value);
+		if (f1_check.size() >= 3) {
+			int new_s = floor(
+				double(-1 + sqrt((1 - 4 * (i + 1)) + 4 * f1_check.size())) / 2);
+			int delta = f1_check.size() - (new_s * new_s + new_s + i + 1);
 
-	// для сохранения результатов calc_ambiguity
-	vector<vector<Fraction>> calculated(new_s + i + 1,
-										vector<Fraction>(f1.size()));
-	vector<vector<char>> is_calculated(new_s + i + 1,
-									   vector<char>(f1.size(), 0));
-	Fraction val =
-		calc_ambiguity(new_s + i, new_s * new_s, f1, calculated, is_calculated);
-	prev_val = val;
-	while (val > Fraction()) {
-		i++;
-		int return_counter = 0;
-		// цикл ищет новое ненулевое значение
-		do {
-			if (return_counter == s)
+			vector<vector<Fraction>> calculated_check = calculated;
+			vector<vector<char>> is_calculated_check = is_calculated;
+			for (int j = 0; j < calculated_check.size(); j++) {
+				calculated_check[j].resize(f1_check.size(), Fraction());
+				is_calculated_check[j].resize(f1_check.size(), 0);
+			}
+			calculated_check.push_back(vector<Fraction>(f1_check.size()));
+			is_calculated_check.push_back(vector<char>(f1_check.size(), 0));
+			Fraction val =
+				calc_ambiguity(new_s + i, new_s * new_s + delta, f1_check,
+							   calculated_check, is_calculated_check);
+			// limit check
+			if (Fraction::last_number_of_digits >= digits_number_limit ||
+				double(paths_number.numberOfDigits() +
+					   min_paths_number.numberOfDigits()) >=
+					double(digits_number_limit) / 2) {
+				word_length = k;
+				if (unambigious_return_flag)
+					return FiniteAutomaton::unambigious;
+				if (k >= (s + 1) * 3 &&
+					(max_return_flag || max_delta_return_flag))
+					return FiniteAutomaton::almost_unambigious;
+				if (val > Fraction() && val >= prev_val)
+					return FiniteAutomaton::exponentially_ambiguous;
+				if (is_exponentially_ambiguous)
+					return FiniteAutomaton::exponentially_ambiguous;
 				return FiniteAutomaton::polynomially_ambigious;
-			N++;
-			d.push_back(vector<InfInt>(s));
-			paths_number.push_back(0);
-			for (int v = 0; v < s; v++) {
-				for (int i = 0; i < s; i++) {
-					d[N][v] += InfInt(adjacency_matrix[i][v]) * d[N - 1][i];
-				}
-				if (fa.states[v].is_terminal) paths_number[N - 1] += d[N][v];
 			}
-			min_d.push_back(vector<InfInt>(s));
-			min_paths_number.push_back(0);
-			for (int v = 0; v < min_s; v++) {
-				for (int i = 0; i < min_s; i++) {
-					min_d[N][v] +=
-						InfInt(min_adjacency_matrix[i][v]) * min_d[N - 1][i];
-				}
-				if (min_fa.states[v].is_terminal)
-					min_paths_number[N - 1] += min_d[N][v];
+
+			if (Fraction() >= val) {
+				return_counter++;
+				if (k >= N && return_counter >= s) break;
+				continue;
 			}
-			return_counter++;
-		} while (min_paths_number[N - 1] == 0);
-		f1.push_back(Fraction(paths_number[N - 1], min_paths_number[N - 1]));
-		for (int j = 0; j < calculated.size(); j++) {
-			calculated[j].push_back(Fraction());
-			is_calculated[j].push_back(0);
+
+			if (val >= prev_val) {
+				is_exponentially_ambiguous = true;
+				if (k >= N) return FiniteAutomaton::exponentially_ambiguous;
+			} else
+				is_exponentially_ambiguous = false;
+
+			return_counter = 0;
+			calculated = calculated_check;
+			is_calculated = is_calculated_check;
+			f1.push_back(new_f1_value);
+			prev_val = val;
+		} else {
+			f1.push_back(new_f1_value);
 		}
-		calculated.push_back(vector<Fraction>(f1.size()));
-		is_calculated.push_back(vector<char>(f1.size(), 0));
-		// увеличил i на 1, увеличил f1 и другие массивы на 1
-		// можем снова считать
-		val = calc_ambiguity(new_s + i, new_s * new_s, f1, calculated,
-							 is_calculated);
-		if (val > *prev_val || val == *prev_val)
-			return FiniteAutomaton::exponentially_ambiguous;
-		prev_val = val;
 	}
+
 	return FiniteAutomaton::polynomially_ambigious;
 }
 
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity() const {
 	Logger::init_step("Ambiguity");
-	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value();
-	Logger::log("Автомат:", *this);
+	optional<int> word_length;
+	FiniteAutomaton::AmbiguityValue result =
+		get_ambiguity_value(300, word_length);
+	Logger::log("Автомат", *this);
+	if (word_length.has_value()) {
+		Logger::log("Для максимальной длины слова", to_string(*word_length));
+	}
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
 		Logger::log("Результат Ambiguity", "Exponentially ambiguous");
@@ -1717,33 +1750,31 @@ void find_maximum_identity_matrix(vector<int>& rows,
 		return;
 	}
 	int n = table.size(), m = table[0].size();
-	vector<int> y_ind(n, -1);
-	vector<int> x_ind(m, -1);
-	for (int i = 0; i < n; i++) {
-		if (used_y[i]) continue;
-		for (int j = 0; j < m; j++) {
-			if (used_x[j]) continue;
+	vector<int> y_ind(m, -1);
+	for (int j = 0; j < m; j++) {
+		if (used_x[j]) continue;
+		for (int i = 0; i < n; i++) {
+			if (used_y[i]) continue;
 			if (!table[i][j]) continue;
-			if (y_ind[i] == -1)
-				y_ind[i] = j;
+			if (y_ind[j] == -1)
+				y_ind[j] = i;
 			else
-				y_ind[i] = -2;
-			if (x_ind[j] == -1)
-				x_ind[j] = i;
-			else
-				x_ind[j] = -2;
+				y_ind[j] = -2;
 		}
 	}
-	// отмечаю строки и стобцы с единственной единицей
-	for (int i = 0; i < n; i++)
-		if (y_ind[i] > 0 && x_ind[y_ind[i]] == i) {
-			used_x[y_ind[i]] = true;
-			used_y[i] = true;
+	// отмечаю стобцы с единственной единицей
+	for (int j = 0; j < m; j++) {
+		if (y_ind[j] >= 0) {
+			if (used_y[y_ind[j]]) continue;
+			if (used_x[j]) continue;
+			used_x[j] = true;
+			used_y[y_ind[j]] = true;
 			unused_y--;
 			unused_x--;
 			size++;
-			temp_result_yx.emplace_back(i, y_ind[i]);
+			temp_result_yx.emplace_back(y_ind[j], j);
 		}
+	}
 	if (unused_y == 0) {
 		set_result(res, size, result_yx, temp_result_yx);
 		return;
@@ -1777,17 +1808,12 @@ void find_maximum_identity_matrix(vector<int>& rows,
 			vector<int> false_y;
 			for (int i = 0; i < table.size(); i++) {
 				if (new_used_y[i]) continue;
-				if (table[i][x] == 1) {
-					new_used_y[i] = true;
-					new_unused_y--;
-				} else {
-					false_y.push_back(i);
-				}
+				false_y.push_back(i);
 			}
 			vector<pair<int, int>> new_result_yx = temp_result_yx;
 			new_result_yx.emplace_back(row, x);
 			vector<bool> temp_used_x = new_used_x;
-			// перехожу на все строки, в которых 0
+			// перехожу на все свободные строки
 			find_maximum_identity_matrix(
 				false_y, table, res, size + 1, result_yx, new_result_yx,
 				temp_used_x, new_used_y, new_unused_x, new_unused_y);
@@ -2419,4 +2445,8 @@ Regex FiniteAutomaton::to_regex() const {
 	Logger::log("Result ", temp1.to_txt());
 	Logger::finish_step();
 	return temp1;
+}
+
+void FiniteAutomaton::set_trim_flag(bool is_trim_global) {
+	is_trim = is_trim_global;
 }

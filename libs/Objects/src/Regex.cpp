@@ -11,6 +11,7 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 	vector<Regex::Lexem> lexems;
 	lexems = {};
 	bool flag_alt = false;
+	bool regex_is_eps = true;
 	auto is_symbol = [](char c) {
 		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
 	};
@@ -26,7 +27,13 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 			break;
 		case ')':
 			lexem.type = Regex::Lexem::parR;
-			if (lexems.back().type == Regex::Lexem::parL || flag_alt) {
+			if ((index != 0) &&
+				(flag_alt || lexems.back().type == Regex::Lexem::parL)) {
+				lexem.type = Regex::Lexem::error;
+				lexems = {};
+				lexems.push_back(lexem);
+				return lexems;
+			} else if (index == 0) {
 				lexem.type = Regex::Lexem::error;
 				lexems = {};
 				lexems.push_back(lexem);
@@ -37,10 +44,23 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 			lexem.type = Regex::Lexem::alt;
 			break;
 		case '*':
+			if ((index != 0) && (lexems.back().type == Regex::Lexem::star ||
+								 lexems.back().type == Regex::Lexem::alt)) {
+				lexem.type = Regex::Lexem::error;
+				lexems = {};
+				lexems.push_back(lexem);
+				return lexems;
+			} else if (index == 0) {
+				lexem.type = Regex::Lexem::error;
+				lexems = {};
+				lexems.push_back(lexem);
+				return lexems;
+			}
 			lexem.type = Regex::Lexem::star;
 			break;
 		default:
 			if (is_symbol(c)) {
+				regex_is_eps = false;
 				lexem.type = Regex::Lexem::symb;
 				string number;
 				for (size_t i = index + 1; i < str.size(); i++) {
@@ -91,6 +111,11 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 		}
 
 		lexems.push_back(lexem);
+	}
+	if (regex_is_eps) {
+		lexems = {};
+		lexems.push_back({Regex::Lexem::error});
+		return lexems;
 	}
 
 	if (lexems.size() && lexems[0].type == Regex::Lexem::alt) {
@@ -348,7 +373,11 @@ Regex Regex::normalize_regex(const string& file) const {
 
 bool Regex::from_string(const string& str) {
 	if (!str.size()) {
-		return false;
+		value = Regex::Lexem::eps;
+		type = Regex::eps;
+		alphabet = {};
+		language = make_shared<Language>(alphabet);
+		return true;
 	}
 
 	vector<Regex::Lexem> l = parse_string(str);

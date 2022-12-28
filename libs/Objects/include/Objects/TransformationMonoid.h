@@ -1,4 +1,5 @@
 #pragma once
+#include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
 // #include "Logger.h"
@@ -42,6 +43,7 @@ class TransformationMonoid {
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 	get_rewriting_rules(); // получаем правила переписывания
 	string get_equalence_classes_txt(); // вывод эквивалентных классов
+	map<string, vector<string>> get_equalence_classes_map();
 	string get_rewriting_rules_txt(); // вывод правил переписывания
 	string to_txt() const;
 	int is_synchronized(
@@ -52,12 +54,17 @@ class TransformationMonoid {
 	bool is_minimal(); // Вычисление Минимальности по М-Н(1 если минимальный)
 	int get_classes_number_MyhillNerode(); // Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); // вывод таблицы М-Н
+	vector<alphabet_symbol> rewriting(
+		vector<alphabet_symbol>,
+		map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>);
 	vector<vector<bool>> get_equivalence_classes_table(
 		vector<string>& table_rows,
 		vector<string>& table_columns); // возвращает
 										// таблицу М-Н
 
   private:
+	set<int> search_transition_by_word(vector<alphabet_symbol> word,
+									   int init_state);
 	FiniteAutomaton automat; // Автомат
 	vector<Term> terms;		 // Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>

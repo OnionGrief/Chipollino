@@ -14,6 +14,7 @@ using namespace std;
 
 class Regex;
 class Language;
+class Grammar;
 class TransformationMonoid;
 
 struct State {
@@ -43,6 +44,12 @@ class FiniteAutomaton : public BaseObject {
 	int initial_state = 0;
 	vector<State> states;
 
+	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
+	// преобразованиях всегда удаляем в конце ловушки.
+	// Если isTrim = false, тогда после удаления ловушки в результате
+	// преобразований добавляем её обратно
+	bool is_trim = true;
+
 	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
 	bool parsing_nfa_for(const string&) const;
 
@@ -55,7 +62,10 @@ class FiniteAutomaton : public BaseObject {
 								 const FiniteAutomaton& fa2);
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
-	AmbiguityValue get_ambiguity_value() const;
+	// принимает в качетве лимита максимальное количество цифр в
+	// числителе + знаменателе дроби, которая может встретиться при вычислениях
+	AmbiguityValue get_ambiguity_value(int digits_number_limit,
+									   optional<int>& word_length) const;
 	optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
@@ -142,11 +152,14 @@ class FiniteAutomaton : public BaseObject {
 	int get_classes_number_GlaisterShallit() const;
 	// построение синтаксического моноида по автомату
 	TransformationMonoid get_syntactic_monoid() const;
-	// предикат для нка
+	// проверка на минимальность для нка
 	optional<bool> is_nfa_minimal() const;
-	// предикат для дка
+	// проверка на минимальность для дка
 	bool is_dfa_minimal() const;
+	// установить  флаг is_trim
+	void set_trim_flag(bool trim_global);
 
 	friend class Regex;
 	friend class TransformationMonoid;
+	friend class Grammar;
 };
