@@ -1799,9 +1799,9 @@ Regex Regex::get_one_unambiguous_regex() const {
 	for (alphabet_symbol consistent_symb : min_fa_consistent) {
 		bool alternate_flag = 0;
 		if (!counter)
-			regl += "(" + consistent_symb.value;
+			regl += "(" + (string)consistent_symb;
 		else {
-			regl += "|" + consistent_symb.value + "(";
+			regl += "|" + (string)consistent_symb + "(";
 			alternate_flag = true;
 		}
 		set<int> reachable_by_consistent_symb;
