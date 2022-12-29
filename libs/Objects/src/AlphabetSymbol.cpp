@@ -5,9 +5,9 @@ alphabet_symbol::alphabet_symbol(const string& s) : value(s){};
 alphabet_symbol::alphabet_symbol(const char* c) : value(c){};
 alphabet_symbol::alphabet_symbol(char c) : value(string(1, c)){};
 
-alphabet_symbol::alphabet_symbol(const alphabet_symbol& other) {
-	value = other.value;
-};
+alphabet_symbol::alphabet_symbol(const alphabet_symbol& other)
+	: value(other.value), annote_numbers(other.annote_numbers),
+	  linearize_numbers(other.linearize_numbers){};
 
 const alphabet_symbol& alphabet_symbol::operator=(const string& s) {
 	value = s;
@@ -27,6 +27,8 @@ const alphabet_symbol& alphabet_symbol::operator=(char c) {
 const alphabet_symbol& alphabet_symbol::operator=(
 	const alphabet_symbol& other) {
 	value = other.value;
+	annote_numbers = other.annote_numbers;
+	linearize_numbers = other.linearize_numbers;
 	return *this;
 }
 
@@ -35,31 +37,39 @@ alphabet_symbol alphabet_symbol::epsilon() {
 }
 
 bool alphabet_symbol::operator==(const alphabet_symbol& other) const {
-	return value == other.value;
+	return value == other.value && annote_numbers == other.annote_numbers &&
+		   linearize_numbers == other.linearize_numbers;
 }
 
 bool alphabet_symbol::operator!=(const alphabet_symbol& other) const {
-	return value != other.value;
+	return !(*this == other);
 }
 
 bool alphabet_symbol::operator<(const alphabet_symbol& other) const {
-	return value < other.value;
+	return annote_numbers < other.linearize_numbers &&
+		   linearize_numbers < other.linearize_numbers && value < other.value;
 }
 
-alphabet_symbol alphabet_symbol::operator+(const alphabet_symbol& other) const {
-	return value + other.value;
-}
+// alphabet_symbol alphabet_symbol::operator+(const alphabet_symbol& other)
+// const { 	return value + other.value;
+// }
 
-alphabet_symbol alphabet_symbol::operator+(const string& s) const {
-	return value + s;
-}
+// alphabet_symbol alphabet_symbol::operator+(const string& s) const {
+// 	return value + s;
+// }
 
 bool alphabet_symbol::is_epsilon() const {
-	return *this == alphabet_symbol::epsilon();
+	return *this == alphabet_symbol::epsilon() && annote_numbers.empty() &&
+		   linearize_numbers.empty();
 }
 
 alphabet_symbol::operator string() const {
-	return value;
+	string res = value;
+	for (const auto& i : annote_numbers)
+		res += i;
+	for (const auto& i : linearize_numbers)
+		res += i;
+	return res;
 }
 
 alphabet_symbol alphabet_symbol::remove_numbers() {
@@ -78,10 +88,19 @@ string alphabet_symbol::vector_to_str(const vector<alphabet_symbol>& in) {
 	return out;
 }
 
-int alphabet_symbol::size() const {
-	return value.size();
+ostream& operator<<(ostream& os, const alphabet_symbol& as) {
+	return os << (string)as;
 }
 
-ostream& operator<<(ostream& os, const alphabet_symbol& as) {
-	return os << as.value;
+void alphabet_symbol::annote(int num) {
+	annote_numbers.push_back("|" + to_string(num));
+}
+void alphabet_symbol::linearize(int num) {
+	linearize_numbers.push_back("|" + to_string(num));
+}
+void alphabet_symbol::deannote() {
+	if (!annote_numbers.empty()) annote_numbers.pop_back();
+}
+void alphabet_symbol::delinearize() {
+	if (!linearize_numbers.empty()) linearize_numbers.pop_back();
 }

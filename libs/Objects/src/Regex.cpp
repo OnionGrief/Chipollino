@@ -997,7 +997,8 @@ FiniteAutomaton Regex::to_glushkov() const {
 			tr[list[p[elem.number][j]]->value.symbol].insert(p[elem.number][j] +
 															 1);
 		}
-		string s = elem.symbol + to_string(i + 1);
+		string s =
+			elem.symbol; // string s = elem.symbol + to_string(i + 1); !!!
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
 	}
 	delete first;
@@ -1631,34 +1632,35 @@ FiniteAutomaton Regex::to_antimirov() const {
 }
 
 string Regex::to_str_log() const {
-	string str1 = "", str2 = "";
-	if (term_l) {
-		str1 = term_l->to_str_log();
-	}
-	if (term_r) {
-		str2 = term_r->to_str_log();
-	}
-	string symb;
-	if (type == Type::conc) {
-		if (term_l && term_l->type == Type::alt) {
-			str1 = "(" + str1 + ")";
-		}
-		if (term_r && term_r->type == Type::alt) {
-			str2 = "(" + str2 + ")";
-		}
-	}
-	if (type == Type::symb /*value.symbol*/)
-		symb = value.symbol + to_string(value.number + 1);
-	if (type == Type::eps) symb = "";
-	if (type == Type::alt) symb = '|';
-	if (type == Type::star) {
-		symb = '*';
-		if (term_l->type != Type::symb)
-			str1 = "(" + str1 +
-				   ")"; // ставим скобки при итерации, если символов > 1
-	}
+	// string str1 = "", str2 = "";
+	// if (term_l) {
+	// 	str1 = term_l->to_str_log();
+	// }
+	// if (term_r) {
+	// 	str2 = term_r->to_str_log();
+	// }
+	// string symb;
+	// if (type == Type::conc) {
+	// 	if (term_l && term_l->type == Type::alt) {
+	// 		str1 = "(" + str1 + ")";
+	// 	}
+	// 	if (term_r && term_r->type == Type::alt) {
+	// 		str2 = "(" + str2 + ")";
+	// 	}
+	// }
+	// if (type == Type::symb /*value.symbol*/)
+	// 	symb = value.symbol + to_string(value.number + 1);
+	// if (type == Type::eps) symb = "";
+	// if (type == Type::alt) symb = '|';
+	// if (type == Type::star) {
+	// 	symb = '*';
+	// 	if (term_l->type != Type::symb)
+	// 		str1 = "(" + str1 +
+	// 			   ")"; // ставим скобки при итерации, если символов > 1
+	// }
 
-	return str1 + symb + str2;
+	// return str1 + symb + str2;
+	return ""; //!!!
 }
 
 Regex Regex::deannote() const {
