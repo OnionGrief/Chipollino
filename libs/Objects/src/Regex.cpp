@@ -909,7 +909,7 @@ Regex Regex::linearize() const {
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
-		list[i]->value.number = i;
+		list[i]->value.symbol.linearize(i);
 	}
 	Logger::log(test.to_txt());
 	Logger::finish_step();
@@ -921,7 +921,7 @@ Regex Regex::delinearize() const {
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
-		list[i]->value.number = 0;
+		list[i]->value.symbol.delinearize();
 	}
 	Logger::log(test.to_txt());
 	Logger::finish_step();
@@ -936,6 +936,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 	vector<Regex*> list = test.pre_order_travers_vect();
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = i;
+		list[i]->value.symbol.linearize(i);
 	}
 	vector<Lexem>* first = test.first_state(); // Множество начальных состояний
 	vector<Lexem>* end = test.end_state(); // Множество конечных состояний
@@ -978,8 +979,13 @@ FiniteAutomaton Regex::to_glushkov() const {
 	Logger::log("First", str_firs);
 	Logger::log("End", str_end);
 	Logger::log("Pairs", str_pair);
-
+	vector<Regex> list_annote;
+	for (size_t i = 0; i < list.size(); i++) {
+		list_annote.push_back(*list[i]);
+		list[i]->value.symbol.delinearize();
+	}
 	for (size_t i = 0; i < first->size(); i++) {
+		(*first)[i].symbol.delinearize();
 		tr[(*first)[i].symbol].insert((*first)[i].number + 1);
 	}
 
@@ -997,8 +1003,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 			tr[list[p[elem.number][j]]->value.symbol].insert(p[elem.number][j] +
 															 1);
 		}
-		string s =
-			elem.symbol; // string s = elem.symbol + to_string(i + 1); !!!
+		string s = list_annote[i].value.symbol;
 		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
 	}
 	delete first;
