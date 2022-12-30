@@ -1,4 +1,5 @@
 #include "Logger/LogTemplate.h"
+#include <variant>
 
 void LogTemplate::set_parameter(const string& key, FiniteAutomaton value) {
 	parameters[key].value = value;
@@ -27,28 +28,30 @@ string LogTemplate::render() const {
 	string s;
 	for (; !infile.eof();) {
 		getline(infile, s);
-		if (s.find("template_initial_regex") != -1) {
-			const auto& p = parameters.find("regex");
-			outstr +=
-				math_mode(get<Regex>(p->second.value)
-							  .to_txt()); // поменять на выключенный стиль!!
-		} else if (s.find("template_linearised_regex") != -1) {
-			const auto& p = parameters.find("linearisedregex");
-			outstr += math_mode(get<Regex>(p->second.value).to_txt());
-		} else if (s.find("template_glushkov") != -1) {
-			const auto& p = parameters.find("automaton");
-			image_number += 1;
-			AutomatonToImage::to_image(
-				get<FiniteAutomaton>(p->second.value).to_txt(), image_number);
-			char si[256];
-			sprintf(si,
-					"\\includegraphics[width=2in, "
-					"keepaspectratio]{output%d.png}\n",
-					image_number);
-			outstr += si;
-		} else {
-			outstr += s;
+		for (const auto& p : parameters) {
+			if (s.find("template_" + p.first) == -1) {
+				continue;
+			}
+			if (holds_alternative<Regex>(p.second.value)) {
+				outstr += math_mode(get<Regex>(p.second.value).to_txt());
+			} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
+				image_number += 1;
+				AutomatonToImage::to_image(
+					get<FiniteAutomaton>(p.second.value).to_txt(),
+										   image_number);
+				char si[256];
+				sprintf(si,
+						"\\includegraphics[width=2in, "
+						"keepaspectratio]{output%d.png}\n",
+						image_number);
+				outstr += si;
+			} else if (holds_alternative<string>(p.second.value)) {
+				outstr += get<string>(p.second.value);
+			} else if (holds_alternative<int>(p.second.value)) {
+				outstr += to_string(get<int>(p.second.value));
+			}
 		}
+		outstr += s;
 		outstr += "\n";
 	}
 	infile.close();

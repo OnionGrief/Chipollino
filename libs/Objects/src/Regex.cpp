@@ -1069,12 +1069,12 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	delete end;
 	FiniteAutomaton fa(0, st, language);
 	if (log) {
-		log->set_parameter("regex", test);
-		log->set_parameter("linearisedregex", test.linearize());
+		log->set_parameter("initial_regex", test);
+		log->set_parameter("linearised_regex", test.linearize());
 		log->set_parameter("first", str_firs);
 		log->set_parameter("end", str_end);
 		log->set_parameter("pairs", str_pair);
-		log->set_parameter("automaton", fa);
+		log->set_parameter("glushkov", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
