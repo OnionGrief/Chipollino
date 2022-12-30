@@ -975,7 +975,7 @@ FiniteAutomaton Regex::to_glushkov() const {
 	// cout << "End " << str_end << endl;
 	// cout << "Pairs " << str_pair << endl;
 
-	Logger::log("Регулярка", test.to_str_log());
+	Logger::log("Регулярка", test.to_txt());
 	Logger::log("First", str_firs);
 	Logger::log("End", str_end);
 	Logger::log("Pairs", str_pair);
@@ -1634,38 +1634,6 @@ FiniteAutomaton Regex::to_antimirov() const {
 	Logger::log("Автомат", fa);
 	Logger::finish_step();
 	return fa;
-}
-
-string Regex::to_str_log() const {
-	// string str1 = "", str2 = "";
-	// if (term_l) {
-	// 	str1 = term_l->to_str_log();
-	// }
-	// if (term_r) {
-	// 	str2 = term_r->to_str_log();
-	// }
-	// string symb;
-	// if (type == Type::conc) {
-	// 	if (term_l && term_l->type == Type::alt) {
-	// 		str1 = "(" + str1 + ")";
-	// 	}
-	// 	if (term_r && term_r->type == Type::alt) {
-	// 		str2 = "(" + str2 + ")";
-	// 	}
-	// }
-	// if (type == Type::symb /*value.symbol*/)
-	// 	symb = value.symbol + to_string(value.number + 1);
-	// if (type == Type::eps) symb = "";
-	// if (type == Type::alt) symb = '|';
-	// if (type == Type::star) {
-	// 	symb = '*';
-	// 	if (term_l->type != Type::symb)
-	// 		str1 = "(" + str1 +
-	// 			   ")"; // ставим скобки при итерации, если символов > 1
-	// }
-
-	// return str1 + symb + str2;
-	return ""; //!!!
 }
 
 Regex Regex::deannote() const {
