@@ -762,33 +762,33 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
-	// vector<map<alphabet_symbol, set<int>>> new_transitions(
-	// 	new_fa.states.size());
-	// for (int i = 0; i < new_fa.states.size(); i++) {
-	// 	for (const auto& elem : new_fa.states[i].transitions) {
-	// 		if (elem.second.size() > 1) {
-	// 			int counter = 1;
-	// 			for (int transition_to : elem.second) {
-	// 				alphabet_symbol new_symb = elem.first + to_string(counter);
-	// 				new_transitions[i][new_symb].insert(transition_to);
-	// 				new_alphabet.insert(new_symb);
-	// 				counter++;
-	// 			}
-	// 		} else {
-	// 			new_transitions[i][elem.first] =
-	// 				new_fa.states[i].transitions[elem.first];
-	// 			if (!elem.first.is_epsilon()) {
-	// 				new_alphabet.insert(elem.first);
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// new_fa.language = make_shared<Language>(new_alphabet);
-	// for (int i = 0; i < new_transitions.size(); i++) {
-	// 	new_fa.states[i].transitions = new_transitions[i];
-	// }
-	// Logger::log("Автомат до навешивания разметки",
-	// 			"Автомат после навешивания разметки", *this, new_fa);
+	vector<map<alphabet_symbol, set<int>>> new_transitions(
+		new_fa.states.size());
+	for (int i = 0; i < new_fa.states.size(); i++) {
+		for (const auto& elem : new_fa.states[i].transitions) {
+			if (elem.second.size() > 1) {
+				int counter = 1;
+				for (int transition_to : elem.second) {
+					alphabet_symbol new_symb = elem.first;
+					new_symb.annote(counter);
+					new_transitions[i][new_symb].insert(transition_to);
+					new_alphabet.insert(new_symb);
+					counter++;
+				}
+			} else {
+				new_transitions[i][elem.first] = elem.second;
+				if (!elem.first.is_epsilon()) {
+					new_alphabet.insert(elem.first);
+				}
+			}
+		}
+	}
+	new_fa.language = make_shared<Language>(new_alphabet);
+	for (int i = 0; i < new_transitions.size(); i++) {
+		new_fa.states[i].transitions = new_transitions[i];
+	}
+	Logger::log("Автомат до навешивания разметки",
+				"Автомат после навешивания разметки", *this, new_fa);
 	Logger::finish_step();
 	return new_fa;
 }
@@ -798,33 +798,29 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
-	// vector<map<alphabet_symbol, set<int>>> new_transitions(
-	// 	new_fa.states.size());
-	// for (int i = 0; i < new_fa.states.size(); i++) {
-	// 	for (const auto& elem : new_fa.states[i].transitions) {
-	// 		if (elem.first.size() > 1) {
-	// 			alphabet_symbol symb = elem.first;
-	// 			symb.remove_numbers();
-	// 			if (!symb.is_epsilon()) {
-	// 				new_alphabet.insert(symb);
-	// 			}
-	// 			for (int transition_to : elem.second) {
-	// 				new_transitions[i][symb].insert(transition_to);
-	// 			}
-	// 		} else {
-	// 			new_transitions[i][elem.first] =
-	// 				new_fa.states[i].transitions[elem.first];
-	// 			new_alphabet.insert(elem.first);
-	// 		}
-	// 	}
-	// }
-	// new_fa.language = make_shared<Language>(new_alphabet);
-	// for (int i = 0; i < new_transitions.size(); i++) {
-	// 	new_fa.states[i].transitions = new_transitions[i];
-	// }
-	// new_fa = new_fa.remove_trap_states();
-	// Logger::log("Автомат до удаления разметки",
-	// 			"Автомат после удаления разметки", *this, new_fa);
+	vector<map<alphabet_symbol, set<int>>> new_transitions(
+		new_fa.states.size());
+	for (int i = 0; i < new_fa.states.size(); i++) {
+		for (const auto& elem : new_fa.states[i].transitions) {
+			if (elem.first.is_annotated()) {
+				alphabet_symbol new_symb = elem.first;
+				new_symb.deannote();
+				for (int transition_to : elem.second) {
+					new_transitions[i][new_symb].insert(transition_to);
+				}
+			} else {
+				new_transitions[i][elem.first] = elem.second;
+				new_alphabet.insert(elem.first);
+			}
+		}
+	}
+	new_fa.language = make_shared<Language>(new_alphabet);
+	for (int i = 0; i < new_transitions.size(); i++) {
+		new_fa.states[i].transitions = new_transitions[i];
+	}
+	new_fa = new_fa.remove_trap_states();
+	Logger::log("Автомат до удаления разметки",
+				"Автомат после удаления разметки", *this, new_fa);
 	Logger::finish_step();
 	return new_fa;
 }
