@@ -116,6 +116,29 @@ vector<alphabet_symbol> TransformationMonoid::rewriting(
 	}
 	return in;
 }
+bool wasrewrite(vector<alphabet_symbol> a, vector<alphabet_symbol> b) {
+	for (int i = 0; i < a.size(); i++) {
+		for (int j = 0; j < b.size(); j++) {
+			if (b[j] != a[i + j]) {
+				break;
+			}
+			if (j == b.size() - 1) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+bool TransformationMonoid::searchrewrite(vector<alphabet_symbol> in) {
+	for (auto currules : rules) {
+		for (vector<alphabet_symbol> rule : currules.second) {
+			if (wasrewrite(in, rule)) {
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
 set<int> TransformationMonoid::search_transition_by_word(
 	vector<alphabet_symbol> word, int init_state) {
 	set<int> out = {};
@@ -184,16 +207,22 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	while (queueTerm.size() > 0) {
 		TransformationMonoid::Term cur = queueTerm.front();
 		queueTerm.pop();
+		cout << "pop \n";
+		for (auto symb : cur.name) {
+			cout << symb;
+		}
+		cout << "pop \n";
+		if (!searchrewrite(cur.name)) {
+			std::vector<TransformationMonoid::Term>::iterator rewritein =
+				std::find(terms.begin(), terms.end(), cur);
+			if (rewritein != terms.end()) {
+				rules[(*rewritein).name].push_back(cur.name);
 
-		std::vector<TransformationMonoid::Term>::iterator rewritein =
-			std::find(terms.begin(), terms.end(), cur);
-		if (rewritein != terms.end()) {
-			rules[(*rewritein).name].push_back(cur.name);
-
-		} else {
-			terms.push_back(cur);
-			get_transition_by_symbol(cur.transitions, cur.name,
-									 automat.language->get_alphabet());
+			} else {
+				terms.push_back(cur);
+				get_transition_by_symbol(cur.transitions, cur.name,
+										 automat.language->get_alphabet());
+			}
 		}
 	}
 }
@@ -339,10 +368,10 @@ string TransformationMonoid::get_rewriting_rules_txt() {
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
 			Logger::log("rewriting " +
-							alphabet_symbol::vector_to_str(item.first),
-						alphabet_symbol::vector_to_str(item.second[i]));
-			ss << alphabet_symbol::vector_to_str(item.first) << "	->	"
-			   << alphabet_symbol::vector_to_str(item.second[i]) << "\n";
+							alphabet_symbol::vector_to_str(item.second[i]),
+						alphabet_symbol::vector_to_str(item.first));
+			ss << alphabet_symbol::vector_to_str(item.second[i]) << "	->	"
+			   << alphabet_symbol::vector_to_str(item.first) << "\n";
 		}
 	}
 	Logger::finish_step();

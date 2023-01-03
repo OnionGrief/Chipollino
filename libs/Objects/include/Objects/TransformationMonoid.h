@@ -72,6 +72,7 @@ class TransformationMonoid {
 										// таблицу М-Н
 
   private:
+	bool searchrewrite(vector<alphabet_symbol>);
 	queue<Term> queueTerm;
 	void get_transition_by_symbol(vector<TransformationMonoid::Transition>,
 								  vector<alphabet_symbol>,
