@@ -41,7 +41,7 @@ class TransformationMonoid {
 	TransformationMonoid();
 	TransformationMonoid(
 		const FiniteAutomaton& in); // Автомат и макс длина перехода
-
+	void OutAllTransformationMonoid();
 	vector<Term> get_equalence_classes(); // получаем все термы
 	vector<Term> get_equalence_classes_vw(
 		const Term& w); // получаем термы, что vw - в языке

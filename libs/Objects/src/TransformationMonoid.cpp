@@ -207,11 +207,6 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	while (queueTerm.size() > 0) {
 		TransformationMonoid::Term cur = queueTerm.front();
 		queueTerm.pop();
-		cout << "pop \n";
-		for (auto symb : cur.name) {
-			cout << symb;
-		}
-		cout << "pop \n";
 		if (!searchrewrite(cur.name)) {
 			std::vector<TransformationMonoid::Term>::iterator rewritein =
 				std::find(terms.begin(), terms.end(), cur);
@@ -380,7 +375,52 @@ bool wasTransition(vector<TransformationMonoid::Transition> mas,
 	}
 	return false;
 }
-
+string to_str(vector<alphabet_symbol> in) {
+	string out = "";
+	for (string str : in) {
+		out += str;
+	}
+	return out;
+}
+void TransformationMonoid::OutAllTransformationMonoid() {
+	cout << "Equivalence classes:\n";
+	cout << get_equalence_classes_txt();
+	cout << "Rewriting rules:\n";
+	cout << get_rewriting_rules_txt();
+	cout << "Information for class w:\n";
+	for (int i = 0; i < terms.size(); i++) {
+		cout << "  class " << to_str(terms[i].name) << "\n";
+		vector<TransformationMonoid::Term> vw =
+			get_equalence_classes_vw(terms[i]);
+		cout << "\t equivalence classes v such that  accepts vw: ";
+		for (TransformationMonoid::Term CurTerm : vw) {
+			cout << to_str(CurTerm.name) << ", ";
+		}
+		cout << "\n";
+		vector<TransformationMonoid::Term> wv =
+			get_equalence_classes_wv(terms[i]);
+		cout << "\t equivalence classes v such that  accepts wv: ";
+		for (TransformationMonoid::Term CurTerm : wv) {
+			cout << to_str(CurTerm.name) << ", ";
+		}
+		cout << "\n";
+		vector<TransformationMonoid::TermDouble> vwv =
+			get_equalence_classes_vwv(terms[i]);
+		cout << "\t equivalence classes v such that  accepts wv: ";
+		for (TransformationMonoid::TermDouble CurTerm : vwv) {
+			cout << to_str(CurTerm.first.name) << " - "
+				 << to_str(CurTerm.second.name) << ", ";
+		}
+		cout << "\n";
+		int sync = is_synchronized(terms[i]);
+		if (sync == -1) {
+			cout << "word not synchronizing\n";
+		} else {
+			cout << "word synchronizing " << automat.states[sync].identifier
+				 << "\n";
+		}
+	}
+}
 vector<TransformationMonoid::TermDouble> TransformationMonoid::
 	get_equalence_classes_vwv(const Term& w) {
 	vector<TermDouble> out;
