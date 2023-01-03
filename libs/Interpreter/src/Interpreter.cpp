@@ -19,9 +19,12 @@ Interpreter::Interpreter() {
 		{"Arden", {{"Arden", {ObjectType::NFA}, ObjectType::Regex}}},
 		{"Glushkov", {{"Glushkov", {ObjectType::Regex}, ObjectType::NFA}}},
 		{"Determinize", {{"Determinize", {ObjectType::NFA}, ObjectType::DFA}}},
+		{"Determinize+",
+		 {{"Determinize+", {ObjectType::NFA}, ObjectType::DFA}}},
 		{"RemEps", {{"RemEps", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Linearize", {{"Linearize", {ObjectType::Regex}, ObjectType::Regex}}},
 		{"Minimize", {{"Minimize", {ObjectType::NFA}, ObjectType::DFA}}},
+		{"Minimize+", {{"Minimize+", {ObjectType::NFA}, ObjectType::DFA}}},
 		{"Reverse", {{"Reverse", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Annote", {{"Annote", {ObjectType::NFA}, ObjectType::DFA}}},
 		{"DeLinearize",
@@ -180,7 +183,8 @@ GeneralObject Interpreter::apply_function(
 			   holds_alternative<ObjectDFA>(obj);
 	};
 
-	//if (is_automaton(arguments[0])) get_automaton(arguments[0]).set_trim_flag(is_trim);
+	// if (is_automaton(arguments[0]))
+	// get_automaton(arguments[0]).set_trim_flag(is_trim);
 	/*if (holds_alternative<ObjectNFA>(arguments[0])) {
 		get<ObjectNFA>(arguments[0]).value.set_trim_flag(is_trim);
 	}
@@ -312,7 +316,13 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Determinize") {
 		res = ObjectDFA(get_automaton(arguments[0]).determinize());
 	}
+	if (function.name == "Determinize+") {
+		res = ObjectDFA(get_automaton(arguments[0]).determinize());
+	}
 	if (function.name == "Minimize") {
+		res = ObjectDFA(get_automaton(arguments[0]).minimize());
+	}
+	if (function.name == "Minimize+") {
 		res = ObjectDFA(get_automaton(arguments[0]).minimize());
 	}
 	if (function.name == "Annote") {
@@ -470,23 +480,28 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 						  names_to_functions[func][0].input == nfa_type)) {
 						return nullopt;
 					} else {
-						// Determinize добавляет ловушку после Annote
-						// if ((func == "Determinize" || func == "Annote") &&
-						if (func == "Annote" &&
+						// Determinize+ добавляет ловушку после Annote
+						if ((func == "Determinize" || func == "Annote") &&
 							names_to_functions[predfunc][0].output ==
 								ObjectType::DFA) {
 							neededfuncs[i] = 0;
 							// удаление Annote перед DFA
 						}
-						if (predfunc == "Minimize" &&
-							(func == "Minimize" || func == "Determinize")) {
+						if (predfunc == "Minimize" && func == "Minimize") {
 							neededfuncs[i] = 0;
 						}
-						if (predfunc == "Determinize" &&
-							func == "Determinize") {
+						if (predfunc == "Minimize+" &&
+							(func == "Minimize" || func == "Minimize+" ||
+							 func == "Determinize+")) {
+							neededfuncs[i] = 0;
+						}
+						if (predfunc == "Determinize+" && func == "Determinize+") {
 							neededfuncs[i] = 0;
 						}
 						if (predfunc == "Determinize" && func == "Minimize") {
+							neededfuncs[i - 1] = 0;
+						}
+						if ((predfunc == "Determinize" || predfunc == "Determinize+") && func == "Minimize+") {
 							neededfuncs[i - 1] = 0;
 						}
 					}
