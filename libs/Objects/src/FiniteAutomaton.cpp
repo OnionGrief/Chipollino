@@ -802,16 +802,15 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 		new_fa.states.size());
 	for (int i = 0; i < new_fa.states.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
+			alphabet_symbol new_symb = elem.first;
 			if (elem.first.is_annotated()) {
-				alphabet_symbol new_symb = elem.first;
 				new_symb.deannote();
 				for (int transition_to : elem.second) {
 					new_transitions[i][new_symb].insert(transition_to);
 				}
-			} else {
-				new_transitions[i][elem.first] = elem.second;
-				new_alphabet.insert(elem.first);
-			}
+			} else
+				new_transitions[i][new_symb] = elem.second;
+			if (!new_symb.is_epsilon()) new_alphabet.insert(new_symb);
 		}
 	}
 	new_fa.language = make_shared<Language>(new_alphabet);
