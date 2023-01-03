@@ -196,7 +196,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 		for (const auto& state : language_min_dfa.states) {
 			ss << "\\{" << state.identifier << "\\} ";
 		}
-		Logger::log("Эквивалентные классы", ss.str());
+		Logger::log("Классы эквивалентности", ss.str());
 		Logger::finish_step();
 		return language_min_dfa; // TODO Нужно решить, что делаем с
 								 // идентификаторами
@@ -313,7 +313,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 	for (const auto& state : minimized_dfa.states) {
 		ss << "\\{" << state.identifier << "\\} ";
 	}
-	Logger::log("Эквивалентные классы", ss.str());
+	Logger::log("Классы эквивалентности", ss.str());
 	Logger::finish_step();
 	return minimized_dfa;
 }
@@ -1186,7 +1186,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 			ss << elem.second[i]->name << ",";
 		ss << elem.second[elem.second.size() - 1]->name << "\\}";
 	}
-	Logger::log("Эквивалентные классы", ss.str());
+	Logger::log("Классы эквивалентности", ss.str());
 	Logger::finish_step();
 	return result_fa;
 }
@@ -1279,7 +1279,7 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 			ss << elem.second[i] << ",";
 		ss << elem.second[elem.second.size() - 1] << "\\}";
 	}
-	Logger::log("Эквивалентные классы", ss.str());
+	Logger::log("Классы эквивалентности", ss.str());
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
