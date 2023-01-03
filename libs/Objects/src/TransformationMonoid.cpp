@@ -219,6 +219,12 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 				rules[(*rewritein).name].push_back(cur.name);
 
 			} else {
+				for (int i = 0; i < cur.transitions.size(); i++) {
+					if (automat.states[cur.transitions[i].second].is_terminal &&
+						cur.transitions[i].first == automat.initial_state) {
+						cur.isFinal = true;
+					}
+				}
 				terms.push_back(cur);
 				get_transition_by_symbol(cur.transitions, cur.name,
 										 automat.language->get_alphabet());
