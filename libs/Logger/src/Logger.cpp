@@ -7,7 +7,7 @@ void Logger::add_log(const LogTemplate& log) {
 
 void Logger::render_to_file(const string& filename) {
 	// TODO
-	ifstream infile("./resources/head.tex");
+	ifstream infile("./resources/template/head.tex");
 	ofstream outfile(filename);
 
 	string s;

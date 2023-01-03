@@ -1,0 +1,29 @@
+\section{Автомат Глушкова}
+\begin{frame}{Конструкция автомата Глушкова}
+  \begin{block}{\bf Алгоритм построения $\Glushkov(r)$}
+    \begin{itemize}
+      \item Строим линеаризованную версию $r$: $r_{\rm Lin} =\Linearize(r)$.
+      \item Находим $\First(r_{\rm Lin})$, $\Last(r_{\rm Lin})$, а также $\Follow_{r_{\rm Lin}}(c)$ для всех $c\in\Sigma_{r_{\rm Lin}}$.
+      \item Все состояния автомата, кроме начального (назовём его $S$), соответствуют буквам $c\in\Sigma_{r_{\rm Lin}}$.
+      \item Из начального состояния строим переходы в те состояния, для которых $c\in\First(r_{\rm Lin})$. Переходы имеют вид $S\overset{c}{\rar}{c}$.
+      \item Переходы из состояния $c$ соответствуют элементам $d$ множества $\Follow_{r_{\rm Lin}}(c)$ и имеют вид $c\overset{d}{\rar}{d}$.
+      \item Конечные состояния --- такие, что $c\in\Last(r_{\rm Lin})$, а также $S$, если $\empt\in\Lang(R)$.
+      \item Теперь стираем разметку, построенную линеаризацией, на переходах автомата. Конструкция завершена.
+    \end{itemize}
+  \end{block} % descriptive documentation
+\end{frame}
+
+\begin{frame}{Пример автомата Глушкова}
+  Исходное регулярное выражение:
+
+  %template_initial_regex % the initial regexp placeholder displaystyle
+
+  Линеаризованное регулярное выражение:
+  %template_linearised_regex % the linearised regexp placeholder displaystyle
+
+  Автомат Глушкова:
+
+  %template_glushkov % the Glushkov diagram placeholder
+
+  Подграфы, распознающие регулярные выражения, являющиеся подструктурами исходного, не имеют общих вершин. Это свойство автомата Глушкова используется в реализациях \texttt{match}-функций некоторых библиотек регулярных выражений. %overall documentation
+\end{frame}

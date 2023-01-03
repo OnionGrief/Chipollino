@@ -786,8 +786,8 @@ FiniteAutomaton Regex::to_tompson(iLogTemplate* log) const {
 	// Logger::log("Регулярное выражение", to_txt());
 	FiniteAutomaton fa(0, get_tompson(-1).first, language);
 	if (log) {
-		log->set_parameter("regex", *this);
-		log->set_parameter("automaton", fa);
+		log->set_parameter("initial_regex", *this);
+		log->set_parameter("thompson", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -1160,10 +1160,10 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 	}
 	FiniteAutomaton fa(0, new_states, glushkov.language);
 	if (log) {
-		log->set_parameter("regex", *this);
-		log->set_parameter("automaton1", glushkov);
+		log->set_parameter("initial_regex", *this);
+		log->set_parameter("glushkov", glushkov);
 		log->set_parameter("follow", str_follow);
-		log->set_parameter("automaton2", fa);
+		log->set_parameter("ilieyu", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -1729,10 +1729,10 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 	FiniteAutomaton fa(0, automat_state, language);
 	if (log) {
-		log->set_parameter("regex", *this);
-		log->set_parameter("deverative", derev_log);
+		log->set_parameter("initial_regex", *this);
+		log->set_parameter("derivative", derev_log);
 		log->set_parameter("state", str_state);
-		log->set_parameter("automaton", fa);
+		log->set_parameter("antimirov", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();

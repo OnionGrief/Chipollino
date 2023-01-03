@@ -186,16 +186,21 @@ GeneralObject Interpreter::apply_function(
 	log_template.set_parameter("name", function.name);
 
 	if (function.name == "Glushkov") {
-		log_template.load_tex_template("./resources/glushkov-template.tex");
+		// нужно будет тут в зависимости от степени логгирования менять шаблон
+		log_template.load_tex_template(
+			"./resources/template/glushkov-long.tex");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_glushkov(&log_template));
 	}
 
 	if (function.name == "IlieYu") {
+		log_template.load_tex_template("./resources/template/follow-long.tex");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_ilieyu(&log_template));
 	}
 	if (function.name == "Antimirov") {
+		log_template.load_tex_template(
+			"./resources/template/antimirov-long.tex");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_antimirov(&log_template));
 	}
@@ -204,6 +209,7 @@ GeneralObject Interpreter::apply_function(
 			(get_automaton(arguments[0]).to_regex(&log_template)));
 	}
 	if (function.name == "Thompson") {
+		log_template.load_tex_template("./resources/template/tomson-long.tex");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_tompson(&log_template));
 	}
