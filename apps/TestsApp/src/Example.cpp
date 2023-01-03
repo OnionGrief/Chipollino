@@ -190,12 +190,15 @@ void Example::tasks_generating() {
 }
 
 void Example::random_regex_parsing() {
-	RegexGenerator r1(8, 10, 3, 2);
-	for (int i = 0; i < 5; i++) {
-		string str = r1.generate_regex();
+	RegexGenerator rg(15, 10, 5, 3);
+	for (int i = 0; i < 30; i++) {
+		string str = rg.generate_regex();
 		cout << "\n" << str << "\n";
-		Regex r(str);
-		cout << r.to_txt() << endl;
+		Regex r1(str);
+		string r1_str = r1.to_txt();
+		Regex r2(r1_str);
+		cout << r1_str << endl;
+		assert(Regex::equivalent(r1, r2));
 	}
 }
 
@@ -554,8 +557,6 @@ void Example::testing_with_generator(
 	RegexGenerator RG(regex_length, star_num, star_nesting, alphabet_size);
 	for (int i = 0; i < 100; i++) {
 		string s = RG.generate_regex();
-		s.erase(s.size() - 1);
-		s.erase(0, 1);
 		cout << "> " << i << endl;
 		check_function(s);
 	}

@@ -73,7 +73,7 @@ string TasksGenerator::generate_predicate() {
 				int rand_id = rand() % id_num + 1;
 				str += " N" + to_string(rand_id);
 			} else {
-				str += " " + regex_generator.generate_regex();
+				str += " " + regex_generator.generate_framed_regex();
 			}
 		} else {
 			if (predicate.input[i] == REGEX) {
@@ -84,7 +84,7 @@ string TasksGenerator::generate_predicate() {
 					Id rand_id = possible_ids[rand() % possible_ids.size()];
 					str += " N" + to_string(rand_id.num);
 				} else {
-					str += " " + regex_generator.generate_regex();
+					str += " " + regex_generator.generate_framed_regex();
 				}
 			}
 
@@ -117,13 +117,13 @@ string TasksGenerator::generate_test() {
 		Id rand_id = possible_ids[rand() % possible_ids.size()];
 		str += "N" + to_string(rand_id.num);
 	} else {
-		str += regex_generator.generate_regex();
+		str += regex_generator.generate_framed_regex();
 	}
 
 	str += " ";
 	// TODO:
 	// str += "((ab)*a)*";
-	str += regex_generator.generate_regex();
+	str += regex_generator.generate_framed_regex();
 
 	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
 	str += " " + to_string(rand_num);
@@ -167,7 +167,7 @@ string TasksGenerator::generate_declaration() {
 					int rand_id = rand() % (id_num - 1) + 1;
 					func_str += " N" + to_string(rand_id);
 				} else {
-					func_str += " " + regex_generator.generate_regex();
+					func_str += " " + regex_generator.generate_framed_regex();
 				}
 			} else {
 
@@ -179,7 +179,7 @@ string TasksGenerator::generate_declaration() {
 						Id rand_id = possible_ids[rand() % possible_ids.size()];
 						func_str += " N" + to_string(rand_id.num);
 					} else {
-						func_str += " " + regex_generator.generate_regex();
+						func_str += " " + regex_generator.generate_framed_regex();
 					}
 				}
 
@@ -230,7 +230,7 @@ string TasksGenerator::generate_declaration() {
 			str += "N" + to_string(rand_id.num);
 			prevOutput = id_output;
 		} else {
-			str += regex_generator.generate_regex();
+			str += regex_generator.generate_framed_regex();
 			prevOutput = REGEX;
 		}
 	}
