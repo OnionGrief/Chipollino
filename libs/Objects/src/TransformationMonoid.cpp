@@ -1,7 +1,7 @@
 #include "Objects/TransformationMonoid.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
-
+#include <algorithm>
 #include <iostream>
 using namespace std;
 vector<alphabet_symbol> union_words(vector<alphabet_symbol> a,
@@ -131,7 +131,73 @@ set<int> TransformationMonoid::search_transition_by_word(
 	}
 	return out;
 }
+vector<int> addtransition(vector<int> in, int from, int to, int size) {
+	// добавляем переход
+	int curtransition = from * size + to;
+	in[curtransition / size] = in[curtransition / size] | curtransition % size;
+	return in;
+}
+vector<int> showtransitions(vector<int> in, int from, int to, int size) {
+	// добавляем переход
+	int curtransition = from * size + to;
+	in[curtransition / size] = in[curtransition / size] | curtransition % size;
+	return in;
+}
 // Получаем ДКА и строим моноид
+void TransformationMonoid::get_transition_by_symbol(
+	vector<TransformationMonoid::Transition> in, vector<alphabet_symbol> word,
+	const set<alphabet_symbol>& alphabet) {
+	for (set<alphabet_symbol>::iterator it = alphabet.begin();
+		 it != alphabet.end(); it++) { // для каждого символа
+		vector<TransformationMonoid::Transition> out;
+		for (TransformationMonoid::Transition temp : in) {
+			set<int> tostate = automat.states[temp.second].transitions[*it];
+			for (int outstate : tostate) {
+				TransformationMonoid::Transition curtransition;
+				curtransition.first = temp.first;
+				curtransition.second = outstate;
+				out.push_back(curtransition);
+			}
+		}
+		// получили новые переходы
+		Term curTerm;
+		curTerm.transitions = out;
+		vector<alphabet_symbol> tempword = word;
+		tempword.push_back(*it);
+		curTerm.name = tempword;
+		queueTerm.push(curTerm);
+	}
+}
+
+TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
+	automat = in.remove_trap_states();
+	automat.remove_unreachable_states();
+	vector<TransformationMonoid::Transition> initperehods;
+	for (int i = 0; i < automat.states.size(); i++) {
+		TransformationMonoid::Transition temp;
+		temp.first = i;
+		temp.second = i;
+		initperehods.push_back(temp);
+	}
+	get_transition_by_symbol(initperehods, {},
+							 automat.language->get_alphabet());
+	while (queueTerm.size() > 0) {
+		TransformationMonoid::Term cur = queueTerm.front();
+		queueTerm.pop();
+
+		std::vector<TransformationMonoid::Term>::iterator rewritein =
+			std::find(terms.begin(), terms.end(), cur);
+		if (rewritein != terms.end()) {
+			rules[(*rewritein).name].push_back(cur.name);
+
+		} else {
+			terms.push_back(cur);
+			get_transition_by_symbol(cur.transitions, cur.name,
+									 automat.language->get_alphabet());
+		}
+	}
+}
+/*
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	Logger::activate_step_counter();
 	automat = in.remove_trap_states();
@@ -145,8 +211,8 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 			get_comb_alphabet(i, automat.language->get_alphabet());
 		int cond_rule_len = 0;
 		map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> temp_rule;
-		for (int j = 0; j < various.size() && cond_get_transactions;
-			 j++) // Для	всех	комбинаций
+		for (int j = 0; j < various.size() && cond_get_transactions; j++)
+		// Для	всех	комбинаций
 		{
 			Term current;
 			current.name = various[j];
@@ -163,7 +229,8 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 					Transition g;
 					g.first = t;
 					g.second = temp;
-					// cout << "test " << to_str(current.name) << " " << t << "
+					// cout << "test " << to_str(current.name) << " " << t
+					//	<< "
 					// "
 					// 	 << temp << "\n";
 					current.transitions.push_back(g);
@@ -196,7 +263,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 		}
 	}
 }
-
+*/
 string TransformationMonoid::to_txt() const {
 	return automat.to_txt();
 }
@@ -250,9 +317,11 @@ map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 			//	"transition " +
 			//		automat.states[terms[i].transitions[j].first].identifier,
 			//	automat.states[terms[i].transitions[j].second].identifier);
-			// ss << automat.states[terms[i].transitions[j].first].identifier
+			// ss <<
+			// automat.states[terms[i].transitions[j].first].identifier
 			//   << "	->	"
-			//   << automat.states[terms[i].transitions[j].second].identifier
+			//   <<
+			//   automat.states[terms[i].transitions[j].second].identifier
 			//   << "\n";
 			ss[term].push_back(
 				automat.states[terms[i].transitions[j].first].identifier);
@@ -464,8 +533,8 @@ bool TransformationMonoid::is_minimal() {
 			table_classes.push_back(terms[i]);
 		}
 		map<vector<alphabet_symbol>, int>
-			data_table; // храним ссылку на Терм из таблицы М-Н (быстрее и проще
-						// искать)
+			data_table; // храним ссылку на Терм из таблицы М-Н (быстрее и
+						// проще искать)
 		for (int i = 0; i < table_classes.size(); i++) {
 			data_table[table_classes[i].name] = i;
 		}
