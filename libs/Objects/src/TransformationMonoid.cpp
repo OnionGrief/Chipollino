@@ -232,73 +232,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 		}
 	}
 }
-/*
-TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
-	Logger::activate_step_counter();
-	automat = in.remove_trap_states();
-	automat.remove_unreachable_states();
-	Logger::deactivate_step_counter();
-	int i = 0;
-	bool cond_get_transactions = true;
-	while (cond_get_transactions) {
-		i++;
-		vector<vector<alphabet_symbol>> various =
-			get_comb_alphabet(i, automat.language->get_alphabet());
-		int cond_rule_len = 0;
-		map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> temp_rule;
-		for (int j = 0; j < various.size() && cond_get_transactions; j++)
-		// Для	всех	комбинаций
-		{
-			Term current;
-			current.name = various[j];
-			vector<alphabet_symbol> temp_word;
-			while (temp_word != current.name) {
-				if (temp_word.size()) current.name = temp_word;
-				temp_word = rewriting(current.name, rules);
-			}
-			if (current.name.size() < various[j].size()) continue;
-			for (int t = 0; t < automat.states.size(); t++) {
 
-				set<int> res = search_transition_by_word(current.name, t);
-				for (auto temp : res) {
-					Transition g;
-					g.first = t;
-					g.second = temp;
-					// cout << "test " << to_str(current.name) << " " << t
-					//	<< "
-					// "
-					// 	 << temp << "\n";
-					current.transitions.push_back(g);
-				}
-			}
-			vector<alphabet_symbol> eqv = was_term(terms, current.transitions);
-			if (eqv.size() == 0) // Если	не	встретился	в
-								 // Эквивалентных классах
-			{
-				for (int i = 0; i < current.transitions.size(); i++) {
-					if (automat.states[current.transitions[i].second]
-							.is_terminal &&
-						current.transitions[i].first == automat.initial_state) {
-						current.isFinal = true;
-					}
-				}
-				cond_rule_len++;
-				terms.push_back(current);
-
-			} else {
-				if (!rules.count(current.name) && current.name != eqv) {
-					rules[current.name].push_back(eqv);
-				}
-			}
-		}
-		if (cond_rule_len == 0) {
-			cond_get_transactions = false;
-			continue;
-		} else {
-		}
-	}
-}
-*/
 string TransformationMonoid::to_txt() const {
 	return automat.to_txt();
 }
