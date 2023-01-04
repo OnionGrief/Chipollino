@@ -1,5 +1,4 @@
 #include "Objects/Grammar.h"
-#include "Objects/Language.h"
 #include "Objects/Logger.h"
 #include <sstream>
 
@@ -473,9 +472,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() const {
 			}
 		}
 	}
-
-	FiniteAutomaton res =
-		FiniteAutomaton(initial_state, states, make_shared<Language>(symbols));
+	FiniteAutomaton res = FiniteAutomaton(initial_state, states, symbols);
 	Logger::log("Построенный по ней автомат", res);
 	Logger::finish_step();
 	return res;
