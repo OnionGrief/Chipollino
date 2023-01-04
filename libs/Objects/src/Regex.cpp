@@ -908,9 +908,12 @@ Regex Regex::linearize() const {
 	Logger::init_step("Linearise");
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
+	set<alphabet_symbol> lang_l;
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.symbol.linearize(i);
+		lang_l.insert(list[i]->value.symbol);
 	}
+	test.set_language(lang_l);
 	Logger::log(test.to_txt());
 	Logger::finish_step();
 	return test;
@@ -920,9 +923,12 @@ Regex Regex::delinearize() const {
 	Logger::init_step("DeLinearise");
 	Regex test(*this);
 	vector<Regex*> list = test.pre_order_travers_vect();
+	set<alphabet_symbol> lang_del;
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.symbol.delinearize();
+		lang_del.insert(list[i]->value.symbol);
 	}
+	test.set_language(lang_del);
 	Logger::log(test.to_txt());
 	Logger::finish_step();
 	return test;
