@@ -31,6 +31,7 @@ Interpreter::Interpreter() {
 		 {{"DeLinearize", {ObjectType::Regex}, ObjectType::Regex},
 		  {"DeLinearize", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Complement", {{"Complement", {ObjectType::DFA}, ObjectType::DFA}}},
+		{"RemoveTrap", {{"RemoveTrap", {ObjectType::DFA}, ObjectType::DFA}}},
 		{"DeAnnote",
 		 {{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
 		  {"DeAnnote", {ObjectType::NFA}, ObjectType::NFA}}},
@@ -346,6 +347,9 @@ GeneralObject Interpreter::apply_function(
 		// if (fa.is_deterministic())
 		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
 	}
+	if (function.name == "RemoveTrap") {
+		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.remove_trap_states());
+	}
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
 			res = ObjectNFA(get_automaton(arguments[0]).deannote());
@@ -480,7 +484,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 							names_to_functions[predfunc][0].output ==
 								ObjectType::DFA) {
 							neededfuncs[i] = 0;
-							// удаление Annote перед DFA
+							// удаление Annote и Determinize перед DFA
 						}
 						if (predfunc == "Minimize" && func == "Minimize") {
 							neededfuncs[i] = 0;
