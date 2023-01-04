@@ -338,6 +338,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 		Logger::log("Неопределенность");
 		Logger::log("Детерминизируем");
 		fa_to_prefix_grammar(fa.determinize());
+		Logger::log("Построенная по нему префиксная грамматика:");
 		Logger::log(pg_to_txt());
 		Logger::finish_step();
 		return;
@@ -357,12 +358,13 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 		}
 	}
 	// TODO:
-	Logger::log("Построенная по нему префиксная грамматика", pg_to_txt());
+	Logger::log("Построенная по нему префиксная грамматика:");
+	Logger::log(pg_to_txt());
 	Logger::finish_step();
 	return;
 }
 
-const string Grammar::pg_to_txt() {
+string Grammar::pg_to_txt() const {
 	set<string> out;
 	stringstream ss;
 	// vector<PrefixGrammarItem> prefix_grammar = prefix_grammar;
@@ -423,7 +425,8 @@ const string Grammar::pg_to_txt() {
 FiniteAutomaton Grammar::prefix_grammar_to_automaton() const {
 	Logger::init_step("PrefixGrammar -> NFA");
 	// TODO:
-	// Logger::log("Префиксная грамматика", pg_to_txt()); 
+	Logger::log("Префиксная грамматика:");
+	Logger::log(pg_to_txt()); 
 	set<alphabet_symbol> symbols;
 	vector<State> states;
 	int initial_state;

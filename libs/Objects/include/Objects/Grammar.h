@@ -97,5 +97,5 @@ class Grammar {
 	// создает автомат по пр грамматике
 	FiniteAutomaton prefix_grammar_to_automaton() const;
 	// вывод пр грамматики в формате string
-	const string pg_to_txt();
+	string pg_to_txt() const;
 };
