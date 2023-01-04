@@ -51,6 +51,8 @@ Interpreter::Interpreter() {
 		 {{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int}}},
 		{"PrefixGrammar",
 		 {{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGrammar}}},
+		 {"PGtoNFA",
+		 {{"PGtoNFA", {ObjectType::PrefixGrammar}, ObjectType::NFA}}},
 		// Предикаты
 		{"Bisimilar",
 		 {{"Bisimilar",
@@ -291,7 +293,10 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "PrefixGrammar") {
 		Grammar g;
 		g.fa_to_prefix_grammar(get_automaton(arguments[0]));
-		return ObjectPrefixGramnar(g);
+		return ObjectPrefixGrammar(g);
+	}
+	if (function.name == "PGtoNFA") {
+		return ObjectNFA(get<ObjectPrefixGrammar>(arguments[0]).value.prefix_grammar_to_automaton());
 	}
 
 	/*
