@@ -108,3 +108,7 @@ void alphabet_symbol::delinearize() {
 bool alphabet_symbol::is_annotated() const {
 	return !annote_numbers.empty();
 }
+
+bool alphabet_symbol::is_linearize() const {
+	return !linearize_numbers.empty();
+}

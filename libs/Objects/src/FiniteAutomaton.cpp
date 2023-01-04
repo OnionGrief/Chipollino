@@ -824,6 +824,37 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 	return new_fa;
 }
 
+FiniteAutomaton FiniteAutomaton::delinearize() const {
+	Logger::init_step("DeLinearize");
+	set<alphabet_symbol> new_alphabet;
+	FiniteAutomaton new_fa =
+		FiniteAutomaton(initial_state, states, make_shared<Language>());
+	vector<map<alphabet_symbol, set<int>>> new_transitions(
+		new_fa.states.size());
+	for (int i = 0; i < new_fa.states.size(); i++) {
+		for (const auto& elem : new_fa.states[i].transitions) {
+			alphabet_symbol new_symb = elem.first;
+			if (elem.first.is_linearize()) {
+				new_symb.delinearize();
+				for (int transition_to : elem.second) {
+					new_transitions[i][new_symb].insert(transition_to);
+				}
+			} else
+				new_transitions[i][new_symb] = elem.second;
+			if (!new_symb.is_epsilon()) new_alphabet.insert(new_symb);
+		}
+	}
+	new_fa.language = make_shared<Language>(new_alphabet);
+	for (int i = 0; i < new_transitions.size(); i++) {
+		new_fa.states[i].transitions = new_transitions[i];
+	}
+	new_fa = new_fa.remove_trap_states();
+	Logger::log("Автомат до удаления разметки",
+				"Автомат после удаления разметки", *this, new_fa);
+	Logger::finish_step();
+	return new_fa;
+}
+
 bool FiniteAutomaton::is_one_unambiguous() const {
 	Logger::init_step("OneUnambiguity");
 	if (language->is_one_unambiguous_flag_cached()) {

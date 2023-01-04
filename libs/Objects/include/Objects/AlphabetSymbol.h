@@ -43,6 +43,7 @@ struct alphabet_symbol {
 	void deannote();
 	void delinearize();
 	bool is_annotated() const;
+	bool is_linearize() const;
 };
 
 ostream& operator<<(ostream& os, const alphabet_symbol& item);
