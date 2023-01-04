@@ -200,7 +200,7 @@ GeneralObject Interpreter::apply_function(
 		return ObjectRegex((get_automaton(arguments[0]).to_regex()));
 	}
 	if (function.name == "Thompson") {
-		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_tompson());
+		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_thompson());
 	}
 	if (function.name == "Bisimilar") {
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
@@ -471,6 +471,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 							names_to_functions[predfunc][0].output ==
 								ObjectType::DFA) {
 							neededfuncs[i] = 0;
+							// удаление Annote перед DFA
 						}
 						if (predfunc == "Minimize" &&
 							(func == "Minimize" || func == "Determinize")) {
@@ -486,15 +487,17 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 					}
 				} else {
 					if (predfunc == func) {
-						if (predfunc != "Reverse" && predfunc != "Complement") {
+						if (func != "Reverse" && func != "Complement" &&
+							func != "Linearize") {
 							neededfuncs[i - 1] = 0;
 						}
-					} else {
+					} /*else {
 						if (predfunc == "Linearize" &&
 							(func == "Glushkov" || func == "IlieYu")) {
 							neededfuncs[i - 1] = 0;
+							// удаление Linearize перед Glushkov
 						}
-					}
+					}*/
 				}
 			} else {
 				return nullopt;
@@ -521,7 +524,9 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 					}
 				} else {
 					neededfuncs[i] = neededfuncs[i - 1];
-					neededfuncs[i - 1] = 0;
+					// neededfuncs[i - 1] = 0;
+					// удаление из последовательности повторений:
+					// DeLinearize.DeLinearize.DeAnnote == DeLinearize
 				}
 			} else if (names_to_functions[predfunc].size() == 2) {
 				if (names_to_functions[func][0].input == regex_type &&

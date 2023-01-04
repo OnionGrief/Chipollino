@@ -77,7 +77,7 @@ class Regex : BaseObject {
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const;
-	pair<vector<State>, int> get_tompson(int) const;
+	pair<vector<State>, int> get_thompson(int) const;
 
 	vector<Lexem>* first_state() const; // начальные состояния для to_glushkov
 	bool contains_eps() const; // проверяет, входит ли eps в дерево regex
@@ -104,7 +104,7 @@ class Regex : BaseObject {
 	// вывод дерева для дебага
 	void print_tree();
 
-	FiniteAutomaton to_tompson() const;
+	FiniteAutomaton to_thompson() const;
 	FiniteAutomaton to_glushkov() const;
 	FiniteAutomaton to_ilieyu() const;
 	FiniteAutomaton to_antimirov() const;

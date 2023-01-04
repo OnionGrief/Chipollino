@@ -62,14 +62,6 @@ bool alphabet_symbol::operator<(const alphabet_symbol& other) const {
 	return value < other.value;
 }
 
-// alphabet_symbol alphabet_symbol::operator+(const alphabet_symbol& other)
-// const { 	return symbol + other.symbol;
-// }
-
-// alphabet_symbol alphabet_symbol::operator+(const string& s) const {
-// 	return symbol + s;
-// }
-
 bool alphabet_symbol::is_epsilon() const {
 	return *this == alphabet_symbol::epsilon();
 }
@@ -90,22 +82,29 @@ ostream& operator<<(ostream& os, const alphabet_symbol& as) {
 }
 
 void alphabet_symbol::annote(int num) {
-	annote_numbers.push_back("$" + to_string(num));
+	annote_numbers.push_back("." + to_string(num));
 	update_value();
 }
+
 void alphabet_symbol::linearize(int num) {
-	linearize_numbers.push_back("$" + to_string(num));
+	linearize_numbers.push_back("." + to_string(num));
 	update_value();
 }
+
 void alphabet_symbol::deannote() {
 	if (!annote_numbers.empty()) {
 		annote_numbers.pop_back();
 		update_value();
 	}
 }
+
 void alphabet_symbol::delinearize() {
 	if (!linearize_numbers.empty()) {
 		linearize_numbers.pop_back();
 		update_value();
 	}
+}
+
+bool alphabet_symbol::is_annotated() const {
+	return !annote_numbers.empty();
 }

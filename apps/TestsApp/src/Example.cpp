@@ -135,7 +135,7 @@ void Example::regex_parsing() {
 	FiniteAutomaton d;
 
 	// cout << "to_tompson ------------------------------\n";
-	c = r.to_tompson(); // to_tompson(-1);
+	c = r.to_thompson(); // to_tompson(-1);
 	// cout << c.to_txt();
 
 	// cout << "to_glushkov ------------------------------\n";
@@ -171,8 +171,8 @@ void Example::parsing_nfa() {
 	FiniteAutomaton b;
 	FiniteAutomaton c;
 
-	cout << "to_tompson ------------------------------\n";
-	c = r.to_ilieyu(); // to_tompson(-1);
+	cout << "to_thompson ------------------------------\n";
+	c = r.to_ilieyu(); // to_thompson(-1);
 	cout << c.to_txt();
 	cout << "Parsing: aaaaaaaaaaaaaaaaaaabccccc\n";
 	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc")
@@ -351,7 +351,7 @@ void Example::step() {
 
 void Example::tester() {
 	Regex r("ab(ab|a)*ababa");
-	FiniteAutomaton dfa1 = r.to_tompson();
+	FiniteAutomaton dfa1 = r.to_thompson();
 	// cout << dfa1.parsing_by_nfa("abaaabaaababa");
 	// cout << dfa1.to_txt();
 	Regex r1("((ab)*a)*");
@@ -412,10 +412,10 @@ void Example::step_interection() {
 void Example::arden_example() {
 
 	Regex r1("b((b(b|)ab*))*");
-	// cout << r1.to_tompson().to_txt();
-	Regex temp = r1.to_tompson().to_regex();
+	// cout << r1.to_thompson().to_txt();
+	Regex temp = r1.to_thompson().to_regex();
 	// cout << temp.to_txt() << "\n";
-	//  cout << temp.to_tompson().to_txt();
+	//  cout << temp.to_thompson().to_txt();
 }
 
 void Example::table() {
@@ -794,23 +794,23 @@ void Example::test_regex_equal() {
 
 void Example::test_ambiguity() {
 	enum AutomatonType {
-		tompson,
+		thompson,
 		glushkov,
 		ilieyu
 	};
 	using Test =
 		tuple<int, string, AutomatonType, FiniteAutomaton::AmbiguityValue>;
 	vector<Test> tests = {
-		{0, "(a*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{0, "(a*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
 		{1, "a*a*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		{2, "abc", tompson, FiniteAutomaton::unambigious},
-		{3, "b|a", tompson, FiniteAutomaton::almost_unambigious},
+		{2, "abc", thompson, FiniteAutomaton::unambigious},
+		{3, "b|a", thompson, FiniteAutomaton::almost_unambigious},
 		{4, "(aa|aa)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
 		{5, "(aab|aab)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
 		{6, "a*a*((a)*)*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		{7, "a*a*((a)*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
-		{8, "a*(b*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
-		{9, "a*((ab)*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{7, "a*a*((a)*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
+		{8, "a*(b*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
+		{9, "a*((ab)*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
 		{10, "(aa|aa)(aa|bb)*|a(ba)*", glushkov,
 		 FiniteAutomaton::almost_unambigious},
 		{11, "(aaa)*(a|)(a|)", ilieyu, FiniteAutomaton::almost_unambigious},
@@ -832,7 +832,8 @@ void Example::test_ambiguity() {
 		 glushkov, FiniteAutomaton::polynomially_ambigious},
 		{20, "(ab)*ab(ab)*|(ac)*(ac)*", glushkov,
 		 FiniteAutomaton::polynomially_ambigious},
-		{21, "(a|b)*(f*)*q", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{21, "(a|b)*(f*)*q", thompson,
+		 FiniteAutomaton::exponentially_ambiguous},
 		{22, "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*", glushkov,
 		 FiniteAutomaton::exponentially_ambiguous},
 	};
@@ -841,8 +842,8 @@ void Example::test_ambiguity() {
 		auto [test_number, reg_string, type, expected_res] = test;
 		// cout << test_number << endl;
 		switch (type) {
-		case tompson:
-			assert(Regex(reg_string).to_tompson().ambiguity() == expected_res);
+		case thompson:
+			assert(Regex(reg_string).to_thompson().ambiguity() == expected_res);
 			break;
 		case glushkov:
 			assert(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
@@ -856,7 +857,7 @@ void Example::test_ambiguity() {
 void Example::test_arden() {
 	auto test_equivalence = [](string rgx_str) {
 		Regex reg(rgx_str);
-		assert(Regex::equivalent(reg, reg.to_tompson().to_regex()));
+		assert(Regex::equivalent(reg, reg.to_thompson().to_regex()));
 		assert(Regex::equivalent(reg, reg.to_glushkov().to_regex()));
 		assert(Regex::equivalent(reg, reg.to_ilieyu().to_regex()));
 		assert(Regex::equivalent(reg, reg.to_antimirov().to_regex()));
@@ -996,7 +997,7 @@ void Example::test_interpreter() {
 	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a})) !!"));
 }
 void Example::test_TransformationMonoid() {
-	FiniteAutomaton fa1 = Regex("a*b*c*").to_tompson().minimize();
+	FiniteAutomaton fa1 = Regex("a*b*c*").to_thompson().minimize();
 	TransformationMonoid tm1(fa1);
 	assert(tm1.class_card() == 7);
 	assert(tm1.class_length() == 2);
@@ -1032,7 +1033,7 @@ void Example::test_TransformationMonoid() {
 	TransformationMonoid tm4(fa4);
 	assert(tm4.is_minimal());
 
-	FiniteAutomaton fa5 = Regex("b*a*").to_tompson().minimize();
+	FiniteAutomaton fa5 = Regex("b*a*").to_thompson().minimize();
 	TransformationMonoid tm5(fa5);
 	assert(tm5.is_minimal());
 }

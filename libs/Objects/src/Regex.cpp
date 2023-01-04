@@ -556,7 +556,7 @@ string Regex::get_iterated_word(int n) const {
 }
 
 // возвращает пару <вектор сотсояний, max_index>
-pair<vector<State>, int> Regex::get_tompson(int max_index) const {
+pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 	string str;			  // идентификатор состояния
 	vector<State> s = {}; // вектор состояний нового автомата
 	map<alphabet_symbol, set<int>> m, p, map_l, map_r; // словари автоматов
@@ -568,8 +568,8 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 	switch (type) {
 	case Regex::alt: // |
 
-		al = term_l->get_tompson(max_index);
-		ar = term_r->get_tompson(al.second);
+		al = term_l->get_thompson(max_index);
+		ar = term_r->get_thompson(al.second);
 		max_index = ar.second;
 
 		str = "q" + to_string(max_index + 1);
@@ -622,8 +622,8 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 
 		return {s, max_index + 2};
 	case Regex::conc: // .
-		al = term_l->get_tompson(max_index);
-		ar = term_r->get_tompson(al.second);
+		al = term_l->get_thompson(max_index);
+		ar = term_r->get_thompson(al.second);
 		max_index = ar.second;
 
 		for (size_t i = 0; i < al.first.size(); i++) {
@@ -672,7 +672,7 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 
 		return {s, max_index};
 	case Regex::star: // *
-		al = term_l->get_tompson(max_index);
+		al = term_l->get_thompson(max_index);
 		max_index = al.second;
 
 		str = "q" + to_string(max_index + 1);
@@ -728,10 +728,10 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 	return {};
 }
 
-FiniteAutomaton Regex::to_tompson() const {
+FiniteAutomaton Regex::to_thompson() const {
 	Logger::init_step("Автомат Томпсона");
 	Logger::log("Регулярное выражение", to_txt());
-	FiniteAutomaton fa(0, get_tompson(-1).first, language);
+	FiniteAutomaton fa(0, get_thompson(-1).first, language);
 	Logger::log("Автомат", fa);
 	Logger::finish_step();
 	return fa;
