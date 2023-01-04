@@ -353,7 +353,8 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
 	}
 	if (function.name == "RemoveTrap") {
-		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.remove_trap_states());
+		res =
+			ObjectDFA(get<ObjectDFA>(arguments[0]).value.remove_trap_states());
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
@@ -499,13 +500,16 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 							 func == "Determinize+")) {
 							neededfuncs[i] = 0;
 						}
-						if (predfunc == "Determinize+" && func == "Determinize+") {
+						if (predfunc == "Determinize+" &&
+							func == "Determinize+") {
 							neededfuncs[i] = 0;
 						}
 						if (predfunc == "Determinize" && func == "Minimize") {
 							neededfuncs[i - 1] = 0;
 						}
-						if ((predfunc == "Determinize" || predfunc == "Determinize+") && func == "Minimize+") {
+						if ((predfunc == "Determinize" ||
+							 predfunc == "Determinize+") &&
+							func == "Minimize+") {
 							neededfuncs[i - 1] = 0;
 						}
 					}
@@ -693,7 +697,7 @@ bool Interpreter::run_test(const Test& test) {
 
 	auto language = eval_expression(test.language);
 	auto test_set = eval_expression(test.test_set);
-	bool success = false;
+	bool success = true;
 
 	if (language.has_value() && test_set.has_value()) {
 		auto reg = get<ObjectRegex>(*test_set).value;
@@ -719,15 +723,32 @@ bool Interpreter::run_test(const Test& test) {
 	return success;
 }
 
-bool Interpreter::run_operation(const GeneralOperation& op) {
-	if (holds_alternative<Declaration>(op)) {
-		run_declaration(get<Declaration>(op));
-	} else if (holds_alternative<Predicate>(op)) {
-		run_predicate(get<Predicate>(op));
-	} else if (holds_alternative<Test>(op)) {
-		run_test(get<Test>(op));
+bool Interpreter::set_flag(const Flag& flag) {
+	auto logger = init_log();
+	logger.log("");
+	if (flag.name == "trim") {
+		is_trim = flag.value;
+	} else {
+		logger.throw_error("while setting flag: wrong name \"" + flag.name +
+						   "\"");
+		return false;
 	}
+	logger.log("set flag \"" + flag.name + "\" = " + to_string(flag.value));
 	return true;
+}
+
+bool Interpreter::run_operation(const GeneralOperation& op) {
+	bool success = false;
+	if (holds_alternative<Declaration>(op)) {
+		success = run_declaration(get<Declaration>(op));
+	} else if (holds_alternative<Predicate>(op)) {
+		success = run_predicate(get<Predicate>(op));
+	} else if (holds_alternative<Test>(op)) {
+		success = run_test(get<Test>(op));
+	} else if (holds_alternative<Flag>(op)) {
+		success = set_flag(get<Flag>(op));
+	}
+	return success;
 }
 
 int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {
@@ -984,6 +1005,40 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 	return nullopt;
 }
 
+optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
+												   int& pos) {
+
+	auto logger = init_log();
+	int i = pos;
+
+	if (lexems.size() < i + 2 || lexems[i].type != Lexem::name ||
+		lexems[i].value != "SetFlag") {
+		return nullopt;
+	}
+	Flag flag;
+	i++;
+	if (lexems[i].type == Lexem::name) {
+		flag.name = lexems[i].value;
+	} else {
+		logger.throw_error("Scan SetFlag: wrong flagName at position 1");
+		return nullopt;
+	}
+	i++;
+	if (lexems[i].type == Lexem::name &&
+		(lexems[i].value == "true" || lexems[i].value == "false")) {
+		if (lexems[i - 1].value == "true")
+			flag.value = true;
+		else
+			flag.value = false;
+	} else {
+		logger.throw_error(
+			"Scan SetFlag: wrong type at position 2, boolean expected");
+		return nullopt;
+	}
+	pos = i + 1;
+	return flag;
+}
+
 optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	const vector<Lexem>& lexems) {
 
@@ -991,12 +1046,15 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	logger.log("scanning");
 
 	int pos = 0;
+	if (auto test = scan_test(lexems, pos); test.has_value()) {
+		return test;
+	}
+	if (auto flag = scan_flag(lexems, pos); flag.has_value()) {
+		return flag;
+	}
 	if (auto declaration = scan_declaration(lexems, pos);
 		declaration.has_value()) {
 		return declaration;
-	}
-	if (auto test = scan_test(lexems, pos); test.has_value()) {
-		return test;
 	}
 	if (auto predicate = scan_predicate(lexems, pos); predicate.has_value()) {
 		return predicate;
