@@ -1644,20 +1644,18 @@ FiniteAutomaton Regex::to_antimirov() const {
 
 Regex Regex::deannote() const {
 	Logger::init_step("DeAnnote");
-	Regex old_regex(*this);
-	Logger::log("Регулярное выражение до преобразования", old_regex.to_txt());
-	string with_number = old_regex.to_txt();
-	string new_string;
-	for (size_t i = 0; i < with_number.size(); i++) {
-		if (!('0' <= with_number[i] && with_number[i] <= '9')) {
-			new_string += with_number[i];
-		}
+	Regex test(*this);
+	Logger::log("Регулярное выражение до преобразования", test.to_txt());
+	vector<Regex*> list = test.pre_order_travers_vect();
+	set<alphabet_symbol> lang_deann;
+	for (size_t i = 0; i < list.size(); i++) {
+		list[i]->value.symbol.deannote();
+		lang_deann.insert(list[i]->value.symbol);
 	}
-	Regex new_regex(new_string);
-	Logger::log("Регулярное выражение после преобразования",
-				new_regex.to_txt());
+	test.set_language(lang_deann);
+	Logger::log("Регулярное выражение после преобразования", test.to_txt());
 	Logger::finish_step();
-	return new_regex;
+	return test;
 }
 
 // для дебага
