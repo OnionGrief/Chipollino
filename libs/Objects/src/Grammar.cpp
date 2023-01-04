@@ -333,8 +333,12 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 	}
 
 	if (count != equal_classes.size()) {
-		// в логер то что неопределенность и детерменизируем
+		// в логер то что неопределенность и детерминизируем
+		Logger::log("Неопределенность");
+		Logger::log("Детерминизируем");
 		fa_to_prefix_grammar(fa.determinize());
+		Logger::log(pg_to_txt());
+		Logger::finish_step();
 		return;
 	}
 	vector<State> states_not_trap = fa.remove_trap_states().states;
@@ -398,9 +402,9 @@ const string Grammar::pg_to_txt() {
 		}
 	}
 	for (const auto& elem : out) {
-		ss << elem << endl;
+		ss << elem << endl << endl;
 	}
-	ss << "------------ base words ------------" << endl;
+	ss << "------------ base words ------------" << endl << endl;
 
 	for (int i = 0; i < prefix_grammar.size(); i++) {
 		if (prefix_grammar[i].is_terminal) {
@@ -408,7 +412,7 @@ const string Grammar::pg_to_txt() {
 			for (const auto& w : g.equivalence_class) {
 				ss << w << " ";
 			}
-			ss << endl;
+			ss << endl << endl;
 		}
 	}
 	return ss.str();
