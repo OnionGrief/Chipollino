@@ -95,7 +95,7 @@ class Grammar {
 	// создание пр грамматики по НКА с помощью ТМ
 	void fa_to_prefix_grammar_TM(const FiniteAutomaton&);
 	// создает автомат по пр грамматике
-	FiniteAutomaton prefix_grammar_to_automaton();
+	FiniteAutomaton prefix_grammar_to_automaton() const;
 	// вывод пр грамматики в формате string
 	const string pg_to_txt();
 };

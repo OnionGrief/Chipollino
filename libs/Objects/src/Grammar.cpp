@@ -261,6 +261,7 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 
 void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 	Logger::init_step("PrefixGrammar");
+	Logger::log("Автомат", fa);
 	const vector<State>& states = fa.states;
 	TransformationMonoid a(fa.minimize());
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
@@ -355,7 +356,8 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa) {
 			prefix_grammar[i].equivalence_class = {};
 		}
 	}
-	Logger::log(pg_to_txt());
+	// TODO:
+	Logger::log("Построенная по нему префиксная грамматика", pg_to_txt());
 	Logger::finish_step();
 	return;
 }
@@ -418,7 +420,10 @@ const string Grammar::pg_to_txt() {
 	return ss.str();
 }
 
-FiniteAutomaton Grammar::prefix_grammar_to_automaton() {
+FiniteAutomaton Grammar::prefix_grammar_to_automaton() const {
+	Logger::init_step("PrefixGrammar -> NFA");
+	// TODO:
+	// Logger::log("Префиксная грамматика", pg_to_txt()); 
 	set<alphabet_symbol> symbols;
 	vector<State> states;
 	int initial_state;
@@ -456,8 +461,10 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() {
 			symbols.insert(alpha);
 		}
 	}
-
-	return FiniteAutomaton(initial_state, states, symbols);
+	FiniteAutomaton res = FiniteAutomaton(initial_state, states, symbols);
+	Logger::log("Построенный по ней автомат", res);
+	Logger::finish_step();
+	return res;
 }
 
 const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
