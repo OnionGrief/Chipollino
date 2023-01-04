@@ -332,8 +332,7 @@ GeneralObject Interpreter::apply_function(
 			res =
 				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
 		} else {
-			// пусть будет так
-			res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
+			res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.delinearize());
 		}
 	}
 	if (function.name == "Complement") {
