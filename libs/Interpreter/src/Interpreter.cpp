@@ -279,9 +279,6 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Ambiguity") {
 		return ObjectAmbiguityValue(get_automaton(arguments[0]).ambiguity());
 	}
-	/*if (function.name == "Width") {
-		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
-	}*/
 	if (function.name == "MyhillNerode") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
 		return ObjectInt(trmon.get_classes_number_MyhillNerode());
@@ -332,7 +329,7 @@ GeneralObject Interpreter::apply_function(
 			res =
 				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
 		} else {
-			res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.delinearize());
+			res = ObjectNFA(get_automaton(arguments[0]).delinearize());
 		}
 	}
 	if (function.name == "Complement") {
