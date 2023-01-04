@@ -414,7 +414,12 @@ string Grammar::pg_to_txt() const {
 		if (prefix_grammar[i].is_terminal) {
 			const PrefixGrammarItem& g = prefix_grammar[i];
 			for (const auto& w : g.equivalence_class) {
-				ss << w << " ";
+				if (w == "") {
+					ss << "eps"
+					   << " ";
+				} else {
+					ss << w << " ";
+				}
 			}
 			ss << endl << endl;
 		}
@@ -426,7 +431,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() const {
 	Logger::init_step("PrefixGrammar -> NFA");
 	// TODO:
 	Logger::log("Префиксная грамматика:");
-	Logger::log(pg_to_txt()); 
+	Logger::log(pg_to_txt());
 	set<alphabet_symbol> symbols;
 	vector<State> states;
 	int initial_state;
