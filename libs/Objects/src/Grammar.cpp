@@ -235,7 +235,7 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 	}
 	g->is_visit = true;
 	for (const auto& equ : equivalence_class_back) {
-		if (monoid_rules.find(equ) == monoid_rules.end()) {
+		if (monoid_rules.find(equ) == monoid_rules.end() || st.is_terminal) {
 			g->equivalence_class.insert(word + w);
 		}
 	}
