@@ -134,8 +134,8 @@ void Example::regex_parsing() {
 	FiniteAutomaton c;
 	FiniteAutomaton d;
 
-	// cout << "to_tompson ------------------------------\n";
-	c = r.to_thompson(); // to_tompson(-1);
+	// cout << "to_thompson ------------------------------\n";
+	c = r.to_thompson(); // to_thompson(-1);
 	// cout << c.to_txt();
 
 	// cout << "to_glushkov ------------------------------\n";
