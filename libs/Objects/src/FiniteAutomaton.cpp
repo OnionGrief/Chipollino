@@ -97,7 +97,7 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 	return reachable;
 }
 
-FiniteAutomaton FiniteAutomaton::determinize() const {
+FiniteAutomaton FiniteAutomaton::determinize(bool is_trim) const {
 	Logger::init_step("Determinize");
 	if (states.size() == 1) {
 		Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
@@ -186,7 +186,7 @@ FiniteAutomaton FiniteAutomaton::determinize() const {
 	return dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::minimize() const {
+FiniteAutomaton FiniteAutomaton::minimize(bool is_trim) const {
 	Logger::init_step("Minimize");
 	if (language->min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
