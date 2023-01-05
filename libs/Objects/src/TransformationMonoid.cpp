@@ -200,16 +200,15 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 
 	automat = in.remove_trap_states();
 	states_counter_new = automat.states.size();
-	if (states_counter_new != states_counter_old) {
-		trap_counter++;
+	if (states_counter_old - states_counter_new > 1) {
+		trap_not_minimal = true;
 		states_counter_old = states_counter_new;
 	}
 
 	automat.remove_unreachable_states();
 	states_counter_new = automat.states.size();
-	if (states_counter_new != states_counter_old) {
-		trap_counter++;
-		states_counter_old = states_counter_new;
+	if (states_counter_old - states_counter_new > 1) {
+		trap_not_minimal = true;
 	}
 	// cout << automat.to_txt();
 	vector<TransformationMonoid::Transition> initperehods;
@@ -549,6 +548,9 @@ bool TransformationMonoid::is_minimal() {
 	// временные данные
 	vector<Term> table_classes;
 	vector<vector<bool>> equivalence_classes_table_temp;
+	if (trap_not_minimal) {
+		return false;
+	}
 	if (equivalence_classes_table_bool.size() == 0) {
 		map<vector<alphabet_symbol>, int>
 			data; // храним ссылку на Терм (быстрее и проще искать)
@@ -650,7 +652,7 @@ bool TransformationMonoid::is_minimal() {
 		}
 	}
 	// не уверен что правильно
-	bool is_minimal_bool = (log2(automat.states.size() + trap_counter) + 1) <=
+	bool is_minimal_bool = (log2(automat.states.size()) + 1) <=
 						   equivalence_classes_table_bool.size();
 	Logger::init_step("Is minimal");
 	Logger::log(is_minimal_bool ? "true" : "false");
