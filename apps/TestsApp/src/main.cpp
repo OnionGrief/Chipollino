@@ -5,6 +5,7 @@ using namespace std;
 int main() {
 	cout << "Test\n";
 	// Тестирование
-	Example::test_all();
-	Example::all_examples();
+	// Example::test_all();
+	//Example::all_examples();
+	Example::logger_test();
 }
