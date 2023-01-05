@@ -32,6 +32,8 @@ Interpreter::Interpreter() {
 		 {{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
 		  {"DeAnnote", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
+		{"Disambiguate",
+		 {{"Disambiguate", {ObjectType::Regex}, ObjectType::Regex}}},
 		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
@@ -41,15 +43,21 @@ Interpreter::Interpreter() {
 		   ObjectType::Regex}}},
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
 		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
-		{"Ambiguity", {{"Ambiguity", {ObjectType::NFA}, ObjectType::Value}}},
+		{"Ambiguity",
+		 {{"Ambiguity", {ObjectType::NFA}, ObjectType::AmbiguityValue}}},
 		{"MyhillNerode",
 		 {{"MyhillNerode", {ObjectType::DFA}, ObjectType::Int}}},
+		{"GlaisterShallit",
+		 {{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int}}},
+		{"PrefixGrammar",
+		 {{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGrammar}}},
 		// Предикаты
 		{"Bisimilar",
 		 {{"Bisimilar",
 		   {ObjectType::NFA, ObjectType::NFA},
 		   ObjectType::Boolean}}},
-		{"Minimal", {{"Minimal", {ObjectType::DFA}, ObjectType::Boolean}}},
+		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::OptionalBool}}},
+		// для dfa - bool, для nfa - optional<bool>
 		{"Subset",
 		 {{"Subset",
 		   {ObjectType::Regex, ObjectType::Regex},
@@ -62,6 +70,9 @@ Interpreter::Interpreter() {
 		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equal",
 		 {{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
+		{"OneUnambiguity",
+		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
+		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
 }
 
@@ -86,7 +97,7 @@ bool Interpreter::run_file(const string& path) {
 	logger.log("opening file " + path);
 	ifstream input_file(path);
 	if (!input_file) {
-		logger.throw_error("failed to open " + to_string(path));
+		logger.throw_error("failed to open " + path);
 		return false;
 	}
 	logger.log("file opened");
@@ -159,15 +170,6 @@ GeneralObject Interpreter::apply_function(
 	auto logger = init_log();
 	logger.log("running function \"" + function.name + "\"");
 
-	// Можээт прыгодыытся
-	const auto nfa = ObjectType::NFA;
-	const auto dfa = ObjectType::DFA;
-	const auto regex = ObjectType::Regex;
-	const auto integer = ObjectType::Int;
-	const auto filename = ObjectType::FileName;
-	const auto boolean = ObjectType::Boolean;
-	const auto value = ObjectType::Value;
-
 	auto get_automaton =
 		[](const GeneralObject& obj) -> const FiniteAutomaton& {
 		if (holds_alternative<ObjectNFA>(obj)) {
@@ -218,16 +220,18 @@ GeneralObject Interpreter::apply_function(
 			get_automaton(arguments[0]), get_automaton(arguments[1]),
 			&log_template));
 	}
-	TransformationMonoid trmon;
 	if (function.name == "Minimal") {
-		trmon = TransformationMonoid(get_automaton(arguments[0]));
-		return ObjectBoolean(trmon.is_minimal(&log_template));
+		FiniteAutomaton a = get_automaton(arguments[0]);
+		if (a.is_deterministic())
+			return ObjectBoolean(a.is_dfa_minimal(&log_template));
+		else
+			return ObjectOptionalBool(a.is_nfa_minimal(&log_template));
 	}
 	if (function.name == "Subset") {
-		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
-			return ObjectBoolean(
-				(get_automaton(arguments[0])
-					 .subset(get_automaton(arguments[1]), &log_template)));
+		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
+			function.input == sign) {
+			return ObjectBoolean((get_automaton(arguments[0])
+									  .subset(get_automaton(arguments[1]), &log_template)));
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
@@ -235,7 +239,7 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equiv") {
-		vector<ObjectType> n = {nfa, nfa};
+		vector<ObjectType> n = {ObjectType::NFA, ObjectType::NFA};
 		if (function.input == n) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
 				get_automaton(arguments[0]), get_automaton(arguments[1]),
@@ -247,7 +251,8 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equal") {
-		if (vector<ObjectType> sign = {nfa, nfa}; function.input == sign) {
+		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
+			function.input == sign) {
 			return ObjectBoolean(FiniteAutomaton::equal(
 				get_automaton(arguments[0]), get_automaton(arguments[1]),
 				&log_template));
@@ -257,6 +262,16 @@ GeneralObject Interpreter::apply_function(
 				get<ObjectRegex>(arguments[1]).value, &log_template));
 		}
 	}
+	if (function.name == "OneUnambiguity") {
+		if (vector<ObjectType> sign = {ObjectType::NFA};
+			function.input == sign) {
+			return ObjectBoolean(
+				get_automaton(arguments[0]).is_one_unambiguous());
+		} else {
+			return ObjectBoolean(
+				get<ObjectRegex>(arguments[0]).value.is_one_unambiguous());
+		}
+	}
 	if (function.name == "SemDet") {
 		return ObjectBoolean(get_automaton(arguments[0]).semdet(&log_template));
 	}
@@ -264,6 +279,7 @@ GeneralObject Interpreter::apply_function(
 		return ObjectInt(
 			get<ObjectRegex>(arguments[0]).value.pump_length(&log_template));
 	}
+	TransformationMonoid trmon;
 	if (function.name == "ClassLength") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
 		return ObjectInt(trmon.class_length(&log_template));
@@ -277,21 +293,31 @@ GeneralObject Interpreter::apply_function(
 		return ObjectInt(trmon.class_card(&log_template));
 	}
 	if (function.name == "Ambiguity") {
-		return ObjectValue(
-			get_automaton(arguments[0]).ambiguity(&log_template));
+		return ObjectAmbiguityValue(get_automaton(arguments[0]).ambiguity(&log_template));
 	}
 	/*if (function.name == "Width") {
 		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
 	}*/
 	if (function.name == "MyhillNerode") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
-		return ObjectInt(trmon.classes_number_MyhillNerode(&log_template));
+		return ObjectInt(trmon.get_classes_number_MyhillNerode(&log_template));
+	}
+	if (function.name == "GlaisterShallit") {
+		return ObjectInt(
+			get_automaton(arguments[0]).get_classes_number_GlaisterShallit(&log_template));
+	}
+	if (function.name == "PrefixGrammar") {
+		Grammar g;
+		g.fa_to_prefix_grammar(get_automaton(arguments[0]), &log_template);
+		return ObjectPrefixGramnar(g);
 	}
 
 	/*
 	* Идёт Глушков по лесу, видит -- регулярка.
 	Построил автомат и застрелился.
 	*/
+
+	// преобразования внутри класса:
 
 	GeneralObject predres = arguments[0];
 	optional<GeneralObject> res;
@@ -316,9 +342,9 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectNFA(get_automaton(arguments[0]).reverse(&log_template));
 	}
 	if (function.name == "DeLinearize") {
-		if (function.output == regex) {
-			res = ObjectRegex(get<ObjectRegex>(arguments[0])
-								  .value.delinearize(&log_template));
+		if (function.output == ObjectType::Regex) {
+			res =
+				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize(&log_template));
 		} else {
 			// пусть будет так
 			res = ObjectNFA(
@@ -332,9 +358,8 @@ GeneralObject Interpreter::apply_function(
 			get<ObjectDFA>(arguments[0]).value.complement(&log_template));
 	}
 	if (function.name == "DeAnnote") {
-		if (function.output == nfa) {
-			res =
-				ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
+		if (function.output == ObjectType::NFA) {
+			res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 		} else {
 			res = ObjectRegex(
 				get<ObjectRegex>(arguments[0]).value.deannote(&log_template));
@@ -349,6 +374,10 @@ GeneralObject Interpreter::apply_function(
 			get<ObjectRegex>(arguments[0])
 				.value.normalize_regex(get<ObjectFileName>(arguments[1]).value,
 									   &log_template));
+	}
+	if (function.name == "Disambiguate") {
+		res = ObjectRegex(
+			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex());
 	}
 	/*if (function.name == "Simplify") {
 		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
@@ -613,8 +642,8 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 		logger.throw_error("while running declaration: invalid expression");
 		return false;
 	}
-	logger.log("assigned to " + to_string(decl.id));
-	// Logger::deactivate();
+	logger.log("assigned to " + decl.id);
+	//Logger::deactivate();
 	return true;
 }
 
@@ -633,6 +662,14 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 
 	if (res.has_value() && holds_alternative<ObjectBoolean>(*res)) {
 		logger.log("result: " + to_string(get<ObjectBoolean>(*res).value));
+		success = true;
+	} else if (res.has_value() && holds_alternative<ObjectOptionalBool>(*res)) {
+		string result = "Unknown";
+		if (get<ObjectOptionalBool>(*res).value)
+			result = "1"; // true
+		else if (get<ObjectOptionalBool>(*res).value.has_value())
+			result = "0"; // false
+		logger.log("result: " + result);
 		success = true;
 	} else {
 		logger.throw_error("while running predicate: invalid expression");
@@ -930,7 +967,8 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 
 	if (auto seq = scan_FunctionSequence(lexems, pos, lexems.size());
 		seq.has_value() && (*seq).functions.size() == 1 &&
-		(*seq).functions[0].output == ObjectType::Boolean) {
+		((*seq).functions[0].output == ObjectType::Boolean ||
+		 (*seq).functions[0].output == ObjectType::OptionalBool)) {
 
 		pred.predicate = (*seq).functions[0];
 		pred.arguments = (*seq).parameters;
