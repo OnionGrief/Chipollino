@@ -118,6 +118,17 @@ class Interpreter {
 		bool value;
 	};
 
+	// Флаги:
+
+	/* глобальный флаг автоматов (отвечает за удаление ловушек)
+	Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
+	преобразованиях всегда удаляем в конце ловушки.
+	Если isTrim = false, тогда после удаления ловушки в результате
+	преобразований добавляем её обратно */
+	bool is_trim = true;
+	// флаг динамического тайпчекера
+	bool is_dynamic = false;
+
 	// Общий вид опрерации
 	using GeneralOperation = variant<Declaration, Test, Predicate, Flag>;
 
@@ -158,13 +169,6 @@ class Interpreter {
 	bool run_test(const Test&);
 	bool set_flag(const Flag&);
 	bool run_operation(const GeneralOperation&);
-
-	// глобальный флаг автоматов (отвечает за удаление ловушек)
-	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
-	// преобразованиях всегда удаляем в конце ловушки.
-	// Если isTrim = false, тогда после удаления ловушки в результате
-	// преобразований добавляем её обратно
-	bool is_trim = true;
 
 	// Список опреаций для последовательного выполнения
 	vector<GeneralOperation> operations;

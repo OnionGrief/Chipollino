@@ -1719,6 +1719,7 @@ bool Regex::is_one_unambiguous() const {
 
 Regex Regex::get_one_unambiguous_regex() const {
 	Logger::init_step("OneUnambiguityRegex");
+	Logger::log("Регулярное выражение до преобразования", to_txt());
 	FiniteAutomaton fa = to_glushkov();
 	if (fa.language->is_one_unambiguous_regex_cached()) {
 		Logger::log("1-однозначное регулярное выражение, описывающее язык",

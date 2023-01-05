@@ -353,11 +353,10 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Complement") {
 		// FiniteAutomaton fa = get_automaton(arguments[0]);
 		// if (fa.is_deterministic())
-		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
+		res = ObjectDFA(get_automaton(arguments[0]).complement());
 	}
 	if (function.name == "RemoveTrap") {
-		res =
-			ObjectDFA(get<ObjectDFA>(arguments[0]).value.remove_trap_states());
+		res = ObjectDFA(get_automaton(arguments[0]).remove_trap_states());
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
@@ -425,7 +424,10 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 		// тип либо одинаковый либо NFA<-DFA
 		if (!((argument_type[i] == func_input_type[i]) ||
 			  (argument_type[i] == ObjectType::DFA &&
-			   func_input_type[i] == ObjectType::NFA))) {
+			   func_input_type[i] == ObjectType::NFA) ||
+			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
+			  (is_dynamic && argument_type[i] == ObjectType::NFA &&
+			   func_input_type[i] == ObjectType::DFA))) {
 			// несовпадение по типам
 			return false;
 		}
@@ -684,9 +686,11 @@ bool Interpreter::run_test(const Test& test) {
 bool Interpreter::set_flag(const Flag& flag) {
 	auto logger = init_log();
 	logger.log("");
-	if (flag.name == "trim") {
+	if (flag.name == "trim")
 		is_trim = flag.value;
-	} else {
+	else if (flag.name == "dynamic")
+		is_dynamic = flag.value;
+	else {
 		logger.throw_error("while setting flag: wrong name \"" + flag.name +
 						   "\"");
 		return false;
@@ -984,7 +988,7 @@ optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 	i++;
 	if (lexems[i].type == Lexem::name &&
 		(lexems[i].value == "true" || lexems[i].value == "false")) {
-		if (lexems[i - 1].value == "true")
+		if (lexems[i].value == "true")
 			flag.value = true;
 		else
 			flag.value = false;
