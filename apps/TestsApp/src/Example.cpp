@@ -513,24 +513,24 @@ void Example::all_examples() {
 	// tasks_generating();
 	// parsing_regex("b(ab)*b");
 	// transformation_monoid_example();
-	// normalize_regex();
+	normalize_regex();
 	// step();
-	// parsing_nfa();
-	// fa_subset_check();
-	// arden_example();
-	//  to_image();
-	//  tester();
-	//  step_interection();
-	//  table();
-	// fa_semdet_check();
-	logger_test()
+	parsing_nfa();
+	fa_subset_check();
+	arden_example();
+	// to_image();
+	// tester();
+	// step_interection();
+	// table();
+	fa_semdet_check();
+	logger_test();
 	fa_to_pgrammar();
-	Regex("abaa").pump_length();
+	// Regex("abaa").pump_length();
 	get_one_unambiguous_regex();
 	cout << "all the examlples are successful" << endl;
 }
 
-voif Example::logger_test() {
+void Example::logger_test() {
 	LogTemplate log_template;
 	Logger tex_logger;
 	log_template.load_tex_template("./resources/template/glushkov-long.tex");

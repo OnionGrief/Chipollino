@@ -5,9 +5,9 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
-#include "Objects/iLogTemplate.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
+#include "Objects/iLogTemplate.h"
 #include "Tester/Tester.h"
 #include <cassert>
 #include <functional>
@@ -48,6 +48,7 @@ class Example {
 		const function<void(string& rgx_str)>& check_function);
 	static void arden_lemma_testing();
 	static void fa_to_pgrammar();
+	static void logger_test();
 
 	// запуск всех тестов
 	static void test_all();
