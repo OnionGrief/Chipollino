@@ -263,6 +263,9 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 								   iLogTemplate* log) {
 	// Logger::init_step("PrefixGrammar");
 	// Logger::log("Автомат", fa);
+	if (log) {
+		log->set_parameter("automaton", fa);
+	}
 	const vector<State>& states = fa.states;
 	TransformationMonoid a(fa.minimize());
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
@@ -336,12 +339,17 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 
 	if (count != equal_classes.size()) {
 		// в логер то что неопределенность и детерминизируем
-		Logger::log("Неопределенность");
-		Logger::log("Детерминизируем");
+		// Logger::log("Неопределенность");
+		// Logger::log("Детерминизируем");
 		fa_to_prefix_grammar(fa.determinize());
-		Logger::log("Построенная по нему префиксная грамматика:");
-		Logger::log(pg_to_txt());
-		Logger::finish_step();
+		// Logger::log("Построенная по нему префиксная грамматика:");
+		// Logger::log(pg_to_txt());
+		// Logger::finish_step();
+		if (log) {
+			log->set_parameter("tekst1", "Неопределенность");
+			log->set_parameter("tekst2", "Детерминизируем");
+			log->set_parameter("pg_to_txt", pg_to_txt());
+		}
 		return;
 	}
 	vector<State> states_not_trap = fa.remove_trap_states().states;
@@ -429,11 +437,14 @@ string Grammar::pg_to_txt() const {
 	return ss.str();
 }
 
-FiniteAutomaton Grammar::prefix_grammar_to_automaton() const {
-	Logger::init_step("PrefixGrammar -> NFA");
-	// TODO:
-	Logger::log("Префиксная грамматика:");
-	Logger::log(pg_to_txt());
+FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
+	// Logger::init_step("PrefixGrammar -> NFA");
+	// // TODO:
+	// Logger::log("Префиксная грамматика:");
+	// Logger::log(pg_to_txt());
+	if (log) {
+		log->set_parameter("pg_to_txt", pg_to_txt());
+	}
 	set<alphabet_symbol> symbols;
 	vector<State> states;
 	int initial_state;
@@ -472,8 +483,11 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() const {
 		}
 	}
 	FiniteAutomaton res = FiniteAutomaton(initial_state, states, symbols);
-	Logger::log("Построенный по ней автомат", res);
-	Logger::finish_step();
+	// Logger::log("Построенный по ней автомат", res);
+	// Logger::finish_step();
+	if (log) {
+		log->set_parameter("automaton", res);
+	}
 	return res;
 }
 
