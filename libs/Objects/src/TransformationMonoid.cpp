@@ -170,6 +170,7 @@ vector<int> showtransitions(vector<int> in, int from, int to, int size) {
 void TransformationMonoid::get_transition_by_symbol(
 	vector<TransformationMonoid::Transition> in, vector<alphabet_symbol> word,
 	const set<alphabet_symbol>& alphabet) {
+
 	for (set<alphabet_symbol>::iterator it = alphabet.begin();
 		 it != alphabet.end(); it++) { // для каждого символа
 		vector<TransformationMonoid::Transition> out;
@@ -193,9 +194,24 @@ void TransformationMonoid::get_transition_by_symbol(
 }
 
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
+	int states_counter_old = 0;
+	int states_counter_new = 0;
+	states_counter_old = in.states.size();
+
 	automat = in.remove_trap_states();
+	states_counter_new = automat.states.size();
+	if (states_counter_new != states_counter_old) {
+		trap_counter++;
+		states_counter_old = states_counter_new;
+	}
+
 	automat.remove_unreachable_states();
-	cout << automat.to_txt();
+	states_counter_new = automat.states.size();
+	if (states_counter_new != states_counter_old) {
+		trap_counter++;
+		states_counter_old = states_counter_new;
+	}
+	// cout << automat.to_txt();
 	vector<TransformationMonoid::Transition> initperehods;
 	for (int i = 0; i < automat.states.size(); i++) {
 		TransformationMonoid::Transition temp;
@@ -208,10 +224,17 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	while (queueTerm.size() > 0) {
 		TransformationMonoid::Term cur = queueTerm.front();
 		queueTerm.pop();
+		// cout << "\n " << rules.size();
+		// cout << "\nnew ";
+		// for (auto w : cur.name) {
+		// 	cout << w;
+		// }
+
 		if (!searchrewrite(cur.name)) {
 			std::vector<TransformationMonoid::Term>::iterator rewritein =
 				std::find(terms.begin(), terms.end(), cur);
 			if (rewritein != terms.end()) {
+				// cout << "\trewrite ";
 				rules[(*rewritein).name].push_back(cur.name);
 
 			} else {
@@ -221,6 +244,8 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 						cur.isFinal = true;
 					}
 				}
+
+				// cout << "\tnewterm ";
 				terms.push_back(cur);
 				get_transition_by_symbol(cur.transitions, cur.name,
 										 automat.language->get_alphabet());
@@ -625,7 +650,7 @@ bool TransformationMonoid::is_minimal() {
 		}
 	}
 	// не уверен что правильно
-	bool is_minimal_bool = (log2(automat.states.size()) + 1) <=
+	bool is_minimal_bool = (log2(automat.states.size() + trap_counter) + 1) <=
 						   equivalence_classes_table_bool.size();
 	Logger::init_step("Is minimal");
 	Logger::log(is_minimal_bool ? "true" : "false");

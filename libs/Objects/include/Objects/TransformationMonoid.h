@@ -86,6 +86,7 @@ class TransformationMonoid {
 	vector<vector<bool>> equivalence_classes_table_bool; // Taблица М-Н
 	vector<string> equivalence_classes_table_left; // Левая часть таблицы
 	vector<string> equivalence_classes_table_top; // шапка таблицы
+	int trap_counter = 0;
 
 	//   | t o p
 	// l |--------
