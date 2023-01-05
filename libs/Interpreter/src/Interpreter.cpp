@@ -64,6 +64,7 @@ Interpreter::Interpreter() {
 		   ObjectType::Boolean}}},
 		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::OptionalBool}}},
 		// для dfa - bool, для nfa - optional<bool>
+		{"Deterministic", {{"Deterministic", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Subset",
 		 {{"Subset",
 		   {ObjectType::Regex, ObjectType::Regex},
@@ -75,7 +76,11 @@ Interpreter::Interpreter() {
 		   ObjectType::Boolean},
 		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equal",
-		 {{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
+		 {{"Equal",
+		   {ObjectType::Regex, ObjectType::Regex},
+		   ObjectType::Boolean},
+		  {"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean},
+		  {"Equal", {ObjectType::Int, ObjectType::Int}, ObjectType::Boolean}}},
 		{"OneUnambiguity",
 		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
@@ -183,7 +188,6 @@ GeneralObject Interpreter::apply_function(
 		return holds_alternative<ObjectNFA>(obj) ||
 			   holds_alternative<ObjectDFA>(obj);
 	};
-	
 
 	if (function.name == "Glushkov") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_glushkov());
@@ -207,14 +211,19 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "Minimal") {
 		FiniteAutomaton a = get_automaton(arguments[0]);
-		if (a.is_deterministic())
+		Logger::activate_step_counter();
+		bool is_deterministic = a.is_deterministic();
+		Logger::deactivate_step_counter();
+		if (is_deterministic)
 			return ObjectBoolean(a.is_dfa_minimal());
 		else
 			return ObjectOptionalBool(a.is_nfa_minimal());
 	}
+	if (function.name == "Deterministic") {
+		return ObjectBoolean(get_automaton(arguments[0]).is_deterministic());
+	}
 	if (function.name == "Subset") {
-		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
-			function.input == sign) {
+		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean((get_automaton(arguments[0])
 									  .subset(get_automaton(arguments[1]))));
 		} else {
@@ -224,8 +233,8 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equiv") {
-		vector<ObjectType> n = {ObjectType::NFA, ObjectType::NFA};
-		if (function.input == n) {
+
+		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
 				get_automaton(arguments[0]), get_automaton(arguments[1])));
 		} else {
@@ -235,19 +244,20 @@ GeneralObject Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equal") {
-		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
-			function.input == sign) {
+		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(FiniteAutomaton::equal(
 				get_automaton(arguments[0]), get_automaton(arguments[1])));
-		} else {
+		} else if (function.input[0] == ObjectType::Regex) {
 			return ObjectBoolean(
 				Regex::equal(get<ObjectRegex>(arguments[0]).value,
 							 get<ObjectRegex>(arguments[1]).value));
+		} else {
+			return ObjectBoolean(get<ObjectInt>(arguments[0]).value ==
+								 get<ObjectInt>(arguments[1]).value);
 		}
 	}
 	if (function.name == "OneUnambiguity") {
-		if (vector<ObjectType> sign = {ObjectType::NFA};
-			function.input == sign) {
+		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(
 				get_automaton(arguments[0]).is_one_unambiguous());
 		} else {

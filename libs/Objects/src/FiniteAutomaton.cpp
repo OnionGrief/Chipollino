@@ -1900,6 +1900,7 @@ optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
 
 optional<bool> FiniteAutomaton::is_nfa_minimal() const {
 	Logger::init_step("Minimal");
+	Logger::log("Автомат", *this);
 	optional<bool> result = get_nfa_minimality_value();
 	if (result.has_value())
 		Logger::log(result.value() ? "True" : "False");
@@ -1911,6 +1912,7 @@ optional<bool> FiniteAutomaton::is_nfa_minimal() const {
 
 bool FiniteAutomaton::is_dfa_minimal() const {
 	Logger::init_step("Minimal");
+	Logger::log("Автомат", *this);
 	bool result = states.size() == minimize().states.size();
 	Logger::log(result ? "True" : "False");
 	Logger::finish_step();
@@ -2121,17 +2123,24 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 }
 
 bool FiniteAutomaton::is_deterministic() const {
+	Logger::init_step("Детерминизированность");
+	Logger::log("Автомат", *this);
+	bool result = true;
 	for (int i = 0; i < states.size(); i++) {
 		for (auto elem : states[i].transitions) {
 			if (elem.first == alphabet_symbol::epsilon()) {
-				return false;
+				result = false;
+				break;
 			}
 			if (elem.second.size() > 1) {
-				return false;
+				result = false;
+				break;
 			}
 		}
 	}
-	return true;
+	Logger::log(result ? "True" : "False");
+	Logger::finish_step();
+	return result;
 }
 
 bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
@@ -2145,6 +2154,7 @@ int FiniteAutomaton::get_initial() {
 
 int FiniteAutomaton::states_number() const {
 	Logger::init_step("States");
+	Logger::log("Автомат", *this);
 	Logger::log(to_string(states.size()));
 	Logger::finish_step();
 	return states.size();
