@@ -172,6 +172,9 @@ class Interpreter {
 	// Сравнение типов ожидаемых и полученных входных данных
 	bool typecheck(vector<ObjectType> func_input_type,
 				   vector<ObjectType> input_type);
+	// выбрать подходящий вариант функции для данных аргументов (если он есть)
+	optional<int> find_func(string func, vector<ObjectType> input_type);
+
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(
 		vector<string> function_names, vector<ObjectType> first_type);

@@ -64,7 +64,8 @@ Interpreter::Interpreter() {
 		   ObjectType::Boolean}}},
 		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::OptionalBool}}},
 		// для dfa - bool, для nfa - optional<bool>
-		{"Deterministic", {{"Deterministic", {ObjectType::NFA}, ObjectType::Boolean}}},
+		{"Deterministic",
+		 {{"Deterministic", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Subset",
 		 {{"Subset",
 		   {ObjectType::Regex, ObjectType::Regex},
@@ -415,15 +416,33 @@ GeneralObject Interpreter::apply_function(
 }
 
 bool Interpreter::typecheck(vector<ObjectType> func_input_type,
-							vector<ObjectType> input_type) {
-	if (input_type.size() != func_input_type.size()) return false;
-	for (int i = 0; i < input_type.size(); i++) {
-		if (!((input_type[i] == func_input_type[i]) ||
-			  (input_type[i] == ObjectType::DFA &&
-			   func_input_type[i] == ObjectType::NFA)))
+							vector<ObjectType> argument_type) {
+
+	// несовпдаение по кол-ву аргументов
+	if (argument_type.size() != func_input_type.size()) return false;
+	// сверяем тип каждого аргумента
+	for (int i = 0; i < argument_type.size(); i++) {
+		// тип либо одинаковый либо NFA<-DFA
+		if (!((argument_type[i] == func_input_type[i]) ||
+			  (argument_type[i] == ObjectType::DFA &&
+			   func_input_type[i] == ObjectType::NFA))) {
+			// несовпадение по типам
 			return false;
+		}
 	}
 	return true;
+}
+
+optional<int> Interpreter::find_func(string func,
+									 vector<ObjectType> argument_type) {
+	// проходимся по всем вариантам функции
+	for (int j = 0; j < names_to_functions[func].size(); j++) {
+		// смотрим что каждый принимает на вход
+		auto func_input_type = names_to_functions[func][j].input;
+		// нашли совпадение по аргументам - возвращаем номер в массиве вариаций
+		if (typecheck(func_input_type, argument_type)) return j;
+	}
+	return nullopt;
 }
 
 optional<vector<Function>> Interpreter::build_function_sequence(
@@ -444,144 +463,82 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 		}
 	}
 
-	// TODO: переписать всё что ниже начисто
-	// 0 - функцию надо исключить из последовательности
-	// 1 - функция остается в последовательности
-	// 2 - функция(Delinearize или DeAnnote) принимает на вход Regex
-	// 3 - функция(Delinearize или DeAnnote) принимает на вход NFA/DFA
-	vector<int> neededfuncs(function_names.size(), 1);
-	if (typecheck(names_to_functions[function_names[0]][0].input, first_type)) {
-		if (names_to_functions[function_names[0]].size() == 2) {
-			neededfuncs[0] = 2;
-		} else {
-			neededfuncs[0] = 1;
-		}
+	/* содержит информацию о каждой ф/и в посл-ти:
+	 либо "-1" - ф/я не входит в итоговую посл-ть (не вып-ся, т.к. выполняет
+	 тождественное преобразование)
+	 либо номер вариации ф/и в таблице 'names_to_functions' */
+	vector<int> needed_funcs(function_names.size(), 0);
+
+	// устанавливаем тип для 1ой ф/и в посл-ти
+	if (auto num = find_func(function_names[0], first_type); num.has_value()) {
+		needed_funcs[0] = num.value();
 	} else {
-		if (names_to_functions[function_names[0]].size() == 2) {
-			if (typecheck(names_to_functions[function_names[0]][1].input,
-						  first_type)) {
-				neededfuncs[0] = 3;
-			} else {
-				return nullopt;
+		logger.throw_error("mismatch by type of function \"" +
+						   function_names[0] + "\"");
+		return nullopt;
+	}
+
+	string prev_func = function_names[0];
+	ObjectType prev_type =
+		names_to_functions[prev_func][needed_funcs[0]].output;
+
+	for (int i = 1; i < function_names.size(); i++) {
+		// запоминаем предыдущую функцию и ее тип
+		if (needed_funcs[i - 1] != -1) {
+			prev_func = function_names[i - 1];
+			prev_type =
+				names_to_functions[prev_func][needed_funcs[i - 1]].output;
+		}
+		string func = function_names[i];
+
+		// поиск совпадения по типу (не нашли - бан)
+		if (auto num = find_func(function_names[i], {prev_type});
+			num.has_value()) {
+			needed_funcs[i] = num.value();
+
+			// удаление ненужных ф/й из посл-ти:
+			if ((func == "Determinize" || func == "Annote") &&
+				names_to_functions[prev_func][0].output == ObjectType::DFA) {
+				needed_funcs[i] = -1;
+				// удаление Annote и Determinize перед DFA
 			}
+			if (prev_func == "Minimize+" &&
+				(func == "Minimize" || func == "Determinize+")) {
+				needed_funcs[i] = -1;
+			}
+			if (prev_func == "Determinize" && func == "Minimize") {
+				needed_funcs[i - 1] = -1;
+			}
+			if ((prev_func == "Determinize" || prev_func == "Determinize+") &&
+				func == "Minimize+") {
+				needed_funcs[i - 1] = -1;
+			}
+			if (prev_func == func) {
+				if (func != "Reverse" && func != "Complement" &&
+					func != "Linearize" && func != "DeLinearize" &&
+					func != "DeAnnote") {
+					needed_funcs[i] = -1;
+					// удаление из последовательности повторений
+				}
+			}
+			/*if (prev_func == "Linearize" &&
+				(func == "Glushkov" || func == "IlieYu")) {
+				needed_funcs[i - 1] = -1;
+				// удаление Linearize перед Glushkov
+			}*/
 		} else {
+			logger.throw_error("mismatch by type of function \"" + func + "\"");
 			return nullopt;
 		}
 	}
 
-	string predfunc = function_names[0];
-	for (int i = 1; i < function_names.size(); i++) {
-		if (neededfuncs[i - 1] != 0) predfunc = function_names[i - 1];
-		string func = function_names[i];
-		// check on types
-
-		if (names_to_functions[func].size() == 1 &&
-			names_to_functions[predfunc].size() == 1) {
-			if (names_to_functions[func][0].input.size() == 1) {
-				if (names_to_functions[predfunc][0].output !=
-					names_to_functions[func][0].input[0]) {
-					vector<ObjectType> nfa_type = {ObjectType::NFA};
-					if (!(names_to_functions[predfunc][0].output ==
-							  ObjectType::DFA &&
-						  names_to_functions[func][0].input == nfa_type)) {
-						return nullopt;
-					} else {
-						// Determinize+ добавляет ловушку после Annote
-						if ((func == "Determinize" || func == "Annote") &&
-							names_to_functions[predfunc][0].output ==
-								ObjectType::DFA) {
-							neededfuncs[i] = 0;
-							// удаление Annote и Determinize перед DFA
-						}
-						if (predfunc == "Minimize" && func == "Minimize") {
-							neededfuncs[i] = 0;
-						}
-						if (predfunc == "Minimize+" &&
-							(func == "Minimize" || func == "Minimize+" ||
-							 func == "Determinize+")) {
-							neededfuncs[i] = 0;
-						}
-						if (predfunc == "Determinize+" &&
-							func == "Determinize+") {
-							neededfuncs[i] = 0;
-						}
-						if (predfunc == "Determinize" && func == "Minimize") {
-							neededfuncs[i - 1] = 0;
-						}
-						if ((predfunc == "Determinize" ||
-							 predfunc == "Determinize+") &&
-							func == "Minimize+") {
-							neededfuncs[i - 1] = 0;
-						}
-					}
-				} else {
-					if (predfunc == func) {
-						if (func != "Reverse" && func != "Complement" &&
-							func != "Linearize") {
-							neededfuncs[i - 1] = 0;
-						}
-					} /*else {
-						if (predfunc == "Linearize" &&
-							(func == "Glushkov" || func == "IlieYu")) {
-							neededfuncs[i - 1] = 0;
-							// удаление Linearize перед Glushkov
-						}
-					}*/
-				}
-			} else {
-				return nullopt;
-			}
-		} else {
-
-			vector<ObjectType> regex_type = {ObjectType::Regex};
-			vector<ObjectType> nfa_type = {ObjectType::NFA};
-			vector<ObjectType> dfa_type = {ObjectType::DFA};
-
-			if (names_to_functions[func].size() == 2) {
-				// DeLinearize ~ DeAnnote
-				if (names_to_functions[predfunc].size() != 2) {
-					if (names_to_functions[predfunc][0].output ==
-						ObjectType::Regex) {
-						neededfuncs[i] = 2;
-					} else if (names_to_functions[predfunc][0].output ==
-								   ObjectType::NFA ||
-							   names_to_functions[predfunc][0].output ==
-								   ObjectType::DFA) {
-						neededfuncs[i] = 3;
-					} else {
-						return nullopt;
-					}
-				} else {
-					neededfuncs[i] = neededfuncs[i - 1];
-					// neededfuncs[i - 1] = 0;
-					// удаление из последовательности повторений:
-					// DeLinearize.DeLinearize.DeAnnote == DeLinearize
-				}
-			} else if (names_to_functions[predfunc].size() == 2) {
-				if (names_to_functions[func][0].input == regex_type &&
-						neededfuncs[i - 1] == 2 ||
-					names_to_functions[func][0].input == nfa_type &&
-						neededfuncs[i - 1] == 3) {
-					neededfuncs[i] = 1;
-				} else {
-					return nullopt;
-				}
-			}
-		}
-	}
-
+	// собираем посл-ть
 	optional<vector<Function>> finalfuncs = nullopt;
 	finalfuncs.emplace() = {};
 	for (int i = 0; i < function_names.size(); i++) {
-		if (neededfuncs[i] > 0) {
-			if (neededfuncs[i] == 1 || neededfuncs[i] == 2) {
-				Function f = names_to_functions[function_names[i]][0];
-				finalfuncs.value().push_back(f);
-			} else {
-				// тип NFA для DeAnnote
-				Function f = names_to_functions[function_names[i]][1];
-				finalfuncs.value().push_back(f);
-			}
+		if (needed_funcs[i] >= 0) {
+			Function f = names_to_functions[function_names[i]][needed_funcs[i]];
+			finalfuncs.value().push_back(f);
 		}
 	}
 
