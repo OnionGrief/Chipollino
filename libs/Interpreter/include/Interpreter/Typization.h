@@ -46,7 +46,7 @@ using ObjectAmbiguityValue =
 	ObjectHolder<ObjectType::AmbiguityValue, FiniteAutomaton::AmbiguityValue>;
 using ObjectOptionalBool =
 	ObjectHolder<ObjectType::OptionalBool, optional<bool>>;
-using ObjectPrefixGramnar = ObjectHolder<ObjectType::PrefixGrammar, Grammar>;
+using ObjectPrefixGrammar = ObjectHolder<ObjectType::PrefixGrammar, Grammar>;
 
 // Универсальный объект
 using GeneralObject = variant<

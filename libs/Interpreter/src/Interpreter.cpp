@@ -51,6 +51,8 @@ Interpreter::Interpreter() {
 		 {{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int}}},
 		{"PrefixGrammar",
 		 {{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGrammar}}},
+		{"PGtoNFA",
+		 {{"PGtoNFA", {ObjectType::PrefixGrammar}, ObjectType::NFA}}},
 		// Предикаты
 		{"Bisimilar",
 		 {{"Bisimilar",
@@ -230,8 +232,9 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Subset") {
 		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
 			function.input == sign) {
-			return ObjectBoolean((get_automaton(arguments[0])
-									  .subset(get_automaton(arguments[1]), &log_template)));
+			return ObjectBoolean(
+				(get_automaton(arguments[0])
+					 .subset(get_automaton(arguments[1]), &log_template)));
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
@@ -293,7 +296,8 @@ GeneralObject Interpreter::apply_function(
 		return ObjectInt(trmon.class_card(&log_template));
 	}
 	if (function.name == "Ambiguity") {
-		return ObjectAmbiguityValue(get_automaton(arguments[0]).ambiguity(&log_template));
+		return ObjectAmbiguityValue(
+			get_automaton(arguments[0]).ambiguity(&log_template));
 	}
 	/*if (function.name == "Width") {
 		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
@@ -304,12 +308,17 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "GlaisterShallit") {
 		return ObjectInt(
-			get_automaton(arguments[0]).get_classes_number_GlaisterShallit(&log_template));
+			get_automaton(arguments[0])
+				.get_classes_number_GlaisterShallit(&log_template));
 	}
 	if (function.name == "PrefixGrammar") {
 		Grammar g;
-		g.fa_to_prefix_grammar(get_automaton(arguments[0]), &log_template);
-		return ObjectPrefixGramnar(g);
+		g.fa_to_prefix_grammar(get_automaton(arguments[0]));
+		return ObjectPrefixGrammar(g);
+	}
+	if (function.name == "PGtoNFA") {
+		return ObjectNFA(get<ObjectPrefixGrammar>(arguments[0])
+							 .value.prefix_grammar_to_automaton());
 	}
 
 	/*
@@ -343,8 +352,8 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "DeLinearize") {
 		if (function.output == ObjectType::Regex) {
-			res =
-				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize(&log_template));
+			res = ObjectRegex(get<ObjectRegex>(arguments[0])
+								  .value.delinearize(&log_template));
 		} else {
 			// пусть будет так
 			res = ObjectNFA(
@@ -359,7 +368,8 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
-			res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
+			res =
+				ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 		} else {
 			res = ObjectRegex(
 				get<ObjectRegex>(arguments[0]).value.deannote(&log_template));
@@ -643,7 +653,7 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 		return false;
 	}
 	logger.log("assigned to " + decl.id);
-	//Logger::deactivate();
+	// Logger::deactivate();
 	return true;
 }
 
