@@ -118,7 +118,7 @@ vector<alphabet_symbol> TransformationMonoid::rewriting(
 }
 bool wasrewrite(vector<alphabet_symbol> a, vector<alphabet_symbol> b) {
 	for (int i = 0; i < a.size(); i++) {
-		for (int j = 0; j < b.size(); j++) {
+		for (int j = 0; i + j < a.size() && j < b.size(); j++) {
 			if (b[j] != a[i + j]) {
 				break;
 			}
@@ -195,6 +195,7 @@ void TransformationMonoid::get_transition_by_symbol(
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	automat = in.remove_trap_states();
 	automat.remove_unreachable_states();
+	cout << automat.to_txt();
 	vector<TransformationMonoid::Transition> initperehods;
 	for (int i = 0; i < automat.states.size(); i++) {
 		TransformationMonoid::Transition temp;
@@ -388,6 +389,7 @@ void TransformationMonoid::OutAllTransformationMonoid() {
 	cout << "Rewriting rules:\n";
 	cout << get_rewriting_rules_txt();
 	cout << "Information for class w:\n";
+
 	for (int i = 0; i < terms.size(); i++) {
 		cout << "  class " << to_str(terms[i].name) << "\n";
 		vector<TransformationMonoid::Term> vw =
@@ -420,6 +422,8 @@ void TransformationMonoid::OutAllTransformationMonoid() {
 				 << "\n";
 		}
 	}
+	cout << "isminimal " << is_minimal() << "\n";
+	cout << to_txt_MyhillNerode();
 }
 vector<TransformationMonoid::TermDouble> TransformationMonoid::
 	get_equalence_classes_vwv(const Term& w) {
