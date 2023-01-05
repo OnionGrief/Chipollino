@@ -91,7 +91,8 @@ class Grammar {
 		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
 		int initial_state);
 	// создание пр грамматики по НКА
-	void fa_to_prefix_grammar(const FiniteAutomaton&);
+	void fa_to_prefix_grammar(const FiniteAutomaton&,
+							  iLogTemplate* log = nullptr);
 	// создание пр грамматики по НКА с помощью ТМ
 	void fa_to_prefix_grammar_TM(const FiniteAutomaton&);
 	// создает автомат по пр грамматике
