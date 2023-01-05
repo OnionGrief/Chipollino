@@ -216,8 +216,8 @@ string TransformationMonoid::get_equalence_classes_txt() {
 	// Logger::init_step("Equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
 
-		Logger::log("class " + alphabet_symbol::vector_to_str(terms[i].name),
-					terms[i].isFinal ? "in lang" : "not in lang");
+		//Logger::log("class " + alphabet_symbol::vector_to_str(terms[i].name),
+					//terms[i].isFinal ? "in lang" : "not in lang");
 		ss << "Term	" << alphabet_symbol::vector_to_str(terms[i].name)
 		   << "	in	language	" << terms[i].isFinal << "\n";
 		for (int j = 0; j < terms[i].transitions.size(); j++) {
@@ -237,7 +237,7 @@ string TransformationMonoid::get_equalence_classes_txt() {
 
 map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 	map<string, vector<string>> ss;
-	Logger::init_step("Equivalence classes");
+	//Logger::init_step("Equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
 
 		// Logger::log("class " + to_str(terms[i].name),
@@ -264,18 +264,21 @@ map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 	return ss;
 }
 
-string TransformationMonoid::get_rewriting_rules_txt() {
+string TransformationMonoid::get_rewriting_rules_txt(iLogTemplate* log) {
 	stringstream ss;
 	// Logger::init_step("Rewriting Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
-			Logger::log("rewriting " +
+			/*Logger::log("rewriting " +
 							alphabet_symbol::vector_to_str(item.first),
-						alphabet_symbol::vector_to_str(item.second[i]));
+						alphabet_symbol::vector_to_str(item.second[i]));*/
 			ss << alphabet_symbol::vector_to_str(item.first) << "	->	"
-			   << alphabet_symbol::vector_to_str(item.second[i]) << "\n";
+			   << alphabet_symbol::vector_to_str(item.second[i]) << "\n\n";
 		}
 	}
+	if (log) {
+			log->set_parameter("rewriting rules", ss.str());
+		}
 	// Logger::finish_step();
 	return ss.str();
 }
@@ -387,8 +390,8 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 // Вернет	-1	если	не	синхронизирован	или	номер
 // состояния	с	которым синхронизирован
 int TransformationMonoid::is_synchronized(const Term& w) {
-	Logger::init_step("Is synchronized word?");
-	Logger::log("word " + alphabet_symbol::vector_to_str(w.name));
+	/*Logger::init_step("Is synchronized word?");
+	Logger::log("word " + alphabet_symbol::vector_to_str(w.name));*/
 
 	if (w.transitions.size() == 0) {
 		// Logger::log("not synchronized");
@@ -409,36 +412,47 @@ int TransformationMonoid::is_synchronized(const Term& w) {
 }
 
 // Вернет число классов эквивалентности
-int TransformationMonoid::class_card() {
-	Logger::init_step("Number of equivalence classes");
-	Logger::log("Number of equivalence classes ", to_string(terms.size()));
-	Logger::finish_step();
+int TransformationMonoid::class_card(iLogTemplate* log) {
+	// Logger::init_step("Number of equivalence classes");
+	//Logger::log("Number of equivalence classes ", to_string(terms.size()));
+	//Logger::finish_step();
+	if (log) {
+		log->set_parameter("Number of equivalence classes", to_string(terms.size()));
+	}
 	return terms.size();
 }
 
 // Вернет самое длинное слово в классе
-int TransformationMonoid::class_length() {
-	Logger::init_step("Longest word in the class");
-	Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
+int TransformationMonoid::class_length(iLogTemplate* log) {
+	// Logger::init_step("Longest word in the class");
+	if (log) {
+		log->set_parameter("Size", to_string(terms[terms.size() - 1].name.size()));
+		log->set_parameter("One of the longest words", alphabet_symbol::vector_to_str(terms[terms.size() - 1].name));
+	}
+	/*Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
 	Logger::log("One of the longest words",
 				alphabet_symbol::vector_to_str(terms[terms.size() - 1].name));
-	Logger::finish_step();
+	Logger::finish_step();*/
 	return terms[terms.size() - 1].name.size();
 }
 
 // Вычисление
-int TransformationMonoid::get_classes_number_MyhillNerode() {
+int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
-	Logger::init_step("Myhill-Nerode сlasses number");
+	if (log) {
+		log->set_parameter("Size", to_string(terms[terms.size() - 1].name.size()));
+		log->set_parameter("Myhill-Nerode сlasses number", equivalence_classes_table_bool.size());
+	}
+	/*Logger::init_step("Myhill-Nerode сlasses number");
 	Logger::log(to_string(equivalence_classes_table_bool.size()));
-	Logger::finish_step();
+	Logger::finish_step();*/
 	return equivalence_classes_table_bool.size();
 }
 
 // Вычисление Минимальности (1 если минимальный)
-bool TransformationMonoid::is_minimal() {
+bool TransformationMonoid::is_minimal(iLogTemplate* log) {
 	// временные данные
 	vector<Term> table_classes;
 	vector<vector<bool>> equivalence_classes_table_temp;
@@ -545,9 +559,12 @@ bool TransformationMonoid::is_minimal() {
 	// не уверен что правильно
 	bool is_minimal_bool = (log2(automat.states.size()) + 1) <=
 						   equivalence_classes_table_bool.size();
-	Logger::init_step("Is minimal");
+	/*Logger::init_step("Is minimal");
 	Logger::log(is_minimal_bool ? "true" : "false");
-	Logger::finish_step();
+	Logger::finish_step();*/
+	if (log) {
+		log->set_parameter("Is minimal", is_minimal_bool ? "true" : "false");
+	}
 	return is_minimal_bool;
 }
 
