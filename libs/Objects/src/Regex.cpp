@@ -366,7 +366,7 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 Regex Regex::normalize_regex(const string& file, iLogTemplate* log) const {
 	// Logger::init_step("Normalize");
 	Regex regex = *this;
-	//Logger::log("Регулярное выражение до нормализации", regex.to_txt());
+	// Logger::log("Регулярное выражение до нормализации", regex.to_txt());
 	if (log) {
 		log->set_parameter("oldregex", *this);
 	}
@@ -1457,8 +1457,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 		// Logger::log("Длина накачки", to_string(language->get_pump_length()));
 		// Logger::finish_step();
 		if (log) {
-			log->set_parameter("pumplength",
-							   language->get_pump_length());
+			log->set_parameter("pumplength", language->get_pump_length());
 		}
 		return language->get_pump_length();
 	}
@@ -1773,27 +1772,38 @@ void Regex::print_tree() {
 }
 
 bool Regex::is_one_unambiguous(iLogTemplate* log) const {
-	Logger::init_step("OneUnambiguity");
+	// Logger::init_step("OneUnambiguity");
 	FiniteAutomaton fa = to_glushkov();
 	bool res = fa.is_deterministic();
-	Logger::log(res ? "True" : "False");
-	Logger::finish_step();
+	// Logger::log(res ? "True" : "False");
+	// Logger::finish_step();
+	if (log) {
+		log->set_parameter("is_one_unambiguous", res ? "True" : "False");
+	}
 	return fa.is_deterministic();
 }
 
 Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
-	Logger::init_step("OneUnambiguityRegex");
+	// Logger::init_step("OneUnambiguityRegex");
 	FiniteAutomaton fa = to_glushkov();
 	if (fa.language->is_one_unambiguous_regex_cached()) {
-		Logger::log("1-однозначное регулярное выражение, описывающее язык",
-					fa.language->get_one_unambiguous_regex().to_txt());
-		Logger::finish_step();
+		// Logger::log("1-однозначное регулярное выражение, описывающее язык",
+		// 			fa.language->get_one_unambiguous_regex().to_txt());
+		// Logger::finish_step();
+		if (log) {
+			log->set_parameter("one_unambiguous_regex",
+							   fa.language->get_one_unambiguous_regex());
+		}
 		return fa.language->get_one_unambiguous_regex();
 	}
 	if (!fa.language->is_one_unambiguous_flag_cached()) fa.is_one_unambiguous();
 	if (!fa.language->get_one_unambiguous_flag()) {
-		Logger::log("Язык не является 1-однозначным");
-		Logger::finish_step();
+		// Logger::log("Язык не является 1-однозначным");
+		// Logger::finish_step();
+		if (log) {
+			log->set_parameter("one_unambiguous_regex",
+							   "Язык не является 1-однозначным");
+		}
 		return *this;
 	}
 	string regl;
@@ -1948,8 +1958,11 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		counter++;
 	}
 	if (counter) regl += ")*";
-	Logger::log("1-однозначное регулярное выражение, описывающее язык", regl);
-	Logger::finish_step();
+	// Logger::log("1-однозначное регулярное выражение, описывающее язык",
+	// regl); Logger::finish_step();
+	if (log) {
+		log->set_parameter("one_unambiguous_regex", regl);
+	}
 	language->set_one_unambiguous_regex(regl, fa.language);
 	return language->get_one_unambiguous_regex();
 }
