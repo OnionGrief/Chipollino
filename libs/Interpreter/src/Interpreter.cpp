@@ -183,15 +183,7 @@ GeneralObject Interpreter::apply_function(
 		return holds_alternative<ObjectNFA>(obj) ||
 			   holds_alternative<ObjectDFA>(obj);
 	};
-
-	// if (is_automaton(arguments[0]))
-	// get_automaton(arguments[0]).set_trim_flag(is_trim);
-	/*if (holds_alternative<ObjectNFA>(arguments[0])) {
-		get<ObjectNFA>(arguments[0]).value.set_trim_flag(is_trim);
-	}
-	if (holds_alternative<ObjectDFA>(arguments[0])) {
-		get<ObjectDFA>(arguments[0]).value.set_trim_flag(is_trim);
-	}*/
+	
 
 	if (function.name == "Glushkov") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_glushkov());
@@ -318,13 +310,13 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectDFA(get_automaton(arguments[0]).determinize());
 	}
 	if (function.name == "Determinize+") {
-		res = ObjectDFA(get_automaton(arguments[0]).determinize());
+		res = ObjectDFA(get_automaton(arguments[0]).determinize(false));
 	}
 	if (function.name == "Minimize") {
 		res = ObjectDFA(get_automaton(arguments[0]).minimize());
 	}
 	if (function.name == "Minimize+") {
-		res = ObjectDFA(get_automaton(arguments[0]).minimize());
+		res = ObjectDFA(get_automaton(arguments[0]).minimize(false));
 	}
 	if (function.name == "Annote") {
 		res = ObjectDFA(get_automaton(arguments[0]).annote());
@@ -358,6 +350,8 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
+			// Пример: (пока в объявлении функции не добавила флаг)
+			// res = ObjectNFA(get_automaton(arguments[0]).deannote(is_trim));
 			res = ObjectNFA(get_automaton(arguments[0]).deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
@@ -375,9 +369,6 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectRegex(
 			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex());
 	}
-	/*if (function.name == "Simplify") {
-		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
-	}*/
 
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
