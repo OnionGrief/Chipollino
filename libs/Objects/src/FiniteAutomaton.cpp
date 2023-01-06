@@ -99,6 +99,8 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 
 FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log,
 											 bool is_trim) const {
+	if (!is_trim)
+		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
 	// Logger::init_step("Determinize");
 	if (states.size() == 1) {
 		// Logger::log("Автомат до детерминизации", "Автомат после
