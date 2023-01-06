@@ -275,7 +275,7 @@ GeneralObject Interpreter::apply_function(
 		} else {
 			bool res = get<ObjectInt>(arguments[0]).value ==
 								 get<ObjectInt>(arguments[1]).value;
-			log_template->set_parameter("res", res);
+			log_template.set_parameter("res", res);
 			return ObjectBoolean(res);
 		}
 	}
