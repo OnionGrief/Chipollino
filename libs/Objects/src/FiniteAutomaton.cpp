@@ -97,7 +97,8 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 	return reachable;
 }
 
-FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) const {
+FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log,
+											 bool is_trim) const {
 	// Logger::init_step("Determinize");
 	if (states.size() == 1) {
 		// Logger::log("Автомат до детерминизации", "Автомат после
@@ -193,7 +194,8 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 	return dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const {
+FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
+										  bool is_trim) const {
 	// Logger::init_step("Minimize");
 	if (language->min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
@@ -2042,8 +2044,8 @@ optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
 optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
 	// Logger::init_step("Minimal");
 	if (log) {
-			log->set_parameter("automaton", *this);
-		}
+		log->set_parameter("automaton", *this);
+	}
 	optional<bool> result = get_nfa_minimality_value();
 	if (result.has_value())
 		if (log) {
@@ -2062,8 +2064,8 @@ optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
 bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	// Logger::init_step("Minimal");
 	if (log) {
-			log->set_parameter("automaton", *this);
-		}
+		log->set_parameter("automaton", *this);
+	}
 	bool result = states.size() == minimize().states.size();
 	if (log) {
 		log->set_parameter("result", result ? "True" : "False");
@@ -2288,7 +2290,7 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 
 bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	// Logger::init_step("Детерминизированность");
-	//Logger::log("Автомат", *this);
+	// Logger::log("Автомат", *this);
 	if (log) {
 		log->set_parameter("automaton", *this);
 	}

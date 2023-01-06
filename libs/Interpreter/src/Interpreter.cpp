@@ -348,13 +348,13 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template));
 	}
 	if (function.name == "Determinize+") {
-		res = ObjectDFA(get_automaton(arguments[0]).determinize(false));
+		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template, false));
 	}
 	if (function.name == "Minimize") {
 		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template));
 	}
 	if (function.name == "Minimize+") {
-		res = ObjectDFA(get_automaton(arguments[0]).minimize(false));
+		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template, false));
 	}
 	if (function.name == "Annote") {
 		res = ObjectDFA(get_automaton(arguments[0]).annote(&log_template));
