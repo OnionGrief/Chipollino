@@ -41,7 +41,7 @@ string LogTemplate::render() const {
 					image_number);
 				char si[256];
 				sprintf(si,
-						"\\includegraphics[width=2in, "
+						"\\includegraphics[height=1.3in, "
 						"keepaspectratio]{output%d.png}\n",
 						image_number);
 				outstr += si;

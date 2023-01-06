@@ -25,6 +25,7 @@ void Logger::render_to_file(const string& filename) {
 	outfile.close();
 
 	char cmd[1024];
-	sprintf(cmd, "pdflatex \"./resources/report.tex\" > pdflatex.log");
+	//sprintf(cmd, "cd resources && pdflatex report.tex > pdflatex.log");
+	sprintf(cmd, "pdflatex ./resources/report.tex > pdflatex.log");
 	system(cmd);
 }

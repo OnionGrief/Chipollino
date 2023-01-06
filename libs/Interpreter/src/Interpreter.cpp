@@ -345,11 +345,11 @@ GeneralObject Interpreter::apply_function(
 	optional<GeneralObject> res;
 
 	if (function.name == "Determinize") {
-		log_template.load_tex_template("determinize-short");
+		log_template.load_tex_template("determinize");
 		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template));
 	}
 	if (function.name == "Determinize+") {
-		log_template.load_tex_template("determinize-short");
+		log_template.load_tex_template("determinize");
 		res = ObjectDFA(
 			get_automaton(arguments[0]).determinize(&log_template, false));
 	}
