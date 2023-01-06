@@ -197,27 +197,28 @@ GeneralObject Interpreter::apply_function(
 			   holds_alternative<ObjectDFA>(obj);
 	};
 
-	log_template.set_parameter("name", function.name);
+	// имя шаблона по умолчанию - название ф/и в интерпретаторе + номер сигнатуры (если их несколько)
+	string func_id = function.name;
+	if (names_to_functions[func_id].size() > 1)
+		func_id += to_string(find_func(function.name, function.input).value() + 1);
+
+	log_template.set_parameter("name", func_id);
+	log_template.load_tex_template(func_id);
 
 	if (function.name == "Glushkov") {
-		// нужно будет тут в зависимости от степени логгирования менять шаблон
-		log_template.load_tex_template("glushkov-long");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_glushkov(&log_template));
 	}
 
 	if (function.name == "IlieYu") {
-		log_template.load_tex_template("follow-long");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_ilieyu(&log_template));
 	}
 	if (function.name == "Antimirov") {
-		log_template.load_tex_template("antimirov-long");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_antimirov(&log_template));
 	}
 	if (function.name == "Thompson") {
-		log_template.load_tex_template("tomson-long");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_tompson(&log_template));
 	}
@@ -345,11 +346,10 @@ GeneralObject Interpreter::apply_function(
 	optional<GeneralObject> res;
 
 	if (function.name == "Determinize") {
-		log_template.load_tex_template("determinize");
 		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template));
 	}
 	if (function.name == "Determinize+") {
-		log_template.load_tex_template("determinize");
+		log_template.load_tex_template("Determinize");
 		res = ObjectDFA(
 			get_automaton(arguments[0]).determinize(&log_template, false));
 	}
@@ -357,6 +357,7 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template));
 	}
 	if (function.name == "Minimize+") {
+		log_template.load_tex_template("Minimize");
 		res = ObjectDFA(
 			get_automaton(arguments[0]).minimize(&log_template, false));
 	}
