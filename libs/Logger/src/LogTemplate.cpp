@@ -24,9 +24,12 @@ void LogTemplate::load_tex_template(string filename) {
 string LogTemplate::render() const {
 	// TODO: заполнять здесь шаблон
 	ifstream infile(tex_template);
+	// если шаблона не нашлось 
+	if (!infile) return ""; // infile.close();
+
 	string outstr = "";
 	string s;
-	for (; !infile.eof();) {
+	while (!infile.eof()) {
 		getline(infile, s);
 		for (const auto& p : parameters) {
 			int insert_place = s.find("%template_" + p.first);
@@ -35,7 +38,8 @@ string LogTemplate::render() const {
 			}
 
 			if (holds_alternative<Regex>(p.second.value)) {
-				s.insert(insert_place, math_mode(get<Regex>(p.second.value).to_txt()));
+				s.insert(insert_place,
+						 math_mode(get<Regex>(p.second.value).to_txt()));
 			} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
 				image_number += 1;
 				AutomatonToImage::to_image(
