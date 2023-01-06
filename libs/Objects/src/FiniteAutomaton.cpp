@@ -97,7 +97,7 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 	return reachable;
 }
 
-FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log) const {
+FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) const {
 	// Logger::init_step("Determinize");
 	if (states.size() == 1) {
 		// Logger::log("Автомат до детерминизации", "Автомат после
@@ -193,7 +193,7 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log) const {
 	return dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log) const {
+FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const {
 	// Logger::init_step("Minimize");
 	if (language->min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
@@ -2041,6 +2041,9 @@ optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
 
 optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
 	// Logger::init_step("Minimal");
+	if (log) {
+			log->set_parameter("automaton", *this);
+		}
 	optional<bool> result = get_nfa_minimality_value();
 	if (result.has_value())
 		if (log) {
@@ -2058,6 +2061,9 @@ optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
 
 bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	// Logger::init_step("Minimal");
+	if (log) {
+			log->set_parameter("automaton", *this);
+		}
 	bool result = states.size() == minimize().states.size();
 	if (log) {
 		log->set_parameter("result", result ? "True" : "False");
@@ -2281,17 +2287,30 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 }
 
 bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
+	// Logger::init_step("Детерминизированность");
+	//Logger::log("Автомат", *this);
+	if (log) {
+		log->set_parameter("automaton", *this);
+	}
+	bool result = true;
 	for (int i = 0; i < states.size(); i++) {
 		for (auto elem : states[i].transitions) {
 			if (elem.first == alphabet_symbol::epsilon()) {
-				return false;
+				result = false;
+				break;
 			}
 			if (elem.second.size() > 1) {
-				return false;
+				result = false;
+				break;
 			}
 		}
 	}
-	return true;
+	if (log) {
+		log->set_parameter("res", result ? "True" : "False");
+	}
+	/*Logger::log(result ? "True" : "False");
+	Logger::finish_step();*/
+	return result;
 }
 
 bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
@@ -2308,6 +2327,7 @@ int FiniteAutomaton::states_number(iLogTemplate* log) const {
 	// Logger::log(to_string(states.size()));
 	// Logger::finish_step();
 	if (log) {
+		log->set_parameter("automaton", *this);
 		log->set_parameter("statesnum", states.size());
 	}
 	return states.size();

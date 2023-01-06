@@ -86,11 +86,11 @@ class FiniteAutomaton : public BaseObject {
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
-	FiniteAutomaton determinize(iLogTemplate* log = nullptr) const;
+	FiniteAutomaton determinize(iLogTemplate* log = nullptr, bool is_trim = true) const;
 	// построение eps-замыкания
 	FiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize(iLogTemplate* log = nullptr) const;
+	FiniteAutomaton minimize(iLogTemplate* log = nullptr, bool is_trim = true) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(

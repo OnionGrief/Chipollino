@@ -1785,6 +1785,9 @@ bool Regex::is_one_unambiguous(iLogTemplate* log) const {
 
 Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	// Logger::init_step("OneUnambiguityRegex");
+	if (log) {
+		log->set_parameter("oldregex", *this);
+	}
 	FiniteAutomaton fa = to_glushkov();
 	if (fa.language->is_one_unambiguous_regex_cached()) {
 		// Logger::log("1-однозначное регулярное выражение, описывающее язык",

@@ -10,34 +10,19 @@
 #include <vector>
 
 using namespace std;
-struct word {			// доступ извне Tester::word
-	int iterations_num; // сколько проведено итераций
-	long long time;		// время парсинга в секундах
-	bool is_belongs;	// принадлежность языку
-};
 
 class Tester {
   public:
-	// struct word {			// доступ извне Tester::word
-	// 	int iterations_num; // сколько проведено итераций
-	// 	long long time;		// время парсинга в секундах
-	// 	bool is_belongs;	// принадлежность языку
-	// };
+	struct word {			// доступ извне Tester::word
+		int iterations_num; // сколько проведено итераций
+		long long time;		// время парсинга в секундах
+		bool is_belongs;	// принадлежность языку
+	};
 
-	struct tableRegex {
-		string r1; // язык, основанный на регулярке
+	struct table {
 		string r2; // слова порождаются регуляркой r2 и шагом итерации
 		int step;  // шаг итерации
 		vector<word> words; // таблица
-	};
-
-	struct tableFA {
-		FiniteAutomaton automaton; // автомат // хз как логгировать, мб
-								   // передавать еще строку (как объект N1, н-р)
-		string r2; // слова порождаются регуляркой r2 и шагом итерации
-		int step;  // шаг итерации
-		vector<word> words1; // таблица по алгоритму с возвратами
-		vector<word> words2; // таблица по параллельному алгоритму
 	};
 
   private:

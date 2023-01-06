@@ -110,8 +110,25 @@ class Interpreter {
 		vector<Expression> arguments;
 	};
 
+	// SetFlag [flagname] [value]
+	struct Flag {
+		string name;
+		bool value;
+	};
+
+	// Флаги:
+
+	/* глобальный флаг автоматов (отвечает за удаление ловушек)
+	Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
+	преобразованиях всегда удаляем в конце ловушки.
+	Если isTrim = false, тогда после удаления ловушки в результате
+	преобразований добавляем её обратно */
+	bool is_trim = true;
+	// флаг динамического тайпчекера
+	bool is_dynamic = false;
+
 	// Общий вид опрерации
-	using GeneralOperation = variant<Declaration, Test, Predicate>;
+	using GeneralOperation = variant<Declaration, Test, Predicate, Flag>;
 
 	//== Парсинг ==============================================================
 
@@ -133,6 +150,7 @@ class Interpreter {
 	optional<Declaration> scan_declaration(const vector<Lexem>&, int& pos);
 	optional<Test> scan_test(const vector<Lexem>&, int& pos);
 	optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);
+	optional<Flag> scan_flag(const vector<Lexem>&, int& pos);
 	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
 
 	//== Исполнение комманд ===================================================
@@ -147,6 +165,7 @@ class Interpreter {
 	bool run_declaration(const Declaration&);
 	bool run_predicate(const Predicate&);
 	bool run_test(const Test&);
+	bool set_flag(const Flag&);
 	bool run_operation(const GeneralOperation&);
 
 	// Применение цепочки функций к набору аргументов
@@ -164,6 +183,9 @@ class Interpreter {
 	// Сравнение типов ожидаемых и полученных входных данных
 	bool typecheck(vector<ObjectType> func_input_type,
 				   vector<ObjectType> input_type);
+	// выбрать подходящий вариант функции для данных аргументов (если он есть)
+	optional<int> find_func(string func, vector<ObjectType> input_type);
+
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(
 		vector<string> function_names, vector<ObjectType> first_type);
@@ -189,7 +211,7 @@ class Interpreter {
 		Type type = error;
 		// Если type = id | function | predicate
 		string value = "";
-		// Усли type = number
+		// Eсли type = number
 		int num = 0;
 
 		Lexem(Type type = error, string value = "");
