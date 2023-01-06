@@ -789,6 +789,8 @@ void Example::test_regex_equal() {
 	Regex r3("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)");
 
 	assert(Regex::equal(r1, r2));
+	assert(!Regex::equal(r1.linearize(), r1));
+	assert(Regex::equal(r1.linearize(), r1.linearize()));
 	assert(!Regex::equal(r1, r3));
 }
 

@@ -1499,23 +1499,23 @@ int Regex::pump_length() const {
 
 bool Regex::equality_checker(const Regex* r1, const Regex* r2) {
 	if (r1 == nullptr && r2 == nullptr) return true;
-	if (r1 == nullptr || r2 == nullptr) return true;
-	alphabet_symbol r1_value, r2_value;
-	if (r1->value.symbol != "")
-		r1_value = r1->value.symbol;
-	else
-		r1_value = to_string(r1->type);
-	if (r2->value.symbol != "")
-		r2_value = r2->value.symbol;
-	else
-		r2_value = to_string(r2->type);
+	if (r1 == nullptr || r2 == nullptr) return false;
+	if (r1->value.type != r2->value.type) return false;
 
-	if (r1_value != r2_value) return false;
+	if (r1->value.type == Regex::Lexem::Type::symb) {
+		alphabet_symbol r1_symb, r2_symb;
+		r1_symb = r1->value.symbol;
+		r2_symb = r2->value.symbol;
+		if (r1_symb != r2_symb) return false;
+	}
 
-	return equality_checker(r1->term_l, r2->term_l) &&
-			   equality_checker(r1->term_r, r2->term_r) ||
-		   equality_checker(r1->term_r, r2->term_l) &&
-			   equality_checker(r1->term_l, r2->term_r);
+	if (equality_checker(r1->term_l, r2->term_l) &&
+		equality_checker(r1->term_r, r2->term_r))
+		return true;
+	if (equality_checker(r1->term_r, r2->term_l) &&
+		equality_checker(r1->term_l, r2->term_r))
+		return true;
+	return false;
 }
 
 bool Regex::equal(const Regex& r1, const Regex& r2) {
