@@ -352,21 +352,25 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	get_equalence_classes_vw(const Term& w) {
 	vector<Term> out;
 	for (int i = 0; i < terms.size(); i++) {
-		vector<Transition> transitions;
+		// vector<Transition> transitions;
+
+		set<TransformationMonoid::Transition> transitions;
 		for (int j = 0; j < terms[i].transitions.size(); j++) {
 			for (int k = 0; k < w.transitions.size(); k++) {
 				if (terms[i].transitions[j].second == w.transitions[k].first) {
 					Transition new_transition;
 					new_transition.second = w.transitions[k].second;
 					new_transition.first = terms[i].transitions[j].first;
-					transitions.push_back(new_transition);
+					transitions.insert(new_transition);
 				}
 			}
 		}
 		if (transitions.size() > 0) {
-			for (int j = 0; j < transitions.size(); j++) {
-				if (automat.states[transitions[j].second].is_terminal &&
-					transitions[j].first == automat.initial_state) {
+			for (set<TransformationMonoid::Transition>::iterator it =
+					 transitions.begin();
+				 it != transitions.end(); it++) {
+				if (automat.states[(*it).second].is_terminal &&
+					(*it).first == automat.initial_state) {
 					out.push_back(terms[i]);
 				}
 			}
@@ -379,21 +383,25 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	get_equalence_classes_wv(const Term& w) {
 	vector<Term> out;
 	for (int i = 0; i < terms.size(); i++) {
-		vector<Transition> transitions;
+		// vector<Transition> transitions;
+
+		set<TransformationMonoid::Transition> transitions;
 		for (int j = 0; j < terms[i].transitions.size(); j++) {
 			for (int k = 0; k < w.transitions.size(); k++) {
 				if (terms[i].transitions[j].first == w.transitions[k].second) {
 					Transition new_transition;
 					new_transition.first = w.transitions[k].first;
 					new_transition.second = terms[i].transitions[j].second;
-					transitions.push_back(new_transition);
+					transitions.insert(new_transition);
 				}
 			}
 		}
 		if (transitions.size() > 0) {
-			for (int j = 0; j < transitions.size(); j++) {
-				if (automat.states[transitions[j].second].is_terminal &&
-					transitions[j].first == automat.initial_state) {
+			for (set<TransformationMonoid::Transition>::iterator it =
+					 transitions.begin();
+				 it != transitions.end(); it++) {
+				if (automat.states[(*it).second].is_terminal &&
+					(*it).first == automat.initial_state) {
 					out.push_back(terms[i]);
 				}
 			}
@@ -401,10 +409,12 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	}
 	return out;
 }
-bool wasTransition(vector<TransformationMonoid::Transition> mas,
+bool wasTransition(set<TransformationMonoid::Transition> mas,
 				   TransformationMonoid::Transition b) {
-	for (int i = 0; i < mas.size(); i++) {
-		if ((mas[i].first == b.first) && (mas[i].second == b.second)) {
+	for (set<TransformationMonoid::Transition>::iterator it = mas.begin();
+		 it != mas.end(); it++) {
+
+		if (((*it).first == b.first) && ((*it).second == b.second)) {
 			return true;
 		}
 	}
@@ -464,7 +474,8 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 	vector<TermDouble> out;
 	for (int i1 = 0; i1 < terms.size(); i1++) {
 		for (int i2 = 0; i2 < terms.size(); i2++) {
-			vector<Transition> transitions;
+			// vector<Transition> transitions;
+			set<TransformationMonoid::Transition> transitions;
 			for (int j1 = 0; j1 < terms[i1].transitions.size(); j1++) {
 				for (int j2 = 0; j2 < terms[i2].transitions.size(); j2++) {
 					for (int k = 0; k < w.transitions.size(); k++) {
@@ -478,16 +489,18 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 							new_transition.second =
 								terms[i2].transitions[j2].second;
 							if (!wasTransition(transitions, new_transition)) {
-								transitions.push_back(new_transition);
+								transitions.insert(new_transition);
 							}
 						}
 					}
 				}
 			}
 			if (transitions.size() > 0) {
-				for (int j = 0; j < transitions.size(); j++) {
-					if (automat.states[transitions[j].second].is_terminal &&
-						transitions[j].first == automat.initial_state) {
+				for (set<TransformationMonoid::Transition>::iterator it =
+						 transitions.begin();
+					 it != transitions.end(); it++) {
+					if (automat.states[(*it).second].is_terminal &&
+						(*it).first == automat.initial_state) {
 						TermDouble new_transition_double;
 						new_transition_double.first = terms[i1];
 						new_transition_double.second = terms[i2];
