@@ -102,11 +102,9 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log,
 	// Logger::init_step("Determinize");
 	if (states.size() == 1) {
 		// Logger::log("Автомат до детерминизации", "Автомат после
-		// детерминизации", 			*this, *this); Logger::finish_step();
-		if (log) {
-			log->set_parameter("oldautomaton", *this);
-			log->set_parameter("newautomaton", *this);
-		}
+		// детерминизации", *this, *this); Logger::finish_step();
+		if (log) log->set_parameter("oldautomaton", *this);
+		if (log) log->set_parameter("newautomaton", *this);
 		return *this;
 	}
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
@@ -898,11 +896,10 @@ FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	// Logger::init_step("OneUnambiguity");
 	if (language->is_one_unambiguous_flag_cached()) {
-		if (log) {
+		if (log)
 			log->set_parameter("OneUnambiguity",
 							   language->get_one_unambiguous_flag() ? "True"
 																	: "False");
-		}
 		// Logger::log(language->get_one_unambiguous_flag() ? "True" : "False");
 		// Logger::finish_step();
 		return language->get_one_unambiguous_flag();
@@ -1811,39 +1808,28 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity(
 	FiniteAutomaton::AmbiguityValue result =
 		get_ambiguity_value(300, word_length);
 	// Logger::log("Автомат:", *this);
-	if (log) {
-		log->set_parameter("automaton", *this);
-	}
+	if (log) log->set_parameter("automaton", *this);
 	if (word_length.has_value()) {
-		if (log) {
+		if (log)
 			log->set_parameter("Для максимальной длины слова",
 							   to_string(*word_length));
-		}
 		// Logger::log("Для максимальной длины слова", to_string(*word_length));
 	}
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
 		// Logger::log("Результат Ambiguity", "Exponentially ambiguous");
-		if (log) {
-			log->set_parameter("result", "Exponentially ambiguous");
-		}
+		if (log) log->set_parameter("result", "Exponentially ambiguous");
 		break;
 	case FiniteAutomaton::almost_unambigious:
-		if (log) {
-			log->set_parameter("result", "Almost unambigious");
-		}
+		if (log) log->set_parameter("result", "Almost unambigious");
 		// Logger::log("Результат Ambiguity", "Almost unambigious");
 		break;
 	case FiniteAutomaton::unambigious:
-		if (log) {
-			log->set_parameter("result", "Unambigious");
-		}
+		if (log) log->set_parameter("result", "Unambigious");
 		// Logger::log("Результат Ambiguity", "Unambigious");
 		break;
 	case FiniteAutomaton::polynomially_ambigious:
-		if (log) {
-			log->set_parameter("result", "Polynomially ambiguous");
-		}
+		if (log) log->set_parameter("result", "Polynomially ambiguous");
 		// Logger::log("Результат Ambiguity", "Polynomially ambiguous");
 		break;
 	default:
@@ -1964,11 +1950,10 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 			"Количество диагональных классов по методу Глейстера-Шаллита",
 			to_string(language->get_nfa_minimum_size()));
 		Logger::finish_step();*/
-		if (log) {
+		if (log)
 			log->set_parameter(
 				"Количество диагональных классов по методу Глейстера-Шаллита",
 				language->get_nfa_minimum_size());
-		}
 		return language->get_nfa_minimum_size();
 	}
 
