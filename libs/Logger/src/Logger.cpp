@@ -23,4 +23,8 @@ void Logger::render_to_file(const string& filename) {
 	}
 	outfile << "\\end{document}" << endl;
 	outfile.close();
+
+	char cmd[1024];
+	sprintf(cmd, "pdflatex \"./resources/report.tex\" > pdflatex.log");
+	system(cmd);
 }
