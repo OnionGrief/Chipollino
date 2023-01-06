@@ -2,6 +2,7 @@
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include "iLogTemplate.h"
+#include "FiniteAutomaton.h"
 #include <algorithm>
 #include <iostream>
 #include <map>

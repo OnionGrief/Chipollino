@@ -216,8 +216,8 @@ string TransformationMonoid::get_equalence_classes_txt() {
 	// Logger::init_step("Equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
 
-		//Logger::log("class " + alphabet_symbol::vector_to_str(terms[i].name),
-					//terms[i].isFinal ? "in lang" : "not in lang");
+		// Logger::log("class " + alphabet_symbol::vector_to_str(terms[i].name),
+		// terms[i].isFinal ? "in lang" : "not in lang");
 		ss << "Term	" << alphabet_symbol::vector_to_str(terms[i].name)
 		   << "	in	language	" << terms[i].isFinal << "\n";
 		for (int j = 0; j < terms[i].transitions.size(); j++) {
@@ -237,7 +237,7 @@ string TransformationMonoid::get_equalence_classes_txt() {
 
 map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 	map<string, vector<string>> ss;
-	//Logger::init_step("Equivalence classes");
+	// Logger::init_step("Equivalence classes");
 	for (int i = 0; i < terms.size(); i++) {
 
 		// Logger::log("class " + to_str(terms[i].name),
@@ -277,8 +277,8 @@ string TransformationMonoid::get_rewriting_rules_txt(iLogTemplate* log) {
 		}
 	}
 	if (log) {
-			log->set_parameter("rewriting rules", ss.str());
-		}
+		log->set_parameter("rewriting rules", ss.str());
+	}
 	// Logger::finish_step();
 	return ss.str();
 }
@@ -414,10 +414,11 @@ int TransformationMonoid::is_synchronized(const Term& w) {
 // Вернет число классов эквивалентности
 int TransformationMonoid::class_card(iLogTemplate* log) {
 	// Logger::init_step("Number of equivalence classes");
-	//Logger::log("Number of equivalence classes ", to_string(terms.size()));
-	//Logger::finish_step();
+	// Logger::log("Number of equivalence classes ", to_string(terms.size()));
+	// Logger::finish_step();
 	if (log) {
-		log->set_parameter("Number of equivalence classes", to_string(terms.size()));
+		log->set_parameter("Number of equivalence classes",
+						   to_string(terms.size()));
 	}
 	return terms.size();
 }
@@ -426,8 +427,11 @@ int TransformationMonoid::class_card(iLogTemplate* log) {
 int TransformationMonoid::class_length(iLogTemplate* log) {
 	// Logger::init_step("Longest word in the class");
 	if (log) {
-		log->set_parameter("Size", to_string(terms[terms.size() - 1].name.size()));
-		log->set_parameter("One of the longest words", alphabet_symbol::vector_to_str(terms[terms.size() - 1].name));
+		log->set_parameter("Size",
+						   to_string(terms[terms.size() - 1].name.size()));
+		log->set_parameter(
+			"One of the longest words",
+			alphabet_symbol::vector_to_str(terms[terms.size() - 1].name));
 	}
 	/*Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
 	Logger::log("One of the longest words",
@@ -442,8 +446,10 @@ int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
 		is_minimal();
 	}
 	if (log) {
-		log->set_parameter("Size", to_string(terms[terms.size() - 1].name.size()));
-		log->set_parameter("Myhill-Nerode сlasses number", equivalence_classes_table_bool.size());
+		log->set_parameter("Size",
+						   to_string(terms[terms.size() - 1].name.size()));
+		log->set_parameter("Myhill-Nerode сlasses number",
+						   equivalence_classes_table_bool.size());
 	}
 	/*Logger::init_step("Myhill-Nerode сlasses number");
 	Logger::log(to_string(equivalence_classes_table_bool.size()));

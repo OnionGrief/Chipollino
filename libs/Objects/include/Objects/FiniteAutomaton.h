@@ -151,7 +151,7 @@ class FiniteAutomaton : public BaseObject {
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
-	bool is_one_unambiguous() const;
+	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
 	// возвращает количество состояний (пердикат States)
 	int states_number(iLogTemplate* log = nullptr) const;
 	// метод Arden
