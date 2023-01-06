@@ -22,6 +22,13 @@ class TransformationMonoid {
 		bool operator==(const Transition a) const {
 			return this->first == a.first && this->second == a.second;
 		}
+		bool operator>(const Transition a) const {
+			return this->first > a.first && this->second > a.second;
+		}
+		bool operator<(const Transition a) const {
+			return this->first * 1000 + this->second <
+				   a.first * 1000 + a.second;
+		}
 	};
 
 	struct Term {
@@ -86,11 +93,11 @@ class TransformationMonoid {
 	vector<vector<bool>> equivalence_classes_table_bool; // Taблица М-Н
 	vector<string> equivalence_classes_table_left; // Левая часть таблицы
 	vector<string> equivalence_classes_table_top; // шапка таблицы
-	bool trap_not_minimal = false;
 
 	//   | t o p
 	// l |--------
 	// e | 0 1 0 0
 	// f | 0 bool0
 	// t | 1 0 1 1
+	bool trap_not_minimal = false;
 };

@@ -173,19 +173,23 @@ void TransformationMonoid::get_transition_by_symbol(
 
 	for (set<alphabet_symbol>::iterator it = alphabet.begin();
 		 it != alphabet.end(); it++) { // для каждого символа
-		vector<TransformationMonoid::Transition> out;
+		// vector<TransformationMonoid::Transition> out;
+		set<TransformationMonoid::Transition> out;
 		for (TransformationMonoid::Transition temp : in) {
 			set<int> tostate = automat.states[temp.second].transitions[*it];
 			for (int outstate : tostate) {
 				TransformationMonoid::Transition curtransition;
 				curtransition.first = temp.first;
 				curtransition.second = outstate;
-				out.push_back(curtransition);
+				out.insert(curtransition);
 			}
 		}
 		// получили новые переходы
 		Term curTerm;
-		curTerm.transitions = out;
+
+		std::vector<TransformationMonoid::Transition> v(out.size());
+		std::copy(out.begin(), out.end(), v.begin());
+		curTerm.transitions = v;
 		vector<alphabet_symbol> tempword = word;
 		tempword.push_back(*it);
 		curTerm.name = tempword;
@@ -218,6 +222,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 		temp.second = i;
 		initperehods.push_back(temp);
 	}
+
 	get_transition_by_symbol(initperehods, {},
 							 automat.language->get_alphabet());
 	while (queueTerm.size() > 0) {
@@ -228,7 +233,12 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 		// for (auto w : cur.name) {
 		// 	cout << w;
 		// }
+		// cout << "\n";
 
+		// for (auto temp : cur.transitions) {
+		// 	cout << "(" << temp.first << " " << temp.second << ")";
+		// }
+		// cout << "\n";
 		if (!searchrewrite(cur.name)) {
 			std::vector<TransformationMonoid::Term>::iterator rewritein =
 				std::find(terms.begin(), terms.end(), cur);
