@@ -536,19 +536,22 @@ void Example::all_examples() {
 void Example::logger_test() {
 	LogTemplate log_template;
 	Logger tex_logger;
-	log_template.load_tex_template("glushkov-long");
+	// log_template.load_tex_template("glushkov-long");
 	// Regex("abaa").pump_length(&log_template);
-	Regex("(a|b)*b").to_glushkov(&log_template);
+	// Regex("(a|b)*b").to_glushkov(&log_template);
+	// tex_logger.add_log(log_template);
+	log_template.load_tex_template("determinize-short");
+	Regex("(a|b)*b").to_glushkov().determinize(&log_template);
 	tex_logger.add_log(log_template);
-	log_template.load_tex_template("tomson-long");
-	Regex("(a|b)*b").to_tompson(&log_template);
-	tex_logger.add_log(log_template);
-	log_template.load_tex_template("follow-long");
-	Regex("(a|b)*b").to_ilieyu(&log_template);
-	tex_logger.add_log(log_template);
-	log_template.load_tex_template("antimirov-long");
-	Regex("(a|b)*b").to_antimirov(&log_template);
-	tex_logger.add_log(log_template);
+	// log_template.load_tex_template("tomson-long");
+	// Regex("(a|b)*b").to_tompson(&log_template);
+	// tex_logger.add_log(log_template);
+	// log_template.load_tex_template("follow-long");
+	// Regex("(a|b)*b").to_ilieyu(&log_template);
+	// tex_logger.add_log(log_template);
+	// log_template.load_tex_template("antimirov-long");
+	// Regex("(a|b)*b").to_antimirov(&log_template);
+	// tex_logger.add_log(log_template);
 	tex_logger.render_to_file("./resources/report.tex");
 }
 

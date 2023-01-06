@@ -345,16 +345,20 @@ GeneralObject Interpreter::apply_function(
 	optional<GeneralObject> res;
 
 	if (function.name == "Determinize") {
+		log_template.load_tex_template("determinize-short");
 		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template));
 	}
 	if (function.name == "Determinize+") {
-		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template, false));
+		log_template.load_tex_template("determinize-short");
+		res = ObjectDFA(
+			get_automaton(arguments[0]).determinize(&log_template, false));
 	}
 	if (function.name == "Minimize") {
 		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template));
 	}
 	if (function.name == "Minimize+") {
-		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template, false));
+		res = ObjectDFA(
+			get_automaton(arguments[0]).minimize(&log_template, false));
 	}
 	if (function.name == "Annote") {
 		res = ObjectDFA(get_automaton(arguments[0]).annote(&log_template));
