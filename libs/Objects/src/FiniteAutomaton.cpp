@@ -192,11 +192,7 @@ FiniteAutomaton FiniteAutomaton::minimize() const {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
 		Logger::log("Автомат до минимизации", "Автомат после минимизации",
 					*this, language_min_dfa);
-		stringstream ss;
-		for (const auto& state : language_min_dfa.states) {
-			ss << "\\{" << state.identifier << "\\} ";
-		}
-		Logger::log("Классы эквивалентности", ss.str());
+		Logger::log("(!) минимальный автомат получен из кэша");
 		Logger::finish_step();
 		return language_min_dfa; // TODO Нужно решить, что делаем с
 								 // идентификаторами
@@ -1519,7 +1515,11 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	Logger::init_step("Equiv");
 	Logger::log("Автоматы:");
 	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
-	bool result = equal(fa1.minimize(), fa2.minimize());
+	bool result = true;
+	if (fa1.language == fa2.language)
+		Logger::log("(!) автоматы изначально принадлежат одному языку");
+	else
+		result = equal(fa1.minimize(), fa2.minimize());
 	if (result)
 		Logger::log("Результат Equiv", "true");
 	else

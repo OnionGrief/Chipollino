@@ -1535,9 +1535,15 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2) {
 	Logger::init_step("Equiv");
 	Logger::log("Первое регулярное выражение", r1.to_txt());
 	Logger::log("Второе регулярное выражение", r2.to_txt());
-	FiniteAutomaton fa1 = r1.to_ilieyu();
-	FiniteAutomaton fa2 = r2.to_ilieyu();
-	bool result = FiniteAutomaton::equivalent(fa1, fa2);
+	bool result = true;
+	if (r1.language == r2.language)
+		Logger::log(
+			"(!) регулярные выражения изначально принадлежат одному языку");
+	else {
+		FiniteAutomaton fa1 = r1.to_ilieyu();
+		FiniteAutomaton fa2 = r2.to_ilieyu();
+		result = FiniteAutomaton::equivalent(fa1, fa2);
+	}
 	if (result)
 		Logger::log("Результат Equiv", "true");
 	else
