@@ -18,7 +18,7 @@ void LogTemplate::set_parameter(const string& key, int value) {
 }
 
 void LogTemplate::load_tex_template(string filename) {
-	tex_template = filename;
+	tex_template = "./resources/template/" + filename + ".tex";
 }
 
 string LogTemplate::render() const {

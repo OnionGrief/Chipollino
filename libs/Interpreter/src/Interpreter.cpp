@@ -201,31 +201,29 @@ GeneralObject Interpreter::apply_function(
 
 	if (function.name == "Glushkov") {
 		// нужно будет тут в зависимости от степени логгирования менять шаблон
-		log_template.load_tex_template(
-			"./resources/template/glushkov-long.tex");
+		log_template.load_tex_template("glushkov-long");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_glushkov(&log_template));
 	}
 
 	if (function.name == "IlieYu") {
-		log_template.load_tex_template("./resources/template/follow-long.tex");
+		log_template.load_tex_template("follow-long");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_ilieyu(&log_template));
 	}
 	if (function.name == "Antimirov") {
-		log_template.load_tex_template(
-			"./resources/template/antimirov-long.tex");
+		log_template.load_tex_template("antimirov-long");
 		return ObjectNFA(
 			get<ObjectRegex>(arguments[0]).value.to_antimirov(&log_template));
+	}
+	if (function.name == "Thompson") {
+		log_template.load_tex_template("tomson-long");
+		return ObjectNFA(
+			get<ObjectRegex>(arguments[0]).value.to_tompson(&log_template));
 	}
 	if (function.name == "Arden") {
 		return ObjectRegex(
 			(get_automaton(arguments[0]).to_regex(&log_template)));
-	}
-	if (function.name == "Thompson") {
-		log_template.load_tex_template("./resources/template/tomson-long.tex");
-		return ObjectNFA(
-			get<ObjectRegex>(arguments[0]).value.to_tompson(&log_template));
 	}
 	if (function.name == "Bisimilar") {
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
@@ -244,8 +242,9 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "Subset") {
 		if (function.input[0] == ObjectType::NFA) {
-			return ObjectBoolean((get_automaton(arguments[0])
-									  .subset(get_automaton(arguments[1]), &log_template)));
+			return ObjectBoolean(
+				(get_automaton(arguments[0])
+					 .subset(get_automaton(arguments[1]), &log_template)));
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
@@ -267,14 +266,15 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Equal") {
 		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(FiniteAutomaton::equal(
-				get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
+				get_automaton(arguments[0]), get_automaton(arguments[1]),
+				&log_template));
 		} else if (function.input[0] == ObjectType::Regex) {
-			return ObjectBoolean(
-				Regex::equal(get<ObjectRegex>(arguments[0]).value,
-							 get<ObjectRegex>(arguments[1]).value, &log_template));
+			return ObjectBoolean(Regex::equal(
+				get<ObjectRegex>(arguments[0]).value,
+				get<ObjectRegex>(arguments[1]).value, &log_template));
 		} else {
 			bool res = get<ObjectInt>(arguments[0]).value ==
-								 get<ObjectInt>(arguments[1]).value;
+					   get<ObjectInt>(arguments[1]).value;
 			log_template.set_parameter("res", res);
 			return ObjectBoolean(res);
 		}
@@ -385,13 +385,17 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectDFA(get_automaton(arguments[0]).complement(&log_template));
 	}
 	if (function.name == "RemoveTrap") {
-		res = ObjectDFA(get_automaton(arguments[0]).remove_trap_states(&log_template));
+		res = ObjectDFA(
+			get_automaton(arguments[0]).remove_trap_states(&log_template));
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
 			// Пример: (пока в объявлении функции не добавила флаг)
-			// res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template, is_trim));
-			res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
+			// res =
+			// ObjectNFA(get_automaton(arguments[0]).deannote(&log_template,
+			// is_trim));
+			res =
+				ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 		} else {
 			res = ObjectRegex(
 				get<ObjectRegex>(arguments[0]).value.deannote(&log_template));
