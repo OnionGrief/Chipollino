@@ -46,7 +46,7 @@ class Grammar {
 	vector<PrefixGrammarItem> prefix_grammar;
 
 	const int fa_to_g(
-		const FiniteAutomaton&, string, int, int,
+		const FiniteAutomaton&, alphabet_symbol, int, int,
 		const vector<PrefixGrammarItem*>&, // вспомогательная функции для
 										   // получения префиксной грамматики
 		const set<string>&, string);

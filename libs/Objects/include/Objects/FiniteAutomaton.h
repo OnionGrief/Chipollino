@@ -122,6 +122,7 @@ class FiniteAutomaton : public BaseObject {
 	FiniteAutomaton annote(iLogTemplate* log = nullptr) const;
 	// снятие разметки с букв
 	FiniteAutomaton deannote(iLogTemplate* log = nullptr) const;
+	FiniteAutomaton delinearize(iLogTemplate* log = nullptr) const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
 	// states.size()) i-й элемент хранит номер класса i-го состояния
 	FiniteAutomaton merge_equivalent_classes(vector<int>) const;

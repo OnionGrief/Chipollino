@@ -16,7 +16,7 @@ vector<alphabet_symbol> union_words(vector<alphabet_symbol> a,
 	return newword;
 }
 
-// получаем	все	перестановки	алфавита	длины	len
+// получаем все перестановки алфавита длины len
 vector<vector<alphabet_symbol>> get_comb_alphabet(
 	int len, const set<alphabet_symbol>& alphabet) {
 
@@ -44,7 +44,7 @@ vector<vector<alphabet_symbol>> get_comb_alphabet(
 	return comb;
 }
 
-// Проверяем	встречался	ли	терм	раньше
+// Проверяем встречался ли терм раньше
 vector<alphabet_symbol> was_term(
 	vector<TransformationMonoid::Term> all_terms,
 	vector<TransformationMonoid::Transition> cur_transition) {
@@ -145,8 +145,8 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 			get_comb_alphabet(i, automat.language->get_alphabet());
 		int cond_rule_len = 0;
 		map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> temp_rule;
-		for (int j = 0; j < various.size() && cond_get_transactions;
-			 j++) // Для	всех	комбинаций
+		for (int j = 0; j < various.size() && cond_get_transactions; j++)
+		// Для всех комбинаций
 		{
 			Term current;
 			current.name = various[j];
@@ -163,14 +163,13 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 					Transition g;
 					g.first = t;
 					g.second = temp;
-					// cout << "test " << to_str(current.name) << " " << t << "
-					// "
-					// 	 << temp << "\n";
+					// cout << "test " << to_str(current.name) << " " << t
+					// << " " << temp << "\n";
 					current.transitions.push_back(g);
 				}
 			}
 			vector<alphabet_symbol> eqv = was_term(terms, current.transitions);
-			if (eqv.size() == 0) // Если	не	встретился	в
+			if (eqv.size() == 0) // Если не встретился в
 								 // Эквивалентных классах
 			{
 				for (int i = 0; i < current.transitions.size(); i++) {
@@ -387,8 +386,8 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 	return out;
 }
 
-// Вернет	-1	если	не	синхронизирован	или	номер
-// состояния	с	которым синхронизирован
+// Вернет -1 если не синхронизирован или номер состояния с которым
+// синхронизирован
 int TransformationMonoid::is_synchronized(const Term& w) {
 	/*Logger::init_step("Is synchronized word?");
 	Logger::log("word " + alphabet_symbol::vector_to_str(w.name));*/

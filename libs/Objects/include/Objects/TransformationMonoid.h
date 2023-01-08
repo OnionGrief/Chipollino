@@ -42,21 +42,17 @@ class TransformationMonoid {
 		const Term& w); // получаем термы, что vwv - в языке
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 	get_rewriting_rules(); // получаем правила переписывания
-	string get_equalence_classes_txt(); // вывод эквивалентных классов
+	string get_equalence_classes_txt(); // вывод классов эквивалентности
 	map<string, vector<string>> get_equalence_classes_map();
-	string get_rewriting_rules_txt(iLogTemplate* log = nullptr); //вывод правил переписывания
+	string get_rewriting_rules_txt(iLogTemplate* log = nullptr); // вывод правил переписывания
 	string to_txt() const;
 	int is_synchronized(
-		const Term& w); // Вернет	-1	если	не	синхронизирован	или
-	// номер состояния	с	которым синхронизирован
-	int class_card(
-		iLogTemplate* log = nullptr); // Вернет число классов эквивалентности
-	int class_length(
-		iLogTemplate* log = nullptr); // Вернет самое длинное слово в классе
-	bool is_minimal(iLogTemplate* log = nullptr); // Вычисление Минимальности по
-												  // М-Н(1 если минимальный)
-	int get_classes_number_MyhillNerode(
-		iLogTemplate* log = nullptr); // Вычисление размера по М-Н
+		const Term& w); // Вернет -1 если не синхронизирован или номер состояния
+						// с которым синхронизирован
+	int class_card(iLogTemplate* log = nullptr); // Вернет число классов эквивалентности
+	int class_length(iLogTemplate* log = nullptr); // Вернет самое длинное слово в классе
+	bool is_minimal(iLogTemplate* log = nullptr); // Вычисление Минимальности по М-Н(1 если минимальный)
+	int get_classes_number_MyhillNerode(iLogTemplate* log = nullptr); // Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); // вывод таблицы М-Н
 	vector<alphabet_symbol> rewriting(
 		vector<alphabet_symbol>,
@@ -70,7 +66,7 @@ class TransformationMonoid {
 	set<int> search_transition_by_word(vector<alphabet_symbol> word,
 									   int init_state);
 	FiniteAutomaton automat; // Автомат
-	vector<Term> terms;		 // Эквивалентные классы
+	vector<Term> terms;		 // Классы эквивалентности
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 		rules; // Правила переписывания
 	vector<vector<bool>> equivalence_classes_table_bool; // Taблица М-Н

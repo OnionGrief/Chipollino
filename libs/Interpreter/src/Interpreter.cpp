@@ -220,7 +220,7 @@ GeneralObject Interpreter::apply_function(
 	}
 	if (function.name == "Thompson") {
 		return ObjectNFA(
-			get<ObjectRegex>(arguments[0]).value.to_tompson(&log_template));
+			get<ObjectRegex>(arguments[0]).value.to_thompson(&log_template));
 	}
 	if (function.name == "Arden") {
 		return ObjectRegex(
@@ -313,9 +313,6 @@ GeneralObject Interpreter::apply_function(
 		return ObjectAmbiguityValue(
 			get_automaton(arguments[0]).ambiguity(&log_template));
 	}
-	/*if (function.name == "Width") {
-		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
-	}*/
 	if (function.name == "MyhillNerode") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
 		return ObjectInt(trmon.get_classes_number_MyhillNerode(&log_template));
@@ -379,9 +376,7 @@ GeneralObject Interpreter::apply_function(
 			res = ObjectRegex(get<ObjectRegex>(arguments[0])
 								  .value.delinearize(&log_template));
 		} else {
-			// пусть будет так
-			res = ObjectNFA(
-				get<ObjectNFA>(arguments[0]).value.deannote(&log_template));
+			res = ObjectNFA(get_automaton(arguments[0]).delinearize(&log_template));
 		}
 	}
 	if (function.name == "Complement") {
