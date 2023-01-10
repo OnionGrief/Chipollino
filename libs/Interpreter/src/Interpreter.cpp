@@ -370,7 +370,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
 			// Пример: (пока в объявлении функции не добавила флаг)
-			// res = ObjectNFA(get_automaton(arguments[0]).deannote(is_trim));
+			// res = ObjectNFA(get_automaton(arguments[0]).deannote(Flags::trim));
 			res = ObjectNFA(get_automaton(arguments[0]).deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
@@ -448,7 +448,7 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 			  (argument_type[i] == ObjectType::DFA &&
 			   func_input_type[i] == ObjectType::NFA) ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
-			  (is_dynamic && argument_type[i] == ObjectType::NFA &&
+			  (flags_values[Flags::dynamic] && argument_type[i] == ObjectType::NFA &&
 			   func_input_type[i] == ObjectType::DFA))) {
 			// несовпадение по типам
 			return false;
@@ -708,10 +708,9 @@ bool Interpreter::run_test(const Test& test) {
 bool Interpreter::set_flag(const Flag& flag) {
 	auto logger = init_log();
 	logger.log("");
-	if (flag.name == "trim")
-		is_trim = flag.value;
-	else if (flag.name == "dynamic")
-		is_dynamic = flag.value;
+	Flags flag_name = flags_names[flag.name];
+	if (flags_values.count(flag_name))
+		flags_values[flag_name] = flag.value;
 	else {
 		logger.throw_error("while setting flag: wrong name \"" + flag.name +
 						   "\"");
@@ -996,7 +995,7 @@ optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 	int i = pos;
 
 	if (lexems.size() < i + 2 || lexems[i].type != Lexem::name ||
-		lexems[i].value != "SetFlag") {
+		lexems[i].value != "Set") {
 		return nullopt;
 	}
 	Flag flag;
@@ -1004,7 +1003,7 @@ optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 	if (lexems[i].type == Lexem::name) {
 		flag.name = lexems[i].value;
 	} else {
-		logger.throw_error("Scan SetFlag: wrong flagName at position 1");
+		logger.throw_error("Scan Set: wrong flagName at position 1");
 		return nullopt;
 	}
 	i++;
