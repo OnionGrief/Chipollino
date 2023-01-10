@@ -89,7 +89,13 @@ Interpreter::Interpreter() {
 		   {ObjectType::Regex, ObjectType::Regex},
 		   ObjectType::Boolean},
 		  {"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean},
-		  {"Equal", {ObjectType::Int, ObjectType::Int}, ObjectType::Boolean}}},
+		  {"Equal", {ObjectType::Int, ObjectType::Int}, ObjectType::Boolean},
+		  {"Equal",
+		   {ObjectType::AmbiguityValue, ObjectType::AmbiguityValue},
+		   ObjectType::Boolean},
+		  {"Equal",
+		   {ObjectType::Boolean, ObjectType::Boolean},
+		   ObjectType::Boolean}}},
 		{"OneUnambiguity",
 		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
@@ -260,9 +266,16 @@ GeneralObject Interpreter::apply_function(
 			return ObjectBoolean(
 				Regex::equal(get<ObjectRegex>(arguments[0]).value,
 							 get<ObjectRegex>(arguments[1]).value));
-		} else {
+		} else if (function.input[0] == ObjectType::Int) {
 			return ObjectBoolean(get<ObjectInt>(arguments[0]).value ==
 								 get<ObjectInt>(arguments[1]).value);
+		} else if (function.input[0] == ObjectType::Boolean) {
+			return ObjectBoolean(get<ObjectBoolean>(arguments[0]).value ==
+								 get<ObjectBoolean>(arguments[1]).value);
+		}else {
+			return ObjectBoolean(
+				get<ObjectAmbiguityValue>(arguments[0]).value ==
+				get<ObjectAmbiguityValue>(arguments[1]).value);
 		}
 	}
 	if (function.name == "OneUnambiguity") {
@@ -370,7 +383,7 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
 			// Пример: (пока в объявлении функции не добавила флаг)
-			// res = ObjectNFA(get_automaton(arguments[0]).deannote(Flags::trim));
+			// res=ObjectNFA(get_automaton(arguments[0]).deannote(Flags::trim));
 			res = ObjectNFA(get_automaton(arguments[0]).deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
@@ -393,14 +406,13 @@ GeneralObject Interpreter::apply_function(
 			get_automaton(arguments[0]), get_automaton(arguments[1])));
 	}
 	if (function.name == "Union") {
-		res = ObjectNFA(FiniteAutomaton::uunion(
-			get_automaton(arguments[0]), get_automaton(arguments[1])));
+		res = ObjectNFA(FiniteAutomaton::uunion(get_automaton(arguments[0]),
+												get_automaton(arguments[1])));
 	}
 	if (function.name == "Difference") {
 		res = ObjectNFA(FiniteAutomaton::difference(
 			get_automaton(arguments[0]), get_automaton(arguments[1])));
 	}
-
 
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
@@ -448,7 +460,8 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 			  (argument_type[i] == ObjectType::DFA &&
 			   func_input_type[i] == ObjectType::NFA) ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
-			  (flags_values[Flags::dynamic] && argument_type[i] == ObjectType::NFA &&
+			  (flags_values[Flags::dynamic] &&
+			   argument_type[i] == ObjectType::NFA &&
 			   func_input_type[i] == ObjectType::DFA))) {
 			// несовпадение по типам
 			return false;
