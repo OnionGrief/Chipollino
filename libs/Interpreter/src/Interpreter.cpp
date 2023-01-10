@@ -38,6 +38,14 @@ Interpreter::Interpreter() {
 		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Disambiguate",
 		 {{"Disambiguate", {ObjectType::Regex}, ObjectType::Regex}}},
+		{"Intersection",
+		 {{"Intersection",
+		   {ObjectType::NFA, ObjectType::NFA},
+		   ObjectType::NFA}}},
+		{"Union",
+		 {{"Union", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
+		{"Difference",
+		 {{"Difference", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
 		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
@@ -55,7 +63,7 @@ Interpreter::Interpreter() {
 		 {{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int}}},
 		{"PrefixGrammar",
 		 {{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGrammar}}},
-		 {"PGtoNFA",
+		{"PGtoNFA",
 		 {{"PGtoNFA", {ObjectType::PrefixGrammar}, ObjectType::NFA}}},
 		// Предикаты
 		{"Bisimilar",
@@ -304,7 +312,8 @@ GeneralObject Interpreter::apply_function(
 		return ObjectPrefixGrammar(g);
 	}
 	if (function.name == "PGtoNFA") {
-		return ObjectNFA(get<ObjectPrefixGrammar>(arguments[0]).value.prefix_grammar_to_automaton());
+		return ObjectNFA(get<ObjectPrefixGrammar>(arguments[0])
+							 .value.prefix_grammar_to_automaton());
 	}
 
 	/*
@@ -379,6 +388,19 @@ GeneralObject Interpreter::apply_function(
 		res = ObjectRegex(
 			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex());
 	}
+	if (function.name == "Intersection") {
+		res = ObjectNFA(FiniteAutomaton::intersection(
+			get_automaton(arguments[0]), get_automaton(arguments[1])));
+	}
+	if (function.name == "Union") {
+		res = ObjectNFA(FiniteAutomaton::uunion(
+			get_automaton(arguments[0]), get_automaton(arguments[1])));
+	}
+	if (function.name == "Difference") {
+		res = ObjectNFA(FiniteAutomaton::difference(
+			get_automaton(arguments[0]), get_automaton(arguments[1])));
+	}
+
 
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
