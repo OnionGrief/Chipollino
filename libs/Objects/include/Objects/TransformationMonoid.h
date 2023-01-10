@@ -7,6 +7,7 @@
 #include <iostream>
 #include <map>
 #include <math.h>
+#include <queue>
 #include <sstream>
 #include <vector>
 using namespace std;
@@ -19,11 +20,26 @@ class TransformationMonoid {
 	struct Transition { // переход (индекс состояния - индекс состояния)
 		int first;
 		int second;
+		bool operator==(const Transition a) const {
+			return this->first == a.first && this->second == a.second;
+		}
+		bool operator>(const Transition a) const {
+			return this->first > a.first && this->second > a.second;
+		}
+		bool operator<(const Transition a) const {
+			return this->first * 1000 + this->second <
+				   a.first * 1000 + a.second;
+		}
 	};
+
 	struct Term {
 		bool isFinal = false;
 		vector<alphabet_symbol> name;
 		vector<Transition> transitions;
+		bool operator==(const Term a) const {
+			return this->transitions == a.transitions &&
+				   this->transitions == a.transitions;
+		}
 	};
 
 	struct TermDouble { // двойной терм
@@ -33,6 +49,7 @@ class TransformationMonoid {
 	TransformationMonoid();
 	TransformationMonoid(
 		const FiniteAutomaton& in); // Автомат и макс длина перехода
+	void OutAllTransformationMonoid();
 	vector<Term> get_equalence_classes(); // получаем все термы
 	vector<Term> get_equalence_classes_vw(
 		const Term& w); // получаем термы, что vw - в языке
@@ -63,6 +80,11 @@ class TransformationMonoid {
 										// таблицу М-Н
 
   private:
+	bool searchrewrite(vector<alphabet_symbol>);
+	queue<Term> queueTerm;
+	void get_transition_by_symbol(vector<TransformationMonoid::Transition>,
+								  vector<alphabet_symbol>,
+								  const set<alphabet_symbol>&);
 	set<int> search_transition_by_word(vector<alphabet_symbol> word,
 									   int init_state);
 	FiniteAutomaton automat; // Автомат
@@ -78,4 +100,5 @@ class TransformationMonoid {
 	// e | 0 1 0 0
 	// f | 0 bool0
 	// t | 1 0 1 1
+	bool trap_not_minimal = false;
 };
