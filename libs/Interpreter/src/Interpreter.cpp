@@ -38,6 +38,14 @@ Interpreter::Interpreter() {
 		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Disambiguate",
 		 {{"Disambiguate", {ObjectType::Regex}, ObjectType::Regex}}},
+		{"Intersection",
+		 {{"Intersection",
+		   {ObjectType::NFA, ObjectType::NFA},
+		   ObjectType::NFA}}},
+		{"Union",
+		 {{"Union", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
+		{"Difference",
+		 {{"Difference", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
 		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
@@ -81,7 +89,13 @@ Interpreter::Interpreter() {
 		   {ObjectType::Regex, ObjectType::Regex},
 		   ObjectType::Boolean},
 		  {"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean},
-		  {"Equal", {ObjectType::Int, ObjectType::Int}, ObjectType::Boolean}}},
+		  {"Equal", {ObjectType::Int, ObjectType::Int}, ObjectType::Boolean},
+		  {"Equal",
+		   {ObjectType::AmbiguityValue, ObjectType::AmbiguityValue},
+		   ObjectType::Boolean},
+		  {"Equal",
+		   {ObjectType::Boolean, ObjectType::Boolean},
+		   ObjectType::Boolean}}},
 		{"OneUnambiguity",
 		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
@@ -197,10 +211,12 @@ GeneralObject Interpreter::apply_function(
 			   holds_alternative<ObjectDFA>(obj);
 	};
 
-	// имя шаблона по умолчанию - название ф/и в интерпретаторе + номер сигнатуры (если их несколько)
+	// имя шаблона по умолчанию - название ф/и в интерпретаторе + номер
+	// сигнатуры (если их несколько)
 	string func_id = function.name;
 	if (names_to_functions[func_id].size() > 1)
-		func_id += to_string(find_func(function.name, function.input).value() + 1);
+		func_id +=
+			to_string(find_func(function.name, function.input).value() + 1);
 
 	log_template.set_parameter("name", func_id);
 	log_template.load_tex_template(func_id);
@@ -273,11 +289,18 @@ GeneralObject Interpreter::apply_function(
 			return ObjectBoolean(Regex::equal(
 				get<ObjectRegex>(arguments[0]).value,
 				get<ObjectRegex>(arguments[1]).value, &log_template));
-		} else {
+		} else if (function.input[0] == ObjectType::Int) {
 			bool res = get<ObjectInt>(arguments[0]).value ==
 					   get<ObjectInt>(arguments[1]).value;
 			log_template.set_parameter("res", res);
 			return ObjectBoolean(res);
+		} else if (function.input[0] == ObjectType::Boolean) {
+			return ObjectBoolean(get<ObjectBoolean>(arguments[0]).value ==
+								 get<ObjectBoolean>(arguments[1]).value);
+		} else {
+			return ObjectBoolean(
+				get<ObjectAmbiguityValue>(arguments[0]).value ==
+				get<ObjectAmbiguityValue>(arguments[1]).value);
 		}
 	}
 	if (function.name == "OneUnambiguity") {
@@ -376,7 +399,8 @@ GeneralObject Interpreter::apply_function(
 			res = ObjectRegex(get<ObjectRegex>(arguments[0])
 								  .value.delinearize(&log_template));
 		} else {
-			res = ObjectNFA(get_automaton(arguments[0]).delinearize(&log_template));
+			res = ObjectNFA(
+				get_automaton(arguments[0]).delinearize(&log_template));
 		}
 	}
 	if (function.name == "Complement") {
@@ -393,7 +417,7 @@ GeneralObject Interpreter::apply_function(
 			// Пример: (пока в объявлении функции не добавила флаг)
 			// res =
 			// ObjectNFA(get_automaton(arguments[0]).deannote(&log_template,
-			// is_trim));
+			// Flags::trim));
 			res =
 				ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 		} else {
@@ -414,6 +438,18 @@ GeneralObject Interpreter::apply_function(
 	if (function.name == "Disambiguate") {
 		res = ObjectRegex(
 			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex());
+	}
+	if (function.name == "Intersection") {
+		res = ObjectNFA(FiniteAutomaton::intersection(
+			get_automaton(arguments[0]), get_automaton(arguments[1])));
+	}
+	if (function.name == "Union") {
+		res = ObjectNFA(FiniteAutomaton::uunion(get_automaton(arguments[0]),
+												get_automaton(arguments[1])));
+	}
+	if (function.name == "Difference") {
+		res = ObjectNFA(FiniteAutomaton::difference(
+			get_automaton(arguments[0]), get_automaton(arguments[1])));
 	}
 
 	if (res.has_value()) {
@@ -462,7 +498,8 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 			  (argument_type[i] == ObjectType::DFA &&
 			   func_input_type[i] == ObjectType::NFA) ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
-			  (is_dynamic && argument_type[i] == ObjectType::NFA &&
+			  (flags_values[Flags::dynamic] &&
+			   argument_type[i] == ObjectType::NFA &&
 			   func_input_type[i] == ObjectType::DFA))) {
 			// несовпадение по типам
 			return false;
@@ -722,10 +759,9 @@ bool Interpreter::run_test(const Test& test) {
 bool Interpreter::set_flag(const Flag& flag) {
 	auto logger = init_log();
 	logger.log("");
-	if (flag.name == "trim")
-		is_trim = flag.value;
-	else if (flag.name == "dynamic")
-		is_dynamic = flag.value;
+	Flags flag_name = flags_names[flag.name];
+	if (flags_values.count(flag_name))
+		flags_values[flag_name] = flag.value;
 	else {
 		logger.throw_error("while setting flag: wrong name \"" + flag.name +
 						   "\"");
@@ -1010,7 +1046,7 @@ optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 	int i = pos;
 
 	if (lexems.size() < i + 2 || lexems[i].type != Lexem::name ||
-		lexems[i].value != "SetFlag") {
+		lexems[i].value != "Set") {
 		return nullopt;
 	}
 	Flag flag;
@@ -1018,7 +1054,7 @@ optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 	if (lexems[i].type == Lexem::name) {
 		flag.name = lexems[i].value;
 	} else {
-		logger.throw_error("Scan SetFlag: wrong flagName at position 1");
+		logger.throw_error("Scan Set: wrong flagName at position 1");
 		return nullopt;
 	}
 	i++;
