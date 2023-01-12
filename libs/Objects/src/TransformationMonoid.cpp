@@ -170,13 +170,10 @@ vector<int> showtransitions(vector<int> in, int from, int to, int size) {
 void TransformationMonoid::get_transition_by_symbol(
 	vector<TransformationMonoid::Transition> in, vector<alphabet_symbol> word,
 	const set<alphabet_symbol>& alphabet) {
-
-	for (set<alphabet_symbol>::iterator it = alphabet.begin();
-		 it != alphabet.end(); it++) { // для каждого символа
-		// vector<TransformationMonoid::Transition> out;
+	for (const alphabet_symbol& as : alphabet) { // для каждого символа
 		set<TransformationMonoid::Transition> out;
 		for (TransformationMonoid::Transition temp : in) {
-			set<int> tostate = automat.states[temp.second].transitions[*it];
+			set<int> tostate = automat.states[temp.second].transitions[as];
 			for (int outstate : tostate) {
 				TransformationMonoid::Transition curtransition;
 				curtransition.first = temp.first;
