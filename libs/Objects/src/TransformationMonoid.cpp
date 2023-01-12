@@ -24,10 +24,9 @@ vector<vector<alphabet_symbol>> get_comb_alphabet(
 	if (len == 0) {
 		return newcomb;
 	}
-	for (set<alphabet_symbol>::iterator it = alphabet.begin();
-		 it != alphabet.end(); it++) {
+	for (alphabet_symbol as : alphabet) {
 		vector<alphabet_symbol> new_symbol;
-		new_symbol.push_back(*it);
+		new_symbol.push_back(as);
 		newcomb.push_back(new_symbol);
 	}
 	if (len == 1) {
@@ -363,11 +362,9 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 			}
 		}
 		if (transitions.size() > 0) {
-			for (set<TransformationMonoid::Transition>::iterator it =
-					 transitions.begin();
-				 it != transitions.end(); it++) {
-				if (automat.states[(*it).second].is_terminal &&
-					(*it).first == automat.initial_state) {
+			for (TransformationMonoid::Transition tr : transitions) {
+				if (automat.states[(tr).second].is_terminal &&
+					(tr).first == automat.initial_state) {
 					out.push_back(terms[i]);
 				}
 			}
@@ -394,11 +391,9 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 			}
 		}
 		if (transitions.size() > 0) {
-			for (set<TransformationMonoid::Transition>::iterator it =
-					 transitions.begin();
-				 it != transitions.end(); it++) {
-				if (automat.states[(*it).second].is_terminal &&
-					(*it).first == automat.initial_state) {
+			for (TransformationMonoid::Transition tr : transitions) {
+				if (automat.states[(tr).second].is_terminal &&
+					(tr).first == automat.initial_state) {
 					out.push_back(terms[i]);
 				}
 			}
@@ -408,10 +403,8 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 }
 bool wasTransition(set<TransformationMonoid::Transition> mas,
 				   TransformationMonoid::Transition b) {
-	for (set<TransformationMonoid::Transition>::iterator it = mas.begin();
-		 it != mas.end(); it++) {
-
-		if (((*it).first == b.first) && ((*it).second == b.second)) {
+	for (TransformationMonoid::Transition maselem : mas) {
+		if (((maselem).first == b.first) && ((maselem).second == b.second)) {
 			return true;
 		}
 	}
@@ -493,11 +486,9 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 				}
 			}
 			if (transitions.size() > 0) {
-				for (set<TransformationMonoid::Transition>::iterator it =
-						 transitions.begin();
-					 it != transitions.end(); it++) {
-					if (automat.states[(*it).second].is_terminal &&
-						(*it).first == automat.initial_state) {
+				for (TransformationMonoid::Transition tr : transitions) {
+					if (automat.states[(tr).second].is_terminal &&
+						(tr).first == automat.initial_state) {
 						TermDouble new_transition_double;
 						new_transition_double.first = terms[i1];
 						new_transition_double.second = terms[i2];
@@ -608,11 +599,12 @@ bool TransformationMonoid::is_minimal() {
 		if (automat.states[automat.initial_state].is_terminal) {
 			equivalence_classes_table_temp[0][0] = true;
 		}
-		vector<Term>::iterator it = table_classes.begin();
-		for (int i = 1; it != table_classes.end(); i++, it++) {
-			if ((*it).isFinal) {
+		int i = 1;
+		for (Term t : table_classes) {
+			if ((t).isFinal) {
 				equivalence_classes_table_temp[i][0] = true;
 			}
+			i++;
 		}
 		for (int i = 0; i < terms.size(); i++) {
 			if (terms[i].isFinal) {
