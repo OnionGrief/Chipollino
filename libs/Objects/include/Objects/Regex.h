@@ -88,6 +88,15 @@ class Regex : BaseObject {
 		const; // возвращает true, если состояние конечно
 	static bool equality_checker(const Regex*, const Regex*);
 
+/*
+	int search_replace_rec(
+		const Regex& replacing, const Regex& replaced_by,
+		Regex* original); //рекурсивный поиск заменяемого листа дерева
+	void normalize_this_regex(
+		const vector<pair<Regex, Regex>>&); //переписывание regex по
+											//пользовательским правилам
+*/
+
 	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
 	// для print_tree
@@ -119,9 +128,8 @@ class Regex : BaseObject {
 	// Генерация языка из алфавита
 	void make_language();
 	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const string& file,
-						  iLogTemplate* log = nullptr) const;
-	bool from_string(const string&);
+	Regex normalize_regex(const vector<pair<Regex, Regex>>&, iLogTemplate* log = nullptr) const;
+	bool from_string(const string&); 
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на эквивалентность

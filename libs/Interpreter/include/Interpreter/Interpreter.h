@@ -1,9 +1,11 @@
 #pragma once
+#include "InputGenerator/RegexGenerator.h"
 #include "Interpreter/Typization.h"
 #include "Logger/Logger.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
+#include <cmath>
 #include <deque>
 #include <fstream>
 #include <map>
@@ -34,13 +36,17 @@ class Interpreter {
 	// Логгер для преобразований
 	Logger tex_logger;
 
+	//== Внутреннее логгирование ==============================================
 	// true, если во время исполнения произошла ошибка
 	bool error = false;
 
-	// Вывод
+	// Режим вывода
 	LogMode log_mode = LogMode::all;
+
+	// Уровень вложенности логов
 	int log_nesting = 0;
 
+	// Внутренний логгер. Контролирует уровень вложенности с учётом скопа
 	class InterpreterLogger {
 	  public:
 		InterpreterLogger(Interpreter& parent) : parent(parent) {
@@ -56,6 +62,7 @@ class Interpreter {
 		Interpreter& parent;
 	};
 
+	// Инициалиризирует внутренний логгер
 	InterpreterLogger init_log();
 
 	// Тут хранятся объекты по их id
@@ -65,18 +72,42 @@ class Interpreter {
 	using Id = string;
 	struct Expression;
 
+	// Функция, состоит из имени и сигнатуры
+	// Предикат - тоже функция, но на выходе boolean
+	struct Function {
+		// Имя функции
+		string name;
+		// Типы входных аргументов
+		vector<ObjectType> input;
+		// Тип выходного аргумента
+		ObjectType output;
+		Function(){};
+		Function(string name, vector<ObjectType> input, ObjectType output)
+			: name(name), input(input), output(output){};
+	};
+
+	friend bool operator==(const Function& l, const Function& r);
+
 	// Композиция функций и аргументы к ней
 	struct FunctionSequence {
 		// Композиция функций
 		vector<Function> functions;
 		// Параметры композиции функций (1 или более)
 		vector<Expression> parameters;
+		// Надо ли отображать результат
+		bool show_result = 0;
+		// Преобразование в текст
+		string to_txt() const;
 	};
+
+	using Array = vector<Expression>;
 
 	// Общий вид выражения
 	struct Expression {
 		ObjectType type;
-		variant<FunctionSequence, int, Regex, Id> value;
+		variant<FunctionSequence, int, Regex, string, Array> value;
+		// Преобразование в текст
+		string to_txt() const;
 	};
 
 	// Операция объявления
@@ -86,8 +117,6 @@ class Interpreter {
 		Id id;
 		// Выражение
 		Expression expr;
-		// Надо ли отображать результат
-		bool show_result = 0;
 	};
 
 	// Специальная форма test
@@ -101,6 +130,17 @@ class Interpreter {
 		// натуральное число — шаг итерации в сете.
 		int iterations = 1;
 	};
+
+	// Специальная форма Verify
+	struct Verifier {
+		// Аргументы:
+		// Предикат
+		Expression predicate;
+		// натуральное число — размер тестов.
+		int size = 20;
+		// Regex random_regex;
+	};
+	Regex current_random_regex;
 
 	// Предикат [предикат] [объект]+
 	struct Predicate {
@@ -121,7 +161,8 @@ class Interpreter {
 	enum class Flags {
 		trim,
 		dynamic,
-		theory
+		theory,
+		verification
 	};
 
 	map<string, Flags> flags_names = {
@@ -142,10 +183,13 @@ class Interpreter {
 		{Flags::dynamic, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
 		{Flags::theory, false},
+		// флаг контекста верификатора гипотез
+		{Flags::verification, false},
 	};
 
 	// Общий вид опрерации
-	using GeneralOperation = variant<Declaration, Test, Predicate, Flag>;
+	using GeneralOperation =
+		variant<Declaration, Test, Predicate, Flag, Verifier>;
 
 	//== Парсинг ==============================================================
 
@@ -154,11 +198,12 @@ class Interpreter {
 	// Находит парную закрывающую скобку
 	int find_closing_par(const vector<Lexem>&, size_t pos);
 
-	optional<Id> scan_Id(const vector<Lexem>&, int& pos, size_t end);
-	optional<Regex> scan_Regex(const vector<Lexem>&, int& pos, size_t end);
-	optional<FunctionSequence> scan_FunctionSequence(const vector<Lexem>&,
-													 int& pos, size_t end);
-	optional<Expression> scan_Expression(const vector<Lexem>&, int& pos,
+	optional<Id> scan_id(const vector<Lexem>&, int& pos, size_t end);
+	optional<Regex> scan_regex(const vector<Lexem>&, int& pos, size_t end);
+	optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&,
+													  int& pos, size_t end);
+	optional<Array> scan_array(const vector<Lexem>&, int& pos, size_t end);
+	optional<Expression> scan_expression(const vector<Lexem>&, int& pos,
 										 size_t end);
 
 	// Типизация идентификаторов. Нужна для корректного составления опреаций
@@ -166,11 +211,20 @@ class Interpreter {
 	// Считывание операции из набора лексем
 	optional<Declaration> scan_declaration(const vector<Lexem>&, int& pos);
 	optional<Test> scan_test(const vector<Lexem>&, int& pos);
+	optional<Verifier> scan_verifier(const vector<Lexem>&, int& pos);
 	optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);
 	optional<Flag> scan_flag(const vector<Lexem>&, int& pos);
 	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
 
 	//== Исполнение комманд ===================================================
+
+	// Применение цепочки функций к набору аргументов
+	optional<GeneralObject> apply_function_sequence(
+		const vector<Function>& functions, vector<GeneralObject> arguments);
+
+	// Применение функции к набору аргументов
+	optional<GeneralObject> apply_function(
+		const Function& function, const vector<GeneralObject>& arguments);
 
 	// Вычисление выражения
 	optional<GeneralObject> eval_expression(const Expression& expr);
@@ -182,6 +236,7 @@ class Interpreter {
 	bool run_declaration(const Declaration&);
 	bool run_predicate(const Predicate&);
 	bool run_test(const Test&);
+	bool run_verifier(const Verifier&);
 	bool set_flag(const Flag&);
 	bool run_operation(const GeneralOperation&);
 
@@ -216,12 +271,16 @@ class Interpreter {
 		enum Type { // TODO добавить тип строки (для filename)
 			error,
 			equalSign,
+			star,
 			doubleExclamation,
 			parL,
 			parR,
+			bracketL,
+			bracketR,
 			dot,
 			number,
 			regex,
+			stringval,
 			name
 		};
 
@@ -272,11 +331,15 @@ class Interpreter {
 		string scan_until(char symbol);
 
 		Lexem scan_equalSign();
+		Lexem scan_star();
 		Lexem scan_doubleExclamation();
 		Lexem scan_parL();
 		Lexem scan_parR();
+		Lexem scan_bracketL();
+		Lexem scan_bracketR();
 		Lexem scan_dot();
 		Lexem scan_number();
+		Lexem scan_stringval();
 		Lexem scan_name();
 		Lexem scan_regex();
 		Lexem scan_lexem();

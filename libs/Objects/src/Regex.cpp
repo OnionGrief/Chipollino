@@ -363,17 +363,17 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 	language = new_language;
 }
 
-Regex Regex::normalize_regex(const string& file, iLogTemplate* log) const {
-	// Logger::init_step("Normalize");
+Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules, iLogTemplate* log) const {
+	//Logger::init_step("Normalize");
 	Regex regex = *this;
-	// Logger::log("Регулярное выражение до нормализации", regex.to_txt());
+	// regex.normalize_this_regex(rules);
+	/*Logger::log("Регулярное выражение после нормализации", regex.to_txt());
+	Logger::finish_step();*/
 	if (log) {
 		log->set_parameter("oldregex", *this);
 	}
-	// Logger::finish_step();
 	return regex;
 }
-
 bool Regex::from_string(const string& str) {
 	if (!str.size()) {
 		value = Regex::Lexem::eps;
@@ -490,6 +490,49 @@ void Regex::set_language(const set<alphabet_symbol>& _alphabet) {
 	alphabet = _alphabet;
 	language = make_shared<Language>(alphabet);
 }
+
+/*
+int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
+							  Regex* original) {
+	int cond = 0;
+	if (equal(replacing, *original)) {
+		Regex* temp = new Regex(replaced_by);
+		cond++;
+		if (original->term_p && original->term_p->term_l &&
+			original->term_p->term_l == original) {
+			temp->term_p = original->term_p;
+			original->term_p->term_l = temp;
+		} else {
+			if (original->term_p && original->term_p->term_r &&
+				original->term_p->term_r == original) {
+				temp->term_p = original->term_p;
+				original->term_p->term_r = temp;
+			}
+		}
+		delete original;
+	} else {
+		if (original->term_l) {
+			cond +=
+				search_replace_rec(replacing, replaced_by, original->term_l);
+		}
+		if (original->term_r) {
+			cond +=
+				search_replace_rec(replacing, replaced_by, original->term_r);
+		}
+	}
+	return cond;
+	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
+	//обоняния.
+}
+void Regex::normalize_this_regex(const vector<pair<Regex, Regex>>& rules) {
+	for (int i = 0; i < rules.size(); i++) {
+		int cond = 0;
+		cond += search_replace_rec(rules[i].first, rules[i].second, this);
+		if (cond != 0) {
+			i--;
+		}
+	}
+}*/
 
 void Regex::pre_order_travers() const {
 	if (type == Regex::symb /*&& value.symbol*/) {

@@ -7,7 +7,8 @@
 
 using namespace std;
 
-bool operator==(const Function& l, const Function& r) {
+bool operator==(const Interpreter::Function& l,
+				const Interpreter::Function& r) {
 	return l.name == r.name && l.input == r.input && l.output == r.output;
 }
 
@@ -49,10 +50,10 @@ Interpreter::Interpreter() {
 		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
-		{"Normalize",
+		/*{"Normalize",
 		 {{"Normalize",
-		   {ObjectType::Regex, ObjectType::FileName},
-		   ObjectType::Regex}}},
+		   {ObjectType::Regex, ObjectType::Array},
+		   ObjectType::Regex}}},*/
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
 		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
 		{"Ambiguity",
@@ -177,21 +178,25 @@ Interpreter::InterpreterLogger Interpreter::init_log() {
 	return InterpreterLogger(*this);
 }
 
-GeneralObject Interpreter::apply_function_sequence(
+optional<GeneralObject> Interpreter::apply_function_sequence(
 	const vector<Function>& functions, vector<GeneralObject> arguments) {
 
 	for (const auto& func : functions) {
 		LogTemplate log_template;
-		arguments = {apply_function(func, arguments, log_template)};
+		const auto& f = apply_function(func, arguments, log_template);
+		if (f.has_value()) {
+			arguments = {*f};
+		} else {
+			return nullopt;
+		}
 		tex_logger.add_log(log_template);
 	}
 
 	return arguments[0];
 }
 
-GeneralObject Interpreter::apply_function(
-	const Function& function, const vector<GeneralObject>& arguments,
-	LogTemplate& log_template) {
+optional<GeneralObject> Interpreter::apply_function(
+	const Function& function, const vector<GeneralObject>& arguments, LogTemplate& log_template) {
 
 	auto logger = init_log();
 	logger.log("running function \"" + function.name + "\"");
@@ -430,10 +435,28 @@ GeneralObject Interpreter::apply_function(
 			get_automaton(arguments[0]).merge_bisimilar(&log_template));
 	}
 	if (function.name == "Normalize") {
+		// Преобразуем array в массив пар
+		const auto& arr = get<ObjectArray>(arguments[1]).value;
+		vector<pair<Regex, Regex>> rules;
+		for (const auto& object : arr) {
+			if (holds_alternative<ObjectArray>(object)) {
+				const auto& rule = get<ObjectArray>(object).value;
+				if (rule.size() == 2 &&
+					holds_alternative<ObjectRegex>(rule[0]) &&
+					holds_alternative<ObjectRegex>(rule[1])) {
+					rules.push_back({get<ObjectRegex>(rule[0]).value,
+									 get<ObjectRegex>(rule[1]).value});
+				} else {
+					logger.throw_error("Normalize: invalid inner array");
+					return nullopt;
+				}
+			} else {
+				logger.throw_error("Normalize: invalid array");
+				return nullopt;
+			}
+		}
 		res = ObjectRegex(
-			get<ObjectRegex>(arguments[0])
-				.value.normalize_regex(get<ObjectFileName>(arguments[1]).value,
-									   &log_template));
+			get<ObjectRegex>(arguments[0]).value.normalize_regex(rules, &log_template));
 	}
 	if (function.name == "Disambiguate") {
 		res = ObjectRegex(
@@ -500,7 +523,11 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
 			  (flags_values[Flags::dynamic] &&
 			   argument_type[i] == ObjectType::NFA &&
-			   func_input_type[i] == ObjectType::DFA))) {
+			   func_input_type[i] == ObjectType::DFA) ||
+			  // для верификатора гипотез (на место '*' - ставить Regex)
+			  (flags_values[Flags::verification] &&
+			   argument_type[i] == ObjectType::RandomRegex &&
+			   func_input_type[i] == ObjectType::Regex))) {
 			// несовпадение по типам
 			return false;
 		}
@@ -510,7 +537,7 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 
 optional<int> Interpreter::find_func(string func,
 									 vector<ObjectType> argument_type) {
-	// проходимся по всем вариантам функции
+	// проходимся по всем вариантам сигнатуры функции
 	for (int j = 0; j < names_to_functions[func].size(); j++) {
 		// смотрим что каждый принимает на вход
 		auto func_input_type = names_to_functions[func][j].input;
@@ -520,7 +547,7 @@ optional<int> Interpreter::find_func(string func,
 	return nullopt;
 }
 
-optional<vector<Function>> Interpreter::build_function_sequence(
+optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 	vector<string> function_names, vector<ObjectType> first_type) {
 
 	auto logger = init_log();
@@ -541,7 +568,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 	/* содержит информацию о каждой ф/и в посл-ти:
 	 либо "-1" - ф/я не входит в итоговую посл-ть (не вып-ся, т.к. выполняет
 	 тождественное преобразование)
-	 либо номер вариации ф/и в таблице 'names_to_functions' */
+	 либо номер сигнатуры ф/и в таблице 'names_to_functions' */
 	vector<int> needed_funcs(function_names.size(), 0);
 
 	// устанавливаем тип для 1ой ф/и в посл-ти
@@ -621,12 +648,29 @@ optional<vector<Function>> Interpreter::build_function_sequence(
 }
 
 optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
+	auto logger = init_log();
+	logger.log("Evaluating expression \"" + expr.to_txt() + "\"");
 
+	if (flags_values[Flags::verification] &&
+		expr.type == ObjectType::RandomRegex) {
+		return ObjectRegex(current_random_regex);
+	}
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
 	if (holds_alternative<Regex>(expr.value)) {
 		return ObjectRegex(get<Regex>(expr.value));
+	}
+	if (holds_alternative<Array>(expr.value)) {
+		vector<GeneralObject> arr;
+		for (const auto& e : get<Array>(expr.value)) {
+			if (const auto& object = eval_expression(e); object.has_value()) {
+				arr.push_back(*object);
+			} else {
+				logger.throw_error("invalid array member");
+			}
+		}
+		return ObjectArray(arr);
 	}
 	if (holds_alternative<Id>(expr.value)) {
 		Id id = get<Id>(expr.value);
@@ -642,6 +686,7 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	if (holds_alternative<FunctionSequence>(expr.value)) {
 		return eval_function_sequence(get<FunctionSequence>(expr.value));
 	}
+	logger.throw_error("unknown expression type");
 	return nullopt;
 }
 
@@ -756,6 +801,46 @@ bool Interpreter::run_test(const Test& test) {
 	return success;
 }
 
+bool Interpreter::run_verifier(const Verifier& verifier) {
+	auto logger = init_log();
+	logger.log("");
+	logger.log("Running verifier...");
+	bool success = true;
+	int results = 0;
+	int tests_size = verifier.size;
+	int tests_false_num = min(10, (int)round(verifier.size * 0.1));
+	vector<string> regex_list;
+	RegexGenerator RG; // TODO: менять параметры
+
+	for (int i = 0; i < verifier.size; i++) {
+		// подстановка равных Regex на место '*'
+		current_random_regex =
+			Regex(RG.generate_regex()); // хз как еще передавать
+		auto predicate = eval_expression(verifier.predicate);
+
+		if (predicate.has_value()) {
+			bool res = get<ObjectBoolean>(*predicate).value;
+			results += res;
+			if (!res && tests_false_num > 0) {
+				regex_list.push_back(current_random_regex.to_txt());
+				tests_false_num--;
+			}
+		} else {
+			logger.throw_error("while running verifier: invalid arguments");
+			success = false;
+			break;
+		}
+	}
+
+	logger.log("result: " + to_string(100 * results / tests_size) + "%");
+	logger.log("");
+	logger.log("Tests with negative result:");
+	for (string str: regex_list)
+		logger.log(str);
+
+	return success;
+}
+
 bool Interpreter::set_flag(const Flag& flag) {
 	auto logger = init_log();
 	logger.log("");
@@ -781,8 +866,46 @@ bool Interpreter::run_operation(const GeneralOperation& op) {
 		success = run_test(get<Test>(op));
 	} else if (holds_alternative<Flag>(op)) {
 		success = set_flag(get<Flag>(op));
+	} else if (holds_alternative<Verifier>(op)) {
+		success = run_verifier(get<Verifier>(op));
 	}
 	return success;
+}
+
+string Interpreter::FunctionSequence::to_txt() const {
+	string str = "(";
+	for (int i = 0; i < functions.size(); i++) {
+		str += functions[i].name + (i == functions.size() - 1 ? " " : ".");
+	}
+	for (int i = 0; i < parameters.size(); i++) {
+		str += parameters[i].to_txt() + (i == parameters.size() - 1 ? "" : " ");
+	}
+	str += ")";
+	return str;
+}
+
+string Interpreter::Expression::to_txt() const {
+	if (const auto* pval = get_if<FunctionSequence>(&value)) {
+		return pval->to_txt();
+	}
+	if (const auto* pval = get_if<int>(&value)) {
+		return to_string(*pval);
+	}
+	if (const auto* pval = get_if<Regex>(&value)) {
+		return "{" + pval->to_txt() + "}";
+	}
+	if (const auto* pval = get_if<string>(&value)) {
+		return *pval;
+	}
+	if (const auto* pval = get_if<Array>(&value)) {
+		string str = "[";
+		for (int i = 0; i < pval->size(); i++) {
+			str += (*pval)[i].to_txt() + (i == pval->size() - 1 ? "" : " ");
+		}
+		str += "]";
+		return str;
+	}
+	return "";
 }
 
 int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {
@@ -799,7 +922,7 @@ int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {
 	return pos - 1;
 }
 
-optional<Interpreter::Id> Interpreter::scan_Id(const vector<Lexem>& lexems,
+optional<Interpreter::Id> Interpreter::scan_id(const vector<Lexem>& lexems,
 											   int& pos, size_t end) {
 	if (end > pos && lexems[pos].type == Lexem::name) {
 		pos += 1;
@@ -808,7 +931,7 @@ optional<Interpreter::Id> Interpreter::scan_Id(const vector<Lexem>& lexems,
 	return nullopt;
 }
 
-optional<Regex> Interpreter::scan_Regex(const vector<Lexem>& lexems, int& pos,
+optional<Regex> Interpreter::scan_regex(const vector<Lexem>& lexems, int& pos,
 										size_t end) {
 	if (end > pos && lexems[pos].type == Lexem::regex) {
 		pos += 1;
@@ -817,11 +940,18 @@ optional<Regex> Interpreter::scan_Regex(const vector<Lexem>& lexems, int& pos,
 	return nullopt;
 }
 
-optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
+optional<Interpreter::FunctionSequence> Interpreter::scan_function_sequence(
 	const vector<Lexem>& lexems, int& pos, size_t end) {
 	auto logger = init_log();
 
 	int i = pos;
+
+	// !!
+	bool show_res = false;
+	if (lexems[end - 1].type == Lexem::doubleExclamation) {
+		show_res = true;
+		end--;
+	}
 
 	// Функции
 	// ([функция].)*[функция]?
@@ -846,7 +976,7 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 	vector<ObjectType> argument_types;
 	vector<Expression> arguments;
 	while (i < end && lexems[i].type) {
-		if (const auto& expr = scan_Expression(lexems, i, end);
+		if (const auto& expr = scan_expression(lexems, i, end);
 			expr.has_value()) {
 			argument_types.push_back((*expr).type);
 			arguments.push_back(*expr);
@@ -868,7 +998,8 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 		FunctionSequence seq;
 		seq.functions = *functions;
 		seq.parameters = arguments;
-		pos = i;
+		seq.show_result = show_res;
+		pos = i + show_res;
 		return seq;
 	} else {
 		logger.throw_error("failed to build function sequence");
@@ -877,19 +1008,55 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_FunctionSequence(
 	return nullopt;
 }
 
-optional<Interpreter::Expression> Interpreter::scan_Expression(
+optional<Interpreter::Array> Interpreter::scan_array(
+	const vector<Lexem>& lexems, int& pos, size_t end) {
+	auto logger = init_log();
+
+	int i = pos;
+
+	// Начинается с [
+	if (lexems[i].type == Lexem::bracketL) {
+		i++;
+	} else {
+		return nullopt;
+	}
+
+	Array arr;
+	while (i < end && lexems[i].type != Lexem::bracketR) {
+		if (auto expr = scan_expression(lexems, i, end); expr.has_value()) {
+			arr.push_back(*expr);
+		} else {
+			logger.throw_error("unable to scan expression in array");
+			return nullopt;
+		}
+	}
+
+	// Кончается на ]
+	if (i < end && lexems[i].type == Lexem::bracketR) {
+		i++;
+	} else {
+		logger.throw_error("unable to scan array: \"]\" expected");
+		return nullopt;
+	}
+
+	pos = i;
+
+	return arr;
+}
+
+optional<Interpreter::Expression> Interpreter::scan_expression(
 	const vector<Lexem>& lexems, int& pos, size_t end) {
 	// ( Expr )
 	if (end > pos && lexems[pos].type == Lexem::parL) {
 		end = find_closing_par(lexems, pos);
 		pos++;
-		const auto& expr = scan_Expression(lexems, pos, end);
+		const auto& expr = scan_expression(lexems, pos, end);
 		pos++;
 		return expr;
 	}
+	Expression expr;
 	// Int
 	if (end > pos && lexems[pos].type == Lexem::number) {
-		Expression expr;
 		expr.type = ObjectType::Int;
 		expr.value = lexems[pos].num;
 		pos++;
@@ -897,7 +1064,6 @@ optional<Interpreter::Expression> Interpreter::scan_Expression(
 	}
 	// Regex
 	if (end > pos && lexems[pos].type == Lexem::regex) {
-		Expression expr;
 		expr.type = ObjectType::Regex;
 		expr.value = Regex(lexems[pos].value);
 		pos++;
@@ -906,19 +1072,39 @@ optional<Interpreter::Expression> Interpreter::scan_Expression(
 	// Id
 	if (end > pos && lexems[pos].type == Lexem::name &&
 		id_types.count(lexems[pos].value)) {
-		Expression expr;
 		expr.type = id_types[lexems[pos].value];
 		expr.value = lexems[pos].value;
 		pos++;
 		return expr;
 	}
+	// String
+	if (end > pos && lexems[pos].type == Lexem::stringval) {
+		expr.type = ObjectType::String;
+		expr.value = lexems[pos].value;
+		pos++;
+		return expr;
+	}
+	// Star (RandomRegex)
+	if (end > pos && lexems[pos].type == Lexem::star &&
+		flags_values[Flags::verification]) {
+		expr.type = ObjectType::RandomRegex;
+		pos++;
+		return expr;
+	}
 	// FunctionSequence
 	int i = pos;
-	if (const auto& seq = scan_FunctionSequence(lexems, i, end);
+	if (const auto& seq = scan_function_sequence(lexems, i, end);
 		seq.has_value()) {
-		Expression expr;
 		expr.type = (*seq).functions.back().output;
 		expr.value = *seq;
+		pos = i;
+		return expr;
+	}
+	i = pos;
+	// Array
+	if (const auto& arr = scan_array(lexems, i, end); arr.has_value()) {
+		expr.type = ObjectType::Array;
+		expr.value = *arr;
 		pos = i;
 		return expr;
 	}
@@ -948,23 +1134,13 @@ optional<Interpreter::Declaration> Interpreter::scan_declaration(
 	}
 	i++;
 
-	auto end = lexems.size();
-	if (lexems[end - 1].type == Lexem::doubleExclamation) {
-		end--;
-	}
-
 	// Expression
-	if (const auto& expr = scan_Expression(lexems, i, end); expr.has_value()) {
+	if (const auto& expr = scan_expression(lexems, i, lexems.size());
+		expr.has_value()) {
 		decl.expr = *expr;
 	} else {
 		return nullopt;
 	}
-
-	// (!!)
-	if (i < lexems.size() && lexems[i].type == Lexem::doubleExclamation) {
-		decl.show_result = true;
-	}
-	i++;
 
 	id_types[decl.id] = decl.expr.type;
 
@@ -986,7 +1162,7 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems,
 
 	Test test;
 	// Language
-	if (const auto& expr = scan_Expression(lexems, i, lexems.size());
+	if (const auto& expr = scan_expression(lexems, i, lexems.size());
 		expr.has_value() &&
 		((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
 		 (*expr).type == ObjectType::NFA)) {
@@ -998,7 +1174,7 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems,
 	}
 
 	// Test set
-	if (const auto& expr = scan_Expression(lexems, i, lexems.size());
+	if (const auto& expr = scan_expression(lexems, i, lexems.size());
 		expr.has_value() && (*expr).type == ObjectType::Regex) {
 		test.test_set = *expr;
 	} else {
@@ -1025,7 +1201,7 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 	int i = pos;
 	Predicate pred;
 
-	if (auto seq = scan_FunctionSequence(lexems, pos, lexems.size());
+	if (auto seq = scan_function_sequence(lexems, pos, lexems.size());
 		seq.has_value() && (*seq).functions.size() == 1 &&
 		((*seq).functions[0].output == ObjectType::Boolean ||
 		 (*seq).functions[0].output == ObjectType::OptionalBool)) {
@@ -1073,6 +1249,45 @@ optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 	return flag;
 }
 
+optional<Interpreter::Verifier> Interpreter::scan_verifier(
+	const vector<Lexem>& lexems, int& pos) {
+
+	auto logger = init_log();
+	int i = pos;
+
+	if (lexems.size() < i + 1 || lexems[i].type != Lexem::name ||
+		lexems[i].value != "Verify") {
+		return nullopt;
+	}
+	i++;
+
+	Verifier verifier;
+	flags_values[Flags::verification] = true;
+	// Predicate
+	if (const auto& expr = scan_expression(lexems, i, lexems.size());
+		expr.has_value() && ((*expr).type == ObjectType::Boolean ||
+							 (*expr).type == ObjectType::Boolean)) {
+		verifier.predicate = *expr;
+	} else {
+		logger.throw_error(
+			"Scan verifier: wrong type at position 1, predicate expected");
+		return nullopt;
+	}
+	// tests size
+	if (lexems.size() > i)
+		if (lexems[i].type == Lexem::number) {
+			verifier.size = lexems[i].num;
+		} else {
+			logger.throw_error(
+				"Scan verifier: wrong type at position 2, number expected");
+			return nullopt;
+		}
+	i++;
+
+	pos = i;
+	return verifier;
+}
+
 optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	const vector<Lexem>& lexems) {
 
@@ -1086,6 +1301,10 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	if (auto flag = scan_flag(lexems, pos); flag.has_value()) {
 		return flag;
 	}
+	if (auto verifier = scan_verifier(lexems, pos); verifier.has_value()) {
+		return verifier;
+	}
+	flags_values[Flags::verification] = false;
 	if (auto declaration = scan_declaration(lexems, pos);
 		declaration.has_value()) {
 		return declaration;
