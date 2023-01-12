@@ -1,4 +1,5 @@
 #pragma once
+#include "InputGenerator/RegexGenerator.h"
 #include "Interpreter/Typization.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
@@ -123,6 +124,17 @@ class Interpreter {
 		int iterations = 1;
 	};
 
+	// Специальная форма Verify
+	struct Verifier {
+		// Аргументы:
+		// Предикат
+		Expression predicate;
+		// натуральное число — размер тестов.
+		int size = 20;
+		// Regex random_regex;
+	};
+	Regex current_random_regex;
+
 	// Предикат [предикат] [объект]+
 	struct Predicate {
 		// Функция (предикат)
@@ -142,7 +154,8 @@ class Interpreter {
 	enum class Flags {
 		trim,
 		dynamic,
-		theory
+		theory,
+		verification
 	};
 
 	map<string, Flags> flags_names = {
@@ -163,10 +176,13 @@ class Interpreter {
 		{Flags::dynamic, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
 		{Flags::theory, false},
+		// флаг контекста верификатора гипотез
+		{Flags::verification, false},
 	};
 
 	// Общий вид опрерации
-	using GeneralOperation = variant<Declaration, Test, Predicate, Flag>;
+	using GeneralOperation =
+		variant<Declaration, Test, Predicate, Flag, Verifier>;
 
 	//== Парсинг ==============================================================
 
@@ -188,6 +204,7 @@ class Interpreter {
 	// Считывание операции из набора лексем
 	optional<Declaration> scan_declaration(const vector<Lexem>&, int& pos);
 	optional<Test> scan_test(const vector<Lexem>&, int& pos);
+	optional<Verifier> scan_verifier(const vector<Lexem>&, int& pos);
 	optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);
 	optional<Flag> scan_flag(const vector<Lexem>&, int& pos);
 	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
@@ -212,6 +229,7 @@ class Interpreter {
 	bool run_declaration(const Declaration&);
 	bool run_predicate(const Predicate&);
 	bool run_test(const Test&);
+	bool run_verifier(const Verifier&);
 	bool set_flag(const Flag&);
 	bool run_operation(const GeneralOperation&);
 
@@ -237,6 +255,7 @@ class Interpreter {
 		enum Type { // TODO добавить тип строки (для filename)
 			error,
 			equalSign,
+			star,
 			doubleExclamation,
 			parL,
 			parR,
@@ -296,6 +315,7 @@ class Interpreter {
 		string scan_until(char symbol);
 
 		Lexem scan_equalSign();
+		Lexem scan_star();
 		Lexem scan_doubleExclamation();
 		Lexem scan_parL();
 		Lexem scan_parR();

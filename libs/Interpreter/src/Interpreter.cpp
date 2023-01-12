@@ -487,7 +487,11 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
 			  (flags_values[Flags::dynamic] &&
 			   argument_type[i] == ObjectType::NFA &&
-			   func_input_type[i] == ObjectType::DFA))) {
+			   func_input_type[i] == ObjectType::DFA) ||
+			  // для верификатора гипотез (на место '*' - ставить Regex)
+			  (flags_values[Flags::verification] &&
+			   argument_type[i] == ObjectType::RandomRegex &&
+			   func_input_type[i] == ObjectType::Regex))) {
 			// несовпадение по типам
 			return false;
 		}
@@ -497,7 +501,7 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 
 optional<int> Interpreter::find_func(string func,
 									 vector<ObjectType> argument_type) {
-	// проходимся по всем вариантам функции
+	// проходимся по всем вариантам сигнатуры функции
 	for (int j = 0; j < names_to_functions[func].size(); j++) {
 		// смотрим что каждый принимает на вход
 		auto func_input_type = names_to_functions[func][j].input;
@@ -528,7 +532,7 @@ optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 	/* содержит информацию о каждой ф/и в посл-ти:
 	 либо "-1" - ф/я не входит в итоговую посл-ть (не вып-ся, т.к. выполняет
 	 тождественное преобразование)
-	 либо номер вариации ф/и в таблице 'names_to_functions' */
+	 либо номер сигнатуры ф/и в таблице 'names_to_functions' */
 	vector<int> needed_funcs(function_names.size(), 0);
 
 	// устанавливаем тип для 1ой ф/и в посл-ти
@@ -611,6 +615,10 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	auto logger = init_log();
 	logger.log("Evaluating expression \"" + expr.to_txt() + "\"");
 
+	if (flags_values[Flags::verification] &&
+		expr.type == ObjectType::RandomRegex) {
+		return ObjectRegex(current_random_regex);
+	}
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
@@ -751,6 +759,29 @@ bool Interpreter::run_test(const Test& test) {
 	return success;
 }
 
+bool Interpreter::run_verifier(const Verifier& verifier) {
+	auto logger = init_log();
+	logger.log("");
+	logger.log("Running verifier...");
+	bool success = true;
+	RegexGenerator RG; // TODO: менять параметры
+
+	for (int i = 0; i < verifier.size; i++) {
+		// подстановка равных Regex на место '*'
+		current_random_regex = Regex(RG.generate_regex()); // хз как еще передавать
+		auto predicate = eval_expression(verifier.predicate);
+
+		if (predicate.has_value()) {
+			/* тут считать кол-во true / false */
+		} else {
+			logger.throw_error("while running verifier: invalid arguments");
+			success = false;
+			break;
+		}
+	}
+	return success;
+}
+
 bool Interpreter::set_flag(const Flag& flag) {
 	auto logger = init_log();
 	logger.log("");
@@ -776,6 +807,8 @@ bool Interpreter::run_operation(const GeneralOperation& op) {
 		success = run_test(get<Test>(op));
 	} else if (holds_alternative<Flag>(op)) {
 		success = set_flag(get<Flag>(op));
+	} else if (holds_alternative<Verifier>(op)) {
+		success = run_verifier(get<Verifier>(op));
 	}
 	return success;
 }
@@ -962,9 +995,9 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 		pos++;
 		return expr;
 	}
+	Expression expr;
 	// Int
 	if (end > pos && lexems[pos].type == Lexem::number) {
-		Expression expr;
 		expr.type = ObjectType::Int;
 		expr.value = lexems[pos].num;
 		pos++;
@@ -972,7 +1005,6 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	}
 	// Regex
 	if (end > pos && lexems[pos].type == Lexem::regex) {
-		Expression expr;
 		expr.type = ObjectType::Regex;
 		expr.value = Regex(lexems[pos].value);
 		pos++;
@@ -981,7 +1013,6 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	// Id
 	if (end > pos && lexems[pos].type == Lexem::name &&
 		id_types.count(lexems[pos].value)) {
-		Expression expr;
 		expr.type = id_types[lexems[pos].value];
 		expr.value = lexems[pos].value;
 		pos++;
@@ -989,9 +1020,15 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	}
 	// String
 	if (end > pos && lexems[pos].type == Lexem::stringval) {
-		Expression expr;
 		expr.type = ObjectType::String;
 		expr.value = lexems[pos].value;
+		pos++;
+		return expr;
+	}
+	// Star (RandomRegex)
+	if (end > pos && lexems[pos].type == Lexem::star &&
+		flags_values[Flags::verification]) {
+		expr.type = ObjectType::RandomRegex;
 		pos++;
 		return expr;
 	}
@@ -999,7 +1036,6 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	int i = pos;
 	if (const auto& seq = scan_function_sequence(lexems, i, end);
 		seq.has_value()) {
-		Expression expr;
 		expr.type = (*seq).functions.back().output;
 		expr.value = *seq;
 		pos = i;
@@ -1008,7 +1044,6 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	i = pos;
 	// Array
 	if (const auto& arr = scan_array(lexems, i, end); arr.has_value()) {
-		Expression expr;
 		expr.type = ObjectType::Array;
 		expr.value = *arr;
 		pos = i;
@@ -1155,6 +1190,45 @@ optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 	return flag;
 }
 
+optional<Interpreter::Verifier> Interpreter::scan_verifier(
+	const vector<Lexem>& lexems, int& pos) {
+
+	auto logger = init_log();
+	int i = pos;
+
+	if (lexems.size() < i + 1 || lexems[i].type != Lexem::name ||
+		lexems[i].value != "Verify") {
+		return nullopt;
+	}
+	i++;
+
+	Verifier verifier;
+	flags_values[Flags::verification] = true;
+	// Predicate
+	if (const auto& expr = scan_expression(lexems, i, lexems.size());
+		expr.has_value() && ((*expr).type == ObjectType::Boolean ||
+							 (*expr).type == ObjectType::Boolean)) {
+		verifier.predicate = *expr;
+	} else {
+		logger.throw_error(
+			"Scan verifier: wrong type at position 1, predicate expected");
+		return nullopt;
+	}
+	// tests size
+	if (lexems.size() > i)
+		if (lexems[i].type == Lexem::number) {
+			verifier.size = lexems[i].num;
+		} else {
+			logger.throw_error(
+				"Scan verifier: wrong type at position 2, number expected");
+			return nullopt;
+		}
+	i++;
+
+	pos = i;
+	return verifier;
+}
+
 optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	const vector<Lexem>& lexems) {
 
@@ -1168,6 +1242,10 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	if (auto flag = scan_flag(lexems, pos); flag.has_value()) {
 		return flag;
 	}
+	if (auto verifier = scan_verifier(lexems, pos); verifier.has_value()) {
+		return verifier;
+	}
+	flags_values[Flags::verification] = false;
 	if (auto declaration = scan_declaration(lexems, pos);
 		declaration.has_value()) {
 		return declaration;

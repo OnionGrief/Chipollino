@@ -13,12 +13,13 @@ namespace Typization {
 
 // Перечисление типов объектов
 enum class ObjectType {
-	NFA,			// недетерминированный КА
-	DFA,			// детерминированный КА
-	Regex,			// регулярное выражение
-	Int,			// целое число
-	String,			// имя файла для чтения
-	Boolean,		// true/false
+	NFA,		 // недетерминированный КА
+	DFA,		 // детерминированный КА
+	Regex,		 // регулярное выражение
+	RandomRegex, // место для подстановки сгенерированнах регулярных выражений
+	Int,		 // целое число
+	String,		 // имя файла для чтения
+	Boolean,	 // true/false
 	OptionalBool,	// optional<bool>
 	AmbiguityValue, // yes/no/ы/ь
 	PrefixGrammar,	// префиксная грамматика
