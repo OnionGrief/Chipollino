@@ -2,8 +2,6 @@
 #include "Interpreter/Interpreter.h"
 #include "Tester/Tester.h"
 #include <algorithm>
-#include <map>
-#include <string>
 
 using namespace std;
 
@@ -196,7 +194,8 @@ optional<GeneralObject> Interpreter::apply_function_sequence(
 }
 
 optional<GeneralObject> Interpreter::apply_function(
-	const Function& function, const vector<GeneralObject>& arguments, LogTemplate& log_template) {
+	const Function& function, const vector<GeneralObject>& arguments,
+	LogTemplate& log_template) {
 
 	auto logger = init_log();
 	logger.log("running function \"" + function.name + "\"");
@@ -455,8 +454,8 @@ optional<GeneralObject> Interpreter::apply_function(
 				return nullopt;
 			}
 		}
-		res = ObjectRegex(
-			get<ObjectRegex>(arguments[0]).value.normalize_regex(rules, &log_template));
+		res = ObjectRegex(get<ObjectRegex>(arguments[0])
+							  .value.normalize_regex(rules, &log_template));
 	}
 	if (function.name == "Disambiguate") {
 		res = ObjectRegex(
@@ -717,12 +716,12 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running declaration...");
-	if (decl.show_result) {
+	/*if (decl.show_result) {
 		// Logger::activate();
 		logger.log("logger is activated for this task");
 	} else {
 		// Logger::deactivate();
-	}
+	}*/
 	if (const auto& expr = eval_expression(decl.expr); expr.has_value()) {
 		objects[decl.id] = *expr;
 	} else {
@@ -835,7 +834,7 @@ bool Interpreter::run_verifier(const Verifier& verifier) {
 	logger.log("result: " + to_string(100 * results / tests_size) + "%");
 	logger.log("");
 	logger.log("Tests with negative result:");
-	for (string str: regex_list)
+	for (string str : regex_list)
 		logger.log(str);
 
 	return success;

@@ -35,6 +35,8 @@ class Interpreter {
   private:
 	// Логгер для преобразований
 	Logger tex_logger;
+	// автогенерация кратких шаблонов
+	void generate_brief_templates();
 
 	//== Внутреннее логгирование ==============================================
 	// true, если во время исполнения произошла ошибка
@@ -224,7 +226,8 @@ class Interpreter {
 
 	// Применение функции к набору аргументов
 	optional<GeneralObject> apply_function(
-		const Function& function, const vector<GeneralObject>& arguments);
+		const Function& function, const vector<GeneralObject>& arguments,
+		LogTemplate& log_template);
 
 	// Вычисление выражения
 	optional<GeneralObject> eval_expression(const Expression& expr);
@@ -239,15 +242,6 @@ class Interpreter {
 	bool run_verifier(const Verifier&);
 	bool set_flag(const Flag&);
 	bool run_operation(const GeneralOperation&);
-
-	// Применение цепочки функций к набору аргументов
-	GeneralObject apply_function_sequence(const vector<Function>& functions,
-										  vector<GeneralObject> arguments);
-
-	// Применение функции к набору аргументов
-	GeneralObject apply_function(const Function& function,
-								 const vector<GeneralObject>& arguments,
-								 LogTemplate& log_template);
 
 	// Список опреаций для последовательного выполнения
 	// vector<GeneralOperation> operations;
