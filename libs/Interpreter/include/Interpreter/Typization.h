@@ -55,7 +55,7 @@ using GeneralObject =
 			ObjectPrefixGrammar, ObjectArray>;
 
 #define OBJECT_DEFINITION(type, value)                                         \
-	struct Object##type : public ObjectHolder<ObjectType::##type, ##value> {   \
+	struct Object##type : public ObjectHolder<ObjectType::type, value> {       \
 		using ObjectHolder::ObjectHolder;                                      \
 	};
 

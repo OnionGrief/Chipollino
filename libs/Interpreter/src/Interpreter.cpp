@@ -1,4 +1,3 @@
-#pragma once
 #include "Interpreter/Interpreter.h"
 #include "Tester/Tester.h"
 #include <algorithm>
