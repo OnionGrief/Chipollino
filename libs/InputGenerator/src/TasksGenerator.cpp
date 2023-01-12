@@ -179,7 +179,8 @@ string TasksGenerator::generate_declaration() {
 						Id rand_id = possible_ids[rand() % possible_ids.size()];
 						func_str += " N" + to_string(rand_id.num);
 					} else {
-						func_str += " " + regex_generator.generate_framed_regex();
+						func_str +=
+							" " + regex_generator.generate_framed_regex();
 					}
 				}
 

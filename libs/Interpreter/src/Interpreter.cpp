@@ -49,10 +49,10 @@ Interpreter::Interpreter() {
 		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
 		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
-		/*{"Normalize",
+		{"Normalize",
 		 {{"Normalize",
 		   {ObjectType::Regex, ObjectType::Array},
-		   ObjectType::Regex}}},*/
+		   ObjectType::Regex}}},
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
 		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
 		{"Ambiguity",
