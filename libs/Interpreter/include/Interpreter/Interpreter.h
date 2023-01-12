@@ -4,6 +4,7 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
+#include <cmath>
 #include <deque>
 #include <fstream>
 #include <map>

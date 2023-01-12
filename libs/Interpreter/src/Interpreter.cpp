@@ -764,21 +764,38 @@ bool Interpreter::run_verifier(const Verifier& verifier) {
 	logger.log("");
 	logger.log("Running verifier...");
 	bool success = true;
+	int results = 0;
+	int tests_size = verifier.size;
+	int tests_false_num = min(10, (int)round(verifier.size * 0.1));
+	vector<string> regex_list;
 	RegexGenerator RG; // TODO: менять параметры
 
 	for (int i = 0; i < verifier.size; i++) {
 		// подстановка равных Regex на место '*'
-		current_random_regex = Regex(RG.generate_regex()); // хз как еще передавать
+		current_random_regex =
+			Regex(RG.generate_regex()); // хз как еще передавать
 		auto predicate = eval_expression(verifier.predicate);
 
 		if (predicate.has_value()) {
-			/* тут считать кол-во true / false */
+			bool res = get<ObjectBoolean>(*predicate).value;
+			results += res;
+			if (!res && tests_false_num > 0) {
+				regex_list.push_back(current_random_regex.to_txt());
+				tests_false_num--;
+			}
 		} else {
 			logger.throw_error("while running verifier: invalid arguments");
 			success = false;
 			break;
 		}
 	}
+
+	logger.log("result: " + to_string(100 * results / tests_size) + "%");
+	logger.log("");
+	logger.log("Tests with negative result:");
+	for (string str: regex_list)
+		logger.log(str);
+
 	return success;
 }
 
