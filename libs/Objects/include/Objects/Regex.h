@@ -87,6 +87,9 @@ class Regex : BaseObject {
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
 	static bool equality_checker(const Regex*, const Regex*);
+	/*void normalize_this_regex(
+		const vector<pair<Regex, Regex>>&); //переписывание regex по
+											//пользовательским правилам*/
 
 	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
@@ -119,7 +122,7 @@ class Regex : BaseObject {
 	// Генерация языка из алфавита
 	void make_language();
 	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const string& file) const;
+	Regex normalize_regex(const vector<pair<Regex, Regex>>&) const;
 	bool from_string(const string&);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);

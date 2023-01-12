@@ -363,10 +363,12 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 	language = new_language;
 }
 
-Regex Regex::normalize_regex(const string& file) const {
+Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 	Logger::init_step("Normalize");
 	Regex regex = *this;
 	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
+	regex.normalize_this_regex(rules);
+	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
 	Logger::finish_step();
 	return regex;
 }
@@ -486,6 +488,10 @@ void Regex::make_language() {
 void Regex::set_language(const set<alphabet_symbol>& _alphabet) {
 	alphabet = _alphabet;
 	language = make_shared<Language>(alphabet);
+}
+
+void Regex::normalize_this_regex(const vector<pair<Regex, Regex>>& rules) {
+	
 }
 
 void Regex::pre_order_travers() const {
