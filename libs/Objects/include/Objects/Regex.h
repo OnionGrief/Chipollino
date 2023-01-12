@@ -33,7 +33,8 @@ class Regex : BaseObject {
 		Type type = error;
 		alphabet_symbol symbol = "";
 		int number = 0;
-		Lexem(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
+		Lexem(Type type = error, const alphabet_symbol& symbol = "",
+			  int number = 0);
 	};
 
 	enum Type {
@@ -87,14 +88,14 @@ class Regex : BaseObject {
 		const; // возвращает true, если состояние конечно
 	static bool equality_checker(const Regex*, const Regex*);
 
-/*
+	/*
 	int search_replace_rec(
 		const Regex& replacing, const Regex& replaced_by,
 		Regex* original); //рекурсивный поиск заменяемого листа дерева
 	void normalize_this_regex(
-		const vector<pair<Regex, Regex>>&); //переписывание regex по
-											//пользовательским правилам
-*/
+			const vector<pair<Regex, Regex>>&); //переписывание regex по
+												//пользовательским правилам
+	*/
 
 	string to_str_log() const;
 
@@ -130,7 +131,7 @@ class Regex : BaseObject {
 	void make_language();
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const vector<pair<Regex, Regex>>&) const;
-	bool from_string(const string&); 
+	bool from_string(const string&);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);
 	// проверка регулярок на эквивалентность

@@ -367,6 +367,7 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 	Logger::init_step("Normalize");
 	Regex regex = *this;
 	// regex.normalize_this_regex(rules);
+	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
 	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
 	Logger::finish_step();
 	return regex;

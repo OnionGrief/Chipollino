@@ -16,7 +16,7 @@ enum class ObjectType {
 	NFA,		 // недетерминированный КА
 	DFA,		 // детерминированный КА
 	Regex,		 // регулярное выражение
-	RandomRegex, // место для подстановки сгенерированнах регулярных выражений
+	RandomRegex, // место для подстановки сгенерированных регулярных выражений
 	Int,		 // целое число
 	String,		 // имя файла для чтения
 	Boolean,	 // true/false
@@ -56,7 +56,7 @@ using GeneralObject =
 			ObjectPrefixGrammar, ObjectArray>;
 
 #define OBJECT_DEFINITION(type, value)                                         \
-	struct Object##type : public ObjectHolder<ObjectType::##type, ##value> {   \
+	struct Object##type : public ObjectHolder<ObjectType::type, value> {       \
 		using ObjectHolder::ObjectHolder;                                      \
 	};
 
