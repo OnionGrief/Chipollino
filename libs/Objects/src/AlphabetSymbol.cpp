@@ -46,8 +46,12 @@ bool alphabet_symbol::operator<(const alphabet_symbol& other) const {
 	return value < other.value;
 }
 
-alphabet_symbol alphabet_symbol::operator+(const alphabet_symbol& b) const {
-	return value + b.value;
+alphabet_symbol alphabet_symbol::operator+(const alphabet_symbol& other) const {
+	return value + other.value;
+}
+
+alphabet_symbol alphabet_symbol::operator+(const string& s) const {
+	return value + s;
 }
 
 bool alphabet_symbol::is_epsilon() const {
@@ -65,6 +69,13 @@ alphabet_symbol alphabet_symbol::remove_numbers() {
 		str_without_numbers += c;
 	}
 	return str_without_numbers;
+}
+
+string alphabet_symbol::vector_to_str(const vector<alphabet_symbol>& in) {
+	string out = "";
+	for (const auto& i : in)
+		out += i.value;
+	return out;
 }
 
 int alphabet_symbol::size() const {

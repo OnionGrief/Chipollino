@@ -14,6 +14,9 @@ using namespace std;
 
 class Regex;
 class Language;
+class Grammar;
+class TransformationMonoid;
+
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
@@ -25,7 +28,7 @@ struct State {
 	State();
 	State(int index, set<int> label, string identifier, bool is_terminal,
 		  map<alphabet_symbol, set<int>> transitions);
-	void set_transition(int, alphabet_symbol);
+	void set_transition(int, const alphabet_symbol&);
 };
 
 class FiniteAutomaton : public BaseObject {
@@ -41,6 +44,12 @@ class FiniteAutomaton : public BaseObject {
 	int initial_state = 0;
 	vector<State> states;
 
+	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
+	// преобразованиях всегда удаляем в конце ловушки.
+	// Если isTrim = false, тогда после удаления ловушки в результате
+	// преобразований добавляем её обратно
+	bool is_trim = true;
+
 	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
 	bool parsing_nfa_for(const string&) const;
 
@@ -53,7 +62,11 @@ class FiniteAutomaton : public BaseObject {
 								 const FiniteAutomaton& fa2);
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
 									 const FiniteAutomaton& fa2);
-	AmbiguityValue get_ambiguity_value() const;
+	// принимает в качетве лимита максимальное количество цифр в
+	// числителе + знаменателе дроби, которая может встретиться при вычислениях
+	AmbiguityValue get_ambiguity_value(int digits_number_limit,
+									   optional<int>& word_length) const;
+	optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
 	std::optional<std::string> get_prefix(int state_beg, int state_end,
@@ -117,7 +130,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&);
 	// проверка автомата на детерминированность
-	bool is_deterministic();
+	bool is_deterministic() const;
 	// проверка НКА на семантический детерминизм
 	bool semdet() const;
 	// проверяет, распознаёт ли автомат слово
@@ -125,16 +138,28 @@ class FiniteAutomaton : public BaseObject {
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&) const; // TODO
 											   // и тд
-	//начальное состояние
+	// начальное состояние
 	int get_initial();
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity() const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
-	bool is_one_unambiguous();
+	bool is_one_unambiguous() const;
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
 	// метод Arden
 	Regex to_regex() const;
+	// возвращает число диагональных классов по методу Глейстера-Шаллита
+	int get_classes_number_GlaisterShallit() const;
+	// построение синтаксического моноида по автомату
+	TransformationMonoid get_syntactic_monoid() const;
+	// проверка на минимальность для нка
+	optional<bool> is_nfa_minimal() const;
+	// проверка на минимальность для дка
+	bool is_dfa_minimal() const;
+	// установить  флаг is_trim
+	void set_trim_flag(bool trim_global);
+
 	friend class Regex;
 	friend class TransformationMonoid;
+	friend class Grammar;
 };

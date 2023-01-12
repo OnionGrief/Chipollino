@@ -1,5 +1,6 @@
 #pragma once
 #include "Objects/FiniteAutomaton.h"
+#include "Objects/Grammar.h"
 #include "Objects/Regex.h"
 #include <deque>
 #include <map>
@@ -12,14 +13,16 @@ namespace Typization {
 
 // Перечисление типов объектов
 enum class ObjectType {
-	NFA,	 // недетерминированный КА
-	DFA,	 // детерминированный КА
-	Regex,	 // регулярное выражение
-	Int,	 // целое число
-	String,	 // имя файла для чтения
-	Boolean, // true/false
-	Value,	 // yes/no/ы
-	Array	 // массив
+	NFA,			// недетерминированный КА
+	DFA,			// детерминированный КА
+	Regex,			// регулярное выражение
+	Int,			// целое число
+	String,			// имя файла для чтения
+	Boolean,		// true/false
+	OptionalBool,	// optional<bool>
+	AmbiguityValue, // yes/no/ы/ь
+	PrefixGrammar,	// префиксная грамматика
+	Array			// массив
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -40,13 +43,16 @@ struct ObjectRegex;
 struct ObjectInt;
 struct ObjectString;
 struct ObjectBoolean;
-struct ObjectValue;
+struct ObjectOptionalBool;
+struct ObjectAmbiguityValue;
+struct ObjectPrefixGrammar;
 struct ObjectArray;
 
 // Универсальный объект
 using GeneralObject =
 	variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString,
-			ObjectBoolean, ObjectValue, ObjectArray>;
+			ObjectBoolean, ObjectOptionalBool, ObjectAmbiguityValue,
+			ObjectPrefixGrammar, ObjectArray>;
 
 #define OBJECT_DEFINITION(type, value)                                         \
 	struct Object##type : public ObjectHolder<ObjectType::##type, ##value> {   \
@@ -60,7 +66,9 @@ OBJECT_DEFINITION(Regex, Regex)
 OBJECT_DEFINITION(Int, int)
 OBJECT_DEFINITION(String, string)
 OBJECT_DEFINITION(Boolean, bool)
-OBJECT_DEFINITION(Value, optional<bool>)
+OBJECT_DEFINITION(OptionalBool, optional<bool>)
+OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
+OBJECT_DEFINITION(PrefixGrammar, Grammar)
 OBJECT_DEFINITION(Array, vector<GeneralObject>)
 }; // namespace Typization
 

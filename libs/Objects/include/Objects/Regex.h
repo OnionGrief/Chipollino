@@ -33,7 +33,7 @@ class Regex : BaseObject {
 		Type type = error;
 		alphabet_symbol symbol = "";
 		int number = 0;
-		Lexem(Type type = error, alphabet_symbol symbol = "", int number = 0);
+		Lexem(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
 	};
 
 	enum Type {
@@ -50,7 +50,6 @@ class Regex : BaseObject {
 	set<alphabet_symbol> alphabet;
 	Type type;
 	Lexem value;
-	Regex* term_p = nullptr;
 	Regex* term_l = nullptr;
 	Regex* term_r = nullptr;
 	// Turns string into lexem vector
@@ -87,9 +86,6 @@ class Regex : BaseObject {
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
 	static bool equality_checker(const Regex*, const Regex*);
-	int search_replace_rec(
-		const Regex& replacing, const Regex& replaced_by,
-		Regex* original); //рекурсивный поиск заменяемого листа дерева
 	void normalize_this_regex(
 		const vector<pair<Regex, Regex>>&); //переписывание regex по
 											//пользовательским правилам
@@ -105,7 +101,8 @@ class Regex : BaseObject {
 
   public:
 	Regex();
-	Regex(string);
+	Regex(const string&);
+	Regex(const string&, const shared_ptr<Language>&);
 	string to_txt() const override;
 	// вывод дерева для дебага
 	void print_tree();
@@ -126,7 +123,7 @@ class Regex : BaseObject {
 	void make_language();
 	// Переписывание regex по пользовательским правилам
 	Regex normalize_regex(const vector<pair<Regex, Regex>>&) const;
-	bool from_string(string);
+	bool from_string(const string&);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);
 	// проверка регулярок на эквивалентность
@@ -153,6 +150,11 @@ class Regex : BaseObject {
 	Regex linearize() const;
 	Regex delinearize() const;
 	Regex deannote() const;
+
+	// проверка регулярки на 1-однозначность
+	bool is_one_unambiguous() const;
+	// извлечение 1-однозначной регулярки методом орбит Брюггеман-Вуда
+	Regex get_one_unambiguous_regex() const;
 };
 
 /*

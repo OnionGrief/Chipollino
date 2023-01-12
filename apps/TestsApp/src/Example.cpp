@@ -206,14 +206,32 @@ void Example::parsing_regex(string str) {
 }
 
 void Example::transformation_monoid_example() {
-	FiniteAutomaton fa = Regex("ababa").to_tompson();
-	TransformationMonoid a(fa);
-	a.get_equalence_classes_txt();
-	a.get_rewriting_rules_txt();
+	FiniteAutomaton fa = Regex("(ba)*bc").to_ilieyu();
+	vector<State> states1;
+	for (int i = 0; i < 3; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	// states1[0].set_transition(0, "b");
+	states1[0].set_transition(1, "a");
+	states1[1].set_transition(0, "b");
+	states1[0].set_transition(1, "c");
+	states1[1].set_transition(2, "c");
+	states1[2].is_terminal = true;
+	// states1[2].set_transition(2, "a");
+	// states1[2].set_transition(2, "b");
+	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b", "c"});
+	cout << "-----\n";
+	cout << dfa1.to_txt();
+	cout << "-----\n";
+	TransformationMonoid a(dfa1);
+	cout << a.get_equalence_classes_txt() << endl;
+	cout << a.get_rewriting_rules_txt() << endl;
 	a.class_card();
 	a.class_length();
 	a.is_minimal();
-	a.classes_number_MyhillNerode();
+	a.get_classes_number_MyhillNerode();
 }
 
 void Example::fa_subset_check() {
@@ -478,6 +496,14 @@ void Example::fa_semdet_check() {
 	cout << "Semdet?: " << sdet << "\n";
 }
 
+void Example::classes_number_GlaisterShallit() {
+	Regex r("abc");
+	r.pump_length();
+	FiniteAutomaton fa = r.to_glushkov();
+	cout << fa.get_classes_number_GlaisterShallit() << endl;
+	fa.is_nfa_minimal();
+}
+
 void Example::all_examples() {
 	// determinize();
 	// remove_eps();
@@ -499,23 +525,82 @@ void Example::all_examples() {
 	//  step_interection();
 	//  table();
 	fa_semdet_check();
+	fa_to_pgrammar();
 	Regex("abaa").pump_length();
+	get_one_unambiguous_regex();
 	cout << "all the examlples are successful" << endl;
 }
+
+void Example::get_one_unambiguous_regex() {
+	Regex r1("(a|b)*a");
+	Regex r2("(a|b)*(ac|bd)");
+	Regex r3("(a|b)*a(a|b)");
+	Regex r4("(c(a|b)*c)*");
+	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
+
+	// ok
+	cout << r1.get_one_unambiguous_regex().to_txt() << endl;
+	// doesn't fulfills the orbit property
+	cout << r2.get_one_unambiguous_regex().to_txt() << endl;
+	// consists of a single orbit, but neither a nor b is consistent
+	cout << r3.get_one_unambiguous_regex().to_txt() << endl;
+	// ok
+	cout << r4.get_one_unambiguous_regex().to_txt() << endl;
+	// doesn't fulfills the orbit property
+	cout << r5.get_one_unambiguous_regex().to_txt() << endl;
+}
+
+void Example::testing_with_generator(
+	int regex_length, int star_num, int star_nesting, int alphabet_size,
+	const function<void(string&)>& check_function) {
+	RegexGenerator RG(regex_length, star_num, star_nesting, alphabet_size);
+	for (int i = 0; i < 100; i++) {
+		string s = RG.generate_regex();
+		s.erase(s.size() - 1);
+		s.erase(0, 1);
+		cout << "> " << i << endl;
+		check_function(s);
+	}
+}
+
+void Example::arden_lemma_testing() {
+	testing_with_generator(3, 3, 3, 3, [](string& s) {
+		Regex r1(s);
+		cout << s << endl;
+		FiniteAutomaton fa1 = Regex(s).to_glushkov();
+		cout << fa1.states_number() << endl;
+		int a1 = fa1.ambiguity();
+		cout << "A " << a1 << endl;
+
+		Regex r2 = fa1.to_regex();
+		cout << r2.to_txt() << endl;
+		FiniteAutomaton fa2 = r2.to_glushkov();
+		cout << fa2.states_number() << endl;
+		int a2 = fa2.ambiguity();
+		cout << "A " << a2 << endl;
+
+		cout << "Eq " << Regex::equivalent(r1, r2) << endl;
+		assert(a1 == a2);
+	});
+}
+
 // TEST
 
 void Example::test_all() {
 	test_fa_equal();
 	test_fa_equiv();
 	test_bisimilar();
-	test_merge_bisimilar();
 	test_regex_subset();
+	test_merge_bisimilar();
 	test_regex_equal();
 	test_ambiguity();
 	test_arden();
 	test_pump_length();
 	test_is_one_unambiguous();
 	test_interpreter();
+	test_TransformationMonoid();
+	test_GlaisterShallit();
+	test_fa_to_pgrammar();
 	cout << "all tests passed\n\n";
 }
 
@@ -706,19 +791,65 @@ void Example::test_regex_equal() {
 }
 
 void Example::test_ambiguity() {
-	FiniteAutomaton fa1 = Regex("(a*)*").to_tompson();
-	FiniteAutomaton fa2 = Regex("b|a|aa").to_tompson();
-	FiniteAutomaton fa3 = Regex("abc").to_tompson();
-	FiniteAutomaton fa4 = Regex("b|a").to_tompson();
-	FiniteAutomaton fa5 = Regex("(aa|aa)*").to_glushkov();
-	FiniteAutomaton fa6 = Regex("(aab|aab)*").to_glushkov();
+	enum AutomatonType {
+		tompson,
+		glushkov,
+		ilieyu
+	};
+	using Test =
+		tuple<int, string, AutomatonType, FiniteAutomaton::AmbiguityValue>;
+	vector<Test> tests = {
+		{0, "(a*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{1, "a*a*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		{2, "abc", tompson, FiniteAutomaton::unambigious},
+		{3, "b|a", tompson, FiniteAutomaton::almost_unambigious},
+		{4, "(aa|aa)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{5, "(aab|aab)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{6, "a*a*((a)*)*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		{7, "a*a*((a)*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{8, "a*(b*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{9, "a*((ab)*)*", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{10, "(aa|aa)(aa|bb)*|a(ba)*", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{11, "(aaa)*(a|)(a|)", ilieyu, FiniteAutomaton::almost_unambigious},
+		{12, "(a|)(ab|aaa|baa)*(a|)", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{13, "(a|b|c)*(d|d)*(a|b|c|d)*", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{14, "(ac*|ad*)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{15, "(a|b|c)*(a|b|c|d)(a|b|c)*|(a|b)*ca*", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{16, "(a|b|c)*(a|b|c|d)(a|b|c)*|(ac*|ad*)*", glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{17,
+		 "(ab)*ab(ab)*|(ac)*(ac)*|(d|c)*", // (abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*
+		 glushkov, FiniteAutomaton::almost_unambigious},
+		{18, "(abab)*abab(abab)*|(aac)*(aac)*", glushkov,
+		 FiniteAutomaton::polynomially_ambigious},
+		{19, "(ab)*ab(ab)*", // (abab)*abab(abab)*
+		 glushkov, FiniteAutomaton::polynomially_ambigious},
+		{20, "(ab)*ab(ab)*|(ac)*(ac)*", glushkov,
+		 FiniteAutomaton::polynomially_ambigious},
+		{21, "(a|b)*(f*)*q", tompson, FiniteAutomaton::exponentially_ambiguous},
+		{22, "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*", glushkov,
+		 FiniteAutomaton::exponentially_ambiguous},
+	};
 
-	assert(fa1.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
-	assert(fa2.ambiguity() == FiniteAutomaton::polynomially_ambigious);
-	assert(fa3.ambiguity() == FiniteAutomaton::unambigious);
-	assert(fa4.ambiguity() == FiniteAutomaton::almost_unambigious);
-	assert(fa5.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
-	assert(fa6.ambiguity() == FiniteAutomaton::exponentially_ambiguous);
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [test_number, reg_string, type, expected_res] = test;
+		// cout << test_number << endl;
+		switch (type) {
+		case tompson:
+			assert(Regex(reg_string).to_tompson().ambiguity() == expected_res);
+			break;
+		case glushkov:
+			assert(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
+			break;
+		case ilieyu:
+			assert(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
+			break;
+		}
+	});
 }
 void Example::test_arden() {
 	auto test_equivalence = [](string rgx_str) {
@@ -740,9 +871,89 @@ void Example::test_arden() {
 	test_equivalence("((b(((ba|b)|||(b))*)))");
 	test_equivalence("(((((a*)((a*)|bb)(((|||((b)))))))))");
 }
-
 void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
+}
+
+void Example::fa_to_pgrammar() {
+	FiniteAutomaton a1 =
+		Regex("(c1(ab*a|b*)*d1)|(c2(ba*b|a*)*d2)")
+			.to_glushkov()
+			.merge_bisimilar(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
+	// cout << a1.to_txt();
+
+	vector<State> states1;
+	for (int i = 0; i < 5; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+	// states1[0].set_transition(0, "b");
+	states1[4].set_transition(1, "a");
+	// states1[0].set_transition(1, "c");
+	//  states1[1].set_transition(1, "a");
+	//  states1[1].set_transition(1, "c");
+	states1[1].set_transition(2, "b");
+	states1[1].set_transition(4, "c");
+	// states1[2].set_transition(2, "c");
+	states1[2].set_transition(2, "b");
+	states1[2].set_transition(2, "c");
+	states1[2].is_terminal = true;
+	states1[0].set_transition(4, "c");
+	states1[3].set_transition(0, "a");
+	states1[3].set_transition(0, "b");
+	states1[4].is_terminal = true;
+	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
+
+	Grammar g;
+	FiniteAutomaton test = a1.annote();
+	cout << dfa1.to_txt();
+
+	g.fa_to_prefix_grammar(dfa1);
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.pg_to_txt();
+	cout << "+++++++++++++++++++++++++++++" << endl;
+
+	cout << g.prefix_grammar_to_automaton().to_txt();
+
+	g.fa_to_prefix_grammar_TM(dfa1);
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.pg_to_txt();
+	cout << "+++++++++++++++++++++++++++++" << endl;
+	cout << g.prefix_grammar_to_automaton().to_txt();
+}
+
+void Example::test_fa_to_pgrammar() {
+	cout << "fa to grammar\n";
+	vector<State> states1;
+	for (int i = 0; i < 5; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states1.push_back(s);
+	}
+
+	states1[4].set_transition(1, "a");
+	states1[1].set_transition(2, "b");
+	states1[1].set_transition(4, "c");
+	states1[2].set_transition(2, "b");
+	states1[2].set_transition(2, "c");
+	states1[2].is_terminal = true;
+	states1[0].set_transition(4, "c");
+	states1[3].set_transition(0, "a");
+	states1[3].set_transition(0, "b");
+	states1[4].is_terminal = true;
+	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
+
+	Grammar g;
+
+	cout << "1\n";
+	g.fa_to_prefix_grammar(dfa1);
+	cout << "2\n";
+	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
+	cout << "3\n";
+	g.fa_to_prefix_grammar_TM(dfa1);
+	cout << "4\n";
+	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
 }
 
 void Example::test_is_one_unambiguous() {
@@ -801,4 +1012,63 @@ void Example::test_interpreter() {
 	// Normalize
 	assert(interpreter.run_line("A = Normalize {abc} [[{a} {b}]]"));
 	assert(!interpreter.run_line("A = Normalize {abc} [[{a} []]]"));
+}
+
+void Example::test_TransformationMonoid() {
+	FiniteAutomaton fa1 = Regex("a*b*c*").to_tompson().minimize();
+	TransformationMonoid tm1(fa1);
+	assert(tm1.class_card() == 7);
+	assert(tm1.class_length() == 2);
+	assert(tm1.is_minimal());
+	assert(tm1.get_classes_number_MyhillNerode() == 3);
+
+	vector<State> states;
+	for (int i = 0; i < 5; i++) {
+		State s = {
+			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		states.push_back(s);
+	}
+	states[0].set_transition(1, "a");
+	states[1].set_transition(2, "c");
+	states[2].set_transition(3, "a");
+	states[3].set_transition(2, "c");
+	states[3].set_transition(4, "b");
+	states[4].set_transition(4, "b");
+	states[4].set_transition(4, "c");
+	states[4].is_terminal = true;
+	FiniteAutomaton fa2(0, states, {"a", "b", "c"});
+	TransformationMonoid tm2(fa2);
+	assert(tm2.class_card() == 12);
+	assert(tm2.class_length() == 4);
+	assert(tm2.is_minimal() == 1);
+	assert(tm2.get_classes_number_MyhillNerode() == 5);
+
+	FiniteAutomaton fa3 = Regex("ab|b").to_glushkov().minimize();
+	TransformationMonoid tm3(fa3);
+	assert(tm3.is_minimal());
+
+	FiniteAutomaton fa4 = Regex("a").to_glushkov().minimize();
+	TransformationMonoid tm4(fa4);
+	assert(tm4.is_minimal());
+
+	FiniteAutomaton fa5 = Regex("b*a*").to_tompson().minimize();
+	TransformationMonoid tm5(fa5);
+	assert(tm5.is_minimal());
+}
+
+void Example::test_GlaisterShallit() {
+	auto check_classes_number = [](string rgx_str, int num) {
+		assert(
+			Regex(rgx_str).to_glushkov().get_classes_number_GlaisterShallit() ==
+			num);
+	};
+	check_classes_number("abc", 4);
+	check_classes_number("a*b*c*", 3);
+	check_classes_number("aa*bb*cc*", 4);
+	check_classes_number("ab|abc", 4);
+	check_classes_number("a(a|b)*(a|b)", 3);
+	check_classes_number("a((a|b)*)*(b|c)", 3);
+	check_classes_number("a(b|c)(a|b)(b|c)", 5);
+	check_classes_number("abc|bca", 6);
+	check_classes_number("abc|bbc", 4);
 }
