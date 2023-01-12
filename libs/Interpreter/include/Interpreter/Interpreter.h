@@ -105,7 +105,7 @@ class Interpreter {
 	// Общий вид выражения
 	struct Expression {
 		ObjectType type;
-		variant<FunctionSequence, int, Regex, string, Array> value;
+		variant<int, FunctionSequence, Regex, string, Array> value;
 		// Преобразование в текст
 		string to_txt() const;
 	};
