@@ -568,7 +568,7 @@ bool TransformationMonoid::is_minimal() {
 			if (terms[i].isFinal) {
 				templeft.insert(data[terms[i].name]);
 			}
-			vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
+			vector<Term> cur = get_equalence_classes_vw(terms[i]);
 			for (int j = 0; j < cur.size(); j++) {
 				templeft.insert(data[cur[j].name]);
 				// table_classes.insert(cur[j]);
@@ -606,7 +606,7 @@ bool TransformationMonoid::is_minimal() {
 			}
 		}
 		for (int i = 0; i < terms.size(); i++) {
-			vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
+			vector<Term> cur = get_equalence_classes_vw(terms[i]);
 			for (int j = 0; j < cur.size(); j++) {
 				equivalence_classes_table_temp[data_table.at(cur[j].name) + 1]
 											  [i + 1] = true;
