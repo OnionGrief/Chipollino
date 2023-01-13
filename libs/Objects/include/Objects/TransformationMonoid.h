@@ -79,6 +79,8 @@ class TransformationMonoid {
 										// таблицу М-Н
 
   private:
+	static bool wasrewrite(const vector<alphabet_symbol>& a,
+						   const vector<alphabet_symbol>& b);
 	static bool wasTransition(const set<TransformationMonoid::Transition>& mas,
 							  TransformationMonoid::Transition b);
 	bool searchrewrite(const vector<alphabet_symbol>&);

@@ -115,7 +115,8 @@ vector<alphabet_symbol> TransformationMonoid::rewriting(
 	}
 	return in;
 }
-bool wasrewrite(vector<alphabet_symbol> a, vector<alphabet_symbol> b) {
+bool TransformationMonoid::wasrewrite(const vector<alphabet_symbol>& a,
+									  const vector<alphabet_symbol>& b) {
 	for (int i = 0; i < a.size(); i++) {
 		for (int j = 0; i + j < a.size() && j < b.size(); j++) {
 			if (b[j] != a[i + j]) {
