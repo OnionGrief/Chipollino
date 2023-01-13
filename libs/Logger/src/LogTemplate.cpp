@@ -24,7 +24,7 @@ void LogTemplate::load_tex_template(string filename) {
 string LogTemplate::render() const {
 	// TODO: заполнять здесь шаблон
 	ifstream infile(tex_template);
-	// если шаблона не нашлось 
+	// если шаблона не нашлось
 	if (!infile) return ""; // infile.close();
 
 	string outstr = "";
@@ -42,15 +42,14 @@ string LogTemplate::render() const {
 						 math_mode(get<Regex>(p.second.value).to_txt()));
 			} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
 				image_number += 1;
-				AutomatonToImage::to_image(
-					get<FiniteAutomaton>(p.second.value).to_txt(),
-					image_number);
-				char si[256];
+				string graph = AutomatonToImage::to_image(
+					get<FiniteAutomaton>(p.second.value).to_txt());
+				/*char si[256];
 				sprintf(si,
 						"\\includegraphics[height=1.3in, "
 						"keepaspectratio]{output%d.png}\n",
-						image_number);
-				s.insert(insert_place, si);
+						image_number);*/
+				s.insert(insert_place, graph);
 			} else if (holds_alternative<string>(p.second.value)) {
 				s.insert(insert_place, get<string>(p.second.value));
 			} else if (holds_alternative<int>(p.second.value)) {

@@ -306,8 +306,8 @@ void Example::to_image() {
 
 	string s2 = fa2.to_txt();
 
-	AutomatonToImage::to_image(s1, 1);
-	AutomatonToImage::to_image(s2, 2);
+	AutomatonToImage::to_image(s1);
+	AutomatonToImage::to_image(s2);
 }
 
 void Example::step() {
