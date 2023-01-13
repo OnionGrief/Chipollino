@@ -36,10 +36,8 @@ Interpreter::Interpreter() {
 		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Disambiguate",
 		 {{"Disambiguate", {ObjectType::Regex}, ObjectType::Regex}}},
-		{"Intersection",
-		 {{"Intersection",
-		   {ObjectType::NFA, ObjectType::NFA},
-		   ObjectType::NFA}}},
+		{"Intersect",
+		 {{"Intersect", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
 		{"Union",
 		 {{"Union", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
 		{"Difference",
@@ -458,7 +456,7 @@ optional<GeneralObject> Interpreter::apply_function(
 		res = ObjectRegex(
 			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex());
 	}
-	if (function.name == "Intersection") {
+	if (function.name == "Intersect") {
 		res = ObjectNFA(FiniteAutomaton::intersection(
 			get_automaton(arguments[0]), get_automaton(arguments[1])));
 	}
@@ -570,17 +568,23 @@ optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 	}
 
 	/* содержит информацию о каждой ф/и в посл-ти:
-	 либо "-1" - ф/я не входит в итоговую посл-ть (не вып-ся, т.к. выполняет
-	 тождественное преобразование)
+	 либо < 0 - ф/я не входит в итоговую посл-ть (не выполняется)
+		"-1" - выполняет тождественное преобразование
+		"-2" - излишнее действие в связи с последующей ф/ей
 	 либо номер сигнатуры ф/и в таблице 'names_to_functions' */
 	vector<int> needed_funcs(function_names.size(), 0);
+
+	string argument_type = "";
+	for (int i = 0; i < first_type.size(); i++)
+		argument_type += (i == 0 ? "" : ", ") + types_to_string[first_type[i]];
 
 	// устанавливаем тип для 1ой ф/и в посл-ти
 	if (auto num = find_func(function_names[0], first_type); num.has_value()) {
 		needed_funcs[0] = num.value();
 	} else {
 		logger.throw_error("mismatch by type of function \"" +
-						   function_names[0] + "\"");
+						   function_names[0] + "\": passed {" + argument_type +
+						   "}");
 		return nullopt;
 	}
 
@@ -613,11 +617,11 @@ optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 				needed_funcs[i] = -1;
 			}
 			if (prev_func == "Determinize" && func == "Minimize") {
-				needed_funcs[i - 1] = -1;
+				needed_funcs[i - 1] = -2;
 			}
 			if ((prev_func == "Determinize" || prev_func == "Determinize+") &&
 				func == "Minimize+") {
-				needed_funcs[i - 1] = -1;
+				needed_funcs[i - 1] = -2;
 			}
 			if (prev_func == func) {
 				if (func != "Reverse" && func != "Complement" &&
@@ -633,10 +637,14 @@ optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 				// удаление Linearize перед Glushkov
 			}*/
 		} else {
-			logger.throw_error("mismatch by type of function \"" + func + "\"");
+			logger.throw_error("mismatch by type of function \"" + func +
+							   "\": passed {" + types_to_string[prev_type] +
+							   "}");
 			return nullopt;
 		}
 	}
+
+	string output_type;
 
 	// собираем посл-ть
 	optional<vector<Function>> finalfuncs = nullopt;
@@ -645,6 +653,13 @@ optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 		if (needed_funcs[i] >= 0) {
 			Function f = names_to_functions[function_names[i]][needed_funcs[i]];
 			finalfuncs.value().push_back(f);
+			output_type = types_to_string[f.output];
+			logger.log(f.name + " (type: {" + argument_type + "} -> " +
+					   output_type + ")"); // можно убрать
+			argument_type = output_type;
+		} else {
+			logger.log(function_names[i] +
+					   " is skipped, it performs unnecessary transformation");
 		}
 	}
 
@@ -878,8 +893,8 @@ bool Interpreter::run_operation(const GeneralOperation& op) {
 
 string Interpreter::FunctionSequence::to_txt() const {
 	string str = "(";
-	for (int i = 0; i < functions.size(); i++) {
-		str += functions[i].name + (i == functions.size() - 1 ? " " : ".");
+	for (int i = (int)functions.size() - 1; i >= 0; i--) {
+		str += functions[i].name + (i == 0 ? " " : ".");
 	}
 	for (int i = 0; i < parameters.size(); i++) {
 		str += parameters[i].to_txt() + (i == parameters.size() - 1 ? "" : " ");
@@ -923,7 +938,7 @@ int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {
 			balance--;
 		}
 	}
-	return pos - 1;
+	return (int)pos - 1;
 }
 
 optional<Interpreter::Id> Interpreter::scan_id(const vector<Lexem>& lexems,

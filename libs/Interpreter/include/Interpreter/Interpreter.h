@@ -208,6 +208,21 @@ class Interpreter {
 	optional<Expression> scan_expression(const vector<Lexem>&, int& pos,
 										 size_t end);
 
+	// перевод ObjectType в String (для логирования и дебага)
+	map<ObjectType, string> types_to_string = {
+		{ObjectType::NFA, "NFA"},
+		{ObjectType::DFA, "DFA"},
+		{ObjectType::Regex, "Regex"},
+		{ObjectType::RandomRegex, "RandomRegex"},
+		{ObjectType::Int, "Int"},
+		{ObjectType::String, "String"},
+		{ObjectType::Boolean, "Boolean"},
+		{ObjectType::OptionalBool, "OptionalBool"},
+		{ObjectType::AmbiguityValue, "AmbiguityValue"},
+		{ObjectType::PrefixGrammar, "PrefixGrammar"},
+		{ObjectType::Array, "Array"},
+	}; // не додумалась как по другому(не ручками) (((
+
 	// Типизация идентификаторов. Нужна для корректного составления опреаций
 	map<string, ObjectType> id_types;
 	// Считывание операции из набора лексем
