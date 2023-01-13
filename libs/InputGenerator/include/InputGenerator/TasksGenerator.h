@@ -73,7 +73,7 @@ class TasksGenerator {
 		{"GlaisterShallit", {DFA}, INT},
 		{"PrefixGrammar", {NFA}, PG},
 		{"PGtoNFA", {PG}, NFA},
-		{"Intersection", {NFA, NFA}, NFA},
+		{"Intersect", {NFA, NFA}, NFA},
 		{"Union", {NFA, NFA}, NFA},
 		{"Difference", {NFA, NFA}, NFA},
 	};
