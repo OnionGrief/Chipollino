@@ -2,9 +2,6 @@
 #include <string>
 
 bool types_equiv(vector<ObjectType> input, ObjectType output) {
-	if (input.size() > 1) {
-		return false;
-	}
 	if (!((output == input[0]) ||
 		  (output == ObjectType::DFA && input[0] == ObjectType::NFA) ||
 		  (output == ObjectType::NFA && input[0] == ObjectType::DFA))) {
@@ -24,8 +21,10 @@ void Interpreter::generate_brief_templates() {
 			outfile << "\\begin{frame}{}" << endl;
 
 			bool equal_types = types_equiv(function.input, function.output);
-
-			//========= Шаблон для входных данных ====================
+			if (function.input.size() > 1) {
+				equal_types = false;
+			}
+			//========= Шаблон для одиночных входных данных =========
 
 			if (function.input.size() == 1) {
 				//Для автоматов
@@ -57,19 +56,23 @@ void Interpreter::generate_brief_templates() {
 					outfile << ":\n\t%template_oldregex" << endl;
 				}
 			} else {
-				bool equal_input_types =
+
+				//========= Шаблон для парных входных данных ===========
+
+				bool input_types_equal =
 					types_equiv(function.input, function.input[1]);
-				for (int index = 0; index < (function.input.size() - 1);
-					 index++) {
+
+				for (int index = 0; index < (function.input.size()); index++) {
+
 					//Для автоматов
 					if ((function.input[index] == ObjectType::NFA ||
 						 function.input[index] == ObjectType::DFA)) {
-						if (equal_input_types) {
+						if (input_types_equal) {
 							if (index == 0) {
-								outfile << "Первый автомат:";
+								outfile << "\tПервый автомат:" << endl;
 								outfile << "\t%template_firstautomaton" << endl;
 							} else {
-								outfile << "Второй автомат:";
+								outfile << "\tВторой автомат:" << endl;
 								outfile << "\t%template_secondautomaton"
 										<< endl;
 							}
@@ -81,47 +84,48 @@ void Interpreter::generate_brief_templates() {
 
 					//Для префиксной грамматики
 					if (function.input[index] == ObjectType::PrefixGrammar) {
-						outfile << "\tПрефиксная грамматика:";
+						outfile << "\tПрефиксная грамматика:" << endl;
 						outfile << "\t%template_grammar" << endl;
 					}
 
 					//Для регулярок
 					if (function.input[index] == ObjectType::Regex) {
-						if (equal_input_types) {
+						if (input_types_equal) {
 							if (index == 0) {
-								outfile << "Первое регулярное выражение:";
+								outfile << "\tПервое регулярное выражение:"
+										<< endl;
 								outfile << "\t%template_firstregex" << endl;
 							} else {
-								outfile << "Второе регулярное выражение:";
+								outfile << "Второе регулярное выражение:"
+										<< endl;
 								outfile << "\t%template_secondregex" << endl;
 							}
 						} else {
-							outfile << "\tРегулярное выражение:";
+							outfile << "\tРегулярное выражение:" << endl;
 							outfile << "\t%template_oldregex" << endl;
 						}
 					}
 
 					//Для Array
 					if (function.input[index] == ObjectType::Array) {
-						outfile << "\tПравила переписования:";
+						outfile << "\tПравила переписования:" << endl;
 						outfile << "\t%template_oldarray" << endl;
 					}
 
-					//Для Int
+					//Для других типов
 					if (function.input[index] == ObjectType::Int ||
 						function.input[index] == ObjectType::AmbiguityValue ||
 						function.input[index] == ObjectType::Boolean ||
 						function.input[index] == ObjectType::OptionalBool) {
-						if (equal_input_types) {
-							if (index == 0) {
-								outfile << "Первое значение:";
-								outfile << "\t%template_firstvalue" << endl;
-							} else {
-								outfile << "Второе значение:";
-								outfile << "\t%template_secondvalue" << endl;
-							}
+						if (input_types_equal) {
+							outfile << "\t"
+									<< types_to_string[function.input[index]]
+									<< index + 1 << endl;
+							outfile << "\t%template_value" << index + 1 << endl;
 						} else {
-							outfile << "\tЗначение:";
+							outfile << "\t"
+									<< types_to_string[function.input[index]]
+									<< endl;
 							outfile << "\t%template_value" << endl;
 						}
 					}
