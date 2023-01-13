@@ -19,13 +19,13 @@ class TransformationMonoid {
 	struct Transition { // переход (индекс состояния - индекс состояния)
 		int first;
 		int second;
-		bool operator==(const Transition a) const {
+		bool operator==(const Transition& a) const {
 			return this->first == a.first && this->second == a.second;
 		}
-		bool operator>(const Transition a) const {
+		bool operator>(const Transition& a) const {
 			return this->first > a.first && this->second > a.second;
 		}
-		bool operator<(const Transition a) const {
+		bool operator<(const Transition& a) const {
 			return this->first * 1000 + this->second <
 				   a.first * 1000 + a.second;
 		}
@@ -35,7 +35,7 @@ class TransformationMonoid {
 		bool isFinal = false;
 		vector<alphabet_symbol> name;
 		vector<Transition> transitions;
-		bool operator==(const Term a) const {
+		bool operator==(const Term& a) const {
 			return this->transitions == a.transitions &&
 				   this->transitions == a.transitions;
 		}
