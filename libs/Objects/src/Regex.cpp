@@ -363,9 +363,11 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 	language = new_language;
 }
 
-Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules, iLogTemplate* log) const {
-	//Logger::init_step("Normalize");
+Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules,
+							 iLogTemplate* log) const {
+	// Logger::init_step("Normalize");
 	Regex regex = *this;
+	// Logger::log("Регулярное выражение до нормализации", regex.to_txt());
 	// regex.normalize_this_regex(rules);
 	/*Logger::log("Регулярное выражение после нормализации", regex.to_txt());
 	Logger::finish_step();*/
