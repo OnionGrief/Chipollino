@@ -71,8 +71,8 @@ class TransformationMonoid {
 	int get_classes_number_MyhillNerode(); // Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); // вывод таблицы М-Н
 	vector<alphabet_symbol> rewriting(
-		vector<alphabet_symbol>,
-		map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>);
+		const vector<alphabet_symbol>&,
+		const map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>&);
 	vector<vector<bool>> get_equivalence_classes_table(
 		vector<string>& table_rows,
 		vector<string>& table_columns); // возвращает

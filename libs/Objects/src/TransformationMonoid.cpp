@@ -74,8 +74,9 @@ TransformationMonoid::TransformationMonoid(){};
 
 // переписывание терма
 vector<alphabet_symbol> TransformationMonoid::rewriting(
-	vector<alphabet_symbol> in,
-	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> rules) {
+	const vector<alphabet_symbol>& in,
+	const map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>&
+		rules) {
 	if (in.size() < 2) {
 		return in;
 	}
@@ -168,8 +169,8 @@ vector<int> showtransitions(vector<int> in, int from, int to, int size) {
 }
 // Получаем ДКА и строим моноид
 void TransformationMonoid::get_transition_by_symbol(
-	vector<TransformationMonoid::Transition> in, vector<alphabet_symbol> word,
-	const set<alphabet_symbol>& alphabet) {
+	const vector<TransformationMonoid::Transition>& in,
+	const vector<alphabet_symbol>& word, const set<alphabet_symbol>& alphabet) {
 	for (const alphabet_symbol& as : alphabet) { // для каждого символа
 		set<TransformationMonoid::Transition> out;
 		for (TransformationMonoid::Transition temp : in) {
