@@ -1044,6 +1044,7 @@ void Example::test_interpreter() {
 	assert(interpreter.run_line("A = Normalize {abc} [[{a} {b}]]"));
 	assert(!interpreter.run_line("A = Normalize {abc} [[{a} []]]"));
 }
+
 void Example::test_TransformationMonoid() {
 	FiniteAutomaton fa1 = Regex("a*b*c*").to_thompson().minimize();
 	TransformationMonoid tm1(fa1);
