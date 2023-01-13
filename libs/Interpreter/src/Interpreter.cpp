@@ -792,7 +792,7 @@ bool Interpreter::run_verifier(const Verifier& verifier) {
 	logger.log("result: " + to_string(100 * results / tests_size) + "%");
 	logger.log("");
 	logger.log("Tests with negative result:");
-	for (string str: regex_list)
+	for (string str : regex_list)
 		logger.log(str);
 
 	return success;
@@ -831,8 +831,8 @@ bool Interpreter::run_operation(const GeneralOperation& op) {
 
 string Interpreter::FunctionSequence::to_txt() const {
 	string str = "(";
-	for (int i = 0; i < functions.size(); i++) {
-		str += functions[i].name + (i == functions.size() - 1 ? " " : ".");
+	for (int i = (int)functions.size() - 1; i >= 0; i--) {
+		str += functions[i].name + (i == 0 ? " " : ".");
 	}
 	for (int i = 0; i < parameters.size(); i++) {
 		str += parameters[i].to_txt() + (i == parameters.size() - 1 ? "" : " ");
@@ -876,7 +876,7 @@ int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {
 			balance--;
 		}
 	}
-	return pos - 1;
+	return (int)pos - 1;
 }
 
 optional<Interpreter::Id> Interpreter::scan_id(const vector<Lexem>& lexems,

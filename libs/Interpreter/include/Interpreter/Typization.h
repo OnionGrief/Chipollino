@@ -8,7 +8,7 @@
 #include <set>
 #include <variant>
 
-// Типизация входный данных
+// Типизация входныx данных
 namespace Typization {
 
 // Перечисление типов объектов
