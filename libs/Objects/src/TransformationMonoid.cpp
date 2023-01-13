@@ -1,7 +1,7 @@
 #include "Objects/TransformationMonoid.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
-
+#include <algorithm>
 #include <iostream>
 using namespace std;
 vector<alphabet_symbol> union_words(vector<alphabet_symbol> a,
@@ -24,10 +24,9 @@ vector<vector<alphabet_symbol>> get_comb_alphabet(
 	if (len == 0) {
 		return newcomb;
 	}
-	for (set<alphabet_symbol>::iterator it = alphabet.begin();
-		 it != alphabet.end(); it++) {
+	for (alphabet_symbol as : alphabet) {
 		vector<alphabet_symbol> new_symbol;
-		new_symbol.push_back(*it);
+		new_symbol.push_back(as);
 		newcomb.push_back(new_symbol);
 	}
 	if (len == 1) {
@@ -44,39 +43,11 @@ vector<vector<alphabet_symbol>> get_comb_alphabet(
 	return comb;
 }
 
-// Проверяем	встречался	ли	терм	раньше
-vector<alphabet_symbol> was_term(
-	vector<TransformationMonoid::Term> all_terms,
-	vector<TransformationMonoid::Transition> cur_transition) {
-	bool met_term = true;
-	for (int i = 0; i < all_terms.size(); i++) {
-		met_term = true;
-		if (all_terms[i].transitions.size() != cur_transition.size()) {
-			continue;
-		}
-		for (int j = 0; j < all_terms[i].transitions.size(); j++) {
-			if ((all_terms[i].transitions[j].first ==
-				 cur_transition[j].first) &&
-				(all_terms[i].transitions[j].second ==
-				 cur_transition[j].second)) {
-				//	continue;
-			} else {
-				met_term = false;
-			}
-		}
-		if (met_term) {
-			return all_terms[i].name;
-		}
-	}
-	return {};
-}
-
-TransformationMonoid::TransformationMonoid(){};
-
-// переписывание терма
+// переписываем имя терма в минимальное
 vector<alphabet_symbol> TransformationMonoid::rewriting(
-	vector<alphabet_symbol> in,
-	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> rules) {
+	const vector<alphabet_symbol>& in,
+	const map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>&
+		rules) {
 	if (in.size() < 2) {
 		return in;
 	}
@@ -116,101 +87,171 @@ vector<alphabet_symbol> TransformationMonoid::rewriting(
 	}
 	return in;
 }
-set<int> TransformationMonoid::search_transition_by_word(
-	vector<alphabet_symbol> word, int init_state) {
-	set<int> out = {};
-	if (word.size() <= 0) {
-		return {init_state};
+// проверяем имя терма на переписываемость (вспомогательный)
+bool TransformationMonoid::wasrewrite(const vector<alphabet_symbol>& a,
+									  const vector<alphabet_symbol>& b) {
+	for (int i = 0; i < a.size(); i++) {
+		for (int j = 0; i + j < a.size() && j < b.size(); j++) {
+			if (b[j] != a[i + j]) {
+				break;
+			}
+			if (j == b.size() - 1) {
+				return true;
+			}
+		}
 	}
-	alphabet_symbol symbol_transition = word[0];
-	word.erase(word.begin());
-	for (auto temp :
-		 automat.states[init_state].transitions[symbol_transition]) {
-		set<int> res = search_transition_by_word(word, temp);
-		out.insert(res.begin(), res.end());
-	}
-	return out;
+	return false;
 }
-// Получаем ДКА и строим моноид
-TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
-	Logger::activate_step_counter();
-	automat = in.remove_trap_states();
-	automat.remove_unreachable_states();
-	Logger::deactivate_step_counter();
-	int i = 0;
-	bool cond_get_transactions = true;
-	while (cond_get_transactions) {
-		i++;
-		vector<vector<alphabet_symbol>> various =
-			get_comb_alphabet(i, automat.language->get_alphabet());
-		int cond_rule_len = 0;
-		map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> temp_rule;
-		for (int j = 0; j < various.size() && cond_get_transactions;
-			 j++) // Для	всех	комбинаций
-		{
-			Term current;
-			current.name = various[j];
-			vector<alphabet_symbol> temp_word;
-			while (temp_word != current.name) {
-				if (temp_word.size()) current.name = temp_word;
-				temp_word = rewriting(current.name, rules);
-			}
-			if (current.name.size() < various[j].size()) continue;
-			for (int t = 0; t < automat.states.size(); t++) {
 
-				set<int> res = search_transition_by_word(current.name, t);
-				for (auto temp : res) {
-					Transition g;
-					g.first = t;
-					g.second = temp;
-					// cout << "test " << to_str(current.name) << " " << t << "
-					// "
-					// 	 << temp << "\n";
-					current.transitions.push_back(g);
-				}
+// проверяем имя терма на переписываемость
+bool TransformationMonoid::searchrewrite(const vector<alphabet_symbol>& in) {
+	for (auto currules : rules) {
+		for (vector<alphabet_symbol> rule : currules.second) {
+			if (wasrewrite(in, rule)) {
+				return 1;
 			}
-			vector<alphabet_symbol> eqv = was_term(terms, current.transitions);
-			if (eqv.size() == 0) // Если	не	встретился	в
-								 // Эквивалентных классах
-			{
-				for (int i = 0; i < current.transitions.size(); i++) {
-					if (automat.states[current.transitions[i].second]
-							.is_terminal &&
-						current.transitions[i].first == automat.initial_state) {
-						current.isFinal = true;
+		}
+	}
+	return 0;
+}
+// генерируем новые переходы по алфавиту
+void TransformationMonoid::get_new_transition(
+	const vector<TransformationMonoid::Transition>& in,
+	const vector<alphabet_symbol>& word, const set<alphabet_symbol>& alphabet) {
+	for (const alphabet_symbol& as : alphabet) { // для каждого символа
+		set<TransformationMonoid::Transition> out;
+		for (TransformationMonoid::Transition temp : in) {
+			set<int> tostate = automat.states[temp.second]
+								   .transitions[as]; // получаем все переходы
+			for (int outstate : tostate) { // для каждого перехода
+				TransformationMonoid::Transition curtransition;
+				curtransition.first = temp.first;
+				curtransition.second = outstate;
+				out.insert(curtransition);
+			}
+		}
+		// получили новые переходы
+		Term curTerm;
+		std::vector<TransformationMonoid::Transition> v(out.size());
+		std::copy(out.begin(), out.end(), v.begin());
+		curTerm.transitions = v;
+		vector<alphabet_symbol> tempword = word;
+		tempword.push_back(as);
+		curTerm.name = tempword;
+		queueTerm.push(curTerm);
+	}
+}
+TransformationMonoid::TransformationMonoid(){};
+// Строим моноид
+TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
+	int states_counter_old = 0;
+	int states_counter_new = 0;
+	states_counter_old =
+		in.states.size(); // для проверки ловушки на минимальность
+
+	automat = in.remove_trap_states(); // удаляем ловушки
+	states_counter_new = automat.states.size();
+	if (states_counter_old - states_counter_new > 1) {
+		trap_not_minimal = true;
+		states_counter_old = states_counter_new;
+	}
+
+	automat.remove_unreachable_states(); // удаляем недостижимые ловушки
+	states_counter_new = automat.states.size();
+	if (states_counter_old - states_counter_new > 1) {
+		trap_not_minimal = true;
+	}
+	// cout << automat.to_txt();
+	vector<TransformationMonoid::Transition>
+		initperehods; // получаем состояния по eps переходу (из себя в себя)
+	for (int i = 0; i < automat.states.size(); i++) {
+		TransformationMonoid::Transition temp;
+		temp.first = i;
+		temp.second = i;
+		initperehods.push_back(temp);
+	}
+	get_new_transition(initperehods, {}, automat.language->get_alphabet());
+	while (queueTerm.size() > 0) { // пока есть кандидаты
+		TransformationMonoid::Term cur = queueTerm.front();
+		queueTerm.pop();
+		if (!searchrewrite(cur.name)) { // если не переписывается
+			std::vector<TransformationMonoid::Term>::iterator rewritein =
+				std::find(terms.begin(), terms.end(), cur);
+			if (rewritein != terms.end()) { // в правила переписывания
+				// cout << "\trewrite ";
+				rules[(*rewritein).name].push_back(cur.name);
+
+			} else { // новый терм
+				for (int i = 0; i < cur.transitions.size(); i++) {
+					if (automat.states[cur.transitions[i].second].is_terminal &&
+						cur.transitions[i].first == automat.initial_state) {
+						cur.isFinal = true;
 					}
 				}
-				cond_rule_len++;
-				terms.push_back(current);
-
-			} else {
-				if (!rules.count(current.name) && current.name != eqv) {
-					rules[current.name].push_back(eqv);
-				}
+				terms.push_back(cur);
+				get_new_transition(cur.transitions, cur.name,
+								   automat.language->get_alphabet());
 			}
-		}
-		if (cond_rule_len == 0) {
-			cond_get_transactions = false;
-			continue;
-		} else {
 		}
 	}
 }
+// Вывод всей информации о Моноиде
+string TransformationMonoid::to_txt() {
+	stringstream ss;
+	ss << "Equivalence classes:\n";
+	ss << get_equalence_classes_txt();
+	ss << "Rewriting rules:\n";
+	ss << get_rewriting_rules_txt();
+	ss << "Information for class w:\n";
 
-string TransformationMonoid::to_txt() const {
-	return automat.to_txt();
+	for (int i = 0; i < terms.size(); i++) {
+		ss << "  class " << alphabet_symbol::vector_to_str(terms[i].name)
+		   << "\n";
+		vector<TransformationMonoid::Term> vw =
+			get_equalence_classes_vw(terms[i]);
+		ss << "\t equivalence classes v such that  accepts vw: ";
+		for (TransformationMonoid::Term CurTerm : vw) {
+			ss << alphabet_symbol::vector_to_str(CurTerm.name) << ", ";
+		}
+		ss << "\n";
+		vector<TransformationMonoid::Term> wv =
+			get_equalence_classes_wv(terms[i]);
+		ss << "\t equivalence classes v such that  accepts wv: ";
+		for (TransformationMonoid::Term CurTerm : wv) {
+			ss << alphabet_symbol::vector_to_str(CurTerm.name) << ", ";
+		}
+		ss << "\n";
+		vector<TransformationMonoid::TermDouble> vwv =
+			get_equalence_classes_vwv(terms[i]);
+		ss << "\t equivalence classes v such that  accepts wv: ";
+		for (TransformationMonoid::TermDouble CurTerm : vwv) {
+			ss << alphabet_symbol::vector_to_str(CurTerm.first.name) << " - "
+			   << alphabet_symbol::vector_to_str(CurTerm.second.name) << ", ";
+		}
+		ss << "\n";
+		int sync = is_synchronized(terms[i]);
+		if (sync == -1) {
+			ss << "word not synchronizing\n";
+		} else {
+			ss << "word synchronizing " << automat.states[sync].identifier
+			   << "\n";
+		}
+	}
+	ss << "isminimal " << is_minimal() << "\n";
+	ss << to_txt_MyhillNerode();
+	return ss.str();
 }
-
+// получаем все эквивалентные классы
 vector<TransformationMonoid::Term> TransformationMonoid::
 	get_equalence_classes() {
 	return terms;
 }
-
+// получаем правила переписывания
 map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 TransformationMonoid::get_rewriting_rules() {
 	return rules;
 }
-
+// вывод эквивалентных классов
 string TransformationMonoid::get_equalence_classes_txt() {
 	stringstream ss;
 	Logger::init_step("Equivalence classes");
@@ -250,9 +291,11 @@ map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 			//	"transition " +
 			//		automat.states[terms[i].transitions[j].first].identifier,
 			//	automat.states[terms[i].transitions[j].second].identifier);
-			// ss << automat.states[terms[i].transitions[j].first].identifier
+			// ss <<
+			// automat.states[terms[i].transitions[j].first].identifier
 			//   << "	->	"
-			//   << automat.states[terms[i].transitions[j].second].identifier
+			//   <<
+			//   automat.states[terms[i].transitions[j].second].identifier
 			//   << "\n";
 			ss[term].push_back(
 				automat.states[terms[i].transitions[j].first].identifier);
@@ -263,42 +306,42 @@ map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 	// Logger::finish_step();
 	return ss;
 }
-
+// вывод правил переписывания
 string TransformationMonoid::get_rewriting_rules_txt() {
 	stringstream ss;
 	Logger::init_step("Rewriting Rules");
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
 			Logger::log("rewriting " +
-							alphabet_symbol::vector_to_str(item.first),
-						alphabet_symbol::vector_to_str(item.second[i]));
-			ss << alphabet_symbol::vector_to_str(item.first) << "	->	"
-			   << alphabet_symbol::vector_to_str(item.second[i]) << "\n";
+							alphabet_symbol::vector_to_str(item.second[i]),
+						alphabet_symbol::vector_to_str(item.first));
+			ss << alphabet_symbol::vector_to_str(item.second[i]) << "	->	"
+			   << alphabet_symbol::vector_to_str(item.first) << "\n";
 		}
 	}
 	Logger::finish_step();
 	return ss.str();
 }
-
+// получаем термы, что vw - в языке
 vector<TransformationMonoid::Term> TransformationMonoid::
 	get_equalence_classes_vw(const Term& w) {
 	vector<Term> out;
 	for (int i = 0; i < terms.size(); i++) {
-		vector<Transition> transitions;
+		set<TransformationMonoid::Transition> transitions;
 		for (int j = 0; j < terms[i].transitions.size(); j++) {
 			for (int k = 0; k < w.transitions.size(); k++) {
 				if (terms[i].transitions[j].second == w.transitions[k].first) {
 					Transition new_transition;
 					new_transition.second = w.transitions[k].second;
 					new_transition.first = terms[i].transitions[j].first;
-					transitions.push_back(new_transition);
+					transitions.insert(new_transition);
 				}
 			}
 		}
 		if (transitions.size() > 0) {
-			for (int j = 0; j < transitions.size(); j++) {
-				if (automat.states[transitions[j].second].is_terminal &&
-					transitions[j].first == automat.initial_state) {
+			for (TransformationMonoid::Transition tr : transitions) {
+				if (automat.states[(tr).second].is_terminal &&
+					(tr).first == automat.initial_state) {
 					out.push_back(terms[i]);
 				}
 			}
@@ -306,26 +349,28 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	}
 	return out;
 }
-
+// получаем термы, что wv - в языке
 vector<TransformationMonoid::Term> TransformationMonoid::
 	get_equalence_classes_wv(const Term& w) {
 	vector<Term> out;
 	for (int i = 0; i < terms.size(); i++) {
-		vector<Transition> transitions;
+		// vector<Transition> transitions;
+
+		set<TransformationMonoid::Transition> transitions;
 		for (int j = 0; j < terms[i].transitions.size(); j++) {
 			for (int k = 0; k < w.transitions.size(); k++) {
 				if (terms[i].transitions[j].first == w.transitions[k].second) {
 					Transition new_transition;
 					new_transition.first = w.transitions[k].first;
 					new_transition.second = terms[i].transitions[j].second;
-					transitions.push_back(new_transition);
+					transitions.insert(new_transition);
 				}
 			}
 		}
 		if (transitions.size() > 0) {
-			for (int j = 0; j < transitions.size(); j++) {
-				if (automat.states[transitions[j].second].is_terminal &&
-					transitions[j].first == automat.initial_state) {
+			for (TransformationMonoid::Transition tr : transitions) {
+				if (automat.states[(tr).second].is_terminal &&
+					(tr).first == automat.initial_state) {
 					out.push_back(terms[i]);
 				}
 			}
@@ -333,22 +378,25 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	}
 	return out;
 }
-bool wasTransition(vector<TransformationMonoid::Transition> mas,
-				   TransformationMonoid::Transition b) {
-	for (int i = 0; i < mas.size(); i++) {
-		if ((mas[i].first == b.first) && (mas[i].second == b.second)) {
+// проверка на присутствие терма
+bool TransformationMonoid::wasTransition(
+	const set<TransformationMonoid::Transition>& mas,
+	TransformationMonoid::Transition b) {
+	for (TransformationMonoid::Transition maselem : mas) {
+		if (((maselem).first == b.first) && ((maselem).second == b.second)) {
 			return true;
 		}
 	}
 	return false;
 }
-
+// получаем термы, что vwv - в языке
 vector<TransformationMonoid::TermDouble> TransformationMonoid::
 	get_equalence_classes_vwv(const Term& w) {
 	vector<TermDouble> out;
 	for (int i1 = 0; i1 < terms.size(); i1++) {
 		for (int i2 = 0; i2 < terms.size(); i2++) {
-			vector<Transition> transitions;
+			// vector<Transition> transitions;
+			set<TransformationMonoid::Transition> transitions;
 			for (int j1 = 0; j1 < terms[i1].transitions.size(); j1++) {
 				for (int j2 = 0; j2 < terms[i2].transitions.size(); j2++) {
 					for (int k = 0; k < w.transitions.size(); k++) {
@@ -362,16 +410,16 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 							new_transition.second =
 								terms[i2].transitions[j2].second;
 							if (!wasTransition(transitions, new_transition)) {
-								transitions.push_back(new_transition);
+								transitions.insert(new_transition);
 							}
 						}
 					}
 				}
 			}
 			if (transitions.size() > 0) {
-				for (int j = 0; j < transitions.size(); j++) {
-					if (automat.states[transitions[j].second].is_terminal &&
-						transitions[j].first == automat.initial_state) {
+				for (TransformationMonoid::Transition tr : transitions) {
+					if (automat.states[(tr).second].is_terminal &&
+						(tr).first == automat.initial_state) {
 						TermDouble new_transition_double;
 						new_transition_double.first = terms[i1];
 						new_transition_double.second = terms[i2];
@@ -416,7 +464,7 @@ int TransformationMonoid::class_card() {
 	return terms.size();
 }
 
-// Вернет самое длинное слово в классе
+// Вернет длину самого длинного слова в классе
 int TransformationMonoid::class_length() {
 	Logger::init_step("Longest word in the class");
 	Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
@@ -426,7 +474,7 @@ int TransformationMonoid::class_length() {
 	return terms[terms.size() - 1].name.size();
 }
 
-// Вычисление
+// Вычисление размера по М-Н
 int TransformationMonoid::get_classes_number_MyhillNerode() {
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
@@ -442,6 +490,9 @@ bool TransformationMonoid::is_minimal() {
 	// временные данные
 	vector<Term> table_classes;
 	vector<vector<bool>> equivalence_classes_table_temp;
+	if (trap_not_minimal) {
+		return false;
+	}
 	if (equivalence_classes_table_bool.size() == 0) {
 		map<vector<alphabet_symbol>, int>
 			data; // храним ссылку на Терм (быстрее и проще искать)
@@ -454,7 +505,7 @@ bool TransformationMonoid::is_minimal() {
 			if (terms[i].isFinal) {
 				templeft.insert(data[terms[i].name]);
 			}
-			vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
+			vector<Term> cur = get_equalence_classes_vw(terms[i]);
 			for (int j = 0; j < cur.size(); j++) {
 				templeft.insert(data[cur[j].name]);
 				// table_classes.insert(cur[j]);
@@ -464,8 +515,8 @@ bool TransformationMonoid::is_minimal() {
 			table_classes.push_back(terms[i]);
 		}
 		map<vector<alphabet_symbol>, int>
-			data_table; // храним ссылку на Терм из таблицы М-Н (быстрее и проще
-						// искать)
+			data_table; // храним ссылку на Терм из таблицы М-Н (быстрее и
+						// проще искать)
 		for (int i = 0; i < table_classes.size(); i++) {
 			data_table[table_classes[i].name] = i;
 		}
@@ -479,11 +530,12 @@ bool TransformationMonoid::is_minimal() {
 		if (automat.states[automat.initial_state].is_terminal) {
 			equivalence_classes_table_temp[0][0] = true;
 		}
-		vector<Term>::iterator it = table_classes.begin();
-		for (int i = 1; it != table_classes.end(); i++, it++) {
-			if ((*it).isFinal) {
+		int i = 1;
+		for (Term t : table_classes) {
+			if ((t).isFinal) {
 				equivalence_classes_table_temp[i][0] = true;
 			}
+			i++;
 		}
 		for (int i = 0; i < terms.size(); i++) {
 			if (terms[i].isFinal) {
@@ -491,7 +543,7 @@ bool TransformationMonoid::is_minimal() {
 			}
 		}
 		for (int i = 0; i < terms.size(); i++) {
-			vector<Term> cur = this->get_equalence_classes_vw(terms[i]);
+			vector<Term> cur = get_equalence_classes_vw(terms[i]);
 			for (int j = 0; j < cur.size(); j++) {
 				equivalence_classes_table_temp[data_table.at(cur[j].name) + 1]
 											  [i + 1] = true;
@@ -550,7 +602,7 @@ bool TransformationMonoid::is_minimal() {
 	Logger::finish_step();
 	return is_minimal_bool;
 }
-
+// вывод таблицы М-Н
 string TransformationMonoid::to_txt_MyhillNerode() {
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
@@ -581,7 +633,7 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	Logger::finish_step();
 	return ss.str();
 }
-
+// возвращает таблицу М-Н
 vector<vector<bool>> TransformationMonoid::get_equivalence_classes_table(
 	vector<string>& table_rows, vector<string>& table_columns) {
 	table_rows = equivalence_classes_table_left;
