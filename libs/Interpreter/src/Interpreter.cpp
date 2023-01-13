@@ -98,6 +98,7 @@ Interpreter::Interpreter() {
 		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
+		generate_brief_templates();
 }
 
 bool Interpreter::run_line(const string& line) {
@@ -216,10 +217,7 @@ optional<GeneralObject> Interpreter::apply_function(
 
 	// имя шаблона по умолчанию - название ф/и в интерпретаторе + номер
 	// сигнатуры (если их несколько)
-	string func_id = function.name;
-	if (names_to_functions[func_id].size() > 1)
-		func_id +=
-			to_string(find_func(function.name, function.input).value() + 1);
+	string func_id = get_func_id(function);
 
 	log_template.set_parameter("name", func_id);
 	log_template.load_tex_template(func_id);
@@ -543,6 +541,14 @@ optional<int> Interpreter::find_func(string func,
 		if (typecheck(func_input_type, argument_type)) return j;
 	}
 	return nullopt;
+}
+
+string Interpreter::get_func_id(Function function) {
+    string id = function.name;
+    if (names_to_functions[id].size() > 1) {
+        id += to_string(find_func(function.name, function.input).value() + 1);
+    }
+    return id;
 }
 
 optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
