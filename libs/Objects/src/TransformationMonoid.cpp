@@ -140,6 +140,7 @@ void TransformationMonoid::get_new_transition(
 	}
 }
 
+TransformationMonoid::TransformationMonoid(){};
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	int states_counter_old = 0;
 	int states_counter_new = 0;
