@@ -31,7 +31,7 @@ class TransformationMonoid {
 		}
 	};
 
-	struct Term {
+	struct Term { // Терм (флаг оставляет ли в языке, имя, вектор переходов)
 		bool isFinal = false;
 		vector<alphabet_symbol> name;
 		vector<Transition> transitions;
@@ -41,15 +41,13 @@ class TransformationMonoid {
 		}
 	};
 
-	struct TermDouble { // двойной терм
+	struct TermDouble { // двойной терм (нужен для uwu переходов)
 		Term first;
 		Term second;
 	};
 	TransformationMonoid();
-	TransformationMonoid(
-		const FiniteAutomaton& in); // Автомат и макс длина перехода
-	void OutAllTransformationMonoid();
-	vector<Term> get_equalence_classes(); // получаем все термы
+	TransformationMonoid(const FiniteAutomaton& in); // Строим моноид
+	vector<Term> get_equalence_classes(); // получаем все эквивалентные классы
 	vector<Term> get_equalence_classes_vw(
 		const Term& w); // получаем термы, что vw - в языке
 	vector<Term> get_equalence_classes_wv(
@@ -61,34 +59,41 @@ class TransformationMonoid {
 	string get_equalence_classes_txt(); // вывод эквивалентных классов
 	map<string, vector<string>> get_equalence_classes_map();
 	string get_rewriting_rules_txt(); // вывод правил переписывания
-	string to_txt() const;
+	string to_txt(); // Вывод всей информации о Моноиде
 	int is_synchronized(
 		const Term& w); // Вернет	-1	если	не	синхронизирован	или
 	// номер состояния	с	которым синхронизирован
 	int class_card(); // Вернет число классов эквивалентности
-	int class_length(); // Вернет самое длинное слово в классе
+	int class_length(); // Вернет длину самого длинного слова в классе
 	bool is_minimal(); // Вычисление Минимальности по М-Н(1 если минимальный)
 	int get_classes_number_MyhillNerode(); // Вычисление размера по М-Н
 	string to_txt_MyhillNerode(); // вывод таблицы М-Н
 	vector<alphabet_symbol> rewriting(
 		const vector<alphabet_symbol>&,
-		const map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>&);
+		const map<vector<alphabet_symbol>,
+				  vector<vector<alphabet_symbol>>>&); // переписываем имя терма
+													  // в минимальное
 	vector<vector<bool>> get_equivalence_classes_table(
 		vector<string>& table_rows,
 		vector<string>& table_columns); // возвращает
 										// таблицу М-Н
 
   private:
-	static bool wasrewrite(const vector<alphabet_symbol>&,
-						   const vector<alphabet_symbol>&);
-	static bool wasTransition(const set<TransformationMonoid::Transition>&,
-							  TransformationMonoid::Transition);
-	bool searchrewrite(const vector<alphabet_symbol>&);
-	queue<Term> queueTerm;
-	void get_transition_by_symbol(
+	static bool wasrewrite(
+		const vector<alphabet_symbol>&,
+		const vector<alphabet_symbol>&); // проверяем имя терма на
+										 // переписываемость (вспомогательный)
+	static bool wasTransition(
+		const set<TransformationMonoid::Transition>&,
+		TransformationMonoid::Transition); // проверка на присутствие терма
+	bool searchrewrite(const vector<alphabet_symbol>&); // проверяем имя терма
+														// на переписываемость
+	queue<Term> queueTerm; // очередь на проверку термов (в ней лежат
+						   // непроверенные кандидаты)
+	void get_new_transition(
 		const vector<TransformationMonoid::Transition>&,
-		const vector<alphabet_symbol>&, const set<alphabet_symbol>&);
-	set<int> search_transition_by_word(vector<alphabet_symbol>, int);
+		const vector<alphabet_symbol>&,
+		const set<alphabet_symbol>&); // генерируем новые переходы по алфавиту
 	FiniteAutomaton automat; // Автомат
 	vector<Term> terms;		 // Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
@@ -102,5 +107,5 @@ class TransformationMonoid {
 	// e | 0 1 0 0
 	// f | 0 bool0
 	// t | 1 0 1 1
-	bool trap_not_minimal = false;
+	bool trap_not_minimal = false; // флаг (неминимальны ли ловушки)
 };
