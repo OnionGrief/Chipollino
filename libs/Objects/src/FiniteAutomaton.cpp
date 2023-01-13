@@ -1845,7 +1845,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity(
 	FiniteAutomaton::AmbiguityValue result =
 		get_ambiguity_value(300, word_length);
 	// Logger::log("Автомат:", *this);
-	if (log) log->set_parameter("automaton", *this);
+	if (log) log->set_parameter("oldautomaton", *this);
 	if (word_length.has_value()) {
 		if (log)
 			log->set_parameter("Для максимальной длины слова",
@@ -2314,7 +2314,7 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	// Logger::init_step("Детерминизированность");
 	// Logger::log("Автомат", *this);
 	if (log) {
-		log->set_parameter("automaton", *this);
+		log->set_parameter("oldautomaton", *this);
 	}
 	bool result = true;
 	for (int i = 0; i < states.size(); i++) {
@@ -2351,8 +2351,8 @@ int FiniteAutomaton::states_number(iLogTemplate* log) const {
 	// Logger::log(to_string(states.size()));
 	// Logger::finish_step();
 	if (log) {
-		log->set_parameter("automaton", *this);
-		log->set_parameter("statesnum", states.size());
+		log->set_parameter("oldautomaton", *this);
+		log->set_parameter("result", states.size());
 	}
 	return states.size();
 }
