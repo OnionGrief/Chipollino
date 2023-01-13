@@ -82,12 +82,12 @@ ostream& operator<<(ostream& os, const alphabet_symbol& as) {
 }
 
 void alphabet_symbol::annote(int num) {
-	annote_numbers.push_back("." + to_string(num));
+	annote_numbers.push_back(annote_marker + to_string(num));
 	update_value();
 }
 
 void alphabet_symbol::linearize(int num) {
-	linearize_numbers.push_back("." + to_string(num));
+	linearize_numbers.push_back(linearise_marker + to_string(num));
 	update_value();
 }
 
