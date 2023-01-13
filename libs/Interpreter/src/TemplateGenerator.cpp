@@ -9,6 +9,19 @@ void Interpreter::generate_brief_templates() {
 			filename += func_id + ".tex";
 			ofstream outfile(filename);
 			outfile << "\\section{" << function.name << "}" << endl;
+			outfile << "\\begin{frame}{}" << endl;
+
+			/*if (function.input == ObjectType::NFA || function.input == ObjectType::DFA) {
+				
+			}*/
+
+			if (function.output == ObjectType::NFA || function.output == ObjectType::DFA) {
+				outfile << "\tАвтомат:" << endl;
+				outfile << "\t%template_newautomaton " << endl;
+				
+			}
+
+			outfile << "\\end{frame}" << endl;
 			outfile.close();
 		}
 	}
