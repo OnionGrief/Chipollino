@@ -128,7 +128,7 @@ bool wasrewrite(vector<alphabet_symbol> a, vector<alphabet_symbol> b) {
 	}
 	return false;
 }
-bool TransformationMonoid::searchrewrite(vector<alphabet_symbol> in) {
+bool TransformationMonoid::searchrewrite(const vector<alphabet_symbol>& in) {
 	for (auto currules : rules) {
 		for (vector<alphabet_symbol> rule : currules.second) {
 			if (wasrewrite(in, rule)) {

@@ -81,7 +81,7 @@ class TransformationMonoid {
   private:
 	static bool wasTransition(const set<TransformationMonoid::Transition>& mas,
 							  TransformationMonoid::Transition b);
-	bool searchrewrite(vector<alphabet_symbol>);
+	bool searchrewrite(const vector<alphabet_symbol>&);
 	queue<Term> queueTerm;
 	void get_transition_by_symbol(vector<TransformationMonoid::Transition>,
 								  vector<alphabet_symbol>,
