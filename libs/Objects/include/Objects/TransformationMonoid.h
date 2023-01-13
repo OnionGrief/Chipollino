@@ -79,17 +79,16 @@ class TransformationMonoid {
 										// таблицу М-Н
 
   private:
-	static bool wasrewrite(const vector<alphabet_symbol>& a,
-						   const vector<alphabet_symbol>& b);
-	static bool wasTransition(const set<TransformationMonoid::Transition>& mas,
-							  TransformationMonoid::Transition b);
+	static bool wasrewrite(const vector<alphabet_symbol>&,
+						   const vector<alphabet_symbol>&);
+	static bool wasTransition(const set<TransformationMonoid::Transition>&,
+							  TransformationMonoid::Transition);
 	bool searchrewrite(const vector<alphabet_symbol>&);
 	queue<Term> queueTerm;
-	void get_transition_by_symbol(vector<TransformationMonoid::Transition>,
-								  vector<alphabet_symbol>,
-								  const set<alphabet_symbol>&);
-	set<int> search_transition_by_word(vector<alphabet_symbol> word,
-									   int init_state);
+	void get_transition_by_symbol(
+		const vector<TransformationMonoid::Transition>&,
+		const vector<alphabet_symbol>&, const set<alphabet_symbol>&);
+	set<int> search_transition_by_word(vector<alphabet_symbol>, int);
 	FiniteAutomaton automat; // Автомат
 	vector<Term> terms;		 // Эквивалентные классы
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
