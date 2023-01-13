@@ -187,7 +187,7 @@ void TransformationMonoid::get_transition_by_symbol(
 		std::copy(out.begin(), out.end(), v.begin());
 		curTerm.transitions = v;
 		vector<alphabet_symbol> tempword = word;
-		tempword.push_back(*it);
+		tempword.push_back(as);
 		curTerm.name = tempword;
 		queueTerm.push(curTerm);
 	}
@@ -401,8 +401,9 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	}
 	return out;
 }
-bool wasTransition(set<TransformationMonoid::Transition> mas,
-				   TransformationMonoid::Transition b) {
+bool TransformationMonoid::wasTransition(
+	const set<TransformationMonoid::Transition>& mas,
+	TransformationMonoid::Transition b) {
 	for (TransformationMonoid::Transition maselem : mas) {
 		if (((maselem).first == b.first) && ((maselem).second == b.second)) {
 			return true;
