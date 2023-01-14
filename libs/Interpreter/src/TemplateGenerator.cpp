@@ -70,10 +70,10 @@ void Interpreter::generate_brief_templates() {
 						if (input_types_equal) {
 							if (index == 0) {
 								outfile << "\tПервый автомат:" << endl;
-								outfile << "\t%template_firstautomaton" << endl;
+								outfile << "\t%template_automaton" << index+1 << endl;
 							} else {
 								outfile << "\tВторой автомат:" << endl;
-								outfile << "\t%template_secondautomaton"
+								outfile << "\t%template_automaton" << index+1
 										<< endl;
 							}
 						} else {
@@ -94,11 +94,11 @@ void Interpreter::generate_brief_templates() {
 							if (index == 0) {
 								outfile << "\tПервое регулярное выражение:"
 										<< endl;
-								outfile << "\t%template_firstregex" << endl;
+								outfile << "\t%template_regex" << index+1 << endl;
 							} else {
-								outfile << "Второе регулярное выражение:"
+								outfile << "\tВторое регулярное выражение:"
 										<< endl;
-								outfile << "\t%template_secondregex" << endl;
+								outfile << "\t%template_regex" << index+1 << endl;
 							}
 						} else {
 							outfile << "\tРегулярное выражение:" << endl;
@@ -120,7 +120,7 @@ void Interpreter::generate_brief_templates() {
 						if (input_types_equal) {
 							outfile << "\t"
 									<< types_to_string[function.input[index]]
-									<< index + 1 << endl;
+									<< index + 1 << ":" << endl;
 							outfile << "\t%template_value" << index + 1 << endl;
 						} else {
 							outfile << "\t"
@@ -143,7 +143,7 @@ void Interpreter::generate_brief_templates() {
 					outfile << " после преоброзования";
 				}
 
-				outfile << ":\n\t%template_newautomaton" << endl;
+				outfile << ":\n\t%template_result" << endl;
 			}
 
 			//Для Regex, Int, Bool, optionalbool
@@ -160,7 +160,7 @@ void Interpreter::generate_brief_templates() {
 			if (function.output == ObjectType::PrefixGrammar) {
 				outfile << "\tПрефиксная грамматика:" << endl;
 
-				outfile << "\t%template_grammar" << endl;
+				outfile << "\t%template_result" << endl;
 			}
 
 			//Для регулярок
@@ -171,7 +171,7 @@ void Interpreter::generate_brief_templates() {
 					outfile << " после преоброзования";
 				}
 
-				outfile << ":\n\t%template_newregex" << endl;
+				outfile << ":\n\t%template_result" << endl;
 			}
 
 			outfile << "\\end{frame}" << endl;

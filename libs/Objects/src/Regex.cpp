@@ -782,7 +782,7 @@ FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
 	FiniteAutomaton fa(0, get_thompson(-1).first, language);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("newautomaton", fa);
+		log->set_parameter("result", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -968,7 +968,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 	test.set_language(lang_l);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("newregex", test);
+		log->set_parameter("result", test);
 	}
 	// Logger::log(test.to_txt());
 	// Logger::finish_step();
@@ -987,7 +987,7 @@ Regex Regex::delinearize(iLogTemplate* log) const {
 	test.set_language(lang_del);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("newregex", test);
+		log->set_parameter("result", test);
 	}
 	// Logger::log(test.to_txt());
 	return test;
@@ -1080,7 +1080,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		log->set_parameter("first", str_first);
 		log->set_parameter("end", str_end);
 		log->set_parameter("pairs", str_pair);
-		log->set_parameter("newautomaton", fa);
+		log->set_parameter("result", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -1169,7 +1169,7 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 		log->set_parameter("oldregex", *this);
 		log->set_parameter("glushkov", glushkov);
 		log->set_parameter("follow", str_follow);
-		log->set_parameter("newautomaton", fa);
+		log->set_parameter("result", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -1747,7 +1747,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 		log->set_parameter("oldregex", *this);
 		log->set_parameter("derivative", derev_log);
 		log->set_parameter("state", str_state);
-		log->set_parameter("newautomaton", fa);
+		log->set_parameter("result", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -1767,7 +1767,7 @@ Regex Regex::deannote(iLogTemplate* log) const {
 	test.set_language(lang_deann);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("newregex", test);
+		log->set_parameter("result", test);
 	}
 	/*Logger::log("Регулярное выражение после преобразования", test.to_txt());
 	Logger::finish_step();*/
