@@ -24,3 +24,8 @@ log.*
 
 *.log
 test.txt
+
+*.rsl
+refal/*.txt
+refal/*.dot
+refal/R_input.tex
