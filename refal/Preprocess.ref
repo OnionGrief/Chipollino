@@ -1,0 +1,314 @@
+/******************************
+      DOT Automaton Grammar
+*******************************
+[Automaton] ::= 'digraph {'[Preamble][NodeList][EdgeList]'}'
+[Preamble] ::= 'rankdir = LR;\n'
+[NodeList] ::= ([Node]'\n')*
+[Node] ::= [NodeName]' [label = \"'[NodeLabel]'\", shape = '[NodeShape]']'[NodeMetaData]?
+[EdgeList] ::= ([Edge]'\n')*
+[Edge] ::= [NodeName]' -> '[NodeName][EdgeLabel]?[EdgeMetaData]? 
+[NodeName] ::= 'dummy' | [Number]
+[NodeShape] ::= 'circle' | 'doublecircle' | 'none'
+[NodeLabel] ::= ([Regex]',')*[RegEx]
+[EdgeLabel] ::= ' [label = \"'[Symbol]'\"]'
+*******************************/
+
+/******************************
+General assumptions:
+
+Every edge is uniquely determined with its source, destination and label.
+Every node is uniquely determined with its NodeName
+Dummy node is always present and it is first
+dummy -> [Number] edge is always present and it is first
+
+*******************************
+Metadata:
+********************************
+For now, only node and edge groups are supported.
+They are specified by [comment_begin][AnythingElse]'group'[AnyName][comment_end] --- either following node data or following edge data.
+[AnyName] may contain digits and latin letters. Every name corresponds to an unique color style.
+The styles are derived automatically (TODO: use special names for distinguished styles, such as traps or finals) 
+at most 20 styles are supported.
+*******************************/
+
+$EXTERN TrueMathMode, FirstSym, Numbers;
+
+$ENTRY Go {
+ , <Arg 1> : e.from'.dot'
+ , <ExistFile e.from'.dot'> :
+ {True
+ , <Br 'LegendaInd='0> : e.W
+ , <Br 'LegendaCont=!NULL!'> : e.WW
+ , <Br 'AuxInd='0> : e.V
+ , <Br 'AuxCont=!NULL!'> : e.VV
+ , <Br 'MetaData=!NULL!'> : e.D
+ , <Br 'MetaGroups='> : e.D
+    =  <Open 'r' 1 e.from'.dot'><Open 'w' 2 'Mod_input.dot'><PutLines 2 <CropGraph Preamble <Get 1>>>
+       <GenLegenda e.from><GenAux e.from><GenMetaData e.from><Close 1><Close 2>;
+  False
+    = <Prout 'No file ' e.from'.dot found.'>; }; 
+}
+
+FrameData {
+ Height = 350;
+ Width = 600;
+ Zoom = 25; /* div 10 */
+}
+
+GetNodeMetaData {
+  (e.NodeName)e.x'/*'e.MD'*/'e.W
+  , e.MD : 
+   {e.M1'group'e.id
+    , <Dg 'MetaGroups'> :
+   {e.MG1'('e.id')'e.MG2
+      = <Br 'MetaGroups='e.MG1'('e.id')'e.MG2><Br 'MetaData=@'e.NodeName'@::='e.id>;
+    e.Rest = <Br 'MetaGroups='e.Rest'('e.id'),'><Br 'MetaData=@'e.NodeName'@::='e.id>;
+   };
+    e.Other = ; 
+   };
+  (e.NodeName)e.NoMetaData = ;
+}
+
+GetEdgeMetaData {
+  (e.Source)(e.Destination)(e.Label)e.MD
+  , e.MD : 
+   {e.M1'group'e.id
+    , <Dg 'MetaGroups'> :
+   {e.MG1'('e.id')'e.MG2
+      = <Br 'MetaGroups='e.MG1'('e.id')'e.MG2><Br 'MetaData=('e.Source')('e.Destination')@'<TrueMathMode e.Label>'@::='e.id>;
+    e.Rest = <Br 'MetaGroups='e.Rest'('e.id'),'><Br 'MetaData=('e.Source')('e.Destination')@'<TrueMathMode e.Label>'@::='e.id>;
+   };
+    e.Other = ; 
+   };
+}
+
+PutLines {
+ s.Stream (e.Line) e.Rest = <Putout s.Stream e.Line><PutLines s.Stream e.Rest>;
+ s.Stream = ;
+}
+
+GenLegenda {
+ e.from
+ , <Dg 'LegendaInd'> :
+ {0 = ;
+  s.Index = <Open 'w' 3 'L_'e.from'.tex'><PutLines 3 (<GenTablePreamble>)<DigBag ('LegendaCont') <Dg 'LegendaCont'>>(<GenTableBottom>)><Close 3>;
+ };
+}
+
+GenAux {
+ e.from
+ , <Dg 'AuxInd'> :
+ {0 = ;
+  s.Index = <Open 'w' 4 'Aux_'e.from'.data'><PutLines 4 <DigBag ('AuxCont') <Dg 'AuxCont'>>><Close 4>;
+ };
+}
+
+
+GenMetaData {
+ e.from
+ , <Dg 'MetaGroups'> :
+ { = ;
+  e.Rest
+  , <StyleTableGen <LenBlock 0 e.Rest> e.Rest> : e.StyleTable
+   = <Open 'w' 5 'Meta_'e.from'.data'><PutLines 5 <Stylize (e.StyleTable) <DigBag ('MetaData') <Dg 'MetaData'>>>><Close 5>;
+ };
+}
+
+Stylize {
+ (e.StyleTable)(e.D1'@::='e.id)e.Rest
+ , e.StyleTable : 
+ {e.S1 ((e.Color)'=('e.id')') e.S2
+  = (e.D1'@::='e.Color)<Stylize (e.StyleTable)e.Rest>;
+}; 
+ (e.StyleTable) = ;
+}
+
+StyleTableGen {
+  s.Styles e.Table
+ , <Compare s.Styles 5> :
+ {'+'
+  , <Div s.Styles 5> : s.S1
+  , <Mod s.Styles 5> : s.S2
+     = <ZipColors (<Renderize s.S1 <GetS 5 0 <ColorTable>>><GetS s.S2 0 <Renderize <Div <Add s.S2 1> 2> ('gray')('purple')('orange')>>) e.Table>;
+  e.Z = <ZipColors (<GetS s.Styles 0 <ColorTable>>) e.Table>;
+ };
+}
+
+ZipColors {
+ (t.Color e.Rest)'('e.id'),'e.List = (t.Color'=('e.id')')<ZipColors (e.Rest)e.List>;
+ () = ;
+}
+
+GetS {
+ s.Num s.Num e.List = ;
+ s.Max s.Curr t.El e.List = t.El <GetS s.Max <Add s.Curr 1> e.List>;
+}
+
+Renderize {
+  0 e.Colors = ;
+  1 e.Colors = e.Colors;
+  2 (e.Color) e.Rest = (e.Color'1')<Renderize 2 e.Rest>(e.Color'2');
+  3 (e.Color) e.Rest = (e.Color'1')(e.Color'2')<Renderize 3 e.Rest>(e.Color'3');
+  4 (e.Color) e.Rest = (e.Color'1')(e.Color'2')<Renderize 4 e.Rest>(e.Color'3')(e.Color'4');
+  s.Num = ;
+}
+
+ColorTable {
+ = ('blue')('green')('red')('violet')('yellow');
+}
+
+DigBag {
+ (e.BagName) '!NULL!' = ;
+ (e.BagName) e.Z = <DigBag (e.BagName) <Dg e.BagName>>(e.Z);
+}
+
+GenTablePreamble {
+ = '$\\begin{array}{r|l}\\rowcolor{HeaderColor}\\mathrm{State} & \\mathrm{Label}\\\\\\hline';
+}
+
+GenTableBottom {
+ = '\\end{array}$';
+}
+
+CropGraph {
+ s.Mode e.x 0 = <Prout 'Incorrect dot file.'>;
+ Preamble e.x'digraph {'e.y = (e.x'digraph {'e.y) <CropGraph Graph Nodes () <Get 1>>;
+ Preamble e.x = (e.x) <CropGraph Preamble <Get 1>>;
+ Graph s.Mode (e.FullGraph) '}'e.y = e.FullGraph('}'e.y);
+ Graph Nodes (e.Graph) e.Node
+ , e.Node :
+ { e.x1 'dummy ->' e.x2  = e.Graph <CropGraph Graph Edges (<ProcessEdge e.x1 'dummy ->' e.x2>) <Get 1>>;
+   e.W = <CropGraph Graph Nodes (e.Graph <ProcessNode e.W>) <Get 1>>;
+   };
+ Graph Edges (e.Edges) e.E = <CropGraph Graph Edges (e.Edges <ProcessEdge e.E>)<Get 1>>;
+}
+
+ProcessNode {
+ e.x' [label = \"'e.NodeLabel'\"'e.z = (e.x' [label = \"'<ProcessLabel <SplitData <Classify <DeleteDoubles e.NodeLabel>>>>'\"'e.z)
+                                             <GetNodeMetaData (<Trim e.x>)e.z>; 
+ e.Other = (e.Other);
+}
+
+DeleteDoubles {
+ e.y','e.y e.z, <FirstSym (<Numbers>)e.z> : False = <DeleteDoubles e.y e.z>;
+ e.x','e.y','e.y e.z, <FirstSym (<Numbers>)e.z> : False = <DeleteDoubles e.x','e.y e.z>;
+ e.y','e.u','e.y e.z, <FirstSym (<Numbers>)e.z> : False = <DeleteDoubles e.y','e.u','e.z>;
+ e.x','e.y','e.u','e.y e.z, <FirstSym (<Numbers>)e.z> : False = <DeleteDoubles e.x','e.y','e.u',' e.z>;
+ e.w = e.w;
+}
+
+ProcessLabel {
+ '\\begin{array}{'e.Header'}'e.Label'\\end{array}'
+ , e.Label : e.V'\\\\'e.Rest
+ , <Dg 'AuxInd'> : s.Num
+ , <Br 'AuxCont=~@'<Symb s.Num>'@\\begin{array}{'e.Header'}'<MapArray TrueMathMode e.Label>'\\end{array}~'> : e.Rubbish
+ , <Br 'AuxInd='<Add s.Num 1>> : e.Rubbish2
+  = e.V'@'<Symb s.Num>'@';
+ e.Z = e.Z;
+} 
+
+MapArray {
+ s.Func e.x'\\\\'e.y = <MapArray s.Func e.x>'\\\\'<MapArray s.Func e.y>;
+ s.Func e.x'&'e.y, <Screened e.x> : False = <Mu s.Func e.x>'&'<MapArray s.Func e.y>;
+ s.Func e.last = <Mu s.Func e.last>;
+}
+
+Screened {
+ e.w'\\' = True;
+ e.w1 = False;
+}
+
+Classify {
+ e.x = (<Len e.x>) e.x;
+}
+
+Len {
+ e.x1','e.x2 = <LengthStr 0 e.x1 e.x2> <LenBlock 2 e.x2>;
+ e.x = <LengthStr 0 e.x> 1;
+}
+
+LenBlock {
+ s.Num e.x','e.y = <LenBlock <Add s.Num 1> e.y>;
+ s.Num e.Z = s.Num;
+}
+
+LengthStr {
+ s.Num ',' e.x = <LengthStr s.Num e.x>;
+ s.Num s.s e.x = <LengthStr <Add s.Num 1> e.x>;
+ s.Num = s.Num; 
+}
+
+Lines {
+ s.Block
+ , <Compare s.Block 7> :
+ {'-' = 2;
+   e.Z
+ , <Compare s.Block 13> :
+ {'-' = 3;
+   e.Z
+  , <Compare s.Block 21> :
+ {'-' = 4;
+  e.Z = 5;
+ };
+ };};
+}
+
+BlockSize {
+ s.Block s.Lines
+ , <Div s.Block s.Lines> : s.PreSize
+ , <Mul s.PreSize s.Lines> :
+ {s.Block = s.PreSize;
+  e.Z = <Add s.PreSize 1>;
+ };
+}
+
+SplitArray {
+  s.Size s.Size e.x','e.y = e.x',\\\\'<SplitArray 1 s.Size e.y>;
+  s.Curr s.Size e.x','e.y = e.x','<SplitArray <Add s.Curr 1> s.Size e.y>;
+  s.Curr s.Size e.x = e.x;
+}
+
+SplitData {
+  (s.Total s.Block) e.Data
+ , <Compare <Div s.Total s.Block> 16> :
+ { '+'
+   , <Dg 'LegendaInd'> : s.Num
+   , <Br 'LegendaInd='<Add s.Num 1>> : e.Rubbish
+   , <Br 'LegendaCont='<TrueMathMode 'L'<Symb s.Num>>'&'<TrueMathMode e.Data>'\\\\'> : e.Rubbish2
+         = 'L'<Symb s.Num>;
+    e.Z
+ , <Compare s.Block 3> :
+ { '+'
+ , <Compare <Div s.Total s.Block> 6> :
+ { '+' =  <CreateArray <SplitArray 1 1 e.Data>>;
+   e.Any0 = <CreateArray <SplitArray 1 <BlockSize s.Block <Lines s.Block>> e.Data>>;
+  };
+    e.ZZ, <Compare <Div s.Total s.Block> 4><Compare s.Block 1> : 
+   {'++' = <CreateArray <SplitArray 1 1 e.Data>>;
+     e.Any = e.Data;
+   };
+ };};
+}
+
+CreateArray {
+  e.w = '\\begin{array}{c}'e.w '\\end{array}';
+}
+
+SectionEdge {
+ (e.x)e.y' [label ='e.l']'e.z'/*'e.MetaData'*/' = <GetEdgeMetaData (e.x)(e.y)(<Trim e.l>)e.MetaData>;
+ (e.x)e.y'/*'e.MetaData'*/' = <GetEdgeMetaData (e.x)(<Trim e.y>)()e.MetaData>;
+ e.W = ;
+}
+
+Trim {
+ e.y'\t' = <Trim e.y>;
+'\t'e.y = <Trim e.y>;
+ e.y' ' = <Trim e.y>;
+' 'e.y = <Trim e.y>;
+ e.y = e.y;
+}
+
+ProcessEdge {
+ e.x' -> 'e.y = (e.x' -> 'e.y)<SectionEdge (<Trim e.x>)e.y>;
+ e.Rubbish = (e.Rubbish);
+}
