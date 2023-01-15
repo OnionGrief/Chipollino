@@ -96,7 +96,7 @@ Interpreter::Interpreter() {
 		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
-		generate_brief_templates();
+	generate_brief_templates();
 }
 
 bool Interpreter::run_line(const string& line) {
@@ -288,27 +288,30 @@ optional<GeneralObject> Interpreter::apply_function(
 			return ObjectBoolean(Regex::equal(
 				get<ObjectRegex>(arguments[0]).value,
 				get<ObjectRegex>(arguments[1]).value, &log_template));
+			// TODO для кратких шаблонов
 		} else if (function.input[0] == ObjectType::Int) {
+			int a = get<ObjectInt>(arguments[0]).value;
 			bool res = get<ObjectInt>(arguments[0]).value ==
 					   get<ObjectInt>(arguments[1]).value;
-			log_template.set_parameter("res", res);
+			log_template.set_parameter("result", res);
 			return ObjectBoolean(res);
 		} else if (function.input[0] == ObjectType::Boolean) {
 			return ObjectBoolean(get<ObjectBoolean>(arguments[0]).value ==
 								 get<ObjectBoolean>(arguments[1]).value);
 		} else {
-			return ObjectBoolean(
-				get<ObjectAmbiguityValue>(arguments[0]).value ==
-				get<ObjectAmbiguityValue>(arguments[1]).value);
+			FiniteAutomaton::AmbiguityValue a =
+				get<ObjectAmbiguityValue>(arguments[0]).value;
+			return ObjectBoolean(a ==
+								 get<ObjectAmbiguityValue>(arguments[1]).value);
 		}
 	}
 	if (function.name == "OneUnambiguity") {
 		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(
-				get_automaton(arguments[0]).is_one_unambiguous());
+				get_automaton(arguments[0]).is_one_unambiguous(&log_template));
 		} else {
-			return ObjectBoolean(
-				get<ObjectRegex>(arguments[0]).value.is_one_unambiguous());
+			return ObjectBoolean(get<ObjectRegex>(arguments[0])
+									 .value.is_one_unambiguous(&log_template));
 		}
 	}
 	if (function.name == "SemDet") {
@@ -346,12 +349,12 @@ optional<GeneralObject> Interpreter::apply_function(
 	}
 	if (function.name == "PrefixGrammar") {
 		Grammar g;
-		g.fa_to_prefix_grammar(get_automaton(arguments[0]));
+		g.fa_to_prefix_grammar(get_automaton(arguments[0]), &log_template);
 		return ObjectPrefixGrammar(g);
 	}
 	if (function.name == "PGtoNFA") {
 		return ObjectNFA(get<ObjectPrefixGrammar>(arguments[0])
-							 .value.prefix_grammar_to_automaton());
+							 .value.prefix_grammar_to_automaton(&log_template));
 	}
 
 	/*
@@ -542,11 +545,11 @@ optional<int> Interpreter::find_func(string func,
 }
 
 string Interpreter::get_func_id(Function function) {
-    string id = function.name;
-    if (names_to_functions[id].size() > 1) {
-        id += to_string(find_func(function.name, function.input).value() + 1);
-    }
-    return id;
+	string id = function.name;
+	if (names_to_functions[id].size() > 1) {
+		id += to_string(find_func(function.name, function.input).value() + 1);
+	}
+	return id;
 }
 
 optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(

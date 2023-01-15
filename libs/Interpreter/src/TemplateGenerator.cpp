@@ -18,7 +18,7 @@ void Interpreter::generate_brief_templates() {
 			filename += func_id + ".tex";
 			ofstream outfile(filename);
 			outfile << "\\section{" << function.name << "}" << endl;
-			outfile << "\\begin{frame}{}" << endl;
+			outfile << "\\begin{frame}{" << function.name << "}" << endl;
 
 			bool equal_types = types_equiv(function.input, function.output);
 			if (function.input.size() > 1) {
@@ -36,13 +36,13 @@ void Interpreter::generate_brief_templates() {
 						outfile << " до преоброзования";
 					}
 
-					outfile << ":\n\t%template_oldautomaton" << endl;
+					outfile << ":\n\n\t%template_oldautomaton" << endl << endl;
 				}
 
 				//Для префиксной грамматики
 				if (function.input[0] == ObjectType::PrefixGrammar) {
-					outfile << "\tПрефиксная грамматика:" << endl;
-					outfile << "\t%template_grammar" << endl;
+					outfile << "\tПрефиксная грамматика:" << endl << endl;
+					outfile << "\t%template_grammar" << endl << endl;
 				}
 
 				//Для регулярок
@@ -53,7 +53,7 @@ void Interpreter::generate_brief_templates() {
 						outfile << " до преоброзования";
 					}
 
-					outfile << ":\n\t%template_oldregex" << endl;
+					outfile << ":\n\t%template_oldregex" << endl << endl;
 				}
 			} else {
 
@@ -69,23 +69,26 @@ void Interpreter::generate_brief_templates() {
 						 function.input[index] == ObjectType::DFA)) {
 						if (input_types_equal) {
 							if (index == 0) {
-								outfile << "\tПервый автомат:" << endl;
-								outfile << "\t%template_automaton" << index+1 << endl;
+								outfile << "\tПервый автомат:" << endl << endl;
+								outfile << "\t%template_automaton" << index + 1
+										<< endl
+										<< endl;
 							} else {
-								outfile << "\tВторой автомат:" << endl;
-								outfile << "\t%template_automaton" << index+1
+								outfile << "\tВторой автомат:" << endl << endl;
+								outfile << "\t%template_automaton" << index + 1
+										<< endl
 										<< endl;
 							}
 						} else {
-							outfile << "\tАвтомат:";
+							outfile << "\tАвтомат:" << endl << endl;
 							outfile << "\t%template_oldautomaton" << endl;
 						}
 					}
 
 					//Для префиксной грамматики
 					if (function.input[index] == ObjectType::PrefixGrammar) {
-						outfile << "\tПрефиксная грамматика:" << endl;
-						outfile << "\t%template_grammar" << endl;
+						outfile << "\tПрефиксная грамматика:" << endl << endl;
+						outfile << "\t%template_grammar" << endl << endl;
 					}
 
 					//Для регулярок
@@ -94,22 +97,26 @@ void Interpreter::generate_brief_templates() {
 							if (index == 0) {
 								outfile << "\tПервое регулярное выражение:"
 										<< endl;
-								outfile << "\t%template_regex" << index+1 << endl;
+								outfile << "\t%template_regex" << index + 1
+										<< endl
+										<< endl;
 							} else {
 								outfile << "\tВторое регулярное выражение:"
 										<< endl;
-								outfile << "\t%template_regex" << index+1 << endl;
+								outfile << "\t%template_regex" << index + 1
+										<< endl
+										<< endl;
 							}
 						} else {
 							outfile << "\tРегулярное выражение:" << endl;
-							outfile << "\t%template_oldregex" << endl;
+							outfile << "\t%template_oldregex" << endl << endl;
 						}
 					}
 
 					//Для Array
 					if (function.input[index] == ObjectType::Array) {
-						outfile << "\tПравила переписования:" << endl;
-						outfile << "\t%template_oldarray" << endl;
+						outfile << "\tПравила переписования:" << endl << endl;
+						outfile << "\t%template_oldarray" << endl << endl;
 					}
 
 					//Для других типов
@@ -120,13 +127,16 @@ void Interpreter::generate_brief_templates() {
 						if (input_types_equal) {
 							outfile << "\t"
 									<< types_to_string[function.input[index]]
-									<< index + 1 << ":" << endl;
-							outfile << "\t%template_value" << index + 1 << endl;
+									<< index + 1 << ":" << endl
+									<< endl;
+							outfile << "\t%template_value" << index + 1 << endl
+									<< endl;
 						} else {
 							outfile << "\t"
 									<< types_to_string[function.input[index]]
+									<< endl
 									<< endl;
-							outfile << "\t%template_value" << endl;
+							outfile << "\t%template_value" << endl << endl;
 						}
 					}
 				}
@@ -143,7 +153,7 @@ void Interpreter::generate_brief_templates() {
 					outfile << " после преоброзования";
 				}
 
-				outfile << ":\n\t%template_result" << endl;
+				outfile << ":\n\n\t%template_result" << endl;
 			}
 
 			//Для Regex, Int, Bool, optionalbool
@@ -158,7 +168,7 @@ void Interpreter::generate_brief_templates() {
 
 			//Для префиксной грамматики
 			if (function.output == ObjectType::PrefixGrammar) {
-				outfile << "\tПрефиксная грамматика:" << endl;
+				outfile << "\tПрефиксная грамматика:" << endl << endl;
 
 				outfile << "\t%template_result" << endl;
 			}
