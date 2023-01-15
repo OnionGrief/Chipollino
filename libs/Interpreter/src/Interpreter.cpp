@@ -290,19 +290,31 @@ optional<GeneralObject> Interpreter::apply_function(
 				get<ObjectRegex>(arguments[1]).value, &log_template));
 			// TODO для кратких шаблонов
 		} else if (function.input[0] == ObjectType::Int) {
-			int a = get<ObjectInt>(arguments[0]).value;
-			bool res = get<ObjectInt>(arguments[0]).value ==
-					   get<ObjectInt>(arguments[1]).value;
+			int value1 = get<ObjectInt>(arguments[0]).value;
+			int value2 = get<ObjectInt>(arguments[1]).value;
+			bool res = (value1 == value2);
+			log_template.set_parameter("value1", value1);
+			log_template.set_parameter("value2", value2);
 			log_template.set_parameter("result", res);
 			return ObjectBoolean(res);
 		} else if (function.input[0] == ObjectType::Boolean) {
-			return ObjectBoolean(get<ObjectBoolean>(arguments[0]).value ==
-								 get<ObjectBoolean>(arguments[1]).value);
+			int value1 = get<ObjectBoolean>(arguments[0]).value;
+			int value2 = get<ObjectBoolean>(arguments[1]).value;
+			bool res = (value1 == value2);
+			log_template.set_parameter("value1", value1);
+			log_template.set_parameter("value2", value2);
+			log_template.set_parameter("result", res);
+			return ObjectBoolean(res);
 		} else {
-			FiniteAutomaton::AmbiguityValue a =
+			FiniteAutomaton::AmbiguityValue value1 =
 				get<ObjectAmbiguityValue>(arguments[0]).value;
-			return ObjectBoolean(a ==
-								 get<ObjectAmbiguityValue>(arguments[1]).value);
+				FiniteAutomaton::AmbiguityValue value2 =
+				get<ObjectAmbiguityValue>(arguments[1]).value;
+			bool res = (value1 == value2);
+			log_template.set_parameter("value1", value1);
+			log_template.set_parameter("value2", value2);
+			log_template.set_parameter("result", res);
+			return ObjectBoolean(res);
 		}
 	}
 	if (function.name == "OneUnambiguity") {
@@ -461,15 +473,15 @@ optional<GeneralObject> Interpreter::apply_function(
 	}
 	if (function.name == "Intersect") {
 		res = ObjectNFA(FiniteAutomaton::intersection(
-			get_automaton(arguments[0]), get_automaton(arguments[1])));
+			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
 	}
 	if (function.name == "Union") {
 		res = ObjectNFA(FiniteAutomaton::uunion(get_automaton(arguments[0]),
-												get_automaton(arguments[1])));
+												get_automaton(arguments[1]), &log_template));
 	}
 	if (function.name == "Difference") {
 		res = ObjectNFA(FiniteAutomaton::difference(
-			get_automaton(arguments[0]), get_automaton(arguments[1])));
+			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
 	}
 
 	if (res.has_value()) {

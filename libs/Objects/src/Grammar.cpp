@@ -266,7 +266,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 	// Logger::init_step("PrefixGrammar");
 	// Logger::log("Автомат", fa);
 	if (log) {
-		log->set_parameter("automaton", fa);
+		log->set_parameter("oldautomaton", fa);
 	}
 	const vector<State>& states = fa.states;
 	TransformationMonoid a(fa.minimize());
