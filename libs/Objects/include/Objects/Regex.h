@@ -98,6 +98,7 @@ class Regex : BaseObject {
 
 	void pre_order_travers() const;
 	void clear();
+	string regex_to_dot_helplify(int* i);
 
   public:
 	Regex();
@@ -146,7 +147,7 @@ class Regex : BaseObject {
 	void regex_alt(Regex* a, Regex* b);
 	void regex_star(Regex* a);
 	void regex_eps();
-
+	string regex_to_dot();
 	Regex linearize() const;
 	Regex delinearize() const;
 	Regex deannote() const;

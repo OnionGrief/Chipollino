@@ -1895,3 +1895,49 @@ Regex Regex::get_one_unambiguous_regex() const {
 	language->set_one_unambiguous_regex(regl, fa.language);
 	return language->get_one_unambiguous_regex();
 }
+string Regex::regex_to_dot_helplify(int* i) {
+	stringstream ss;
+	(*i)++;
+	int cur = (*i);
+	if (term_l) {
+		ss << cur << "-> " << (*i) + 1 << "\n\t";
+		ss << term_l->regex_to_dot_helplify(i);
+	}
+	if (term_r) {
+		ss << cur << "-> " << (*i) + 1 << "\n\t";
+		ss << term_r->regex_to_dot_helplify(i);
+	}
+	string symb;
+
+	if (type == Type::conc) {
+		symb = "cons";
+	}
+	if (type == Type::symb) {
+		symb = value.symbol + to_string(value.number + 1);
+	}
+	if (type == Type::eps) {
+		symb = "eps";
+	}
+	if (type == Type::conc) {
+		symb = "|";
+	}
+	if (type == Type::conc) {
+		symb = "|";
+	}
+	if (type == Type::alt) symb = '|';
+	if (type == Type::star) {
+		symb = '*';
+	}
+	ss << cur << " [label = \"" << symb << "\", shape = doublecircle]\n\t";
+	return ss.str();
+}
+string Regex::regex_to_dot() {
+	stringstream ss;
+	int temp = 0;
+	int* i = &temp;
+	ss << "digraph {\n\tdummy [label = ";
+	ss << "\"\", shape = none]\n\tdummy -> 1\n\t";
+	ss << regex_to_dot_helplify(&temp);
+	ss << "}\n";
+	return ss.str();
+}
