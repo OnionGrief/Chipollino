@@ -19,7 +19,7 @@ cp makefile.lin makefile
 echo "export PATH=$PATH:/usr/src/refal" >> ~/.bashrc
 fi
 cd $BASEDIR
-rm -R ./build
+rm -fR ./build
 mkdir build
 cd ./build/
 cmake ../. && cmake --build .
