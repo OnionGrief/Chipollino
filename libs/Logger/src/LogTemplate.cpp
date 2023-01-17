@@ -17,6 +17,10 @@ void LogTemplate::set_parameter(const string& key, int value) {
 	parameters[key].value = value;
 }
 
+void LogTemplate::set_parameter(const string& key, Table value) {
+	parameters[key].value = value;
+}
+
 void LogTemplate::load_tex_template(string filename) {
 	tex_template = "./resources/template/" + filename + ".tex";
 }
@@ -54,6 +58,8 @@ string LogTemplate::render() const {
 				s.insert(insert_place, get<string>(p.second.value));
 			} else if (holds_alternative<int>(p.second.value)) {
 				s.insert(insert_place, to_string(get<int>(p.second.value)));
+			} else if (holds_alternative<Table>(p.second.value)) {
+				s.insert(insert_place, log_table(get<Table>(p.second.value)));
 			}
 		}
 		outstr += s;
@@ -143,18 +149,18 @@ string LogTemplate::math_mode(string str) {
 	return str_math;
 }
 
-string LogTemplate::log_table(vector<string> rows, vector<string> columns,
-							  vector<string> data) {
+string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> columns,
+							  vector<string> data*/) {
 	string table = "";
 	string format = "|l|";
 	string cols = "  & ";
 	string row = "";
-	for (int i = 0; i < columns.size(); i++) {
+	for (int i = 0; i < t.columns.size(); i++) {
 		format += "l|";
-		if (i != columns.size() - 1) {
-			cols += columns[i] + " & ";
+		if (i != t.columns.size() - 1) {
+			cols += t.columns[i] + " & ";
 		} else {
-			cols += columns[i] + "\\\\";
+			cols += t.columns[i] + "\\\\";
 		}
 	}
 	table += "\\begin{tabular}{" + format + "}\n";
@@ -163,13 +169,13 @@ string LogTemplate::log_table(vector<string> rows, vector<string> columns,
 	table += "\\hline\n";
 	int k = 0;
 	int j;
-	for (int i = 0; i < rows.size(); i++) {
-		row = rows[i] + " & ";
-		for (j = 0; j < columns.size(); j++) {
-			if (j != columns.size() - 1) {
-				row = row + data[k + j] + " & ";
+	for (int i = 0; i < t.rows.size(); i++) {
+		row = t.rows[i] + " & ";
+		for (j = 0; j < t.columns.size(); j++) {
+			if (j != t.columns.size() - 1) {
+				row = row + t.data[k + j] + " & ";
 			} else {
-				row = row + data[k + j] + "\\\\";
+				row = row + t.data[k + j] + "\\\\";
 			}
 		}
 		k += j;

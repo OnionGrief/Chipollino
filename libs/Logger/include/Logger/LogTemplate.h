@@ -14,11 +14,18 @@ class LogTemplate : public iLogTemplate {
 	void set_parameter(const string& key, Regex value) override;
 	void set_parameter(const string& key, string value) override;
 	void set_parameter(const string& key, int value) override;
+	void set_parameter(const string& key, Table value) override;
 
 	// Рендерит все логи, возвращает строку
 	string render() const;
 	// загрузка шаблона
 	void load_tex_template(string filename);
+
+	// struct Table {
+	// 	vector<string> rows;	// названия строк
+	// 	vector<string> columns; // названия столбцов
+	// 	vector<string> data;	// данные
+	// };
 
   private:
 	// LaTeX-шаблон
@@ -26,7 +33,7 @@ class LogTemplate : public iLogTemplate {
 
 	// Стуктура для хранения параметров
 	struct LogParameter {
-		variant<FiniteAutomaton, Regex, string, int> value;
+		variant<FiniteAutomaton, Regex, string, int, Table> value;
 	};
 
 	// Параметры
@@ -36,6 +43,6 @@ class LogTemplate : public iLogTemplate {
 	// счетчик картинок
 	inline static int image_number = 0;
 	// таблицы в общем виде
-	static string log_table(vector<string> rows, vector<string> columns,
-							vector<string> data);
+	static string log_table(Table t/*vector<string> rows, vector<string> columns,
+							vector<string> data*/);
 };

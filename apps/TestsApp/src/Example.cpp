@@ -423,21 +423,28 @@ void Example::arden_example() {
 	//  cout << temp.to_thompson().to_txt();
 }
 
-// void Example::table() {
-// 	vector<string> r;
-// 	vector<string> c;
-// 	vector<string> data;
-// 	// vector<Tester::word> words;
-// 	for (int i = 0; i < 3; i++) {
-// 		c.push_back("c");
-// 		r.push_back("r");
-// 		for (int j = 0; j < 3; j++) {
-// 			data.push_back(to_string(i * j));
-// 		}
-// 	}
-// 	string l = LogTemplate::log_table(r, c, data);
-// 	cout << l << endl;
-// }
+void Example::table() {
+	vector<string> r;
+	vector<string> c;
+	vector<string> data;
+	for (int i = 0; i < 3; i++) {
+		c.push_back("c");
+		r.push_back("r");
+		for (int j = 0; j < 3; j++) {
+			data.push_back(to_string(i + j));
+		}
+	}
+	LogTemplate::Table t;
+	t.columns = c;
+	t.data = data;
+	t.rows = r;
+	LogTemplate log_template;
+	Logger tex_logger;
+	log_template.set_parameter("table", t);
+	log_template.load_tex_template("determinize");
+	tex_logger.add_log(log_template);
+	tex_logger.render_to_file("./resources/report.tex");
+}
 
 void Example::fa_semdet_check() {
 	vector<State> states;
