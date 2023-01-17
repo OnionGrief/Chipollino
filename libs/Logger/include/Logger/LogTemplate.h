@@ -35,4 +35,7 @@ class LogTemplate : public iLogTemplate {
 	static string math_mode(string str);
 	// счетчик картинок
 	inline static int image_number = 0;
+	// таблицы в общем виде
+	static string log_table(vector<string> rows, vector<string> columns,
+							vector<string> data);
 };

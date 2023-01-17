@@ -137,3 +137,40 @@ string LogTemplate::math_mode(string str) {
 	str_math = "$" + str_math + "$";
 	return str_math;
 }
+
+string LogTemplate::log_table(vector<string> rows, vector<string> columns,
+							  vector<string> data) {
+	string table = "";
+	string format = "|l|";
+	string cols = "  & ";
+	string row = "";
+	for (int i = 0; i < columns.size(); i++) {
+		format += "l|";
+		if (i != columns.size() - 1) {
+			cols += columns[i] + " & ";
+		} else {
+			cols += columns[i] + "\\\\";
+		}
+	}
+	table += "\\begin{tabular}{" + format + "}\n";
+	table += "\\hline\n";
+	table += cols + "\n";
+	table += "\\hline\n";
+	int k = 0;
+	int j;
+	for (int i = 0; i < rows.size(); i++) {
+		row = rows[i] + " & ";
+		for (j = 0; j < columns.size(); j++) {
+			if (j != columns.size() - 1) {
+				row = row + data[k + j] + " & ";
+			} else {
+				row = row + data[k + j] + "\\\\";
+			}
+		}
+		k += j;
+		table += row + "\n";
+		table += "\\hline\n";
+	}
+	table += "\\end{tabular}\n";
+	return table;
+}
