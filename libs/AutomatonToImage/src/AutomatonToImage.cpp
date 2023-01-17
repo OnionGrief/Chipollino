@@ -27,16 +27,34 @@ string AutomatonToImage::to_image(string automat) {
 	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
 	system("cd refal && refgo Postprocess+MathMode input.tex > error_refal.txt "
 		   "2>&1");
-	system("cd refal && rm input.dot && rm input.tex");
-	ifstream infile("./refal/R_input.tex");
-	stringstream graph;
 
+	system("cd refal && rm input.dot && rm input.tex");
+	
+	//автомат
+	ifstream infile_for_R("./refal/R_input.tex");
+	stringstream graph;
 	string s;
-	for (; !infile.eof();) {
-		getline(infile, s);
-		graph << s << endl;
+	if (infile_for_R) {
+		for (; !infile_for_R.eof();) {
+			getline(infile_for_R, s);
+			graph << s << endl;
+		}
 	}
-	infile.close();
+	infile_for_R.close();
+
+
+	//таблица
+	ifstream infile_for_L("./refal/L_input.tex");
+	if (infile_for_L) {
+		for (; !infile_for_L.eof();) {
+			getline(infile_for_L, s);
+			graph << s << endl;
+		}
+	}
+	infile_for_L.close();
+	
+
+	
 
 	return graph.str();
 }

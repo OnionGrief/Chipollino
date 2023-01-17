@@ -1,0 +1,9 @@
+digraph {
+	rankdir = LR
+	dummy [label = "", shape = none]
+	0 [label = "aa*", shape = circle]
+	1 [label = "a*", shape = doublecircle]
+	dummy -> 0
+	0 -> 1 [label = "a"]
+	1 -> 1 [label = "a"]
+}
