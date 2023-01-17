@@ -884,7 +884,7 @@ void Example::test_pump_length() {
 
 void Example::fa_to_pgrammar() {
 	FiniteAutomaton a1 =
-		Regex("(c1(ab*a|b*)*d1)|(c2(ba*b|a*)*d2)")
+		Regex("(c_1(ab*a|b*)*d_1)|(c_2(ba*b|a*)*d_25)")
 			.to_glushkov()
 			.merge_bisimilar(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
 	// cout << a1.to_txt();

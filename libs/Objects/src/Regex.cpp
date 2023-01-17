@@ -62,17 +62,43 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 			if (is_symbol(c)) {
 				regex_is_eps = false;
 				lexem.type = Regex::Lexem::symb;
-				string number;
-				for (size_t i = index + 1; i < str.size(); i++) {
-					if (str[i] >= '0' && str[i] <= '9') {
-						number += str[i];
-					} else {
+				lexem.symbol = c;
+				for (size_t j = index + 1; j < str.size(); j++) {
+					bool lin = false;
+					bool annote = false;
+					if (str[j] == alphabet_symbol::linearize_marker) {
+						lin = true;
+					}
+					if (str[j] == alphabet_symbol::annote_marker) {
+						annote = true;
+					}
+					if (!lin && !annote) {
 						break;
 					}
-					index = i;
+					string number;
+					for (size_t i = j + 1; i < str.size(); i++) {
+						if (str[i] >= '0' && str[i] <= '9') {
+							number += str[i];
+						} else {
+							break;
+						}
+						index = i;
+						j = i;
+					}
+					if (number.length() == 0) {
+						lexem.type = Regex::Lexem::error;
+						lexems = {};
+						lexems.push_back(lexem);
+						return lexems;
+					}
+					int numb = stoi(number);
+					if (lin) {
+						lexem.symbol.linearize(numb);
+					}
+					if (annote) {
+						lexem.symbol.annote(numb);
+					}
 				}
-
-				lexem.symbol = c + number;
 				flag_alt = false;
 
 			} else {
@@ -490,9 +516,7 @@ void Regex::set_language(const set<alphabet_symbol>& _alphabet) {
 	language = make_shared<Language>(alphabet);
 }
 
-void Regex::normalize_this_regex(const vector<pair<Regex, Regex>>& rules) {
-	
-}
+void Regex::normalize_this_regex(const vector<pair<Regex, Regex>>& rules) {}
 
 void Regex::pre_order_travers() const {
 	if (type == Regex::symb /*&& value.symbol*/) {

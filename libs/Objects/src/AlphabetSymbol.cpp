@@ -87,7 +87,7 @@ void alphabet_symbol::annote(int num) {
 }
 
 void alphabet_symbol::linearize(int num) {
-	linearize_numbers.push_back(linearise_marker + to_string(num));
+	linearize_numbers.push_back(linearize_marker + to_string(num));
 	update_value();
 }
 

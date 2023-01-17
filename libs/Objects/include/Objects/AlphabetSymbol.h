@@ -14,7 +14,7 @@ struct alphabet_symbol {
 	void update_value();
 
   public:
-	static const char linearise_marker = '.';
+	static const char linearize_marker = '.';
 	static const char annote_marker = '_';
 
 	alphabet_symbol();
