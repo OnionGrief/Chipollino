@@ -1,4 +1,1 @@
-0 219 25 76 
-can't open pagedata.
-Refal system Error: File error.
-Do you want to print view-field? [Yn]
+0 2731 56 298 
