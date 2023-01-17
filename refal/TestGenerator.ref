@@ -1,0 +1,143 @@
+/******************************
+Preamble is: DummyTest.tex
+Diagrams taken from R_input{i}.tex (starting from i=1)
+Page parameters are taken from file pagedata
+The command line argument -- max number of R_input{i}.tex files to be included.
+*******************************/
+
+$ENTRY Go {
+ , <Numb <Arg 1>> : s.TestNum
+ , <ExtractLimitations 'pagedata'> : s.DefWidth s.DefHeight
+ , <Br 'MPFlag=-'> : e.Rubbish
+    =  <Open 'a' 1 'DummyTest.tex'><GenerateFrames s.DefWidth s.DefHeight 100 0 s.TestNum>
+       <Putout 1 '\\end{frame}\\end{document}'><Close 1>;
+}
+
+GenerateFrames {
+  s.DefWidth s.DefHeight s.PageHeight s.MaxTest s.MaxTest
+  , <Dg 'MPFlag'> :
+  {'+'
+  , <Dg 'FrameHeight'> : s.Height
+   , <Prout 'Digged MP'><Compare s.Height s.PageHeight> :
+    {'+' = <InsertNewPageIfNeeded '+'><GenInclusion s.DefHeight s.MaxTest>;
+     s.Any = <GenInclusion s.Height s.MaxTest>;
+    };
+   '-' = ;
+  };
+  s.DefWidth s.DefHeight s.PageHeight s.PrevTest s.MaxTest
+  , <Add s.PrevTest 1> : s.CurrTest
+  , <Open 'r' 2 'R_input'<Symb s.CurrTest>'.tex'> : e.Rubbish
+  , <Get 2> :
+ { '% Minipage 's.FlagMP'; Frame 's.FlagF'; Width percent 'e.WidP'; Height percent 'e.HP
+   , <Close 2> : e.Trash
+   , <Numb e.WidP> : s.WidthPercent
+   , <Numb e.HP> : s.HeightPercent
+  , <Compare s.DefWidth 50> : 
+ {'-'
+   , s.FlagMP :
+   {'+', <Dg 'MPFlag'> : 
+      { '+', <Max <Dg 'FrameHeight'> s.HeightPercent> : s.AdjustHeight
+           , <Br 'MPFlag=-'> : e.Buried
+           , <PageEsteem s.PageHeight s.AdjustHeight s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
+           = <Prout 'Input 's.CurrTest><InsertNewPageIfNeeded s.BeforeFlag>
+	     <GenMinipageIncl s.DefWidth s.AdjustHeight s.PrevTest>
+             <Putout 1 '\\hfill'>
+             <GenMinipageIncl s.DefWidth s.AdjustHeight s.CurrTest>
+	     <InsertNewPageIfNeeded s.NewPageFlag>
+             <GenerateFrames s.DefWidth s.DefHeight s.RestPage s.CurrTest s.MaxTest>;
+        '-', <Br 'FrameHeight='s.HeightPercent> : e.Buried1
+	   , <Br 'MPFlag=+'> : e.Buried2
+              = <Prout 'Buried minipage num 's.CurrTest>
+	        <GenerateFrames s.DefWidth s.DefHeight s.PageHeight s.CurrTest s.MaxTest>;
+      };
+    '-', <Dg 'MPFlag'> :
+    { '+'
+      , <Dg 'FrameHeight'> : s.PrevHeight
+      , <Br 'MPFlag=-'> : e.Buried
+      , <PageEsteem s.PageHeight s.PrevHeight s.DefHeight> : s.BeforeFlag s.NewPageFlagPrev s.RestPagePrev
+      , <PageEsteem s.RestPagePrev s.HeightPercent s.DefHeight> : s.BFlag1 s.NewPageFlag s.RestPage
+           = <Prout 'Input 's.CurrTest><Prout 'Prev page Flag:'s.NewPageFlagPrev><Prout 'Page Flag:'s.NewPageFlag>
+	    <InsertNewPageIfNeeded s.BeforeFlag>
+            <GenInclusion s.PrevHeight s.PrevTest><InsertNewPageIfNeeded s.NewPageFlagPrev>
+            <GenInclusion s.HeightPercent s.CurrTest><InsertNewPageIfNeeded s.NewPageFlag>
+            <GenerateFrames s.DefWidth s.DefHeight s.RestPage s.CurrTest s.MaxTest>;
+      '-'
+      , <Br 'MPFlag=-'> : e.Buried
+      , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
+          = <Prout 'Input 's.CurrTest><Prout 'Page Flag:'s.NewPageFlag>
+            <InsertNewPageIfNeeded s.BeforeFlag>
+ 	    <GenInclusion s.HeightPercent s.CurrTest><InsertNewPageIfNeeded s.NewPageFlag>
+            <GenerateFrames s.DefWidth s.DefHeight s.RestPage s.CurrTest s.MaxTest>;
+    };     
+   };
+  s.AnyOtherResult
+ , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
+      = <Prout 'Input 's.CurrTest><Prout 'Page Flag:'s.NewPageFlag>
+	    <InsertNewPageIfNeeded s.BeforeFlag>
+            <GenInclusion s.HeightPercent s.CurrTest><InsertNewPageIfNeeded s.NewPageFlag>
+            <GenerateFrames s.DefWidth s.DefHeight s.RestPage s.CurrTest s.MaxTest>;
+ };
+ };
+}
+
+PageEsteem {
+ s.PageHeight s.CurrHeight s.NeededHeight
+ , <Compare s.CurrHeight s.PageHeight> : 
+ {'+'
+  , <Sub 100 s.CurrHeight> : s.RestPage
+  , <Compare s.NeededHeight s.RestPage> :
+ { '-' = '+-'s.RestPage;
+   s.Any = '++'100;
+ };
+  s.Rest 
+ , <Sub s.PageHeight s.CurrHeight> : s.RestPage
+ , <Compare s.NeededHeight s.RestPage> :
+ {'-' = '--'s.RestPage;
+  s.Any
+   = '-+'100;
+ };
+ };
+}
+
+Max {
+ s.1 s.2
+ , <Compare s.2 s.1> :
+ {'-' = s.1;
+  s.Rest = s.2;
+ };
+}
+
+ToVal {
+ s.Numb
+ , <Symb s.Numb> : 
+  {s.1 s.2 s.3 = ;
+   e.rest = '0.'e.rest;
+  };
+}
+
+InsertNewPageIfNeeded {
+ '+' = <Putout 1 '\\end{frame}\n\\begin{frame}{}\n'>;
+ s.Rest = ;
+}
+
+GenMinipageIncl {
+ s.DefWidth s.DefHeight s.TestNum
+  = <Putout 1 '\\begin{minipage}{'<ToVal s.DefWidth>'\\textwidth}'>
+    <GenInclusion s.DefHeight s.TestNum>
+    <Putout 1 '\\end{minipage}'>;
+}
+
+GenInclusion {
+ s.DefHeight s.TestNum = 
+ <Putout 1 '\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal s.DefHeight>'\\textheight}{'>
+    <Putout 1 '\\input{R_input'<Symb s.TestNum>'.tex}}\\end{center}\n'>;
+}
+
+ExtractLimitations {
+ e.Filename
+ , <Open 'r' 7 e.Filename> : e.Rubbish
+ , <Get 7> : e.Num';'e.Num2
+ = <Numb e.Num><Numb e.Num2><Close 7>;
+}
+
+

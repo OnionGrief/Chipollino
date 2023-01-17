@@ -1,0 +1,48 @@
+/* Crazy Refal-style. Bracket balance is completely ignored, since it does not affect anything. We assume no epsilons in indices! */
+$ENTRY TrueMathMode {
+ 'eps'e.Input = '\\empt'<TrueMathMode e.Input>;
+  e.Input'eps' = <TrueMathMode e.Input>'\\empt';
+   = ;
+ e.Input = '\\regexpstr{'<MathMode e.Input>'}';
+}
+
+MathMode {
+ e.x'|'e.y = <MathMode e.x>'\\alter '<TrueMathMode e.y>;
+ e.x'*'e.y = <MathMode e.x>'{}\\hspace*{-0.09ex}\\star '<TrueMathMode e.y>;
+ e.x s.Num e.Number e.y, <InSet (<Numbers>) s.Num e.Number><FirstSym (<Numbers>) e.y> : True False = <Epsilon e.x>'_{'<HorizHack s.Num e.Number>'}'
+                     <MathMode e.y>;
+ e.x = <Epsilon e.x>;
+}
+
+Epsilon {
+ 'eps'e.Z = '}\\empt\\regexpstr{'<Epsilon e.Z>;
+ s.x e.Z = s.x <Epsilon e.Z>;
+  = ;
+}
+
+HorizHack {
+  = ;
+ s.x e.y = '\\hspace*{-0.09ex}'s.x<HorizHack e.y>;
+}
+
+$ENTRY Numbers {
+ = '0123456789';
+}
+
+InSet {
+ (e.x) s.Next e.data
+ , e.x :
+ { e.x1 s.Next e.x2 = <InSet (e.x) e.data>;
+   e.xx = False;
+ };
+ (e.x) = True;
+}
+
+$ENTRY FirstSym {
+ (e.x) s.Next e.data
+ , e.x :
+ { e.x1 s.Next e.x2 = True;
+   e.xx = False;
+ };
+ (e.x) = False;
+}

@@ -56,6 +56,13 @@ string Interpreter::Lexer::scan_until(char symbol) {
 	return acc;
 }
 
+Interpreter::Lexem Interpreter::Lexer::scan_star() {
+	if (scan_word("*")) {
+		return Lexem(Lexem::star);
+	}
+	return Lexem(Lexem::error);
+}
+
 Interpreter::Lexem Interpreter::Lexer::scan_equalSign() {
 	if (scan_word("=")) {
 		return Lexem(Lexem::equalSign);
@@ -80,6 +87,20 @@ Interpreter::Lexem Interpreter::Lexer::scan_parL() {
 Interpreter::Lexem Interpreter::Lexer::scan_parR() {
 	if (scan_word(")")) {
 		return Lexem(Lexem::parR);
+	}
+	return Lexem(Lexem::error);
+}
+
+Interpreter::Lexem Interpreter::Lexer::scan_bracketL() {
+	if (scan_word("[")) {
+		return Lexem(Lexem::bracketL);
+	}
+	return Lexem(Lexem::error);
+}
+
+Interpreter::Lexem Interpreter::Lexer::scan_bracketR() {
+	if (scan_word("]")) {
+		return Lexem(Lexem::bracketR);
 	}
 	return Lexem(Lexem::error);
 }
@@ -114,6 +135,15 @@ Interpreter::Lexem Interpreter::Lexer::scan_name() {
 	return Lexem(Lexem::error);
 }
 
+Interpreter::Lexem Interpreter::Lexer::scan_stringval() {
+	if (scan_word("\"")) {
+		string val = scan_until('\"');
+		scan_word("\"");
+		return Lexem(Lexem::stringval, val);
+	}
+	return Lexem(Lexem::error);
+}
+
 Interpreter::Lexem Interpreter::Lexer::scan_regex() {
 	if (scan_word("{")) {
 		string val = scan_until('}');
@@ -130,13 +160,25 @@ Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
 	if (Lexem lex = scan_parR(); lex.type) {
 		return lex;
 	}
+	if (Lexem lex = scan_bracketL(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_bracketR(); lex.type) {
+		return lex;
+	}
 	if (Lexem lex = scan_dot(); lex.type) {
 		return lex;
 	}
 	if (Lexem lex = scan_regex(); lex.type) {
 		return lex;
 	}
+	if (Lexem lex = scan_stringval(); lex.type) {
+		return lex;
+	}
 	if (Lexem lex = scan_number(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_star(); lex.type) {
 		return lex;
 	}
 	if (Lexem lex = scan_equalSign(); lex.type) {
@@ -186,6 +228,7 @@ vector<Interpreter::Lexem> Interpreter::Lexer::parse_string(string str) {
 	while (!eof()) {
 		auto lexem = scan_lexem();
 		lexems.push_back(lexem);
+		skip_spaces();
 	}
 	return lexems;
 }

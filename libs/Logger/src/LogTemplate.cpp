@@ -24,31 +24,36 @@ void LogTemplate::load_tex_template(string filename) {
 string LogTemplate::render() const {
 	// TODO: заполнять здесь шаблон
 	ifstream infile(tex_template);
+	// если шаблона не нашлось
+	if (!infile) return ""; // infile.close();
+
 	string outstr = "";
 	string s;
-	for (; !infile.eof();) {
+	while (!infile.eof()) {
 		getline(infile, s);
 		for (const auto& p : parameters) {
-			if (s.find("template_" + p.first) == -1) {
+			int insert_place = s.find("%template_" + p.first);
+			if (insert_place == -1) {
 				continue;
 			}
+
 			if (holds_alternative<Regex>(p.second.value)) {
-				outstr += math_mode(get<Regex>(p.second.value).to_txt());
+				s.insert(insert_place,
+						 math_mode(get<Regex>(p.second.value).to_txt()));
 			} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
 				image_number += 1;
-				AutomatonToImage::to_image(
-					get<FiniteAutomaton>(p.second.value).to_txt(),
-					image_number);
-				char si[256];
+				string graph = AutomatonToImage::to_image(
+					get<FiniteAutomaton>(p.second.value).to_txt());
+				/*char si[256];
 				sprintf(si,
-						"\\includegraphics[width=2in, "
+						"\\includegraphics[height=1.3in, "
 						"keepaspectratio]{output%d.png}\n",
-						image_number);
-				outstr += si;
+						image_number);*/
+				s.insert(insert_place, graph);
 			} else if (holds_alternative<string>(p.second.value)) {
-				outstr += get<string>(p.second.value);
+				s.insert(insert_place, get<string>(p.second.value));
 			} else if (holds_alternative<int>(p.second.value)) {
-				outstr += to_string(get<int>(p.second.value));
+				s.insert(insert_place, to_string(get<int>(p.second.value)));
 			}
 		}
 		outstr += s;
