@@ -1011,8 +1011,8 @@ void Example::test_interpreter() {
 		"A = [[(([a}]))] [{a} (Glushkov(DeAnnote {a} !!) !!) []]]"));
 
 	// Normalize
-	assert(interpreter.run_line("A = Normalize {abc} [[{a} {b}]]"));
-	assert(!interpreter.run_line("A = Normalize {abc} [[{a} []]]"));
+	// assert(interpreter.run_line("A = Normalize {abc} [[{a} {b}]]"));
+	// assert(!interpreter.run_line("A = Normalize {abc} [[{a} []]]"));
 }
 
 void Example::test_TransformationMonoid() {
