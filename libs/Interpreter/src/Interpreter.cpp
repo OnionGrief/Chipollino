@@ -232,7 +232,7 @@ optional<GeneralObject> Interpreter::apply_function(
 
 	log_template.set_parameter("name", func_id);
 	log_template.load_tex_template(func_id);
-	log_template.set_theory_flag(flags_values[Flags::theory]);
+	log_template.set_theory_flag(flags[Flag::weak_type_comparison]);
 
 	if (function.name == "Glushkov") {
 		return ObjectNFA(
