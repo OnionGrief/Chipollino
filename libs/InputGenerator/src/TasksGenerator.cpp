@@ -200,7 +200,7 @@ string TasksGenerator::generate_declaration() {
 					func_str += " N" + to_string(rand_id.num);
 				}
 
-				if (first_func.input[i] == FILENAME) {
+				if (first_func.input[i] == ARRAY) {
 					func_str += " Rules";
 				}
 			}

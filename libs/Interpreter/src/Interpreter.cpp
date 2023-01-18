@@ -46,17 +46,17 @@ Interpreter::Interpreter() {
 		 {{"Difference", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
 		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
-		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
+		{"ClassLength", {{"ClassLength", {ObjectType::NFA}, ObjectType::Int}}},
 		{"Normalize",
 		 {{"Normalize",
 		   {ObjectType::Regex, ObjectType::Array},
 		   ObjectType::Regex}}},
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
-		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
+		{"ClassCard", {{"ClassCard", {ObjectType::NFA}, ObjectType::Int}}},
 		{"Ambiguity",
 		 {{"Ambiguity", {ObjectType::NFA}, ObjectType::AmbiguityValue}}},
 		{"MyhillNerode",
-		 {{"MyhillNerode", {ObjectType::DFA}, ObjectType::Int}}},
+		 {{"MyhillNerode", {ObjectType::NFA}, ObjectType::Int}}},
 		{"GlaisterShallit",
 		 {{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int}}},
 		{"PrefixGrammar",
@@ -773,22 +773,23 @@ bool Interpreter::run_test(const Test& test) {
 	return success;
 }
 
-bool Interpreter::run_verifier(const Verifier& verifier) {
+bool Interpreter::run_verification(const Verification& verification) {
 	auto logger = init_log();
 	logger.log("");
-	logger.log("Running verifier...");
+	logger.log("Running verification...");
 	bool success = true;
 	int results = 0;
-	int tests_size = verifier.size;
-	int tests_false_num = min(10, (int)round(verifier.size * 0.1));
+	int tests_size = verification.size;
+	int tests_false_num = min(10, (int)round(verification.size * 0.1));
 	vector<string> regex_list;
 	RegexGenerator RG; // TODO: менять параметры
+	Expression expr = verification.predicate;
 
-	for (int i = 0; i < verifier.size; i++) {
+	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
 		current_random_regex =
 			Regex(RG.generate_regex()); // хз как еще передавать
-		auto predicate = eval_expression(verifier.predicate);
+		auto predicate = eval_expression(expr);
 
 		if (predicate.has_value()) {
 			bool res = get<ObjectBoolean>(*predicate).value;
@@ -798,7 +799,7 @@ bool Interpreter::run_verifier(const Verifier& verifier) {
 				tests_false_num--;
 			}
 		} else {
-			logger.throw_error("while running verifier: invalid arguments");
+			logger.throw_error("while running verification: invalid arguments");
 			success = false;
 			break;
 		}
@@ -838,8 +839,8 @@ bool Interpreter::run_operation(const GeneralOperation& op) {
 		success = run_test(get<Test>(op));
 	} else if (holds_alternative<Flag>(op)) {
 		success = set_flag(get<Flag>(op));
-	} else if (holds_alternative<Verifier>(op)) {
-		success = run_verifier(get<Verifier>(op));
+	} else if (holds_alternative<Verification>(op)) {
+		success = run_verification(get<Verification>(op));
 	}
 	return success;
 }
@@ -1221,43 +1222,43 @@ optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 	return flag;
 }
 
-optional<Interpreter::Verifier> Interpreter::scan_verifier(
+optional<Interpreter::Verification> Interpreter::scan_verification(
 	const vector<Lexem>& lexems, int& pos) {
 
 	auto logger = init_log();
 	int i = pos;
 
 	if (lexems.size() < i + 1 || lexems[i].type != Lexem::name ||
-		lexems[i].value != "Verify") {
+		lexems[i].value != "Verification") {
 		return nullopt;
 	}
 	i++;
 
-	Verifier verifier;
+	Verification verification;
 	flags_values[Flags::verification] = true;
 	// Predicate
 	if (const auto& expr = scan_expression(lexems, i, lexems.size());
 		expr.has_value() && ((*expr).type == ObjectType::Boolean ||
-							 (*expr).type == ObjectType::Boolean)) {
-		verifier.predicate = *expr;
+							 (*expr).type == ObjectType::OptionalBool)) {
+		verification.predicate = *expr;
 	} else {
 		logger.throw_error(
-			"Scan verifier: wrong type at position 1, predicate expected");
+			"Scan verification: wrong type at position 1, predicate expected");
 		return nullopt;
 	}
 	// tests size
 	if (lexems.size() > i)
 		if (lexems[i].type == Lexem::number) {
-			verifier.size = lexems[i].num;
+			verification.size = lexems[i].num;
 		} else {
 			logger.throw_error(
-				"Scan verifier: wrong type at position 2, number expected");
+				"Scan verification: wrong type at position 2, number expected");
 			return nullopt;
 		}
 	i++;
 
 	pos = i;
-	return verifier;
+	return verification;
 }
 
 optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
@@ -1273,8 +1274,8 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	if (auto flag = scan_flag(lexems, pos); flag.has_value()) {
 		return flag;
 	}
-	if (auto verifier = scan_verifier(lexems, pos); verifier.has_value()) {
-		return verifier;
+	if (auto verification = scan_verification(lexems, pos); verification.has_value()) {
+		return verification;
 	}
 	flags_values[Flags::verification] = false;
 	if (auto declaration = scan_declaration(lexems, pos);

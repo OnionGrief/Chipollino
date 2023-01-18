@@ -29,6 +29,22 @@ class Interpreter {
 	// Установит режим логгирования в консоль
 	void set_log_mode(LogMode mode);
 
+	
+	// SetFlag [flagname] [value]
+	struct Flag {
+		string name;
+		bool value;
+	};
+
+
+	enum class Flags {
+		trim,
+		dynamic,
+		theory,
+		verification
+	};
+	bool set_flag(const Flag&);
+
   private:
 	//== Внутреннее логгирование ==============================================
 	// true, если во время исполнения произошла ошибка
@@ -126,7 +142,7 @@ class Interpreter {
 	};
 
 	// Специальная форма Verify
-	struct Verifier {
+	struct Verification {
 		// Аргументы:
 		// Предикат
 		Expression predicate;
@@ -144,25 +160,12 @@ class Interpreter {
 		vector<Expression> arguments;
 	};
 
-	// SetFlag [flagname] [value]
-	struct Flag {
-		string name;
-		bool value;
-	};
-
 	// Флаги:
 
-	enum class Flags {
-		trim,
-		dynamic,
-		theory,
-		verification
-	};
-
 	map<string, Flags> flags_names = {
-		{"trim", Flags::trim},
-		{"dynamic", Flags::dynamic},
-		{"theory", Flags::theory},
+		{"auto_remove_trap_states", Flags::trim},
+		{"weak_type_comparison", Flags::dynamic},
+		{"log_theory", Flags::theory},
 		// Андрей, придумай сам названия
 	};
 
@@ -183,7 +186,7 @@ class Interpreter {
 
 	// Общий вид опрерации
 	using GeneralOperation =
-		variant<Declaration, Test, Predicate, Flag, Verifier>;
+		variant<Declaration, Test, Predicate, Flag, Verification>;
 
 	//== Парсинг ==============================================================
 
@@ -220,7 +223,7 @@ class Interpreter {
 	// Считывание операции из набора лексем
 	optional<Declaration> scan_declaration(const vector<Lexem>&, int& pos);
 	optional<Test> scan_test(const vector<Lexem>&, int& pos);
-	optional<Verifier> scan_verifier(const vector<Lexem>&, int& pos);
+	optional<Verification> scan_verification(const vector<Lexem>&, int& pos);
 	optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);
 	optional<Flag> scan_flag(const vector<Lexem>&, int& pos);
 	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
@@ -245,8 +248,7 @@ class Interpreter {
 	bool run_declaration(const Declaration&);
 	bool run_predicate(const Predicate&);
 	bool run_test(const Test&);
-	bool run_verifier(const Verifier&);
-	bool set_flag(const Flag&);
+	bool run_verification(const Verification&);
 	bool run_operation(const GeneralOperation&);
 
 	// Список опреаций для последовательного выполнения

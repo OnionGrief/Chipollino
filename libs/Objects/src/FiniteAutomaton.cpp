@@ -2457,7 +2457,3 @@ Regex FiniteAutomaton::to_regex() const {
 	Logger::finish_step();
 	return temp1;
 }
-
-void FiniteAutomaton::set_trim_flag(bool is_trim_global) {
-	is_trim = is_trim_global;
-}
