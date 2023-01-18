@@ -144,6 +144,17 @@ void Interpreter::set_log_mode(LogMode mode) {
 	log_mode = mode;
 }
 
+bool Interpreter::set_flag(Flag key, bool value) {
+	auto logger = init_log();
+	if (flags.count(key)) {
+		flags[key] = value;
+	} else {
+		logger.throw_error("set_flag::invalid flag id");
+		return false;
+	}
+	return true;
+}
+
 void Interpreter::InterpreterLogger::log(const string& str) {
 	if (parent.log_mode == LogMode::all) {
 		for (int i = 1; i < parent.log_nesting; i++) {
@@ -814,7 +825,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 	return success;
 }
 
-bool Interpreter::set_flag(const SetFlag& flag) {
+bool Interpreter::run_set_flag(const SetFlag& flag) {
 	auto logger = init_log();
 	logger.log("");
 	Flag flag_name = flags_names[flag.name];
@@ -838,7 +849,7 @@ bool Interpreter::run_operation(const GeneralOperation& op) {
 	} else if (holds_alternative<Test>(op)) {
 		success = run_test(get<Test>(op));
 	} else if (holds_alternative<SetFlag>(op)) {
-		success = set_flag(get<SetFlag>(op));
+		success = run_set_flag(get<SetFlag>(op));
 	} else if (holds_alternative<Verification>(op)) {
 		success = run_verification(get<Verification>(op));
 	}

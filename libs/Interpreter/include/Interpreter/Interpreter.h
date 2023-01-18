@@ -29,21 +29,13 @@ class Interpreter {
 	// Установит режим логгирования в консоль
 	void set_log_mode(LogMode mode);
 
-	
-	// SetFlag [flagname] [value]
-	struct SetFlag {
-		string name;
-		bool value;
-	};
-
-
 	enum class Flag {
 		trim,
 		dynamic,
 		theory,
 		verification
 	};
-	bool set_flag(const SetFlag&);
+	bool set_flag(Flag key, bool value);
 
   private:
 	//== Внутреннее логгирование ==============================================
@@ -160,6 +152,12 @@ class Interpreter {
 		vector<Expression> arguments;
 	};
 
+	// SetFlag [flagname] [value]
+	struct SetFlag {
+		string name;
+		bool value;
+	};
+
 	// Флаги:
 
 	map<string, Flag> flags_names = {
@@ -249,7 +247,8 @@ class Interpreter {
 	bool run_predicate(const Predicate&);
 	bool run_test(const Test&);
 	bool run_verification(const Verification&);
-	bool run_operation(const GeneralOperation&);
+	bool run_set_flag(const SetFlag&);
+	bool run_operation(const GeneralOperation&);	
 
 	// Список опреаций для последовательного выполнения
 	vector<GeneralOperation> operations;
