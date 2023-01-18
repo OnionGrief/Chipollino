@@ -192,11 +192,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim) const {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
 		Logger::log("Автомат до минимизации", "Автомат после минимизации",
 					*this, language_min_dfa);
-		stringstream ss;
-		for (const auto& state : language_min_dfa.states) {
-			ss << "\\{" << state.identifier << "\\} ";
-		}
-		Logger::log("Эквивалентные классы", ss.str());
+		Logger::log("(!) минимальный автомат получен из кэша");
 		Logger::finish_step();
 		return language_min_dfa; // TODO Нужно решить, что делаем с
 								 // идентификаторами
@@ -313,7 +309,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim) const {
 	for (const auto& state : minimized_dfa.states) {
 		ss << "\\{" << state.identifier << "\\} ";
 	}
-	Logger::log("Эквивалентные классы", ss.str());
+	Logger::log("Классы эквивалентности", ss.str());
 	Logger::finish_step();
 	return minimized_dfa;
 }
@@ -770,14 +766,14 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 			if (elem.second.size() > 1) {
 				int counter = 1;
 				for (int transition_to : elem.second) {
-					alphabet_symbol new_symb = elem.first + to_string(counter);
+					alphabet_symbol new_symb = elem.first;
+					new_symb.annote(counter);
 					new_transitions[i][new_symb].insert(transition_to);
 					new_alphabet.insert(new_symb);
 					counter++;
 				}
 			} else {
-				new_transitions[i][elem.first] =
-					new_fa.states[i].transitions[elem.first];
+				new_transitions[i][elem.first] = elem.second;
 				if (!elem.first.is_epsilon()) {
 					new_alphabet.insert(elem.first);
 				}
@@ -803,20 +799,46 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 		new_fa.states.size());
 	for (int i = 0; i < new_fa.states.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
-			if (elem.first.size() > 1) {
-				alphabet_symbol symb = elem.first;
-				symb.remove_numbers();
-				if (!symb.is_epsilon()) {
-					new_alphabet.insert(symb);
-				}
+			alphabet_symbol new_symb = elem.first;
+			if (elem.first.is_annotated()) {
+				new_symb.deannote();
 				for (int transition_to : elem.second) {
-					new_transitions[i][symb].insert(transition_to);
+					new_transitions[i][new_symb].insert(transition_to);
 				}
-			} else {
-				new_transitions[i][elem.first] =
-					new_fa.states[i].transitions[elem.first];
-				new_alphabet.insert(elem.first);
-			}
+			} else
+				new_transitions[i][new_symb] = elem.second;
+			if (!new_symb.is_epsilon()) new_alphabet.insert(new_symb);
+		}
+	}
+	new_fa.language = make_shared<Language>(new_alphabet);
+	for (int i = 0; i < new_transitions.size(); i++) {
+		new_fa.states[i].transitions = new_transitions[i];
+	}
+	new_fa = new_fa.remove_trap_states();
+	Logger::log("Автомат до удаления разметки",
+				"Автомат после удаления разметки", *this, new_fa);
+	Logger::finish_step();
+	return new_fa;
+}
+
+FiniteAutomaton FiniteAutomaton::delinearize() const {
+	Logger::init_step("DeLinearize");
+	set<alphabet_symbol> new_alphabet;
+	FiniteAutomaton new_fa =
+		FiniteAutomaton(initial_state, states, make_shared<Language>());
+	vector<map<alphabet_symbol, set<int>>> new_transitions(
+		new_fa.states.size());
+	for (int i = 0; i < new_fa.states.size(); i++) {
+		for (const auto& elem : new_fa.states[i].transitions) {
+			alphabet_symbol new_symb = elem.first;
+			if (elem.first.is_linearize()) {
+				new_symb.delinearize();
+				for (int transition_to : elem.second) {
+					new_transitions[i][new_symb].insert(transition_to);
+				}
+			} else
+				new_transitions[i][new_symb] = elem.second;
+			if (!new_symb.is_epsilon()) new_alphabet.insert(new_symb);
 		}
 	}
 	new_fa.language = make_shared<Language>(new_alphabet);
@@ -1191,7 +1213,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar() const {
 			ss << elem.second[i]->name << ",";
 		ss << elem.second[elem.second.size() - 1]->name << "\\}";
 	}
-	Logger::log("Эквивалентные классы", ss.str());
+	Logger::log("Классы эквивалентности", ss.str());
 	Logger::finish_step();
 	return result_fa;
 }
@@ -1284,7 +1306,7 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 			ss << elem.second[i] << ",";
 		ss << elem.second[elem.second.size() - 1] << "\\}";
 	}
-	Logger::log("Эквивалентные классы", ss.str());
+	Logger::log("Классы эквивалентности", ss.str());
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
@@ -1494,7 +1516,11 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	Logger::init_step("Equiv");
 	Logger::log("Автоматы:");
 	Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
-	bool result = equal(fa1.minimize(), fa2.minimize());
+	bool result = true;
+	if (fa1.language == fa2.language)
+		Logger::log("(!) автоматы изначально принадлежат одному языку");
+	else
+		result = equal(fa1.minimize(), fa2.minimize());
 	if (result)
 		Logger::log("Результат Equiv", "true");
 	else
@@ -1933,7 +1959,7 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 				was[*it2] = true;
 				auto res = get_prefix(*it2, state_end, was);
 				if (res.has_value()) {
-					ans = it->first + res.value();
+					ans = (string)it->first + (string)res.value();
 				}
 				return ans;
 			}

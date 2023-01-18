@@ -232,7 +232,7 @@ optional<GeneralObject> Interpreter::apply_function(
 		return ObjectRegex((get_automaton(arguments[0]).to_regex()));
 	}
 	if (function.name == "Thompson") {
-		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_tompson());
+		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_thompson());
 	}
 	if (function.name == "Bisimilar") {
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
@@ -322,9 +322,6 @@ optional<GeneralObject> Interpreter::apply_function(
 	if (function.name == "Ambiguity") {
 		return ObjectAmbiguityValue(get_automaton(arguments[0]).ambiguity());
 	}
-	/*if (function.name == "Width") {
-		return ObjectInt(get<ObjectNFA>(arguments[0]).value.);
-	}*/
 	if (function.name == "MyhillNerode") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
 		return ObjectInt(trmon.get_classes_number_MyhillNerode());
@@ -382,8 +379,7 @@ optional<GeneralObject> Interpreter::apply_function(
 			res =
 				ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize());
 		} else {
-			// пусть будет так
-			res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote());
+			res = ObjectNFA(get_automaton(arguments[0]).delinearize());
 		}
 	}
 	if (function.name == "Complement") {

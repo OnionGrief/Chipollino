@@ -219,8 +219,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 }
 
 // vector<vector<GrammarItem>>
-const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
-						   int index_back,
+const int Grammar::fa_to_g(const FiniteAutomaton& fa, alphabet_symbol w,
+						   int index, int index_back,
 						   const vector<PrefixGrammarItem*>& grammar_items,
 						   const set<string>& monoid_rules, string word) {
 	const State& st = fa.states[index];
@@ -236,7 +236,8 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 	g->is_visit = true;
 	for (const auto& equ : equivalence_class_back) {
 		if (monoid_rules.find(equ) == monoid_rules.end() || st.is_terminal) {
-			g->equivalence_class.insert(word + w);
+			string l = string(w);
+			g->equivalence_class.insert(word + l);
 		}
 	}
 
@@ -248,8 +249,9 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 				alpha = "";
 			}
 			if (index != ind) {
+				string l = string(w);
 				fa_to_g(fa, alpha, ind, index, grammar_items, monoid_rules,
-						word + w);
+						word + l);
 
 			} else {
 				g->rules[alpha].insert(index);
@@ -465,8 +467,9 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() const {
 			}
 			if (alpha == "") {
 				alpha = alphabet_symbol::epsilon();
+			} else {
+				symbols.insert(alpha);
 			}
-			symbols.insert(alpha);
 		}
 	}
 	FiniteAutomaton res = FiniteAutomaton(initial_state, states, symbols);
