@@ -27,7 +27,7 @@ class TransformationMonoid {
 			return first > a.first && second > a.second;
 		}
 		bool operator<(const Transition& a) const {
-			return first * 1000 + second < a.first * 1000 + a.second;
+			return first < a.first || first == a.first && second < a.second;
 		}
 	};
 	// Терм (флаг оставляет ли в языке, имя, вектор переходов)
@@ -36,7 +36,7 @@ class TransformationMonoid {
 		vector<alphabet_symbol> name;
 		vector<Transition> transitions;
 		bool operator==(const Term& a) const {
-			return transitions == a.transitions && transitions == a.transitions;
+			return transitions == a.transitions;
 		}
 	};
 	// двойной терм (нужен для uwu переходов)
