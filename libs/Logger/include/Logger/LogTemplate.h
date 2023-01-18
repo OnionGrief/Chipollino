@@ -42,6 +42,9 @@ class LogTemplate : public iLogTemplate {
 
 	// Параметры
 	map<string, LogParameter> parameters;
+
+	//Добавление шаблона настоящего параметра
+	void add_parameter(string parameter_name);
 	// math mode
 	static string math_mode(string str);
 	// счетчик картинок

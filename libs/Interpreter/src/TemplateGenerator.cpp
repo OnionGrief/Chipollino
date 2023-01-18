@@ -53,7 +53,7 @@ void Interpreter::generate_brief_templates() {
 						outfile << " до преоброзования";
 					}
 
-					outfile << ":\n\n\t%template_oldregex" << endl << endl;
+					outfile << ":\n\t%template_oldregex" << endl << endl;
 				}
 			} else {
 
@@ -153,7 +153,7 @@ void Interpreter::generate_brief_templates() {
 					outfile << " после преоброзования";
 				}
 
-				outfile << ":\n\n\t%template_result" << endl;
+				outfile << ":\n\n\t%template_result" << endl << endl;
 			}
 
 			//Для Regex, Int, Bool, optionalbool
@@ -163,14 +163,14 @@ void Interpreter::generate_brief_templates() {
 				function.output == ObjectType::OptionalBool) {
 				outfile << "\tРезультат:" << endl;
 
-				outfile << "\t%template_result" << endl;
+				outfile << "\t%template_result" << endl << endl;
 			}
 
 			//Для префиксной грамматики
 			if (function.output == ObjectType::PrefixGrammar) {
 				outfile << "\tПрефиксная грамматика:" << endl << endl;
 
-				outfile << "\t%template_result" << endl;
+				outfile << "\t%template_result" << endl << endl;
 			}
 
 			//Для регулярок
@@ -181,7 +181,7 @@ void Interpreter::generate_brief_templates() {
 					outfile << " после преоброзования";
 				}
 
-				outfile << ":\n\t%template_result" << endl;
+				outfile << ":\n\t%template_result" << endl << endl;
 			}
 
 			outfile << "\\end{frame}" << endl;

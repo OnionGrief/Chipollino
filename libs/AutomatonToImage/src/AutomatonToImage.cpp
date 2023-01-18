@@ -47,6 +47,10 @@ string AutomatonToImage::to_image(string automat) {
 	ifstream infile_for_L("./refal/L_input.tex");
 
 	if (!infile_for_L) return graph.str();
+
+	graph << "\\end{frame}" << endl << endl;
+	graph << "\\begin{frame}" << endl << endl;
+
 	while (!infile_for_L.eof()) {
 		getline(infile_for_L, s);
 		graph << s << endl;

@@ -255,7 +255,7 @@ optional<GeneralObject> Interpreter::apply_function(
 			return ObjectOptionalBool(a.is_nfa_minimal(&log_template));
 	}
 	if (function.name == "Deterministic") {
-		return ObjectBoolean(get_automaton(arguments[0]).is_deterministic());
+		return ObjectBoolean(get_automaton(arguments[0]).is_deterministic(&log_template));
 	}
 	if (function.name == "Subset") {
 		if (function.input[0] == ObjectType::NFA) {
@@ -265,7 +265,7 @@ optional<GeneralObject> Interpreter::apply_function(
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
-					.value.subset(get<ObjectRegex>(arguments[1]).value));
+					.value.subset(get<ObjectRegex>(arguments[1]).value, &log_template));
 		}
 	}
 	if (function.name == "Equiv") {
@@ -470,7 +470,7 @@ optional<GeneralObject> Interpreter::apply_function(
 	}
 	if (function.name == "Disambiguate") {
 		res = ObjectRegex(
-			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex());
+			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex(&log_template));
 	}
 	if (function.name == "Intersect") {
 		res = ObjectNFA(FiniteAutomaton::intersection(
