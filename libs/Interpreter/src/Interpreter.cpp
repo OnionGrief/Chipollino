@@ -872,6 +872,9 @@ string Interpreter::FunctionSequence::to_txt() const {
 }
 
 string Interpreter::Expression::to_txt() const {
+	if (type == ObjectType::RandomRegex) {
+		return "*";
+	}
 	if (const auto* pval = get_if<FunctionSequence>(&value)) {
 		return pval->to_txt();
 	}
