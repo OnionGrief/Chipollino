@@ -165,8 +165,6 @@ class FiniteAutomaton : public BaseObject {
 	optional<bool> is_nfa_minimal(iLogTemplate* log = nullptr) const;
 	// проверка на минимальность для дка
 	bool is_dfa_minimal(iLogTemplate* log = nullptr) const;
-	// установить  флаг is_trim
-	void set_trim_flag(bool trim_global);
 
 	friend class Regex;
 	friend class TransformationMonoid;
