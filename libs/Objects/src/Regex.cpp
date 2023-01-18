@@ -62,17 +62,43 @@ vector<Regex::Lexem> Regex::parse_string(string str) {
 			if (is_symbol(c)) {
 				regex_is_eps = false;
 				lexem.type = Regex::Lexem::symb;
-				string number;
-				for (size_t i = index + 1; i < str.size(); i++) {
-					if (str[i] >= '0' && str[i] <= '9') {
-						number += str[i];
-					} else {
+				lexem.symbol = c;
+				for (size_t j = index + 1; j < str.size(); j++) {
+					bool lin = false;
+					bool annote = false;
+					if (str[j] == alphabet_symbol::linearize_marker) {
+						lin = true;
+					}
+					if (str[j] == alphabet_symbol::annote_marker) {
+						annote = true;
+					}
+					if (!lin && !annote) {
 						break;
 					}
-					index = i;
+					string number;
+					for (size_t i = j + 1; i < str.size(); i++) {
+						if (str[i] >= '0' && str[i] <= '9') {
+							number += str[i];
+						} else {
+							break;
+						}
+						index = i;
+						j = i;
+					}
+					if (number.length() == 0) {
+						lexem.type = Regex::Lexem::error;
+						lexems = {};
+						lexems.push_back(lexem);
+						return lexems;
+					}
+					int numb = stoi(number);
+					if (lin) {
+						lexem.symbol.linearize(numb);
+					}
+					if (annote) {
+						lexem.symbol.annote(numb);
+					}
 				}
-
-				lexem.symbol = c + number;
 				flag_alt = false;
 
 			} else {
@@ -493,48 +519,7 @@ void Regex::set_language(const set<alphabet_symbol>& _alphabet) {
 	language = make_shared<Language>(alphabet);
 }
 
-/*
-int Regex::search_replace_rec(const Regex& replacing, const Regex& replaced_by,
-							  Regex* original) {
-	int cond = 0;
-	if (equal(replacing, *original)) {
-		Regex* temp = new Regex(replaced_by);
-		cond++;
-		if (original->term_p && original->term_p->term_l &&
-			original->term_p->term_l == original) {
-			temp->term_p = original->term_p;
-			original->term_p->term_l = temp;
-		} else {
-			if (original->term_p && original->term_p->term_r &&
-				original->term_p->term_r == original) {
-				temp->term_p = original->term_p;
-				original->term_p->term_r = temp;
-			}
-		}
-		delete original;
-	} else {
-		if (original->term_l) {
-			cond +=
-				search_replace_rec(replacing, replaced_by, original->term_l);
-		}
-		if (original->term_r) {
-			cond +=
-				search_replace_rec(replacing, replaced_by, original->term_r);
-		}
-	}
-	return cond;
-	//Привычка зарубать себе на носу довела Буратино до самоампутации органа
-	//обоняния.
-}
-void Regex::normalize_this_regex(const vector<pair<Regex, Regex>>& rules) {
-	for (int i = 0; i < rules.size(); i++) {
-		int cond = 0;
-		cond += search_replace_rec(rules[i].first, rules[i].second, this);
-		if (cond != 0) {
-			i--;
-		}
-	}
-}*/
+void Regex::normalize_this_regex(const vector<pair<Regex, Regex>>& rules) {}
 
 void Regex::pre_order_travers() const {
 	if (type == Regex::symb /*&& value.symbol*/) {
@@ -1905,6 +1890,8 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	int counter = 0;
 	for (alphabet_symbol consistent_symb : min_fa_consistent) {
 		bool alternate_flag = 0;
+		// TODO
+		// сборка регулярок из строк будет ошибочной, если символы размечены
 		if (!counter)
 			regl += "(" + (string)consistent_symb;
 		else {

@@ -27,7 +27,6 @@ string AutomatonToImage::to_image(string automat) {
 	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
 	system("cd refal && refgo Postprocess+MathMode input.tex > error_refal.txt "
 		   "2>&1");
-	system("cd refal && rm input.dot && rm input.tex");
 	ifstream infile("./refal/R_input.tex");
 	stringstream graph;
 
@@ -37,6 +36,7 @@ string AutomatonToImage::to_image(string automat) {
 		graph << s << endl;
 	}
 	infile.close();
+	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm R_input.tex");
 
 	return graph.str();
 }
