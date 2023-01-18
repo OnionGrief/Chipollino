@@ -509,7 +509,8 @@ int Regex::which_depth() {
 	return 0;
 }
 // получаем все возможные подавтоматы
-void Regex::top_rec_bruteforce(int depth_rec, vector<Regex>* out) {
+void Regex::top_rec_bruteforce(int depth_rec, vector<Regex>* out,
+							   vector<Regex*>* address) {
 	if (depth_rec == 0) {
 		return;
 	}
@@ -517,9 +518,10 @@ void Regex::top_rec_bruteforce(int depth_rec, vector<Regex>* out) {
 		Regex regex1 = *this;
 		regex1.del_rec_bruteforce(i);
 		(*out).push_back(regex1);
+		(*address).push_back(this);
 	}
 	if (term_r) {
-		term_r->top_rec_bruteforce(depth_rec - 1, out);
+		term_r->top_rec_bruteforce(depth_rec - 1, out, address);
 	}
 }
 // проверяем строки на возможную экв-ость
@@ -550,13 +552,21 @@ Regex* Regex::rewrite_normalize(map<alphabet_symbol, alphabet_symbol>* out) {
 		term_r->rewrite_normalize(out);
 	}
 }
+void Regex::replace_term_helplify(Regex* replace, Regex* original){
+
+};
+void Regex::replace_term(Regex* replace) {
+	type = replace->type;
+	value = replace->value;
+	term_l = replace->term_l;
+	// Regex* term_r = nullptr;
+};
+
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 	set<alphabet_symbol> alphabet_backup = alphabet;
 	map<alphabet_symbol, alphabet_symbol> rules_replace_alphabet;
 	Regex regex = *this;
-	vector<Regex> out;
-	int y = regex.which_depth();
-	regex.top_rec_bruteforce(y + 1, &out);
+
 	//  находим порядок символов в правилах (чтобы по маске найти
 	//  кандидатов и отсеять лишних,а также узнать map для букв (вроде и
 	//  костыль, а вроде и особенность ревлизации (это реально удобно)))
@@ -564,20 +574,44 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 	for (auto rule : rules) {
 		allrulesimage.push_back(rule.first.getsymbolimage());
 	}
-	for (auto subtree : out) {
+	bool cond = true;
+	while (cond) {
+		bool cond1 = false;
+		vector<Regex> out1;
+		vector<Regex*> address;
+		int y = regex.which_depth();
+		regex.top_rec_bruteforce(y + 1, &out1, &address);
+		for (int j = 0; j < out1.size(); j++) {
+			// for (auto subtree : out1) {
 
-		vector<alphabet_symbol> in = subtree.getsymbolimage();
-		for (int i = 0; i < allrulesimage.size(); i++) {
-			// for (auto rule : allrulesimage) {
-			std::map<alphabet_symbol, alphabet_symbol> out;
-			if (equalent_string_normalize(in, allrulesimage[i], &out)) {
-				Regex temp = rules[i].first;
-				temp.rewrite_normalize(&out);
-				subtree.alphabet = alphabet_backup;
-				cout << "\n" << temp.equal(temp, subtree) << "\n";
-				// cout << temp.regex_to_dot();
+			vector<alphabet_symbol> in = out1[j].getsymbolimage();
+			for (int i = 0; i < allrulesimage.size(); i++) {
+				// for (auto rule : allrulesimage) {
+				std::map<alphabet_symbol, alphabet_symbol> out;
+				if (equalent_string_normalize(in, allrulesimage[i], &out)) {
+					Regex temp = rules[i].first;
+					temp.rewrite_normalize(&out);
+					Regex endstate = rules[i].second;
+					endstate.rewrite_normalize(&out);
+					out1[j].alphabet = alphabet_backup;
+					// subtree.make_language();
+					// cout << "\n" < < < < "\n";
+					if (temp.equal(temp, out1[j])) {
+						cout << "\n" << temp.regex_to_dot() << "\n";
+						// address[j]->type = Regex::Type::conc;
+						address[j]->replace_term(&endstate);
+
+						cout << "\n" << regex.regex_to_dot() << "\n";
+						cond1 = true;
+						break;
+					}
+					// cout << temp.regex_to_dot();
+				}
+				if (cond1) break;
 			}
+			if (cond1) break;
 		}
+		if (cond1) cond = false;
 	}
 
 	// regex.del_rec_bruteforce(&regex, 3);

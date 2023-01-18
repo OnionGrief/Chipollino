@@ -110,10 +110,12 @@ class Regex : BaseObject {
 	Regex* tree_style(vector<Regex::Lexem>, Regex::Type);
 	vector<alphabet_symbol> getsymbolimage();
 	bool rec_bruteforce(Regex, int, vector<Regex>*);
-	void top_rec_bruteforce(int, vector<Regex>*);
+	void top_rec_bruteforce(int, vector<Regex>*, vector<Regex*>*);
 	bool del_rec_bruteforce(int);
 	int which_depth();
 	Regex* rewrite_normalize(map<alphabet_symbol, alphabet_symbol>*);
+	void replace_term_helplify(Regex*, Regex*);
+	void replace_term(Regex*);
 
   public:
 	Regex();
