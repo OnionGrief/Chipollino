@@ -1,3 +1,3 @@
 #!/bin/bash
 cd ..
-sudo docker build -t chipollino .  
+sudo docker build  -t chipollino .  

@@ -1,6 +1,6 @@
 #!/bin/bash
 BASEDIR=$(pwd)
-apt-get install -y make cmake dos2unix wget dot2tex build-essential
+apt-get install -y make cmake dos2unix wget dot2tex build-essential dos2unix
 read -p 'Установить TEX? Необходим для вывода в PDF (Y/N) ' need_tex
 if [ "$need_tex" == "Y" ]; then
   apt-get install -y texlive-latex-extra
@@ -23,6 +23,15 @@ rm -fR ./build
 mkdir build
 cd ./build/
 cmake ../. && cmake --build .
+cd ../refal 
+dos2unix MathMode.ref
+dos2unix Postprocess.ref
+dos2unix Preprocess.ref
+dos2unix TestGenerator.ref
+refc MathMode.ref
+refc Postprocess.ref
+refc Preprocess.ref
+refc TestGenerator.ref
 cat ./../scripts/chipollino.txt
-#Надо написать сборку рефал-программ когда они будут в одной ветке, возможно еще что-то надо (для текущего комиита все собирается)
+#Надо написать сборку рефал-программ когда они будут в одной ветке, возможно еще что-то надо (для текущего комиита все собирается) - вроде есть на будущее
 #make
