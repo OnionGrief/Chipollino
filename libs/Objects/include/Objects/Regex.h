@@ -110,8 +110,8 @@ class Regex : BaseObject {
 	Regex* tree_style(vector<Regex::Lexem>, Regex::Type);
 	vector<alphabet_symbol> getsymbolimage(Regex*);
 	bool rec_bruteforce(Regex, int, vector<Regex>*);
-	bool top_rec_bruteforce(Regex, int, vector<Regex>*);
-	bool del_rec_bruteforce(Regex*, int);
+	bool top_rec_bruteforce(int, int, vector<Regex>*);
+	bool del_rec_bruteforce(int);
 	int which_depth();
 
   public:

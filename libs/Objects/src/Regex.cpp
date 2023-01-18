@@ -483,22 +483,22 @@ bool Regex::normalize_rewrite(
 	}
 	return 0;
 }
-bool Regex::del_rec_bruteforce(Regex* from, int depth) {
+bool Regex::del_rec_bruteforce(int depth) {
 	cout << depth << " ";
 	if (depth == 0) {
 		cout << "i alive";
-		if (from->type == Regex::Type::alt && from->term_l) {
-			from->type = from->term_l->type;
-			from->value = from->term_l->value;
-			from->term_r = from->term_l->term_r;
-			from->term_l = from->term_l->term_l;
+		if (type == Regex::Type::alt && term_l) {
+			type = term_l->type;
+			value = term_l->value;
+			term_r = term_l->term_r;
+			term_l = term_l->term_l;
 		} else {
-			from->term_r = nullptr;
-			from->term_l = nullptr;
+			term_r = nullptr;
+			term_l = nullptr;
 		}
 		return true;
 	}
-	del_rec_bruteforce(from->term_r, depth - 1);
+	term_r->del_rec_bruteforce(depth - 1);
 }
 int Regex::which_depth() {
 	if (term_r) {
@@ -506,11 +506,16 @@ int Regex::which_depth() {
 	}
 	return 0;
 }
-bool Regex::top_rec_bruteforce(Regex from, int depth, vector<Regex>* out) {
+bool Regex::top_rec_bruteforce(int depth_in_symbol, int depth_rec,
+							   vector<Regex>* out) {
 	// from.rec_bruteforce(from, depth, out);
-	(*out).push_back(from);
-	if (from.term_r) {
-		(*from.term_r).top_rec_bruteforce((*from.term_r), depth, out);
+	for (int i = 0; i < depth_rec; i++) {
+		Regex regex1 = *this;
+		regex1.del_rec_bruteforce(i);
+		(*out).push_back(regex1);
+	}
+	if (term_r) {
+		term_r->top_rec_bruteforce(depth_in_symbol, depth_rec - 1, out);
 	}
 }
 // bool Regex::rec_bruteforce(Regex from, int depth, vector<Regex>* out) {
@@ -531,16 +536,17 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 	map<alphabet_symbol, alphabet_symbol> rules_replace_alphabet;
 	Regex regex = *this;
 	vector<Regex> out;
-	regex.top_rec_bruteforce(regex, 14, &out);
-	for (auto i : out) {
-		//	cout << i.regex_to_dot();
-	}
 	int y = regex.which_depth();
-	for (int i = 0; i < y + 1; i++) {
-		Regex regex1 = *this;
-		regex1.del_rec_bruteforce(&regex1, i);
-		cout << regex1.regex_to_dot();
+	regex.top_rec_bruteforce(2, y + 1, &out);
+	for (auto i : out) {
+		cout << i.regex_to_dot();
 	}
+
+	// for (int i = 0; i < y + 1; i++) {
+	// 	Regex regex1 = *this;
+	// 	regex1.del_rec_bruteforce(i);
+	// 	cout << regex1.regex_to_dot();
+	// }
 	// regex.del_rec_bruteforce(&regex, 3);
 	// cout << regex.regex_to_dot();
 	//  находим порядок символов в правилах (чтобы по маске найти
