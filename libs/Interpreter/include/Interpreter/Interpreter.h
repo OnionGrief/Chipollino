@@ -32,8 +32,7 @@ class Interpreter {
 	enum class Flag {
 		trim,
 		dynamic,
-		theory,
-		verification
+		theory
 	};
 	bool set_flag(Flag key, bool value);
 
@@ -142,7 +141,6 @@ class Interpreter {
 		int size = 20;
 		// Regex random_regex;
 	};
-	Regex current_random_regex;
 
 	// Предикат [предикат] [объект]+
 	struct Predicate {
@@ -177,9 +175,7 @@ class Interpreter {
 		// флаг динамического тайпчекера
 		{Flag::dynamic, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
-		{Flag::theory, false},
-		// флаг контекста верификатора гипотез
-		{Flag::verification, false},
+		{Flag::theory, false}
 	};
 
 	// Общий вид опрерации
@@ -227,6 +223,9 @@ class Interpreter {
 	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
 
 	//== Исполнение комманд ===================================================
+
+	// Выражение для подстановки на место *
+	optional<Regex> current_random_regex;
 
 	// Применение цепочки функций к набору аргументов
 	optional<GeneralObject> apply_function_sequence(

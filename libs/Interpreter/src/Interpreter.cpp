@@ -493,12 +493,10 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 			  (argument_type[i] == ObjectType::DFA &&
 			   func_input_type[i] == ObjectType::NFA) ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
-			  (flags[Flag::dynamic] &&
-			   argument_type[i] == ObjectType::NFA &&
+			  (flags[Flag::dynamic] && argument_type[i] == ObjectType::NFA &&
 			   func_input_type[i] == ObjectType::DFA) ||
 			  // для верификатора гипотез (на место '*' - ставить Regex)
-			  (flags[Flag::verification] &&
-			   argument_type[i] == ObjectType::RandomRegex &&
+			  (argument_type[i] == ObjectType::RandomRegex &&
 			   func_input_type[i] == ObjectType::Regex))) {
 			// несовпадение по типам
 			return false;
@@ -640,9 +638,12 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	auto logger = init_log();
 	logger.log("Evaluating expression \"" + expr.to_txt() + "\"");
 
-	if (flags[Flag::verification] &&
-		expr.type == ObjectType::RandomRegex) {
-		return ObjectRegex(current_random_regex);
+	if (expr.type == ObjectType::RandomRegex) {
+		if (current_random_regex.has_value()) {
+			return ObjectRegex(*current_random_regex);
+		} else {
+			return nullopt;
+		}
 	}
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
@@ -806,7 +807,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 			bool res = get<ObjectBoolean>(*predicate).value;
 			results += res;
 			if (!res && tests_false_num > 0) {
-				regex_list.push_back(current_random_regex.to_txt());
+				regex_list.push_back(current_random_regex->to_txt());
 				tests_false_num--;
 			}
 		} else {
@@ -815,6 +816,8 @@ bool Interpreter::run_verification(const Verification& verification) {
 			break;
 		}
 	}
+
+	current_random_regex = nullopt;
 
 	logger.log("result: " + to_string(100 * results / tests_size) + "%");
 	logger.log("");
@@ -1069,8 +1072,7 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 		return expr;
 	}
 	// Star (RandomRegex)
-	if (end > pos && lexems[pos].type == Lexem::star &&
-		flags[Flag::verification]) {
+	if (end > pos && lexems[pos].type == Lexem::star) {
 		expr.type = ObjectType::RandomRegex;
 		pos++;
 		return expr;
@@ -1199,8 +1201,8 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 	return nullopt;
 }
 
-optional<Interpreter::SetFlag> Interpreter::scan_flag(const vector<Lexem>& lexems,
-												   int& pos) {
+optional<Interpreter::SetFlag> Interpreter::scan_flag(
+	const vector<Lexem>& lexems, int& pos) {
 
 	auto logger = init_log();
 	int i = pos;
@@ -1246,7 +1248,6 @@ optional<Interpreter::Verification> Interpreter::scan_verification(
 	i++;
 
 	Verification verification;
-	flags[Flag::verification] = true;
 	// Predicate
 	if (const auto& expr = scan_expression(lexems, i, lexems.size());
 		expr.has_value() && ((*expr).type == ObjectType::Boolean ||
@@ -1285,10 +1286,10 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	if (auto flag = scan_flag(lexems, pos); flag.has_value()) {
 		return flag;
 	}
-	if (auto verification = scan_verification(lexems, pos); verification.has_value()) {
+	if (auto verification = scan_verification(lexems, pos);
+		verification.has_value()) {
 		return verification;
 	}
-	flags[Flag::verification] = false;
 	if (auto declaration = scan_declaration(lexems, pos);
 		declaration.has_value()) {
 		return declaration;
