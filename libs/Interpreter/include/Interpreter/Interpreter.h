@@ -16,11 +16,7 @@ using namespace Typization;
 
 class Interpreter {
   public:
-	enum class LogMode {
-		all,
-		errors,
-		nothing
-	};
+	enum class LogMode { all, errors, nothing };
 	Interpreter();
 	// Интерпретация строчки, возвращает true в случае успеха
 	bool run_line(const string& line);
@@ -30,9 +26,9 @@ class Interpreter {
 	void set_log_mode(LogMode mode);
 
 	enum class Flag {
-		trim,
-		dynamic,
-		theory
+		auto_remove_trap_states,
+		weak_type_comparison,
+		log_theory
 	};
 	bool set_flag(Flag key, bool value);
 
@@ -159,9 +155,9 @@ class Interpreter {
 	// Флаги:
 
 	map<string, Flag> flags_names = {
-		{"auto_remove_trap_states", Flag::trim},
-		{"weak_type_comparison", Flag::dynamic},
-		{"log_theory", Flag::theory},
+		{"auto_remove_trap_states", Flag::auto_remove_trap_states},
+		{"weak_type_comparison", Flag::weak_type_comparison},
+		{"log_theory", Flag::log_theory},
 		// Андрей, придумай сам названия
 	};
 
@@ -171,12 +167,11 @@ class Interpreter {
 		преобразованиях всегда удаляем в конце ловушки.
 		Если isTrim = false, тогда после удаления ловушки в результате
 		преобразований добавляем её обратно */
-		{Flag::trim, true},
+		{Flag::auto_remove_trap_states, true},
 		// флаг динамического тайпчекера
-		{Flag::dynamic, false},
+		{Flag::weak_type_comparison, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
-		{Flag::theory, false}
-	};
+		{Flag::log_theory, false}};
 
 	// Общий вид опрерации
 	using GeneralOperation =
@@ -247,7 +242,7 @@ class Interpreter {
 	bool run_test(const Test&);
 	bool run_verification(const Verification&);
 	bool run_set_flag(const SetFlag&);
-	bool run_operation(const GeneralOperation&);	
+	bool run_operation(const GeneralOperation&);
 
 	// Список опреаций для последовательного выполнения
 	vector<GeneralOperation> operations;

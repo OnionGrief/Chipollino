@@ -393,7 +393,7 @@ optional<GeneralObject> Interpreter::apply_function(
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
 			// Пример: (пока в объявлении функции не добавила флаг)
-			// res=ObjectNFA(get_automaton(arguments[0]).deannote(Flag::trim));
+			// res=ObjectNFA(get_automaton(arguments[0]).deannote(Flag::auto_remove_trap_states));
 			res = ObjectNFA(get_automaton(arguments[0]).deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
@@ -489,7 +489,8 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 			  (argument_type[i] == ObjectType::DFA &&
 			   func_input_type[i] == ObjectType::NFA) ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
-			  (flags[Flag::dynamic] && argument_type[i] == ObjectType::NFA &&
+			  (flags[Flag::weak_type_comparison] &&
+			   argument_type[i] == ObjectType::NFA &&
 			   func_input_type[i] == ObjectType::DFA) ||
 			  // для верификатора гипотез (на место '*' - ставить Regex)
 			  (argument_type[i] == ObjectType::RandomRegex &&
