@@ -264,14 +264,15 @@ void Example::fa_subset_check() {
 }
 
 void Example::normalize_regex() {
-	string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
-	string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
-	regl = regl + regr;
-	// regl = "abc"; //"bbb*(aaa*bbb*)*";
+	// string regl = "a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|";
+	// string regr = "bbb*(aaa*bbb*)*"; //"((a|)*c)";
+	string regl = "|aa*|bb|b|a";
+	// regl = regl + regr;
+	//  regl = "abc"; //"bbb*(aaa*bbb*)*";
 	Regex r(regl);
 
 	cout << "\nNormalize\nBefore: " << r.to_txt() << "\n";
-	r.normalize_regex({{{"a"}, {"b"}}});
+	r.normalize_regex({{{"|bb*"}, {"b*"}}});
 	cout << "After: " << r.to_txt() << "\n";
 }
 void Example::to_image() {

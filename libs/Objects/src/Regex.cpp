@@ -510,6 +510,9 @@ int Regex::which_depth() {
 }
 // получаем все возможные подавтоматы
 void Regex::top_rec_bruteforce(int depth_rec, vector<Regex>* out) {
+	if (depth_rec == 0) {
+		return;
+	}
 	for (int i = 0; i < depth_rec; i++) {
 		Regex regex1 = *this;
 		regex1.del_rec_bruteforce(i);
