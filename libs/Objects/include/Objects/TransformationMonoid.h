@@ -62,20 +62,20 @@ class TransformationMonoid {
 	string get_equalence_classes_txt();
 	map<string, vector<string>> get_equalence_classes_map();
 	// вывод правил переписывания
-	string get_rewriting_rules_txt();
+	string get_rewriting_rules_txt(iLogTemplate* log = nullptr);
 	// Вывод всей информации о Моноиде
 	string to_txt();
 	// Вернет -1 если не синхронизирован или
 	// номер состояния с которым синхронизирован
 	int is_synchronized(const Term& w);
 	// Вернет число классов эквивалентности
-	int class_card();
+	int class_card(iLogTemplate* log = nullptr);
 	// Вернет длину самого длинного слова в классе
-	int class_length();
+	int class_length(iLogTemplate* log = nullptr);
 	// Вычисление Минимальности по М-Н (true если минимальный)
-	bool is_minimal();
+	bool is_minimal(iLogTemplate* log = nullptr);
 	// Вычисление размера по М-Н
-	int get_classes_number_MyhillNerode();
+	int get_classes_number_MyhillNerode(iLogTemplate* log = nullptr);
 	// вывод таблицы М-Н
 	string to_txt_MyhillNerode();
 	// переписываем имя терма в  минимальное
