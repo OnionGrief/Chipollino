@@ -53,5 +53,8 @@ string AutomatonToImage::to_image(string automat) {
 	}
 	infile_for_L.close();
 
+	system("cd refal && rm L_input.tex && rm -f Meta_input.data && rm -f "
+		   "Aux_input.tex");
+
 	return graph.str();
 }

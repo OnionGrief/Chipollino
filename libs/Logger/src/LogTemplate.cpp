@@ -38,7 +38,6 @@ string LogTemplate::render() const {
 	string outstr = "";
 	string s;
 	bool detailed = true;
-	cout << render_theory << endl;
 	while (!infile.eof()) {
 		getline(infile, s);
 		if (s.find("%begin detailed") != -1) {
