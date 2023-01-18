@@ -95,7 +95,6 @@ class Regex : BaseObject {
 	void normalize_this_regex(
 			const vector<pair<Regex, Regex>>&); //переписывание regex по
 												//пользовательским правилам
-	*/
 
 	string to_str_log() const;
 
