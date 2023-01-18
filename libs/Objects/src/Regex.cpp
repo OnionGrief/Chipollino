@@ -411,24 +411,6 @@ vector<Regex::Lexem> Regex::not_refal_style(Regex::Type lasttype) {
 	return out;
 }
 
-bool Regex::rec_normalize(Regex* from, const Regex& to,
-						  map<alphabet_symbol, alphabet_symbol> rules,
-						  bool start) {
-	// cout << type << "\n";
-	// bool cond = true;
-	// if (type == Type::symb && (value.symbol == from->value.symbol)) {
-	// 	return false;
-	// } else {
-	// 	if (type != from->type) return false;
-	// }
-	// if (term_l) {
-	// 	term_l->rec_normalize(from->term_l, to, rules, start);
-	// }
-	// if (term_r) {
-	// 	term_r->rec_normalize(from->term_r, to, rules, start);
-	// }
-	return 0;
-}
 // bool TransformationMonoid::wasrewrite(const vector<alphabet_symbol>& a,
 // 									  const vector<alphabet_symbol>& b) {
 // 	for (int i = 0; i < a.size(); i++) {
@@ -443,13 +425,29 @@ bool Regex::rec_normalize(Regex* from, const Regex& to,
 // 	}
 // 	return false;
 // }
+// попытка правила переписывания символов!
+vector<alphabet_symbol> Regex::getsymbolimage(Regex* in) {
+	vector<alphabet_symbol> out;
+	if ((*in).type == Regex::Type::symb) {
+		out.push_back((*in).value.symbol);
+	}
+	if (term_l) {
+		vector<alphabet_symbol> temp = term_l->getsymbolimage(in->term_l);
+		out.insert(out.end(), temp.begin(), temp.end());
+	}
+	if (term_r) {
+		vector<alphabet_symbol> temp = term_r->getsymbolimage(in->term_r);
+		out.insert(out.end(), temp.begin(), temp.end());
+	}
+	return out;
+}
+
 bool Regex::normalize_rewrite(
 	vector<Regex::Lexem>* original,
 	pair<vector<Regex::Lexem>, vector<Regex::Lexem>>* rule) {
 	bool cond = true;
 	int start = 0;
 	int end = 0;
-
 	for (int i = 0; i < (*original).size() && cond; i++) {
 		for (int j = 0;
 			 i + j < (*original).size() && j < (*rule).first.size() && cond;
@@ -485,48 +483,95 @@ bool Regex::normalize_rewrite(
 	}
 	return 0;
 }
+bool Regex::del_rec_bruteforce(Regex* from, int depth) {
+	cout << depth << " ";
+	if (depth == 0) {
+		cout << "i alive";
+		if (from->type == Regex::Type::alt && from->term_l) {
+			from->type = from->term_l->type;
+			from->value = from->term_l->value;
+			from->term_r = from->term_l->term_r;
+			from->term_l = from->term_l->term_l;
+		} else {
+			from->term_r = nullptr;
+			from->term_l = nullptr;
+		}
+		return true;
+	}
+	del_rec_bruteforce(from->term_r, depth - 1);
+}
+int Regex::which_depth() {
+	if (term_r) {
+		return 1 + term_r->which_depth();
+	}
+	return 0;
+}
+bool Regex::top_rec_bruteforce(Regex from, int depth, vector<Regex>* out) {
+	// from.rec_bruteforce(from, depth, out);
+	(*out).push_back(from);
+	if (from.term_r) {
+		(*from.term_r).top_rec_bruteforce((*from.term_r), depth, out);
+	}
+}
+// bool Regex::rec_bruteforce(Regex from, int depth, vector<Regex>* out) {
+// 	if (depth == 0) {
+// 		(*out).push_back(from);
+// 		return true;
+// 	} else {
+// 		if (from.term_r) {
+// 			from.rec_bruteforce(
+// 				*from.term_r,
+// 				depth - (from.term_l->getsymbolimage(from.term_l).size()),
+// out);
+// 		}
+// 	}
+// }
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 
 	map<alphabet_symbol, alphabet_symbol> rules_replace_alphabet;
 	Regex regex = *this;
-	cout << regex.regex_to_dot();
-	set<alphabet_symbol> alphabet_backup = alphabet;
-	vector<Regex::Lexem> curexpr =
-		regex.not_refal_style(Regex::star); // текущее выражение
-	vector<pair<vector<Regex::Lexem>, vector<Regex::Lexem>>> allrules;
-	for (auto rule : rules) {
-		vector<Regex::Lexem> from = rule.first.not_refal_style(Regex::star);
-		vector<Regex::Lexem> to = rule.second.not_refal_style(Regex::star);
-		allrules.push_back({from, to});
+	vector<Regex> out;
+	regex.top_rec_bruteforce(regex, 14, &out);
+	for (auto i : out) {
+		//	cout << i.regex_to_dot();
 	}
-	int i = 0;
-	for (i = 0; i < allrules.size(); i++) {
-		if (regex.normalize_rewrite(&curexpr, &allrules[i])) {
-			i = -1;
-			continue;
-		}
+	int y = regex.which_depth();
+	for (int i = 0; i < y + 1; i++) {
+		Regex regex1 = *this;
+		regex1.del_rec_bruteforce(&regex1, i);
+		cout << regex1.regex_to_dot();
 	}
-	for (auto t : curexpr) {
-		cout << t.type << " ";
-	}
+	// regex.del_rec_bruteforce(&regex, 3);
+	// cout << regex.regex_to_dot();
+	//  находим порядок символов в правилах (чтобы по маске найти
+	//  кандидатов и отсеять лишних,а также узнать map для букв (вроде и
+	//  костыль, а вроде и особенность ревлизации (это реально удобно)))
+	//  vector<vector<alphabet_symbol>> allrulesimage;
+	//  for (auto rule : rules) {
+	//  	allrulesimage.push_back(rule.first.getsymbolimage(&rule.first));
+	//  }
 
-	cout << "не переписываем :-(\n";
-	regex = *regex.tree_style(curexpr, Regex::Type::symb);
-	regex.alphabet = alphabet_backup;
-
-	//  предполагается что все деревья односторонние (построены одинаковым
-	//  образом), если нет то прийдется изобретать костыль
-
-	//  Logger::init_step("Normalize");
-	//  Logger::log("Регулярное выражение до нормализации", to_txt());
-	//  Regex regex = *this;
-	//  regex.normalize_this_regex(rules);
-	//  Logger::log("Регулярное выражение после нормализации", regex.to_txt());
-	//  Logger::finish_step();
-	//  return regex;
+	cout << "sad";
 	return regex;
 }
+bool Regex::rec_normalize(Regex* from, const Regex& to,
+						  map<alphabet_symbol, alphabet_symbol>* rules,
+						  bool start) {
 
+	// if (to.type != from->type) {
+	// 	return false;
+	// }
+	// if (to.value.symbol == Regex::Lexem::Type::symb) {
+	// 	if (rules->count(to.value.symbol) == 0) {
+	// 		rules->insert(to.value.symbol, from->value.symbol);
+	// 	}
+	// 	if ((*rules)[to.value.symbol] != from->value.symbol) {
+	// 		return false;
+	// 	}
+	// }
+
+	return 0;
+}
 bool Regex::from_string(const string& str) {
 	if (!str.size()) {
 		value = Regex::Lexem::eps;
@@ -1623,7 +1668,8 @@ int Regex::pump_length() const {
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
 					pumping.language = make_shared<Language>(pumping.alphabet);
-					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
+					// cout << pumped_prefix << " " <<
+					// pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
 						language->set_pump_length(i);

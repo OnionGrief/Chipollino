@@ -102,12 +102,17 @@ class Regex : BaseObject {
 	string regex_to_dot_helplify(int* i);
 	// спускаемся и проверяем на рав-во с поправкой на экв-ые по роли символы
 	bool rec_normalize(Regex*, const Regex&,
-					   map<alphabet_symbol, alphabet_symbol>, bool);
+					   map<alphabet_symbol, alphabet_symbol>*, bool);
 	vector<Lexem> not_refal_style(Regex::Type lasttype);
 	// Удобно при бяках вида (несбалансированных деревьев и т.д.)
 	bool normalize_rewrite(vector<Regex::Lexem>*,
 						   pair<vector<Regex::Lexem>, vector<Regex::Lexem>>*);
 	Regex* tree_style(vector<Regex::Lexem>, Regex::Type);
+	vector<alphabet_symbol> getsymbolimage(Regex*);
+	bool rec_bruteforce(Regex, int, vector<Regex>*);
+	bool top_rec_bruteforce(Regex, int, vector<Regex>*);
+	bool del_rec_bruteforce(Regex*, int);
+	int which_depth();
 
   public:
 	Regex();
@@ -138,7 +143,8 @@ class Regex : BaseObject {
 	static bool equal(const Regex&, const Regex&);
 	// проверка регулярок на эквивалентность
 	static bool equivalent(const Regex&, const Regex&);
-	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
+	// проверка регулярок на вложенность (проверяет вложен ли аргумент в
+	// this)
 	bool subset(const Regex&) const; // TODO
 
 	// Производная по символу
