@@ -15,6 +15,7 @@ class LogTemplate : public iLogTemplate {
 	void set_parameter(const string& key, string value) override;
 	void set_parameter(const string& key, int value) override;
 	void set_parameter(const string& key, Table value) override;
+	void set_theory_flag(bool value);
 
 	// Рендерит все логи, возвращает строку
 	string render() const;
@@ -30,6 +31,9 @@ class LogTemplate : public iLogTemplate {
   private:
 	// LaTeX-шаблон
 	string tex_template;
+
+	// флаг логирования подробной части
+	bool render_theory = false;
 
 	// Стуктура для хранения параметров
 	struct LogParameter {

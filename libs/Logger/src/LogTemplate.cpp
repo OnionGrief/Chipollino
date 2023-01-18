@@ -21,6 +21,10 @@ void LogTemplate::set_parameter(const string& key, Table value) {
 	parameters[key].value = value;
 }
 
+void LogTemplate::set_theory_flag(bool value) {
+	render_theory = value;
+}
+
 void LogTemplate::load_tex_template(string filename) {
 	tex_template = "./resources/template/" + filename + ".tex";
 }
