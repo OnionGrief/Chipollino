@@ -53,7 +53,7 @@ void Interpreter::generate_brief_templates() {
 						outfile << " до преоброзования";
 					}
 
-					outfile << ":\n\n\t%template_oldregex" << endl << endl;
+					outfile << ":\n\t%template_oldregex" << endl << endl;
 				}
 			} else {
 

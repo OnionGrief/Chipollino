@@ -29,7 +29,7 @@ int main() {
 
 	// Используем сгенерированный тест
 	TasksGenerator TG;
-	TG.generate_task(3, 5, false, false);
+	TG.generate_task(15, 15, false, false);
 	TG.write_to_file("test.txt");
 
 	// Загружаем в интерпретатор файл с коммандами

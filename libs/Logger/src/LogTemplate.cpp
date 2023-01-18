@@ -36,10 +36,10 @@ void LogTemplate::add_parameter(string parameter_name) {
 		while (!infile.eof()) {
 			getline(infile, s);
 			if (str_endframe_place == i) {
-				outstr += "\n\n" + parameter_name + ":\n\n%template_" + parameter_name +
-				  "\n\n" + s;
+				outstr += "\t" + parameter_name + ":\n\n\t%template_" +
+						  parameter_name + "\n\n" + s + "\n";
 			} else {
-				outstr += s;
+				outstr += s + "\n";
 			}
 			i++;
 		}
@@ -57,7 +57,6 @@ void LogTemplate::set_parameter(const string& key, FiniteAutomaton value) {
 }
 
 void LogTemplate::set_parameter(const string& key, Regex value) {
-	cout<<"a";
 	parameters[key].value = value;
 	add_parameter(key);
 }
