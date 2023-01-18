@@ -37,37 +37,50 @@ string LogTemplate::render() const {
 
 	string outstr = "";
 	string s;
+	bool detailed = true;
+	cout << render_theory << endl;
 	while (!infile.eof()) {
 		getline(infile, s);
-		for (const auto& p : parameters) {
-			int insert_place = s.find("%template_" + p.first);
-			if (insert_place == -1) {
-				continue;
-			}
-
-			if (holds_alternative<Regex>(p.second.value)) {
-				s.insert(insert_place,
-						 math_mode(get<Regex>(p.second.value).to_txt()));
-			} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
-				image_number += 1;
-				string graph = AutomatonToImage::to_image(
-					get<FiniteAutomaton>(p.second.value).to_txt());
-				/*char si[256];
-				sprintf(si,
-						"\\includegraphics[height=1.3in, "
-						"keepaspectratio]{output%d.png}\n",
-						image_number);*/
-				s.insert(insert_place, graph);
-			} else if (holds_alternative<string>(p.second.value)) {
-				s.insert(insert_place, get<string>(p.second.value));
-			} else if (holds_alternative<int>(p.second.value)) {
-				s.insert(insert_place, to_string(get<int>(p.second.value)));
-			} else if (holds_alternative<Table>(p.second.value)) {
-				s.insert(insert_place, log_table(get<Table>(p.second.value)));
+		if (s.find("%begin detailed") != -1) {
+			if (!render_theory) {
+				detailed = false;
 			}
 		}
-		outstr += s;
-		outstr += "\n";
+		if (s.find("%end detailed") != -1) {
+			detailed = true;
+		}
+		if (detailed) {
+			for (const auto& p : parameters) {
+				int insert_place = s.find("%template_" + p.first);
+				if (insert_place == -1) {
+					continue;
+				}
+
+				if (holds_alternative<Regex>(p.second.value)) {
+					s.insert(insert_place,
+							 math_mode(get<Regex>(p.second.value).to_txt()));
+				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
+					image_number += 1;
+					string graph = AutomatonToImage::to_image(
+						get<FiniteAutomaton>(p.second.value).to_txt());
+					/*char si[256];
+					sprintf(si,
+							"\\includegraphics[height=1.3in, "
+							"keepaspectratio]{output%d.png}\n",
+							image_number);*/
+					s.insert(insert_place, graph);
+				} else if (holds_alternative<string>(p.second.value)) {
+					s.insert(insert_place, get<string>(p.second.value));
+				} else if (holds_alternative<int>(p.second.value)) {
+					s.insert(insert_place, to_string(get<int>(p.second.value)));
+				} else if (holds_alternative<Table>(p.second.value)) {
+					s.insert(insert_place,
+							 log_table(get<Table>(p.second.value)));
+				}
+			}
+			outstr += s;
+			outstr += "\n";
+		}
 	}
 	infile.close();
 	return outstr;
