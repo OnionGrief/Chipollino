@@ -41,11 +41,12 @@ string AutomatonToImage::to_image(string automat) {
 		}
 	}
 	infile_for_R.close();
-
-
+	
 	//таблица
 	ifstream infile_for_L("./refal/L_input.tex");
 	if (infile_for_L) {
+		graph << "\\end{frame}" << endl << endl;
+		graph << "\\begin{frame}" << endl << endl;
 		for (; !infile_for_L.eof();) {
 			getline(infile_for_L, s);
 			graph << s << endl;

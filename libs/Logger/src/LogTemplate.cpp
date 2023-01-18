@@ -1,20 +1,75 @@
 #include "Logger/LogTemplate.h"
 #include <variant>
 
+void LogTemplate::add_parameter(string parameter_name) {
+
+	ifstream infile(tex_template);
+
+	if (!infile) return; // infile.close();
+
+	string s;
+	bool is_exist = false;
+	int str_endframe_place, i = 0;
+	while (!infile.eof()) {
+		getline(infile, s);
+
+		int insert_place = s.find("%template_" + parameter_name);
+		int endframe_place = s.find("\\end{frame}");
+		if (endframe_place != -1) {
+			str_endframe_place = i;
+		}
+		i++;
+
+		if (insert_place != -1) {
+			is_exist = true;
+			break;
+		}
+	}
+
+	infile.close();
+
+	if (!is_exist) {
+		infile.open(tex_template);
+		string outstr = "";
+
+		int i = 0;
+		while (!infile.eof()) {
+			getline(infile, s);
+			if (str_endframe_place == i) {
+				outstr += "\n\n" + parameter_name + ":\n\n%template_" + parameter_name +
+				  "\n\n" + s;
+			} else {
+				outstr += s;
+			}
+			i++;
+		}
+
+		infile.close();
+		ofstream outfile(tex_template);
+		outfile << outstr;
+		outfile.close();
+	}
+}
+
 void LogTemplate::set_parameter(const string& key, FiniteAutomaton value) {
 	parameters[key].value = value;
+	add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, Regex value) {
+	cout<<"a";
 	parameters[key].value = value;
+	add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, string value) {
 	parameters[key].value = value;
+	add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, int value) {
 	parameters[key].value = value;
+	add_parameter(key);
 }
 
 void LogTemplate::load_tex_template(string filename) {
