@@ -571,7 +571,7 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 				Regex temp = rules[i].first;
 				temp.rewrite_normalize(&out);
 				subtree.alphabet = alphabet_backup;
-				cout << temp.equivalent(temp, subtree) << "\n";
+				cout << "\n" << temp.equal(temp, subtree) << "\n";
 				// cout << temp.regex_to_dot();
 			}
 		}
