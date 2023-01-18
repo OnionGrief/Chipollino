@@ -362,35 +362,35 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 	: Regex(str) {
 	language = new_language;
 }
-Regex* Regex::tree_style(vector<Regex::Lexem> in, Regex::Type lasttype) {
-	Regex::Type temp;
-	if (in[0].type == Regex::Lexem::Type::alt) temp = Regex::Type::alt;
-	if (in[0].type == Regex::Lexem::Type::conc) temp = Regex::Type::conc;
-	if (in[0].type == Regex::Lexem::Type::star) temp = Regex::Type::star;
-	if (in[0].type == Regex::Lexem::Type::symb) temp = Regex::Type::symb;
-	Regex* out = new Regex();
-	if (in.size() < 2) {
-		out->type = temp;
-		out->value = in[0];
-	}
-	if (in[0].type != Regex::Lexem::Type::symb) {
-		lasttype = temp;
-	}
-	if (temp == Regex::Type::symb) {
-		out->type = temp;
-		out->value = in[0];
-	}
-	out->type = temp;
-	out->value = in[0];
-	in.erase(in.begin());
-	vector<Regex::Lexem> in_a;
-	do {
-		in_a.push_back(in[0]);
-	} while (in_a[in_a.size() - 1].type != Regex::Type::symb);
-	// out->term_l;
-	// out->term_r;
-	return out;
-}
+// Regex* Regex::tree_style(vector<Regex::Lexem> in, Regex::Type lasttype) {
+// 	Regex::Type temp;
+// 	if (in[0].type == Regex::Lexem::Type::alt) temp = Regex::Type::alt;
+// 	if (in[0].type == Regex::Lexem::Type::conc) temp = Regex::Type::conc;
+// 	if (in[0].type == Regex::Lexem::Type::star) temp = Regex::Type::star;
+// 	if (in[0].type == Regex::Lexem::Type::symb) temp = Regex::Type::symb;
+// 	Regex* out = new Regex();
+// 	if (in.size() < 2) {
+// 		out->type = temp;
+// 		out->value = in[0];
+// 	}
+// 	if (in[0].type != Regex::Lexem::Type::symb) {
+// 		lasttype = temp;
+// 	}
+// 	if (temp == Regex::Type::symb) {
+// 		out->type = temp;
+// 		out->value = in[0];
+// 	}
+// 	out->type = temp;
+// 	out->value = in[0];
+// 	in.erase(in.begin());
+// 	vector<Regex::Lexem> in_a;
+// 	do {
+// 		in_a.push_back(in[0]);
+// 	} while (in_a[in_a.size() - 1].type != Regex::Type::symb);
+// 	// out->term_l;
+// 	// out->term_r;
+// 	return out;
+// }
 // lisp style :-)
 vector<Regex::Lexem> Regex::not_refal_style(Regex::Type lasttype) {
 	vector<Regex::Lexem> out;
@@ -426,17 +426,17 @@ vector<Regex::Lexem> Regex::not_refal_style(Regex::Type lasttype) {
 // 	return false;
 // }
 // попытка правила переписывания символов!
-vector<alphabet_symbol> Regex::getsymbolimage(Regex* in) {
+vector<alphabet_symbol> Regex::getsymbolimage() {
 	vector<alphabet_symbol> out;
-	if ((*in).type == Regex::Type::symb) {
-		out.push_back((*in).value.symbol);
+	if (type == Regex::Type::symb) {
+		out.push_back(value.symbol);
 	}
 	if (term_l) {
-		vector<alphabet_symbol> temp = term_l->getsymbolimage(in->term_l);
+		vector<alphabet_symbol> temp = term_l->getsymbolimage();
 		out.insert(out.end(), temp.begin(), temp.end());
 	}
 	if (term_r) {
-		vector<alphabet_symbol> temp = term_r->getsymbolimage(in->term_r);
+		vector<alphabet_symbol> temp = term_r->getsymbolimage();
 		out.insert(out.end(), temp.begin(), temp.end());
 	}
 	return out;
@@ -483,6 +483,7 @@ bool Regex::normalize_rewrite(
 	}
 	return 0;
 }
+// рекурсивно обрезаем снизу
 bool Regex::del_rec_bruteforce(int depth) {
 	cout << depth << " ";
 	if (depth == 0) {
@@ -500,84 +501,89 @@ bool Regex::del_rec_bruteforce(int depth) {
 	}
 	term_r->del_rec_bruteforce(depth - 1);
 }
+// считаем глубину ругулярного дерева
 int Regex::which_depth() {
 	if (term_r) {
 		return 1 + term_r->which_depth();
 	}
 	return 0;
 }
-bool Regex::top_rec_bruteforce(int depth_in_symbol, int depth_rec,
-							   vector<Regex>* out) {
-	// from.rec_bruteforce(from, depth, out);
+// получаем все возможные подавтоматы
+void Regex::top_rec_bruteforce(int depth_rec, vector<Regex>* out) {
 	for (int i = 0; i < depth_rec; i++) {
 		Regex regex1 = *this;
 		regex1.del_rec_bruteforce(i);
 		(*out).push_back(regex1);
 	}
 	if (term_r) {
-		term_r->top_rec_bruteforce(depth_in_symbol, depth_rec - 1, out);
+		term_r->top_rec_bruteforce(depth_rec - 1, out);
 	}
 }
-// bool Regex::rec_bruteforce(Regex from, int depth, vector<Regex>* out) {
-// 	if (depth == 0) {
-// 		(*out).push_back(from);
-// 		return true;
-// 	} else {
-// 		if (from.term_r) {
-// 			from.rec_bruteforce(
-// 				*from.term_r,
-// 				depth - (from.term_l->getsymbolimage(from.term_l).size()),
-// out);
-// 		}
-// 	}
-// }
+// проверяем строки на возможную экв-ость
+bool equalent_string_normalize(vector<alphabet_symbol> original,
+							   vector<alphabet_symbol> rewrite_candidate,
+							   map<alphabet_symbol, alphabet_symbol>* out) {
+	if (original.size() != rewrite_candidate.size()) {
+		return false;
+	}
+	for (int i = 0; i < original.size(); i++) {
+		if (out->count(rewrite_candidate[i]) == 0) {
+			(*out)[rewrite_candidate[i]] = original[i];
+		}
+		if (original[i] != (*out)[rewrite_candidate[i]]) {
+			return false;
+		}
+	}
+	return true;
+}
+Regex* Regex::rewrite_normalize(map<alphabet_symbol, alphabet_symbol>* out) {
+	if (type == Regex::Type::symb) {
+		value.symbol = (*out)[value.symbol];
+	}
+	if (term_l) {
+		term_l->rewrite_normalize(out);
+	}
+	if (term_r) {
+		term_r->rewrite_normalize(out);
+	}
+}
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
-
+	set<alphabet_symbol> alphabet_backup = alphabet;
 	map<alphabet_symbol, alphabet_symbol> rules_replace_alphabet;
 	Regex regex = *this;
 	vector<Regex> out;
 	int y = regex.which_depth();
-	regex.top_rec_bruteforce(2, y + 1, &out);
-	for (auto i : out) {
-		cout << i.regex_to_dot();
-	}
-
-	// for (int i = 0; i < y + 1; i++) {
-	// 	Regex regex1 = *this;
-	// 	regex1.del_rec_bruteforce(i);
-	// 	cout << regex1.regex_to_dot();
-	// }
-	// regex.del_rec_bruteforce(&regex, 3);
-	// cout << regex.regex_to_dot();
+	regex.top_rec_bruteforce(y + 1, &out);
 	//  находим порядок символов в правилах (чтобы по маске найти
 	//  кандидатов и отсеять лишних,а также узнать map для букв (вроде и
 	//  костыль, а вроде и особенность ревлизации (это реально удобно)))
-	//  vector<vector<alphabet_symbol>> allrulesimage;
-	//  for (auto rule : rules) {
-	//  	allrulesimage.push_back(rule.first.getsymbolimage(&rule.first));
-	//  }
+	vector<vector<alphabet_symbol>> allrulesimage;
+	for (auto rule : rules) {
+		allrulesimage.push_back(rule.first.getsymbolimage());
+	}
+	for (auto subtree : out) {
+
+		vector<alphabet_symbol> in = subtree.getsymbolimage();
+		for (int i = 0; i < allrulesimage.size(); i++) {
+			// for (auto rule : allrulesimage) {
+			std::map<alphabet_symbol, alphabet_symbol> out;
+			if (equalent_string_normalize(in, allrulesimage[i], &out)) {
+				Regex temp = rules[i].first;
+				temp.rewrite_normalize(&out);
+				subtree.alphabet = alphabet_backup;
+				cout << temp.equivalent(temp, subtree) << "\n";
+				// cout << temp.regex_to_dot();
+			}
+		}
+	}
+
+	// regex.del_rec_bruteforce(&regex, 3);
+	// cout << regex.regex_to_dot();
 
 	cout << "sad";
 	return regex;
 }
-bool Regex::rec_normalize(Regex* from, const Regex& to,
-						  map<alphabet_symbol, alphabet_symbol>* rules,
-						  bool start) {
 
-	// if (to.type != from->type) {
-	// 	return false;
-	// }
-	// if (to.value.symbol == Regex::Lexem::Type::symb) {
-	// 	if (rules->count(to.value.symbol) == 0) {
-	// 		rules->insert(to.value.symbol, from->value.symbol);
-	// 	}
-	// 	if ((*rules)[to.value.symbol] != from->value.symbol) {
-	// 		return false;
-	// 	}
-	// }
-
-	return 0;
-}
 bool Regex::from_string(const string& str) {
 	if (!str.size()) {
 		value = Regex::Lexem::eps;
