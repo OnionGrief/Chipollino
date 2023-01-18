@@ -33,7 +33,8 @@ class Regex : BaseObject {
 		Type type = error;
 		alphabet_symbol symbol = "";
 		int number = 0;
-		Lexem(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
+		Lexem(Type type = error, const alphabet_symbol& symbol = "",
+			  int number = 0);
 	};
 
 	enum Type {
@@ -87,8 +88,8 @@ class Regex : BaseObject {
 		const; // возвращает true, если состояние конечно
 	static bool equality_checker(const Regex*, const Regex*);
 	void normalize_this_regex(
-		const vector<pair<Regex, Regex>>&); //переписывание regex по
-											//пользовательским правилам
+		const vector<pair<Regex, Regex>>&); // переписывание regex по
+											// пользовательским правилам
 	string to_str_log() const;
 
 	// Рекурсивная генерация алфавита
@@ -99,6 +100,14 @@ class Regex : BaseObject {
 	void pre_order_travers() const;
 	void clear();
 	string regex_to_dot_helplify(int* i);
+	// спускаемся и проверяем на рав-во с поправкой на экв-ые по роли символы
+	bool rec_normalize(Regex*, const Regex&,
+					   map<alphabet_symbol, alphabet_symbol>, bool);
+	vector<Lexem> not_refal_style(Regex::Type lasttype);
+	// Удобно при бяках вида (несбалансированных деревьев и т.д.)
+	bool normalize_rewrite(vector<Regex::Lexem>*,
+						   pair<vector<Regex::Lexem>, vector<Regex::Lexem>>*);
+	Regex* tree_style(vector<Regex::Lexem>, Regex::Type);
 
   public:
 	Regex();

@@ -362,14 +362,168 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 	: Regex(str) {
 	language = new_language;
 }
+Regex* Regex::tree_style(vector<Regex::Lexem> in, Regex::Type lasttype) {
+	Regex::Type temp;
+	if (in[0].type == Regex::Lexem::Type::alt) temp = Regex::Type::alt;
+	if (in[0].type == Regex::Lexem::Type::conc) temp = Regex::Type::conc;
+	if (in[0].type == Regex::Lexem::Type::star) temp = Regex::Type::star;
+	if (in[0].type == Regex::Lexem::Type::symb) temp = Regex::Type::symb;
+	Regex* out = new Regex();
+	if (in.size() < 2) {
+		out->type = temp;
+		out->value = in[0];
+	}
+	if (in[0].type != Regex::Lexem::Type::symb) {
+		lasttype = temp;
+	}
+	if (temp == Regex::Type::symb) {
+		out->type = temp;
+		out->value = in[0];
+	}
+	out->type = temp;
+	out->value = in[0];
+	in.erase(in.begin());
+	vector<Regex::Lexem> in_a;
+	do {
+		in_a.push_back(in[0]);
+	} while (in_a[in_a.size() - 1].type != Regex::Type::symb);
+	// out->term_l;
+	// out->term_r;
+	return out;
+}
+// lisp style :-)
+vector<Regex::Lexem> Regex::not_refal_style(Regex::Type lasttype) {
+	vector<Regex::Lexem> out;
+	if (!((type == Type::alt || type == Type::conc) && lasttype == type)) {
+		out.push_back(value);
+	}
+	if (type != Type::symb) {
+		lasttype = type;
+	}
+	if (term_l) {
+		vector<Regex::Lexem> temp = term_l->not_refal_style(lasttype);
+		out.insert(out.end(), temp.begin(), temp.end());
+	}
+	if (term_r) {
+		vector<Regex::Lexem> temp = term_r->not_refal_style(lasttype);
+		out.insert(out.end(), temp.begin(), temp.end());
+	}
+	return out;
+}
 
+bool Regex::rec_normalize(Regex* from, const Regex& to,
+						  map<alphabet_symbol, alphabet_symbol> rules,
+						  bool start) {
+	// cout << type << "\n";
+	// bool cond = true;
+	// if (type == Type::symb && (value.symbol == from->value.symbol)) {
+	// 	return false;
+	// } else {
+	// 	if (type != from->type) return false;
+	// }
+	// if (term_l) {
+	// 	term_l->rec_normalize(from->term_l, to, rules, start);
+	// }
+	// if (term_r) {
+	// 	term_r->rec_normalize(from->term_r, to, rules, start);
+	// }
+	return 0;
+}
+// bool TransformationMonoid::wasrewrite(const vector<alphabet_symbol>& a,
+// 									  const vector<alphabet_symbol>& b) {
+// 	for (int i = 0; i < a.size(); i++) {
+// 		for (int j = 0; i + j < a.size() && j < b.size(); j++) {
+// 			if (b[j] != a[i + j]) {
+// 				break;
+// 			}
+// 			if (j == b.size() - 1) {
+// 				return true;
+// 			}
+// 		}
+// 	}
+// 	return false;
+// }
+bool Regex::normalize_rewrite(
+	vector<Regex::Lexem>* original,
+	pair<vector<Regex::Lexem>, vector<Regex::Lexem>>* rule) {
+	bool cond = true;
+	int start = 0;
+	int end = 0;
+
+	for (int i = 0; i < (*original).size() && cond; i++) {
+		for (int j = 0;
+			 i + j < (*original).size() && j < (*rule).first.size() && cond;
+			 j++) {
+			if ((*rule).first[j].type == (*original)[i + j].type) {
+				if ((*rule).first[j].type == Regex::Lexem::Type::symb) {
+					if ((*rule).first[j].symb != (*original)[i + j].symb) {
+						break;
+					}
+				}
+			} else {
+				break;
+			}
+			if (j == (*rule).first.size() - 1) {
+				start = i;
+				end = j + 1;
+				cond = false;
+			}
+		}
+	}
+	if (!cond) {
+		Regex::Lexem a;
+		a.type = Regex::Lexem::Type::symb;
+		if ((*(original->begin() + start)).type != Regex::Lexem::Type::symb)
+			a = (*(original->begin() + start));
+		original->erase(original->begin() + start, original->begin() + end);
+		if (rule->second.size() < 2 && a.type != Regex::Lexem::Type::symb) {
+			rule->second.insert(rule->second.begin(), a);
+		}
+		original->insert(original->begin(), rule->second.begin(),
+						 rule->second.end());
+		return 1;
+	}
+	return 0;
+}
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
-	Logger::init_step("Normalize");
+
+	map<alphabet_symbol, alphabet_symbol> rules_replace_alphabet;
 	Regex regex = *this;
-	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
-	regex.normalize_this_regex(rules);
-	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
-	Logger::finish_step();
+	cout << regex.regex_to_dot();
+	set<alphabet_symbol> alphabet_backup = alphabet;
+	vector<Regex::Lexem> curexpr =
+		regex.not_refal_style(Regex::star); // текущее выражение
+	vector<pair<vector<Regex::Lexem>, vector<Regex::Lexem>>> allrules;
+	for (auto rule : rules) {
+		vector<Regex::Lexem> from = rule.first.not_refal_style(Regex::star);
+		vector<Regex::Lexem> to = rule.second.not_refal_style(Regex::star);
+		allrules.push_back({from, to});
+	}
+	int i = 0;
+	for (i = 0; i < allrules.size(); i++) {
+		if (regex.normalize_rewrite(&curexpr, &allrules[i])) {
+			i = -1;
+			continue;
+		}
+	}
+	for (auto t : curexpr) {
+		cout << t.type << " ";
+	}
+
+	cout << "не переписываем :-(\n";
+	regex = *regex.tree_style(curexpr, Regex::Type::symb);
+	regex.alphabet = alphabet_backup;
+
+	//  предполагается что все деревья односторонние (построены одинаковым
+	//  образом), если нет то прийдется изобретать костыль
+
+	//  Logger::init_step("Normalize");
+	//  Logger::log("Регулярное выражение до нормализации", to_txt());
+	//  Regex regex = *this;
+	//  regex.normalize_this_regex(rules);
+	//  Logger::log("Регулярное выражение после нормализации", regex.to_txt());
+	//  Logger::finish_step();
+	//  return regex;
 	return regex;
 }
 
@@ -490,9 +644,7 @@ void Regex::set_language(const set<alphabet_symbol>& _alphabet) {
 	language = make_shared<Language>(alphabet);
 }
 
-void Regex::normalize_this_regex(const vector<pair<Regex, Regex>>& rules) {
-	
-}
+void Regex::normalize_this_regex(const vector<pair<Regex, Regex>>& rules) {}
 
 void Regex::pre_order_travers() const {
 	if (type == Regex::symb /*&& value.symbol*/) {
@@ -1919,10 +2071,7 @@ string Regex::regex_to_dot_helplify(int* i) {
 		symb = "eps";
 	}
 	if (type == Type::conc) {
-		symb = "|";
-	}
-	if (type == Type::conc) {
-		symb = "|";
+		symb = ".";
 	}
 	if (type == Type::alt) symb = '|';
 	if (type == Type::star) {
