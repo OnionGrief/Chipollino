@@ -19,39 +19,49 @@ Interpreter::Interpreter() {
 		{"Arden", {{"Arden", {ObjectType::NFA}, ObjectType::Regex}}},
 		{"Glushkov", {{"Glushkov", {ObjectType::Regex}, ObjectType::NFA}}},
 		{"Determinize", {{"Determinize", {ObjectType::NFA}, ObjectType::DFA}}},
+		{"Determinize+",
+		 {{"Determinize+", {ObjectType::NFA}, ObjectType::DFA}}},
 		{"RemEps", {{"RemEps", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Linearize", {{"Linearize", {ObjectType::Regex}, ObjectType::Regex}}},
 		{"Minimize", {{"Minimize", {ObjectType::NFA}, ObjectType::DFA}}},
+		{"Minimize+", {{"Minimize+", {ObjectType::NFA}, ObjectType::DFA}}},
 		{"Reverse", {{"Reverse", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Annote", {{"Annote", {ObjectType::NFA}, ObjectType::DFA}}},
 		{"DeLinearize",
 		 {{"DeLinearize", {ObjectType::Regex}, ObjectType::Regex},
 		  {"DeLinearize", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Complement", {{"Complement", {ObjectType::DFA}, ObjectType::DFA}}},
+		{"RemoveTrap", {{"RemoveTrap", {ObjectType::DFA}, ObjectType::DFA}}},
 		{"DeAnnote",
 		 {{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
 		  {"DeAnnote", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
 		{"Disambiguate",
 		 {{"Disambiguate", {ObjectType::Regex}, ObjectType::Regex}}},
+		{"Intersect",
+		 {{"Intersect", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
+		{"Union",
+		 {{"Union", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
+		{"Difference",
+		 {{"Difference", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
 		// Многосортные функции
 		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
-		{"ClassLength", {{"ClassLength", {ObjectType::DFA}, ObjectType::Int}}},
+		{"ClassLength", {{"ClassLength", {ObjectType::NFA}, ObjectType::Int}}},
 		{"Normalize",
 		 {{"Normalize",
 		   {ObjectType::Regex, ObjectType::Array},
 		   ObjectType::Regex}}},
 		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
-		{"ClassCard", {{"ClassCard", {ObjectType::DFA}, ObjectType::Int}}},
+		{"ClassCard", {{"ClassCard", {ObjectType::NFA}, ObjectType::Int}}},
 		{"Ambiguity",
 		 {{"Ambiguity", {ObjectType::NFA}, ObjectType::AmbiguityValue}}},
 		{"MyhillNerode",
-		 {{"MyhillNerode", {ObjectType::DFA}, ObjectType::Int}}},
+		 {{"MyhillNerode", {ObjectType::NFA}, ObjectType::Int}}},
 		{"GlaisterShallit",
 		 {{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int}}},
 		{"PrefixGrammar",
 		 {{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGrammar}}},
-		 {"PGtoNFA",
+		{"PGtoNFA",
 		 {{"PGtoNFA", {ObjectType::PrefixGrammar}, ObjectType::NFA}}},
 		// Предикаты
 		{"Bisimilar",
@@ -60,6 +70,8 @@ Interpreter::Interpreter() {
 		   ObjectType::Boolean}}},
 		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::OptionalBool}}},
 		// для dfa - bool, для nfa - optional<bool>
+		{"Deterministic",
+		 {{"Deterministic", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Subset",
 		 {{"Subset",
 		   {ObjectType::Regex, ObjectType::Regex},
@@ -71,7 +83,17 @@ Interpreter::Interpreter() {
 		   ObjectType::Boolean},
 		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Equal",
-		 {{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
+		 {{"Equal",
+		   {ObjectType::Regex, ObjectType::Regex},
+		   ObjectType::Boolean},
+		  {"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean},
+		  {"Equal", {ObjectType::Int, ObjectType::Int}, ObjectType::Boolean},
+		  {"Equal",
+		   {ObjectType::AmbiguityValue, ObjectType::AmbiguityValue},
+		   ObjectType::Boolean},
+		  {"Equal",
+		   {ObjectType::Boolean, ObjectType::Boolean},
+		   ObjectType::Boolean}}},
 		{"OneUnambiguity",
 		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
@@ -120,6 +142,17 @@ bool Interpreter::run_file(const string& path) {
 
 void Interpreter::set_log_mode(LogMode mode) {
 	log_mode = mode;
+}
+
+bool Interpreter::set_flag(Flag key, bool value) {
+	auto logger = init_log();
+	if (flags.count(key)) {
+		flags[key] = value;
+	} else {
+		logger.throw_error("set_flag::invalid flag id");
+		return false;
+	}
+	return true;
 }
 
 void Interpreter::InterpreterLogger::log(const string& str) {
@@ -185,14 +218,6 @@ optional<GeneralObject> Interpreter::apply_function(
 			   holds_alternative<ObjectDFA>(obj);
 	};
 
-	//if (is_automaton(arguments[0])) get_automaton(arguments[0]).set_trim_flag(is_trim);
-	/*if (holds_alternative<ObjectNFA>(arguments[0])) {
-		get<ObjectNFA>(arguments[0]).value.set_trim_flag(is_trim);
-	}
-	if (holds_alternative<ObjectDFA>(arguments[0])) {
-		get<ObjectDFA>(arguments[0]).value.set_trim_flag(is_trim);
-	}*/
-
 	if (function.name == "Glushkov") {
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_glushkov());
 	}
@@ -215,14 +240,19 @@ optional<GeneralObject> Interpreter::apply_function(
 	}
 	if (function.name == "Minimal") {
 		FiniteAutomaton a = get_automaton(arguments[0]);
-		if (a.is_deterministic())
+		Logger::activate_step_counter();
+		bool is_deterministic = a.is_deterministic();
+		Logger::deactivate_step_counter();
+		if (is_deterministic)
 			return ObjectBoolean(a.is_dfa_minimal());
 		else
 			return ObjectOptionalBool(a.is_nfa_minimal());
 	}
+	if (function.name == "Deterministic") {
+		return ObjectBoolean(get_automaton(arguments[0]).is_deterministic());
+	}
 	if (function.name == "Subset") {
-		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
-			function.input == sign) {
+		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean((get_automaton(arguments[0])
 									  .subset(get_automaton(arguments[1]))));
 		} else {
@@ -232,8 +262,8 @@ optional<GeneralObject> Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equiv") {
-		vector<ObjectType> n = {ObjectType::NFA, ObjectType::NFA};
-		if (function.input == n) {
+
+		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(FiniteAutomaton::equivalent(
 				get_automaton(arguments[0]), get_automaton(arguments[1])));
 		} else {
@@ -243,19 +273,27 @@ optional<GeneralObject> Interpreter::apply_function(
 		}
 	}
 	if (function.name == "Equal") {
-		if (vector<ObjectType> sign = {ObjectType::NFA, ObjectType::NFA};
-			function.input == sign) {
+		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(FiniteAutomaton::equal(
 				get_automaton(arguments[0]), get_automaton(arguments[1])));
-		} else {
+		} else if (function.input[0] == ObjectType::Regex) {
 			return ObjectBoolean(
 				Regex::equal(get<ObjectRegex>(arguments[0]).value,
 							 get<ObjectRegex>(arguments[1]).value));
+		} else if (function.input[0] == ObjectType::Int) {
+			return ObjectBoolean(get<ObjectInt>(arguments[0]).value ==
+								 get<ObjectInt>(arguments[1]).value);
+		} else if (function.input[0] == ObjectType::Boolean) {
+			return ObjectBoolean(get<ObjectBoolean>(arguments[0]).value ==
+								 get<ObjectBoolean>(arguments[1]).value);
+		} else {
+			return ObjectBoolean(
+				get<ObjectAmbiguityValue>(arguments[0]).value ==
+				get<ObjectAmbiguityValue>(arguments[1]).value);
 		}
 	}
 	if (function.name == "OneUnambiguity") {
-		if (vector<ObjectType> sign = {ObjectType::NFA};
-			function.input == sign) {
+		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(
 				get_automaton(arguments[0]).is_one_unambiguous());
 		} else {
@@ -298,7 +336,8 @@ optional<GeneralObject> Interpreter::apply_function(
 		return ObjectPrefixGrammar(g);
 	}
 	if (function.name == "PGtoNFA") {
-		return ObjectNFA(get<ObjectPrefixGrammar>(arguments[0]).value.prefix_grammar_to_automaton());
+		return ObjectNFA(get<ObjectPrefixGrammar>(arguments[0])
+							 .value.prefix_grammar_to_automaton());
 	}
 
 	/*
@@ -314,8 +353,14 @@ optional<GeneralObject> Interpreter::apply_function(
 	if (function.name == "Determinize") {
 		res = ObjectDFA(get_automaton(arguments[0]).determinize());
 	}
+	if (function.name == "Determinize+") {
+		res = ObjectDFA(get_automaton(arguments[0]).determinize(false));
+	}
 	if (function.name == "Minimize") {
 		res = ObjectDFA(get_automaton(arguments[0]).minimize());
+	}
+	if (function.name == "Minimize+") {
+		res = ObjectDFA(get_automaton(arguments[0]).minimize(false));
 	}
 	if (function.name == "Annote") {
 		res = ObjectDFA(get_automaton(arguments[0]).annote());
@@ -340,10 +385,15 @@ optional<GeneralObject> Interpreter::apply_function(
 	if (function.name == "Complement") {
 		// FiniteAutomaton fa = get_automaton(arguments[0]);
 		// if (fa.is_deterministic())
-		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement());
+		res = ObjectDFA(get_automaton(arguments[0]).complement());
+	}
+	if (function.name == "RemoveTrap") {
+		res = ObjectDFA(get_automaton(arguments[0]).remove_trap_states());
 	}
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
+			// Пример: (пока в объявлении функции не добавила флаг)
+			// res=ObjectNFA(get_automaton(arguments[0]).deannote(Flag::auto_remove_trap_states));
 			res = ObjectNFA(get_automaton(arguments[0]).deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
@@ -380,9 +430,18 @@ optional<GeneralObject> Interpreter::apply_function(
 		res = ObjectRegex(
 			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex());
 	}
-	/*if (function.name == "Simplify") {
-		res =  ObjectRegex(get<ObjectRegex>(arguments[0]).value.);
-	}*/
+	if (function.name == "Intersect") {
+		res = ObjectNFA(FiniteAutomaton::intersection(
+			get_automaton(arguments[0]), get_automaton(arguments[1])));
+	}
+	if (function.name == "Union") {
+		res = ObjectNFA(FiniteAutomaton::uunion(get_automaton(arguments[0]),
+												get_automaton(arguments[1])));
+	}
+	if (function.name == "Difference") {
+		res = ObjectNFA(FiniteAutomaton::difference(
+			get_automaton(arguments[0]), get_automaton(arguments[1])));
+	}
 
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
@@ -419,15 +478,40 @@ optional<GeneralObject> Interpreter::apply_function(
 }
 
 bool Interpreter::typecheck(vector<ObjectType> func_input_type,
-							vector<ObjectType> input_type) {
-	if (input_type.size() != func_input_type.size()) return false;
-	for (int i = 0; i < input_type.size(); i++) {
-		if (!((input_type[i] == func_input_type[i]) ||
-			  (input_type[i] == ObjectType::DFA &&
-			   func_input_type[i] == ObjectType::NFA)))
+							vector<ObjectType> argument_type) {
+
+	// несовпдаение по кол-ву аргументов
+	if (argument_type.size() != func_input_type.size()) return false;
+	// сверяем тип каждого аргумента
+	for (int i = 0; i < argument_type.size(); i++) {
+		// тип либо одинаковый либо NFA<-DFA
+		if (!((argument_type[i] == func_input_type[i]) ||
+			  (argument_type[i] == ObjectType::DFA &&
+			   func_input_type[i] == ObjectType::NFA) ||
+			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
+			  (flags[Flag::weak_type_comparison] &&
+			   argument_type[i] == ObjectType::NFA &&
+			   func_input_type[i] == ObjectType::DFA) ||
+			  // для верификатора гипотез (на место '*' - ставить Regex)
+			  (argument_type[i] == ObjectType::RandomRegex &&
+			   func_input_type[i] == ObjectType::Regex))) {
+			// несовпадение по типам
 			return false;
+		}
 	}
 	return true;
+}
+
+optional<int> Interpreter::find_func(string func,
+									 vector<ObjectType> argument_type) {
+	// проходимся по всем вариантам сигнатуры функции
+	for (int j = 0; j < names_to_functions[func].size(); j++) {
+		// смотрим что каждый принимает на вход
+		auto func_input_type = names_to_functions[func][j].input;
+		// нашли совпадение по аргументам - возвращаем номер в массиве вариаций
+		if (typecheck(func_input_type, argument_type)) return j;
+	}
+	return nullopt;
 }
 
 optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
@@ -448,136 +532,99 @@ optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
 		}
 	}
 
-	// TODO: переписать всё что ниже начисто
-	// 0 - функцию надо исключить из последовательности
-	// 1 - функция остается в последовательности
-	// 2 - функция(Delinearize или DeAnnote) принимает на вход Regex
-	// 3 - функция(Delinearize или DeAnnote) принимает на вход NFA/DFA
-	vector<int> neededfuncs(function_names.size(), 1);
-	if (typecheck(names_to_functions[function_names[0]][0].input, first_type)) {
-		if (names_to_functions[function_names[0]].size() == 2) {
-			neededfuncs[0] = 2;
-		} else {
-			neededfuncs[0] = 1;
-		}
+	/* содержит информацию о каждой ф/и в посл-ти:
+	 либо < 0 - ф/я не входит в итоговую посл-ть (не выполняется)
+		"-1" - выполняет тождественное преобразование
+		"-2" - излишнее действие в связи с последующей ф/ей
+	 либо номер сигнатуры ф/и в таблице 'names_to_functions' */
+	vector<int> needed_funcs(function_names.size(), 0);
+
+	string argument_type = "";
+	for (int i = 0; i < first_type.size(); i++)
+		argument_type += (i == 0 ? "" : ", ") + types_to_string[first_type[i]];
+
+	// устанавливаем тип для 1ой ф/и в посл-ти
+	if (auto num = find_func(function_names[0], first_type); num.has_value()) {
+		needed_funcs[0] = num.value();
 	} else {
-		if (names_to_functions[function_names[0]].size() == 2) {
-			if (typecheck(names_to_functions[function_names[0]][1].input,
-						  first_type)) {
-				neededfuncs[0] = 3;
-			} else {
-				return nullopt;
+		logger.throw_error("mismatch by type of function \"" +
+						   function_names[0] + "\": passed {" + argument_type +
+						   "}");
+		return nullopt;
+	}
+
+	string prev_func = function_names[0];
+	ObjectType prev_type =
+		names_to_functions[prev_func][needed_funcs[0]].output;
+
+	for (int i = 1; i < function_names.size(); i++) {
+		// запоминаем предыдущую функцию и ее тип
+		if (needed_funcs[i - 1] != -1) {
+			prev_func = function_names[i - 1];
+			prev_type =
+				names_to_functions[prev_func][needed_funcs[i - 1]].output;
+		}
+		string func = function_names[i];
+
+		// поиск совпадения по типу (не нашли - бан)
+		if (auto num = find_func(function_names[i], {prev_type});
+			num.has_value()) {
+			needed_funcs[i] = num.value();
+
+			// удаление ненужных ф/й из посл-ти:
+			if ((func == "Determinize" || func == "Annote") &&
+				names_to_functions[prev_func][0].output == ObjectType::DFA) {
+				needed_funcs[i] = -1;
+				// удаление Annote и Determinize перед DFA
 			}
+			if (prev_func == "Minimize+" &&
+				(func == "Minimize" || func == "Determinize+")) {
+				needed_funcs[i] = -1;
+			}
+			if (prev_func == "Determinize" && func == "Minimize") {
+				needed_funcs[i - 1] = -2;
+			}
+			if ((prev_func == "Determinize" || prev_func == "Determinize+") &&
+				func == "Minimize+") {
+				needed_funcs[i - 1] = -2;
+			}
+			if (prev_func == func) {
+				if (func != "Reverse" && func != "Complement" &&
+					func != "Linearize" && func != "DeLinearize" &&
+					func != "DeAnnote") {
+					needed_funcs[i] = -1;
+					// удаление из последовательности повторений
+				}
+			}
+			/*if (prev_func == "Linearize" &&
+				(func == "Glushkov" || func == "IlieYu")) {
+				needed_funcs[i - 1] = -1;
+				// удаление Linearize перед Glushkov
+			}*/
 		} else {
+			logger.throw_error("mismatch by type of function \"" + func +
+							   "\": passed {" + types_to_string[prev_type] +
+							   "}");
 			return nullopt;
 		}
 	}
 
-	string predfunc = function_names[0];
-	for (int i = 1; i < function_names.size(); i++) {
-		if (neededfuncs[i - 1] != 0) predfunc = function_names[i - 1];
-		string func = function_names[i];
-		// check on types
+	string output_type;
 
-		if (names_to_functions[func].size() == 1 &&
-			names_to_functions[predfunc].size() == 1) {
-			if (names_to_functions[func][0].input.size() == 1) {
-				if (names_to_functions[predfunc][0].output !=
-					names_to_functions[func][0].input[0]) {
-					vector<ObjectType> nfa_type = {ObjectType::NFA};
-					if (!(names_to_functions[predfunc][0].output ==
-							  ObjectType::DFA &&
-						  names_to_functions[func][0].input == nfa_type)) {
-						return nullopt;
-					} else {
-						// Determinize добавляет ловушку после Annote
-						// if ((func == "Determinize" || func == "Annote") &&
-						if (func == "Annote" &&
-							names_to_functions[predfunc][0].output ==
-								ObjectType::DFA) {
-							neededfuncs[i] = 0;
-							// удаление Annote перед DFA
-						}
-						if (predfunc == "Minimize" &&
-							(func == "Minimize" || func == "Determinize")) {
-							neededfuncs[i] = 0;
-						}
-						if (predfunc == "Determinize" &&
-							func == "Determinize") {
-							neededfuncs[i] = 0;
-						}
-						if (predfunc == "Determinize" && func == "Minimize") {
-							neededfuncs[i - 1] = 0;
-						}
-					}
-				} else {
-					if (predfunc == func) {
-						if (func != "Reverse" && func != "Complement" &&
-							func != "Linearize") {
-							neededfuncs[i - 1] = 0;
-						}
-					} /*else {
-						if (predfunc == "Linearize" &&
-							(func == "Glushkov" || func == "IlieYu")) {
-							neededfuncs[i - 1] = 0;
-							// удаление Linearize перед Glushkov
-						}
-					}*/
-				}
-			} else {
-				return nullopt;
-			}
-		} else {
-
-			vector<ObjectType> regex_type = {ObjectType::Regex};
-			vector<ObjectType> nfa_type = {ObjectType::NFA};
-			vector<ObjectType> dfa_type = {ObjectType::DFA};
-
-			if (names_to_functions[func].size() == 2) {
-				// DeLinearize ~ DeAnnote
-				if (names_to_functions[predfunc].size() != 2) {
-					if (names_to_functions[predfunc][0].output ==
-						ObjectType::Regex) {
-						neededfuncs[i] = 2;
-					} else if (names_to_functions[predfunc][0].output ==
-								   ObjectType::NFA ||
-							   names_to_functions[predfunc][0].output ==
-								   ObjectType::DFA) {
-						neededfuncs[i] = 3;
-					} else {
-						return nullopt;
-					}
-				} else {
-					neededfuncs[i] = neededfuncs[i - 1];
-					// neededfuncs[i - 1] = 0;
-					// удаление из последовательности повторений:
-					// DeLinearize.DeLinearize.DeAnnote == DeLinearize
-				}
-			} else if (names_to_functions[predfunc].size() == 2) {
-				if (names_to_functions[func][0].input == regex_type &&
-						neededfuncs[i - 1] == 2 ||
-					names_to_functions[func][0].input == nfa_type &&
-						neededfuncs[i - 1] == 3) {
-					neededfuncs[i] = 1;
-				} else {
-					return nullopt;
-				}
-			}
-		}
-	}
-
+	// собираем посл-ть
 	optional<vector<Function>> finalfuncs = nullopt;
 	finalfuncs.emplace() = {};
 	for (int i = 0; i < function_names.size(); i++) {
-		if (neededfuncs[i] > 0) {
-			if (neededfuncs[i] == 1 || neededfuncs[i] == 2) {
-				Function f = names_to_functions[function_names[i]][0];
-				finalfuncs.value().push_back(f);
-			} else {
-				// тип NFA для DeAnnote
-				Function f = names_to_functions[function_names[i]][1];
-				finalfuncs.value().push_back(f);
-			}
+		if (needed_funcs[i] >= 0) {
+			Function f = names_to_functions[function_names[i]][needed_funcs[i]];
+			finalfuncs.value().push_back(f);
+			output_type = types_to_string[f.output];
+			logger.log(f.name + " (type: {" + argument_type + "} -> " +
+					   output_type + ")"); // можно убрать
+			argument_type = output_type;
+		} else {
+			logger.log(function_names[i] +
+					   " is skipped, it performs unnecessary transformation");
 		}
 	}
 
@@ -588,6 +635,13 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	auto logger = init_log();
 	logger.log("Evaluating expression \"" + expr.to_txt() + "\"");
 
+	if (expr.type == ObjectType::RandomRegex) {
+		if (current_random_regex.has_value()) {
+			return ObjectRegex(*current_random_regex);
+		} else {
+			return nullopt;
+		}
+	}
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
@@ -728,21 +782,84 @@ bool Interpreter::run_test(const Test& test) {
 	return success;
 }
 
-bool Interpreter::run_operation(const GeneralOperation& op) {
-	if (holds_alternative<Declaration>(op)) {
-		return run_declaration(get<Declaration>(op));
-	} else if (holds_alternative<Predicate>(op)) {
-		return run_predicate(get<Predicate>(op));
-	} else if (holds_alternative<Test>(op)) {
-		return run_test(get<Test>(op));
+bool Interpreter::run_verification(const Verification& verification) {
+	auto logger = init_log();
+	logger.log("");
+	logger.log("Running verification...");
+	bool success = true;
+	int results = 0;
+	int tests_size = verification.size;
+	int tests_false_num = min(10, (int)round(verification.size * 0.1));
+	vector<string> regex_list;
+	RegexGenerator RG; // TODO: менять параметры
+	Expression expr = verification.predicate;
+
+	for (int i = 0; i < verification.size; i++) {
+		// подстановка равных Regex на место '*'
+		current_random_regex =
+			Regex(RG.generate_regex()); // хз как еще передавать
+		auto predicate = eval_expression(expr);
+
+		if (predicate.has_value()) {
+			bool res = get<ObjectBoolean>(*predicate).value;
+			results += res;
+			if (!res && tests_false_num > 0) {
+				regex_list.push_back(current_random_regex->to_txt());
+				tests_false_num--;
+			}
+		} else {
+			logger.throw_error("while running verification: invalid arguments");
+			success = false;
+			break;
+		}
 	}
+
+	current_random_regex = nullopt;
+
+	logger.log("result: " + to_string(100 * results / tests_size) + "%");
+	logger.log("");
+	logger.log("Tests with negative result:");
+	for (string str : regex_list)
+		logger.log(str);
+
+	return success;
+}
+
+bool Interpreter::run_set_flag(const SetFlag& flag) {
+	auto logger = init_log();
+	logger.log("");
+	Flag flag_name = flags_names[flag.name];
+	if (flags.count(flag_name))
+		flags[flag_name] = flag.value;
+	else {
+		logger.throw_error("while setting flag: wrong name \"" + flag.name +
+						   "\"");
+		return false;
+	}
+	logger.log("set flag \"" + flag.name + "\" = " + to_string(flag.value));
 	return true;
+}
+
+bool Interpreter::run_operation(const GeneralOperation& op) {
+	bool success = false;
+	if (holds_alternative<Declaration>(op)) {
+		success = run_declaration(get<Declaration>(op));
+	} else if (holds_alternative<Predicate>(op)) {
+		success = run_predicate(get<Predicate>(op));
+	} else if (holds_alternative<Test>(op)) {
+		success = run_test(get<Test>(op));
+	} else if (holds_alternative<SetFlag>(op)) {
+		success = run_set_flag(get<SetFlag>(op));
+	} else if (holds_alternative<Verification>(op)) {
+		success = run_verification(get<Verification>(op));
+	}
+	return success;
 }
 
 string Interpreter::FunctionSequence::to_txt() const {
 	string str = "(";
-	for (int i = 0; i < functions.size(); i++) {
-		str += functions[i].name + (i == functions.size() - 1 ? " " : ".");
+	for (int i = (int)functions.size() - 1; i >= 0; i--) {
+		str += functions[i].name + (i == 0 ? " " : ".");
 	}
 	for (int i = 0; i < parameters.size(); i++) {
 		str += parameters[i].to_txt() + (i == parameters.size() - 1 ? "" : " ");
@@ -752,6 +869,9 @@ string Interpreter::FunctionSequence::to_txt() const {
 }
 
 string Interpreter::Expression::to_txt() const {
+	if (type == ObjectType::RandomRegex) {
+		return "*";
+	}
 	if (const auto* pval = get_if<FunctionSequence>(&value)) {
 		return pval->to_txt();
 	}
@@ -786,7 +906,7 @@ int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {
 			balance--;
 		}
 	}
-	return pos - 1;
+	return (int)pos - 1;
 }
 
 optional<Interpreter::Id> Interpreter::scan_id(const vector<Lexem>& lexems,
@@ -921,9 +1041,9 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 		pos++;
 		return expr;
 	}
+	Expression expr;
 	// Int
 	if (end > pos && lexems[pos].type == Lexem::number) {
-		Expression expr;
 		expr.type = ObjectType::Int;
 		expr.value = lexems[pos].num;
 		pos++;
@@ -931,7 +1051,6 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	}
 	// Regex
 	if (end > pos && lexems[pos].type == Lexem::regex) {
-		Expression expr;
 		expr.type = ObjectType::Regex;
 		expr.value = Regex(lexems[pos].value);
 		pos++;
@@ -940,7 +1059,6 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	// Id
 	if (end > pos && lexems[pos].type == Lexem::name &&
 		id_types.count(lexems[pos].value)) {
-		Expression expr;
 		expr.type = id_types[lexems[pos].value];
 		expr.value = lexems[pos].value;
 		pos++;
@@ -948,9 +1066,14 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	}
 	// String
 	if (end > pos && lexems[pos].type == Lexem::stringval) {
-		Expression expr;
 		expr.type = ObjectType::String;
 		expr.value = lexems[pos].value;
+		pos++;
+		return expr;
+	}
+	// Star (RandomRegex)
+	if (end > pos && lexems[pos].type == Lexem::star) {
+		expr.type = ObjectType::RandomRegex;
 		pos++;
 		return expr;
 	}
@@ -958,7 +1081,6 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	int i = pos;
 	if (const auto& seq = scan_function_sequence(lexems, i, end);
 		seq.has_value()) {
-		Expression expr;
 		expr.type = (*seq).functions.back().output;
 		expr.value = *seq;
 		pos = i;
@@ -967,7 +1089,6 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	i = pos;
 	// Array
 	if (const auto& arr = scan_array(lexems, i, end); arr.has_value()) {
-		Expression expr;
 		expr.type = ObjectType::Array;
 		expr.value = *arr;
 		pos = i;
@@ -1080,6 +1201,78 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 	return nullopt;
 }
 
+optional<Interpreter::SetFlag> Interpreter::scan_flag(
+	const vector<Lexem>& lexems, int& pos) {
+
+	auto logger = init_log();
+	int i = pos;
+
+	if (lexems.size() < i + 2 || lexems[i].type != Lexem::name ||
+		lexems[i].value != "Set") {
+		return nullopt;
+	}
+	SetFlag flag;
+	i++;
+	if (lexems[i].type == Lexem::name) {
+		flag.name = lexems[i].value;
+	} else {
+		logger.throw_error("Scan Set: wrong flagName at position 1");
+		return nullopt;
+	}
+	i++;
+	if (lexems[i].type == Lexem::name &&
+		(lexems[i].value == "true" || lexems[i].value == "false")) {
+		if (lexems[i].value == "true")
+			flag.value = true;
+		else
+			flag.value = false;
+	} else {
+		logger.throw_error(
+			"Scan SetFlag: wrong type at position 2, boolean expected");
+		return nullopt;
+	}
+	pos = i + 1;
+	return flag;
+}
+
+optional<Interpreter::Verification> Interpreter::scan_verification(
+	const vector<Lexem>& lexems, int& pos) {
+
+	auto logger = init_log();
+	int i = pos;
+
+	if (lexems.size() < i + 1 || lexems[i].type != Lexem::name ||
+		lexems[i].value != "Verification") {
+		return nullopt;
+	}
+	i++;
+
+	Verification verification;
+	// Predicate
+	if (const auto& expr = scan_expression(lexems, i, lexems.size());
+		expr.has_value() && ((*expr).type == ObjectType::Boolean ||
+							 (*expr).type == ObjectType::OptionalBool)) {
+		verification.predicate = *expr;
+	} else {
+		logger.throw_error(
+			"Scan verification: wrong type at position 1, predicate expected");
+		return nullopt;
+	}
+	// tests size
+	if (lexems.size() > i)
+		if (lexems[i].type == Lexem::number) {
+			verification.size = lexems[i].num;
+		} else {
+			logger.throw_error(
+				"Scan verification: wrong type at position 2, number expected");
+			return nullopt;
+		}
+	i++;
+
+	pos = i;
+	return verification;
+}
+
 optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	const vector<Lexem>& lexems) {
 
@@ -1087,12 +1280,19 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	logger.log("scanning");
 
 	int pos = 0;
+	if (auto test = scan_test(lexems, pos); test.has_value()) {
+		return test;
+	}
+	if (auto flag = scan_flag(lexems, pos); flag.has_value()) {
+		return flag;
+	}
+	if (auto verification = scan_verification(lexems, pos);
+		verification.has_value()) {
+		return verification;
+	}
 	if (auto declaration = scan_declaration(lexems, pos);
 		declaration.has_value()) {
 		return declaration;
-	}
-	if (auto test = scan_test(lexems, pos); test.has_value()) {
-		return test;
 	}
 	if (auto predicate = scan_predicate(lexems, pos); predicate.has_value()) {
 		return predicate;

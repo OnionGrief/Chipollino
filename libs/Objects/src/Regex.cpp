@@ -392,13 +392,12 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 	Logger::init_step("Normalize");
 	Regex regex = *this;
+	// regex.normalize_this_regex(rules);
 	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
-	regex.normalize_this_regex(rules);
 	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
 	Logger::finish_step();
 	return regex;
 }
-
 bool Regex::from_string(const string& str) {
 	if (!str.size()) {
 		value = Regex::Lexem::eps;
@@ -1734,6 +1733,7 @@ bool Regex::is_one_unambiguous() const {
 
 Regex Regex::get_one_unambiguous_regex() const {
 	Logger::init_step("OneUnambiguityRegex");
+	Logger::log("Регулярное выражение до преобразования", to_txt());
 	FiniteAutomaton fa = to_glushkov();
 	if (fa.language->is_one_unambiguous_regex_cached()) {
 		Logger::log("1-однозначное регулярное выражение, описывающее язык",

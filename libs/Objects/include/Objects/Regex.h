@@ -87,6 +87,11 @@ class Regex : BaseObject {
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
 	static bool equality_checker(const Regex*, const Regex*);
+
+	/*
+	int search_replace_rec(
+		const Regex& replacing, const Regex& replaced_by,
+		Regex* original); //рекурсивный поиск заменяемого листа дерева*/
 	void normalize_this_regex(
 		const vector<pair<Regex, Regex>>&); //переписывание regex по
 											//пользовательским правилам
