@@ -386,7 +386,7 @@ optional<GeneralObject> Interpreter::apply_function(
 	if (function.name == "DeAnnote") {
 		if (function.output == ObjectType::NFA) {
 			// Пример: (пока в объявлении функции не добавила флаг)
-			// res=ObjectNFA(get_automaton(arguments[0]).deannote(Flags::trim));
+			// res=ObjectNFA(get_automaton(arguments[0]).deannote(Flag::trim));
 			res = ObjectNFA(get_automaton(arguments[0]).deannote());
 		} else {
 			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote());
@@ -482,11 +482,11 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type,
 			  (argument_type[i] == ObjectType::DFA &&
 			   func_input_type[i] == ObjectType::NFA) ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
-			  (flags_values[Flags::dynamic] &&
+			  (flags[Flag::dynamic] &&
 			   argument_type[i] == ObjectType::NFA &&
 			   func_input_type[i] == ObjectType::DFA) ||
 			  // для верификатора гипотез (на место '*' - ставить Regex)
-			  (flags_values[Flags::verification] &&
+			  (flags[Flag::verification] &&
 			   argument_type[i] == ObjectType::RandomRegex &&
 			   func_input_type[i] == ObjectType::Regex))) {
 			// несовпадение по типам
@@ -629,7 +629,7 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	auto logger = init_log();
 	logger.log("Evaluating expression \"" + expr.to_txt() + "\"");
 
-	if (flags_values[Flags::verification] &&
+	if (flags[Flag::verification] &&
 		expr.type == ObjectType::RandomRegex) {
 		return ObjectRegex(current_random_regex);
 	}
@@ -814,12 +814,12 @@ bool Interpreter::run_verification(const Verification& verification) {
 	return success;
 }
 
-bool Interpreter::set_flag(const Flag& flag) {
+bool Interpreter::set_flag(const SetFlag& flag) {
 	auto logger = init_log();
 	logger.log("");
-	Flags flag_name = flags_names[flag.name];
-	if (flags_values.count(flag_name))
-		flags_values[flag_name] = flag.value;
+	Flag flag_name = flags_names[flag.name];
+	if (flags.count(flag_name))
+		flags[flag_name] = flag.value;
 	else {
 		logger.throw_error("while setting flag: wrong name \"" + flag.name +
 						   "\"");
@@ -837,8 +837,8 @@ bool Interpreter::run_operation(const GeneralOperation& op) {
 		success = run_predicate(get<Predicate>(op));
 	} else if (holds_alternative<Test>(op)) {
 		success = run_test(get<Test>(op));
-	} else if (holds_alternative<Flag>(op)) {
-		success = set_flag(get<Flag>(op));
+	} else if (holds_alternative<SetFlag>(op)) {
+		success = set_flag(get<SetFlag>(op));
 	} else if (holds_alternative<Verification>(op)) {
 		success = run_verification(get<Verification>(op));
 	}
@@ -1059,7 +1059,7 @@ optional<Interpreter::Expression> Interpreter::scan_expression(
 	}
 	// Star (RandomRegex)
 	if (end > pos && lexems[pos].type == Lexem::star &&
-		flags_values[Flags::verification]) {
+		flags[Flag::verification]) {
 		expr.type = ObjectType::RandomRegex;
 		pos++;
 		return expr;
@@ -1188,7 +1188,7 @@ optional<Interpreter::Predicate> Interpreter::scan_predicate(
 	return nullopt;
 }
 
-optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
+optional<Interpreter::SetFlag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 												   int& pos) {
 
 	auto logger = init_log();
@@ -1198,7 +1198,7 @@ optional<Interpreter::Flag> Interpreter::scan_flag(const vector<Lexem>& lexems,
 		lexems[i].value != "Set") {
 		return nullopt;
 	}
-	Flag flag;
+	SetFlag flag;
 	i++;
 	if (lexems[i].type == Lexem::name) {
 		flag.name = lexems[i].value;
@@ -1235,7 +1235,7 @@ optional<Interpreter::Verification> Interpreter::scan_verification(
 	i++;
 
 	Verification verification;
-	flags_values[Flags::verification] = true;
+	flags[Flag::verification] = true;
 	// Predicate
 	if (const auto& expr = scan_expression(lexems, i, lexems.size());
 		expr.has_value() && ((*expr).type == ObjectType::Boolean ||
@@ -1277,7 +1277,7 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	if (auto verification = scan_verification(lexems, pos); verification.has_value()) {
 		return verification;
 	}
-	flags_values[Flags::verification] = false;
+	flags[Flag::verification] = false;
 	if (auto declaration = scan_declaration(lexems, pos);
 		declaration.has_value()) {
 		return declaration;

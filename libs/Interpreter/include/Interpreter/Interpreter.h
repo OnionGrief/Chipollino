@@ -31,19 +31,19 @@ class Interpreter {
 
 	
 	// SetFlag [flagname] [value]
-	struct Flag {
+	struct SetFlag {
 		string name;
 		bool value;
 	};
 
 
-	enum class Flags {
+	enum class Flag {
 		trim,
 		dynamic,
 		theory,
 		verification
 	};
-	bool set_flag(const Flag&);
+	bool set_flag(const SetFlag&);
 
   private:
 	//== Внутреннее логгирование ==============================================
@@ -162,31 +162,31 @@ class Interpreter {
 
 	// Флаги:
 
-	map<string, Flags> flags_names = {
-		{"auto_remove_trap_states", Flags::trim},
-		{"weak_type_comparison", Flags::dynamic},
-		{"log_theory", Flags::theory},
+	map<string, Flag> flags_names = {
+		{"auto_remove_trap_states", Flag::trim},
+		{"weak_type_comparison", Flag::dynamic},
+		{"log_theory", Flag::theory},
 		// Андрей, придумай сам названия
 	};
 
-	map<Flags, bool> flags_values = {
+	map<Flag, bool> flags = {
 		/* глобальный флаг автоматов (отвечает за удаление ловушек)
 		Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 		преобразованиях всегда удаляем в конце ловушки.
 		Если isTrim = false, тогда после удаления ловушки в результате
 		преобразований добавляем её обратно */
-		{Flags::trim, true},
+		{Flag::trim, true},
 		// флаг динамического тайпчекера
-		{Flags::dynamic, false},
+		{Flag::dynamic, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
-		{Flags::theory, false},
+		{Flag::theory, false},
 		// флаг контекста верификатора гипотез
-		{Flags::verification, false},
+		{Flag::verification, false},
 	};
 
 	// Общий вид опрерации
 	using GeneralOperation =
-		variant<Declaration, Test, Predicate, Flag, Verification>;
+		variant<Declaration, Test, Predicate, SetFlag, Verification>;
 
 	//== Парсинг ==============================================================
 
@@ -225,7 +225,7 @@ class Interpreter {
 	optional<Test> scan_test(const vector<Lexem>&, int& pos);
 	optional<Verification> scan_verification(const vector<Lexem>&, int& pos);
 	optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);
-	optional<Flag> scan_flag(const vector<Lexem>&, int& pos);
+	optional<SetFlag> scan_flag(const vector<Lexem>&, int& pos);
 	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
 
 	//== Исполнение комманд ===================================================

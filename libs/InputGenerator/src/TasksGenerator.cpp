@@ -154,7 +154,8 @@ string TasksGenerator::generate_declaration() {
 			 ((input_type == DFA && !ids.count(DFA)) ||
 			  (input_type == NFA) && !(ids.count(NFA) || ids.count(DFA)))) ||
 			((first_func.output == INT || first_func.output == VALUE) &&
-			 !for_static_Tpchkr && funcNum > 1)) {
+			 !for_static_Tpchkr && funcNum > 1) ||
+			(!ids.count(input_type) && input_type != REGEX)) {
 			first_func = rand_func();
 			input_type = first_func.input[0];
 		} // вроде работает
@@ -200,8 +201,16 @@ string TasksGenerator::generate_declaration() {
 					func_str += " N" + to_string(rand_id.num);
 				}
 
+				// TODO:
+
 				if (first_func.input[i] == ARRAY) {
 					func_str += " Rules";
+				}
+
+				if (first_func.input[i] == PG) {
+					vector<Id> possible_ids = ids[PG];
+					Id rand_id = possible_ids[rand() % possible_ids.size()];
+					func_str += " N" + to_string(rand_id.num);
 				}
 			}
 		}

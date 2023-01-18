@@ -91,7 +91,7 @@ class Regex : BaseObject {
 	/*
 	int search_replace_rec(
 		const Regex& replacing, const Regex& replaced_by,
-		Regex* original); //рекурсивный поиск заменяемого листа дерева
+		Regex* original); //рекурсивный поиск заменяемого листа дерева*/
 	void normalize_this_regex(
 			const vector<pair<Regex, Regex>>&); //переписывание regex по
 												//пользовательским правилам
