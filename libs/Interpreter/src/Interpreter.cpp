@@ -255,7 +255,8 @@ optional<GeneralObject> Interpreter::apply_function(
 			return ObjectOptionalBool(a.is_nfa_minimal(&log_template));
 	}
 	if (function.name == "Deterministic") {
-		return ObjectBoolean(get_automaton(arguments[0]).is_deterministic(&log_template));
+		return ObjectBoolean(
+			get_automaton(arguments[0]).is_deterministic(&log_template));
 	}
 	if (function.name == "Subset") {
 		if (function.input[0] == ObjectType::NFA) {
@@ -265,7 +266,8 @@ optional<GeneralObject> Interpreter::apply_function(
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
-					.value.subset(get<ObjectRegex>(arguments[1]).value, &log_template));
+					.value.subset(get<ObjectRegex>(arguments[1]).value,
+								  &log_template));
 		}
 	}
 	if (function.name == "Equiv") {
@@ -309,7 +311,7 @@ optional<GeneralObject> Interpreter::apply_function(
 		} else {
 			FiniteAutomaton::AmbiguityValue value1 =
 				get<ObjectAmbiguityValue>(arguments[0]).value;
-				FiniteAutomaton::AmbiguityValue value2 =
+			FiniteAutomaton::AmbiguityValue value2 =
 				get<ObjectAmbiguityValue>(arguments[1]).value;
 			bool res = (value1 == value2);
 			log_template.set_parameter("value1", value1);
@@ -469,20 +471,23 @@ optional<GeneralObject> Interpreter::apply_function(
 							  .value.normalize_regex(rules, &log_template));
 	}
 	if (function.name == "Disambiguate") {
-		res = ObjectRegex(
-			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex(&log_template));
+		res = ObjectRegex(get<ObjectRegex>(arguments[0])
+							  .value.get_one_unambiguous_regex(&log_template));
 	}
 	if (function.name == "Intersect") {
 		res = ObjectNFA(FiniteAutomaton::intersection(
-			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
+			get_automaton(arguments[0]), get_automaton(arguments[1]),
+			&log_template));
 	}
 	if (function.name == "Union") {
 		res = ObjectNFA(FiniteAutomaton::uunion(get_automaton(arguments[0]),
-												get_automaton(arguments[1]), &log_template));
+												get_automaton(arguments[1]),
+												&log_template));
 	}
 	if (function.name == "Difference") {
-		res = ObjectNFA(FiniteAutomaton::difference(
-			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
+		res = ObjectNFA(FiniteAutomaton::difference(get_automaton(arguments[0]),
+													get_automaton(arguments[1]),
+													&log_template));
 	}
 
 	if (res.has_value()) {
