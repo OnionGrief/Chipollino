@@ -17,6 +17,7 @@ void AutomatonToImage::to_image(string automat, int name) {
 			name);
 	system(cmd);
 */
+
 string AutomatonToImage::to_image(string automat) {
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");

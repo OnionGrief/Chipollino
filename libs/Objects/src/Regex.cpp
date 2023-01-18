@@ -1700,8 +1700,8 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << out[j][0].to_txt() << " ";
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
-			derev_log = out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
-						" = " + out[j][1].to_txt() + "\\";
+			derev_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
+						" = " + out[j][1].to_txt() + "\\\\";
 			// Logger::log(derev_log);
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
