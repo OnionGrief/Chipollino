@@ -117,6 +117,7 @@ class FiniteAutomaton : public BaseObject {
 	FiniteAutomaton annote() const;
 	// снятие разметки с букв
 	FiniteAutomaton deannote() const;
+	FiniteAutomaton delinearize() const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
 	// states.size()) i-й элемент хранит номер класса i-го состояния
 	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
