@@ -381,7 +381,7 @@ vector<alphabet_symbol> Regex::getsymbolimage() {
 }
 
 // рекурсивно обрезаем снизу
-bool Regex::del_rec_bruteforce(int depth) {
+void Regex::del_rec_bruteforce(int depth) {
 	if (depth == 0) {
 		if (type == Regex::Type::alt && term_l) {
 			type = term_l->type;
@@ -392,7 +392,6 @@ bool Regex::del_rec_bruteforce(int depth) {
 			term_r = nullptr;
 			term_l = nullptr;
 		}
-		return true;
 	}
 	term_r->del_rec_bruteforce(depth - 1);
 }
@@ -436,7 +435,7 @@ bool equalent_string_normalize(vector<alphabet_symbol> original,
 	}
 	return true;
 }
-Regex* Regex::rewrite_normalize(map<alphabet_symbol, alphabet_symbol>* out) {
+void Regex::rewrite_normalize(map<alphabet_symbol, alphabet_symbol>* out) {
 	if (type == Regex::Type::symb) {
 		value.symbol = (*out)[value.symbol];
 	}
@@ -464,6 +463,7 @@ Regex* Regex::search_rec_term(Regex* replace) {
 	} else {
 		return term_r;
 	}
+	return nullptr;
 };
 void Regex::replace_term_helplify(Regex* replace) {
 	if (type == Regex::Type::alt) {

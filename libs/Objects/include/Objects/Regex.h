@@ -102,9 +102,9 @@ class Regex : BaseObject {
 	string regex_to_dot_helplify(int* i);
 	vector<alphabet_symbol> getsymbolimage();
 	void top_rec_bruteforce(int, vector<Regex>*, vector<Regex*>*);
-	bool del_rec_bruteforce(int);
+	void del_rec_bruteforce(int);
 	int which_depth();
-	Regex* rewrite_normalize(map<alphabet_symbol, alphabet_symbol>*);
+	void rewrite_normalize(map<alphabet_symbol, alphabet_symbol>*);
 	void replace_term_helplify(Regex*);
 	void replace_term(Regex*, Regex*);
 	Regex* search_rec_term(Regex*);
