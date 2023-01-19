@@ -372,6 +372,16 @@ Regex::Regex() {
 	term_r = nullptr;
 }
 
+Regex::Regex(const alphabet_symbol& str) : Regex() {
+	type = Regex::symb;
+	Lexem temp;
+	temp.type = Regex::Lexem::symb;
+	temp.symbol = str;
+	value = temp;
+	term_l = nullptr;
+	term_r = nullptr;
+}
+
 Regex::Regex(const string& str) : Regex() {
 	try {
 		bool res = from_string(str);

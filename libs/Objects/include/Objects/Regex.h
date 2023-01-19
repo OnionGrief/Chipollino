@@ -93,8 +93,8 @@ class Regex : BaseObject {
 		const Regex& replacing, const Regex& replaced_by,
 		Regex* original); //рекурсивный поиск заменяемого листа дерева*/
 	void normalize_this_regex(
-		const vector<pair<Regex, Regex>>&); //переписывание regex по
-											//пользовательским правилам
+		const vector<pair<Regex, Regex>>&); // переписывание regex по
+											// пользовательским правилам
 
 	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
@@ -107,6 +107,7 @@ class Regex : BaseObject {
   public:
 	Regex();
 	Regex(const string&);
+	Regex(const alphabet_symbol&);
 	Regex(const string&, const shared_ptr<Language>&);
 	string to_txt() const override;
 	// вывод дерева для дебага
