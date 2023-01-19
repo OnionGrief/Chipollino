@@ -3,6 +3,7 @@
 #include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 #include <map>
+#include <sstream>
 #include <string>
 #include <variant>
 
@@ -29,6 +30,9 @@ class LogTemplate : public iLogTemplate {
 	// };
 
   private:
+	// Путь к папке с шаблонами
+	const string template_path = "./resources/template/";
+
 	// LaTeX-шаблон
 	string tex_template;
 
@@ -52,4 +56,6 @@ class LogTemplate : public iLogTemplate {
 	// таблицы в общем виде
 	static string log_table(Table t/*vector<string> rows, vector<string> columns,
 							vector<string> data*/);
+	// Рекурсивно раскрывает include-выражения в файле
+	stringstream expand_includes(string filename) const;
 };

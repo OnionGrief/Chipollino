@@ -17,11 +17,7 @@ using namespace Typization;
 
 class Interpreter {
   public:
-	enum class LogMode {
-		all,
-		errors,
-		nothing
-	};
+	enum class LogMode { all, errors, nothing };
 	Interpreter();
 	// Интерпретация строчки, возвращает true в случае успеха
 	bool run_line(const string& line);
@@ -31,6 +27,13 @@ class Interpreter {
 	void set_log_mode(LogMode mode);
 	// Выгружает лог в файл
 	void generate_log(const string& filename);
+
+	enum class Flag {
+		auto_remove_trap_states,
+		weak_type_comparison,
+		log_theory
+	};
+	bool set_flag(Flag key, bool value);
 
   private:
 	// Логгер для преобразований
@@ -134,7 +137,7 @@ class Interpreter {
 	};
 
 	// Специальная форма Verify
-	struct Verifier {
+	struct Verification {
 		// Аргументы:
 		// Предикат
 		Expression predicate;
@@ -142,7 +145,6 @@ class Interpreter {
 		int size = 20;
 		// Regex random_regex;
 	};
-	Regex current_random_regex;
 
 	// Предикат [предикат] [объект]+
 	struct Predicate {
@@ -153,45 +155,35 @@ class Interpreter {
 	};
 
 	// SetFlag [flagname] [value]
-	struct Flag {
+	struct SetFlag {
 		string name;
 		bool value;
 	};
 
 	// Флаги:
 
-	enum class Flags {
-		trim,
-		dynamic,
-		theory,
-		verification
-	};
-
-	map<string, Flags> flags_names = {
-		{"trim", Flags::trim},
-		{"dynamic", Flags::dynamic},
-		{"theory", Flags::theory},
+	map<string, Flag> flags_names = {
+		{"auto_remove_trap_states", Flag::auto_remove_trap_states},
+		{"weak_type_comparison", Flag::weak_type_comparison},
+		{"log_theory", Flag::log_theory},
 		// Андрей, придумай сам названия
 	};
 
-	map<Flags, bool> flags_values = {
+	map<Flag, bool> flags = {
 		/* глобальный флаг автоматов (отвечает за удаление ловушек)
 		Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 		преобразованиях всегда удаляем в конце ловушки.
 		Если isTrim = false, тогда после удаления ловушки в результате
 		преобразований добавляем её обратно */
-		{Flags::trim, true},
+		{Flag::auto_remove_trap_states, true},
 		// флаг динамического тайпчекера
-		{Flags::dynamic, false},
+		{Flag::weak_type_comparison, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
-		{Flags::theory, false},
-		// флаг контекста верификатора гипотез
-		{Flags::verification, false},
-	};
+		{Flag::log_theory, false}};
 
 	// Общий вид опрерации
 	using GeneralOperation =
-		variant<Declaration, Test, Predicate, Flag, Verifier>;
+		variant<Declaration, Test, Predicate, SetFlag, Verification>;
 
 	//== Парсинг ==============================================================
 
@@ -228,12 +220,15 @@ class Interpreter {
 	// Считывание операции из набора лексем
 	optional<Declaration> scan_declaration(const vector<Lexem>&, int& pos);
 	optional<Test> scan_test(const vector<Lexem>&, int& pos);
-	optional<Verifier> scan_verifier(const vector<Lexem>&, int& pos);
+	optional<Verification> scan_verification(const vector<Lexem>&, int& pos);
 	optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);
-	optional<Flag> scan_flag(const vector<Lexem>&, int& pos);
+	optional<SetFlag> scan_flag(const vector<Lexem>&, int& pos);
 	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
 
 	//== Исполнение комманд ===================================================
+
+	// Выражение для подстановки на место *
+	optional<Regex> current_random_regex;
 
 	// Применение цепочки функций к набору аргументов
 	optional<GeneralObject> apply_function_sequence(
@@ -254,8 +249,8 @@ class Interpreter {
 	bool run_declaration(const Declaration&);
 	bool run_predicate(const Predicate&);
 	bool run_test(const Test&);
-	bool run_verifier(const Verifier&);
-	bool set_flag(const Flag&);
+	bool run_verification(const Verification&);
+	bool run_set_flag(const SetFlag&);
 	bool run_operation(const GeneralOperation&);
 
 	// Список опреаций для последовательного выполнения

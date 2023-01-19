@@ -80,29 +80,36 @@ void LogTemplate::set_theory_flag(bool value) {
 }
 
 void LogTemplate::load_tex_template(string filename) {
-	tex_template = "./resources/template/" + filename + ".tex";
+	tex_template = template_path + filename + ".tex";
 }
 
 string LogTemplate::render() const {
-	// TODO: заполнять здесь шаблон
-	ifstream infile(tex_template);
-	// если шаблона не нашлось
-	if (!infile) return ""; // infile.close();
+	stringstream infile = expand_includes(tex_template);
 
+
+	// Строка-аккумулятор
 	string outstr = "";
-	string s;
-	bool detailed = true;
+
+	// Если false, отображение отключается, скипаем строчки, пока не станет true
+	bool show = true;
+
 	while (!infile.eof()) {
+		// Сюда записываем строчку
+		string s;
 		getline(infile, s);
+
+		// Проверка на detailed-блоки
 		if (s.find("%begin detailed") != -1) {
 			if (!render_theory) {
-				detailed = false;
+				show = false;
 			}
 		}
 		if (s.find("%end detailed") != -1) {
-			detailed = true;
+			show = true;
 		}
-		if (detailed) {
+
+		// Отображаем строчку
+		if (show) {
 			for (const auto& p : parameters) {
 				int insert_place = s.find("%template_" + p.first);
 				if (insert_place == -1) {
@@ -135,7 +142,7 @@ string LogTemplate::render() const {
 			outstr += "\n";
 		}
 	}
-	infile.close();
+
 	return outstr;
 }
 
@@ -254,4 +261,40 @@ string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> colum
 	}
 	table += "\\end{tabular}\n";
 	return table;
+}
+
+stringstream LogTemplate::expand_includes(string filename) const {
+	stringstream outstream;
+
+	ifstream infile(filename);
+	if (!infile) {
+		cerr << "ERROR: while rendering template. Unknown filename " +
+					filename + "\n";
+		return outstream;
+	}
+
+	while (!infile.eof()) {
+		// Сюда записываем строчку
+		string s;
+		getline(infile, s);
+
+		// Проверка include
+		if (s.find("%include") != -1) {
+			int l_bound = s.find("\"");
+			int r_bound = s.find("\"", l_bound + 1);
+			if (l_bound != -1 && r_bound != -1) {
+				string input_file_name =
+					s.substr(l_bound + 1, r_bound - l_bound - 1);
+
+				outstream
+					<< expand_includes(template_path + input_file_name).str();
+			} else {
+				cout << "ERROR: Expected quotes \"\" after %include statement";
+			}
+		} else {
+			outstream << s << "\n";
+		}
+	}
+
+	return outstream;
 }

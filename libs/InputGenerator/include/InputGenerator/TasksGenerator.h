@@ -43,7 +43,7 @@ class TasksGenerator {
 
 	string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int",
 		   VALUE = "Value", BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA",
-		   FILENAME = "FileName", PG = "PG";
+		   ARRAY = "Array", PG = "PG";
 	vector<Function> functions = {
 		{"Thompson", {REGEX}, NFA},
 		{"IlieYu", {REGEX}, NFA},
@@ -65,7 +65,7 @@ class TasksGenerator {
 		{"MergeBisim", {NFA}, NFA},
 		{"PumpLength", {REGEX}, INT},
 		{"ClassLength", {DFA}, INT},
-		//{"Normalize", {REGEX, FILENAME}, REGEX},
+		//{"Normalize", {REGEX, ARRAY}, REGEX},
 		{"States", {NFA}, INT},
 		{"ClassCard", {DFA}, INT},
 		{"Ambiguity", {NFA}, VALUE},
