@@ -17,49 +17,78 @@ void LogTemplate::set_parameter(const string& key, int value) {
 	parameters[key].value = value;
 }
 
+void LogTemplate::set_parameter(const string& key, Table value) {
+	parameters[key].value = value;
+}
+
+void LogTemplate::set_theory_flag(bool value) {
+	render_theory = value;
+}
+
 void LogTemplate::load_tex_template(string filename) {
-	tex_template = "./resources/template/" + filename + ".tex";
+	tex_template = template_path + filename + ".tex";
 }
 
 string LogTemplate::render() const {
-	// TODO: заполнять здесь шаблон
-	ifstream infile(tex_template);
-	// если шаблона не нашлось
-	if (!infile) return ""; // infile.close();
+	stringstream infile = expand_includes(tex_template);
 
+
+	// Строка-аккумулятор
 	string outstr = "";
-	string s;
-	while (!infile.eof()) {
-		getline(infile, s);
-		for (const auto& p : parameters) {
-			int insert_place = s.find("%template_" + p.first);
-			if (insert_place == -1) {
-				continue;
-			}
 
-			if (holds_alternative<Regex>(p.second.value)) {
-				s.insert(insert_place,
-						 math_mode(get<Regex>(p.second.value).to_txt()));
-			} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
-				image_number += 1;
-				string graph = AutomatonToImage::to_image(
-					get<FiniteAutomaton>(p.second.value).to_txt());
-				/*char si[256];
-				sprintf(si,
-						"\\includegraphics[height=1.3in, "
-						"keepaspectratio]{output%d.png}\n",
-						image_number);*/
-				s.insert(insert_place, graph);
-			} else if (holds_alternative<string>(p.second.value)) {
-				s.insert(insert_place, get<string>(p.second.value));
-			} else if (holds_alternative<int>(p.second.value)) {
-				s.insert(insert_place, to_string(get<int>(p.second.value)));
+	// Если false, отображение отключается, скипаем строчки, пока не станет true
+	bool show = true;
+
+	while (!infile.eof()) {
+		// Сюда записываем строчку
+		string s;
+		getline(infile, s);
+
+		// Проверка на detailed-блоки
+		if (s.find("%begin detailed") != -1) {
+			if (!render_theory) {
+				show = false;
 			}
 		}
-		outstr += s;
-		outstr += "\n";
+		if (s.find("%end detailed") != -1) {
+			show = true;
+		}
+
+		// Отображаем строчку
+		if (show) {
+			for (const auto& p : parameters) {
+				int insert_place = s.find("%template_" + p.first);
+				if (insert_place == -1) {
+					continue;
+				}
+
+				if (holds_alternative<Regex>(p.second.value)) {
+					s.insert(insert_place,
+							 math_mode(get<Regex>(p.second.value).to_txt()));
+				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
+					image_number += 1;
+					string graph = AutomatonToImage::to_image(
+						get<FiniteAutomaton>(p.second.value).to_txt());
+					/*char si[256];
+					sprintf(si,
+							"\\includegraphics[height=1.3in, "
+							"keepaspectratio]{output%d.png}\n",
+							image_number);*/
+					s.insert(insert_place, graph);
+				} else if (holds_alternative<string>(p.second.value)) {
+					s.insert(insert_place, get<string>(p.second.value));
+				} else if (holds_alternative<int>(p.second.value)) {
+					s.insert(insert_place, to_string(get<int>(p.second.value)));
+				} else if (holds_alternative<Table>(p.second.value)) {
+					s.insert(insert_place,
+							 log_table(get<Table>(p.second.value)));
+				}
+			}
+			outstr += s;
+			outstr += "\n";
+		}
 	}
-	infile.close();
+
 	return outstr;
 }
 
@@ -141,4 +170,77 @@ string LogTemplate::math_mode(string str) {
 	}
 	str_math = "$" + str_math + "$";
 	return str_math;
+}
+
+string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> columns,
+							  vector<string> data*/) {
+	string table = "";
+	string format = "|l|";
+	string cols = "  & ";
+	string row = "";
+	for (int i = 0; i < t.columns.size(); i++) {
+		format += "l|";
+		if (i != t.columns.size() - 1) {
+			cols += t.columns[i] + " & ";
+		} else {
+			cols += t.columns[i] + "\\\\";
+		}
+	}
+	table += "\\begin{tabular}{" + format + "}\n";
+	table += "\\hline\n";
+	table += cols + "\n";
+	table += "\\hline\n";
+	int k = 0;
+	int j;
+	for (int i = 0; i < t.rows.size(); i++) {
+		row = t.rows[i] + " & ";
+		for (j = 0; j < t.columns.size(); j++) {
+			if (j != t.columns.size() - 1) {
+				row = row + t.data[k + j] + " & ";
+			} else {
+				row = row + t.data[k + j] + "\\\\";
+			}
+		}
+		k += j;
+		table += row + "\n";
+		table += "\\hline\n";
+	}
+	table += "\\end{tabular}\n";
+	return table;
+}
+
+stringstream LogTemplate::expand_includes(string filename) const {
+	stringstream outstream;
+
+	ifstream infile(filename);
+	if (!infile) {
+		cerr << "ERROR: while rendering template. Unknown filename " +
+					filename + "\n";
+		return outstream;
+	}
+
+	while (!infile.eof()) {
+		// Сюда записываем строчку
+		string s;
+		getline(infile, s);
+
+		// Проверка include
+		if (s.find("%include") != -1) {
+			int l_bound = s.find("\"");
+			int r_bound = s.find("\"", l_bound + 1);
+			if (l_bound != -1 && r_bound != -1) {
+				string input_file_name =
+					s.substr(l_bound + 1, r_bound - l_bound - 1);
+
+				outstream
+					<< expand_includes(template_path + input_file_name).str();
+			} else {
+				cout << "ERROR: Expected quotes \"\" after %include statement";
+			}
+		} else {
+			outstream << s << "\n";
+		}
+	}
+
+	return outstream;
 }
