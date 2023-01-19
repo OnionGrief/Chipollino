@@ -1982,9 +1982,10 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	if (counter) regl += ")*";
 	// Logger::log("1-однозначное регулярное выражение, описывающее язык",
 	// regl); Logger::finish_step();
-	if (log) {
-		log->set_parameter("result", regl);
-	}
 	language->set_one_unambiguous_regex(regl, fa.language);
-	return language->get_one_unambiguous_regex();
+	Regex res = language->get_one_unambiguous_regex();
+	if (log) {
+		log->set_parameter("result", res);
+	}
+	return res;
 }
