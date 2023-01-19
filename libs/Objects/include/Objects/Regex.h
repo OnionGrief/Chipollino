@@ -100,16 +100,7 @@ class Regex : BaseObject {
 	void pre_order_travers() const;
 	void clear();
 	string regex_to_dot_helplify(int* i);
-	// спускаемся и проверяем на рав-во с поправкой на экв-ые по роли символы
-	bool rec_normalize(Regex*, const Regex&,
-					   unordered_map<alphabet_symbol, alphabet_symbol>*, bool);
-	vector<Lexem> not_refal_style(Regex::Type lasttype);
-	// Удобно при бяках вида (несбалансированных деревьев и т.д.)
-	bool normalize_rewrite(vector<Regex::Lexem>*,
-						   pair<vector<Regex::Lexem>, vector<Regex::Lexem>>*);
-	Regex* tree_style(vector<Regex::Lexem>, Regex::Type);
 	vector<alphabet_symbol> getsymbolimage();
-	bool rec_bruteforce(Regex, int, vector<Regex>*);
 	void top_rec_bruteforce(int, vector<Regex>*, vector<Regex*>*);
 	bool del_rec_bruteforce(int);
 	int which_depth();

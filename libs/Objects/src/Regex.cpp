@@ -362,69 +362,7 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 	: Regex(str) {
 	language = new_language;
 }
-// Regex* Regex::tree_style(vector<Regex::Lexem> in, Regex::Type lasttype) {
-// 	Regex::Type temp;
-// 	if (in[0].type == Regex::Lexem::Type::alt) temp = Regex::Type::alt;
-// 	if (in[0].type == Regex::Lexem::Type::conc) temp = Regex::Type::conc;
-// 	if (in[0].type == Regex::Lexem::Type::star) temp = Regex::Type::star;
-// 	if (in[0].type == Regex::Lexem::Type::symb) temp = Regex::Type::symb;
-// 	Regex* out = new Regex();
-// 	if (in.size() < 2) {
-// 		out->type = temp;
-// 		out->value = in[0];
-// 	}
-// 	if (in[0].type != Regex::Lexem::Type::symb) {
-// 		lasttype = temp;
-// 	}
-// 	if (temp == Regex::Type::symb) {
-// 		out->type = temp;
-// 		out->value = in[0];
-// 	}
-// 	out->type = temp;
-// 	out->value = in[0];
-// 	in.erase(in.begin());
-// 	vector<Regex::Lexem> in_a;
-// 	do {
-// 		in_a.push_back(in[0]);
-// 	} while (in_a[in_a.size() - 1].type != Regex::Type::symb);
-// 	// out->term_l;
-// 	// out->term_r;
-// 	return out;
-// }
-// lisp style :-)
-vector<Regex::Lexem> Regex::not_refal_style(Regex::Type lasttype) {
-	vector<Regex::Lexem> out;
-	if (!((type == Type::alt || type == Type::conc) && lasttype == type)) {
-		out.push_back(value);
-	}
-	if (type != Type::symb) {
-		lasttype = type;
-	}
-	if (term_l) {
-		vector<Regex::Lexem> temp = term_l->not_refal_style(lasttype);
-		out.insert(out.end(), temp.begin(), temp.end());
-	}
-	if (term_r) {
-		vector<Regex::Lexem> temp = term_r->not_refal_style(lasttype);
-		out.insert(out.end(), temp.begin(), temp.end());
-	}
-	return out;
-}
 
-// bool TransformationMonoid::wasrewrite(const vector<alphabet_symbol>& a,
-// 									  const vector<alphabet_symbol>& b) {
-// 	for (int i = 0; i < a.size(); i++) {
-// 		for (int j = 0; i + j < a.size() && j < b.size(); j++) {
-// 			if (b[j] != a[i + j]) {
-// 				break;
-// 			}
-// 			if (j == b.size() - 1) {
-// 				return true;
-// 			}
-// 		}
-// 	}
-// 	return false;
-// }
 // попытка правила переписывания символов!
 vector<alphabet_symbol> Regex::getsymbolimage() {
 	vector<alphabet_symbol> out;
@@ -442,52 +380,9 @@ vector<alphabet_symbol> Regex::getsymbolimage() {
 	return out;
 }
 
-bool Regex::normalize_rewrite(
-	vector<Regex::Lexem>* original,
-	pair<vector<Regex::Lexem>, vector<Regex::Lexem>>* rule) {
-	bool cond = true;
-	int start = 0;
-	int end = 0;
-	for (int i = 0; i < (*original).size() && cond; i++) {
-		for (int j = 0;
-			 i + j < (*original).size() && j < (*rule).first.size() && cond;
-			 j++) {
-			if ((*rule).first[j].type == (*original)[i + j].type) {
-				if ((*rule).first[j].type == Regex::Lexem::Type::symb) {
-					if ((*rule).first[j].symb != (*original)[i + j].symb) {
-						break;
-					}
-				}
-			} else {
-				break;
-			}
-			if (j == (*rule).first.size() - 1) {
-				start = i;
-				end = j + 1;
-				cond = false;
-			}
-		}
-	}
-	if (!cond) {
-		Regex::Lexem a;
-		a.type = Regex::Lexem::Type::symb;
-		if ((*(original->begin() + start)).type != Regex::Lexem::Type::symb)
-			a = (*(original->begin() + start));
-		original->erase(original->begin() + start, original->begin() + end);
-		if (rule->second.size() < 2 && a.type != Regex::Lexem::Type::symb) {
-			rule->second.insert(rule->second.begin(), a);
-		}
-		original->insert(original->begin(), rule->second.begin(),
-						 rule->second.end());
-		return 1;
-	}
-	return 0;
-}
 // рекурсивно обрезаем снизу
 bool Regex::del_rec_bruteforce(int depth) {
-	cout << depth << " ";
 	if (depth == 0) {
-		cout << "i alive";
 		if (type == Regex::Type::alt && term_l) {
 			type = term_l->type;
 			value = term_l->value;
@@ -572,7 +467,6 @@ Regex* Regex::search_rec_term(Regex* replace) {
 };
 void Regex::replace_term_helplify(Regex* replace) {
 	if (type == Regex::Type::alt) {
-
 		term_r->replace_term_helplify(replace);
 	} else {
 		Regex* t = new Regex();
@@ -588,7 +482,7 @@ void Regex::replace_term_helplify(Regex* replace) {
 void Regex::replace_term(Regex* from, Regex* to) {
 	Regex* temp = search_rec_term(from); // если находим конечную ссылку
 	if (temp == nullptr) {
-		cout << "null";
+		// беда
 	} else {
 		if (to->type == Regex::Type::alt) {
 			type = to->type;
@@ -626,8 +520,6 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 		int y = regex.which_depth();
 		regex.top_rec_bruteforce(y + 1, &out1, &address);
 		for (int j = 0; j < out1.size(); j++) {
-			// for (auto subtree : out1) {
-
 			vector<alphabet_symbol> in = out1[j].getsymbolimage();
 			for (int i = 0; i < allrulesimage.size(); i++) {
 				// for (auto rule : allrulesimage) {
@@ -639,10 +531,7 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 					endstate.rewrite_normalize(&out);
 					out1[j].alphabet = alphabet_backup;
 					if (temp.equal(temp, out1[j])) {
-						cout << "\n" << temp.regex_to_dot() << "\n";
-						// address[j]->type = Regex::Type::conc;
 						address[j]->replace_term(&temp, &endstate);
-						cout << "\n" << regex.regex_to_dot() << "\n";
 						// вставить переписывание
 						cond1 = true;
 						break;
@@ -652,10 +541,8 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 			}
 			if (cond1) break;
 		}
-		if (cond1) cond = false;
+		if (!cond1) cond = false;
 	}
-
-	cout << "sad";
 	return regex;
 }
 
