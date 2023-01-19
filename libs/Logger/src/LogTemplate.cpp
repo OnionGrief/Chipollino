@@ -38,7 +38,6 @@ string LogTemplate::render() const {
 
 	// Если false, отображение отключается, скипаем строчки, пока не станет true
 	bool show = true;
-	cout << render_theory << endl;
 
 	while (!infile.eof()) {
 		// Сюда записываем строчку
