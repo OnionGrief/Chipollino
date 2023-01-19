@@ -383,17 +383,21 @@ vector<alphabet_symbol> Regex::getsymbolimage() {
 // рекурсивно обрезаем снизу
 void Regex::del_rec_bruteforce(int depth) {
 	if (depth == 0) {
+		// cout << regex_to_dot();
 		if (type == Regex::Type::alt && term_l) {
 			type = term_l->type;
 			value = term_l->value;
 			term_r = term_l->term_r;
 			term_l = term_l->term_l;
-		} else {
-			term_r = nullptr;
-			term_l = nullptr;
+			return;
 		}
+		return;
 	}
-	term_r->del_rec_bruteforce(depth - 1);
+	if (term_r) {
+		if (depth == 1) {
+		}
+		term_r->del_rec_bruteforce(depth - 1);
+	}
 }
 // считаем глубину ругулярного дерева
 int Regex::which_depth() {
@@ -415,6 +419,8 @@ void Regex::top_rec_bruteforce(int depth_rec, vector<Regex>* out,
 		(*address).push_back(this);
 	}
 	if (term_r) {
+		if (depth_rec == 1) {
+		}
 		term_r->top_rec_bruteforce(depth_rec - 1, out, address);
 	}
 }
@@ -449,11 +455,10 @@ void Regex::rewrite_normalize(map<alphabet_symbol, alphabet_symbol>* out) {
 
 // получаем ссылку на последний вставленный терм
 Regex* Regex::search_rec_term(Regex* replace) {
-	Regex* temp;
-	if ((type = replace->type) && term_l->equal(*term_l, *replace->term_l)) {
+	if (type == replace->type) {
 		if (term_r) {
 			if (replace->term_r) {
-				temp = term_r->search_rec_term(replace->term_r);
+				return term_r->search_rec_term(replace->term_r);
 			} else {
 				return term_r;
 			}
@@ -461,9 +466,11 @@ Regex* Regex::search_rec_term(Regex* replace) {
 			return nullptr;
 		}
 	} else {
-		return term_r;
+		if ((term_l->type == replace->type)) {
+			return term_r;
+		}
 	}
-	return nullptr;
+	return this;
 };
 void Regex::replace_term_helplify(Regex* replace) {
 	if (type == Regex::Type::alt) {
@@ -475,7 +482,7 @@ void Regex::replace_term_helplify(Regex* replace) {
 		t->term_l = term_l;
 		t->term_r = term_r;
 		term_l = t;
-		term_l->type = Regex::Type::alt;
+		type = Regex::Type::alt;
 		term_r = replace;
 	}
 };
@@ -484,18 +491,17 @@ void Regex::replace_term(Regex* from, Regex* to) {
 	if (temp == nullptr) {
 		// беда
 	} else {
+
 		if (to->type == Regex::Type::alt) {
 			type = to->type;
 			value = to->value;
 			term_l = to->term_l;
 			term_r = to->term_r;
-			replace_term_helplify(temp);
+			// replace_term_helplify(temp);
 		} else {
-			to->type == Regex::Type::alt;
-			term_l = new Regex();
-			term_l->type = to->type;
-			term_l->value = to->value;
-			term_r = temp;
+			type == Regex::Type::alt;
+			term_l = to->copy();
+			term_r = temp->copy();
 		}
 	}
 };
@@ -520,20 +526,31 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 		int y = regex.which_depth();
 		regex.top_rec_bruteforce(y + 1, &out1, &address);
 		for (int j = 0; j < out1.size(); j++) {
+			// cout << out1[j].regex_to_dot();
 			vector<alphabet_symbol> in = out1[j].getsymbolimage();
+			// cout << in.size();
 			for (int i = 0; i < allrulesimage.size(); i++) {
-				// for (auto rule : allrulesimage) {
+				//  		// for (auto rule : allrulesimage) {
 				std::map<alphabet_symbol, alphabet_symbol> out;
 				if (equalent_string_normalize(in, allrulesimage[i], &out)) {
 					Regex temp = rules[i].first;
+					// cout << "f " << temp.regex_to_dot();
 					temp.rewrite_normalize(&out);
+
+					// cout << "e " << temp.regex_to_dot();
 					Regex endstate = rules[i].second;
 					endstate.rewrite_normalize(&out);
-					out1[j].alphabet = alphabet_backup;
+					//  			// out1[j].alphabet = alphabet_backup;
 					if (temp.equal(temp, out1[j])) {
+						cout << "\nнесмешно\n";
+						// cout << endstate.regex_to_dot();
+						//  cout << address[j]->regex_to_dot();
 						address[j]->replace_term(&temp, &endstate);
-						// вставить переписывание
-						cond1 = true;
+
+						// cout << temp.regex_to_dot();
+						//  cout <<
+						//    				// вставить переписывание
+						// cond1 = true;
 						break;
 					}
 				}
@@ -817,7 +834,8 @@ pair<vector<State>, int> Regex::get_tompson(int max_index) const {
 				for (auto el : test_r.transitions) {
 					alphabet_symbol elem = el.first; // al->alphabet[i];
 					for (int transition_to : test_r.transitions[elem]) {
-						// trans.push_back(test.transitions[elem][j] + 1);
+						// trans.push_back(test.transitions[elem][j] +
+						// 1);
 						map_l[elem].insert(transition_to + al.first.size() - 1);
 					}
 					// map_l[elem] = trans;
@@ -2083,6 +2101,12 @@ string Regex::regex_to_dot_helplify(int* i) {
 		symb = "cons";
 	}
 	if (type == Type::symb) {
+		if (term_l) {
+			cout << "\\ есть l ветвь";
+		}
+		if (term_r) {
+			cout << "\\ есть r ветвь";
+		}
 		symb = value.symbol + to_string(value.number + 1);
 	}
 	if (type == Type::eps) {
