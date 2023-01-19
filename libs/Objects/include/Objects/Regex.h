@@ -114,8 +114,9 @@ class Regex : BaseObject {
 	bool del_rec_bruteforce(int);
 	int which_depth();
 	Regex* rewrite_normalize(map<alphabet_symbol, alphabet_symbol>*);
-	void replace_term_helplify(Regex*, Regex*);
-	void replace_term(Regex*);
+	void replace_term_helplify(Regex*);
+	void replace_term(Regex*, Regex*);
+	Regex* search_rec_term(Regex*);
 
   public:
 	Regex();

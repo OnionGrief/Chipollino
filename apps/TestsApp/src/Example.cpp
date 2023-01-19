@@ -272,7 +272,7 @@ void Example::normalize_regex() {
 	Regex r(regl);
 
 	cout << "\nNormalize\nBefore: " << r.to_txt() << "\n";
-	r.normalize_regex({{{"|bb*"}, {"b*"}}});
+	r.normalize_regex({{{"|bb*"}, {"b"}}});
 	cout << "After: " << r.to_txt() << "\n";
 }
 void Example::to_image() {

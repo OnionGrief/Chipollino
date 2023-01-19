@@ -552,14 +552,58 @@ Regex* Regex::rewrite_normalize(map<alphabet_symbol, alphabet_symbol>* out) {
 		term_r->rewrite_normalize(out);
 	}
 }
-void Regex::replace_term_helplify(Regex* replace, Regex* original){
 
+// получаем ссылку на последний вставленный терм
+Regex* Regex::search_rec_term(Regex* replace) {
+	Regex* temp;
+	if ((type = replace->type) && term_l->equal(*term_l, *replace->term_l)) {
+		if (term_r) {
+			if (replace->term_r) {
+				temp = term_r->search_rec_term(replace->term_r);
+			} else {
+				return term_r;
+			}
+		} else {
+			return nullptr;
+		}
+	} else {
+		return term_r;
+	}
 };
-void Regex::replace_term(Regex* replace) {
-	type = replace->type;
-	value = replace->value;
-	term_l = replace->term_l;
-	// Regex* term_r = nullptr;
+void Regex::replace_term_helplify(Regex* replace) {
+	if (type == Regex::Type::alt) {
+
+		term_r->replace_term_helplify(replace);
+	} else {
+		Regex* t = new Regex();
+		t->value = value;
+		t->type = type;
+		t->term_l = term_l;
+		t->term_r = term_r;
+		term_l = t;
+		term_l->type = Regex::Type::alt;
+		term_r = replace;
+	}
+};
+void Regex::replace_term(Regex* from, Regex* to) {
+	Regex* temp = search_rec_term(from); // если находим конечную ссылку
+	if (temp == nullptr) {
+		cout << "null";
+	} else {
+		if (to->type == Regex::Type::alt) {
+			type = to->type;
+			value = to->value;
+			term_l = to->term_l;
+			term_r = to->term_r;
+			replace_term_helplify(temp);
+		} else {
+			to->type == Regex::Type::alt;
+			term_l = new Regex();
+			term_l->type = to->type;
+			term_l->value = to->value;
+			term_r = temp;
+		}
+	}
 };
 
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
@@ -594,18 +638,15 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 					Regex endstate = rules[i].second;
 					endstate.rewrite_normalize(&out);
 					out1[j].alphabet = alphabet_backup;
-					// subtree.make_language();
-					// cout << "\n" < < < < "\n";
 					if (temp.equal(temp, out1[j])) {
 						cout << "\n" << temp.regex_to_dot() << "\n";
 						// address[j]->type = Regex::Type::conc;
-						address[j]->replace_term(&endstate);
-
+						address[j]->replace_term(&temp, &endstate);
 						cout << "\n" << regex.regex_to_dot() << "\n";
+						// вставить переписывание
 						cond1 = true;
 						break;
 					}
-					// cout << temp.regex_to_dot();
 				}
 				if (cond1) break;
 			}
@@ -613,9 +654,6 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
 		}
 		if (cond1) cond = false;
 	}
-
-	// regex.del_rec_bruteforce(&regex, 3);
-	// cout << regex.regex_to_dot();
 
 	cout << "sad";
 	return regex;
@@ -638,8 +676,6 @@ bool Regex::from_string(const string& str) {
 
 		return false;
 	}
-
-	//*this = *(root->copy());
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
