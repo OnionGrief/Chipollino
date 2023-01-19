@@ -233,9 +233,10 @@ stringstream LogTemplate::expand_includes(string filename) const {
 				string input_file_name =
 					s.substr(l_bound + 1, r_bound - l_bound - 1);
 
-
 				outstream
 					<< expand_includes(template_path + input_file_name).str();
+			} else {
+				cout << "ERROR: Expected quotes \"\" after %include statement";
 			}
 		} else {
 			outstream << s << "\n";
