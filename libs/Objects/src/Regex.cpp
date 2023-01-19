@@ -1507,6 +1507,7 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 	return ans;
 }
 // Длина накачки
+// Длина накачки
 int Regex::pump_length(iLogTemplate* log) const {
 	// Logger::init_step("PumpLength");
 	if (language->pump_length_cached()) {
@@ -1531,6 +1532,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 			}
 			return i;
 		}
+		bool pumped = true;
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
 			bool was = false;
 			for (int j = 0; j < it->size(); j++) {
@@ -1551,29 +1553,43 @@ int Regex::pump_length(iLogTemplate* log) const {
 					Regex b;
 					pumping.regex_union(&a, &b);
 					if (!derevative_with_respect_to_str(*it, this,
-														*pumping.term_r))
+														*pumping.term_r)) {
+						pumped = false;
 						continue;
+					}
 					pumping.generate_alphabet(pumping.alphabet);
 					pumping.language = make_shared<Language>(pumping.alphabet);
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
-						language->set_pump_length(i);
-						/*cout << *it << "\n";
+						cout << *it << "\n";
 						cout << pumping.to_txt() << "\n";
 						cout << to_txt() << "\n";
 						cout << subset(pumping) << "\n";
-						Regex pump2;
-						cout << subset(pump2);*/
-						// Logger::log("Длина накачки", to_string(i));
-						// Logger::finish_step();
-						if (log) {
-							log->set_parameter("pumplength", i);
-						}
-						return i;
+						//// Logger::log("Длина накачки", to_string(i));
+						//// Logger::finish_step();
+						// if (log) {
+						//	log->set_parameter("pumplength", i);
+						//}
+					} else {
+						pumped = false;
 					}
 				}
 			}
+		}
+		std::string ch_prefixes;
+		for (auto it = checked_prefixes.begin(); it != checked_prefixes.end();
+			 it++) {
+			if (it->second) ch_prefixes += it->first + "\n";
+		}
+		if (pumped) {
+			language->set_pump_length(i);
+			if (log) {
+				log->set_parameter("pumplength", i);
+				log->set_parameter("pumplength2", i);
+			}
+			cout << i;
+			return i;
 		}
 	}
 }
