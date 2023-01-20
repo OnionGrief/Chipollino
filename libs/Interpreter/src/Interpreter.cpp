@@ -329,6 +329,7 @@ optional<GeneralObject> Interpreter::apply_function(
 		return ObjectBoolean(get_automaton(arguments[0]).semdet(&log_template));
 	}
 	if (function.name == "PumpLength") {
+		log_template.load_tex_template("PumpLength");
 		return ObjectInt(
 			get<ObjectRegex>(arguments[0]).value.pump_length(&log_template));
 	}
