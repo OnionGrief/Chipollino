@@ -1216,7 +1216,8 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 			term_r->get_prefix(len - k, prefs2);
 			for (auto i = prefs1->begin(); i != prefs1->end(); i++) {
 				for (auto j = prefs2->begin(); j != prefs2->end(); j++) {
-					prefs->insert(*i + *j);
+					if (prefix_derevative(*i + *j))
+						prefs->insert(*i + *j);
 				}
 			}
 			prefs1->clear();
@@ -1547,10 +1548,10 @@ int Regex::pump_length(iLogTemplate* log) const {
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
-						cout << *it << "\n";
+						/*cout << *it << "\n";
 						cout << pumping.to_txt() << "\n";
 						cout << to_txt() << "\n";
-						cout << subset(pumping) << "\n";
+						cout << subset(pumping) << "\n";*/
 						//// Logger::log("Длина накачки", to_string(i));
 						//// Logger::finish_step();
 						// if (log) {
@@ -1570,10 +1571,9 @@ int Regex::pump_length(iLogTemplate* log) const {
 		if (pumped) {
 			language->set_pump_length(i);
 			if (log) {
-				log->set_parameter("pumplength", i);
-				log->set_parameter("pumplength2", i);
+				log->set_parameter("pumplength1", i);
+				log->set_parameter("pumplength2", ch_prefixes);
 			}
-			cout << i;
 			return i;
 		}
 	}
