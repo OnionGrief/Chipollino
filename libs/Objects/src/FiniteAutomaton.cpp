@@ -1622,14 +1622,14 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	// Logger::log("Автоматы:");
 	// Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
 	bool result = true;
-	if (fa1.language == fa2.language)
+	if (fa1.language == fa2.language) {
 		if (log)
 			log->set_parameter(
 				"samelanguage",
 				"(!) автоматы изначально принадлежат одному языку");
 		// Logger::log("(!) автоматы изначально принадлежат одному языку");
-		else
-			result = equal(fa1.minimize(), fa2.minimize());
+	} else
+		result = equal(fa1.minimize(), fa2.minimize());
 	/*if (result)
 		Logger::log("Результат Equiv", "true");
 	else
