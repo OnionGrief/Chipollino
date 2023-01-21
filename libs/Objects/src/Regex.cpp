@@ -1495,10 +1495,7 @@ std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
 // Длина накачки
 // Длина накачки
 int Regex::pump_length(iLogTemplate* log) const {
-	// Logger::init_step("PumpLength");
 	if (language->pump_length_cached()) {
-		// Logger::log("Длина накачки", to_string(language->get_pump_length()));
-		// Logger::finish_step();
 		if (log) {
 			log->set_parameter("pumplength", language->get_pump_length());
 		}
@@ -1510,9 +1507,6 @@ int Regex::pump_length(iLogTemplate* log) const {
 		get_prefix(i, &prefs);
 		if (prefs.empty()) {
 			language->set_pump_length(i);
-			/*Logger::log(
-				"Длина накачки совпадает с длиной регулярного выражения");
-			Logger::finish_step();*/
 			if (log) {
 				log->set_parameter("pumplength", i);
 			}
@@ -1541,18 +1535,8 @@ int Regex::pump_length(iLogTemplate* log) const {
 					}
 					pumped_prefix += a.to_txt();
 					Regex pumping(pumped_prefix);
-					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
-						cout << *it << "\n";
-						cout << pumping.to_txt() << "\n";
-						cout << to_txt() << "\n";
-						cout << subset(pumping) << "\n";
-						//// Logger::log("Длина накачки", to_string(i));
-						//// Logger::finish_step();
-						// if (log) {
-						//	log->set_parameter("pumplength", i);
-						//}
 					} else {
 						pumped = false;
 					}
