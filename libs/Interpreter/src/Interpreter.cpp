@@ -230,7 +230,7 @@ optional<GeneralObject> Interpreter::apply_function(
 
 	log_template.set_parameter("name", func_id);
 	log_template.load_tex_template(func_id);
-	log_template.set_theory_flag(flags[Flag::weak_type_comparison]);
+	log_template.set_theory_flag(flags[Flag::log_theory]);
 
 	if (function.name == "Glushkov") {
 		return ObjectNFA(
@@ -900,9 +900,10 @@ bool Interpreter::run_verification(const Verification& verification) {
 bool Interpreter::run_set_flag(const SetFlag& flag) {
 	auto logger = init_log();
 	logger.log("");
-	Flag flag_name = flags_names[flag.name];
-	if (flags.count(flag_name))
+	if (flags_names.count(flag.name)) {
+		Flag flag_name = flags_names[flag.name];
 		flags[flag_name] = flag.value;
+	}
 	else {
 		logger.throw_error("while setting flag: wrong name \"" + flag.name +
 						   "\"");

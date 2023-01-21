@@ -1622,14 +1622,14 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 	// Logger::log("Автоматы:");
 	// Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
 	bool result = true;
-	if (fa1.language == fa2.language)
+	if (fa1.language == fa2.language) {
 		if (log)
 			log->set_parameter(
 				"samelanguage",
 				"(!) автоматы изначально принадлежат одному языку"); // TODO: logs
 		// Logger::log("(!) автоматы изначально принадлежат одному языку");
-		else
-			result = equal(fa1.minimize(), fa2.minimize());
+	} else
+		result = equal(fa1.minimize(), fa2.minimize());
 	/*if (result)
 		Logger::log("Результат Equiv", "true");
 	else
@@ -2069,15 +2069,15 @@ optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
 		log->set_parameter("oldautomaton", *this);
 	}
 	optional<bool> result = get_nfa_minimality_value();
-	if (result.has_value())
+	if (result.has_value()) {
 		if (log) {
 			log->set_parameter("result", result.value() ? "True" : "False");
 		}
 		// Logger::log(result.value() ? "True" : "False");
-
-		else if (log) {
-			log->set_parameter("result", "Unknown");
-		}
+	}
+	else if (log) {
+		log->set_parameter("result", "Unknown");
+	}
 	// Logger::log("Unknown");
 	// Logger::finish_step();
 	return result;
@@ -2195,15 +2195,14 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 
 bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 	// Logger::init_step("SemDet");
-
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 	}
 	bool result = semdet_entry(log);
-	return result;
 	if (log) {
 		log->set_parameter("result", result);
 	}
+	return result;
 	// Logger::finish_step();
 }
 
