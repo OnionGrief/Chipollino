@@ -1619,18 +1619,18 @@ bool Regex::equivalent(const Regex& r1, const Regex& r2, iLogTemplate* log) {
 	// Logger::log("Первое регулярное выражение", r1.to_txt());
 	// Logger::log("Второе регулярное выражение", r2.to_txt());
 	bool result = true;
-	if (r1.language == r2.language)
+	if (r1.language == r2.language) {
 		if (log)
 			log->set_parameter(
 				"samelanguage",
 				"(!) регулярные выражения изначально принадлежат одному языку");
 		// Logger::log(
 		//"(!) регулярные выражения изначально принадлежат одному языку");
-		else {
-			FiniteAutomaton fa1 = r1.to_ilieyu();
-			FiniteAutomaton fa2 = r2.to_ilieyu();
-			result = FiniteAutomaton::equivalent(fa1, fa2);
-		}
+	} else {
+		FiniteAutomaton fa1 = r1.to_ilieyu();
+		FiniteAutomaton fa2 = r2.to_ilieyu();
+		result = FiniteAutomaton::equivalent(fa1, fa2);
+	}
 	/*if (result)
 		Logger::log("Результат Equiv", "true");
 	else

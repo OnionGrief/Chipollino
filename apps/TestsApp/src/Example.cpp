@@ -775,6 +775,7 @@ void Example::test_regex_subset() {
 
 	assert(r1.subset(r2));
 	assert(!r2.subset(r1));
+	assert(!Regex("ab*").subset(Regex("a*b*")));
 }
 
 void Example::test_regex_equal() {
