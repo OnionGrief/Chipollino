@@ -460,8 +460,9 @@ int TransformationMonoid::class_card(iLogTemplate* log) {
 	// Logger::init_step("Number of equivalence classes");
 	// Logger::log("Number of equivalence classes ", to_string(terms.size()));
 	// Logger::finish_step();
+	if (log) log->set_parameter("oldautomaton", automat);
 	if (log) {
-		log->set_parameter("Number of equivalence classes",
+		log->set_parameter("result",
 						   to_string(terms.size()));
 	}
 	return terms.size();
@@ -469,10 +470,13 @@ int TransformationMonoid::class_card(iLogTemplate* log) {
 
 // Вернет самое длинное слово в классе
 int TransformationMonoid::class_length(iLogTemplate* log) {
+
+	if (log) log->set_parameter("oldautomaton", automat);
 	// Logger::init_step("Longest word in the class");
 	if (log) {
-		log->set_parameter("Size",
+		log->set_parameter("result",
 						   to_string(terms[terms.size() - 1].name.size()));
+						   // TODO: logs
 		log->set_parameter(
 			"One of the longest words",
 			alphabet_symbol::vector_to_str(terms[terms.size() - 1].name));
@@ -485,13 +489,16 @@ int TransformationMonoid::class_length(iLogTemplate* log) {
 }
 
 int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
+
+	if (log) log->set_parameter("oldautomaton", automat);
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
 	if (log) {
+		/*TODO: logs */
 		log->set_parameter("Size",
 						   to_string(terms[terms.size() - 1].name.size()));
-		log->set_parameter("Myhill-Nerode сlasses number",
+		log->set_parameter("result",
 						   equivalence_classes_table_bool.size());
 	}
 	/*Logger::init_step("Myhill-Nerode сlasses number");
@@ -615,7 +622,7 @@ bool TransformationMonoid::is_minimal(iLogTemplate* log) {
 	Logger::log(is_minimal_bool ? "true" : "false");
 	Logger::finish_step();*/
 	if (log) {
-		log->set_parameter("Is minimal", is_minimal_bool ? "true" : "false");
+		log->set_parameter("result", is_minimal_bool ? "true" : "false");
 	}
 	return is_minimal_bool;
 }

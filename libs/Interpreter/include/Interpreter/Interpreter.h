@@ -38,6 +38,8 @@ class Interpreter {
   private:
 	// Логгер для преобразований
 	Logger tex_logger;
+	// автогенерация кратких шаблонов
+	void generate_brief_templates();
 
 	//== Внутреннее логгирование ==============================================
 	// true, если во время исполнения произошла ошибка
@@ -259,6 +261,7 @@ class Interpreter {
 				   vector<ObjectType> input_type);
 	// выбрать подходящий вариант функции для данных аргументов (если он есть)
 	optional<int> find_func(string func, vector<ObjectType> input_type);
+	string get_func_id(Function function);
 
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(

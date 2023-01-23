@@ -266,7 +266,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 	// Logger::init_step("PrefixGrammar");
 	// Logger::log("Автомат", fa);
 	if (log) {
-		log->set_parameter("automaton", fa);
+		log->set_parameter("oldautomaton", fa);
 	}
 	const vector<State>& states = fa.states;
 	TransformationMonoid a(fa.minimize());
@@ -348,9 +348,9 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 		// Logger::log(pg_to_txt());
 		// Logger::finish_step();
 		if (log) {
-			log->set_parameter("tekst1", "Неопределенность");
-			log->set_parameter("tekst2", "Детерминизируем");
-			log->set_parameter("pg_to_txt", pg_to_txt());
+			log->set_parameter("text1", "Неопределенность");
+			log->set_parameter("text2", "Детерминизируем");
+			log->set_parameter("result", pg_to_txt());
 		}
 		return;
 	}
@@ -371,7 +371,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 	// Logger::log(pg_to_txt());
 	// Logger::finish_step();
 	if (log) {
-		log->set_parameter("pg_to_txt", pg_to_txt());
+		log->set_parameter("result", pg_to_txt());
 	}
 	return;
 }
@@ -445,7 +445,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 	// Logger::log("Префиксная грамматика:");
 	// Logger::log(pg_to_txt());
 	if (log) {
-		log->set_parameter("pg_to_txt", pg_to_txt());
+		log->set_parameter("grammar", pg_to_txt());
 	}
 	set<alphabet_symbol> symbols;
 	vector<State> states;
@@ -489,7 +489,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 	// Logger::log("Построенный по ней автомат", res);
 	// Logger::finish_step();
 	if (log) {
-		log->set_parameter("automaton", res);
+		log->set_parameter("result", res);
 	}
 	return res;
 }

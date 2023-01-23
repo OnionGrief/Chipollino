@@ -17,6 +17,7 @@ void AutomatonToImage::to_image(string automat, int name) {
 			name);
 	system(cmd);
 */
+
 string AutomatonToImage::to_image(string automat) {
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
@@ -27,16 +28,39 @@ string AutomatonToImage::to_image(string automat) {
 	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
 	system("cd refal && refgo Postprocess+MathMode input.tex > error_refal.txt "
 		   "2>&1");
-	ifstream infile("./refal/R_input.tex");
-	stringstream graph;
 
+	system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+
+	// автомат
+	ifstream infile_for_R("./refal/R_input.tex");
+	stringstream graph;
 	string s;
-	for (; !infile.eof();) {
-		getline(infile, s);
+	if (!infile_for_R) return "";
+
+	while (!infile_for_R.eof()) {
+		getline(infile_for_R, s);
 		graph << s << endl;
 	}
-	infile.close();
-	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm R_input.tex");
+	infile_for_R.close();
+
+	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm "
+		   "R_input.tex");
+
+	// таблица
+	ifstream infile_for_L("./refal/L_input.tex");
+
+	if (!infile_for_L) return graph.str();
+
+	graph << "\\end{frame}" << endl << endl;
+	graph << "\\begin{frame}" << endl << endl;
+
+	while (!infile_for_L.eof()) {
+		getline(infile_for_L, s);
+		graph << s << endl;
+	}
+	infile_for_L.close();
+
+	system("cd refal && rm L_input.tex");
 
 	return graph.str();
 }

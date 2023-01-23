@@ -766,8 +766,8 @@ FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
 	// Logger::log("Регулярное выражение", to_txt());
 	FiniteAutomaton fa(0, get_thompson(-1).first, language);
 	if (log) {
-		log->set_parameter("initial_regex", *this);
-		log->set_parameter("thompson", fa);
+		log->set_parameter("oldregex", *this);
+		log->set_parameter("result", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -953,7 +953,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 	test.set_language(lang_l);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("newregex", test);
+		log->set_parameter("result", test);
 	}
 	// Logger::log(test.to_txt());
 	// Logger::finish_step();
@@ -972,7 +972,7 @@ Regex Regex::delinearize(iLogTemplate* log) const {
 	test.set_language(lang_del);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("newregex", test);
+		log->set_parameter("result", test);
 	}
 	// Logger::log(test.to_txt());
 	return test;
@@ -1060,12 +1060,12 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	delete end;
 	FiniteAutomaton fa(0, st, language);
 	if (log) {
-		log->set_parameter("initial_regex", test);
-		log->set_parameter("linearised_regex", test.linearize());
+		log->set_parameter("oldregex", test);
+		log->set_parameter("linearised regex", test.linearize());
 		log->set_parameter("first", str_first);
 		log->set_parameter("end", str_end);
 		log->set_parameter("pairs", str_pair);
-		log->set_parameter("glushkov", fa);
+		log->set_parameter("result", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -1151,10 +1151,10 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 	}
 	FiniteAutomaton fa(0, new_states, glushkov.language);
 	if (log) {
-		log->set_parameter("initial_regex", *this);
+		log->set_parameter("oldregex", *this);
 		log->set_parameter("glushkov", glushkov);
 		log->set_parameter("follow", str_follow);
-		log->set_parameter("ilieyu", fa);
+		log->set_parameter("result", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -1700,8 +1700,8 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << out[j][0].to_txt() << " ";
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
-			derev_log = out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
-						" = " + out[j][1].to_txt() + "\\";
+			derev_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
+						" = " + out[j][1].to_txt() + "\\\\";
 			// Logger::log(derev_log);
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
@@ -1729,10 +1729,10 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 	FiniteAutomaton fa(0, automat_state, language);
 	if (log) {
-		log->set_parameter("initial_regex", *this);
+		log->set_parameter("oldregex", *this);
 		log->set_parameter("derivative", derev_log);
 		log->set_parameter("state", str_state);
-		log->set_parameter("antimirov", fa);
+		log->set_parameter("result", fa);
 	}
 	// Logger::log("Автомат", fa);
 	// Logger::finish_step();
@@ -1752,7 +1752,7 @@ Regex Regex::deannote(iLogTemplate* log) const {
 	test.set_language(lang_deann);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("newregex", test);
+		log->set_parameter("result", test);
 	}
 	/*Logger::log("Регулярное выражение после преобразования", test.to_txt());
 	Logger::finish_step();*/
@@ -1811,7 +1811,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		// 			fa.language->get_one_unambiguous_regex().to_txt());
 		// Logger::finish_step();
 		if (log) {
-			log->set_parameter("one_unambiguous_regex",
+			log->set_parameter("result",
 							   fa.language->get_one_unambiguous_regex());
 		}
 		return fa.language->get_one_unambiguous_regex();
@@ -1821,7 +1821,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		// Logger::log("Язык не является 1-однозначным");
 		// Logger::finish_step();
 		if (log) {
-			log->set_parameter("one_unambiguous_regex",
+			log->set_parameter("result",
 							   "Язык не является 1-однозначным");
 		}
 		return *this;
@@ -1982,9 +1982,10 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	if (counter) regl += ")*";
 	// Logger::log("1-однозначное регулярное выражение, описывающее язык",
 	// regl); Logger::finish_step();
-	if (log) {
-		log->set_parameter("one_unambiguous_regex", regl);
-	}
 	language->set_one_unambiguous_regex(regl, fa.language);
-	return language->get_one_unambiguous_regex();
+	Regex res = language->get_one_unambiguous_regex();
+	if (log) {
+		log->set_parameter("result", res);
+	}
+	return res;
 }

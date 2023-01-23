@@ -1,68 +1,20 @@
-% descriptive documentation :section
-\section{Основные понятия}
-\begin{frame}{Follow-эквивалентность}
-  \begin{block}{\bf Определение}
-    Пусть $R$ --- регулярное выражение. Положим $follow(a_{i}) = \{a_{j} | \exists w, u(wa_{i}a_{j}u \in\Lang(R))\}$.
+\section{IlieYu}
+\begin{frame}{IlieYu}
+	Регулярное выражение:
+	%template_oldregex
 
-    Follow-эквивалентность: состояния автомата Глушкова $a_{i}$ и $a_{j}$ follow-эквивалентны, если $follow(a_{i}) = follow(a_{j})$, и либо $a_{i}$, $a_{j}$ оба финальные, либо они оба не финальные.
-  \end{block} % descriptive documentation
+	Автомат:
+
+	%template_result
+
+	glushkov:
+
+	%template_glushkov
+
+	follow:
+
+	%template_follow
+
 \end{frame}
 
-\section{Follow-автомат (IlieYu)}
-% descriptive documentation : frame
-\begin{frame}{Конструкция автомата Илия-Ю (или follow-автомата)}
-  \begin{block}{\bf Алгоритм построения $\IlieYu(r)$}
-    \begin{itemize}
-      \item Построить автомат Глушкова ($\Glushkov$);
-      \item Объединить follow-эквивалентные состояния.
-    \end{itemize}
-  \end{block} % descriptive documentation
-\end{frame}
 
-\begin{frame}{Пример Follow-автомата (IlieYu)}\only<3> {\vspace{-5pt}}
-  \vspace{-5pt}
-  \only<1-3> {
-    Исходное регулярное выражение:
-
-    %template_initial_regex % the initial regexp placeholder displaystyle
-  }
-  \only<1> {
-    Автомат Глушкова:
-
-    %template_glushkov % the Glushkov diagram placeholder
-  }
-  \only<2> {
-    Follow-отношения:
-    %template_follow % the follow-relationships placeholder 1
-  }
-  \only<3>{
-    Follow-автомат:
-
-    %template_ilieyu % the IlieYu diagram placeholder
-  }
-\end{frame}
-
-% overall documentation : section 
-\section{Обсуждение}
-\begin{frame}{Дополнительные сведения} \only<2> {\vspace{-5pt}}
-  \only<1> {
-    \begin{block}{\bf }
-      \begin{itemize}
-        \item Меньше позиционного автомата и, в среднем, быстрее вычисляется.
-        \item Может быть вычислен за квдратичное время.
-        \item Является частным от позиционного автомата.
-      \end{itemize}
-    \end{block}
-    \begin{block}{\bf Связь с автоматом Томпсона}
-      Follow-автомат (IlieYu) может быть получен из автомата Томпсона путем последовательного применения к нему следующих операций:
-      \[\DeAnnote(\Minimize(\RemEps(\Annote(\Thompson(r)))))\] % the formula IlieYu placeholder displaystyle
-    \end{block}
-  }
-  \only<2> {
-    \begin{block}{\bf Теорема}
-      Пусть $r$ -- взвешенное регулярное выражение над $K$. Если $K$ является $k$-замкнутым для автомата $\Thompson(r)$, то $\IlieYu(r)$ может быть вычислен за $O(mn)$ путем применения удаления $\empt$-переходов с последующей взвешенной минимизацией к  $\Thompson(r)$.
-    \end{block}
-    $K$ называется $k$-замкнутым, если $\forall a \in K$ , $\oplus_{n=0}^{k+1} a^n = \oplus_{n=0}^{k} a^n$. В более общем плане мы скажем, что $K$ замкнуто ($k$-замкнуто) для автомата $A$, если  аксиомы замкнутость ($k$-замкнутость) справедливы для всех весов цикла $A$.
-    % я не уверена в правильности выражения "для всех весов цикла" (( вот источник: https://cs.nyu.edu/~mohri/pub/glush.pdf
-  }
-\end{frame}
