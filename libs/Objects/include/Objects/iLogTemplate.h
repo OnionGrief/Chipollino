@@ -13,7 +13,8 @@ class iLogTemplate {
 		vector<string> data;	// данные
 	};
 
-	virtual void set_parameter(const string& key, FiniteAutomaton value) = 0;
+	virtual void set_parameter(const string& key,
+							   const FiniteAutomaton& value) = 0;
 	virtual void set_parameter(const string& key, Regex value) = 0;
 	virtual void set_parameter(const string& key, std::string value) = 0;
 	virtual void set_parameter(const string& key, int value) = 0;

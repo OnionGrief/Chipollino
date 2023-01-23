@@ -500,7 +500,7 @@ void Example::all_examples() {
 	// step_interection();
 	// table();
 	fa_semdet_check();
-	logger_test();
+	// logger_test();
 	fa_to_pgrammar();
 	// Regex("abaa").pump_length();
 	get_one_unambiguous_regex();

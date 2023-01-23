@@ -51,7 +51,8 @@ void LogTemplate::add_parameter(string parameter_name) {
 	}
 }
 
-void LogTemplate::set_parameter(const string& key, FiniteAutomaton value) {
+void LogTemplate::set_parameter(const string& key,
+								const FiniteAutomaton& value) {
 	parameters[key].value = value;
 	add_parameter(key);
 }
@@ -86,13 +87,11 @@ void LogTemplate::load_tex_template(string filename) {
 string LogTemplate::render() const {
 	stringstream infile = expand_includes(tex_template);
 
-
 	// Строка-аккумулятор
 	string outstr = "";
 
 	// Если false, отображение отключается, скипаем строчки, пока не станет true
 	bool show = true;
-
 	while (!infile.eof()) {
 		// Сюда записываем строчку
 		string s;
@@ -120,15 +119,16 @@ string LogTemplate::render() const {
 					s.insert(insert_place,
 							 math_mode(get<Regex>(p.second.value).to_txt()));
 				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
-					image_number += 1;
-					string graph = AutomatonToImage::to_image(
-						get<FiniteAutomaton>(p.second.value).to_txt());
-					/*char si[256];
-					sprintf(si,
-							"\\includegraphics[height=1.3in, "
-							"keepaspectratio]{output%d.png}\n",
-							image_number);*/
-					s.insert(insert_place, graph);
+					const FiniteAutomaton automaton =
+						get<FiniteAutomaton>(p.second.value);
+					string a_str = automaton.to_txt();
+					if (cache_automatons.count(a_str) != 0) {
+						s.insert(insert_place, cache_automatons[a_str]);
+					} else {
+						string graph = AutomatonToImage::to_image(a_str);
+						cache_automatons[a_str] = graph;
+						s.insert(insert_place, graph);
+					}
 				} else if (holds_alternative<string>(p.second.value)) {
 					s.insert(insert_place, get<string>(p.second.value));
 				} else if (holds_alternative<int>(p.second.value)) {
