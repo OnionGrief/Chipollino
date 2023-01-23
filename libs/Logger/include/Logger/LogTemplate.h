@@ -32,7 +32,7 @@ class LogTemplate : public iLogTemplate {
   private:
 	// кеш отрендеренных автоматов
 	// inline static map<const FiniteAutomaton*, string> cache_automatons;
-	inline static map<string, string> cache_automatons;
+	inline static map<size_t, string> cache_automatons;
 	//  Путь к папке с шаблонами
 	const string template_path = "./resources/template/";
 

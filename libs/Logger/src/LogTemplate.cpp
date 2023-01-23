@@ -119,14 +119,15 @@ string LogTemplate::render() const {
 					s.insert(insert_place,
 							 math_mode(get<Regex>(p.second.value).to_txt()));
 				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
-					const FiniteAutomaton automaton =
-						get<FiniteAutomaton>(p.second.value);
-					string a_str = automaton.to_txt();
-					if (cache_automatons.count(a_str) != 0) {
-						s.insert(insert_place, cache_automatons[a_str]);
+					hash<string> hasher;
+					string automaton =
+						get<FiniteAutomaton>(p.second.value).to_txt();
+					size_t hash = hasher(automaton);
+					if (cache_automatons.count(hash) != 0) {
+						s.insert(insert_place, cache_automatons[hash]);
 					} else {
-						string graph = AutomatonToImage::to_image(a_str);
-						cache_automatons[a_str] = graph;
+						string graph = AutomatonToImage::to_image(automaton);
+						cache_automatons[hash] = graph;
 						s.insert(insert_place, graph);
 					}
 				} else if (holds_alternative<string>(p.second.value)) {
