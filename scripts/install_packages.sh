@@ -1,5 +1,6 @@
 #!/bin/bash
 BASEDIR=$(pwd)
+apt-get update
 apt-get install -y make cmake dos2unix wget dot2tex build-essential dos2unix
 read -p 'Установить TEX? Необходим для вывода в PDF (Y/N) ' need_tex
 if [ "$need_tex" == "Y" ]; then
@@ -16,6 +17,7 @@ wget http://www.botik.ru/pub/local/scp/refal5/ref5_081222.zip
 unzip ref5_081222.zip 
 rm makefile
 cp makefile.lin makefile
+make
 echo "export PATH=$PATH:/usr/src/refal" >> ~/.bashrc
 fi
 cd $BASEDIR
@@ -28,6 +30,7 @@ dos2unix MathMode.ref
 dos2unix Postprocess.ref
 dos2unix Preprocess.ref
 dos2unix TestGenerator.ref
+export PATH=$PATH:/usr/src/refal
 refc MathMode.ref
 refc Postprocess.ref
 refc Preprocess.ref

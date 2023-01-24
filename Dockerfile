@@ -6,7 +6,6 @@ RUN apt-get update
 
 COPY . ./app
 WORKDIR /app/
-RUN apt-get install -y make cmake dos2unix wget dot2tex build-essential
 RUN ./scripts/install_packages.sh 
 #все делаем скриптом (скрипт не только в докере запускать можно)
 
