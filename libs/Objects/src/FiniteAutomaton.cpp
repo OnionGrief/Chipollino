@@ -99,12 +99,6 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 
 FiniteAutomaton FiniteAutomaton::determinize(bool is_trim) const {
 	Logger::init_step("Determinize");
-	if (states.size() == 1) {
-		Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
-					*this, *this);
-		Logger::finish_step();
-		return *this;
-	}
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({initial_state}, true);
 
@@ -113,6 +107,10 @@ FiniteAutomaton FiniteAutomaton::determinize(bool is_trim) const {
 	for (auto elem : label) {
 		new_identifier +=
 			(new_identifier.empty() ? "" : ", ") + states[elem].identifier;
+		new_identifier =
+			!new_identifier.empty() && states[elem].identifier.empty()
+				? new_identifier.substr(0, new_identifier.size() - 2)
+				: new_identifier;
 	}
 	State new_initial_state = {0, label, new_identifier, false,
 							   map<alphabet_symbol, set<int>>()};
@@ -153,6 +151,10 @@ FiniteAutomaton FiniteAutomaton::determinize(bool is_trim) const {
 			for (auto elem : z1) {
 				new_identifier += (new_identifier.empty() ? "" : ", ") +
 								  states[elem].identifier;
+				new_identifier =
+					!new_identifier.empty() && states[elem].identifier.empty()
+						? new_identifier.substr(0, new_identifier.size() - 2)
+						: new_identifier;
 			}
 
 			State q1 = {-1, z1, new_identifier, false,
@@ -194,8 +196,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim) const {
 					*this, language_min_dfa);
 		Logger::log("(!) минимальный автомат получен из кэша");
 		Logger::finish_step();
-		return language_min_dfa; // TODO Нужно решить, что делаем с
-								 // идентификаторами
+		return language_min_dfa;
 	}
 	// минимизация
 	FiniteAutomaton dfa = determinize();
@@ -376,6 +377,10 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
 			new_identifier +=
 				(state2.identifier.empty() ? "" : ", " + state2.identifier);
+			new_identifier =
+				!new_identifier.empty() && state2.identifier.empty()
+					? new_identifier.substr(0, new_identifier.size() - 2)
+					: new_identifier;
 			new_dfa.states.push_back({counter,
 									  {state1.index, state2.index},
 									  new_identifier,
@@ -442,6 +447,10 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
 			new_identifier +=
 				(state2.identifier.empty() ? "" : ", " + state2.identifier);
+			new_identifier =
+				!new_identifier.empty() && state2.identifier.empty()
+					? new_identifier.substr(0, new_identifier.size() - 2)
+					: new_identifier;
 			new_dfa.states.push_back({counter,
 									  {state1.index, state2.index},
 									  new_identifier,
@@ -491,6 +500,10 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 			new_identifier = state1.identifier.empty() ? "" : state1.identifier;
 			new_identifier +=
 				(state2.identifier.empty() ? "" : ", " + state2.identifier);
+			new_identifier =
+				!new_identifier.empty() && state2.identifier.empty()
+					? new_identifier.substr(0, new_identifier.size() - 2)
+					: new_identifier;
 			new_dfa.states.push_back({counter,
 									  {state1.index, state2.index},
 									  new_identifier,
@@ -1159,9 +1172,14 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 	vector<State> new_states;
 	for (int i = 0; i < class_to_index.size(); i++) {
 		string new_identifier;
-		for (int index : class_to_index[i])
+		for (int index : class_to_index[i]) {
 			new_identifier +=
 				(new_identifier.empty() ? "" : ", ") + states[index].identifier;
+			new_identifier =
+				!new_identifier.empty() && states[index].identifier.empty()
+					? new_identifier.substr(0, new_identifier.size() - 2)
+					: new_identifier;
+		}
 		State s = {
 			i, {i}, new_identifier, false, map<alphabet_symbol, set<int>>()};
 		new_states.push_back(s);
