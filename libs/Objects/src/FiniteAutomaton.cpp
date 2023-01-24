@@ -99,6 +99,12 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 
 FiniteAutomaton FiniteAutomaton::determinize(bool is_trim) const {
 	Logger::init_step("Determinize");
+	if (!language) {
+		Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
+					*this, *this);
+		Logger::finish_step();
+		return *this;
+	}
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({initial_state}, true);
 
@@ -190,6 +196,12 @@ FiniteAutomaton FiniteAutomaton::determinize(bool is_trim) const {
 
 FiniteAutomaton FiniteAutomaton::minimize(bool is_trim) const {
 	Logger::init_step("Minimize");
+	if (!language) {
+		Logger::log("Автомат до минимизации", "Автомат после минимизации",
+					*this, *this);
+		Logger::finish_step();
+		return *this;
+	}
 	if (language->min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
 		Logger::log("Автомат до минимизации", "Автомат после минимизации",
@@ -546,6 +558,12 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 
 FiniteAutomaton FiniteAutomaton::complement() const {
 	Logger::init_step("Complement");
+	if (!language) {
+		Logger::log("Автомат до дополнения", "Автомат после дополнения", *this,
+					*this);
+		Logger::finish_step();
+		return *this;
+	}
 	FiniteAutomaton new_dfa =
 		FiniteAutomaton(initial_state, states, language->get_alphabet());
 	new_dfa = new_dfa.add_trap_state();
@@ -563,6 +581,12 @@ FiniteAutomaton FiniteAutomaton::complement() const {
 }
 FiniteAutomaton FiniteAutomaton::reverse() const {
 	Logger::init_step("Reverse");
+	if (!language) {
+		Logger::log("Автомат до обращения", "Автомат после обращения", *this,
+					*this);
+		Logger::finish_step();
+		return *this;
+	}
 	FiniteAutomaton enfa =
 		FiniteAutomaton(states.size(), states, language->get_alphabet());
 	int final_states_counter = 0;
@@ -617,6 +641,12 @@ FiniteAutomaton FiniteAutomaton::reverse() const {
 
 FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 	Logger::init_step("AddTrapState");
+	if (!language) {
+		Logger::log("Автомат до добавления ловушки",
+					"Автомат после добавления ловушки", *this, *this);
+		Logger::finish_step();
+		return *this;
+	}
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
 	int count = new_dfa.states.size();
@@ -655,6 +685,12 @@ FiniteAutomaton FiniteAutomaton::add_trap_state() const {
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 	Logger::init_step("RemoveTrapState");
+	if (!language) {
+		Logger::log("Автомат до удаления ловушек",
+					"Автомат после удаления ловушек", *this, *this);
+		Logger::finish_step();
+		return *this;
+	}
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
@@ -716,7 +752,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
-	if (states.size() == 1) return *this;
+	if (!language || states.size() == 1) return *this;
 	FiniteAutomaton new_dfa(initial_state, states, language);
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
@@ -769,6 +805,12 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 
 FiniteAutomaton FiniteAutomaton::annote() const {
 	Logger::init_step("Annote");
+	if (!language) {
+		Logger::log("Автомат до навешивания разметки",
+					"Автомат после навешивания разметки", *this, *this);
+		Logger::finish_step();
+		return *this;
+	}
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
@@ -805,6 +847,12 @@ FiniteAutomaton FiniteAutomaton::annote() const {
 
 FiniteAutomaton FiniteAutomaton::deannote() const {
 	Logger::init_step("DeAnnote");
+	if (!language) {
+		Logger::log("Автомат до удаления разметки",
+					"Автомат после удаления разметки", *this, *this);
+		Logger::finish_step();
+		return *this;
+	}
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
@@ -836,6 +884,12 @@ FiniteAutomaton FiniteAutomaton::deannote() const {
 
 FiniteAutomaton FiniteAutomaton::delinearize() const {
 	Logger::init_step("DeLinearize");
+	if (!language) {
+		Logger::log("Автомат до удаления разметки",
+					"Автомат после удаления разметки", *this, *this);
+		Logger::finish_step();
+		return *this;
+	}
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
