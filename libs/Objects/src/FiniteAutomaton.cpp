@@ -99,12 +99,6 @@ set<int> FiniteAutomaton::closure(const set<int>& indices,
 
 FiniteAutomaton FiniteAutomaton::determinize(bool is_trim) const {
 	Logger::init_step("Determinize");
-	if (states.size() == 1) {
-		Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
-					*this, *this);
-		Logger::finish_step();
-		return *this;
-	}
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({initial_state}, true);
 
