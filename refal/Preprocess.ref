@@ -31,7 +31,7 @@ The styles are derived automatically (TODO: use special names for distinguished 
 at most 20 styles are supported.
 *******************************/
 
-$EXTERN TrueMathMode, FirstSym, Numbers;
+$EXTERN TrueMathMode, FirstSym, Numbers, Separator;
 
 $ENTRY Go {
  , <Arg 1> : e.from'.dot'
@@ -43,7 +43,7 @@ $ENTRY Go {
  , <Br 'AuxCont=!NULL!'> : e.VV
  , <Br 'MetaData=!NULL!'> : e.D
  , <Br 'MetaGroups='> : e.D
-    =  <Open 'r' 1 e.from'.dot'><Open 'w' 2 'Mod_input.dot'><PutLines 2 <CropGraph Preamble <Get 1>>>
+    =  <Open 'r' 1 e.from'.dot'><Open 'w' 2 'Mod_'e.from'.dot'><PutLines 2 <CropGraph Preamble <Get 1>>>
        <GenLegenda e.from><GenAux e.from><GenMetaData e.from><Close 1><Close 2>;
   False
     = <Prout 'No file ' e.from'.dot found.'>; }; 
@@ -184,16 +184,25 @@ CropGraph {
 }
 
 ProcessNode {
- e.x' [label = \"'e.NodeLabel'\"'e.z = (e.x' [label = \"'<ProcessLabel <SplitData <Classify <DeleteDoubles e.NodeLabel>>>>'\"'e.z)
+ e.x' [label = \"'e.NodeLabel'\"'e.z = (e.x' [label = \"'<ProcessLabel <SplitData <Classify <Prepare e.NodeLabel>>>>'\"'e.z)
                                              <GetNodeMetaData (<Trim e.x>)e.z>; 
  e.Other = (e.Other);
 }
 
+Prepare {
+ e.Label = <DeleteDoubles e.Label>; /* alternatives are too narrow, rendering is flawed */
+}
+
+AdjustAlts {
+ e.x'|'e.y = e.x'!|!'<AdjustAlts e.y>;
+ e.z = e.z;
+}
+
 DeleteDoubles {
- e.y','e.y e.z, <FirstSym (<Numbers>)e.z> : False = <DeleteDoubles e.y e.z>;
- e.x','e.y','e.y e.z, <FirstSym (<Numbers>)e.z> : False = <DeleteDoubles e.x','e.y e.z>;
- e.y','e.u','e.y e.z, <FirstSym (<Numbers>)e.z> : False = <DeleteDoubles e.y','e.u','e.z>;
- e.x','e.y','e.u','e.y e.z, <FirstSym (<Numbers>)e.z> : False = <DeleteDoubles e.x','e.y','e.u',' e.z>;
+ e.y t.Sep e.y e.z, <Separator (e.y) t.Sep e.y e.z><FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.y e.z>;
+ e.x t.Sep e.y t.Sep e.y e.z, <Separator (e.x) t.Sep e.y><FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.x t.Sep e.y e.z>;
+ e.y t.Sep e.u t.Sep e.y e.z, <Separator (e.y) t.Sep e.u> <FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.y t.Sep e.u t.Sep e.z>;
+ e.x t.Sep e.y t.Sep e.u t.Sep e.y e.z, <Separator (e.x) t.Sep e.y><FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.x t.Sep e.y t.Sep e.u t.Sep e.z>;
  e.w = e.w;
 }
 
@@ -203,8 +212,8 @@ ProcessLabel {
  , <Dg 'AuxInd'> : s.Num
  , <Br 'AuxCont=~@'<Symb s.Num>'@\\begin{array}{'e.Header'}'<MapArray TrueMathMode e.Label>'\\end{array}~'> : e.Rubbish
  , <Br 'AuxInd='<Add s.Num 1>> : e.Rubbish2
-  = e.V'@'<Symb s.Num>'@';
- e.Z = e.Z;
+  = <AdjustAlts e.V>'@'<Symb s.Num>'@';
+ e.Z = <AdjustAlts e.Z>;
 } 
 
 MapArray {
@@ -223,18 +232,18 @@ Classify {
 }
 
 Len {
- e.x1','e.x2 = <LengthStr 0 e.x1 e.x2> <LenBlock 2 e.x2>;
+ e.x1 t.Sep e.x2, <Separator (e.x1) t.Sep e.x2> : True  = <LengthStr 0 e.x1 e.x2> <LenBlock 2 e.x2>;
  e.x = <LengthStr 0 e.x> 1;
 }
 
 LenBlock {
- s.Num e.x','e.y = <LenBlock <Add s.Num 1> e.y>;
+ s.Num e.x t.Sep e.y, <Separator (e.x) t.Sep e.y> : True = <LenBlock <Add s.Num 1> e.y>;
  s.Num e.Z = s.Num;
 }
 
 LengthStr {
- s.Num ',' e.x = <LengthStr s.Num e.x>;
- s.Num s.s e.x = <LengthStr <Add s.Num 1> e.x>;
+ s.Num t.Sep e.x, <Separator () t.Sep e.x> : True = <LengthStr s.Num e.x>;
+ s.Num t.s e.x = <LengthStr <Add s.Num 1> e.x>;
  s.Num = s.Num; 
 }
 
@@ -263,8 +272,8 @@ BlockSize {
 }
 
 SplitArray {
-  s.Size s.Size e.x','e.y = e.x',\\\\'<SplitArray 1 s.Size e.y>;
-  s.Curr s.Size e.x','e.y = e.x','<SplitArray <Add s.Curr 1> s.Size e.y>;
+  s.Size s.Size e.x t.Sep e.y, <Separator (e.x) t.Sep e.y> : True = e.x t.Sep'\\\\'<SplitArray 1 s.Size e.y>;
+  s.Curr s.Size e.x t.Sep e.y, <Separator (e.x) t.Sep e.y> : True = e.x t.Sep <SplitArray <Add s.Curr 1> s.Size e.y>;
   s.Curr s.Size e.x = e.x;
 }
 

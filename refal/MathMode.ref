@@ -9,20 +9,73 @@ $ENTRY TrueMathMode {
 MathMode {
  e.x'|'e.y = <MathMode e.x>'\\alter '<TrueMathMode e.y>;
  e.x'*'e.y = <MathMode e.x>'{}\\hspace*{-0.09ex}\\star '<TrueMathMode e.y>;
- e.x s.Num e.Number e.y, <InSet (<Numbers>) s.Num e.Number><FirstSym (<Numbers>) e.y> : True False = <Epsilon e.x>'_{'<HorizHack s.Num e.Number>'}'
+ e.x e.Num e.Number s.Last e.y, <InSet (<AnnoteSym><LinearizeSym>)(e.Num)>
+                                <InSet (<IndicesAlphabet>) e.Num e.Number s.Last>
+                                <FirstSym (<IndicesAlphabet>) e.y> : True True False
+        = <Epsilon e.x>'_{'<AnnoteLinearize e.Num e.Number s.Last>'}'
                      <MathMode e.y>;
+ e.x s.Num e.Number e.y, <InSet (<Numbers>)s.Num e.Number><FirstSym (<Numbers>) e.y> : True False
+        = <Epsilon e.x>'_{'<HorizHack s.Num e.Number>'}'
+                     <MathMode e.y>;   
  e.x = <Epsilon e.x>;
 }
 
 Epsilon {
- 'eps'e.Z = '}\\empt\\regexpstr{'<Epsilon e.Z>;
+ e.Eps e.Z, <InSet (<EpsilonSym>) (e.Eps)> : True = '}\\empt\\regexpstr{'<Epsilon e.Z>;
  s.x e.Z = s.x <Epsilon e.Z>;
   = ;
 }
 
+/* We assume that every numeric index is preceded with an annotation showing the annotation source
+   Namely, every index coming from Linearize is preceded with a dot, and every index coming from Annote is preceded with a comma
+   Rendered linearize indices are faint, and annote indices are full-colored. They are separated by 0.5ex intervals
+*/
+AnnoteLinearize {
+ e.Linear e.x e.y
+ , <InSet (<LinearizeSym>) (e.Linear)><InSet (<Numbers>) e.x><FirstSym (<Numbers>) e.y> : True True False
+   = '\\pgfsetfillopacity{0.6}{'<HorizHack e.x>'}\\pgfsetfillopacity{1}'<SeparateAnnote e.y><AnnoteLinearize e.y>;
+ e.Annote e.x e.y
+ , <InSet (<AnnoteSym>)(e.Annote)><InSet (<Numbers>) e.x><FirstSym (<Numbers>) e.y> : True True False
+   = '{'<HorizHack e.x>'}'<SeparateAnnote e.y><AnnoteLinearize e.y>;
+  e.y = <HorizHack e.y>; /* This must be a plain number without any annotation, so do nothing - merely HorizHack */
+}
+
+SeparateAnnote {
+ e.y, <FirstSym (<IndicesAlphabet>) e.y> :
+ { True = '\\hspace{-0.07ex},\\hspace{-0.05ex}';
+   False = ;
+ };
+}
+
+$ENTRY Separator {
+ (e.Before)',' e.After
+ , <FirstSym (<Numbers>) e.After> : 
+ { True = False;
+   False = True;
+ };
+ (e.Before) t.Any e.After = False;
+}
+
+
 HorizHack {
   = ;
  s.x e.y = '\\hspace*{-0.09ex}'s.x<HorizHack e.y>;
+}
+
+$ENTRY IndicesAlphabet {
+ = '0123456789.,';
+}
+
+LinearizeSym {
+ = ('.');
+}
+
+AnnoteSym {
+ = (',');
+}
+
+EpsilonSym {
+ = 'eps';
 }
 
 $ENTRY Numbers {
@@ -30,18 +83,27 @@ $ENTRY Numbers {
 }
 
 InSet {
- (e.x) s.Next e.data
+ (e.x) t.Next e.data
  , e.x :
- { e.x1 s.Next e.x2 = <InSet (e.x) e.data>;
+ { e.x1 t.Next e.x2 = <InSet (e.x) e.data>;
    e.xx = False;
  };
  (e.x) = True;
 }
 
 $ENTRY FirstSym {
- (e.x) s.Next e.data
+ (e.x) t.Next e.data
  , e.x :
- { e.x1 s.Next e.x2 = True;
+ { e.x1 t.Next e.x2 = True;
+   e.xx = False;
+ };
+ (e.x) = False;
+}
+
+$ENTRY LastSym {
+ (e.x) e.data t.Next 
+ , e.x :
+ { e.x1 t.Next e.x2 = True;
    e.xx = False;
  };
  (e.x) = False;
