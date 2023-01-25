@@ -90,6 +90,7 @@ class TasksGenerator {
 
 	void distribute_functions();
 	Function generate_next_func(string, int);
+	string generate_arguments(Function first_func);
 	Function rand_func();
 	Function rand_pred();
 	void change_seed();

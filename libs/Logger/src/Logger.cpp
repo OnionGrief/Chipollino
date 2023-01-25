@@ -19,7 +19,7 @@ void Logger::render_to_file(const string& filename) {
 	}
 	infile.close();
 
-	// может позже добавить логгера для логгера
+	// может позже добавить логгер для логгера
 	cout << "\nCreating report...\n\n";
 	size_t logs_size = logs.size();
 
