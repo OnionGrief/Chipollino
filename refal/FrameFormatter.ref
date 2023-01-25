@@ -257,7 +257,7 @@ ParseFrame {
  s.DefaultWidth s.MPWidth Diag ((e.Preamble)(e.PageData)e.Previous)('\\end{tikzpicture}'e.Rubbish) e.Rest
         = (Diagram ((e.Preamble) e.Previous ('\\end{tikzpicture}')) e.PageData) <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>; 
  s.DefaultWidth s.MPWidth Normal (e.Previous)(e.Line'%template_'e.TempInfo)e.Rest
- , <Nempty e.Line> : True
+ , <Nempty <Trim e.Line>> : True
  , <PrepareFormula s.DefaultWidth normalsize e.Line> : e.ListNormal
  , <PrepareFormula s.MPWidth small e.Line> : e.ListMP 
       = <MapFormulas (e.Previous)(e.ListNormal)(e.ListMP)>
@@ -586,6 +586,8 @@ ChooseContent {
     <Putout 2 '\\vspace*{-0.5ex}\n\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
     <Putout 2 e.Head>
     <PutByLines Raw e.Content><Putout 2 e.Bottom><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
+ s.DefHeight s.Flag Formula (e.Preamble)e.R1(s.Flag ())e.R2 = ;
+
  s.DefHeight s.Flag Formula (e.Preamble)e.R1(s.Flag e.Content)e.R2
  , e.Content :
  { (e.1) t.2 e.Rest
