@@ -147,6 +147,8 @@ class FiniteAutomaton : public BaseObject {
 	bool is_one_unambiguous() const;
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
+	// проверка на пустоту
+	bool is_empty() const;
 	// метод Arden
 	Regex to_regex() const;
 	// возвращает число диагональных классов по методу Глейстера-Шаллита

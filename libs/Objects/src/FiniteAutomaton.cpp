@@ -2186,6 +2186,10 @@ int FiniteAutomaton::states_number() const {
 	return states.size();
 }
 
+bool FiniteAutomaton::is_empty() const {
+	return states.size() == 0;
+}
+
 /*
 Джун программист прибегает с проекта к своему ментору и кричит:
 — Меня отпустили с проекта пораньше!
