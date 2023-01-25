@@ -1,5 +1,19 @@
+%begin detailed
 \section{Длина накачки}
-\begin{frame}{Пример автомата Антимирова}
+\begin{frame}{Лемма о накачке}
+    \vspace{-5pt}
+    Если $G$ — это регулярная грамматика, то существует $n \in \mathbb{N}$, что $\forall w(w \in \Lang(G) \:  \& \: |w| > n \Rightarrow \exists w_1, w_2, w_3(|w_2| > 0 \: \&  \: |w_1| + |w_3| \leqslant n \: \& \: w = w_1w_2w_3 \: \& \: \forall k(k\geqslant0 \Rightarrow w_1w_2^kw_3 \in \Lang(G))$. Длина накачки $G$ - минимальное из таких $n$.
+    \begin{block}{\bf Алгоритм поиска длины накачки}
+    Пусть $R\in\RegExp$. По возрастанию значения $n$:
+    \begin{itemize}
+        \item Рассмотреть в $R$ все возможные префиксы $w$ длины $n$ и по каждому из них построить производную Брзозовски.
+        \item Перебрать инфиксы в пределах $n$-префиксов на предмет возможности накачки: а именно, если префикс $w$ в выражении $w\delta_w(R)$ допускает разбиение на $w_1w_2w_3$, то он накачивается $\Leftrightarrow \: \Lang((w_1(w_2) \star w_3\delta_w(R)) \subseteq \Lang(R)$.
+    \end{itemize}
+    Если все $n$-префиксы накачиваются, то $n$ и есть искомая длина накачки.
+    \end{block}
+\end{frame} % descriptive documentation
+%end detailed
+\begin{frame}{Нахождение длины накачки}
     \vspace{-5pt}
 	Длина накачки:
     %template_pumplength1 % founded pump len
