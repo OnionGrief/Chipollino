@@ -78,19 +78,29 @@ MakeBestZoom {
    s.Any
   , <Compare s.ZH 50> :
   {'+' = <Min <Div <Mul s.MaxHeight 2> 3> s.Height>;
-   s.Any = s.Height;
+   s.Any2 = s.Height;
   };
  };
 }
 
 RenderFrame {
- (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.LastObject)
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight = ; /* Nothing to render, all previous fits in minipages */
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.LastObject) /* The last object is always rendered normally */
  , e.LastObject : s.Sort (e.AllContent) s.FlagMP s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
    , s.WidNorm : s.WidthPercent
    , s.HeightNorm : s.HeightPercent
    , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
    = <InsertNewPageIfNeeded (e.Name) s.BeforeFlag>
      <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>;
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object) e.Rest
+ , e.Object : s.Sort (e.AllContent) Normal s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm /* If the object does not fit a minipage, it is rendered normally */
+   , s.WidNorm : s.WidthPercent
+   , s.HeightNorm : s.HeightPercent0
+   , <MakeBestZoom s.WidthPercent s.HeightPercent0> : s.HeightPercent
+   , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
+   = <InsertNewPageIfNeeded (e.Name) s.BeforeFlag>
+     <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>
+     <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object)(e.NextObject) e.Rest
  , e.Object : Diagram (e.AllContent) MiniPage s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
  , e.NextObject : Diagram (e.AllContent2) MiniPage s.FlagF s.WidP2 s.HP2 s.WidNorm2 s.HeightNorm2
