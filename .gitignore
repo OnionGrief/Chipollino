@@ -21,4 +21,5 @@ resources/images/
 temp/
 report.*
 *.log
+*.rsl
 test.txt

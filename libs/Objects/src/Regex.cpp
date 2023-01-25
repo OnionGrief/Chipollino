@@ -507,60 +507,77 @@ void Regex::replace_term(Regex* from, Regex* to) {
 };
 
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
-	set<alphabet_symbol> alphabet_backup = alphabet;
-	map<alphabet_symbol, alphabet_symbol> rules_replace_alphabet;
-	Regex regex = *this;
+	string expr;
+	expr += "cd refal && refgo normalize > out.txt '";
+	expr += to_txt();
+	expr += "'";
+	system(expr.c_str());
+	ifstream infile_for_R("./refal/out.txt");
+	string s;
+	stringstream newregex;
 
-	//  находим порядок символов в правилах (чтобы по маске найти
-	//  кандидатов и отсеять лишних,а также узнать map для букв (вроде и
-	//  костыль, а вроде и особенность ревлизации (это реально удобно)))
-	vector<vector<alphabet_symbol>> allrulesimage;
-	for (auto rule : rules) {
-		allrulesimage.push_back(rule.first.getsymbolimage());
+	while (!infile_for_R.eof()) {
+		getline(infile_for_R, s);
+		newregex << s;
 	}
-	bool cond = true;
-	while (cond) {
-		bool cond1 = false;
-		vector<Regex> out1;
-		vector<Regex*> address;
-		int y = regex.which_depth();
-		regex.top_rec_bruteforce(y + 1, &out1, &address);
-		for (int j = 0; j < out1.size(); j++) {
-			// cout << out1[j].regex_to_dot();
-			vector<alphabet_symbol> in = out1[j].getsymbolimage();
-			// cout << in.size();
-			for (int i = 0; i < allrulesimage.size(); i++) {
-				//  		// for (auto rule : allrulesimage) {
-				std::map<alphabet_symbol, alphabet_symbol> out;
-				if (equalent_string_normalize(in, allrulesimage[i], &out)) {
-					Regex temp = rules[i].first;
-					// cout << "f " << temp.regex_to_dot();
-					temp.rewrite_normalize(&out);
+	infile_for_R.close();
+	Regex out(newregex.str());
+	return out;
 
-					// cout << "e " << temp.regex_to_dot();
-					Regex endstate = rules[i].second;
-					endstate.rewrite_normalize(&out);
-					//  			// out1[j].alphabet = alphabet_backup;
-					if (temp.equal(temp, out1[j])) {
-						cout << "\nнесмешно\n";
-						// cout << endstate.regex_to_dot();
-						//  cout << address[j]->regex_to_dot();
-						address[j]->replace_term(&temp, &endstate);
+	// set<alphabet_symbol> alphabet_backup = alphabet;
+	// map<alphabet_symbol, alphabet_symbol> rules_replace_alphabet;
+	// Regex regex = *this;
 
-						// cout << temp.regex_to_dot();
-						//  cout <<
-						//    				// вставить переписывание
-						// cond1 = true;
-						break;
-					}
-				}
-				if (cond1) break;
-			}
-			if (cond1) break;
-		}
-		if (!cond1) cond = false;
-	}
-	return regex;
+	// //  находим порядок символов в правилах (чтобы по маске найти
+	// //  кандидатов и отсеять лишних,а также узнать map для букв (вроде и
+	// //  костыль, а вроде и особенность ревлизации (это реально удобно)))
+	// vector<vector<alphabet_symbol>> allrulesimage;
+	// for (auto rule : rules) {
+	// 	allrulesimage.push_back(rule.first.getsymbolimage());
+	// }
+	// bool cond = true;
+	// while (cond) {
+	// 	bool cond1 = false;
+	// 	vector<Regex> out1;
+	// 	vector<Regex*> address;
+	// 	int y = regex.which_depth();
+	// 	regex.top_rec_bruteforce(y + 1, &out1, &address);
+	// 	for (int j = 0; j < out1.size(); j++) {
+	// 		// cout << out1[j].regex_to_dot();
+	// 		vector<alphabet_symbol> in = out1[j].getsymbolimage();
+	// 		// cout << in.size();
+	// 		for (int i = 0; i < allrulesimage.size(); i++) {
+	// 			//  		// for (auto rule : allrulesimage) {
+	// 			std::map<alphabet_symbol, alphabet_symbol> out;
+	// 			if (equalent_string_normalize(in, allrulesimage[i], &out)) {
+	// 				Regex temp = rules[i].first;
+	// 				// cout << "f " << temp.regex_to_dot();
+	// 				temp.rewrite_normalize(&out);
+
+	// 				// cout << "e " << temp.regex_to_dot();
+	// 				Regex endstate = rules[i].second;
+	// 				endstate.rewrite_normalize(&out);
+	// 				//  			// out1[j].alphabet = alphabet_backup;
+	// 				if (temp.equal(temp, out1[j])) {
+	// 					cout << "\nнесмешно\n";
+	// 					// cout << endstate.regex_to_dot();
+	// 					//  cout << address[j]->regex_to_dot();
+	// 					address[j]->replace_term(&temp, &endstate);
+
+	// 					// cout << temp.regex_to_dot();
+	// 					//  cout <<
+	// 					//    				// вставить переписывание
+	// 					// cond1 = true;
+	// 					break;
+	// 				}
+	// 			}
+	// 			if (cond1) break;
+	// 		}
+	// 		if (cond1) break;
+	// 	}
+	// 	if (!cond1) cond = false;
+	// }
+	// return regex;
 }
 
 bool Regex::from_string(const string& str) {
