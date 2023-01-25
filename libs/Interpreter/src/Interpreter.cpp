@@ -704,6 +704,7 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running declaration...");
+	Logger::activate();
 	if (const auto& expr = eval_expression(decl.expr); expr.has_value()) {
 		objects[decl.id] = *expr;
 	} else {
