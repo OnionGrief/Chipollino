@@ -2636,6 +2636,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			// data[i][j].regex_from_state->to_txt());
 		}
 	}
+	full_logs += "%template_ardensteps\n";
 	if (log) log->set_parameter("step-by-step construction", full_logs);
 	// если у нас 1 принимающее состояние
 	if (end_state.size() < 2) {
