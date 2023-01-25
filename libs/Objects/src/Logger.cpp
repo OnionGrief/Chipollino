@@ -221,6 +221,6 @@ void Logger::finish() {
 	}
 	out.close();
 	char cmd[1024];
-	sprintf(cmd, "pdflatex \"./resources/report.tex\"");
+	sprintf(cmd, "pdflatex \"./resources/report.tex\" > pdflatex.log");
 	system(cmd);
 }

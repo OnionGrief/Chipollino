@@ -20,3 +20,5 @@ resources/output*.png
 resources/images/
 temp/
 report.*
+*.log
+test.txt

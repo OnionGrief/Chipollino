@@ -1,11 +1,21 @@
 #pragma once
 #include <iostream>
+#include <string>
 #include <vector>
 using namespace std;
 
 // using alphabet_symbol = string;
 struct alphabet_symbol {
+  private:
+	vector<string> annote_numbers;
+	vector<string> linearize_numbers;
+	string symbol = "";
 	string value = "";
+	void update_value();
+
+  public:
+	static const char linearize_marker = '.';
+	static const char annote_marker = ',';
 
 	alphabet_symbol();
 	alphabet_symbol(const string& s);
@@ -25,16 +35,18 @@ struct alphabet_symbol {
 	bool operator==(const alphabet_symbol& other) const;
 	bool operator!=(const alphabet_symbol& other) const;
 	bool operator<(const alphabet_symbol& other) const;
-	alphabet_symbol operator+(const alphabet_symbol& other) const;
 	// возвращает символ эпсилон
 	static alphabet_symbol epsilon();
 	bool is_epsilon() const;
-	// возвращает символ без разметки
-	alphabet_symbol remove_numbers();
 	// преобразовывает вектор символов в одну строку
 	static string vector_to_str(const vector<alphabet_symbol>&);
 
-	int size() const;
+	void annote(int num);
+	void linearize(int num);
+	void deannote();
+	void delinearize();
+	bool is_annotated() const;
+	bool is_linearize() const;
 };
 
 ostream& operator<<(ostream& os, const alphabet_symbol& item);

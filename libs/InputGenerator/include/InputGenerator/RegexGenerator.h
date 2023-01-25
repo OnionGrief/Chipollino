@@ -16,7 +16,7 @@ class RegexGenerator {
 	int star_num = 0;
 	int cur_regex_length = 0;
 	int cur_star_num = 0;
-	int star_nesting = 0; //вложенность
+	int star_nesting = 0; // вложенность
 	int cur_nesting = 0;
 	bool all_alts_are_eps = true;
 	string res_str = "";
@@ -43,6 +43,9 @@ class RegexGenerator {
 	/*сгенерировать регулярное выражение, параметрирозованное длиной, кол-вом
 	итераций Клини, звездной вложенностью и размером алфавита*/
 	string generate_regex();
+	/*сгенерировать регулярное выражение, обрамленное фигурными скобками
+	(для интерпретатора)*/
+	string generate_framed_regex();
 	/*запись регулярки в файл*/
 	void write_to_file(string filename);
 };

@@ -32,10 +32,10 @@ class TasksGenerator {
 	int id_num = 0; // кол-во объявленных идентификаторов
 	bool for_static_Tpchkr = false,
 		 for_dinamic_Tpchkr =
-			 false; //для статического тайпчекера - генерируем все функции
-					//подряд, для динамического - dfa = nfa, если оба false, то
-					//генерируем гарантированно правильные последовательности
-					//команд
+			 false; // для статического тайпчекера - генерируем все функции
+					// подряд, для динамического - dfa = nfa, если оба false, то
+					// генерируем гарантированно правильные последовательности
+					// команд
 	map<string, vector<Function>>
 		funcInput; // разделение функций (с единственным аргументом) по
 				   // принимаемым значениям
@@ -43,7 +43,7 @@ class TasksGenerator {
 
 	string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int",
 		   VALUE = "Value", BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA",
-		   FILENAME = "FileName";
+		   ARRAY = "Array", PG = "PG";
 	vector<Function> functions = {
 		{"Thompson", {REGEX}, NFA},
 		{"IlieYu", {REGEX}, NFA},
@@ -53,10 +53,11 @@ class TasksGenerator {
 		{"Determinize", {NFA}, DFA},
 		{"RemEps", {NFA}, NFA},
 		{"Linearize", {REGEX}, REGEX},
+		{"Disambiguate", {REGEX}, REGEX},
 		{"Minimize", {NFA}, DFA},
 		{"Reverse", {NFA}, NFA},
 		{"Annote", {NFA}, DFA},
-		//{"DeLinearize", {NFA}, NFA},
+		{"DeLinearize", {NFA}, NFA},
 		{"DeLinearize", {REGEX}, REGEX},
 		{"Complement", {DFA}, DFA},
 		{"DeAnnote", {NFA}, NFA},
@@ -64,24 +65,34 @@ class TasksGenerator {
 		{"MergeBisim", {NFA}, NFA},
 		{"PumpLength", {REGEX}, INT},
 		{"ClassLength", {DFA}, INT},
-		//{"Normalize", {REGEX, FILENAME}, REGEX},
+		//{"Normalize", {REGEX, ARRAY}, REGEX},
 		{"States", {NFA}, INT},
 		{"ClassCard", {DFA}, INT},
 		{"Ambiguity", {NFA}, VALUE},
 		{"MyhillNerode", {DFA}, INT},
+		{"GlaisterShallit", {DFA}, INT},
+		{"PrefixGrammar", {NFA}, PG},
+		{"PGtoNFA", {PG}, NFA},
+		{"Intersect", {NFA, NFA}, NFA},
+		{"Union", {NFA, NFA}, NFA},
+		{"Difference", {NFA, NFA}, NFA},
 	};
 
 	vector<Function> predicates = {
-		{"Subset", {REGEX, REGEX}, BOOLEAN}, {"Subset", {NFA, NFA}, BOOLEAN},
-		{"Equiv", {NFA, NFA}, BOOLEAN},		 {"Equiv", {REGEX, REGEX}, BOOLEAN},
-		{"Bisimilar", {NFA, NFA}, BOOLEAN},	 {"Minimal", {DFA}, BOOLEAN},
+		{"Subset", {REGEX, REGEX}, BOOLEAN},
+		{"Subset", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {REGEX, REGEX}, BOOLEAN},
+		{"OneUnambiguity", {NFA}, BOOLEAN},
+		{"OneUnambiguity", {REGEX}, BOOLEAN},
+		{"Bisimilar", {NFA, NFA}, BOOLEAN},
+		{"Minimal", {NFA}, BOOLEAN},
 		{"Equal", {NFA, NFA}, BOOLEAN},
-		//{"SemDet", {NFA}, BOOLEAN},
+		{"SemDet", {NFA}, BOOLEAN},
 	};
 
 	void distribute_functions();
 	Function generate_next_func(string, int);
-	string generate_op();
 	Function rand_func();
 	Function rand_pred();
 	void change_seed();
@@ -103,6 +114,8 @@ class TasksGenerator {
 	/* генерирует метод:
 	test (НКА | рег. выр-е, рег. выр-е без альтернатив, шаг итерации) */
 	string generate_test();
+	/* генерирует рандомную операцию: объявление, предикат или test*/
+	string generate_op();
 	/*запись теста в файл*/
 	void write_to_file(string filename);
 };

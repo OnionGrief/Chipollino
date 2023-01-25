@@ -1,8 +1,10 @@
 #pragma once
+#include "InputGenerator/RegexGenerator.h"
 #include "Interpreter/Typization.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
+#include <cmath>
 #include <deque>
 #include <fstream>
 #include <map>
@@ -23,14 +25,25 @@ class Interpreter {
 	// Установит режим логгирования в консоль
 	void set_log_mode(LogMode mode);
 
+	enum class Flag {
+		auto_remove_trap_states,
+		weak_type_comparison,
+		log_theory,
+	};
+	bool set_flag(Flag key, bool value);
+
   private:
+	//== Внутреннее логгирование ==============================================
 	// true, если во время исполнения произошла ошибка
 	bool error = false;
 
-	// Вывод
+	// Режим вывода
 	LogMode log_mode = LogMode::all;
+
+	// Уровень вложенности логов
 	int log_nesting = 0;
 
+	// Внутренний логгер. Контролирует уровень вложенности с учётом скопа
 	class InterpreterLogger {
 	  public:
 		InterpreterLogger(Interpreter& parent) : parent(parent) {
@@ -46,15 +59,8 @@ class Interpreter {
 		Interpreter& parent;
 	};
 
+	// Инициалиризирует внутренний логгер
 	InterpreterLogger init_log();
-
-	// Применение цепочки функций к набору аргументов
-	GeneralObject apply_function_sequence(const vector<Function>& functions,
-										  vector<GeneralObject> arguments);
-
-	// Применение функции к набору аргументов
-	GeneralObject apply_function(const Function& function,
-								 const vector<GeneralObject>& arguments);
 
 	// Тут хранятся объекты по их id
 	map<string, GeneralObject> objects;
@@ -63,18 +69,42 @@ class Interpreter {
 	using Id = string;
 	struct Expression;
 
+	// Функция, состоит из имени и сигнатуры
+	// Предикат - тоже функция, но на выходе boolean
+	struct Function {
+		// Имя функции
+		string name;
+		// Типы входных аргументов
+		vector<ObjectType> input;
+		// Тип выходного аргумента
+		ObjectType output;
+		Function(){};
+		Function(string name, vector<ObjectType> input, ObjectType output)
+			: name(name), input(input), output(output){};
+	};
+
+	friend bool operator==(const Function& l, const Function& r);
+
 	// Композиция функций и аргументы к ней
 	struct FunctionSequence {
 		// Композиция функций
 		vector<Function> functions;
 		// Параметры композиции функций (1 или более)
 		vector<Expression> parameters;
+		// Надо ли отображать результат
+		bool show_result = 0;
+		// Преобразование в текст
+		string to_txt() const;
 	};
+
+	using Array = vector<Expression>;
 
 	// Общий вид выражения
 	struct Expression {
 		ObjectType type;
-		variant<FunctionSequence, int, Regex, Id> value;
+		variant<int, FunctionSequence, Regex, string, Array> value;
+		// Преобразование в текст
+		string to_txt() const;
 	};
 
 	// Операция объявления
@@ -84,8 +114,6 @@ class Interpreter {
 		Id id;
 		// Выражение
 		Expression expr;
-		// Надо ли отображать результат
-		bool show_result = 0;
 	};
 
 	// Специальная форма test
@@ -100,6 +128,16 @@ class Interpreter {
 		int iterations = 1;
 	};
 
+	// Специальная форма Verify
+	struct Verification {
+		// Аргументы:
+		// Предикат
+		Expression predicate;
+		// натуральное число — размер тестов.
+		int size = 20;
+		// Regex random_regex;
+	};
+
 	// Предикат [предикат] [объект]+
 	struct Predicate {
 		// Функция (предикат)
@@ -108,8 +146,37 @@ class Interpreter {
 		vector<Expression> arguments;
 	};
 
+	// SetFlag [flagname] [value]
+	struct SetFlag {
+		string name;
+		bool value;
+	};
+
+	// Флаги:
+
+	map<string, Flag> flags_names = {
+		{"auto_remove_trap_states", Flag::auto_remove_trap_states},
+		{"weak_type_comparison", Flag::weak_type_comparison},
+		{"log_theory", Flag::log_theory},
+		// Андрей, придумай сам названия
+	};
+
+	map<Flag, bool> flags = {
+		/* глобальный флаг автоматов (отвечает за удаление ловушек)
+		Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
+		преобразованиях всегда удаляем в конце ловушки.
+		Если isTrim = false, тогда после удаления ловушки в результате
+		преобразований добавляем её обратно */
+		{Flag::auto_remove_trap_states, true},
+		// флаг динамического тайпчекера
+		{Flag::weak_type_comparison, false},
+		// флаг добавления теоретического блока к ф/ям в логгере
+		{Flag::log_theory, false},
+	};
+
 	// Общий вид опрерации
-	using GeneralOperation = variant<Declaration, Test, Predicate>;
+	using GeneralOperation =
+		variant<Declaration, Test, Predicate, SetFlag, Verification>;
 
 	//== Парсинг ==============================================================
 
@@ -118,22 +185,51 @@ class Interpreter {
 	// Находит парную закрывающую скобку
 	int find_closing_par(const vector<Lexem>&, size_t pos);
 
-	optional<Id> scan_Id(const vector<Lexem>&, int& pos, size_t end);
-	optional<Regex> scan_Regex(const vector<Lexem>&, int& pos, size_t end);
-	optional<FunctionSequence> scan_FunctionSequence(const vector<Lexem>&,
-													 int& pos, size_t end);
-	optional<Expression> scan_Expression(const vector<Lexem>&, int& pos,
+	optional<Id> scan_id(const vector<Lexem>&, int& pos, size_t end);
+	optional<Regex> scan_regex(const vector<Lexem>&, int& pos, size_t end);
+	optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&,
+													  int& pos, size_t end);
+	optional<Array> scan_array(const vector<Lexem>&, int& pos, size_t end);
+	optional<Expression> scan_expression(const vector<Lexem>&, int& pos,
 										 size_t end);
+
+	// перевод ObjectType в String (для логирования и дебага)
+	map<ObjectType, string> types_to_string = {
+		{ObjectType::NFA, "NFA"},
+		{ObjectType::DFA, "DFA"},
+		{ObjectType::Regex, "Regex"},
+		{ObjectType::RandomRegex, "RandomRegex"},
+		{ObjectType::Int, "Int"},
+		{ObjectType::String, "String"},
+		{ObjectType::Boolean, "Boolean"},
+		{ObjectType::OptionalBool, "OptionalBool"},
+		{ObjectType::AmbiguityValue, "AmbiguityValue"},
+		{ObjectType::PrefixGrammar, "PrefixGrammar"},
+		{ObjectType::Array, "Array"},
+	}; // не додумалась как по другому(не ручками) (((
 
 	// Типизация идентификаторов. Нужна для корректного составления опреаций
 	map<string, ObjectType> id_types;
 	// Считывание операции из набора лексем
 	optional<Declaration> scan_declaration(const vector<Lexem>&, int& pos);
 	optional<Test> scan_test(const vector<Lexem>&, int& pos);
+	optional<Verification> scan_verification(const vector<Lexem>&, int& pos);
 	optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);
+	optional<SetFlag> scan_flag(const vector<Lexem>&, int& pos);
 	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
 
 	//== Исполнение комманд ===================================================
+
+	// Выражение для подстановки на место *
+	optional<Regex> current_random_regex;
+
+	// Применение цепочки функций к набору аргументов
+	optional<GeneralObject> apply_function_sequence(
+		const vector<Function>& functions, vector<GeneralObject> arguments);
+
+	// Применение функции к набору аргументов
+	optional<GeneralObject> apply_function(
+		const Function& function, const vector<GeneralObject>& arguments);
 
 	// Вычисление выражения
 	optional<GeneralObject> eval_expression(const Expression& expr);
@@ -145,6 +241,8 @@ class Interpreter {
 	bool run_declaration(const Declaration&);
 	bool run_predicate(const Predicate&);
 	bool run_test(const Test&);
+	bool run_verification(const Verification&);
+	bool run_set_flag(const SetFlag&);
 	bool run_operation(const GeneralOperation&);
 
 	// Список опреаций для последовательного выполнения
@@ -153,6 +251,9 @@ class Interpreter {
 	// Сравнение типов ожидаемых и полученных входных данных
 	bool typecheck(vector<ObjectType> func_input_type,
 				   vector<ObjectType> input_type);
+	// выбрать подходящий вариант функции для данных аргументов (если он есть)
+	optional<int> find_func(string func, vector<ObjectType> input_type);
+
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(
 		vector<string> function_names, vector<ObjectType> first_type);
@@ -166,19 +267,23 @@ class Interpreter {
 		enum Type { // TODO добавить тип строки (для filename)
 			error,
 			equalSign,
+			star,
 			doubleExclamation,
 			parL,
 			parR,
+			bracketL,
+			bracketR,
 			dot,
 			number,
 			regex,
+			stringval,
 			name
 		};
 
 		Type type = error;
 		// Если type = id | function | predicate
 		string value = "";
-		// Усли type = number
+		// Eсли type = number
 		int num = 0;
 
 		Lexem(Type type = error, string value = "");
@@ -222,11 +327,15 @@ class Interpreter {
 		string scan_until(char symbol);
 
 		Lexem scan_equalSign();
+		Lexem scan_star();
 		Lexem scan_doubleExclamation();
 		Lexem scan_parL();
 		Lexem scan_parR();
+		Lexem scan_bracketL();
+		Lexem scan_bracketR();
 		Lexem scan_dot();
 		Lexem scan_number();
+		Lexem scan_stringval();
 		Lexem scan_name();
 		Lexem scan_regex();
 		Lexem scan_lexem();

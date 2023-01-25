@@ -32,8 +32,9 @@ class Regex : BaseObject {
 
 		Type type = error;
 		alphabet_symbol symbol = "";
-		int number = 0;
-		Lexem(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
+		int number = 0; // Нужно для линиаризации в глушкове
+		Lexem(Type type = error, const alphabet_symbol& symbol = "",
+			  int number = 0);
 	};
 
 	enum Type {
@@ -76,7 +77,7 @@ class Regex : BaseObject {
 	// Производная по префиксу
 	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const;
-	pair<vector<State>, int> get_tompson(int) const;
+	pair<vector<State>, int> get_thompson(int) const;
 
 	vector<Lexem>* first_state() const; // начальные состояния для to_glushkov
 	bool contains_eps() const; // проверяет, входит ли eps в дерево regex
@@ -86,7 +87,14 @@ class Regex : BaseObject {
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
 	static bool equality_checker(const Regex*, const Regex*);
-	string to_str_log() const;
+
+	/*
+	int search_replace_rec(
+		const Regex& replacing, const Regex& replaced_by,
+		Regex* original); //рекурсивный поиск заменяемого листа дерева*/
+	void normalize_this_regex(
+		const vector<pair<Regex, Regex>>&); //переписывание regex по
+											//пользовательским правилам
 
 	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
@@ -104,7 +112,7 @@ class Regex : BaseObject {
 	// вывод дерева для дебага
 	void print_tree();
 
-	FiniteAutomaton to_tompson() const;
+	FiniteAutomaton to_thompson() const;
 	FiniteAutomaton to_glushkov() const;
 	FiniteAutomaton to_ilieyu() const;
 	FiniteAutomaton to_antimirov() const;
@@ -119,7 +127,7 @@ class Regex : BaseObject {
 	// Генерация языка из алфавита
 	void make_language();
 	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const string& file) const;
+	Regex normalize_regex(const vector<pair<Regex, Regex>>&) const;
 	bool from_string(const string&);
 	// проверка регулярок на равентсво(буквальное)
 	static bool equal(const Regex&, const Regex&);

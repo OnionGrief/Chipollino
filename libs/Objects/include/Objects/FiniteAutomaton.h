@@ -44,6 +44,12 @@ class FiniteAutomaton : public BaseObject {
 	int initial_state = 0;
 	vector<State> states;
 
+	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
+	// преобразованиях всегда удаляем в конце ловушки.
+	// Если isTrim = false, тогда после удаления ловушки в результате
+	// преобразований добавляем её обратно
+	bool is_trim = true;
+
 	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
 	bool parsing_nfa_for(const string&) const;
 
@@ -79,11 +85,11 @@ class FiniteAutomaton : public BaseObject {
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
-	FiniteAutomaton determinize() const;
+	FiniteAutomaton determinize(bool is_trim = true) const;
 	// построение eps-замыкания
 	FiniteAutomaton remove_eps() const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize() const;
+	FiniteAutomaton minimize(bool is_trim = true) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&,
@@ -111,6 +117,7 @@ class FiniteAutomaton : public BaseObject {
 	FiniteAutomaton annote() const;
 	// снятие разметки с букв
 	FiniteAutomaton deannote() const;
+	FiniteAutomaton delinearize() const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
 	// states.size()) i-й элемент хранит номер класса i-го состояния
 	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
@@ -140,15 +147,17 @@ class FiniteAutomaton : public BaseObject {
 	bool is_one_unambiguous() const;
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
+	// проверка на пустоту
+	bool is_empty() const;
 	// метод Arden
 	Regex to_regex() const;
 	// возвращает число диагональных классов по методу Глейстера-Шаллита
 	int get_classes_number_GlaisterShallit() const;
 	// построение синтаксического моноида по автомату
 	TransformationMonoid get_syntactic_monoid() const;
-	// предикат для нка
+	// проверка на минимальность для нка
 	optional<bool> is_nfa_minimal() const;
-	// предикат для дка
+	// проверка на минимальность для дка
 	bool is_dfa_minimal() const;
 
 	friend class Regex;
