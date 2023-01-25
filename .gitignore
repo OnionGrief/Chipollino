@@ -20,6 +20,7 @@ resources/output*.png
 resources/images/
 temp/
 report.*
+rendered_report.*
 log.*
 
 *.log
