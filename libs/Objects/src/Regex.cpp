@@ -1238,7 +1238,8 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 			get_prefix(len - k, prefs2);
 			for (auto i = prefs1->begin(); i != prefs1->end(); i++) {
 				for (auto j = prefs2->begin(); j != prefs2->end(); j++) {
-					prefs->insert(*i + *j);
+					if (prefix_derevative(*i + *j))
+						prefs->insert(*i + *j);
 				}
 			}
 			prefs1->clear();
