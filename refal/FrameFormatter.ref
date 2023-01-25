@@ -10,7 +10,7 @@ Page parameters are taken from file pagedata
 
 *******************************/
 
-$EXTERN TrueMathMode,FirstSym, Numbers, InSet;
+$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters;
 
 $ENTRY Go {
  , <Numb <Arg 1>> : s.TestNum
@@ -380,7 +380,11 @@ Weight {
  '.' = 1;
  s.Num, <InSet (<Numbers>) s.Num> :
  {True = 2;
-  False = 3;
+  False
+ , <InSet (<ASCIIStandard>) s.Num> :
+ {True = 3;
+  False = 1; /* Brute Unicode processing */
+ };
  };
 }
 
@@ -528,6 +532,18 @@ InsertNewPageIfNeeded {
  (e.Name) s.Rest = ;
 }
 
+NonASCII {
+ (e.Set) s.1 e.Rest
+ , e.Set : 
+ { e.S1 s.1 e.S2 = <NonASCII (e.Set) e.Rest>;
+   e.Fail = True;
+ };
+ (e.Set) = False;
+}
+
+ASCIIStandard {
+  = <Numbers><Letters>'$%&*()-_=+`~!@#;:\'\"<>,./?[]{}\\|^ \t\n';
+}
 
 PutByLines {
  s.Mode  = ;
@@ -552,9 +568,17 @@ ChooseContent {
     <PutByLines Raw e.Content><Putout 2 e.Bottom><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
  s.DefHeight s.Flag Formula (e.Preamble)e.R1(s.Flag e.Content)e.R2
  , e.Content :
- { t.1 t.2 e.Rest
+ { (e.1) t.2 e.Rest
+   , <NonASCII (<ASCIIStandard>) e.1 > :
+ {False
   = <PutByLines Raw e.Preamble><Putout 2 '$\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$\\vfill'>;
-  (e.C) = <PutByLines Raw e.Preamble><Putout 2 '$'<TrueMathMode e.C>'$\n\\vfill'>;
+  True
+   = <PutByLines Raw e.Preamble><PutByLines Raw e.Content><Putout 2 '\\vfill'>; };
+  (e.C)
+  , <NonASCII (<ASCIIStandard>) e.C> :
+ {False = <PutByLines Raw e.Preamble><Putout 2 '$'<TrueMathMode e.C>'$\n\\vfill'>;
+  True = <PutByLines Raw e.Preamble><PutByLines Raw e.Content><Putout 2 '\\vfill'>;
+ };
  };
  s.DefHeight s.Flag Theory e.Content
   = <PutByLines Raw e.Content'\n\\vfill'>;
