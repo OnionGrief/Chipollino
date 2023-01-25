@@ -177,25 +177,35 @@ TableMathMode {
  e.Z = <TrueMathMode e.Z>;
 }
 
+SwitchOddity {
+ Even = Odd;
+ Odd = Even;
+}
+
+GenZebra {
+ Even = '\\rowcolor{HeaderColor!33}';
+ Odd = ;
+}
+
 FormTable {
  s.DefaultWidth s.ExSize e.Lines
- , <FormTableAux s.DefaultWidth s.ExSize 1 e.Lines> : e.Code (s.Width)(s.Height)
+ , <FormTableAux Odd s.DefaultWidth s.ExSize 1 e.Lines> : e.Code (s.Width)(s.Height)
    = (e.Code)(s.Width)(s.Height);
 }
 
 /* quick and dirty code, assuming there are no more than two long cells in any table */
 FormTableAux {
- s.DefaultWidth s.ExSize s.Lines
+ s.Oddity s.DefaultWidth s.ExSize s.Lines
  , <ExSize s.ExSize> : (s.ExW)(s.ExH)
   = (s.DefaultWidth)(<Mul s.Lines <Add s.ExH 1>>);
- s.DefaultWidth s.ExSize s.Lines (e.Line) e.InnerTable
+ s.Oddity s.DefaultWidth s.ExSize s.Lines (e.Line) e.InnerTable
  , <ExSize s.ExSize> : (s.ExW)(s.ExH)
  , <Mul s.ExW <Length e.Line>> : s.RealWidth
  , <Compare s.DefaultWidth s.RealWidth> :
  {'-'
   , <SplitLongCells s.ExH s.DefaultWidth s.ExSize e.Line> : e.Data s.Height
-       = (e.Data)<FormTableAux s.DefaultWidth s.ExSize <Add s.Lines <Div s.Height s.ExH>> e.InnerTable>;
-  '+' = (<TableMathMode e.Line>)<FormTableAux s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
+       = (<GenZebra s.Oddity> e.Data)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add s.Lines <Div s.Height s.ExH>> e.InnerTable>;
+  '+' = (<GenZebra s.Oddity><TableMathMode e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
  };
  }
 
@@ -573,7 +583,7 @@ GenContent {
 ChooseContent {
  s.DefHeight s.Flag Table (e.Preamble)e.R1(s.Flag (e.Head)e.Content(e.Bottom))e.R2
   = <PutByLines Raw e.Preamble>
-    <Putout 2 '\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
+    <Putout 2 '\\vspace*{-0.5ex}\n\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
     <Putout 2 e.Head>
     <PutByLines Raw e.Content><Putout 2 e.Bottom><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
  s.DefHeight s.Flag Formula (e.Preamble)e.R1(s.Flag e.Content)e.R2
