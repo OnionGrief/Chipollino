@@ -1,1 +1,1 @@
-reftr FrameFormatter+MathMode 
+refgo FrameFormatter+MathMode 2>err
