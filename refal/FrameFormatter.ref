@@ -39,8 +39,8 @@ MakeFrames {
   s.DW s.MPW Normal '\\begin{frame}{'e.Name'}'e.Endl
    = <MakeFrames s.DW s.MPW Frame (e.Name)() <Trim <Get 1>>>;
   s.DW s.MPW Frame (e.Name)(e.Content) e.1'\\end{frame}'
-   = <Putout 2 '\\begin{frame}{}'><Putout 2 '\\footnotesize'><RenderFrame (e.Name)<GenAbsValues <ExtractLimitations 'pagedata'>> 
-                                          <FrameData Height> 
+   = <Putout 2 '\\begin{frame}{'e.Name'}'><Putout 2 '\\footnotesize'><RenderFrame (e.Name)<GenAbsValues <ExtractLimitations 'pagedata'>> 
+                                          <Sub <FrameData Height> <TitleHeight e.Name>>  
                           <ParseFrame s.DW s.MPW Normal () e.Content (e.1)>>
 			  <Putout 2 '\\end{frame}'>
      <Tracer><MakeFrames s.DW s.MPW Normal <Get 1>>;
@@ -49,6 +49,11 @@ MakeFrames {
   s.DW s.MPW Normal e.Line 0 = ;
   s.DW s.MPW Normal e.Line = <Putout 2 e.Line><MakeFrames s.DW s.MPW Normal <Get 1>>;
 } 
+
+TitleHeight {
+  = 0;
+ e.Anything = 50;
+}
 
 Tracer {
  =;
