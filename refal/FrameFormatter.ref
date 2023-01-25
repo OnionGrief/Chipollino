@@ -62,7 +62,8 @@ Tracer {
 
 GenAbsValues {
  s.WidthPercent s.HeightPercent
-  = <Div <Mul <FrameData Width> s.WidthPercent> 100> 0 /*<Div <Mul <FrameData Height> s.HeightPercent> 100>*/; 
+  = <Div <Mul <FrameData Width> s.WidthPercent> 100> 0 
+                      /*<Div <Mul <FrameData Height> s.HeightPercent> 100>*/; 
 }
 
 ChooseHeight {
@@ -99,7 +100,7 @@ RenderFrame {
    , s.WidNorm : s.WidthPercent
    , s.HeightNorm : s.HeightPercent
    , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
-   = <InsertNewPageIfNeeded (e.Name) s.BeforeFlag>
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
      <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>;
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object) e.Rest
  , e.Object : s.Sort (e.AllContent) Normal s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm /* If the object does not fit a minipage, it is rendered normally */
@@ -107,8 +108,9 @@ RenderFrame {
    , s.HeightNorm : s.HeightPercent0
    , <MakeBestZoom s.WidthPercent s.HeightPercent0> : s.HeightPercent
    , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
-   = <InsertNewPageIfNeeded (e.Name) s.BeforeFlag>
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
      <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
      <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object)(e.NextObject) e.Rest
  , e.Object : Diagram (e.AllContent) MiniPage s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
@@ -121,11 +123,11 @@ RenderFrame {
    , <PageEsteem s.PageHeight s.HeightPercent2 s.DefHeight> : s.BeforeFlagV2 s.NewPageFlagV2 s.RestPageV2
    , <ChooseMaxCase s.BeforeFlagV1 s.BeforeFlagV2 s.NewPageFlagV1 s.NewPageFlagV2 s.RestPageV1 s.RestPageV2>
           : s.BeforeFlag s.NewPageFlag s.RestPage
-   = <InsertNewPageIfNeeded (e.Name) s.BeforeFlag>
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
      <GenContent MiniPage s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (Diagram (e.AllContent))>
      <Putout 2 '\\hfill'>
      <GenContent MiniPage s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent2 s.PageHeight> (Diagram (e.AllContent2))>
-     <InsertNewPageIfNeeded (e.Name) s.NewPageFlag>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
      <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object) e.Rest
  , e.Object : s.Sort (e.AllContent) s.Any s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
@@ -133,8 +135,9 @@ RenderFrame {
    , s.HeightNorm : s.HeightPercent0
    , <MakeBestZoom s.WidthPercent s.HeightPercent0> : s.HeightPercent
    , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
-   = <InsertNewPageIfNeeded (e.Name) s.BeforeFlag>
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
      <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
      <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
      
 }
@@ -191,7 +194,7 @@ FormTableAux {
  , <Compare s.DefaultWidth s.RealWidth> :
  {'-'
   , <SplitLongCells s.ExH s.DefaultWidth s.ExSize e.Line> : e.Data s.Height
-       = <FormTableAux s.DefaultWidth s.ExSize <Add s.Lines <Div s.Height s.ExH>> e.InnerTable>;
+       = (e.Data)<FormTableAux s.DefaultWidth s.ExSize <Add s.Lines <Div s.Height s.ExH>> e.InnerTable>;
   '+' = (<TableMathMode e.Line>)<FormTableAux s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
  };
  }
@@ -211,13 +214,13 @@ SplitLongCells {
  };
  s.MaxHeight s.DefaultWidth s.ExSize e.Last'\\\\'
  , <Compare <Length e.Last> 20> :
- {'+', <FormFormula <Div s.DefaultWidth 3> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
+ {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
       = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n\\\\\n'<Max s.MaxHeight s.Height>;
   s.Any = <TableMathMode e.Last>'\\\\'s.MaxHeight; 
  };
  s.MaxHeight s.DefaultWidth s.ExSize e.Last
  , <Compare <Length e.Last> 20> :
- {'+', <FormFormula <Div s.DefaultWidth 3> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
+ {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
       = '\\begin{array}{l}\n'<TableMathMode e.Form>'\\end{array}\n'<Max s.MaxHeight s.Height>;
   s.Any = <TableMathMode e.Last> s.MaxHeight; 
  };
@@ -324,7 +327,7 @@ FormFormula {
  , <ExSize s.Size> : (s.ExW)(s.ExH)
  , <Mul s.ExW s.Len> : s.RealWidth
  , <Compare s.RealWidth s.DefWidth> :
-  { '+' = <SplitToLines s.DefWidth s.ExH <Div s.DefWidth s.ExW> () e.Formula>;
+  { '+' = <SplitToLines s.DefWidth s.ExH <Max 1 <Div s.DefWidth s.ExW>> () e.Formula>;
      s.Rest = ((e.Formula))(s.RealWidth)(<Add s.ExH s.ExH>);
    };
 }
@@ -368,10 +371,10 @@ TakePrefix {
 }
 
 Weight {
- '|' = 5;
+ '|' = 7;
  '*' = 2;
  ' ' = 1;
- '=' = 4;
+ '=' = 9;
  '(' = 2;
  ')' = 2;
  '{' = 2;
@@ -480,6 +483,13 @@ TakeNormPercent {
 
 PageEsteem {
  s.PageHeight s.CurrHeight s.NeededHeight
+ , <Cp 'First'> : '+'
+ , <Compare s.PageHeight <Sub <FrameData Height> <TitleHeight 'Any'>>> : '0'     /* Something must be present on the very first slide with title */
+ , <Compare s.CurrHeight s.PageHeight> :
+ { '+' = '-+'<FrameData Height>;
+   s.Any = '--'<Sub s.PageHeight s.CurrHeight>;
+ };
+ s.PageHeight s.CurrHeight s.NeededHeight
  , <Compare s.CurrHeight s.PageHeight> : 
  {'+'
   , <Compare <FrameData Height> s.CurrHeight> :
@@ -525,11 +535,11 @@ ToVal {
 }
 
 InsertNewPageIfNeeded {
- (e.Name)'+'
+ (e.Name)(t.Term e.Rest) '+'
   , <Dg 'First'> : e.Trash
   , <Br 'First=-'> : e.Trash2
       = <Putout 2 '\\end{frame}\n\\begin{frame}{}\n\\footnotesize'>;
- (e.Name) s.Rest = ;
+ (e.Name)(e.Any) s.Rest = ; /* Either no objects are left or page fits the next object */
 }
 
 NonASCII {
@@ -571,19 +581,19 @@ ChooseContent {
  { (e.1) t.2 e.Rest
    , <NonASCII (<ASCIIStandard>) e.1 > :
  {False
-  = <PutByLines Raw e.Preamble><Putout 2 '$\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$\\vfill'>;
+  = <PutByLines Raw e.Preamble><Putout 2 '\\noindent $\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$\\vfill'>;
   True
-   = <PutByLines Raw e.Preamble><PutByLines Raw e.Content><Putout 2 '\\vfill'>; };
+   = <PutByLines Raw e.Preamble><PutByLines Raw ('\\noindent')e.Content><Putout 2 '\\vfill'>; };
   (e.C)
   , <NonASCII (<ASCIIStandard>) e.C> :
- {False = <PutByLines Raw e.Preamble><Putout 2 '$'<TrueMathMode e.C>'$\n\\vfill'>;
-  True = <PutByLines Raw e.Preamble><PutByLines Raw e.Content><Putout 2 '\\vfill'>;
+ {False = <PutByLines Raw e.Preamble><Putout 2 '\\noindent $'<TrueMathMode e.C>'$\n\\vfill'>;
+  True = <PutByLines Raw e.Preamble><PutByLines Raw ('\\noindent')e.Content><Putout 2 '\\vfill'>;
  };
  };
  s.DefHeight s.Flag Theory e.Content
   = <PutByLines Raw e.Content'\n\\vfill'>;
  s.DefHeight s.Flag Diagram (e.Preamble)e.Content
   = <PutByLines Raw e.Preamble>
-    <Putout 2 '\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
+    <Putout 2 '\\vspace*{-1ex}\n\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
     <PutByLines Raw e.Content><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
 }
