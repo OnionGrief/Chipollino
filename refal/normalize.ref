@@ -1,5 +1,11 @@
  $ENTRY Go { =
-      <Prout   <Normalize <Arg 1>>> ;}
+      <Open 'r' 1 'out.txt'>
+      <Br 'answer' '=' <Normalize <Get 1>>>
+      <Close 1> 
+      <Open 'w' 1 'out.txt'>
+      <Put 1 <Dg 'answer'>>
+      <Close 1> ;
+    }
 /*сейчас тут прописаны правила переписывания, надо сделать 
 считывание из файла но пока не совсем понял как генерировать левые части*/
 Normalize {

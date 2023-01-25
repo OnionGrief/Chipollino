@@ -507,11 +507,10 @@ void Regex::replace_term(Regex* from, Regex* to) {
 };
 
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
-	string expr;
-	expr += "cd refal && refgo normalize > out.txt '";
-	expr += to_txt();
-	expr += "'";
-	system(expr.c_str());
+	ofstream fout("./refal/out.txt");
+	fout << to_txt() << endl;
+	fout.close();
+	system("cd refal && refgo normalize");
 	ifstream infile_for_R("./refal/out.txt");
 	string s;
 	stringstream newregex;

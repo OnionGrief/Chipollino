@@ -23,3 +23,4 @@ report.*
 *.log
 *.rsl
 test.txt
+/refal/out.txt
