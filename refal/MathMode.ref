@@ -7,14 +7,14 @@ $ENTRY TrueMathMode {
 }
 
 MathMode {
- e.x'|'e.y = <MathMode e.x>'\\alter '<TrueMathMode e.y>;
- e.x'*'e.y = <MathMode e.x>'{}\\hspace*{-0.09ex}\\star '<TrueMathMode e.y>;
+ e.x'|'e.y = <MathMode e.x>'\\alter '<MathMode e.y>;
+ e.x'*'e.y = <MathMode e.x>'{}\\hspace*{-0.1ex}\\star '<MathMode e.y>;
  e.x e.Num e.Number s.Last e.y, <InSet (<AnnoteSym><LinearizeSym>)(e.Num)>
                                 <InSet (<IndicesAlphabet>) e.Num e.Number s.Last>
                                 <FirstSym (<IndicesAlphabet>) e.y> : True True False
         = <Epsilon e.x>'_{'<AnnoteLinearize e.Num e.Number s.Last>'}'
                      <MathMode e.y>;
- e.x s.Num e.Number e.y, <InSet (<Numbers>)s.Num e.Number><FirstSym (<Numbers>) e.y> : True False
+ e.x s.Num e.Number e.y, <LastSym (<Letters>)e.x><InSet (<Numbers>)s.Num e.Number><FirstSym (<Numbers>) e.y> : True True False
         = <Epsilon e.x>'_{'<HorizHack s.Num e.Number>'}'
                      <MathMode e.y>;   
  e.x = <Epsilon e.x>;
@@ -80,6 +80,10 @@ EpsilonSym {
 
 $ENTRY Numbers {
  = '0123456789';
+}
+
+$ENTRY Letters {
+ = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
 }
 
 InSet {
