@@ -1656,6 +1656,9 @@ FiniteAutomaton Regex::to_antimirov() const {
 		}
 
 		if ((state.size() == 0) || (states[i].contains_eps())) {
+			if (state == "") {
+				state = alphabet_symbol::epsilon();
+			}
 			automat_state.push_back({int(i), {}, state, true, transit});
 		} else {
 			automat_state.push_back({int(i), {}, state, false, transit});
