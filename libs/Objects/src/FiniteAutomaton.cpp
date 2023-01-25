@@ -2621,7 +2621,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	// вывод итоговых regex
 	string full_logs = "";
 	for (int i = 0; i < data.size(); i++) {
-		if (i != 0) full_logs += "\n\n";
+		if (i != 0) full_logs += "\\\\";
 		full_logs += "state " + to_string(i) + ":"; // TODO: logs
 		// Logger::log("State ", std::to_string(i));
 		for (int j = 0; j < data[i].size(); j++) {
