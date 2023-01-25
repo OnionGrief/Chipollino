@@ -146,13 +146,13 @@ TG.generate_task(3, 5, false, false);
 - `MergeBisim: NFA -> NFA` — объединение эквивалентных по бисимуляции состояний
 - `Annote: NFA -> DFA` — навешивает разметку на все буквы в автомате, стоящие на недетерминированных переходах
 - `DeAnnote: NFA -> NFA` — снимает разметку Annote
-- `DeLinearize: NFA -> NFA` — снимает разметку Linearize  
+- `DeLinearize: NFA -> NFA` — снимает разметку Linearize
+- `Intersect: (NFA, NFA) -> NFA` — пересечение языков
+- `Union: (NFA, NFA) -> NFA` — объединение языков
+- `Difference: (NFA, NFA) -> NFA` — разность языков  
 **TODO:**  
 - `Determinize: NFA -> DFA` — детерминизация без добавления состояния-ловушки
 - `Minimize: NFA -> DFA` — минимизация без добавления состояния-ловушки
-- `Intersect: (NFA, NFA) -> NFA` — пересечение языков
-- `Union: (NFA, NFA) -> NFA` — объединение языков
-- `Difference: (NFA, NFA) -> NFA` — разность языков
 
 **Многосортные функции**
 - `PumpLength: Regex -> Int` — возвращает длину накачки регулярного выражения
