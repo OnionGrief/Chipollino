@@ -866,6 +866,8 @@ bool Interpreter::run_verification(const Verification& verification) {
 	RegexGenerator RG; // TODO: менять параметры
 	Expression expr = verification.predicate;
 
+	set_log_mode(LogMode::errors);
+
 	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
 		current_random_regex =
@@ -886,13 +888,18 @@ bool Interpreter::run_verification(const Verification& verification) {
 		}
 	}
 
+	set_log_mode(LogMode::all);
+
 	current_random_regex = nullopt;
 
 	logger.log("result: " + to_string(100 * results / tests_size) + "%");
-	logger.log("");
-	logger.log("Tests with negative result:");
-	for (string str : regex_list)
-		logger.log(str);
+
+	if (results < tests_size) {
+		logger.log("");
+		logger.log("Tests with negative result:");
+		for (string str : regex_list)
+			logger.log(str);
+	}
 
 	return success;
 }
@@ -1289,7 +1296,7 @@ optional<Interpreter::SetFlag> Interpreter::scan_flag(
 	if (lexems[i].type == Lexem::name) {
 		flag.name = lexems[i].value;
 	} else {
-		logger.throw_error("Scan Set: wrong flagName at position 1");
+		logger.throw_error("Scan \"Set\": wrong flagName at position 1");
 		return nullopt;
 	}
 	i++;
@@ -1301,7 +1308,7 @@ optional<Interpreter::SetFlag> Interpreter::scan_flag(
 			flag.value = false;
 	} else {
 		logger.throw_error(
-			"Scan SetFlag: wrong type at position 2, boolean expected");
+			"Scan \"Set\": wrong type at position 2, boolean expected");
 		return nullopt;
 	}
 	pos = i + 1;
@@ -1315,7 +1322,7 @@ optional<Interpreter::Verification> Interpreter::scan_verification(
 	int i = pos;
 
 	if (lexems.size() < i + 1 || lexems[i].type != Lexem::name ||
-		lexems[i].value != "Verification") {
+		lexems[i].value != "Verify") {
 		return nullopt;
 	}
 	i++;

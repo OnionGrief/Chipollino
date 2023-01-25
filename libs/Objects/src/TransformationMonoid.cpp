@@ -462,8 +462,7 @@ int TransformationMonoid::class_card(iLogTemplate* log) {
 	// Logger::finish_step();
 	if (log) log->set_parameter("oldautomaton", automat);
 	if (log) {
-		log->set_parameter("result",
-						   to_string(terms.size()));
+		log->set_parameter("result", to_string(terms.size()));
 	}
 	return terms.size();
 }
@@ -476,7 +475,7 @@ int TransformationMonoid::class_length(iLogTemplate* log) {
 	if (log) {
 		log->set_parameter("result",
 						   to_string(terms[terms.size() - 1].name.size()));
-						   // TODO: logs
+		// TODO: logs
 		log->set_parameter(
 			"One of the longest words",
 			alphabet_symbol::vector_to_str(terms[terms.size() - 1].name));
@@ -496,10 +495,7 @@ int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
 	}
 	if (log) {
 		/*TODO: logs */
-		log->set_parameter("Size",
-						   to_string(terms[terms.size() - 1].name.size()));
-		log->set_parameter("result",
-						   equivalence_classes_table_bool.size());
+		log->set_parameter("result", equivalence_classes_table_bool.size());
 	}
 	/*Logger::init_step("Myhill-Nerode сlasses number");
 	Logger::log(to_string(equivalence_classes_table_bool.size()));

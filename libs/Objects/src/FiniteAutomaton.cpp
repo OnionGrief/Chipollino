@@ -748,6 +748,8 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 			count--;
 		}
 	}
+	if (new_dfa.is_empty())
+		new_dfa = FiniteAutomaton(initial_state, states, language);
 	// Logger::log("Автомат до удаления ловушек", "Автомат после удаления
 	// ловушек", *this, new_dfa);
 	// Logger::finish_step();
@@ -2145,9 +2147,9 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 		// Logger::log("State", to_string(i));
 		// Logger::log("Prefix", prefix.value());
 		// Logger::log("Regex", reg.to_txt());
-		auto derevative = reg.prefix_derevative(prefix.value());
-		if (!derevative.has_value()) continue;
-		state_languages[i] = derevative.value();
+		auto derivative = reg.prefix_derivative(prefix.value());
+		if (!derivative.has_value()) continue;
+		state_languages[i] = derivative.value();
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 		// Logger::log("Derevative", state_languages[i].to_txt());
 
@@ -2156,7 +2158,7 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 			log->set_parameter("state", i);
 			log->set_parameter("prefix", prefix.value());
 			log->set_parameter("regex", reg);
-			log->set_parameter("deverative", state_languages[i]);
+			log->set_parameter("derivative", state_languages[i]);
 		}
 		state_languages[i].make_language();
 	}
@@ -2357,6 +2359,10 @@ int FiniteAutomaton::states_number(iLogTemplate* log) const {
 		log->set_parameter("result", states.size());
 	}
 	return states.size();
+}
+
+bool FiniteAutomaton::is_empty() const {
+	return states.size() == 0;
 }
 
 /*
@@ -2613,24 +2619,24 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		data[i] = tempdata3;
 	}
 	// вывод итоговых regex
+	string full_logs = "";
 	for (int i = 0; i < data.size(); i++) {
-		if (log) {
-			log->set_parameter("state", i); // TODO: logs
-		}
+		if (i != 0) full_logs += "\n\n";
+		full_logs += "state " + to_string(i) + ":"; // TODO: logs
 		// Logger::log("State ", std::to_string(i));
 		for (int j = 0; j < data[i].size(); j++) {
-			if (log) {
-				log->set_parameter(
-					"regex",
-					data[i][j]
-						.regex_from_state
-						->to_txt()); // тут по идее должно быть без to_txt но у
-									 // нас не принимается Regex*
-			}
+			// TODO: передача набора regex
+
+			full_logs +=
+				" " + data[i][j]
+						  .regex_from_state
+						  ->to_txt(); // тут по идее должно быть без to_txt но у
+									  // нас не принимается Regex*
 			// Logger::log("regex in this state",
 			// data[i][j].regex_from_state->to_txt());
 		}
 	}
+	if (log) log->set_parameter("step-by-step construction", full_logs);
 	// если у нас 1 принимающее состояние
 	if (end_state.size() < 2) {
 		Regex* r1;

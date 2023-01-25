@@ -999,20 +999,16 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	string str_end = "";
 	string str_pair = "";
 	for (size_t i = 0; i < first->size(); i++) {
-		str_first = str_first + string((*first)[i].symbol) +
-					to_string((*first)[i].number + 1) + " ";
+		str_first += string((*first)[i].symbol) + " ";
 	}
 
 	for (size_t i = 0; i < end->size(); i++) {
-		str_end = str_end + string((*end)[i].symbol) +
-				  to_string((*end)[i].number + 1) + " ";
+		str_end += str_end + string((*end)[i].symbol) + " ";
 	}
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
 			str_pair = str_pair + string(list[it1.first]->value.symbol) +
-					   to_string(list[it1.first]->value.number + 1) +
-					   string(list[it1.second[i]]->value.symbol) +
-					   to_string(list[it1.second[i]]->value.number + 1) + " ";
+					   string(list[it1.second[i]]->value.symbol) + " ";
 		}
 	}
 
@@ -1249,7 +1245,7 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 	}
 }
 
-bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
+bool Regex::derivative_with_respect_to_sym(Regex* respected_sym,
 										   const Regex* reg_e,
 										   Regex& result) const {
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
@@ -1274,9 +1270,9 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 		result.type = Type::eps;
 		return answer;
 	case Type::alt:
-		answer1 = derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+		answer1 = derivative_with_respect_to_sym(respected_sym, reg_e->term_l,
 												 subresult);
-		answer2 = derevative_with_respect_to_sym(respected_sym, reg_e->term_r,
+		answer2 = derivative_with_respect_to_sym(respected_sym, reg_e->term_r,
 												 subresult1);
 		// cout << "alt of " << reg_e->term_l->to_txt() << " and "
 		//	 << reg_e->term_r->to_txt() << "\n";
@@ -1306,11 +1302,11 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 	case Type::conc:
 		subresult.type = Type::conc;
 		if (subresult.term_l == nullptr) subresult.term_l = new Regex();
-		answer1 = derevative_with_respect_to_sym(respected_sym, reg_e->term_l,
+		answer1 = derivative_with_respect_to_sym(respected_sym, reg_e->term_l,
 												 *subresult.term_l);
 		subresult.term_r = reg_e->term_r->copy();
 		if (reg_e->term_l->is_eps_possible()) {
-			answer2 = derevative_with_respect_to_sym(respected_sym,
+			answer2 = derivative_with_respect_to_sym(respected_sym,
 													 reg_e->term_r, subresult1);
 			if (answer1 && answer2) {
 				result.type = Type::alt;
@@ -1351,14 +1347,14 @@ bool Regex::derevative_with_respect_to_sym(Regex* respected_sym,
 	case Type::star:
 		result.type = Type::conc;
 		if (result.term_l == nullptr) result.term_l = new Regex();
-		bool answer = derevative_with_respect_to_sym(
+		bool answer = derivative_with_respect_to_sym(
 			respected_sym, reg_e->term_l, *result.term_l);
 		result.term_r = reg_e->copy();
 		return answer;
 	}
 }
 
-bool Regex::partial_derevative_with_respect_to_sym(
+bool Regex::partial_derivative_with_respect_to_sym(
 	Regex* respected_sym, const Regex* reg_e, vector<Regex>& result) const {
 	Regex cur_result;
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
@@ -1386,9 +1382,9 @@ bool Regex::partial_derevative_with_respect_to_sym(
 		result.push_back(cur_result);
 		return answer;
 	case Type::alt:
-		answer1 = partial_derevative_with_respect_to_sym(
+		answer1 = partial_derivative_with_respect_to_sym(
 			respected_sym, reg_e->term_l, subresult);
-		answer2 = partial_derevative_with_respect_to_sym(
+		answer2 = partial_derivative_with_respect_to_sym(
 			respected_sym, reg_e->term_r, subresult1);
 		for (int i = 0; i < subresult.size(); i++) {
 			result.push_back(subresult[i]);
@@ -1400,7 +1396,7 @@ bool Regex::partial_derevative_with_respect_to_sym(
 		return answer;
 	case Type::conc:
 		cur_subresult.type = Type::conc;
-		answer1 = partial_derevative_with_respect_to_sym(
+		answer1 = partial_derivative_with_respect_to_sym(
 			respected_sym, reg_e->term_l, subresult);
 		cur_subresult.term_r = reg_e->term_r->copy();
 		for (int i = 0; i < subresult.size(); i++) {
@@ -1410,7 +1406,7 @@ bool Regex::partial_derevative_with_respect_to_sym(
 			cur_subresult.term_l = nullptr;
 		}
 		if (reg_e->term_l->is_eps_possible()) {
-			answer2 = partial_derevative_with_respect_to_sym(
+			answer2 = partial_derivative_with_respect_to_sym(
 				respected_sym, reg_e->term_r, subresult1);
 			for (int i = 0; i < subresult1.size(); i++) {
 				result.push_back(subresult1[i]);
@@ -1422,7 +1418,7 @@ bool Regex::partial_derevative_with_respect_to_sym(
 		return answer;
 	case Type::star:
 		cur_result.type = Type::conc;
-		bool answer = partial_derevative_with_respect_to_sym(
+		bool answer = partial_derivative_with_respect_to_sym(
 			respected_sym, reg_e->term_l, subresult);
 		cur_result.term_r = reg_e->copy();
 		for (int i = 0; i < subresult.size(); i++) {
@@ -1435,7 +1431,7 @@ bool Regex::partial_derevative_with_respect_to_sym(
 	}
 }
 
-bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
+bool Regex::derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										   Regex& result) const {
 	bool success = true;
 	Regex cur = *reg_e;
@@ -1447,7 +1443,7 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 		sym.type = Type::symb;
 		sym.value.symbol = str[i];
 		next.clear();
-		success &= derevative_with_respect_to_sym(&sym, &cur, next);
+		success &= derivative_with_respect_to_sym(&sym, &cur, next);
 		// cout << "derevative for prefix " << sym->to_txt() << " in "
 		//	 << cur.to_txt() << " is " << next.to_txt() << "\n";
 		if (!success) {
@@ -1461,12 +1457,12 @@ bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 }
 
 // Производная по символу
-std::optional<Regex> Regex::symbol_derevative(
+std::optional<Regex> Regex::symbol_derivative(
 	const Regex& respected_sym) const {
 	auto rs = respected_sym.copy();
 	Regex result;
 	std::optional<Regex> ans;
-	if (derevative_with_respect_to_sym(rs, this, result))
+	if (derivative_with_respect_to_sym(rs, this, result))
 		ans = result;
 	else
 		ans = nullopt;
@@ -1474,18 +1470,18 @@ std::optional<Regex> Regex::symbol_derevative(
 	return ans;
 }
 // Частичная производная по символу
-void Regex::partial_symbol_derevative(const Regex& respected_sym,
+void Regex::partial_symbol_derivative(const Regex& respected_sym,
 									  vector<Regex>& result) const {
 	auto rs = respected_sym.copy();
-	partial_derevative_with_respect_to_sym(rs, this, result);
+	partial_derivative_with_respect_to_sym(rs, this, result);
 	delete rs;
 	return;
 }
 // Производная по префиксу
-std::optional<Regex> Regex::prefix_derevative(std::string respected_str) const {
+std::optional<Regex> Regex::prefix_derivative(std::string respected_str) const {
 	Regex result;
 	std::optional<Regex> ans;
-	if (derevative_with_respect_to_str(respected_str, this, result))
+	if (derivative_with_respect_to_str(respected_str, this, result))
 		ans = result;
 	else
 		ans = nullopt;
@@ -1535,7 +1531,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 					Regex a(pumped_prefix);
 					Regex b;
 					pumping.regex_union(&a, &b);
-					if (!derevative_with_respect_to_str(*it, this,
+					if (!derivative_with_respect_to_str(*it, this,
 														*pumping.term_r))
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
@@ -1671,7 +1667,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 		for (vector<Regex>::iterator j = alph_regex.begin();
 			 j != alph_regex.end(); j++) {
 			vector<Regex> regs;
-			state.partial_symbol_derevative(*j, regs);
+			state.partial_symbol_derivative(*j, regs);
 			for (vector<Regex>::iterator k = regs.begin(); k != regs.end();
 				 k++) {
 				out.push_back({state, *k, *j});
@@ -1691,7 +1687,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 	vector<State> automat_state;
 
-	string derev_log = "";
+	string deriv_log = "";
 
 	for (size_t i = 0; i < name_states.size(); i++) {
 		string state = name_states[i];
@@ -1700,9 +1696,9 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << out[j][0].to_txt() << " ";
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
-			derev_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
-						" = " + out[j][1].to_txt() + "\\\\";
-			// Logger::log(derev_log);
+			deriv_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
+						 " = " + out[j][1].to_txt() + "\\\\";
+			// Logger::log(deriv_log);
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
 							  out[j][1].to_txt());
@@ -1722,15 +1718,15 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 		str_state += automat_state[i].identifier + " ";
 	}
 
-	// cout << derev_log;
+	// cout << deriv_log;
 	// cout << str_state << endl;
-	// //Logger::log(derev_log, str_state);
+	// //Logger::log(deriv_log, str_state);
 	// Logger::log(str_state);
 
 	FiniteAutomaton fa(0, automat_state, language);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("derivative", derev_log);
+		log->set_parameter("derivative", deriv_log);
 		log->set_parameter("state", str_state);
 		log->set_parameter("result", fa);
 	}
@@ -1821,8 +1817,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		// Logger::log("Язык не является 1-однозначным");
 		// Logger::finish_step();
 		if (log) {
-			log->set_parameter("result",
-							   "Язык не является 1-однозначным");
+			log->set_parameter("result", "Язык не является 1-однозначным");
 		}
 		return *this;
 	}
