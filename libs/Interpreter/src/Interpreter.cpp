@@ -910,8 +910,7 @@ bool Interpreter::run_set_flag(const SetFlag& flag) {
 	if (flags_names.count(flag.name)) {
 		Flag flag_name = flags_names[flag.name];
 		flags[flag_name] = flag.value;
-	}
-	else {
+	} else {
 		logger.throw_error("while setting flag: wrong name \"" + flag.name +
 						   "\"");
 		return false;

@@ -421,9 +421,9 @@ string Grammar::pg_to_txt() const {
 		}
 	}
 	for (const auto& elem : out) {
-		ss << elem << endl << endl;
+		ss << elem << "\\\\";
 	}
-	ss << "------------ base words ------------" << endl << endl;
+	ss << "------------ base words ------------" << "\\\\";
 
 	for (int i = 0; i < prefix_grammar.size(); i++) {
 		if (prefix_grammar[i].is_terminal) {
@@ -436,7 +436,7 @@ string Grammar::pg_to_txt() const {
 					ss << w << "; ";
 				}
 			}
-			ss << endl << endl;
+			ss << "\\\\";
 		}
 	}
 	return ss.str();
