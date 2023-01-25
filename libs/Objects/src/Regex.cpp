@@ -1007,8 +1007,8 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	}
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
-			str_pair = str_pair + string(list[it1.first]->value.symbol) +
-					   string(list[it1.second[i]]->value.symbol) + " ";
+			str_pair = str_pair + "(" + string(list[it1.first]->value.symbol) + "," +
+					   string(list[it1.second[i]]->value.symbol)+")" + " ";
 		}
 	}
 

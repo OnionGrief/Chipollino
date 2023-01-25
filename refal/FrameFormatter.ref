@@ -39,8 +39,9 @@ MakeFrames {
   s.DW s.MPW Normal '\\begin{frame}{'e.Name'}'e.Endl
    = <MakeFrames s.DW s.MPW Frame (e.Name)() <Trim <Get 1>>>;
   s.DW s.MPW Frame (e.Name)(e.Content) e.1'\\end{frame}'
-   = <Putout 2 '\\begin{frame}{}'><Putout 2 '\\footnotesize'><RenderFrame (e.Name)<GenAbsValues <ExtractLimitations 'pagedata'>> 
-                                          <FrameData Height> 
+  , <Br 'First=+'> : e.Trash
+   = <Putout 2 '\\begin{frame}{'e.Name'}'><Putout 2 '\\footnotesize'><RenderFrame (e.Name)<GenAbsValues <ExtractLimitations 'pagedata'>> 
+                                          <Sub <FrameData Height> <TitleHeight e.Name>>  
                           <ParseFrame s.DW s.MPW Normal () e.Content (e.1)>>
 			  <Putout 2 '\\end{frame}'>
      <Tracer><MakeFrames s.DW s.MPW Normal <Get 1>>;
@@ -49,6 +50,11 @@ MakeFrames {
   s.DW s.MPW Normal e.Line 0 = ;
   s.DW s.MPW Normal e.Line = <Putout 2 e.Line><MakeFrames s.DW s.MPW Normal <Get 1>>;
 } 
+
+TitleHeight {
+  = 0;
+ e.Anything = 40;
+}
 
 Tracer {
  =;
@@ -60,32 +66,50 @@ GenAbsValues {
 }
 
 ChooseHeight {
- '+' s.1 s.2 = <Min s.1 <FrameData DiagHeight>>;
- '-' s.1 s.2 = <Min <Min s.1 s.2> <FrameData DiagHeight>>;
+ '+' s.1 s.2 = <Min s.1 <FrameData Height>>;
+ '-' s.1 s.2 = <Min <Min s.1 s.2> <CurrentHeight>>;
+}
+
+CurrentHeight {
+ , <Cp 'First'> :
+ {'+' = <Sub <FrameData Height> <TitleHeight 'any'>>;
+  '-' = <FrameData Height>;
+ };
 }
 
 MakeBestZoom {
  s.Width s.Height 
- , <FrameData Width> <FrameData Height> : s.MaxWidth s.MaxHeight
+ , <FrameData Width> <CurrentHeight> : s.MaxWidth s.MaxHeight
  , <Div <Mul s.Width 100> s.MaxWidth> <Div <Mul s.Height 100> s.MaxHeight> : s.ZW s.ZH
  , <Compare <Min s.ZW s.ZH> 30> :
  { '-' = s.Height;
    s.Any
   , <Compare s.ZH 50> :
-  {'+' = <Min <Div <Mul s.MaxHeight 2> 3> s.Height>;
-   s.Any = s.Height;
+  {'+'
+   , <ExtractLimitations 'pagedata'> : s.MP s.Fr = <Min <Div <Mul s.MaxHeight s.Fr> 100> s.Height>;
+   s.Any2 = s.Height;
   };
  };
 }
 
 RenderFrame {
- (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.LastObject)
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight = ; /* Nothing to render, all previous fits in minipages */
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.LastObject) /* The last object is always rendered normally */
  , e.LastObject : s.Sort (e.AllContent) s.FlagMP s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
    , s.WidNorm : s.WidthPercent
    , s.HeightNorm : s.HeightPercent
    , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
    = <InsertNewPageIfNeeded (e.Name) s.BeforeFlag>
      <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>;
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object) e.Rest
+ , e.Object : s.Sort (e.AllContent) Normal s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm /* If the object does not fit a minipage, it is rendered normally */
+   , s.WidNorm : s.WidthPercent
+   , s.HeightNorm : s.HeightPercent0
+   , <MakeBestZoom s.WidthPercent s.HeightPercent0> : s.HeightPercent
+   , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
+   = <InsertNewPageIfNeeded (e.Name) s.BeforeFlag>
+     <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>
+     <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object)(e.NextObject) e.Rest
  , e.Object : Diagram (e.AllContent) MiniPage s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
  , e.NextObject : Diagram (e.AllContent2) MiniPage s.FlagF s.WidP2 s.HP2 s.WidNorm2 s.HeightNorm2
@@ -287,9 +311,8 @@ PrepareFormula {
 }
 
 FrameData {
- Height = 300; /* Space that can be really used */
+ Height = 320; /* Space that can be really used */
  MaxHeight = 350; /* This is for the zoom machinery of adjustbox */
- DiagHeight = 280;
  Width = 600;
  Zoom = 15; /* div 10 */
 }
@@ -308,11 +331,12 @@ FormFormula {
 
 AllSeparators {
  = (','(NotBefore <Numbers>))
-   (')'(NotBefore ')*'))
+   (')'(NotBefore ')*,'))
    ('|'(NotBefore ))
    (' '(NotBefore ))
+   ('='(NotBefore '!<>'))
    ('}'(NotBefore ))
-   ('*'(NotBefore '*)'));
+   ('*'(NotBefore '*),'));
 }
 
 FindSeparator {
@@ -473,7 +497,10 @@ ToVal {
 }
 
 InsertNewPageIfNeeded {
- (e.Name)'+' = <Putout 2 '\\end{frame}\n\\begin{frame}{}\n\\footnotesize'>;
+ (e.Name)'+'
+  , <Dg 'First'> : e.Trash
+  , <Br 'First=-'> : e.Trash2
+      = <Putout 2 '\\end{frame}\n\\begin{frame}{}\n\\footnotesize'>;
  (e.Name) s.Rest = ;
 }
 
@@ -498,17 +525,17 @@ ChooseContent {
   = <PutByLines Raw e.Preamble>
     <Putout 2 '\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
     <Putout 2 e.Head>
-    <PutByLines Raw e.Content><Putout 2 e.Bottom><Putout 2'}\\end{center}\n'>;
+    <PutByLines Raw e.Content><Putout 2 e.Bottom><Putout 2'}\\end{center}\n\\vfill'>;
  s.DefHeight s.Flag Formula (e.Preamble)e.R1(s.Flag e.Content)e.R2
  , e.Content :
  { t.1 t.2 e.Rest
-  = <PutByLines Raw e.Preamble><Putout 2 '$\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$'>;
-  (e.C) = <PutByLines Raw e.Preamble><Putout 2 '$'<TrueMathMode e.C>'$\n'>;
+  = <PutByLines Raw e.Preamble><Putout 2 '$\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$\\vfill'>;
+  (e.C) = <PutByLines Raw e.Preamble><Putout 2 '$'<TrueMathMode e.C>'$\n\\vfill'>;
  };
  s.DefHeight s.Flag Theory e.Content
-  = <PutByLines Raw e.Content>;
+  = <PutByLines Raw e.Content'\n\\vfill'>;
  s.DefHeight s.Flag Diagram (e.Preamble)e.Content
   = <PutByLines Raw e.Preamble>
     <Putout 2 '\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
-    <PutByLines Raw e.Content><Putout 2'}\\end{center}\n'>;
+    <PutByLines Raw e.Content><Putout 2'}\\end{center}\n\\vfill'>;
 }

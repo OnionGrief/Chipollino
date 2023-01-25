@@ -99,7 +99,7 @@ TrimStrong {
 }
 
 FrameSize {
-  Height = 300;
+  Height = 320;
   Width = 600;
   MaxZoom = 250 ; /* div 100 */
   MinZoom = 45; /* div 100 , not used yet */
