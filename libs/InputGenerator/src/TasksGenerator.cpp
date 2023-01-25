@@ -61,16 +61,15 @@ string TasksGenerator::generate_predicate() {
 	while (
 		// ф/я подходит, если отключена проверка на соответствие типов
 		!for_static_Tpchkr &&
+		// ф/я не подходит, если в памяти нет типа данных, ожидаемого на
+		// вход ф/и (исключение - REGEX и INT, т.к. их можно сгенерировать)
+		(!ids.count(input_type) && input_type != REGEX && input_type != INT) &&
 		// ф/я подходит, если на вход требуется DFA, включен дин. тайпчек,
 		// и в памяти есть либо NFA либо DFA
 		!(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
 		// ф/я подходит, если на вход требуется NFA, и
 		// в памяти есть либо NFA либо DFA
-		!(input_type == NFA && ids.count(NFA_DFA)) &&
-		// ф/я не подходит, если в памяти нет типа данных, ожидаемого на
-		// вход ф/и (исключение - REGEX и INT, т.к. их можно сгенерировать)
-		(!ids.count(input_type) && input_type != REGEX && input_type != INT)) {
-
+		!(input_type == NFA && ids.count(NFA_DFA))) {
 		predicate = rand_pred();
 		input_type = predicate.input[0];
 	}
@@ -165,19 +164,19 @@ string TasksGenerator::generate_declaration() {
 		while (
 			// ф/я подходит, если отключена проверка на соответствие типов
 			!for_static_Tpchkr &&
-			// ф/я подходит, если на вход требуется DFA, включен дин. тайпчек,
-			// и в памяти есть либо NFA либо DFA
-			!(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
-			// ф/я подходит, если на вход требуется NFA, и
-			// в памяти есть либо NFA либо DFA
-			!(input_type == NFA && ids.count(NFA_DFA)) &&
 			// ф/я не подходит, если на выходе не REGEX / FA / PG, т.к. ни одна
 			// ф/я не принимает другие типы данных на вход
 			((first_func.output != REGEX && first_func.output != DFA && first_func.output != NFA &&
 			  first_func.output != PG && funcNum > 1) ||
 			 // ф/я не подходит, если в памяти нет типа данных, ожидаемого на
 			 // вход ф/и (исключение - REGEX и INT, т.к. их можно сгенерировать)
-			 (!ids.count(input_type) && input_type != REGEX && input_type != INT))) {
+			 ((!ids.count(input_type) && input_type != REGEX && input_type != INT) &&
+			  // ф/я подходит, если на вход требуется DFA, включен дин. тайпчек,
+			  // и в памяти есть либо NFA либо DFA
+			  !(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
+			  // ф/я подходит, если на вход требуется NFA, и
+			  // в памяти есть либо NFA либо DFA
+			  !(input_type == NFA && ids.count(NFA_DFA))))) {
 			first_func = rand_func();
 			input_type = first_func.input[0];
 		} // вроде работает
@@ -229,22 +228,19 @@ string TasksGenerator::generate_declaration() {
 
 TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput, int funcNum) {
 	Function str;
-	if (for_static_Tpchkr) {
+	if (for_static_Tpchkr)
 		str = rand_func();
+	else if ((for_dinamic_Tpchkr && prevOutput == NFA) || prevOutput == DFA) {
+		vector<Function> possible_functions = funcInput[NFA_DFA];
+		str = possible_functions[rand() % possible_functions.size()];
+		if ((str.output == INT || str.output == VALUE) && funcNum != 0)
+			str = generate_next_func(prevOutput, funcNum);
 	} else {
-		if ((for_dinamic_Tpchkr && prevOutput == NFA) || prevOutput == DFA) {
-			vector<Function> possible_functions = funcInput[NFA_DFA];
-			str = possible_functions[rand() % possible_functions.size()];
-			if ((str.output == INT || str.output == VALUE) && funcNum != 0)
-				str = generate_next_func(prevOutput, funcNum);
-		} else {
-			vector<Function> possible_functions = funcInput[prevOutput];
-			str = possible_functions[rand() % possible_functions.size()];
-			if ((str.output == INT || str.output == VALUE) &&
-				funcNum != 0) // может возвращать int если
-							  // последняя функция в посл-ти
-				str = generate_next_func(prevOutput, funcNum);
-		}
+		vector<Function> possible_functions = funcInput[prevOutput];
+		str = possible_functions[rand() % possible_functions.size()];
+		if ((str.output == INT || str.output == VALUE) &&
+			funcNum != 0) // может возвращать int если последняя функция в посл-ти
+			str = generate_next_func(prevOutput, funcNum);
 	}
 	return str;
 }
