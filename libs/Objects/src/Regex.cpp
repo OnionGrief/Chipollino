@@ -999,20 +999,16 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	string str_end = "";
 	string str_pair = "";
 	for (size_t i = 0; i < first->size(); i++) {
-		str_first = str_first + string((*first)[i].symbol) +
-					to_string((*first)[i].number + 1) + " ";
+		str_first += string((*first)[i].symbol) + " ";
 	}
 
 	for (size_t i = 0; i < end->size(); i++) {
-		str_end = str_end + string((*end)[i].symbol) +
-				  to_string((*end)[i].number + 1) + " ";
+		str_end += str_end + string((*end)[i].symbol) + " ";
 	}
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
 			str_pair = str_pair + string(list[it1.first]->value.symbol) +
-					   to_string(list[it1.first]->value.number + 1) +
-					   string(list[it1.second[i]]->value.symbol) +
-					   to_string(list[it1.second[i]]->value.number + 1) + " ";
+					   string(list[it1.second[i]]->value.symbol) + " ";
 		}
 	}
 
@@ -1701,7 +1697,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
 			derev_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
-						" = " + out[j][1].to_txt() + "\\\\";
+						 " = " + out[j][1].to_txt() + "\\\\";
 			// Logger::log(derev_log);
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
@@ -1821,8 +1817,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		// Logger::log("Язык не является 1-однозначным");
 		// Logger::finish_step();
 		if (log) {
-			log->set_parameter("result",
-							   "Язык не является 1-однозначным");
+			log->set_parameter("result", "Язык не является 1-однозначным");
 		}
 		return *this;
 	}
