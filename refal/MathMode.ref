@@ -133,7 +133,7 @@ $ENTRY Letters {
  = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
 }
 
-InSet {
+$ENTRY InSet {
  (e.x) t.Next e.data
  , e.x :
  { e.x1 t.Next e.x2 = <InSet (e.x) e.data>;

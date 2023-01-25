@@ -1115,7 +1115,7 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 			 j != states[state_ind].label.end(); j++) {
 			str_follow = str_follow + states[*j].identifier + " ";
 		}
-		str_follow = str_follow + ";\n";
+		str_follow = str_follow + ";\\\\";
 	}
 
 	// cout << str_follow;
