@@ -7,8 +7,8 @@ $ENTRY TrueMathMode {
 }
 
 MathMode {
- e.x'|'e.y = <MathMode e.x>'\\alter '<MathMode e.y>;
- e.x'*'e.y = <MathMode e.x>'{}\\hspace*{-0.1ex}\\star '<MathMode e.y>;
+ e.x'|'e.y = <MathMode e.x>'\\alter '<TrueMathMode e.y>;
+ e.x'*'e.y = <MathMode e.x>'{}\\hspace*{-0.09ex}\\star '<TrueMathMode e.y>;
  e.x e.Num e.Number s.Last e.y, <InSet (<AnnoteSym><LinearizeSym>)(e.Num)>
                                 <InSet (<IndicesAlphabet>) e.Num e.Number s.Last>
                                 <FirstSym (<IndicesAlphabet>) e.y> : True True False
