@@ -1522,26 +1522,24 @@ int Regex::pump_length(iLogTemplate* log) const {
 				}
 			}
 			if (was) continue;
+			bool infix_pumped = false;
 			for (int j = 0; j < it->size(); j++) {
-				for (int k = j + 1; k <= it->size(); k++) {
-					std::string pumped_prefix;
-					pumped_prefix += it->substr(0, j);
-					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
-					pumped_prefix += it->substr(k, it->size() - k + j);
-					Regex a;
-					if (!derevative_with_respect_to_str(*it, this, a)) {
-						pumped = false;
-						continue;
-					}
-					pumped_prefix += a.to_txt();
-					Regex pumping(pumped_prefix);
-					if (subset(pumping)) {
-						checked_prefixes[*it] = true;
-					} else {
-						pumped = false;
-					}
+				std::string pumped_prefix;
+				pumped_prefix += it->substr(0, j);
+				pumped_prefix += "(" + it->substr(j, it->size()) + ")*";
+				Regex a;
+				if (!derevative_with_respect_to_str(*it, this, a)) {
+					continue;
+				}
+				pumped_prefix += a.to_txt();
+				Regex pumping(pumped_prefix);
+				if (subset(pumping)) {
+					checked_prefixes[*it] = true;
+					infix_pumped = true;
+					break;
 				}
 			}
+			pumped &= infix_pumped;
 		}
 		std::string ch_prefixes;
 		for (auto it = checked_prefixes.begin(); it != checked_prefixes.end();
