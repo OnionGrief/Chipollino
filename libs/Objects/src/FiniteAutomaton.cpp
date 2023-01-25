@@ -696,8 +696,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states() const {
 			count--;
 		}
 	}
-	if (new_dfa.is_empty())
-		new_dfa = FiniteAutomaton(initial_state, states, language);
+	if (new_dfa.is_empty()) new_dfa = *this;
 	Logger::log("Автомат до удаления ловушек", "Автомат после удаления ловушек",
 				*this, new_dfa);
 	Logger::finish_step();
@@ -753,6 +752,7 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 			count--;
 		}
 	}
+	if (new_dfa.is_empty()) new_dfa = *this;
 	return new_dfa;
 }
 
