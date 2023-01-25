@@ -43,14 +43,14 @@ $ENTRY Go {
  , <Br 'AuxCont=!NULL!'> : e.VV
  , <Br 'MetaData=!NULL!'> : e.D
  , <Br 'MetaGroups='> : e.D
-    =  <Open 'r' 1 e.from'.dot'><Open 'w' 2 'Mod_'e.from'.dot'><PutLines 2 <CropGraph Preamble <Get 1>>>
+    =  <Open 'w' 5 'L_input.tex'><Close 5><Open 'r' 1 e.from'.dot'><Open 'w' 2 'Mod_'e.from'.dot'><PutLines 2 <CropGraph Preamble <Get 1>>>
        <GenLegenda e.from><GenAux e.from><GenMetaData e.from><Close 1><Close 2>;
   False
     = <Prout 'No file ' e.from'.dot found.'>; }; 
 }
 
 FrameData {
- Height = 350;
+ Height = 330;
  Width = 600;
  Zoom = 25; /* div 10 */
 }
@@ -283,7 +283,7 @@ SplitData {
  { '+'
    , <Dg 'LegendaInd'> : s.Num
    , <Br 'LegendaInd='<Add s.Num 1>> : e.Rubbish
-   , <Br 'LegendaCont='<TrueMathMode 'L'<Symb s.Num>>'&'<TrueMathMode e.Data>'\\\\'> : e.Rubbish2
+   , <Br 'LegendaCont=''L'<Symb s.Num>'&'e.Data'\\\\'> : e.Rubbish2
          = 'L'<Symb s.Num>;
     e.Z
  , <Compare s.Block 3> :

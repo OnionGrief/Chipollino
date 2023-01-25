@@ -122,7 +122,7 @@ string LogTemplate::render() const {
 
 				if (holds_alternative<Regex>(p.second.value)) {
 					s.insert(insert_place,
-							 math_mode(get<Regex>(p.second.value).to_txt()));
+							 get<Regex>(p.second.value).to_txt()); /* Math mode is done in global renderer */
 				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
 					hash<string> hasher;
 					string automaton =

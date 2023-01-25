@@ -75,6 +75,7 @@ CalcPreamble {
  , <BestCase s.MPSort <Compare s.HeightPercent s.RealHeightPercent>> : s.FrameType
                      = '% Minipage 's.MPType
 		       '; Frame 's.FrameType
+			'; WidthMP percent 's.RealWidthPercent'; HeightMP percent 's.RealHeightPercent
                       '; Width percent 's.RealWidthPercent'; Height percent 's.RealHeightPercent;
 }
 
@@ -98,7 +99,7 @@ TrimStrong {
 }
 
 FrameSize {
-  Height = 350;
+  Height = 300;
   Width = 600;
   MaxZoom = 250 ; /* div 100 */
   MinZoom = 45; /* div 100 , not used yet */
