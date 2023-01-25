@@ -81,7 +81,12 @@ void LogTemplate::set_theory_flag(bool value) {
 }
 
 void LogTemplate::load_tex_template(string filename) {
+	template_filename = filename;
 	tex_template = template_path + filename + ".tex";
+}
+
+string LogTemplate::get_tex_template() {
+	return template_filename;
 }
 
 string LogTemplate::render() const {

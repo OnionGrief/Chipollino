@@ -22,6 +22,7 @@ class LogTemplate : public iLogTemplate {
 	string render() const;
 	// загрузка шаблона
 	void load_tex_template(string filename);
+	string get_tex_template();
 
 	// struct Table {
 	// 	vector<string> rows;	// названия строк
@@ -36,8 +37,10 @@ class LogTemplate : public iLogTemplate {
 	//  Путь к папке с шаблонами
 	const string template_path = "./resources/template/";
 
-	// LaTeX-шаблон
+	// путь к LaTeX-шаблону
 	string tex_template;
+	// имя файла шаблона
+	string template_filename;
 
 	// флаг логирования подробной части
 	bool render_theory = false;
