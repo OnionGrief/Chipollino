@@ -526,6 +526,8 @@ const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 }
 
 void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
+	Logger::init_step("PrefixGrammarTM");
+	Logger::log("Автомат", fa);
 	const vector<State>& states = fa.states;
 	TransformationMonoid a(fa);
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
@@ -572,7 +574,12 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	}
 	if (count != equal_classes.size()) {
 		// в логер то что неопределенность и детерменизируем
+		Logger::log("Неопределенность");
+		Logger::log("Детерминизируем");
 		fa_to_prefix_grammar_TM(fa.determinize());
+		Logger::log("Построенная по нему префиксная грамматика:");
+		Logger::log(pg_to_txt());
+		Logger::finish_step();
 		return;
 	}
 	//----------------------------
@@ -611,5 +618,8 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 			}
 		}
 	}
+	Logger::log("Построенная по нему префиксная грамматика:");
+	Logger::log(pg_to_txt());
+	Logger::finish_step();
 	return;
 }
