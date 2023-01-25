@@ -505,12 +505,83 @@ void Regex::replace_term(Regex* from, Regex* to) {
 		}
 	}
 };
+string Regex::to_refal_expr(map<string, string>* symbols) {
+	string str1 = "", str2 = "";
+	if (term_l) {
+		str1 = term_l->to_refal_expr(symbols);
+	}
+	if (term_r) {
+		str2 = term_r->to_refal_expr(symbols);
+	}
+	string symb;
+	if (type == Type::conc) {
+		if (term_l && term_l->type == Type::alt) {
+			str1 = "'('" + str1 + "')'";
+		}
+		if (term_r && term_r->type == Type::alt) {
+			str2 = "'('" + str2 + "')'";
+		}
+	}
+	if (type == Type::symb /*value.symbol*/) {
+		string temp = value.symbol;
+		if (symbols->count(temp) != 0) {
+			symb = (*symbols)[temp];
+		} else {
+			(*symbols)[temp] = " e." + to_string(symbols->size() + 1) + " ";
+			symb = (*symbols)[temp];
+		}
+	}
+	if (type == Type::eps) symb = "";
+	if (type == Type::alt) symb = "'|'";
+	if (type == Type::star) {
+		symb = "'*'";
+		if (term_l->type != Type::symb)
+			str1 = "'('" + str1 +
+				   "')'"; // ставим скобки при итерации, если символов > 1
+	}
+	if (type == Type::alt) return "'('" + str1 + symb + str2 + "')'";
+	return str1 + symb + str2;
+}
+string Regex::get_refal_rewrite_rule(pair<Regex, Regex> rule) {
+	map<string, string> temp;
+	string out;
+	out += "e.0 ";
+	out += rule.first.to_refal_expr(&temp);
+	out += "e.";
+	out += to_string(temp.size() + 1);
+	out += " ";
+	out += "=<Normalize ";
+	out += "e.0 ";
+	out += rule.second.to_refal_expr(&temp);
+	out += "e.";
+	out += to_string(temp.size() + 1);
+	out += " ";
+	out += ">;\n\t";
+	return out;
+}
+void Regex::create_normalize_refal_code(
+	const vector<pair<Regex, Regex>>& rules) {
+	ofstream fout("./refal/normalize.ref");
+	fout << "/*this file is auto generated*/\n";
+	fout << "$ENTRY Go {=<Open 'r' 1 'out.txt'>\n\t";
+	fout << "<Br 'answer' '=' <Normalize <Get 1>>>\n\t";
+	fout << "<Close 1>\n\t<Open 'w' 1 'out.txt'>\n\t";
+	fout << "<Put 1 <Dg 'answer' >>\n\t<Close 1>;\n}\n";
+	fout << "Normalize {\n\t";
+	for (int i = 0; i < rules.size(); i++) {
+		fout << get_refal_rewrite_rule(rules[i]);
+	}
 
+	fout << " e.1 = e.1;\n}";
+	fout.close();
+}
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
+	Regex a("");
+	a.create_normalize_refal_code(rules);
 	ofstream fout("./refal/out.txt");
 	fout << to_txt() << endl;
 	fout.close();
-	system("cd refal && refgo normalize");
+	system("cd refal && refc normalize.ref > reflog0.txt && refgo normalize");
 	ifstream infile_for_R("./refal/out.txt");
 	string s;
 	stringstream newregex;

@@ -108,6 +108,9 @@ class Regex : BaseObject {
 	void replace_term_helplify(Regex*);
 	void replace_term(Regex*, Regex*);
 	Regex* search_rec_term(Regex*);
+	string get_refal_rewrite_rule(pair<Regex, Regex>);
+	void create_normalize_refal_code(const vector<pair<Regex, Regex>>&);
+	string to_refal_expr(map<string, string>*);
 
   public:
 	Regex();
