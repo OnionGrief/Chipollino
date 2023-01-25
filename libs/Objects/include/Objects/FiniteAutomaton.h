@@ -155,6 +155,8 @@ class FiniteAutomaton : public BaseObject {
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
 	// возвращает количество состояний (пердикат States)
 	int states_number(iLogTemplate* log = nullptr) const;
+	// проверка на пустоту
+	bool is_empty() const;
 	// метод Arden
 	Regex to_regex(iLogTemplate* log = nullptr) const;
 	// возвращает число диагональных классов по методу Глейстера-Шаллита

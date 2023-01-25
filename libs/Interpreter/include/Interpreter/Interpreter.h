@@ -31,7 +31,7 @@ class Interpreter {
 	enum class Flag {
 		auto_remove_trap_states,
 		weak_type_comparison,
-		log_theory
+		log_theory,
 	};
 	bool set_flag(Flag key, bool value);
 
@@ -179,7 +179,8 @@ class Interpreter {
 		// флаг динамического тайпчекера
 		{Flag::weak_type_comparison, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
-		{Flag::log_theory, false}};
+		{Flag::log_theory, false},
+	};
 
 	// Общий вид опрерации
 	using GeneralOperation =

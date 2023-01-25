@@ -748,6 +748,8 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 			count--;
 		}
 	}
+	if (new_dfa.is_empty())
+		new_dfa = FiniteAutomaton(initial_state, states, language);
 	// Logger::log("Автомат до удаления ловушек", "Автомат после удаления
 	// ловушек", *this, new_dfa);
 	// Logger::finish_step();
@@ -2357,6 +2359,10 @@ int FiniteAutomaton::states_number(iLogTemplate* log) const {
 		log->set_parameter("result", states.size());
 	}
 	return states.size();
+}
+
+bool FiniteAutomaton::is_empty() const {
+	return states.size() == 0;
 }
 
 /*
