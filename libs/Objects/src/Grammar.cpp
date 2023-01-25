@@ -394,6 +394,9 @@ string Grammar::pg_to_txt() const {
 							prefix_grammar[w_back].is_started) {
 							eq = "eps";
 						}
+						if (wt == "eps") {
+							continue;
+						}
 						if (/*m_r.find(wt) == m_r.end() &&*/
 							!(wt == eq && a == "eps")) {
 							string test = wt;
@@ -547,6 +550,9 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 			grammar_items[states[i].index]->is_started = true;
 		}
 	}
+	if (st0.is_terminal) {
+		grammar_items[st0.index]->equivalence_class.insert("");
+	}
 	//---------------------------
 	set<string> equal_classes;
 	int count = 0;
@@ -598,7 +604,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	for (const auto& elem : st0.transitions) {
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
-				g->equivalence_class.erase("");
+				// g->equivalence_class.erase("");
 			}
 		}
 	}
