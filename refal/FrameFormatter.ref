@@ -10,7 +10,7 @@ Page parameters are taken from file pagedata
 
 *******************************/
 
-$EXTERN TrueMathMode,FirstSym, Numbers;
+$EXTERN TrueMathMode,FirstSym, Numbers, InSet;
 
 $ENTRY Go {
  , <Numb <Arg 1>> : s.TestNum
@@ -150,12 +150,12 @@ ChooseMaxCase {
 
 
 Length {
- e.String = <AuxLen 0 e.String>;
+ e.String = <Div <AuxLen 0 e.String> 3>;
 }
 
 AuxLen {
 s.Num = s.Num;
-s.Num s.X e.Rest = <AuxLen <Add s.Num 1> e.Rest>;
+s.Num s.Sym e.Rest = <AuxLen <Add s.Num <Weight s.Sym>> e.Rest>;
 }
 
 CountTextHeight {
@@ -352,7 +352,7 @@ FindSeparator {
 SplitToLines {
  s.DefWidth s.ExH s.Size (e.Lines) = (e.Lines)(s.Size)(<CountTextHeight s.DefWidth (e.Lines)>);
  s.DefWidth s.ExH s.Size (e.Lines) e.Formula
- , <TakePrefix s.Size e.Formula> : e.Prefix (e.Next)
+ , <TakePrefix <Mul s.Size 3> e.Formula> : e.Prefix (e.Next)
  , e.Next :
  { = (e.Lines (e.Prefix))(s.Size)(<CountTextHeight s.DefWidth (e.Lines (e.Prefix))>);
   e.Z
@@ -364,7 +364,31 @@ SplitToLines {
 TakePrefix {
   0 e.Rest = (e.Rest);
  s.Size = ();
- s.Length s.Next e.Rest = s.Next <TakePrefix <Sub s.Length 1> e.Rest>;
+ s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight s.Sym>> e.Rest>;
+}
+
+Weight {
+ '|' = 5;
+ '*' = 2;
+ ' ' = 1;
+ '=' = 4;
+ '(' = 2;
+ ')' = 2;
+ '{' = 2;
+ '}' = 2;
+ ',' = 1;
+ '.' = 1;
+ s.Num, <InSet (<Numbers>) s.Num> :
+ {True = 2;
+  False = 3;
+ };
+}
+
+SafeSub {
+ s.N1 s.N2, <Compare s.N1 s.N2> : 
+ {'-' = 0;
+  s.Any = <Sub s.N1 s.N2>;
+ };
 }
 
 ExSize {
@@ -525,7 +549,7 @@ ChooseContent {
   = <PutByLines Raw e.Preamble>
     <Putout 2 '\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
     <Putout 2 e.Head>
-    <PutByLines Raw e.Content><Putout 2 e.Bottom><Putout 2'}\\end{center}\n\\vfill'>;
+    <PutByLines Raw e.Content><Putout 2 e.Bottom><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
  s.DefHeight s.Flag Formula (e.Preamble)e.R1(s.Flag e.Content)e.R2
  , e.Content :
  { t.1 t.2 e.Rest
@@ -537,5 +561,5 @@ ChooseContent {
  s.DefHeight s.Flag Diagram (e.Preamble)e.Content
   = <PutByLines Raw e.Preamble>
     <Putout 2 '\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
-    <PutByLines Raw e.Content><Putout 2'}\\end{center}\n\\vfill'>;
+    <PutByLines Raw e.Content><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
 }
