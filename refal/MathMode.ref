@@ -16,15 +16,55 @@ AdjustSpaceBeforeStar {
 MathMode {
  e.x'|'e.y = <MathMode e.x>'\\alter '<MathMode e.y>;
  e.x'*'e.y = <MathMode e.x>'{}'<AdjustSpaceBeforeStar e.x>'\\star '<MathMode e.y>;
- e.x e.Num e.Number s.Last e.y, <InSet (<AnnoteSym><LinearizeSym>)(e.Num)>
-                                <InSet (<IndicesAlphabet>) e.Num e.Number s.Last>
-                                <FirstSym (<IndicesAlphabet>) e.y> : True True False
-        = <Epsilon e.x>'_{'<AnnoteLinearize e.Num e.Number s.Last>'}'
-                     <MathMode e.y>;
- e.x s.Num e.Number e.y, <LastSym (<Letters>)e.x><InSet (<Numbers>)s.Num e.Number><FirstSym (<Numbers>) e.y> : True True False
-        = <Epsilon e.x>'_{'<HorizHack s.Num e.Number>'}'
-                     <MathMode e.y>;   
- e.x = <Epsilon e.x>;
+ e.x = <IndexModes Outer ()() e.x>;
+}
+
+AnnoteLinearizeIfNeeded {
+ e.Ind e.y
+ , <InSet (<AnnoteSym><LinearizeSym>)(e.Ind)> : True = <AnnoteLinearize e.Ind e.y>;
+ e.Z = <HorizHack e.Z>;
+}
+
+IndexModes {
+ s.AnyMode (e.Before)(e.Index) e.Ind e.y
+ , <InSet (<AnnoteSym><LinearizeSym>)(e.Ind)> : True
+ , <IndexCont e.y> : 
+  {True
+   = <IndexModes Index (e.Before)(e.Index e.Ind) e.y>;
+   False
+  ,  s.AnyMode :
+  {Index
+    = <Epsilon e.Before>'_{'<AnnoteLinearizeIfNeeded e.Index>'}'<IndexModes Outer (e.Ind)() e.y>;
+   Outer
+    = <IndexModes Outer (e.Before e.Ind)() e.y>;
+  }; };
+ s.AnyMode (e.Before)(e.Index) s.Sym e.y
+ , <InSet (<Numbers>) s.Sym > : 
+ { True
+  , s.AnyMode :
+ {Index = <IndexModes Index (e.Before)(e.Index s.Sym) e.y>;
+  Outer,
+   <LastSym (<Letters>)e.Before> :
+  {True = <IndexModes Index (e.Before)(e.Index s.Sym) e.y>;
+   False = <IndexModes Outer (e.Before s.Sym)() e.y>
+ };};
+   False
+  , s.AnyMode :
+  {Index = <Epsilon e.Before>'_{'<AnnoteLinearizeIfNeeded e.Index>'}'<IndexModes Outer (s.Sym)() e.y>;
+   Outer = <IndexModes Outer (e.Before s.Sym)() e.y>;};
+ };
+ Outer (e.Before)() s.Any e.y
+   = <IndexModes Outer (e.Before s.Any)() e.y>;
+ Outer (e.Before)() = <Epsilon e.Before>;
+ Index (e.Before)(e.Index) = <Epsilon e.Before>'_{'<AnnoteLinearizeIfNeeded e.Index>'}';
+}
+
+IndexCont {
+ e.Ind e.y
+ , <InSet (<AnnoteSym><LinearizeSym>) (e.Ind)> : True
+  = <FirstSym (<Numbers>) e.y>;
+ s.Sym e.y = <InSet (<Numbers>) s.Sym>;
+ e.Z = False;
 }
 
 Epsilon {

@@ -331,11 +331,12 @@ FormFormula {
 
 AllSeparators {
  = (','(NotBefore <Numbers>))
-   (')'(NotBefore ')*'))
+   (')'(NotBefore ')*,'))
    ('|'(NotBefore ))
    (' '(NotBefore ))
+   ('='(NotBefore '!<>'))
    ('}'(NotBefore ))
-   ('*'(NotBefore '*)'));
+   ('*'(NotBefore '*),'));
 }
 
 FindSeparator {
