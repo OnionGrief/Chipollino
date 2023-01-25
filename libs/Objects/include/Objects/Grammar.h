@@ -94,7 +94,8 @@ class Grammar {
 	void fa_to_prefix_grammar(const FiniteAutomaton&,
 							  iLogTemplate* log = nullptr);
 	// создание пр грамматики по НКА с помощью ТМ
-	void fa_to_prefix_grammar_TM(const FiniteAutomaton&);
+	void fa_to_prefix_grammar_TM(const FiniteAutomaton&,
+								 iLogTemplate* log = nullptr);
 	// создает автомат по пр грамматике
 	FiniteAutomaton prefix_grammar_to_automaton(
 		iLogTemplate* log = nullptr) const;

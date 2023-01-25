@@ -375,7 +375,7 @@ optional<GeneralObject> Interpreter::apply_function(
 	}
 	if (function.name == "PrefixGrammar") {
 		Grammar g;
-		g.fa_to_prefix_grammar(get_automaton(arguments[0]), &log_template);
+		g.fa_to_prefix_grammar_TM(get_automaton(arguments[0]), &log_template);
 		return ObjectPrefixGrammar(g);
 	}
 	if (function.name == "PGtoNFA") {
