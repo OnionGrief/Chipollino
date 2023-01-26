@@ -163,7 +163,7 @@ DigBag {
 }
 
 GenTablePreamble {
- = '$\\begin{array}{r!{\\color{black!80}\\vline width .6pt}l}\\rowcolor{HeaderColor}\\mathrm{State} & \\mathrm{Label}\\\\\\hline';
+ = '$\\begin{array}{r!{\\color{black!80}\\vline width .6pt}l}\\rowcolor{HeaderColor}\n Имя & Подробная метка состояния\\\\\\hline';
 }
 
 GenTableBottom {

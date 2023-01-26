@@ -1633,8 +1633,12 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 				"(!) автоматы изначально принадлежат одному языку"); // TODO:
 																	 // logs
 		// Logger::log("(!) автоматы изначально принадлежат одному языку");
-	} else
+	} else {
+			if ((!fa1.language->min_dfa_cached() || !fa2.language->min_dfa_cached()) && log) {
+				log->set_parameter("cachedMINDFA", "Минимальные автоматы сохранены в кэше");
+			}
 		result = equal(fa1.minimize(), fa2.minimize());
+               }
 	/*if (result)
 		Logger::log("Результат Equiv", "true");
 	else

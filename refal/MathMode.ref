@@ -56,6 +56,7 @@ AdjustSpaceBeforeStar {
 }
 
 MathMode {
+ e.x'->'e.y = <MathMode e.x>'\\rar '<MathMode e.y>;
  e.x'|'e.y = <MathMode e.x>'\\alter '<MathMode e.y>;
  e.x'*'e.y = <MathMode e.x>'{}'<AdjustSpaceBeforeStar e.x>'\\star '<MathMode e.y>;
  e.x = <IndexModes Outer ()() e.x>;
