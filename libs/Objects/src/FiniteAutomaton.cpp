@@ -2122,7 +2122,7 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 
 bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 	if (!annoted) {
-		return annote().semdet_entry(true, log);
+		return annote().remove_trap_states().semdet_entry(true, log);
 	}
 	// Logger::log(
 	//"Получение языка из производной регулярки автомата по префиксу");
