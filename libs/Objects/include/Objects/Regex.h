@@ -99,6 +99,9 @@ class Regex : BaseObject {
 	void pre_order_travers() const;
 	void clear();
 
+	// Получение всех символов из строки
+	bool get_symbols_from_string(Regex* reg, vector<Regex>& res);
+
   public:
 	Regex();
 	Regex(const string&);

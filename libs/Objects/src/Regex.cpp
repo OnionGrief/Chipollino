@@ -1435,21 +1435,37 @@ bool Regex::partial_derevative_with_respect_to_sym(
 	}
 }
 
+bool Regex::get_symbols_from_string(Regex* reg, vector<Regex>& res) {
+	if (reg->type == Type::symb) {
+		res.push_back(*reg);
+		return true;
+	}
+	if (reg->type == Regex::conc) {
+		vector<Regex> resl, resr;
+		get_symbols_from_string(reg->term_l, resl);
+		get_symbols_from_string(reg->term_r, resr);
+		for (int i = 0; i < resl.size(); i++) {
+			res.push_back(resl[i]);
+		}
+		for (int i = 0; i < resr.size(); i++) {
+			res.push_back(resr[i]);
+		}
+		return true;
+	}
+	return false;
+}
+
 bool Regex::derevative_with_respect_to_str(std::string str, const Regex* reg_e,
 										   Regex& result) const {
 	bool success = true;
 	Regex cur = *reg_e;
 	Regex next = *reg_e;
-	// cout << "start getting derevative for prefix " << str << " in "
-	//	 << reg_e->to_txt() << "\n";
-	for (int i = 0; i < str.size(); i++) {
-		Regex sym;
-		sym.type = Type::symb;
-		sym.value.symbol = str[i];
-		next.clear();
-		success &= derevative_with_respect_to_sym(&sym, &cur, next);
-		// cout << "derevative for prefix " << sym->to_txt() << " in "
-		//	 << cur.to_txt() << " is " << next.to_txt() << "\n";
+	Regex symbols;
+	symbols.from_string(str);
+	vector<Regex> syms;
+	symbols.get_symbols_from_string(&symbols, syms);
+	for (int i = 0; i < syms.size(); i++) {
+		success &= derevative_with_respect_to_sym(&syms[i], &cur, next);
 		if (!success) {
 			return false;
 		}
