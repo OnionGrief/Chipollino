@@ -315,7 +315,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim) const {
 
 FiniteAutomaton FiniteAutomaton::remove_eps() const {
 	Logger::init_step("RemEps");
-	FiniteAutomaton new_nfa(0, {}, language);
+	FiniteAutomaton new_nfa(initial_state, states, language);
 
 	vector<State> new_states;
 	map<set<int>, int> visited_states;
@@ -351,31 +351,33 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 			set<int> q1;
 			set<int> x1;
 			for (auto k : x) {
+				x1.clear();
 				q1 = closure(k, true);
 				for (int m : q1) {
 					x1.insert(m);
 				}
-			}
-			if (!x1.empty()) {
-				if (visited_states.find(x1) == visited_states.end()) {
-					string new_state_identifier;
-					for (auto elem : x1) {
-						new_state_identifier +=
-							(new_state_identifier.empty() ||
-									 states[elem].identifier.empty()
-								 ? ""
-								 : ", ") +
-							states[elem].identifier;
+				if (!x1.empty()) {
+					if (visited_states.find(x1) == visited_states.end()) {
+						string new_state_identifier;
+						for (auto elem : x1) {
+							new_state_identifier +=
+								(new_state_identifier.empty() ||
+										 states[elem].identifier.empty()
+									 ? ""
+									 : ", ") +
+								states[elem].identifier;
+						}
+						State new_state = {states_counter, x1,
+										   new_state_identifier, false,
+										   map<alphabet_symbol, set<int>>()};
+						new_states.push_back(new_state);
+						visited_states[x1] = states_counter;
+						s.push(x1);
+						states_counter++;
 					}
-					State new_state = {states_counter, x1, new_state_identifier,
-									   false, map<alphabet_symbol, set<int>>()};
-					new_states.push_back(new_state);
-					visited_states[x1] = states_counter;
-					s.push(x1);
-					states_counter++;
+					new_states[visited_states[q]].transitions[symb].insert(
+						visited_states[x1]);
 				}
-				new_states[visited_states[q]].transitions[symb].insert(
-					visited_states[x1]);
 			}
 		}
 	}
@@ -384,6 +386,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 			if (states[elem].is_terminal) state.is_terminal = true;
 		}
 	}
+	new_nfa.initial_state = 0;
 	new_nfa.states = new_states;
 	new_nfa = new_nfa.remove_unreachable_states();
 	Logger::log("Автомат до удаления eps-переходов",
