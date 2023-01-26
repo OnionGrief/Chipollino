@@ -21,6 +21,13 @@ $ENTRY Go {
        <Close 1><Close 2>;
 }
 
+Balanced {
+ (e.B1(t.Open t.Close)e.B2) e.y1 t.Open e.y2 t.Close e.y3
+   = <Balanced (e.B1(t.Open t.Close)e.B2) e.y1 e.y2 e.y3>;
+ (e.B1(e.Brs1 t.AnyBr e.Brs2) e.B2) e.y1 t.AnyBr e.y2 = False;
+ (e.BrPairs) e.y = True;
+}
+
 MakeFrames {
   s.DW s.MPW Normal '%begin detailed'e.Endl
    = <MakeFrames s.DW s.MPW Theory <Get 1>>;
@@ -29,6 +36,7 @@ MakeFrames {
   s.DW s.MPW Theory e.Smth
    = <Putout 2 e.Smth> <MakeFrames s.DW s.MPW Theory <Get 1>>;
   s.DW s.MPW Normal '\\begin{frame}{'e.Name'}'e.Endl
+  , <Balanced (('{}'))e.Name> : True
    = <MakeFrames s.DW s.MPW Frame (e.Name)() <Trim <Get 1>>>;
   s.DW s.MPW Frame (e.Name)(e.Content) e.1'\\end{frame}'
   , <Br 'First=+'> : e.Trash
