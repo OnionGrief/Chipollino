@@ -32,6 +32,7 @@ class Interpreter {
 		auto_remove_trap_states,
 		weak_type_comparison,
 		log_theory,
+		report,
 	};
 	bool set_flag(Flag key, bool value);
 
@@ -180,6 +181,8 @@ class Interpreter {
 		{Flag::weak_type_comparison, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
 		{Flag::log_theory, false},
+		// временный флаг для логирования в отчет, Андрей исправь
+		{Flag::report, true},
 	};
 
 	// Общий вид опрерации

@@ -1002,9 +1002,18 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		str_first += string((*first)[i].symbol) + " ";
 	}
 
+	set<string> end_set;
+
 	for (size_t i = 0; i < end->size(); i++) {
-		str_end += str_end + string((*end)[i].symbol) + " ";
+		// str_end = str_end + string((*end)[i].symbol) +
+		//		  to_string((*end)[i].number + 1) + " ";
+		end_set.insert(string((*end)[i].symbol));
 	}
+
+	for (auto& elem : end_set) {
+		str_end = str_end + elem + " ";
+	}
+
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
 			str_pair = str_pair + "(" + string(list[it1.first]->value.symbol) + "," +
