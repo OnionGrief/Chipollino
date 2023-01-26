@@ -320,7 +320,7 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
 	// minimized_dfa);
 	stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
-		ss << "\\{" << state.identifier << "\\} ";
+		ss << "\\{" << state.identifier << "\\}\;";
 	}
 	// Logger::log("Классы эквивалентности", ss.str());
 	// Logger::finish_step();
@@ -588,6 +588,8 @@ FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
 	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
+		log->set_parameter("cach",
+							   "(!) минимальный автомат получен из кэша");
 		log->set_parameter("result", new_dfa);
 	}
 	return new_dfa;
@@ -923,7 +925,7 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 }
 
 bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
-	if (log) log->set_parameter("oldregex", *this);
+	if (log) log->set_parameter("oldautomaton", *this);
 	// Logger::init_step("OneUnambiguity");
 	if (language->is_one_unambiguous_flag_cached()) {
 		if (log)
@@ -1303,8 +1305,8 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	for (auto& elem : class_to_nonterminals) {
 		ss << "\\{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
-			ss << elem.second[i]->name << ",";
-		ss << elem.second[elem.second.size() - 1]->name << "\\}";
+			ss << elem.second[i]->name << ",\\ ";
+		ss << elem.second[elem.second.size() - 1]->name << "\\}\;";
 	}
 	// Logger::log("Классы эквивалентности", ss.str());
 	// Logger::finish_step();
@@ -1634,11 +1636,14 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 																	 // logs
 		// Logger::log("(!) автоматы изначально принадлежат одному языку");
 	} else {
-			if ((!fa1.language->min_dfa_cached() || !fa2.language->min_dfa_cached()) && log) {
-				log->set_parameter("cachedMINDFA", "Минимальные автоматы сохранены в кэше");
-			}
+		if ((!fa1.language->min_dfa_cached() ||
+			 !fa2.language->min_dfa_cached()) &&
+			log) {
+			log->set_parameter("cachedMINDFA",
+							   "Минимальные автоматы сохранены в кэше");
+		}
 		result = equal(fa1.minimize(), fa2.minimize());
-               }
+	}
 	/*if (result)
 		Logger::log("Результат Equiv", "true");
 	else
@@ -2107,6 +2112,8 @@ bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	}
 	bool result = states.size() == minimize().states.size();
 	if (log) {
+		log->set_parameter("cach",
+							   "(!) минимальный автомат получен из кэша");
 		log->set_parameter("result", result ? "True" : "False");
 	}
 	// Logger::log(result ? "True" : "False");
@@ -2645,13 +2652,18 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		for (int j = 0; j < data[i].size(); j++) {
 			// TODO: передача набора regex
 
-			full_logs +=
-				"\\ " + data[i][j]
-						  .regex_from_state
-						  ->to_txt(); // тут по идее должно быть без to_txt но у
-									  // нас не принимается Regex*
-			// Logger::log("regex in this state",
-			// data[i][j].regex_from_state->to_txt());
+			full_logs += "\\ ";
+			if (data[i][j].regex_from_state->to_txt() == "") {
+				full_logs += "eps";
+			} else {
+				full_logs +=
+					data[i][j]
+						.regex_from_state->to_txt(); // тут по идее должно быть
+													 // без to_txt но у нас не
+													 // принимается Regex*
+				// Logger::log("regex in this state",
+				// data[i][j].regex_from_state->to_txt());
+			}
 		}
 	}
 	if (log) log->set_parameter("step-by-step construction", full_logs);

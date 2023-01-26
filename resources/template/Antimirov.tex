@@ -1,3 +1,26 @@
+%begin detailed
+% descriptive documentation : section
+\section{Основные понятия}
+\begin{frame}{Частичные производные}
+    \vspace{-5pt}
+    $\alpha_{c}(R)$ — это регулярное выражение $R'$ такое, что если $w \in \Lang(R')$, то $cw \in \Lang(R)$. Обратное не обязательно выполняется. Вычислить частичные производные можно по следующему рекурсивному алгоритму.
+    \[\alpha_{c}(c) = \{\empt\}\] % the Derivative placeholder 1 % the Derivative placeholder displaystyle
+    \[\alpha_{c}(c') = \varnothing\] % the Derivative placeholder 2 % the Derivative placeholder displaystyle
+    \[\alpha_{c}(\empt) = \varnothing\] % the Derivative placeholder 3 % the Derivative placeholder displaystyle
+    \begin{equation*}
+        \alpha_{c}(r_{1} r_{2}) =
+        \begin{cases}
+            \{r r_{2} | r \in \alpha_{c}(r_{1})\} \cup \alpha_{c}(r_{2}) & \text {если} \empt \in \Lang(r_{1}) \\ % the Derivative placeholder 4 % the Derivative placeholder displaystyle
+            \{r r_{2} | r \in \alpha_{c}(r_{1})\}                        & \text {иначе}                       % the Derivative placeholder 5 % the Derivative placeholder displaystyle
+        \end{cases}
+    \end{equation*}
+    \[\alpha_{c}(\bot) = \varnothing\] % the Derivative placeholder 6 % the Derivative placeholder displaystyle
+    \[\alpha_{c}(r_{1}|r_{2}) = \alpha_{c}(r_{1}) \cup \alpha_{c}(r_{2})\] % the Derivative placeholder 7 % the Derivative placeholder displaystyle
+    \[\alpha_{c}(r\star) = \{r'r\star | r' \in \alpha_{c}(r)\}\] % the Derivative placeholder 8 % the Derivative placeholder displaystyle
+    Автомат Антимирова аналогичен автомату Брзозовски, но состояния представляют собой элементы $\alpha_{w}$, а не $\delta_{w}$. Упрощать по ACI состояния не требуется — их множество и так конечно.
+\end{frame} % descriptive documentation
+%end detailed
+
 \section{Antimirov}
 \begin{frame}{Построение $\Antimirov\TypeIs\RegexTYPE\to\NFATYPE$}
 	Регулярное выражение:
@@ -17,4 +40,17 @@
 
 \end{frame}
 
-
+%begin detailed
+% overall documentation : section 
+\section{Обсуждение}
+\begin{frame}{Дополнительные сведения}
+    \begin{block}{\bf Связь с автоматом Томпсона}
+        Автомат Антимирова может быть получен из автомата Томпсона путем последовательного применения к нему следующих операций:
+        \[\RemEps(\DeAnnote(\Minimize(\RemEps(\Annote(\Thompson(r))))))\] % the formula Antimirov placeholder displaystyle
+    \end{block}
+    \begin{block}{\bf Теорема}
+        Пусть $r$ -- взвешенное регулярное выражение над $K$. Если $K$ является $null-k$-замкнутым для $r$, то $\Antimirov(r)$ может быть вычислен за $O(m log m + mn)$ путем применения удаления $\empt$-переходов и минимизации.
+    \end{block}
+    Мы будем говорить, что $K$ является $null-k$-замкнутым для $\alpha$, если $\exists k \geq 0$, такое, что для каждого подтерма $\beta^*$ $null(\beta)^* = \oplus_{i=0}^{k} null(\beta)^i$.
+\end{frame}
+%end detailed
