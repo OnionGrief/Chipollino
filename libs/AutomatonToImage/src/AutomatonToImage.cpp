@@ -29,7 +29,10 @@ string AutomatonToImage::to_image(string automat) {
 	system("cd refal && refgo Postprocess+MathMode input.tex > error_refal.txt "
 		   "2>&1");
 
-	system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+	// для Linux:
+	// system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+	system("cd refal && IF EXIST Meta_input.data DEL Meta_input.data && IF "
+		   "EXIST Aux_input.data DEL Aux_input.data");
 
 	// автомат
 	ifstream infile_for_R("./refal/R_input.tex");
@@ -43,6 +46,7 @@ string AutomatonToImage::to_image(string automat) {
 	}
 	infile_for_R.close();
 
+	// TODO: разные команды для Linux и Windows
 	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm "
 		   "R_input.tex");
 
