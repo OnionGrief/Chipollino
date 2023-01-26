@@ -96,7 +96,7 @@ Interpreter::Interpreter() {
 		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
-	//generate_brief_templates();
+	// generate_brief_templates();
 }
 
 bool Interpreter::run_line(const string& line) {
@@ -196,7 +196,7 @@ optional<GeneralObject> Interpreter::apply_function_sequence(
 		} else {
 			return nullopt;
 		}
-		tex_logger.add_log(log_template);
+		if (flags[Flag::report]) tex_logger.add_log(log_template);
 	}
 
 	return arguments[0];
@@ -866,7 +866,14 @@ bool Interpreter::run_verification(const Verification& verification) {
 	RegexGenerator RG; // TODO: менять параметры
 	Expression expr = verification.predicate;
 
+	LogTemplate log_template;
+	log_template.set_parameter("name", "Verify");
+	log_template.load_tex_template("Verify");
+	log_template.set_theory_flag(flags[Flag::log_theory]);
+	log_template.set_parameter("expr", expr.to_txt());
+
 	set_log_mode(LogMode::errors);
+	flags[Flag::report] = false;
 
 	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
@@ -888,18 +895,27 @@ bool Interpreter::run_verification(const Verification& verification) {
 		}
 	}
 
+	flags[Flag::report] = true;
 	set_log_mode(LogMode::all);
 
 	current_random_regex = nullopt;
 
-	logger.log("result: " + to_string(100 * results / tests_size) + "%");
+	string res = to_string(100 * results / tests_size);
+	logger.log("result: " + res + "%");
+	log_template.set_parameter("result", res + +"\\%");
 
 	if (results < tests_size) {
 		logger.log("");
 		logger.log("Tests with negative result:");
-		for (string str : regex_list)
+		string neg_tests = "";
+		for (string str : regex_list) {
 			logger.log(str);
+			neg_tests += str + "\\\\";
+		}
+		log_template.set_parameter("neg tests", neg_tests);
 	}
+
+	tex_logger.add_log(log_template);
 
 	return success;
 }
