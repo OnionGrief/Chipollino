@@ -96,7 +96,7 @@ Interpreter::Interpreter() {
 		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
-	//generate_brief_templates();
+	// generate_brief_templates();
 }
 
 bool Interpreter::run_line(const string& line) {
@@ -196,7 +196,7 @@ optional<GeneralObject> Interpreter::apply_function_sequence(
 		} else {
 			return nullopt;
 		}
-		tex_logger.add_log(log_template);
+		if (flags[Flag::report]) tex_logger.add_log(log_template);
 	}
 
 	return arguments[0];
@@ -228,7 +228,6 @@ optional<GeneralObject> Interpreter::apply_function(
 	// сигнатуры (если их несколько)
 	string func_id = get_func_id(function);
 
-	log_template.set_parameter("name", func_id);
 	log_template.load_tex_template(func_id);
 	log_template.set_theory_flag(flags[Flag::log_theory]);
 
@@ -375,7 +374,7 @@ optional<GeneralObject> Interpreter::apply_function(
 	}
 	if (function.name == "PrefixGrammar") {
 		Grammar g;
-		g.fa_to_prefix_grammar(get_automaton(arguments[0]), &log_template);
+		g.fa_to_prefix_grammar_TM(get_automaton(arguments[0]), &log_template);
 		return ObjectPrefixGrammar(g);
 	}
 	if (function.name == "PGtoNFA") {
@@ -830,16 +829,23 @@ bool Interpreter::run_test(const Test& test) {
 	auto test_set = eval_expression(test.test_set);
 	bool success = true;
 
+	LogTemplate log_template;
+
 	if (language.has_value() && test_set.has_value()) {
 		auto reg = get<ObjectRegex>(*test_set).value;
 
 		if (holds_alternative<ObjectRegex>(*language)) {
+			log_template.load_tex_template("Test1");
 			Tester::test(get<ObjectRegex>(*language).value, reg,
-						 test.iterations);
+						 test.iterations, &log_template);
 		} else if (holds_alternative<ObjectNFA>(*language)) {
-			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations);
+			log_template.load_tex_template("Test2");
+			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations,
+						 &log_template);
 		} else if (holds_alternative<ObjectDFA>(*language)) {
-			Tester::test(get<ObjectDFA>(*language).value, reg, test.iterations);
+			log_template.load_tex_template("Test2");
+			Tester::test(get<ObjectDFA>(*language).value, reg, test.iterations,
+						 &log_template);
 		} else {
 			logger.throw_error(
 				"while running test: invalid language expression");
@@ -849,6 +855,8 @@ bool Interpreter::run_test(const Test& test) {
 		logger.throw_error("while running test: invalid arguments");
 		success = false;
 	}
+
+	tex_logger.add_log(log_template);
 
 	// Logger::deactivate();
 	return success;
@@ -861,12 +869,18 @@ bool Interpreter::run_verification(const Verification& verification) {
 	bool success = true;
 	int results = 0;
 	int tests_size = verification.size;
-	int tests_false_num = min(10, (int)round(verification.size * 0.1));
+	int tests_false_num = min(10, (int)ceil(verification.size * 0.1));
 	vector<string> regex_list;
 	RegexGenerator RG; // TODO: менять параметры
 	Expression expr = verification.predicate;
 
+	LogTemplate log_template;
+	log_template.load_tex_template("Verify");
+	log_template.set_theory_flag(flags[Flag::log_theory]);
+	log_template.set_parameter("expr", expr.to_txt());
+
 	set_log_mode(LogMode::errors);
+	flags[Flag::report] = false;
 
 	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
@@ -888,18 +902,27 @@ bool Interpreter::run_verification(const Verification& verification) {
 		}
 	}
 
+	flags[Flag::report] = true;
 	set_log_mode(LogMode::all);
 
 	current_random_regex = nullopt;
 
-	logger.log("result: " + to_string(100 * results / tests_size) + "%");
+	string res = to_string(100 * results / tests_size);
+	logger.log("result: " + res + "%");
+	log_template.set_parameter("result", res + +"\\%");
 
 	if (results < tests_size) {
 		logger.log("");
 		logger.log("Tests with negative result:");
-		for (string str : regex_list)
+		string neg_tests = "";
+		for (string str : regex_list) {
 			logger.log(str);
+			neg_tests += str + "\\\\";
+		}
+		log_template.set_parameter("neg tests", neg_tests);
 	}
+
+	tex_logger.add_log(log_template);
 
 	return success;
 }
@@ -910,8 +933,7 @@ bool Interpreter::run_set_flag(const SetFlag& flag) {
 	if (flags_names.count(flag.name)) {
 		Flag flag_name = flags_names[flag.name];
 		flags[flag_name] = flag.value;
-	}
-	else {
+	} else {
 		logger.throw_error("while setting flag: wrong name \"" + flag.name +
 						   "\"");
 		return false;

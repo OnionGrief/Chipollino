@@ -122,7 +122,9 @@ string LogTemplate::render() const {
 
 				if (holds_alternative<Regex>(p.second.value)) {
 					s.insert(insert_place,
-							 get<Regex>(p.second.value).to_txt()); /* Math mode is done in global renderer */
+							 get<Regex>(p.second.value)
+								 .to_txt()); /* Math mode is done in global
+												renderer */
 				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
 					hash<string> hasher;
 					string automaton =
@@ -235,21 +237,20 @@ string LogTemplate::math_mode(string str) {
 string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> columns,
 							  vector<string> data*/) {
 	string table = "";
-	string format = "|l|";
+	string format = "l|";
 	string cols = "  & ";
 	string row = "";
 	for (int i = 0; i < t.columns.size(); i++) {
-		format += "l|";
+		format += "l";
 		if (i != t.columns.size() - 1) {
 			cols += t.columns[i] + " & ";
 		} else {
 			cols += t.columns[i] + "\\\\";
 		}
 	}
-	table += "\\begin{tabular}{" + format + "}\n";
-	table += "\\hline\n";
+	table += "$\\begin{array}{" + format + "}\n";
 	table += cols + "\n";
-	table += "\\hline\n";
+	// table += "\\hline\n";
 	int k = 0;
 	int j;
 	for (int i = 0; i < t.rows.size(); i++) {
@@ -263,9 +264,8 @@ string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> colum
 		}
 		k += j;
 		table += row + "\n";
-		table += "\\hline\n";
 	}
-	table += "\\end{tabular}\n";
+	table += "\\end{array}$\n";
 	return table;
 }
 

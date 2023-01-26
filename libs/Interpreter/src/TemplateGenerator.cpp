@@ -33,7 +33,7 @@ void Interpreter::generate_brief_templates() {
 					outfile << "\tАвтомат";
 
 					if (equal_types) {
-						outfile << " до преоброзования";
+						outfile << " до преобразования";
 					}
 
 					outfile << ":\n\n\t%template_oldautomaton" << endl << endl;
@@ -50,7 +50,7 @@ void Interpreter::generate_brief_templates() {
 					outfile << "\tРегулярное выражение";
 
 					if (equal_types) {
-						outfile << " до преоброзования";
+						outfile << " до преобразования";
 					}
 
 					outfile << ":\n\t%template_oldregex" << endl << endl;
@@ -115,7 +115,7 @@ void Interpreter::generate_brief_templates() {
 
 					//Для Array
 					if (function.input[index] == ObjectType::Array) {
-						outfile << "\tПравила переписования:" << endl << endl;
+						outfile << "\tПравила переписывания:" << endl << endl;
 						outfile << "\t%template_oldarray" << endl << endl;
 					}
 
@@ -150,7 +150,7 @@ void Interpreter::generate_brief_templates() {
 				outfile << "\tАвтомат";
 
 				if (equal_types) {
-					outfile << " после преоброзования";
+					outfile << " после преобразования";
 				}
 
 				outfile << ":\n\n\t%template_result" << endl << endl;
@@ -178,7 +178,7 @@ void Interpreter::generate_brief_templates() {
 				outfile << "\tРегулярное выражение";
 
 				if (equal_types) {
-					outfile << " после преоброзования";
+					outfile << " после преобразования";
 				}
 
 				outfile << ":\n\t%template_result" << endl << endl;

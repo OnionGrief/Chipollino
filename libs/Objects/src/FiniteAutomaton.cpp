@@ -748,8 +748,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 			count--;
 		}
 	}
-	if (new_dfa.is_empty())
-		new_dfa = FiniteAutomaton(initial_state, states, language);
+	if (new_dfa.is_empty()) new_dfa = *this;
 	// Logger::log("Автомат до удаления ловушек", "Автомат после удаления
 	// ловушек", *this, new_dfa);
 	// Logger::finish_step();
@@ -809,6 +808,7 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 			count--;
 		}
 	}
+	if (new_dfa.is_empty()) new_dfa = *this;
 	return new_dfa;
 }
 
@@ -2628,7 +2628,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			// TODO: передача набора regex
 
 			full_logs +=
-				" " + data[i][j]
+				"\\ " + data[i][j]
 						  .regex_from_state
 						  ->to_txt(); // тут по идее должно быть без to_txt но у
 									  // нас не принимается Regex*

@@ -404,6 +404,9 @@ string Grammar::pg_to_txt() const {
 							prefix_grammar[w_back].is_started) {
 							eq = "eps";
 						}
+						if (wt == "eps") {
+							continue;
+						}
 						if (/*m_r.find(wt) == m_r.end() &&*/
 							!(wt == eq && a == "eps")) {
 							string test = wt;
@@ -418,9 +421,9 @@ string Grammar::pg_to_txt() const {
 		}
 	}
 	for (const auto& elem : out) {
-		ss << elem << endl << endl;
+		ss << elem << "\\\\";
 	}
-	ss << "------------ base words ------------" << endl << endl;
+	ss << "------------ base words ------------" << "\\\\";
 
 	for (int i = 0; i < prefix_grammar.size(); i++) {
 		if (prefix_grammar[i].is_terminal) {
@@ -428,12 +431,12 @@ string Grammar::pg_to_txt() const {
 			for (const auto& w : g.equivalence_class) {
 				if (w == "") {
 					ss << "eps"
-					   << " ";
+					   << "\;";
 				} else {
-					ss << w << " ";
+					ss << w << "\;";
 				}
 			}
-			ss << endl << endl;
+			ss << "\\\\";
 		}
 	}
 	return ss.str();
@@ -525,7 +528,13 @@ const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 	return 0;
 }
 
-void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
+void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa,
+									  iLogTemplate* log) {
+	/*Logger::init_step("PrefixGrammarTM");
+	Logger::log("Автомат", fa);*/
+	if (log) {
+		log->set_parameter("oldautomaton", fa);
+	}
 	const vector<State>& states = fa.states;
 	TransformationMonoid a(fa);
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
@@ -561,6 +570,9 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 			grammar_items[states[i].index]->is_started = true;
 		}
 	}
+	if (st0.is_terminal) {
+		grammar_items[st0.index]->equivalence_class.insert("");
+	}
 	//---------------------------
 	set<string> equal_classes;
 	int count = 0;
@@ -572,7 +584,17 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	}
 	if (count != equal_classes.size()) {
 		// в логер то что неопределенность и детерменизируем
+		/*Logger::log("Неопределенность");
+		Logger::log("Детерминизируем");*/
 		fa_to_prefix_grammar_TM(fa.determinize());
+		/*Logger::log("Построенная по нему префиксная грамматика:");
+		Logger::log(pg_to_txt());
+		Logger::finish_step();*/
+		if (log) {
+			log->set_parameter("text1", "Неопределенность");
+			log->set_parameter("text2", "Детерминизируем");
+			log->set_parameter("result", pg_to_txt());
+		}
 		return;
 	}
 	//----------------------------
@@ -607,9 +629,15 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	for (const auto& elem : st0.transitions) {
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
-				g->equivalence_class.erase("");
+				// g->equivalence_class.erase("");
 			}
 		}
+	}
+	// Logger::log("Построенная по нему префиксная грамматика:");
+	//  Logger::log(pg_to_txt());
+	//  Logger::finish_step();
+	if (log) {
+		log->set_parameter("result", pg_to_txt());
 	}
 	return;
 }

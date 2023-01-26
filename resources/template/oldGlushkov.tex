@@ -1,19 +1,6 @@
+%begin detailed
 \section{Основные понятия}
-\begin{frame}{Линеаризация}
-  \begin{block}{\bf Определение}
-    Если регулярное выражение $r\in\RegExp$ содержит $n$ вхождений букв алфавита $\Sigma$, тогда линеаризованное регулярное выражение $\Linearize(r)$ получается из $r$ приписыванием $i$-ой по счёту букве, входящей в $r$, индекса $i$.
-  \end{block} % descriptive documentation
-
-  \begin{exampleblock}{\bf Пример}
-    Рассмотрим регулярное выражение:
-    \[(\regexpstr{ba}\alter \regexpstr{b})\regexpstr{aa}(\regexpstr{a}\alter\regexpstr{ab})\star\] % the initial regexp placeholder displaystyle
-
-    Его линеаризованная версия:
-    \[(\regexpstr{b_{1}a_{2}}\alter \regexpstr{b_{3}})\regexpstr{a_{4}a_{5}}(\regexpstr{a_{6}}\alter\regexpstr{a_{7}b_{8}})\star\] % the linearised regexp placeholder displaystyle
-
-  \end{exampleblock}
-
-\end{frame}
+%include "Linearize.tex"
 
 \begin{frame}{Множества $\First$, $\Last$, $\Follow$}
   \vspace{-5pt}%хак, чтобы вся документация влезла на слайд --- благо здесь она фиксированной длины
@@ -61,7 +48,9 @@
   В описании данных множеств содержится исчерпывающая информация о языке $\Lang(r_{\rm Lin})$. % overall documentation
   }
 \end{frame}
+%end detailed
 \section{Автомат Глушкова}
+%begin detailed
 \begin{frame}{Конструкция автомата Глушкова}
   \begin{block}{\bf Алгоритм построения $\Glushkov(r)$}
     \begin{itemize}
@@ -75,7 +64,7 @@
     \end{itemize}
   \end{block} % descriptive documentation
 \end{frame}
-
+%end detailed
 \begin{frame}{Пример автомата Глушкова}
   Исходное регулярное выражение:
 
@@ -87,11 +76,13 @@
   Автомат Глушкова:
 
   %template_glushkov % the Glushkov diagram placeholder
-
+%begin detailed
   Подграфы, распознающие регулярные выражения, являющиеся подструктурами исходного, не имеют общих вершин. Это свойство автомата Глушкова используется в реализациях \texttt{match}-функций некоторых библиотек регулярных выражений. %overall documentation
+%end detailed
 \end{frame}
 
 % overall documentation : section 
+%begin detailed
 \section{Обсуждение}
 %В разделе "обсуждение" можно добавлять всё что угодно по вкусу: историческую справку, какие-то интересные примеры, способы применения, связь с другими понятиями теории автоматов и т.д. Можно сделать дополнительный метакомментарий: basic documentation, добавляющую ещё какие-то простые пояснения.
 \begin{frame}{Cвойства автомата Глушкова}
@@ -105,3 +96,4 @@
     Для $1$-однозначных регулярных выражений $r$ автомат $\Glushkov(r)$ является детерминированным. Эту его особенность активно используют в современных библиотеках регулярных выражений, например, в \textsc{RE2}. Выигрыш может получиться колоссальным: например, $\Thompson(\regexpstr(a\star)\star)$ является экспоненциально неоднозначным, а $\Glushkov(\regexpstr(a\star)\star)$ однозначен и детерминирован!
   \end{alertblock}% advanced documentation
 \end{frame}
+%end detailed
