@@ -2122,7 +2122,7 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 
 bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 	if (!annoted) {
-		return annote().semdet_entry(true);
+		return annote().semdet_entry(true, log);
 	}
 	// Logger::log(
 	//"Получение языка из производной регулярки автомата по префиксу");
@@ -2150,7 +2150,7 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 		// Logger::log("Regex", reg.to_txt());
 		auto derevative = reg.prefix_derevative(prefix.value());
 		if (!derevative.has_value()) continue;
-		state_languages[i] = derevative.value();
+		state_languages[i].from_string(derevative.value().to_txt());
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 		// Logger::log("Derevative", state_languages[i].to_txt());
 		/*if (log) {
@@ -2159,8 +2159,6 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 			log->set_parameter("regex", reg);
 			log->set_parameter("deverative", state_languages[i]);
 		}*/
-
-		state_languages[i].make_language();
 	}
 	auto make_string_transition = [=](int from, alphabet_symbol through,
 									  int to) {
@@ -2196,7 +2194,7 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 						}
 					}
 					verified_ambiguity |= reliability;
-					if (reliability) {
+					if (reliability && transition->second.size() > 1) {
 						ambiguous_transitions +=
 							"Reliable:" + 
 							make_string_transition(j, transition->first, *it) +
@@ -2207,13 +2205,22 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 					// Logger::log("Результат SemDet", "false");
 					// Logger::finish_step();
 					ambiguous_transitions += "Reliable: none\\\\";
-					log->set_parameter("semdet2", false);
+					if (log) {
+						log->set_parameter("semdet1", ambiguous_transitions);
+						log->set_parameter("semdet2", false);
+					}
 					return false;
 				}
 			}
 		}
 	}
-	log->set_parameter("semdet2", "true");
+	if (log) {
+		if (ambiguous_transitions == "") {
+			ambiguous_transitions = "None";
+		}
+		log->set_parameter("semdet1", ambiguous_transitions);
+		log->set_parameter("semdet2", "true");
+	}
 	return true;
 }
 
@@ -2222,7 +2229,7 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 	}
-	bool result = semdet_entry(log);
+	bool result = semdet_entry(false, log);
 	if (log) {
 		log->set_parameter("result", result);
 	}
