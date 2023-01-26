@@ -1987,6 +1987,7 @@ void find_maximum_identity_matrix(vector<int>& rows,
 int FiniteAutomaton::get_classes_number_GlaisterShallit(
 	iLogTemplate* log) const {
 	// Logger::init_step("GlaisterShallit");
+	if (log) log->set_parameter("oldautomaton", *this);
 	if (language->nfa_minimum_size_cached()) {
 		/*Logger::log(
 			"Количество диагональных классов по методу Глейстера-Шаллита",
