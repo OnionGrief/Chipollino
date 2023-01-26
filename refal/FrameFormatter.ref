@@ -173,8 +173,21 @@ s.DefaultWidth ((e.Line))
 
 TableMathMode {
  e.x'\\\\'e.y = <TableMathMode e.x>'\\\\'<TableMathMode e.y>;
- e.x'&'e.y = <TableMathMode e.x>'&'<TableMathMode e.y>;
- e.Z = <TrueMathMode e.Z>;
+ e.x'&'e.y = <DropTagsMM (<TableTags>) e.x>'&'<TableMathMode e.y>;
+ e.Z = <DropTagsMM (<TableTags>) e.Z>;
+}
+
+DropTagsMM {
+  (e.set (e.Element) e.set2) e.X e.Element e.Y
+  , <FirstSym (<Letters>) e.Y> : False
+  , e.set (e.Element) e.set2 : e.Whole
+    = <DropTagsMM (e.Whole) e.X>e.Element 
+      <DropTagsMM (e.Whole) e.Y>;
+  (e.Whole)e.Rest = <TrueMathMode e.Rest>;
+}
+
+TableTags {
+ = ('\\hline')('\\rowcolor{RowColor}'); /* There to place all elements to be screened by math mode */
 }
 
 SwitchOddity {

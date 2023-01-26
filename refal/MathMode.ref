@@ -30,7 +30,13 @@ IndexModes {
  , <InSet (<AnnoteSym><LinearizeSym>)(e.Ind)> : True
  , <IndexCont e.y> : 
   {True
-   = <IndexModes Index (e.Before)(e.Index e.Ind) e.y>;
+   , s.AnyMode :
+  {Index = <IndexModes Index (e.Before)(e.Index e.Ind) e.y>;
+   Outer
+   , <LastSym (<Letters>)e.Before> :
+   { True = <IndexModes Index (e.Before)(e.Ind) e.y>;
+     False = <IndexModes Outer (e.Before e.Ind)() e.y>;
+   };};
    False
   ,  s.AnyMode :
   {Index
