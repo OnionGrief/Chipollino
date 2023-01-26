@@ -10,7 +10,7 @@ Page parameters are taken from file pagedata
 
 *******************************/
 
-$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters, ASCIIStandard, NonASCII;
+$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters, ASCIIStandard, NonASCII, Trim;
 
 $ENTRY Go {
  , <Numb <Arg 1>> : s.TestNum
@@ -19,14 +19,6 @@ $ENTRY Go {
     =  <Open 'r' 1 '../resources/report.tex'><Open 'w' 2 '../resources/rendered_report.tex'>
        <MakeFrames <FrameData Width> <Div <Mul <FrameData Width> s.DefWidth> <FrameData Height>> Normal <Get 1>>
        <Close 1><Close 2>;
-}
-
-Trim {
- e.y'\t' = <Trim e.y>;
-'\t'e.y = <Trim e.y>;
- e.y' ' = <Trim e.y>;
-' 'e.y = <Trim e.y>;
- e.y = e.y;
 }
 
 MakeFrames {
@@ -187,7 +179,7 @@ DropTagsMM {
 }
 
 TableTags {
- = ('\\hline')('\\rowcolor{RowColor}'); /* There to place all elements to be screened by math mode */
+ = ('\\hline')('\\rowcolor{RowColor}')('\\rowcolor{HeaderColor}'); /* There to place all elements to be screened by math mode */
 }
 
 SwitchOddity {
@@ -235,11 +227,11 @@ SplitLongCells {
         <SplitLongCells <Max s.MaxHeight s.Height> s.DefaultWidth s.ExSize e.L2>;
   s.Any = <TableMathMode e.L1>'&'<SplitLongCells s.MaxHeight s.DefaultWidth s.ExSize e.L2>; 
  };
- s.MaxHeight s.DefaultWidth s.ExSize e.Last'\\\\'
+ s.MaxHeight s.DefaultWidth s.ExSize e.Last'\\\\'e.Smth
  , <Compare <Length e.Last> 20> :
  {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
-      = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n\\\\\n'<Max s.MaxHeight s.Height>;
-  s.Any = <TableMathMode e.Last>'\\\\'s.MaxHeight; 
+      = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n\\\\'e.Smth'\n'<Max s.MaxHeight s.Height>;
+  s.Any = <TableMathMode e.Last>'\\\\'e.Smth s.MaxHeight; 
  };
  s.MaxHeight s.DefaultWidth s.ExSize e.Last
  , <Compare <Length e.Last> 20> :
@@ -269,22 +261,6 @@ Table ((Preamble)(MiniPage Content)(Normal Content)) MiniPage Normal WidthMP Hei
 ParseFrame {
  s.DefaultWidth s.MPWidth Diag ((e.Preamble)(e.PageData)e.Previous)('\\end{tikzpicture}'e.Rubbish) e.Rest
         = (Diagram ((e.Preamble) e.Previous ('\\end{tikzpicture}')) e.PageData) <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>; 
- s.DefaultWidth s.MPWidth Normal (e.Previous)(e.Line'%template_'e.TempInfo)e.Rest
- , <Nempty <Trim e.Line>> : True
- , <PrepareFormula s.DefaultWidth normalsize e.Line> : e.ListNormal
- , <PrepareFormula s.MPWidth small e.Line> : e.ListMP 
-      = <MapFormulas (e.Previous)(e.ListNormal)(e.ListMP)>
-        <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
- s.DefaultWidth s.MPWidth Table ((e.Preamble) (e.FirstLine) e.Table)(e.Smth'\\end{array}'e.Rubbish)e.Rest
- , <FormTable s.DefaultWidth normalsize e.Table> : (e.NormForm)(s.WidthNorm)(s.HeightNorm)
- , <FormTable s.DefaultWidth normalsize e.Table> : (e.MPForm)(s.WidthMP)(s.HeightMP)
-      = (Table ((e.Preamble)(MiniPage (e.FirstLine)e.MPForm (e.Smth'\\end{array}'e.Rubbish))
-                            (Normal (e.FirstLine)e.MPForm (e.Smth'\\end{array}'e.Rubbish))) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
-         <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
- s.DefaultWidth s.MPWidth Theory (e.Content)(e.Smth'%end theory'e.Rubbish)e.Rest
- , <CountTextHeight s.DefaultWidth (e.Content (e.Smth))> : s.ThHeight
-  = (Theory (e.Content (e.Smth)) Normal Normal s.DefaultWidth s.ThHeight s.DefaultWidth s.ThHeight)
-    <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
  s.DefaultWidth s.MPWidth Normal ()('%begin theory'e.Rubbish)e.Rest
   = <ParseFrame s.DefaultWidth s.MPWidth Theory ((e.Rubbish)) e.Rest>;
  s.DefaultWidth s.MPWidth Normal (e.Preamble)(e.Start'\\begin{array}'e.End)e.Rest
@@ -294,6 +270,22 @@ ParseFrame {
        <ParseFrame s.DefaultWidth s.MPWidth Diag ((e.Preamble)(<GetMP s.FlagM> <GetFrame s.FlagF> 
                        <CountAbsWidth <Numb e.WP1>><CountAbsHeight <Numb e.HP1>><CountAbsWidth <Numb e.WP0>><CountAbsHeight <Numb e.HP0>>))
            e.Rest>;
+ s.DefaultWidth s.MPWidth Normal (e.Previous)(e.Line'%template_'e.TempInfo)e.Rest
+ , <Nempty <Trim e.Line>> : True
+ , <PrepareFormula s.DefaultWidth normalsize e.Line> : e.ListNormal
+ , <PrepareFormula s.MPWidth small e.Line> : e.ListMP 
+      = <MapFormulas (e.Previous)(e.ListNormal)(e.ListMP)>
+        <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
+ s.DefaultWidth s.MPWidth Table ((e.Preamble) (e.FirstLine) e.Table)(e.Smth'\\end{array}'e.Rubbish)e.Rest
+ , <FormTable s.DefaultWidth normalsize e.Table> : (e.NormForm)(s.WidthNorm)(s.HeightNorm)
+ , <FormTable s.MPWidth normalsize e.Table> : (e.MPForm)(s.WidthMP)(s.HeightMP)
+      = (Table ((e.Preamble)(MiniPage (e.FirstLine)e.MPForm (e.Smth'\\end{array}'e.Rubbish))
+                            (Normal (e.FirstLine)e.NormForm (e.Smth'\\end{array}'e.Rubbish))) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+         <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
+ s.DefaultWidth s.MPWidth Theory (e.Content)(e.Smth'%end theory'e.Rubbish)e.Rest
+ , <CountTextHeight s.DefaultWidth (e.Content (e.Smth))> : s.ThHeight
+  = (Theory (e.Content (e.Smth)) Normal Normal s.DefaultWidth s.ThHeight s.DefaultWidth s.ThHeight)
+    <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
  s.DefaultWidth s.MPWidth Normal (e.Preamble) (e.Line) e.Rest = <ParseFrame s.DefaultWidth s.MPWidth Normal (e.Preamble (e.Line)) e.Rest>;
  s.DefaultWidth s.MPWidth Normal (e.Preamble) = ;
  s.DefaultWidth s.MPWidth s.Special (e.Preamble) (e.Line) e.Rest

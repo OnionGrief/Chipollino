@@ -31,7 +31,7 @@ The styles are derived automatically (TODO: use special names for distinguished 
 at most 20 styles are supported.
 *******************************/
 
-$EXTERN TrueMathMode, FirstSym, Numbers, Separator;
+$EXTERN TrueMathMode, FirstSym, Numbers, Separator, Trim;
 
 $ENTRY Go {
  , <Arg 1> : e.from'.dot'
@@ -307,14 +307,6 @@ SectionEdge {
  (e.x)e.y' [label ='e.l']'e.z'/*'e.MetaData'*/' = <GetEdgeMetaData (e.x)(e.y)(<Trim e.l>)e.MetaData>;
  (e.x)e.y'/*'e.MetaData'*/' = <GetEdgeMetaData (e.x)(<Trim e.y>)()e.MetaData>;
  e.W = ;
-}
-
-Trim {
- e.y'\t' = <Trim e.y>;
-'\t'e.y = <Trim e.y>;
- e.y' ' = <Trim e.y>;
-' 'e.y = <Trim e.y>;
- e.y = e.y;
 }
 
 ProcessEdge {
