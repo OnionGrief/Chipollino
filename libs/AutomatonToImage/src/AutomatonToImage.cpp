@@ -19,6 +19,10 @@ void AutomatonToImage::to_image(string automat, int name) {
 */
 
 string AutomatonToImage::to_image(string automat) {
+
+	system("cd refal && IF EXIST Meta_input.data DEL Meta_input.data && IF "
+		   "EXIST Aux_input.data DEL Aux_input.data");
+
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
 	fprintf(fo, "%s", automat.c_str());
