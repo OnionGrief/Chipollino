@@ -237,7 +237,7 @@ string LogTemplate::math_mode(string str) {
 string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> columns,
 							  vector<string> data*/) {
 	string table = "";
-	string format = "l|";
+	string format = "l!{\\color{black!80}\\vline width .65pt}";
 	string cols = "  & ";
 	string row = "";
 	for (int i = 0; i < t.columns.size(); i++) {
@@ -248,9 +248,8 @@ string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> colum
 			cols += t.columns[i] + "\\\\";
 		}
 	}
-	table += "$\\begin{array}{" + format + "}\n";
-	table += cols + "\n";
-	// table += "\\hline\n";
+	table += "$\\begin{array}{" + format + "}\\rowcolor{HeaderColor}\n";
+	table += cols + "\\hline\n";
 	int k = 0;
 	int j;
 	for (int i = 0; i < t.rows.size(); i++) {

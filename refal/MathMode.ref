@@ -3,40 +3,49 @@ $ENTRY TrueMathMode {
  'eps'e.Input = '\\empt'<TrueMathMode e.Input>;
   e.Input'eps' = <TrueMathMode e.Input>'\\empt';
    = ;
- e.Input = <SeparateModes Normal () e.Input>;
+ e.Input = <SeparateModes (<EpsilonSym>) Normal () e.Input>;
 }
 
+$ENTRY Trim {
+ e.y'\t' = <Trim e.y>;
+'\t'e.y = <Trim e.y>;
+ e.y' ' = <Trim e.y>;
+' 'e.y = <Trim e.y>;
+ e.y = e.y;
+}
+
+
 SeparateModes {
- Normal () e.Eps e.Rest
- , <EpsilonSym> : e.Eps = e.Eps 
-                          <SeparateModes Normal () e.Rest>;
- Normal (e.Prefix) e.Eps e.Rest
- , <EpsilonSym> : e.Eps = '\\regexpstr{'<MathMode e.Prefix>'}'e.Eps 
-                          <SeparateModes Normal () e.Rest>;
- Normal (e.Prefix) s.Sym e.Rest
+ (e.Eps) Normal (e.Prefix) e.Eps e.Rest
+ , <Trim e.Prefix> :
+ { = e.Eps <SeparateModes (e.Eps) Normal () e.Rest>;
+  e.Nempt  = '\\regexpstr{'<MathMode e.Nempt>'}'e.Eps 
+                          <SeparateModes (e.Eps) Normal () e.Rest>;
+ };
+ (e.Eps) Normal (e.Prefix) s.Sym e.Rest
  , <InSet (<ASCIIStandard>) s.Sym> :
- { True = <SeparateModes Normal (e.Prefix s.Sym) e.Rest>;
+ { True = <SeparateModes (e.Eps) Normal (e.Prefix s.Sym) e.Rest>;
    False
-  , e.Prefix :
-   { = <SeparateModes Text (s.Sym) e.Rest>;
-    e.Nempty = '\\regexpstr{'<MathMode e.Prefix>'}'<SeparateModes Text (s.Sym) e.Rest>;
+  , <Trim e.Prefix> :
+   { = <SeparateModes (e.Eps) Text (s.Sym) e.Rest>;
+    e.Nempty = '\\regexpstr{'<MathMode e.Nempty>'}'<SeparateModes (e.Eps) Text (s.Sym) e.Rest>;
    };
  };
- Text (e.Prefix) s.Sym e.Rest
+ (e.Eps) Text (e.Prefix) s.Sym e.Rest
  , <InSet (<ASCIIStandard>) s.Sym> :
- { False = <SeparateModes Text (e.Prefix s.Sym) e.Rest>;
+ { False = <SeparateModes (e.Eps) Text (e.Prefix s.Sym) e.Rest>;
    True
    , <InSet (<Punctuation>) s.Sym> :
-   { False = '\\text{'e.Prefix'}'<SeparateModes Normal (s.Sym) e.Rest>;
+   { False = '\\text{'e.Prefix'}'<SeparateModes (e.Eps) Normal (s.Sym) e.Rest>;
      True
      , <FirstSym (<ASCIIStandard>) e.Rest> :
-      { False = <SeparateModes Text (e.Prefix s.Sym) e.Rest>;
-        True = '\\text{'e.Prefix s.Sym'}'<SeparateModes Normal ( ) e.Rest>;
+      { False = <SeparateModes (e.Eps) Text (e.Prefix s.Sym) e.Rest>;
+        True = '\\text{'e.Prefix s.Sym'}'<SeparateModes (e.Eps) Normal ( ) e.Rest>;
       };
    };
  };
- Text (e.Prefix) = '\\text{'e.Prefix'}';
- Normal (e.Prefix) = '\\regexpstr{'<MathMode e.Prefix>'}';
+ (e.Eps) Text (e.Prefix) = '\\text{'e.Prefix'}';
+ (e.Eps) Normal (e.Prefix) = '\\regexpstr{'<MathMode e.Prefix>'}';
 }
 
 AdjustSpaceBeforeStar {
