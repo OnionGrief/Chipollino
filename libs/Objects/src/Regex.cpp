@@ -1119,7 +1119,7 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 	string str_follow;
 	for (size_t i = 0; i < new_states.size(); i++) {
 		int state_ind = new_states[i].index;
-		str_follow = str_follow + states[state_ind].identifier + ": ";
+		str_follow = str_follow + states[state_ind].identifier + ":\\ ";
 		for (auto j = states[state_ind].label.begin();
 			 j != states[state_ind].label.end(); j++) {
 			str_follow = str_follow + states[*j].identifier + "\\ ";
@@ -1706,7 +1706,12 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
 			deriv_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
-						 " = " + out[j][1].to_txt() + "\\\\";
+						 "\\ =\\ ";
+			if (out[j][1].to_txt() == "") {
+				deriv_log += "eps\\\\";
+			} else {
+				deriv_log += out[j][1].to_txt() + "\\\\";
+			}
 			// Logger::log(deriv_log);
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
@@ -1797,6 +1802,9 @@ void Regex::print_tree() {
 }
 
 bool Regex::is_one_unambiguous(iLogTemplate* log) const {
+	if (log) {
+		log->set_parameter("oldregex", *this);
+	}
 	// Logger::init_step("OneUnambiguity");
 	FiniteAutomaton fa = to_glushkov();
 	bool res = fa.is_deterministic();

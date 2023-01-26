@@ -1,4 +1,4 @@
-R = {a}
+R = {a*b*}
 A = Determinize.Glushkov R
 V = Ambiguity A
 B = Deterministic A
