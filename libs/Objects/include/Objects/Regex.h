@@ -100,14 +100,6 @@ class Regex : BaseObject {
 	void pre_order_travers() const;
 	void clear();
 	string regex_to_dot_helplify(int* i);
-	vector<alphabet_symbol> getsymbolimage();
-	void top_rec_bruteforce(int, vector<Regex>*, vector<Regex*>*);
-	void del_rec_bruteforce(int);
-	int which_depth();
-	void rewrite_normalize(map<alphabet_symbol, alphabet_symbol>*);
-	void replace_term_helplify(Regex*);
-	void replace_term(Regex*, Regex*);
-	Regex* search_rec_term(Regex*);
 	string get_refal_rewrite_rule(pair<Regex, Regex>);
 	void create_normalize_refal_code(const vector<pair<Regex, Regex>>&);
 	string to_refal_expr(map<string, string>*);
@@ -160,7 +152,7 @@ class Regex : BaseObject {
 	void regex_alt(Regex* a, Regex* b);
 	void regex_star(Regex* a);
 	void regex_eps();
-	string regex_to_dot();
+	string regex_to_dot(); // вывод regex в формате dot
 	Regex linearize() const;
 	Regex delinearize() const;
 	Regex deannote() const;
