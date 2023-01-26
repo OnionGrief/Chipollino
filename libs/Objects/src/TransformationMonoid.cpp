@@ -16,7 +16,7 @@ vector<alphabet_symbol> union_words(vector<alphabet_symbol> a,
 	return newword;
 }
 
-// получаем	все	перестановки	алфавита	длины	len
+// получаем все перестановки алфавита длины len
 vector<vector<alphabet_symbol>> get_comb_alphabet(
 	int len, const set<alphabet_symbol>& alphabet) {
 
@@ -24,7 +24,7 @@ vector<vector<alphabet_symbol>> get_comb_alphabet(
 	if (len == 0) {
 		return newcomb;
 	}
-	for (alphabet_symbol as : alphabet) {
+	for (const alphabet_symbol& as : alphabet) {
 		vector<alphabet_symbol> new_symbol;
 		new_symbol.push_back(as);
 		newcomb.push_back(new_symbol);
@@ -43,7 +43,6 @@ vector<vector<alphabet_symbol>> get_comb_alphabet(
 	return comb;
 }
 
-// переписываем имя терма в минимальное
 vector<alphabet_symbol> TransformationMonoid::rewriting(
 	const vector<alphabet_symbol>& in,
 	const map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>&
@@ -87,9 +86,9 @@ vector<alphabet_symbol> TransformationMonoid::rewriting(
 	}
 	return in;
 }
-// проверяем имя терма на переписываемость (вспомогательный)
-bool TransformationMonoid::wasrewrite(const vector<alphabet_symbol>& a,
-									  const vector<alphabet_symbol>& b) {
+
+bool TransformationMonoid::was_rewrite(const vector<alphabet_symbol>& a,
+									   const vector<alphabet_symbol>& b) {
 	for (int i = 0; i < a.size(); i++) {
 		for (int j = 0; i + j < a.size() && j < b.size(); j++) {
 			if (b[j] != a[i + j]) {
@@ -103,24 +102,23 @@ bool TransformationMonoid::wasrewrite(const vector<alphabet_symbol>& a,
 	return false;
 }
 
-// проверяем имя терма на переписываемость
 bool TransformationMonoid::searchrewrite(const vector<alphabet_symbol>& in) {
-	for (auto currules : rules) {
-		for (vector<alphabet_symbol> rule : currules.second) {
-			if (wasrewrite(in, rule)) {
+	for (const auto& currules : rules) {
+		for (const vector<alphabet_symbol>& rule : currules.second) {
+			if (was_rewrite(in, rule)) {
 				return 1;
 			}
 		}
 	}
 	return 0;
 }
-// генерируем новые переходы по алфавиту
+
 void TransformationMonoid::get_new_transition(
 	const vector<TransformationMonoid::Transition>& in,
 	const vector<alphabet_symbol>& word, const set<alphabet_symbol>& alphabet) {
 	for (const alphabet_symbol& as : alphabet) { // для каждого символа
 		set<TransformationMonoid::Transition> out;
-		for (TransformationMonoid::Transition temp : in) {
+		for (const TransformationMonoid::Transition& temp : in) {
 			set<int> tostate = automat.states[temp.second]
 								   .transitions[as]; // получаем все переходы
 			for (int outstate : tostate) { // для каждого перехода
@@ -141,8 +139,8 @@ void TransformationMonoid::get_new_transition(
 		queueTerm.push(curTerm);
 	}
 }
+
 TransformationMonoid::TransformationMonoid(){};
-// Строим моноид
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	int states_counter_old = 0;
 	int states_counter_new = 0;
@@ -195,7 +193,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 		}
 	}
 }
-// Вывод всей информации о Моноиде
+
 string TransformationMonoid::to_txt() {
 	stringstream ss;
 	ss << "Equivalence classes:\n";
@@ -210,21 +208,21 @@ string TransformationMonoid::to_txt() {
 		vector<TransformationMonoid::Term> vw =
 			get_equalence_classes_vw(terms[i]);
 		ss << "\t equivalence classes v such that  accepts vw: ";
-		for (TransformationMonoid::Term CurTerm : vw) {
+		for (const TransformationMonoid::Term& CurTerm : vw) {
 			ss << alphabet_symbol::vector_to_str(CurTerm.name) << ", ";
 		}
 		ss << "\n";
 		vector<TransformationMonoid::Term> wv =
 			get_equalence_classes_wv(terms[i]);
 		ss << "\t equivalence classes v such that  accepts wv: ";
-		for (TransformationMonoid::Term CurTerm : wv) {
+		for (const TransformationMonoid::Term& CurTerm : wv) {
 			ss << alphabet_symbol::vector_to_str(CurTerm.name) << ", ";
 		}
 		ss << "\n";
 		vector<TransformationMonoid::TermDouble> vwv =
 			get_equalence_classes_vwv(terms[i]);
 		ss << "\t equivalence classes v such that  accepts wv: ";
-		for (TransformationMonoid::TermDouble CurTerm : vwv) {
+		for (const TransformationMonoid::TermDouble& CurTerm : vwv) {
 			ss << alphabet_symbol::vector_to_str(CurTerm.first.name) << " - "
 			   << alphabet_symbol::vector_to_str(CurTerm.second.name) << ", ";
 		}
@@ -241,17 +239,17 @@ string TransformationMonoid::to_txt() {
 	ss << to_txt_MyhillNerode();
 	return ss.str();
 }
-// получаем все эквивалентные классы
+
 vector<TransformationMonoid::Term> TransformationMonoid::
 	get_equalence_classes() {
 	return terms;
 }
-// получаем правила переписывания
+
 map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 TransformationMonoid::get_rewriting_rules() {
 	return rules;
 }
-// вывод эквивалентных классов
+
 string TransformationMonoid::get_equalence_classes_txt() {
 	stringstream ss;
 	Logger::init_step("Equivalence classes");
@@ -306,7 +304,7 @@ map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 	// Logger::finish_step();
 	return ss;
 }
-// вывод правил переписывания
+
 string TransformationMonoid::get_rewriting_rules_txt() {
 	stringstream ss;
 	Logger::init_step("Rewriting Rules");
@@ -322,7 +320,7 @@ string TransformationMonoid::get_rewriting_rules_txt() {
 	Logger::finish_step();
 	return ss.str();
 }
-// получаем термы, что vw - в языке
+
 vector<TransformationMonoid::Term> TransformationMonoid::
 	get_equalence_classes_vw(const Term& w) {
 	vector<Term> out;
@@ -349,7 +347,7 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	}
 	return out;
 }
-// получаем термы, что wv - в языке
+
 vector<TransformationMonoid::Term> TransformationMonoid::
 	get_equalence_classes_wv(const Term& w) {
 	vector<Term> out;
@@ -368,7 +366,7 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 			}
 		}
 		if (transitions.size() > 0) {
-			for (TransformationMonoid::Transition tr : transitions) {
+			for (const TransformationMonoid::Transition& tr : transitions) {
 				if (automat.states[(tr).second].is_terminal &&
 					(tr).first == automat.initial_state) {
 					out.push_back(terms[i]);
@@ -378,18 +376,18 @@ vector<TransformationMonoid::Term> TransformationMonoid::
 	}
 	return out;
 }
-// проверка на присутствие терма
-bool TransformationMonoid::wasTransition(
+
+bool TransformationMonoid::was_transition(
 	const set<TransformationMonoid::Transition>& mas,
-	TransformationMonoid::Transition b) {
-	for (TransformationMonoid::Transition maselem : mas) {
+	const TransformationMonoid::Transition& b) {
+	for (const TransformationMonoid::Transition& maselem : mas) {
 		if (((maselem).first == b.first) && ((maselem).second == b.second)) {
 			return true;
 		}
 	}
 	return false;
 }
-// получаем термы, что vwv - в языке
+
 vector<TransformationMonoid::TermDouble> TransformationMonoid::
 	get_equalence_classes_vwv(const Term& w) {
 	vector<TermDouble> out;
@@ -409,7 +407,7 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 								terms[i1].transitions[j1].first;
 							new_transition.second =
 								terms[i2].transitions[j2].second;
-							if (!wasTransition(transitions, new_transition)) {
+							if (!was_transition(transitions, new_transition)) {
 								transitions.insert(new_transition);
 							}
 						}
@@ -417,7 +415,7 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 				}
 			}
 			if (transitions.size() > 0) {
-				for (TransformationMonoid::Transition tr : transitions) {
+				for (const TransformationMonoid::Transition& tr : transitions) {
 					if (automat.states[(tr).second].is_terminal &&
 						(tr).first == automat.initial_state) {
 						TermDouble new_transition_double;
@@ -432,8 +430,6 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::
 	return out;
 }
 
-// Вернет	-1	если	не	синхронизирован	или	номер
-// состояния	с	которым синхронизирован
 int TransformationMonoid::is_synchronized(const Term& w) {
 	Logger::init_step("Is synchronized word?");
 	Logger::log("word " + alphabet_symbol::vector_to_str(w.name));
@@ -456,7 +452,6 @@ int TransformationMonoid::is_synchronized(const Term& w) {
 	return state;
 }
 
-// Вернет число классов эквивалентности
 int TransformationMonoid::class_card() {
 	Logger::init_step("Number of equivalence classes");
 	Logger::log("Number of equivalence classes ", to_string(terms.size()));
@@ -464,7 +459,6 @@ int TransformationMonoid::class_card() {
 	return terms.size();
 }
 
-// Вернет длину самого длинного слова в классе
 int TransformationMonoid::class_length() {
 	Logger::init_step("Longest word in the class");
 	Logger::log("Size", to_string(terms[terms.size() - 1].name.size()));
@@ -474,7 +468,6 @@ int TransformationMonoid::class_length() {
 	return terms[terms.size() - 1].name.size();
 }
 
-// Вычисление размера по М-Н
 int TransformationMonoid::get_classes_number_MyhillNerode() {
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
@@ -485,7 +478,6 @@ int TransformationMonoid::get_classes_number_MyhillNerode() {
 	return equivalence_classes_table_bool.size();
 }
 
-// Вычисление Минимальности (1 если минимальный)
 bool TransformationMonoid::is_minimal() {
 	// временные данные
 	vector<Term> table_classes;
@@ -511,7 +503,7 @@ bool TransformationMonoid::is_minimal() {
 				// table_classes.insert(cur[j]);
 			}
 		}
-		for (auto i : templeft) {
+		for (int i : templeft) {
 			table_classes.push_back(terms[i]);
 		}
 		map<vector<alphabet_symbol>, int>
@@ -531,7 +523,7 @@ bool TransformationMonoid::is_minimal() {
 			equivalence_classes_table_temp[0][0] = true;
 		}
 		int i = 1;
-		for (Term t : table_classes) {
+		for (const Term& t : table_classes) {
 			if ((t).isFinal) {
 				equivalence_classes_table_temp[i][0] = true;
 			}
@@ -602,7 +594,7 @@ bool TransformationMonoid::is_minimal() {
 	Logger::finish_step();
 	return is_minimal_bool;
 }
-// вывод таблицы М-Н
+
 string TransformationMonoid::to_txt_MyhillNerode() {
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
@@ -633,7 +625,7 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	Logger::finish_step();
 	return ss.str();
 }
-// возвращает таблицу М-Н
+
 vector<vector<bool>> TransformationMonoid::get_equivalence_classes_table(
 	vector<string>& table_rows, vector<string>& table_columns) {
 	table_rows = equivalence_classes_table_left;
