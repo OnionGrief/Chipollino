@@ -1803,7 +1803,7 @@ bool Regex::is_one_unambiguous(iLogTemplate* log) const {
 	// Logger::log(res ? "True" : "False");
 	// Logger::finish_step();
 	if (log) {
-		log->set_parameter("is_one_unambiguous", res ? "True" : "False");
+		log->set_parameter("result", res ? "True" : "False");
 	}
 	return fa.is_deterministic();
 }

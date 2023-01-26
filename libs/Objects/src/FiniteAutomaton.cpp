@@ -923,7 +923,7 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 }
 
 bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
-	if (log) log->set_parameter("oldregex", *this);
+	if (log) log->set_parameter("oldautomaton", *this);
 	// Logger::init_step("OneUnambiguity");
 	if (language->is_one_unambiguous_flag_cached()) {
 		if (log)
