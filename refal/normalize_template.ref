@@ -7,14 +7,17 @@ $ENTRY Go {=<Open 'r' 1 'out.txt'>
 	<Close 1>;
 }
 
+CompareNum {
+	e.0, <Compare e.0 0> : '+' = <Sub e.0 9999>;
+	e.1 = e.1;
+}
 MatchingBracketsBool {
 	0 = True;
 	e.0 = False;
 }
 MatchingBrackets {
-	'(' e.0 = <Add <MatchingBrackets e.0> 1>;
-	')' e.0 = <Sub <MatchingBrackets e.0> 1>;
-	s.0 e.0 = <MatchingBrackets e.0>;
+	'(' e.0 = <Add <CompareNum  <MatchingBrackets e.0>> 1>;
+	')' e.0 = <Sub <CompareNum <MatchingBrackets e.0>> 1>;
+	s.0 e.0 = <CompareNum <MatchingBrackets e.0>>;
 	 = 0;
 }
-
