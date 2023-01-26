@@ -395,6 +395,48 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 	return new_nfa;
 }
 
+FiniteAutomaton FiniteAutomaton::remove_eps_additional() const {
+	Logger::init_step("RemEps");
+	FiniteAutomaton new_nfa(initial_state, states, language);
+
+	for (auto& state : new_nfa.states)
+		state.transitions = map<alphabet_symbol, set<int>>();
+
+	for (int i = 0; i < states.size(); i++) {
+		set<int> q = closure({states[i].index}, true);
+		for (int elem : q) {
+			if (states[elem].is_terminal) {
+				new_nfa.states[i].is_terminal = true;
+			}
+		}
+		vector<set<int>> x;
+		for (alphabet_symbol symb : language->get_alphabet()) {
+			x.clear();
+			for (int k : q) {
+				auto transitions_by_symbol = states[k].transitions.find(symb);
+				if (transitions_by_symbol != states[k].transitions.end())
+					x.push_back(transitions_by_symbol->second);
+			}
+			set<int> q1;
+			set<int> x1;
+			for (auto k : x) {
+				q1 = closure(k, true);
+				for (int m : q1) {
+					x1.insert(m);
+				}
+			}
+			for (auto elem : x1) {
+				new_nfa.states[i].transitions[symb].insert(elem);
+			}
+		}
+	}
+	new_nfa = new_nfa.remove_unreachable_states();
+	Logger::log("Автомат до удаления eps-переходов",
+				"Автомат после удаления eps-переходов", *this, new_nfa);
+	Logger::finish_step();
+	return new_nfa;
+}
+
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 											  const FiniteAutomaton& fa2) {
 	Logger::init_step("Intersection");
