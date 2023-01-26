@@ -1532,7 +1532,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 				if (!derevative_with_respect_to_str(*it, this, a)) {
 					continue;
 				}
-				pumped_prefix += a.to_txt();
+				pumped_prefix += "(" + a.to_txt() + ")";
 				Regex pumping(pumped_prefix);
 				if (subset(pumping)) {
 					checked_prefixes[*it] = true;
@@ -1631,7 +1631,9 @@ bool Regex::subset(const Regex& r, iLogTemplate* log) const {
 	// Logger::init_step("Subset");
 	// Logger::log("Первое регулярное выражение", to_txt());
 	// Logger::log("Второе регулярное выражение", r.to_txt());
-	bool result = to_ilieyu().subset(r.to_ilieyu());
+	auto il = to_ilieyu();
+	auto ril = r.to_ilieyu();
+	bool result = il.subset(ril);
 	/*if (result)
 		Logger::log("Результат Subset", "true");
 	else
