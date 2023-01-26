@@ -1998,6 +1998,7 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 	}
 
 	TransformationMonoid sm = get_syntactic_monoid();
+	sm.get_classes_number_MyhillNerode();
 
 	vector<string> table_rows;
 	vector<string> table_columns;
@@ -2037,19 +2038,19 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 	// 	cout << endl;
 	// }
 
-	iLogTemplate::Table t;
-	for (int i = 0; i < result_yx.size(); i++) {
-		t.columns.push_back(table_columns[result_yx[i].second]);
-	}
-	for (int i = 0; i < result_yx.size(); i++) {
-		t.rows.push_back(table_rows[result_yx[i].first]);
-		for (int j = 0; j < result_yx.size(); j++) {
-			t.data.push_back(
-				to_string(equivalence_classes_table[result_yx[i].first]
-												   [result_yx[j].second]));
-		}
-	}
 	if (log) {
+		iLogTemplate::Table t;
+		for (int i = 0; i < result_yx.size(); i++) {
+			t.columns.push_back(table_columns[result_yx[i].second]);
+		}
+		for (int i = 0; i < result_yx.size(); i++) {
+			t.rows.push_back(table_rows[result_yx[i].first]);
+			for (int j = 0; j < result_yx.size(); j++) {
+				t.data.push_back(
+					to_string(equivalence_classes_table[result_yx[i].first]
+													   [result_yx[j].second]));
+			}
+		}
 		log->set_parameter("result", result);
 		log->set_parameter("table", t);
 	}
