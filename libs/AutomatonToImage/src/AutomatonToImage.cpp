@@ -17,7 +17,12 @@ void AutomatonToImage::to_image(string automat, int name) {
 			name);
 	system(cmd);
 */
+
 string AutomatonToImage::to_image(string automat) {
+
+	system("cd refal && IF EXIST Meta_input.data DEL Meta_input.data && IF "
+		   "EXIST Aux_input.data DEL Aux_input.data");
+
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
 	fprintf(fo, "%s", automat.c_str());
@@ -27,16 +32,41 @@ string AutomatonToImage::to_image(string automat) {
 	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
 	system("cd refal && refgo Postprocess+MathMode input.tex > error_refal.txt "
 		   "2>&1");
-	ifstream infile("./refal/R_input.tex");
-	stringstream graph;
 
+	// для Linux:
+	// system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+	system("cd refal && IF EXIST Meta_input.data DEL Meta_input.data && IF "
+		   "EXIST Aux_input.data DEL Aux_input.data");
+
+	// автомат
+	ifstream infile_for_R("./refal/R_input.tex");
+	stringstream graph;
 	string s;
-	for (; !infile.eof();) {
-		getline(infile, s);
+	if (!infile_for_R) return "";
+
+	while (!infile_for_R.eof()) {
+		getline(infile_for_R, s);
 		graph << s << endl;
 	}
-	infile.close();
-	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm R_input.tex");
+	infile_for_R.close();
+
+	// TODO: разные команды для Linux и Windows
+	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm "
+		   "R_input.tex");
+
+	// таблица
+	ifstream infile_for_L("./refal/L_input.tex");
+
+	if (!infile_for_L) return graph.str();
+
+	// the table is adjusted for frames in the general renderer module
+	while (!infile_for_L.eof()) {
+		getline(infile_for_L, s);
+		graph << s << endl;
+	}
+	infile_for_L.close();
+
+	system("cd refal && rm L_input.tex");
 
 	return graph.str();
 }

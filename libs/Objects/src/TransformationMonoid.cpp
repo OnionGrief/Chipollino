@@ -460,19 +460,22 @@ int TransformationMonoid::class_card(iLogTemplate* log) {
 	// Logger::init_step("Number of equivalence classes");
 	// Logger::log("Number of equivalence classes ", to_string(terms.size()));
 	// Logger::finish_step();
+	if (log) log->set_parameter("oldautomaton", automat);
 	if (log) {
-		log->set_parameter("Number of equivalence classes",
-						   to_string(terms.size()));
+		log->set_parameter("result", to_string(terms.size()));
 	}
 	return terms.size();
 }
 
 // Вернет самое длинное слово в классе
 int TransformationMonoid::class_length(iLogTemplate* log) {
+
+	if (log) log->set_parameter("oldautomaton", automat);
 	// Logger::init_step("Longest word in the class");
 	if (log) {
-		log->set_parameter("Size",
+		log->set_parameter("result",
 						   to_string(terms[terms.size() - 1].name.size()));
+		// TODO: logs
 		log->set_parameter(
 			"One of the longest words",
 			alphabet_symbol::vector_to_str(terms[terms.size() - 1].name));
@@ -485,14 +488,24 @@ int TransformationMonoid::class_length(iLogTemplate* log) {
 }
 
 int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
+
+	if (log) log->set_parameter("oldautomaton", automat);
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
+	iLogTemplate::Table t;
+	t.columns = equivalence_classes_table_top;
+	t.rows = equivalence_classes_table_left;
+	for (int i = 0; i < equivalence_classes_table_left.size(); i++) {
+		for (int j = 0; j < equivalence_classes_table_bool[i].size();
+			 j++) { // вывод матрицы
+			t.data.push_back(to_string(equivalence_classes_table_bool[i][j]));
+		}
+	}
 	if (log) {
-		log->set_parameter("Size",
-						   to_string(terms[terms.size() - 1].name.size()));
-		log->set_parameter("Myhill-Nerode сlasses number",
-						   equivalence_classes_table_bool.size());
+		/*TODO: logs */
+		log->set_parameter("result", equivalence_classes_table_bool.size());
+		log->set_parameter("table", t);
 	}
 	/*Logger::init_step("Myhill-Nerode сlasses number");
 	Logger::log(to_string(equivalence_classes_table_bool.size()));
@@ -615,7 +628,7 @@ bool TransformationMonoid::is_minimal(iLogTemplate* log) {
 	Logger::log(is_minimal_bool ? "true" : "false");
 	Logger::finish_step();*/
 	if (log) {
-		log->set_parameter("Is minimal", is_minimal_bool ? "true" : "false");
+		log->set_parameter("result", is_minimal_bool ? "true" : "false");
 	}
 	return is_minimal_bool;
 }
@@ -625,20 +638,24 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 		is_minimal();
 	}
 	stringstream ss;
+	// iLogTemplate::Table t;
 	int maxlen = terms[terms.size() - 1].name.size();
 	ss << string(maxlen + 2, ' ');
 	for (int i = 0; i < equivalence_classes_table_top.size(); i++) {
 		ss << equivalence_classes_table_top[i]
 		   << string(maxlen + 2 - equivalence_classes_table_top[i].size(), ' ');
+		// t.columns.push_back(equivalence_classes_table_top[i]);
 	}
 	ss << "\n";
 
 	for (int i = 0; i < equivalence_classes_table_left.size(); i++) {
+		// t.rows.push_back(equivalence_classes_table_left[i]);
 		ss << equivalence_classes_table_left[i]
 		   << string(maxlen + 2 - equivalence_classes_table_left[i].size(),
 					 ' ');
 		for (int j = 0; j < equivalence_classes_table_bool[i].size();
 			 j++) { // вывод матрицы
+			// t.data.push_back(to_string(equivalence_classes_table_bool[i][j]));
 			ss << equivalence_classes_table_bool[i][j]
 			   << string(maxlen + 1, ' ');
 		}

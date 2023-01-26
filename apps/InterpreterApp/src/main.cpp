@@ -4,7 +4,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-	// Приветсвие
+	// Приветствие
 	cout << "Chipollino :-)\n";
 
 	// Инициализируем интерпретатор
@@ -14,8 +14,9 @@ int main(int argc, char* argv[]) {
 	// Загружаем в интерпретатор файл с коммандами
 	string load_file = "test.txt";
 	if (argc > 1) load_file = argv[1];
-	interpreter.run_file(load_file);
-	interpreter.generate_log("./resources/report.tex");
+	if (interpreter.run_file(load_file)) {
+		interpreter.generate_log("./resources/report.tex");
+	}
 
 	// Гененрируем выходной документ, завершаем работу логгера
 	// Logger::finish();

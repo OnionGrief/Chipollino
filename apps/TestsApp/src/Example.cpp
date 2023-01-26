@@ -500,7 +500,7 @@ void Example::all_examples() {
 	// step_interection();
 	// table();
 	fa_semdet_check();
-	logger_test();
+	// logger_test();
 	fa_to_pgrammar();
 	// Regex("abaa").pump_length();
 	get_one_unambiguous_regex();
@@ -514,9 +514,9 @@ void Example::logger_test() {
 	// Regex("abaa").pump_length(&log_template);
 	// Regex("(a|b)*b").to_glushkov(&log_template);
 	// tex_logger.add_log(log_template);
-	log_template.load_tex_template("determinize-short");
-	Regex("(a|b)*b").to_glushkov().determinize(&log_template);
-	tex_logger.add_log(log_template);
+	// log_template.load_tex_template("determinize-short");
+	// Regex("(a|b)*b").to_glushkov().determinize(&log_template);
+	// tex_logger.add_log(log_template);
 	// log_template.load_tex_template("tomson-long");
 	// Regex("(a|b)*b").to_tompson(&log_template);
 	// tex_logger.add_log(log_template);
@@ -526,6 +526,15 @@ void Example::logger_test() {
 	// log_template.load_tex_template("antimirov-long");
 	// Regex("(a|b)*b").to_antimirov(&log_template);
 	// tex_logger.add_log(log_template);
+	log_template.load_tex_template("Test1");
+	Regex r("ab(ab|a)*ababa");
+	FiniteAutomaton dfa1 = r.to_thompson();
+	Regex r1("((ab)*a)*");
+	Regex r2("ab(ab|a)*ababa");
+	Tester::test(dfa1, r1, 1, &log_template);
+	tex_logger.add_log(log_template);
+	Tester::test(r2, r1, 1, &log_template);
+	tex_logger.add_log(log_template);
 	tex_logger.render_to_file("./resources/report.tex");
 }
 

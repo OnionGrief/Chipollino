@@ -96,6 +96,7 @@ Interpreter::Interpreter() {
 		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
+	// generate_brief_templates();
 }
 
 bool Interpreter::run_line(const string& line) {
@@ -195,7 +196,7 @@ optional<GeneralObject> Interpreter::apply_function_sequence(
 		} else {
 			return nullopt;
 		}
-		tex_logger.add_log(log_template);
+		if (flags[Flag::report]) tex_logger.add_log(log_template);
 	}
 
 	return arguments[0];
@@ -225,12 +226,8 @@ optional<GeneralObject> Interpreter::apply_function(
 
 	// имя шаблона по умолчанию - название ф/и в интерпретаторе + номер
 	// сигнатуры (если их несколько)
-	string func_id = function.name;
-	if (names_to_functions[func_id].size() > 1)
-		func_id +=
-			to_string(find_func(function.name, function.input).value() + 1);
+	string func_id = get_func_id(function);
 
-	log_template.set_parameter("name", func_id);
 	log_template.load_tex_template(func_id);
 	log_template.set_theory_flag(flags[Flag::log_theory]);
 
@@ -268,7 +265,8 @@ optional<GeneralObject> Interpreter::apply_function(
 			return ObjectOptionalBool(a.is_nfa_minimal(&log_template));
 	}
 	if (function.name == "Deterministic") {
-		return ObjectBoolean(get_automaton(arguments[0]).is_deterministic());
+		return ObjectBoolean(
+			get_automaton(arguments[0]).is_deterministic(&log_template));
 	}
 	if (function.name == "Subset") {
 		if (function.input[0] == ObjectType::NFA) {
@@ -278,7 +276,8 @@ optional<GeneralObject> Interpreter::apply_function(
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])
-					.value.subset(get<ObjectRegex>(arguments[1]).value));
+					.value.subset(get<ObjectRegex>(arguments[1]).value,
+								  &log_template));
 		}
 	}
 	if (function.name == "Equiv") {
@@ -302,27 +301,42 @@ optional<GeneralObject> Interpreter::apply_function(
 			return ObjectBoolean(Regex::equal(
 				get<ObjectRegex>(arguments[0]).value,
 				get<ObjectRegex>(arguments[1]).value, &log_template));
+			// TODO для кратких шаблонов
 		} else if (function.input[0] == ObjectType::Int) {
-			bool res = get<ObjectInt>(arguments[0]).value ==
-					   get<ObjectInt>(arguments[1]).value;
-			log_template.set_parameter("res", res);
+			int value1 = get<ObjectInt>(arguments[0]).value;
+			int value2 = get<ObjectInt>(arguments[1]).value;
+			bool res = (value1 == value2);
+			log_template.set_parameter("value1", value1);
+			log_template.set_parameter("value2", value2);
+			log_template.set_parameter("result", res);
 			return ObjectBoolean(res);
 		} else if (function.input[0] == ObjectType::Boolean) {
-			return ObjectBoolean(get<ObjectBoolean>(arguments[0]).value ==
-								 get<ObjectBoolean>(arguments[1]).value);
+			int value1 = get<ObjectBoolean>(arguments[0]).value;
+			int value2 = get<ObjectBoolean>(arguments[1]).value;
+			bool res = (value1 == value2);
+			log_template.set_parameter("value1", value1);
+			log_template.set_parameter("value2", value2);
+			log_template.set_parameter("result", res);
+			return ObjectBoolean(res);
 		} else {
-			return ObjectBoolean(
-				get<ObjectAmbiguityValue>(arguments[0]).value ==
-				get<ObjectAmbiguityValue>(arguments[1]).value);
+			FiniteAutomaton::AmbiguityValue value1 =
+				get<ObjectAmbiguityValue>(arguments[0]).value;
+			FiniteAutomaton::AmbiguityValue value2 =
+				get<ObjectAmbiguityValue>(arguments[1]).value;
+			bool res = (value1 == value2);
+			log_template.set_parameter("value1", value1);
+			log_template.set_parameter("value2", value2);
+			log_template.set_parameter("result", res);
+			return ObjectBoolean(res);
 		}
 	}
 	if (function.name == "OneUnambiguity") {
 		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(
-				get_automaton(arguments[0]).is_one_unambiguous());
+				get_automaton(arguments[0]).is_one_unambiguous(&log_template));
 		} else {
-			return ObjectBoolean(
-				get<ObjectRegex>(arguments[0]).value.is_one_unambiguous());
+			return ObjectBoolean(get<ObjectRegex>(arguments[0])
+									 .value.is_one_unambiguous(&log_template));
 		}
 	}
 	if (function.name == "SemDet") {
@@ -361,12 +375,12 @@ optional<GeneralObject> Interpreter::apply_function(
 	}
 	if (function.name == "PrefixGrammar") {
 		Grammar g;
-		g.fa_to_prefix_grammar(get_automaton(arguments[0]));
+		g.fa_to_prefix_grammar_TM(get_automaton(arguments[0]), &log_template);
 		return ObjectPrefixGrammar(g);
 	}
 	if (function.name == "PGtoNFA") {
 		return ObjectNFA(get<ObjectPrefixGrammar>(arguments[0])
-							 .value.prefix_grammar_to_automaton());
+							 .value.prefix_grammar_to_automaton(&log_template));
 	}
 
 	/*
@@ -468,20 +482,23 @@ optional<GeneralObject> Interpreter::apply_function(
 							  .value.normalize_regex(rules, &log_template));
 	}
 	if (function.name == "Disambiguate") {
-		res = ObjectRegex(
-			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex());
+		res = ObjectRegex(get<ObjectRegex>(arguments[0])
+							  .value.get_one_unambiguous_regex(&log_template));
 	}
 	if (function.name == "Intersect") {
 		res = ObjectNFA(FiniteAutomaton::intersection(
-			get_automaton(arguments[0]), get_automaton(arguments[1])));
+			get_automaton(arguments[0]), get_automaton(arguments[1]),
+			&log_template));
 	}
 	if (function.name == "Union") {
 		res = ObjectNFA(FiniteAutomaton::uunion(get_automaton(arguments[0]),
-												get_automaton(arguments[1])));
+												get_automaton(arguments[1]),
+												&log_template));
 	}
 	if (function.name == "Difference") {
-		res = ObjectNFA(FiniteAutomaton::difference(
-			get_automaton(arguments[0]), get_automaton(arguments[1])));
+		res = ObjectNFA(FiniteAutomaton::difference(get_automaton(arguments[0]),
+													get_automaton(arguments[1]),
+													&log_template));
 	}
 
 	if (res.has_value()) {
@@ -553,6 +570,14 @@ optional<int> Interpreter::find_func(string func,
 		if (typecheck(func_input_type, argument_type)) return j;
 	}
 	return nullopt;
+}
+
+string Interpreter::get_func_id(Function function) {
+	string id = function.name;
+	if (names_to_functions[id].size() > 1) {
+		id += to_string(find_func(function.name, function.input).value() + 1);
+	}
+	return id;
 }
 
 optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
@@ -805,16 +830,23 @@ bool Interpreter::run_test(const Test& test) {
 	auto test_set = eval_expression(test.test_set);
 	bool success = true;
 
+	LogTemplate log_template;
+
 	if (language.has_value() && test_set.has_value()) {
 		auto reg = get<ObjectRegex>(*test_set).value;
 
 		if (holds_alternative<ObjectRegex>(*language)) {
+			log_template.load_tex_template("Test1");
 			Tester::test(get<ObjectRegex>(*language).value, reg,
-						 test.iterations);
+						 test.iterations, &log_template);
 		} else if (holds_alternative<ObjectNFA>(*language)) {
-			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations);
+			log_template.load_tex_template("Test2");
+			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations,
+						 &log_template);
 		} else if (holds_alternative<ObjectDFA>(*language)) {
-			Tester::test(get<ObjectDFA>(*language).value, reg, test.iterations);
+			log_template.load_tex_template("Test2");
+			Tester::test(get<ObjectDFA>(*language).value, reg, test.iterations,
+						 &log_template);
 		} else {
 			logger.throw_error(
 				"while running test: invalid language expression");
@@ -824,6 +856,8 @@ bool Interpreter::run_test(const Test& test) {
 		logger.throw_error("while running test: invalid arguments");
 		success = false;
 	}
+
+	tex_logger.add_log(log_template);
 
 	// Logger::deactivate();
 	return success;
@@ -836,10 +870,18 @@ bool Interpreter::run_verification(const Verification& verification) {
 	bool success = true;
 	int results = 0;
 	int tests_size = verification.size;
-	int tests_false_num = min(10, (int)round(verification.size * 0.1));
+	int tests_false_num = min(10, (int)ceil(verification.size * 0.1));
 	vector<string> regex_list;
 	RegexGenerator RG; // TODO: менять параметры
 	Expression expr = verification.predicate;
+
+	LogTemplate log_template;
+	log_template.load_tex_template("Verify");
+	log_template.set_theory_flag(flags[Flag::log_theory]);
+	log_template.set_parameter("expr", expr.to_txt());
+
+	set_log_mode(LogMode::errors);
+	flags[Flag::report] = false;
 
 	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
@@ -861,13 +903,27 @@ bool Interpreter::run_verification(const Verification& verification) {
 		}
 	}
 
+	flags[Flag::report] = true;
+	set_log_mode(LogMode::all);
+
 	current_random_regex = nullopt;
 
-	logger.log("result: " + to_string(100 * results / tests_size) + "%");
-	logger.log("");
-	logger.log("Tests with negative result:");
-	for (string str : regex_list)
-		logger.log(str);
+	string res = to_string(100 * results / tests_size);
+	logger.log("result: " + res + "%");
+	log_template.set_parameter("result", res + +"\\%");
+
+	if (results < tests_size) {
+		logger.log("");
+		logger.log("Tests with negative result:");
+		string neg_tests = "";
+		for (string str : regex_list) {
+			logger.log(str);
+			neg_tests += str + "\\\\";
+		}
+		log_template.set_parameter("neg tests", neg_tests);
+	}
+
+	tex_logger.add_log(log_template);
 
 	return success;
 }
@@ -878,8 +934,7 @@ bool Interpreter::run_set_flag(const SetFlag& flag) {
 	if (flags_names.count(flag.name)) {
 		Flag flag_name = flags_names[flag.name];
 		flags[flag_name] = flag.value;
-	}
-	else {
+	} else {
 		logger.throw_error("while setting flag: wrong name \"" + flag.name +
 						   "\"");
 		return false;
@@ -1264,7 +1319,7 @@ optional<Interpreter::SetFlag> Interpreter::scan_flag(
 	if (lexems[i].type == Lexem::name) {
 		flag.name = lexems[i].value;
 	} else {
-		logger.throw_error("Scan Set: wrong flagName at position 1");
+		logger.throw_error("Scan \"Set\": wrong flagName at position 1");
 		return nullopt;
 	}
 	i++;
@@ -1276,7 +1331,7 @@ optional<Interpreter::SetFlag> Interpreter::scan_flag(
 			flag.value = false;
 	} else {
 		logger.throw_error(
-			"Scan SetFlag: wrong type at position 2, boolean expected");
+			"Scan \"Set\": wrong type at position 2, boolean expected");
 		return nullopt;
 	}
 	pos = i + 1;
@@ -1290,7 +1345,7 @@ optional<Interpreter::Verification> Interpreter::scan_verification(
 	int i = pos;
 
 	if (lexems.size() < i + 1 || lexems[i].type != Lexem::name ||
-		lexems[i].value != "Verification") {
+		lexems[i].value != "Verify") {
 		return nullopt;
 	}
 	i++;

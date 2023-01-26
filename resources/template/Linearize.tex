@@ -1,16 +1,9 @@
-\section{Основные понятия}
-\begin{frame}{Линеаризация}
-  \begin{block}{\bf Определение}
-    Если регулярное выражение $r\in\RegExp$ содержит $n$ вхождений букв алфавита $\Sigma$, тогда линеаризованное регулярное выражение $\Linearize(r)$ получается из $r$ приписыванием $i$-ой по счёту букве, входящей в $r$, индекса $i$.
-  \end{block} % descriptive documentation
+\section{Linearize}
+\begin{frame}{Linearize}
+	Регулярное выражение до преобразования:
+	%template_oldregex
 
-  \begin{exampleblock}{\bf Пример}
-    Рассмотрим регулярное выражение:
-    \[(\regexpstr{ba}\alter \regexpstr{b})\regexpstr{aa}(\regexpstr{a}\alter\regexpstr{ab})\star\] % the initial regexp placeholder displaystyle
-
-    Его линеаризованная версия:
-    \[(\regexpstr{b_{1}a_{2}}\alter \regexpstr{b_{3}})\regexpstr{a_{4}a_{5}}(\regexpstr{a_{6}}\alter\regexpstr{a_{7}b_{8}})\star\] % the linearised regexp placeholder displaystyle
-
-  \end{exampleblock}
+	Регулярное выражение после преобразования:
+	%template_result
 
 \end{frame}

@@ -1,21 +1,39 @@
+\PassOptionsToPackage{table}{xcolor}
 \documentclass[mathserif]{beamer} 
 \usepackage{eulervm} %красивый математический шрифт - по желанию
-\usepackage{ulem} %зачёркивания
+\usepackage{ulem,adjustbox} %зачёркивания
 \usepackage{bm} %особо жирный математический
 \usepackage{schemata} %для красивых блочных переходов, пользуюсь редко
 \usepackage{mathtools} %улучшенная работа с типографией в math mode
 \setbeamertemplate{navigation symbols}{} %отключает управляющие символы в правом нижнем углу
 \usefonttheme{professionalfonts}
 \usepackage{cmap} %чтобы были работающие гиперссылки
-\usepackage{makeidx,fancybox,tikz}
+\usepackage{makeidx,fancybox,tikz,nicematrix}
+\usepackage[inkscapearea=page]{svg}
 \usetikzlibrary{automata, positioning, arrows,patterns}
 \usetikzlibrary{arrows.meta}
 \usepackage{tempora} %по желанию -- русские штрифты с засечками
 
 \mode<presentation>
 {
-  \usetheme{CambridgeUS}
-  \usecolortheme{dove}
+% \usetheme{Warsaw}
+%  \usetheme{Frankfurt}
+%  \usetheme{Singapore}
+%  \usetheme{Boadilla}
+%  \usetheme{Montpellier}
+%  \usetheme{Szeged}
+  \usetheme{CambridgeUS} %тут решайте сами, что выбрать
+    % or ...
+
+%  \usecolortheme{dolphin}
+  \usecolortheme{dove} %аналогично
+%  \usecolortheme{wolverine}
+%  \usecolortheme{crane}
+
+%  \usefonttheme{structurebold}
+%  \usefonttheme{structuresmallcapsserif}
+
+%  \setbeamercovered{transparent}
 }
 \usepackage[T1,T2A]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -30,6 +48,11 @@
 \definecolor{grey80}{rgb}{0.8,.8,0.8}
 \definecolor{grey90}{rgb}{0.9,.9,0.9}
 \definecolor{grey95}{rgb}{0.95,.95,0.95}
+\definecolor{green80}{rgb}{0.2,.6,0}
+\definecolor{teal80}{rgb}{0,.2,1}
+\definecolor{violet80}{rgb}{0.6,.0,4}
+\definecolor{yellow80}{rgb}{0.7,.7,0}
+\definecolor{HeaderColor}{rgb}{0.85,.86,0.95}
 \newcommand\redstroke{\bgroup\markoverwith
 {\textcolor{red}{\rule[0.5ex]{2pt}{1.5pt}}}\ULon} %зачёркивание жирной красной чертой
 
@@ -44,9 +67,9 @@
 
 \title[] {Логи}
 
-\author[Chipollino]{Лучшая команда разработчиков по ТФЯ} % :))
+\author[Chipollino]{Лучшая команда разработчиков по ТФЯ} % :((
 \date[] 
-{2022 г.}
+{2023 г.}
 \subject{Computer Science}
 
 \newcommand{\Lang}{\mathscr{L}} %макрос для языка регулярки или автомата
@@ -64,6 +87,7 @@
 \def\DeAnnote{\mathtt{DeAnnote}}
 \def\Annote{\mathtt{Annote}}
 \def\Minimize{\mathtt{Minimize}}
+\def\MergeBisim{\mathtt{MergeBisim}}
 \def\logand{\mathrel{\&}}
 \def\lognot{\mathop{\neg}}
 \def\iff{\mathrel{\Leftrightarrow}}
@@ -73,17 +97,16 @@
 \def\star{\ensuremath{^{*}}}%отрендеренные регулярные операторы 
 \def\regexpstr#1{\mathtt{#1}}%буквы внутри регулярок переписываются в моноширинный
 \newcommand{\Nat}{\mathbb N}
+\newcommand{\transit}[1]{\overset{#1}{\longrightarrow}} %переход по слову/букве
 \newcommand{\empt}{\varepsilon} %пустое слово
 \newcommand{\bottom}{\bot} %противоречие
 \newcommand{\rar}{\rightarrow} %стрелка вправо. Для экономии букв.
 \newcommand{\RegExp}{\mathcal{RE}} %макрос для обозначения множества всех регулярок
-\def\Aut{\mathscr{A}}
+\newcommand{\Aut}{\mathscr{A}}
 \newcommand{\seq}{\;{=}\;}
 \newenvironment{wideitemize}{\itemize\addtolength{\itemsep}{8pt}}{\enditemize}
-\newcommand{\transit}[1]{\overset{#1}{\longrightarrow}}
 %в преамбулу можно и нужно добавлять свои макросы
 
 \begin{document}
 
 \maketitle
-

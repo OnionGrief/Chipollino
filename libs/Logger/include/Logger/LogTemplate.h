@@ -8,10 +8,10 @@
 #include <variant>
 
 using namespace std;
-
 class LogTemplate : public iLogTemplate {
   public:
-	void set_parameter(const string& key, FiniteAutomaton value) override;
+	void set_parameter(const string& key,
+					   const FiniteAutomaton& value) override;
 	void set_parameter(const string& key, Regex value) override;
 	void set_parameter(const string& key, string value) override;
 	void set_parameter(const string& key, int value) override;
@@ -22,6 +22,7 @@ class LogTemplate : public iLogTemplate {
 	string render() const;
 	// загрузка шаблона
 	void load_tex_template(string filename);
+	string get_tex_template();
 
 	// struct Table {
 	// 	vector<string> rows;	// названия строк
@@ -30,11 +31,16 @@ class LogTemplate : public iLogTemplate {
 	// };
 
   private:
-	// Путь к папке с шаблонами
+	// кеш отрендеренных автоматов
+	// inline static map<const FiniteAutomaton*, string> cache_automatons;
+	inline static map<size_t, string> cache_automatons;
+	//  Путь к папке с шаблонами
 	const string template_path = "./resources/template/";
 
-	// LaTeX-шаблон
+	// путь к LaTeX-шаблону
 	string tex_template;
+	// имя файла шаблона
+	string template_filename;
 
 	// флаг логирования подробной части
 	bool render_theory = false;
@@ -46,6 +52,9 @@ class LogTemplate : public iLogTemplate {
 
 	// Параметры
 	map<string, LogParameter> parameters;
+
+	// Добавление шаблона настоящего параметра
+	void add_parameter(string parameter_name);
 	// math mode
 	static string math_mode(string str);
 	// счетчик картинок

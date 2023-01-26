@@ -31,13 +31,16 @@ class Interpreter {
 	enum class Flag {
 		auto_remove_trap_states,
 		weak_type_comparison,
-		log_theory
+		log_theory,
+		report,
 	};
 	bool set_flag(Flag key, bool value);
 
   private:
 	// Логгер для преобразований
 	Logger tex_logger;
+	// автогенерация кратких шаблонов
+	void generate_brief_templates();
 
 	//== Внутреннее логгирование ==============================================
 	// true, если во время исполнения произошла ошибка
@@ -177,7 +180,10 @@ class Interpreter {
 		// флаг динамического тайпчекера
 		{Flag::weak_type_comparison, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
-		{Flag::log_theory, false}};
+		{Flag::log_theory, false},
+		// временный флаг для логирования в отчет, Андрей исправь
+		{Flag::report, true},
+	};
 
 	// Общий вид опрерации
 	using GeneralOperation =
@@ -259,6 +265,7 @@ class Interpreter {
 				   vector<ObjectType> input_type);
 	// выбрать подходящий вариант функции для данных аргументов (если он есть)
 	optional<int> find_func(string func, vector<ObjectType> input_type);
+	string get_func_id(Function function);
 
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(

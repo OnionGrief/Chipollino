@@ -75,6 +75,7 @@ CalcPreamble {
  , <BestCase s.MPSort <Compare s.HeightPercent s.RealHeightPercent>> : s.FrameType
                      = '% Minipage 's.MPType
 		       '; Frame 's.FrameType
+			'; WidthMP percent 's.RealWidthPercent'; HeightMP percent 's.RealHeightPercent
                       '; Width percent 's.RealWidthPercent'; Height percent 's.RealHeightPercent;
 }
 
@@ -98,7 +99,7 @@ TrimStrong {
 }
 
 FrameSize {
-  Height = 350;
+  Height = 320;
   Width = 600;
   MaxZoom = 250 ; /* div 100 */
   MinZoom = 45; /* div 100 , not used yet */
@@ -266,7 +267,12 @@ ProcessNode {
 ProcessLabel {
  e.Label'@'e.PlaceHolder = e.Label'@'e.PlaceHolder;
  /*No Label */ = '\\;\\;\\;';
- e.Label = <TrueMathMode e.Label>;
+ e.Label = <TrueMathMode <NormalizeAlts e.Label>>;
+}
+
+NormalizeAlts {
+ e.x'!|!'e.y = e.x'|'<NormalizeAlts e.y>;
+ e.z = e.z;
 } 
 
 ProcessEdge {
