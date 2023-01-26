@@ -40,10 +40,10 @@ void Tester::test(const Regex& lang, const Regex& regex, int step,
 	}
 
 	// vector<string> col;
-	t.columns.push_back("$Количество итераций$");
-	t.columns.push_back("$Длина строки$");
-	t.columns.push_back("$Время парсинга$");
-	t.columns.push_back("$Принадлежность языку$");
+	t.columns.push_back("Количество итераций");
+	t.columns.push_back("Длина строки");
+	t.columns.push_back("Время парсинга");
+	t.columns.push_back("Принадлежность языку");
 	if (log) {
 		log->set_parameter("language", lang);
 		log->set_parameter("regex", regex);
@@ -91,10 +91,10 @@ void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step,
 		if (time >= 180) return;
 	}
 
-	t.columns.push_back("$Количество итераций$");
-	t.columns.push_back("$Длина строки$");
-	t.columns.push_back("$Время парсинга$");
-	t.columns.push_back("$Принадлежность языку$");
+	t.columns.push_back("Количество итераций");
+	t.columns.push_back("Длина строки");
+	t.columns.push_back("Время парсинга");
+	t.columns.push_back("Принадлежность языку");
 	if (log) {
 		log->set_parameter("language", lang);
 		log->set_parameter("regex", regex);

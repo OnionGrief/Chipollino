@@ -250,7 +250,7 @@ string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> colum
 	}
 	table += "$\\begin{array}{" + format + "}\n";
 	table += cols + "\n";
-	table += "\\hline\n";
+	// table += "\\hline\n";
 	int k = 0;
 	int j;
 	for (int i = 0; i < t.rows.size(); i++) {
