@@ -424,24 +424,15 @@ string Regex::get_refal_rewrite_rule(pair<Regex, Regex> rule) {
 }
 void Regex::create_normalize_refal_code(
 	const vector<pair<Regex, Regex>>& rules) {
-	ofstream fout("./refal/normalize.ref");
-	fout << "/*this file is auto generated*/\n";
-	fout << "$ENTRY Go {=<Open 'r' 1 'out.txt'>\n\t";
-	fout << "<Br 'answer' '=' <Normalize <Get 1>>>\n\t";
-	fout << "<Close 1>\n\t<Open 'w' 1 'out.txt'>\n\t";
-	fout << "<Put 1 <Dg 'answer' >>\n\t<Close 1>;\n}\n";
-	fout << "Normalize {\n\t";
-	for (int i = 0; i < rules.size(); i++) {
-		fout << get_refal_rewrite_rule(rules[i]);
+	system("cd refal && cp normalize_template.ref normalize.ref");
+	std::ofstream fout("./refal/normalize.ref", std::ios::app);
+	if (fout.is_open()) {
+		fout << "\nNormalize {\n\t";
+		for (int i = 0; i < rules.size(); i++) {
+			fout << get_refal_rewrite_rule(rules[i]);
+		}
+		fout << " e.1 = e.1;\n}\n";
 	}
-
-	fout << " e.1 = e.1;\n}\n";
-	// проверка на баланс скобок
-	fout << "MatchingBracketsBool {\n\t0 = True;\n\te.0 = False;\n}\n";
-	fout << "MatchingBrackets {\n\t";
-	fout << "'(' e.0 = <Add <MatchingBrackets e.0> 1>;\n\t";
-	fout << "')' e.0 = <Sub <MatchingBrackets e.0> 1>;\n\t";
-	fout << "s.0 e.0 = <MatchingBrackets e.0>;\n\t=0;\n}";
 	fout.close();
 }
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {

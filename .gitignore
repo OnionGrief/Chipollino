@@ -26,3 +26,4 @@ test.txt
 /refal/out.txt
 /refal/reflog0.txt
 /refal/reflog1.txt
+/refal/normalize.ref

@@ -1,0 +1,20 @@
+ /*this file is template for auto generated*/
+$ENTRY Go {=<Open 'r' 1 'out.txt'>
+	<Br 'answer' '=' <Normalize <Get 1>>>
+	<Close 1>
+	<Open 'w' 1 'out.txt'>
+	<Put 1 <Dg 'answer' >>
+	<Close 1>;
+}
+
+MatchingBracketsBool {
+	0 = True;
+	e.0 = False;
+}
+MatchingBrackets {
+	'(' e.0 = <Add <MatchingBrackets e.0> 1>;
+	')' e.0 = <Sub <MatchingBrackets e.0> 1>;
+	s.0 e.0 = <MatchingBrackets e.0>;
+	 = 0;
+}
+
