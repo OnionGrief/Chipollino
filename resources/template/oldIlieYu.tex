@@ -1,3 +1,4 @@
+%begin detailed
 % descriptive documentation :section
 \section{Основные понятия}
 \begin{frame}{Follow-эквивалентность}
@@ -7,7 +8,9 @@
     Follow-эквивалентность: состояния автомата Глушкова $a_{i}$ и $a_{j}$ follow-эквивалентны, если $follow(a_{i}) = follow(a_{j})$, и либо $a_{i}$, $a_{j}$ оба финальные, либо они оба не финальные.
   \end{block} % descriptive documentation
 \end{frame}
+%end detailed
 
+%begin detailed
 \section{Follow-автомат (IlieYu)}
 % descriptive documentation : frame
 \begin{frame}{Конструкция автомата Илия-Ю (или follow-автомата)}
@@ -18,6 +21,7 @@
     \end{itemize}
   \end{block} % descriptive documentation
 \end{frame}
+%end detailed
 
 \begin{frame}{Пример Follow-автомата (IlieYu)}\only<3> {\vspace{-5pt}}
   \vspace{-5pt}
@@ -42,6 +46,7 @@
   }
 \end{frame}
 
+%begin detailed
 % overall documentation : section 
 \section{Обсуждение}
 \begin{frame}{Дополнительные сведения} \only<2> {\vspace{-5pt}}
@@ -66,3 +71,4 @@
     % я не уверена в правильности выражения "для всех весов цикла" (( вот источник: https://cs.nyu.edu/~mohri/pub/glush.pdf
   }
 \end{frame}
+%end detailed

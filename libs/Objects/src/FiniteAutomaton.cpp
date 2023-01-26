@@ -2002,9 +2002,7 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 	}
 
 	TransformationMonoid sm = get_syntactic_monoid();
-	cout << sm.to_txt_MyhillNerode() << endl;
-
-	iLogTemplate::Table t;
+	sm.get_classes_number_MyhillNerode();
 
 	vector<string> table_rows;
 	vector<string> table_columns;
@@ -2023,45 +2021,49 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 	find_maximum_identity_matrix(rows, equivalence_classes_table, result, 0,
 								 result_yx, {}, used_x, used_y, m, n);
 
+	// DEBUG
+	// cout << sm.to_txt_MyhillNerode() << endl;
 	// int maxlen = table_columns[table_columns.size() - 1].size();
 	// cout << string(maxlen + 2, ' ');
-	for (int i = 0; i < result_yx.size(); i++) {
-		for (auto i : table_columns[result_yx[i].second]) {
-			// cout << i;
-			t.columns.push_back(to_string(i));
-		}
-		// cout << string(maxlen + 2 -
-		// table_columns[result_yx[i].second].size(), 			   ' ');
-	}
+	// for (int i = 0; i < result_yx.size(); i++) {
+	// 	cout << table_columns[result_yx[i].second]
+	// 		 << string(maxlen + 2 - table_columns[result_yx[i].second].size(),
+	// 				   ' ');
+	// }
 	// cout << endl;
+	// for (int i = 0; i < result_yx.size(); i++) {
+	// 	cout << table_rows[result_yx[i].first]
+	// 		 << string(maxlen + 2 - table_rows[result_yx[i].first].size(), ' ');
+	// 	for (int j = 0; j < result_yx.size(); j++) {
+	// 		cout << equivalence_classes_table[result_yx[i].first]
+	// 										 [result_yx[j].second]
+	// 			 << string(maxlen + 1, ' ');
+	// 	}
+	// 	cout << endl;
+	// }
 
-	for (int i = 0; i < result_yx.size(); i++) {
-		for (auto i : table_rows[result_yx[i].first]) {
-			// cout << i;
-			t.rows.push_back(to_string(i));
-		}
-		// cout << string(maxlen + 2 - table_rows[result_yx[i].first].size(), '
-		// ');
-		for (int j = 0; j < result_yx.size(); j++) {
-			t.data.push_back(
-				to_string(equivalence_classes_table[result_yx[i].first]
-												   [result_yx[j].second]));
-			// cout << equivalence_classes_table[result_yx[i].first]
-			// 								 [result_yx[j].second]
-			// 	 << string(maxlen + 1, ' ');
-		}
-		// cout << endl;
-	}
-
-	// кэширование
-	language->set_nfa_minimum_size(result);
 	if (log) {
+		iLogTemplate::Table t;
+		for (int i = 0; i < result_yx.size(); i++) {
+			t.columns.push_back(table_columns[result_yx[i].second]);
+		}
+		for (int i = 0; i < result_yx.size(); i++) {
+			t.rows.push_back(table_rows[result_yx[i].first]);
+			for (int j = 0; j < result_yx.size(); j++) {
+				t.data.push_back(
+					to_string(equivalence_classes_table[result_yx[i].first]
+													   [result_yx[j].second]));
+			}
+		}
 		log->set_parameter("result", result);
 		log->set_parameter("table", t);
 	}
 	/*Logger::log("Количество диагональных классов по методу Глейстера-Шаллита",
 				to_string(result));
 	Logger::finish_step();*/
+
+	// кэширование
+	language->set_nfa_minimum_size(result);
 	return result;
 }
 

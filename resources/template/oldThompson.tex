@@ -1,3 +1,4 @@
+%begin detailed
 \section{Основные понятия}
 % overall documentation : frame 
 \begin{frame}{Адгоритм Томпсона и НКА}
@@ -7,7 +8,9 @@
         Регулярные выражения и недетерминированные конечные автоматы - это два представления формальных языков.
     \end{block}
 \end{frame}% overall documentation
+%end detailed
 
+%begin detailed
 % descriptive documentation : frame 
 \begin{frame}{Недетерминированные КА}\only<3> {\vspace{-5pt}}
     \vspace{-5pt}
@@ -49,14 +52,18 @@
         \end{block}
     }
 \end{frame} % descriptive documentation
+%end detailed
 
+%begin detailed
 \begin{frame}{Пример НКА}
     \vspace{-5pt}
     \begin{center}
         \includegraphics[width=3in, keepaspectratio]{tompson1.png} % the NFA example diagram placeholder
     \end{center}
 \end{frame}% descriptive documentation
+%end detailed
 
+%begin detailed
 \section{Автомат Томпсона}
 % descriptive documentation : frame
 \begin{frame}{Конструкция автомата Томпсона}\only<2> {\vspace{-5pt}}
@@ -75,7 +82,9 @@
         \end{wideitemize}
     \end{block}
 \end{frame} % descriptive documentation
+%end detailed
 
+%begin detailed
 \begin{frame}{Правила} \only<4> {\vspace{-5pt}}
     \vspace{-5pt}
     \only<1-4>{$N(s)$ и $N(t)$ являются NFA подвыражений $s$ и $t$ соответственно.}
@@ -112,6 +121,7 @@
         Заключенное в скобки выражение (выражения) преобразуется в само $N(s)$.
     }
 \end{frame}% descriptive documentation
+%end detailed
 
 \begin{frame}{Пример автомата Томпсона}
     Исходное регулярное выражение:
@@ -122,6 +132,7 @@
     %template_thompson % the Thompson diagram placeholder
 \end{frame}
 
+%begin detailed
 % overall documentation : section 
 \section{Обсуждение}
 \begin{frame}{Cвойства автомата Томпсона}
@@ -131,3 +142,4 @@
         \item Не больше двух переходов из каждого состояния
     \end{itemize}
 \end{frame}
+%end detailed
