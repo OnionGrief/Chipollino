@@ -1727,7 +1727,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 	}
 	string str_state = "";
 	for (size_t i = 0; i < automat_state.size(); i++) {
-		str_state += automat_state[i].identifier + "\\ ";
+		str_state += automat_state[i].identifier + "\\\\ ";
 	}
 
 	// cout << deriv_log;
