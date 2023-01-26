@@ -237,15 +237,16 @@ string LogTemplate::math_mode(string str) {
 string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> columns,
 							  vector<string> data*/) {
 	string table = "";
-	string format = "l|";
-	string cols = "  & ";
+	string format = "c|";
+	string cols = "  &";
 	string row = "";
 	for (int i = 0; i < t.columns.size(); i++) {
-		format += "l";
+		format += "c";
+		string c = t.columns[i] == " " ? "eps" : t.columns[i];
 		if (i != t.columns.size() - 1) {
-			cols += t.columns[i] + " & ";
+			cols += c + " &";
 		} else {
-			cols += t.columns[i] + "\\\\";
+			cols += c + "\\\\";
 		}
 	}
 	table += "$\\begin{array}{" + format + "}\n";
@@ -254,10 +255,11 @@ string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> colum
 	int k = 0;
 	int j;
 	for (int i = 0; i < t.rows.size(); i++) {
-		row = t.rows[i] + " & ";
+		string r = t.rows[i] == " " ? "eps" : t.rows[i];
+		row = r + " & ";
 		for (j = 0; j < t.columns.size(); j++) {
 			if (j != t.columns.size() - 1) {
-				row = row + t.data[k + j] + " & ";
+				row = row + t.data[k + j] + " &";
 			} else {
 				row = row + t.data[k + j] + "\\\\";
 			}

@@ -494,11 +494,9 @@ int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
 		is_minimal();
 	}
 	iLogTemplate::Table t;
-	for (int i = 0; i < equivalence_classes_table_top.size(); i++) {
-		t.columns.push_back(equivalence_classes_table_top[i]);
-	}
+	t.columns = equivalence_classes_table_top;
+	t.rows = equivalence_classes_table_left;
 	for (int i = 0; i < equivalence_classes_table_left.size(); i++) {
-		t.rows.push_back(equivalence_classes_table_left[i]);
 		for (int j = 0; j < equivalence_classes_table_bool[i].size();
 			 j++) { // вывод матрицы
 			t.data.push_back(to_string(equivalence_classes_table_bool[i][j]));
