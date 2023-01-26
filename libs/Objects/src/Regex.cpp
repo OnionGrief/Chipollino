@@ -999,7 +999,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	string str_end = "";
 	string str_pair = "";
 	for (size_t i = 0; i < first->size(); i++) {
-		str_first += string((*first)[i].symbol) + " ";
+		str_first += string((*first)[i].symbol) + "\\ ";
 	}
 
 	set<string> end_set;
@@ -1011,13 +1011,13 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	}
 
 	for (auto& elem : end_set) {
-		str_end = str_end + elem + " ";
+		str_end = str_end + elem + "\\ ";
 	}
 
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
 			str_pair = str_pair + "(" + string(list[it1.first]->value.symbol) + "," +
-					   string(list[it1.second[i]]->value.symbol)+")" + " ";
+					   string(list[it1.second[i]]->value.symbol)+")" + "\\ ";
 		}
 	}
 
@@ -1122,7 +1122,7 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 		str_follow = str_follow + states[state_ind].identifier + ": ";
 		for (auto j = states[state_ind].label.begin();
 			 j != states[state_ind].label.end(); j++) {
-			str_follow = str_follow + states[*j].identifier + " ";
+			str_follow = str_follow + states[*j].identifier + "\\ ";
 		}
 		str_follow = str_follow + ";\\\\";
 	}
@@ -1727,7 +1727,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 	}
 	string str_state = "";
 	for (size_t i = 0; i < automat_state.size(); i++) {
-		str_state += automat_state[i].identifier + " ";
+		str_state += automat_state[i].identifier + "\\ ";
 	}
 
 	// cout << deriv_log;

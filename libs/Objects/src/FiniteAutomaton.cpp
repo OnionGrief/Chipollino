@@ -2628,7 +2628,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			// TODO: передача набора regex
 
 			full_logs +=
-				" " + data[i][j]
+				"\\ " + data[i][j]
 						  .regex_from_state
 						  ->to_txt(); // тут по идее должно быть без to_txt но у
 									  // нас не принимается Regex*
