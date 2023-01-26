@@ -3,7 +3,40 @@ $ENTRY TrueMathMode {
  'eps'e.Input = '\\empt'<TrueMathMode e.Input>;
   e.Input'eps' = <TrueMathMode e.Input>'\\empt';
    = ;
- e.Input = '\\regexpstr{'<MathMode e.Input>'}';
+ e.Input = <SeparateModes Normal () e.Input>;
+}
+
+SeparateModes {
+ Normal () e.Eps e.Rest
+ , <EpsilonSym> : e.Eps = e.Eps 
+                          <SeparateModes Normal () e.Rest>;
+ Normal (e.Prefix) e.Eps e.Rest
+ , <EpsilonSym> : e.Eps = '\\regexpstr{'<MathMode e.Prefix>'}'e.Eps 
+                          <SeparateModes Normal () e.Rest>;
+ Normal (e.Prefix) s.Sym e.Rest
+ , <InSet (<ASCIIStandard>) s.Sym> :
+ { True = <SeparateModes Normal (e.Prefix s.Sym) e.Rest>;
+   False
+  , e.Prefix :
+   { = <SeparateModes Text (s.Sym) e.Rest>;
+    e.Nempty = '\\regexpstr{'<MathMode e.Prefix>'}'<SeparateModes Text (s.Sym) e.Rest>;
+   };
+ };
+ Text (e.Prefix) s.Sym e.Rest
+ , <InSet (<ASCIIStandard>) s.Sym> :
+ { False = <SeparateModes Text (e.Prefix s.Sym) e.Rest>;
+   True
+   , <InSet (<Punctuation>) s.Sym> :
+   { False = '\\text{'e.Prefix'}'<SeparateModes Normal (s.Sym) e.Rest>;
+     True
+     , <FirstSym (<ASCIIStandard>) e.Rest> :
+      { False = <SeparateModes Text (e.Prefix s.Sym) e.Rest>;
+        True = '\\text{'e.Prefix s.Sym'}'<SeparateModes Normal ( ) e.Rest>;
+      };
+   };
+ };
+ Text (e.Prefix) = '\\text{'e.Prefix'}';
+ Normal (e.Prefix) = '\\regexpstr{'<MathMode e.Prefix>'}';
 }
 
 AdjustSpaceBeforeStar {
@@ -40,7 +73,7 @@ IndexModes {
    False
   ,  s.AnyMode :
   {Index
-    = <Epsilon e.Before>'_{'<AnnoteLinearizeIfNeeded e.Index>'}'<IndexModes Outer (e.Ind)() e.y>;
+    = e.Before'_{'<AnnoteLinearizeIfNeeded e.Index>'}'<IndexModes Outer (e.Ind)() e.y>;
    Outer
     = <IndexModes Outer (e.Before e.Ind)() e.y>;
   }; };
@@ -56,13 +89,13 @@ IndexModes {
  };};
    False
   , s.AnyMode :
-  {Index = <Epsilon e.Before>'_{'<AnnoteLinearizeIfNeeded e.Index>'}'<IndexModes Outer (s.Sym)() e.y>;
+  {Index = e.Before'_{'<AnnoteLinearizeIfNeeded e.Index>'}'<IndexModes Outer (s.Sym)() e.y>;
    Outer = <IndexModes Outer (e.Before s.Sym)() e.y>;};
  };
  Outer (e.Before)() s.Any e.y
    = <IndexModes Outer (e.Before s.Any)() e.y>;
- Outer (e.Before)() = <Epsilon e.Before>;
- Index (e.Before)(e.Index) = <Epsilon e.Before>'_{'<AnnoteLinearizeIfNeeded e.Index>'}';
+ Outer (e.Before)() = e.Before;
+ Index (e.Before)(e.Index) = e.Before'_{'<AnnoteLinearizeIfNeeded e.Index>'}';
 }
 
 IndexCont {
@@ -71,12 +104,6 @@ IndexCont {
   = <FirstSym (<Numbers>) e.y>;
  s.Sym e.y = <InSet (<Numbers>) s.Sym>;
  e.Z = False;
-}
-
-Epsilon {
- e.Eps e.Z, <InSet (<EpsilonSym>) (e.Eps)> : True = '}\\empt\\regexpstr{'<Epsilon e.Z>;
- s.x e.Z = s.x <Epsilon e.Z>;
-  = ;
 }
 
 /* We assume that every numeric index is preceded with an annotation showing the annotation source
@@ -135,6 +162,10 @@ $ENTRY Numbers {
  = '0123456789';
 }
 
+$ENTRY Punctuation {
+ = ' ,.:;';
+}
+
 $ENTRY Letters {
  = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
 }
@@ -164,4 +195,17 @@ $ENTRY LastSym {
    e.xx = False;
  };
  (e.x) = False;
+}
+
+$ENTRY NonASCII {
+ (e.Set) s.1 e.Rest
+ , e.Set : 
+ { e.S1 s.1 e.S2 = <NonASCII (e.Set) e.Rest>;
+   e.Fail = True;
+ };
+ (e.Set) = False;
+}
+
+$ENTRY ASCIIStandard {
+  = <Numbers><Letters>'$%&*()-_=+`~!@#;:\'\"<>,./?[]{}\\|^ \t\n';
 }

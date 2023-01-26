@@ -10,7 +10,7 @@ Page parameters are taken from file pagedata
 
 *******************************/
 
-$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters;
+$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters, ASCIIStandard, NonASCII;
 
 $ENTRY Go {
  , <Numb <Arg 1>> : s.TestNum
@@ -565,18 +565,6 @@ InsertNewPageIfNeeded {
  (e.Name)(e.Any) s.Rest = ; /* Either no objects are left or page fits the next object */
 }
 
-NonASCII {
- (e.Set) s.1 e.Rest
- , e.Set : 
- { e.S1 s.1 e.S2 = <NonASCII (e.Set) e.Rest>;
-   e.Fail = True;
- };
- (e.Set) = False;
-}
-
-ASCIIStandard {
-  = <Numbers><Letters>'$%&*()-_=+`~!@#;:\'\"<>,./?[]{}\\|^ \t\n';
-}
 
 PutByLines {
  s.Mode  = ;
