@@ -321,6 +321,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 	map<set<int>, int> visited_states;
 
 	set<int> q = closure({initial_state}, true);
+	for (auto elem : q)
+		cout << elem << " ";
 	string initial_state_identifier;
 	for (auto elem : q) {
 		initial_state_identifier +=
@@ -348,36 +350,44 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 				if (transitions_by_symbol != states[k].transitions.end())
 					x.push_back(transitions_by_symbol->second);
 			}
+			for (auto elem1 : x) {
+				for (auto elem2 : elem1)
+					cout << elem2 << " ";
+				cout << endl;
+			}
+			cout << endl;
 			set<int> q1;
 			set<int> x1;
+			x1.clear();
 			for (auto k : x) {
-				x1.clear();
 				q1 = closure(k, true);
 				for (int m : q1) {
 					x1.insert(m);
 				}
-				if (!x1.empty()) {
-					if (visited_states.find(x1) == visited_states.end()) {
-						string new_state_identifier;
-						for (auto elem : x1) {
-							new_state_identifier +=
-								(new_state_identifier.empty() ||
-										 states[elem].identifier.empty()
-									 ? ""
-									 : ", ") +
-								states[elem].identifier;
-						}
-						State new_state = {states_counter, x1,
-										   new_state_identifier, false,
-										   map<alphabet_symbol, set<int>>()};
-						new_states.push_back(new_state);
-						visited_states[x1] = states_counter;
-						s.push(x1);
-						states_counter++;
+			}
+			for (auto elem3 : x1)
+				cout << elem3 << " ";
+			cout << endl;
+			if (!x1.empty()) {
+				if (visited_states.find(x1) == visited_states.end()) {
+					string new_state_identifier;
+					for (auto elem : x1) {
+						new_state_identifier +=
+							(new_state_identifier.empty() ||
+									 states[elem].identifier.empty()
+								 ? ""
+								 : ", ") +
+							states[elem].identifier;
 					}
-					new_states[visited_states[q]].transitions[symb].insert(
-						visited_states[x1]);
+					State new_state = {states_counter, x1, new_state_identifier,
+									   false, map<alphabet_symbol, set<int>>()};
+					new_states.push_back(new_state);
+					visited_states[x1] = states_counter;
+					s.push(x1);
+					states_counter++;
 				}
+				new_states[visited_states[q]].transitions[symb].insert(
+					visited_states[x1]);
 			}
 		}
 	}
