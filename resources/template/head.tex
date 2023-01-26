@@ -13,7 +13,7 @@
 \usetikzlibrary{automata, positioning, arrows,patterns}
 \usetikzlibrary{arrows.meta}
 \usepackage{tempora} %по желанию -- русские штрифты с засечками
-\usepackage{dirtree,enumitem} %дерево вычислений + настраиваемые списки
+\usepackage{dirtree} %дерево вычислений
 
 \mode<presentation>
 {
@@ -158,7 +158,7 @@
 \newcommand{\seq}{\;{=}\;}
 \newenvironment{wideitemize}{\itemize\addtolength{\itemsep}{8pt}}{\enditemize}
 
-\newenvironment{narritemize}{\itemize[label=$\textcolor{black!75}{\bullet}$,labelsep=0.5ex]\addtolength{\itemsep}{-0.5ex}}{\enditemize}
+\newenvironment{narritemize}{\itemize\addtolength{\itemsep}{-0.5ex}}{\enditemize}
 %в преамбулу можно и нужно добавлять свои макросы
 
 \newcommand{\AddTRAPIcon}[1]{\raisebox{-1ex}{
