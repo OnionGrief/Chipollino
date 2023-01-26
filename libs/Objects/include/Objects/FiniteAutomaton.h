@@ -86,8 +86,10 @@ class FiniteAutomaton : public BaseObject {
 	string to_txt() const override;
 	// детерминизация ДКА
 	FiniteAutomaton determinize(bool is_trim = true) const;
-	// построение eps-замыкания
+	// удаление eps-переходов (построение eps-замыканий)
 	FiniteAutomaton remove_eps() const;
+	// удаление eps-переходов (доп. вариант)
+	FiniteAutomaton remove_eps_additional() const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
 	FiniteAutomaton minimize(bool is_trim = true) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
