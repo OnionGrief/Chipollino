@@ -869,7 +869,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 	bool success = true;
 	int results = 0;
 	int tests_size = verification.size;
-	int tests_false_num = min(10, (int)round(verification.size * 0.1));
+	int tests_false_num = min(10, (int)ceil(verification.size * 0.1));
 	vector<string> regex_list;
 	RegexGenerator RG; // TODO: менять параметры
 	Expression expr = verification.predicate;
