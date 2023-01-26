@@ -588,8 +588,6 @@ FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
 	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
-		log->set_parameter("cach",
-							   "(!) минимальный автомат получен из кэша");
 		log->set_parameter("result", new_dfa);
 	}
 	return new_dfa;
@@ -2112,8 +2110,6 @@ bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	}
 	bool result = states.size() == minimize().states.size();
 	if (log) {
-		log->set_parameter("cach",
-							   "(!) минимальный автомат получен из кэша");
 		log->set_parameter("result", result ? "True" : "False");
 	}
 	// Logger::log(result ? "True" : "False");
