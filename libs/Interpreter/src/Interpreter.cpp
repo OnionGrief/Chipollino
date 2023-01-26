@@ -326,6 +326,7 @@ optional<GeneralObject> Interpreter::apply_function(
 		}
 	}
 	if (function.name == "SemDet") {
+		log_template.load_tex_template("SemDet");
 		return ObjectBoolean(get_automaton(arguments[0]).semdet(&log_template));
 	}
 	if (function.name == "PumpLength") {

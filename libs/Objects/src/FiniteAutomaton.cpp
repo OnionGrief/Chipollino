@@ -2153,19 +2153,37 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 		state_languages[i] = derevative.value();
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 		// Logger::log("Derevative", state_languages[i].to_txt());
-		if (log) {
+		/*if (log) {
 			log->set_parameter("state", i);
 			log->set_parameter("prefix", prefix.value());
 			log->set_parameter("regex", reg);
 			log->set_parameter("deverative", state_languages[i]);
-		}
+		}*/
+
 		state_languages[i].make_language();
 	}
+	auto make_string_transition = [=](int from, alphabet_symbol through,
+									  int to) {
+		string f = "${q_" + std::to_string(from) + "}";
+		string arrow = "{\\xrightarrow{\\text{$" + string(through) + "$}}}";
+		string t = "{q_" + std::to_string(to) + "}$";
+		return f + arrow + t;
+	};
+	std::string ambiguous_transitions = "";
 	for (int i = 0; i < states.size(); i++) {
 		for (int j = 0; j < states.size(); j++) {
 			for (auto transition = states[j].transitions.begin();
 				 transition != states[j].transitions.end(); transition++) {
 				bool verified_ambiguity = false;
+				if (transition->second.size() > 1) {
+					ambiguous_transitions += "Ambigous: ";
+					for (auto it = transition->second.begin();
+						 it != transition->second.end(); it++) {
+						ambiguous_transitions +=
+							make_string_transition(j, transition->first, *it) +
+							",";
+					}
+				}
 				for (auto it = transition->second.begin();
 					 it != transition->second.end(); it++) {
 					bool reliability = true;
@@ -2178,16 +2196,24 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 						}
 					}
 					verified_ambiguity |= reliability;
+					if (reliability) {
+						ambiguous_transitions +=
+							"Reliable:" + 
+							make_string_transition(j, transition->first, *it) +
+							+"\\\\";
+					}
 				}
 				if (!verified_ambiguity) {
 					// Logger::log("Результат SemDet", "false");
 					// Logger::finish_step();
+					ambiguous_transitions += "Reliable: none\\\\";
+					log->set_parameter("semdet2", false);
 					return false;
 				}
 			}
 		}
 	}
-	// Logger::log("Результат SemDet", "true");
+	log->set_parameter("semdet2", "true");
 	return true;
 }
 
