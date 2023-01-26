@@ -830,16 +830,20 @@ bool Interpreter::run_test(const Test& test) {
 	auto test_set = eval_expression(test.test_set);
 	bool success = true;
 
+	LogTemplate log_template;
+	log_template.set_parameter("name", "Test");
+	log_template.load_tex_template("Test");
+
 	if (language.has_value() && test_set.has_value()) {
 		auto reg = get<ObjectRegex>(*test_set).value;
 
 		if (holds_alternative<ObjectRegex>(*language)) {
 			Tester::test(get<ObjectRegex>(*language).value, reg,
-						 test.iterations);
+						 test.iterations, &log_template);
 		} else if (holds_alternative<ObjectNFA>(*language)) {
-			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations);
+			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations, &log_template);
 		} else if (holds_alternative<ObjectDFA>(*language)) {
-			Tester::test(get<ObjectDFA>(*language).value, reg, test.iterations);
+			Tester::test(get<ObjectDFA>(*language).value, reg, test.iterations, &log_template);
 		} else {
 			logger.throw_error(
 				"while running test: invalid language expression");
@@ -849,6 +853,8 @@ bool Interpreter::run_test(const Test& test) {
 		logger.throw_error("while running test: invalid arguments");
 		success = false;
 	}
+
+	tex_logger.add_log(log_template);
 
 	// Logger::deactivate();
 	return success;
