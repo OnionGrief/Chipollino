@@ -42,6 +42,9 @@ class Interpreter {
 	// автогенерация кратких шаблонов
 	void generate_brief_templates();
 
+	// генерация теста для всех функций
+	void generate_test_for_all_functions();
+
 	//== Внутреннее логгирование ==============================================
 	// true, если во время исполнения произошла ошибка
 	bool error = false;
