@@ -493,9 +493,21 @@ int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
+	iLogTemplate::Table t;
+	for (int i = 0; i < equivalence_classes_table_top.size(); i++) {
+		t.columns.push_back(equivalence_classes_table_top[i]);
+	}
+	for (int i = 0; i < equivalence_classes_table_left.size(); i++) {
+		t.rows.push_back(equivalence_classes_table_left[i]);
+		for (int j = 0; j < equivalence_classes_table_bool[i].size();
+			 j++) { // вывод матрицы
+			t.data.push_back(to_string(equivalence_classes_table_bool[i][j]));
+		}
+	}
 	if (log) {
 		/*TODO: logs */
 		log->set_parameter("result", equivalence_classes_table_bool.size());
+		log->set_parameter("table", t);
 	}
 	/*Logger::init_step("Myhill-Nerode сlasses number");
 	Logger::log(to_string(equivalence_classes_table_bool.size()));
@@ -628,20 +640,24 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 		is_minimal();
 	}
 	stringstream ss;
+	// iLogTemplate::Table t;
 	int maxlen = terms[terms.size() - 1].name.size();
 	ss << string(maxlen + 2, ' ');
 	for (int i = 0; i < equivalence_classes_table_top.size(); i++) {
 		ss << equivalence_classes_table_top[i]
 		   << string(maxlen + 2 - equivalence_classes_table_top[i].size(), ' ');
+		// t.columns.push_back(equivalence_classes_table_top[i]);
 	}
 	ss << "\n";
 
 	for (int i = 0; i < equivalence_classes_table_left.size(); i++) {
+		// t.rows.push_back(equivalence_classes_table_left[i]);
 		ss << equivalence_classes_table_left[i]
 		   << string(maxlen + 2 - equivalence_classes_table_left[i].size(),
 					 ' ');
 		for (int j = 0; j < equivalence_classes_table_bool[i].size();
 			 j++) { // вывод матрицы
+			// t.data.push_back(to_string(equivalence_classes_table_bool[i][j]));
 			ss << equivalence_classes_table_bool[i][j]
 			   << string(maxlen + 1, ' ');
 		}
