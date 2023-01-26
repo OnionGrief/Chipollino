@@ -21,14 +21,22 @@ $ENTRY Go {
        <Close 1><Close 2>;
 }
 
+Balanced {
+ (e.B1(t.Open t.Close)e.B2) e.y1 t.Open e.y2 t.Close e.y3
+   = <Balanced (e.B1(t.Open t.Close)e.B2) e.y1 e.y2 e.y3>;
+ (e.B1(e.Brs1 t.AnyBr e.Brs2) e.B2) e.y1 t.AnyBr e.y2 = False;
+ (e.BrPairs) e.y = True;
+}
+
 MakeFrames {
-  s.DW s.MPW Normal '%begin theory'e.Endl
+  s.DW s.MPW Normal '%begin detailed'e.Endl
    = <MakeFrames s.DW s.MPW Theory <Get 1>>;
-  s.DW s.MPW Theory e.Smth '%end theory'e.Endl
+  s.DW s.MPW Theory e.Smth '%end detailed'e.Endl
    = <Putout 2 e.Smth> <MakeFrames s.DW s.MPW Normal <Get 1>>;
   s.DW s.MPW Theory e.Smth
    = <Putout 2 e.Smth> <MakeFrames s.DW s.MPW Theory <Get 1>>;
   s.DW s.MPW Normal '\\begin{frame}{'e.Name'}'e.Endl
+  , <Balanced (('{}'))e.Name> : True
    = <MakeFrames s.DW s.MPW Frame (e.Name)() <Trim <Get 1>>>;
   s.DW s.MPW Frame (e.Name)(e.Content) e.1'\\end{frame}'
   , <Br 'First=+'> : e.Trash
@@ -156,6 +164,9 @@ s.Num s.Sym e.Rest = <AuxLen <Add s.Num <Weight s.Sym>> e.Rest>;
 CountTextHeight {
 s.DefaultWidth (e.Content1 () e.Content2) = <Add <CountTextHeight s.DefaultWidth (e.Content1)><CountTextHeight s.DefaultWidth (e.Content2)>>;
 s.DefaultWidth ((e.Line1)(e.Line2)e.Rest) = <CountTextHeight s.DefaultWidth ((e.Line1 e.Line2) e.Rest)>;
+s.DefaultWidth ()
+  , <ExSize normalsize> : (s.ExW)(s.ExH)
+ = s.ExH;
 s.DefaultWidth ((e.Line))
  , <Length e.Line> : s.Num
  , <ExSize normalsize> : (s.ExW)(s.ExH)
@@ -261,7 +272,7 @@ Table ((Preamble)(MiniPage Content)(Normal Content)) MiniPage Normal WidthMP Hei
 ParseFrame {
  s.DefaultWidth s.MPWidth Diag ((e.Preamble)(e.PageData)e.Previous)('\\end{tikzpicture}'e.Rubbish) e.Rest
         = (Diagram ((e.Preamble) e.Previous ('\\end{tikzpicture}')) e.PageData) <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>; 
- s.DefaultWidth s.MPWidth Normal ()('%begin theory'e.Rubbish)e.Rest
+ s.DefaultWidth s.MPWidth Normal ()('%begin detailed'e.Rubbish)e.Rest
   = <ParseFrame s.DefaultWidth s.MPWidth Theory ((e.Rubbish)) e.Rest>;
  s.DefaultWidth s.MPWidth Normal (e.Preamble)(e.Start'\\begin{array}'e.End)e.Rest
   = <ParseFrame s.DefaultWidth s.MPWidth Table ((e.Preamble)(e.Start'\\begin{array}'e.End)) e.Rest>;
@@ -282,7 +293,7 @@ ParseFrame {
       = (Table ((e.Preamble)(MiniPage (e.FirstLine)e.MPForm (e.Smth'\\end{array}'e.Rubbish))
                             (Normal (e.FirstLine)e.NormForm (e.Smth'\\end{array}'e.Rubbish))) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
          <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
- s.DefaultWidth s.MPWidth Theory (e.Content)(e.Smth'%end theory'e.Rubbish)e.Rest
+ s.DefaultWidth s.MPWidth Theory (e.Content)(e.Smth'%end detailed'e.Rubbish)e.Rest
  , <CountTextHeight s.DefaultWidth (e.Content (e.Smth))> : s.ThHeight
   = (Theory (e.Content (e.Smth)) Normal Normal s.DefaultWidth s.ThHeight s.DefaultWidth s.ThHeight)
     <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
@@ -596,7 +607,7 @@ ChooseContent {
  };
  };
  s.DefHeight s.Flag Theory e.Content
-  = <PutByLines Raw e.Content'\n\\vfill'>;
+  = <PutByLines Raw e.Content('\n\\vfill')>;
  s.DefHeight s.Flag Diagram (e.Preamble)e.Content
   = <PutByLines Raw e.Preamble>
     <Putout 2 '\\vspace*{-1ex}\n\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
