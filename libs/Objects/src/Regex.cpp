@@ -1016,8 +1016,9 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
-			str_pair = str_pair + "(" + string(list[it1.first]->value.symbol) + "," +
-					   string(list[it1.second[i]]->value.symbol)+")" + "\\ ";
+			str_pair = str_pair + "(" + string(list[it1.first]->value.symbol) +
+					   "," + string(list[it1.second[i]]->value.symbol) + ")" +
+					   "\\ ";
 		}
 	}
 
@@ -1221,8 +1222,7 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 			term_r->get_prefix(len - k, prefs2);
 			for (auto i = prefs1->begin(); i != prefs1->end(); i++) {
 				for (auto j = prefs2->begin(); j != prefs2->end(); j++) {
-					if (prefix_derivative(*i + *j))
-						prefs->insert(*i + *j);
+					if (prefix_derivative(*i + *j)) prefs->insert(*i + *j);
 				}
 			}
 			prefs1->clear();
@@ -1243,8 +1243,7 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 			get_prefix(len - k, prefs2);
 			for (auto i = prefs1->begin(); i != prefs1->end(); i++) {
 				for (auto j = prefs2->begin(); j != prefs2->end(); j++) {
-					if (prefix_derivative(*i + *j))
-						prefs->insert(*i + *j);
+					if (prefix_derivative(*i + *j)) prefs->insert(*i + *j);
 				}
 			}
 			prefs1->clear();
@@ -1501,6 +1500,7 @@ std::optional<Regex> Regex::prefix_derivative(std::string respected_str) const {
 // Длина накачки
 // Длина накачки
 int Regex::pump_length(iLogTemplate* log) const {
+	if (log) log->set_parameter("oldregex", *this);
 	if (language->pump_length_cached()) {
 		if (log) {
 			log->set_parameter("pumplength", language->get_pump_length());
