@@ -341,7 +341,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps() const {
 	while (!s.empty()) {
 		q = s.top();
 		s.pop();
-		for (alphabet_symbol symb : language->get_alphabet()) {
+		for (const alphabet_symbol& symb : language->get_alphabet()) {
 			x.clear();
 			for (int k : q) {
 				auto transitions_by_symbol = states[k].transitions.find(symb);
@@ -413,7 +413,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps_additional() const {
 			}
 		}
 		vector<set<int>> x;
-		for (alphabet_symbol symb : language->get_alphabet()) {
+		for (const alphabet_symbol& symb : language->get_alphabet()) {
 			x.clear();
 			for (int k : q) {
 				auto transitions_by_symbol = states[k].transitions.find(symb);
