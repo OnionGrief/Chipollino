@@ -988,10 +988,18 @@ FiniteAutomaton Regex::to_glushkov() const {
 				   to_string((*first)[i].number + 1) + " ";
 	}
 
+	set<string> end_set;
+
 	for (size_t i = 0; i < end->size(); i++) {
-		str_end = str_end + string((*end)[i].symbol) +
-				  to_string((*end)[i].number + 1) + " ";
+		// str_end = str_end + string((*end)[i].symbol) +
+		//		  to_string((*end)[i].number + 1) + " ";
+		end_set.insert(string((*end)[i].symbol));
 	}
+
+	for (auto& elem : end_set) {
+		str_end = str_end + elem + " ";
+	}
+
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
 			str_pair = str_pair + string(list[it1.first]->value.symbol) +
@@ -1656,6 +1664,9 @@ FiniteAutomaton Regex::to_antimirov() const {
 		}
 
 		if ((state.size() == 0) || (states[i].contains_eps())) {
+			if (state == "") {
+				state = alphabet_symbol::epsilon();
+			}
 			automat_state.push_back({int(i), {}, state, true, transit});
 		} else {
 			automat_state.push_back({int(i), {}, state, false, transit});
