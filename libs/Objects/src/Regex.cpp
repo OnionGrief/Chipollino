@@ -549,6 +549,11 @@ string Regex::get_refal_rewrite_rule(pair<Regex, Regex> rule) {
 	out += rule.first.to_refal_expr(&temp);
 	out += "e.";
 	out += to_string(temp.size() + 1);
+	for (int i = 1; i <= temp.size(); i++) {
+		out += ",\n\t<MatchingBracketsBool <MatchingBrackets e." +
+			   to_string(i) + ">> : True";
+	}
+
 	out += " ";
 	out += "=<Normalize ";
 	out += "e.0 ";
@@ -572,7 +577,13 @@ void Regex::create_normalize_refal_code(
 		fout << get_refal_rewrite_rule(rules[i]);
 	}
 
-	fout << " e.1 = e.1;\n}";
+	fout << " e.1 = e.1;\n}\n";
+	// проверка на баланс скобок
+	fout << "MatchingBracketsBool {\n\t0 = True;\n\te.0 = False;\n}\n";
+	fout << "MatchingBrackets {\n\t";
+	fout << "'(' e.0 = <Add <MatchingBrackets e.0> 1>;\n\t";
+	fout << "')' e.0 = <Sub <MatchingBrackets e.0> 1>;\n\t";
+	fout << "s.0 e.0 = <MatchingBrackets e.0>;\n\t=0;\n}";
 	fout.close();
 }
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
