@@ -2242,8 +2242,8 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 				auto res = get_prefix(*it2, state_end, was);
 				if (res.has_value()) {
 					ans = (string)it->first + (string)res.value();
+					return ans;
 				}
-				return ans;
 			}
 		}
 	}
@@ -2252,7 +2252,7 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 
 bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 	if (!annoted) {
-		return annote().semdet_entry(true);
+		return annote().remove_trap_states().semdet_entry(true, log);
 	}
 	// Logger::log(
 	//"Получение языка из производной регулярки автомата по префиксу");
@@ -2280,24 +2280,38 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 		// Logger::log("Regex", reg.to_txt());
 		auto derivative = reg.prefix_derivative(prefix.value());
 		if (!derivative.has_value()) continue;
-		state_languages[i] = derivative.value();
+		state_languages[i].from_string(derivative.value().to_txt());
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 		// Logger::log("Derevative", state_languages[i].to_txt());
-
-		// TODO: logs
-		if (log) {
+		/*if (log) {
 			log->set_parameter("state", i);
 			log->set_parameter("prefix", prefix.value());
 			log->set_parameter("regex", reg);
-			log->set_parameter("derivative", state_languages[i]);
-		}
-		state_languages[i].make_language();
+			log->set_parameter("deverative", state_languages[i]);
+		}*/
 	}
+	auto make_string_transition = [=](int from, alphabet_symbol through,
+									  int to) {
+		string f = "${q_" + std::to_string(from) + "}";
+		string arrow = "{\\xrightarrow{\\text{$" + string(through) + "$}}}";
+		string t = "{q_" + std::to_string(to) + "}$";
+		return f + arrow + t;
+	};
+	std::string ambiguous_transitions = "";
 	for (int i = 0; i < states.size(); i++) {
 		for (int j = 0; j < states.size(); j++) {
 			for (auto transition = states[j].transitions.begin();
 				 transition != states[j].transitions.end(); transition++) {
 				bool verified_ambiguity = false;
+				if (transition->second.size() > 1) {
+					ambiguous_transitions += "Ambigous: ";
+					for (auto it = transition->second.begin();
+						 it != transition->second.end(); it++) {
+						ambiguous_transitions +=
+							make_string_transition(j, transition->first, *it) +
+							",";
+					}
+				}
 				for (auto it = transition->second.begin();
 					 it != transition->second.end(); it++) {
 					bool reliability = true;
@@ -2310,16 +2324,33 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 						}
 					}
 					verified_ambiguity |= reliability;
+					if (reliability && transition->second.size() > 1) {
+						ambiguous_transitions +=
+							"Reliable:" + 
+							make_string_transition(j, transition->first, *it) +
+							+"\\\\";
+					}
 				}
 				if (!verified_ambiguity) {
 					// Logger::log("Результат SemDet", "false");
 					// Logger::finish_step();
+					ambiguous_transitions += "Reliable: none\\\\";
+					if (log) {
+						log->set_parameter("semdet1", ambiguous_transitions);
+						log->set_parameter("semdet2", false);
+					}
 					return false;
 				}
 			}
 		}
 	}
-	// Logger::log("Результат SemDet", "true");
+	if (log) {
+		if (ambiguous_transitions == "") {
+			ambiguous_transitions = "None";
+		}
+		log->set_parameter("semdet1", ambiguous_transitions);
+		log->set_parameter("semdet2", "true");
+	}
 	return true;
 }
 
@@ -2328,7 +2359,7 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 	}
-	bool result = semdet_entry(log);
+	bool result = semdet_entry(false, log);
 	if (log) {
 		log->set_parameter("result", result);
 	}
