@@ -63,7 +63,7 @@ $ENTRY FrameData {
 }
 
 $ENTRY ExSize {
- normalsize = (<Div <FrameData Width> 70>)(<Div <FrameData MaxHeight> 30>);
+ normalsize = (<Div <FrameData Width> 72>)(<Div <FrameData MaxHeight> 30>);
  small = (<Div <FrameData Width> 76>)(<Div <FrameData MaxHeight> 35>);
  footnotesize = (<Div <FrameData Width> 85>)(<Div <FrameData MaxHeight> 40>);
  scriptsize = (<Div <FrameData Width> 95>)(<Div <FrameData MaxHeight> 45>);
@@ -127,24 +127,37 @@ FindSeparator {
 TakePrefix {
   0 e.Rest = (e.Rest);
  s.Size = ();
- s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight s.Sym>> e.Rest>;
+ s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight (e.Rest) s.Sym>> e.Rest>;
 }
 
 Weight {
- '|' = 7;
- '*' = 2;
- ' ' = 1;
- '=' = 9;
- '(' = 2;
- ')' = 2;
- '{' = 2;
- '}' = 2;
- ',' = 1;
- '.' = 1;
- s.Num, <InSet (<Numbers>) s.Num> :
- {True = 2;
+ (e.Any) '|' = 7;
+ (' ') '*' = 4;
+ (e.Any) '*' = 2;
+ (e.Any) ' '
+ , <FirstSym (<ASCIIStandard>) e.Any> :
+ {True = 1;
+  False = 2;
+ };
+ (e.Any) '=' = 9;
+ (e.Any) '(' = 2;
+ (e.Any) ')' = 2;
+ (e.Any) '{' = 2;
+ (e.Any) '}' = 2;
+ (e.Any)','
+ , <FirstSym (<Numbers>) e.Any> :
+ {True = 0;
+  False = 3;
+ };
+ (e.Any)'.'
+ , <FirstSym (<Numbers>) e.Any> :
+ {True = 0;
+  False = 3;
+ };
+ (e.Any) s.Sym, <InSet (<Numbers>) s.Sym> :
+ {True = <Add 1 <Mod <Random 1> 2>>;
   False
- , <InSet (<ASCIIStandard>) s.Num> :
+ , <InSet (<ASCIIStandard>) s.Sym> :
  {True = 3;
   False = 1; /* Brute Unicode processing */
  };
@@ -257,7 +270,7 @@ ChooseMaxCase {
 
 AuxLen {
 s.Mode s.Num = s.Num;
-String s.Num s.Sym e.Rest = <AuxLen String <Add s.Num <Weight s.Sym>> e.Rest>;
+String s.Num s.Sym e.Rest = <AuxLen String <Add s.Num <Weight (e.Rest) s.Sym>> e.Rest>;
 List s.Num t.Term e.Rest = <AuxLen List <Add s.Num 1> e.Rest>;
 }
 
