@@ -56,6 +56,13 @@ string Interpreter::Lexer::scan_until(char symbol) {
 	return acc;
 }
 
+Interpreter::Lexem Interpreter::Lexer::scan_star() {
+	if (scan_word("*")) {
+		return Lexem(Lexem::star);
+	}
+	return Lexem(Lexem::error);
+}
+
 Interpreter::Lexem Interpreter::Lexer::scan_equalSign() {
 	if (scan_word("=")) {
 		return Lexem(Lexem::equalSign);
@@ -169,6 +176,9 @@ Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
 		return lex;
 	}
 	if (Lexem lex = scan_number(); lex.type) {
+		return lex;
+	}
+	if (Lexem lex = scan_star(); lex.type) {
 		return lex;
 	}
 	if (Lexem lex = scan_equalSign(); lex.type) {

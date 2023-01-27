@@ -85,11 +85,13 @@ class FiniteAutomaton : public BaseObject {
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
-	FiniteAutomaton determinize() const;
-	// построение eps-замыкания
+	FiniteAutomaton determinize(bool is_trim = true) const;
+	// удаление eps-переходов (построение eps-замыканий)
 	FiniteAutomaton remove_eps() const;
+	// удаление eps-переходов (доп. вариант)
+	FiniteAutomaton remove_eps_additional() const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize() const;
+	FiniteAutomaton minimize(bool is_trim = true) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&,
@@ -117,6 +119,7 @@ class FiniteAutomaton : public BaseObject {
 	FiniteAutomaton annote() const;
 	// снятие разметки с букв
 	FiniteAutomaton deannote() const;
+	FiniteAutomaton delinearize() const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
 	// states.size()) i-й элемент хранит номер класса i-го состояния
 	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
@@ -146,6 +149,8 @@ class FiniteAutomaton : public BaseObject {
 	bool is_one_unambiguous() const;
 	// возвращает количество состояний (пердикат States)
 	int states_number() const;
+	// проверка на пустоту
+	bool is_empty() const;
 	// метод Arden
 	Regex to_regex() const;
 	// возвращает число диагональных классов по методу Глейстера-Шаллита
@@ -156,8 +161,6 @@ class FiniteAutomaton : public BaseObject {
 	optional<bool> is_nfa_minimal() const;
 	// проверка на минимальность для дка
 	bool is_dfa_minimal() const;
-	// установить  флаг is_trim
-	void set_trim_flag(bool trim_global);
 
 	friend class Regex;
 	friend class TransformationMonoid;

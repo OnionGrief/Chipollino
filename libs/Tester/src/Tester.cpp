@@ -5,7 +5,6 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 	vector<double> times;
 	vector<int> lengths;
 	vector<bool> belongs;
-	// automaton.determinize();
 	FiniteAutomaton automaton = lang.to_glushkov();
 
 	using clock = std::chrono::high_resolution_clock;
@@ -15,7 +14,6 @@ void Tester::test(const Regex& lang, const Regex& regex, int step) {
 		// cout << word;
 		const auto start = clock::now();
 		bool is_belongs = automaton.parsing_by_nfa(word);
-		//  parsing_by_regex(lang, word); // падает на больших словах((
 		const auto end = clock::now();
 		const long long elapsed =
 			std::chrono::duration_cast<std::chrono::milliseconds>(end - start)

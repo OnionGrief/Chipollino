@@ -219,8 +219,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 }
 
 // vector<vector<GrammarItem>>
-const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
-						   int index_back,
+const int Grammar::fa_to_g(const FiniteAutomaton& fa, alphabet_symbol w,
+						   int index, int index_back,
 						   const vector<PrefixGrammarItem*>& grammar_items,
 						   const set<string>& monoid_rules, string word) {
 	const State& st = fa.states[index];
@@ -236,7 +236,8 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 	g->is_visit = true;
 	for (const auto& equ : equivalence_class_back) {
 		if (monoid_rules.find(equ) == monoid_rules.end() || st.is_terminal) {
-			g->equivalence_class.insert(word + w);
+			string l = string(w);
+			g->equivalence_class.insert(word + l);
 		}
 	}
 
@@ -248,8 +249,9 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, string w, int index,
 				alpha = "";
 			}
 			if (index != ind) {
+				string l = string(w);
 				fa_to_g(fa, alpha, ind, index, grammar_items, monoid_rules,
-						word + w);
+						word + l);
 
 			} else {
 				g->rules[alpha].insert(index);
@@ -392,6 +394,9 @@ string Grammar::pg_to_txt() const {
 							prefix_grammar[w_back].is_started) {
 							eq = "eps";
 						}
+						if (wt == "eps") {
+							continue;
+						}
 						if (/*m_r.find(wt) == m_r.end() &&*/
 							!(wt == eq && a == "eps")) {
 							string test = wt;
@@ -465,8 +470,9 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton() const {
 			}
 			if (alpha == "") {
 				alpha = alphabet_symbol::epsilon();
+			} else {
+				symbols.insert(alpha);
 			}
-			symbols.insert(alpha);
 		}
 	}
 	FiniteAutomaton res = FiniteAutomaton(initial_state, states, symbols);
@@ -507,6 +513,8 @@ const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 }
 
 void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
+	Logger::init_step("PrefixGrammarTM");
+	Logger::log("Автомат", fa);
 	const vector<State>& states = fa.states;
 	TransformationMonoid a(fa);
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
@@ -542,6 +550,9 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 			grammar_items[states[i].index]->is_started = true;
 		}
 	}
+	if (st0.is_terminal) {
+		grammar_items[st0.index]->equivalence_class.insert("");
+	}
 	//---------------------------
 	set<string> equal_classes;
 	int count = 0;
@@ -553,7 +564,12 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	}
 	if (count != equal_classes.size()) {
 		// в логер то что неопределенность и детерменизируем
+		Logger::log("Неопределенность");
+		Logger::log("Детерминизируем");
 		fa_to_prefix_grammar_TM(fa.determinize());
+		Logger::log("Построенная по нему префиксная грамматика:");
+		Logger::log(pg_to_txt());
+		Logger::finish_step();
 		return;
 	}
 	//----------------------------
@@ -588,9 +604,12 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa) {
 	for (const auto& elem : st0.transitions) {
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
-				g->equivalence_class.erase("");
+				// g->equivalence_class.erase("");
 			}
 		}
 	}
+	Logger::log("Построенная по нему префиксная грамматика:");
+	Logger::log(pg_to_txt());
+	Logger::finish_step();
 	return;
 }

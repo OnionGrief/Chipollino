@@ -37,7 +37,10 @@ int Language::get_pump_length() {
 
 void Language::set_min_dfa(int initial_state, const vector<State>& states,
 						   const shared_ptr<Language>& language) {
-	min_dfa.emplace(FA_structure(initial_state, states, language));
+	vector<State> renamed_states = states;
+	for (int i = 0; i < renamed_states.size(); i++)
+		renamed_states[i].identifier = to_string(i);
+	min_dfa.emplace(FA_structure(initial_state, renamed_states, language));
 }
 
 bool Language::min_dfa_cached() {

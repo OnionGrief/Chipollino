@@ -43,7 +43,7 @@ class TasksGenerator {
 
 	string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int",
 		   VALUE = "Value", BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA",
-		   FILENAME = "FileName";
+		   ARRAY = "Array", PG = "PG";
 	vector<Function> functions = {
 		{"Thompson", {REGEX}, NFA},
 		{"IlieYu", {REGEX}, NFA},
@@ -57,7 +57,7 @@ class TasksGenerator {
 		{"Minimize", {NFA}, DFA},
 		{"Reverse", {NFA}, NFA},
 		{"Annote", {NFA}, DFA},
-		//{"DeLinearize", {NFA}, NFA},
+		{"DeLinearize", {NFA}, NFA},
 		{"DeLinearize", {REGEX}, REGEX},
 		{"Complement", {DFA}, DFA},
 		{"DeAnnote", {NFA}, NFA},
@@ -65,14 +65,17 @@ class TasksGenerator {
 		{"MergeBisim", {NFA}, NFA},
 		{"PumpLength", {REGEX}, INT},
 		{"ClassLength", {DFA}, INT},
-		//{"Normalize", {REGEX, FILENAME}, REGEX},
+		//{"Normalize", {REGEX, ARRAY}, REGEX},
 		{"States", {NFA}, INT},
 		{"ClassCard", {DFA}, INT},
 		{"Ambiguity", {NFA}, VALUE},
 		{"MyhillNerode", {DFA}, INT},
 		{"GlaisterShallit", {DFA}, INT},
-		{"PrefixGrammar", {DFA}, VALUE},
-		// output: PG, но для генератора и так сойдет
+		{"PrefixGrammar", {NFA}, PG},
+		{"PGtoNFA", {PG}, NFA},
+		{"Intersect", {NFA, NFA}, NFA},
+		{"Union", {NFA, NFA}, NFA},
+		{"Difference", {NFA, NFA}, NFA},
 	};
 
 	vector<Function> predicates = {
@@ -84,8 +87,8 @@ class TasksGenerator {
 		{"OneUnambiguity", {REGEX}, BOOLEAN},
 		{"Bisimilar", {NFA, NFA}, BOOLEAN},
 		{"Minimal", {NFA}, BOOLEAN},
-		{"Equal", {NFA, NFA}, BOOLEAN}
-		//{"SemDet", {NFA}, BOOLEAN},
+		{"Equal", {NFA, NFA}, BOOLEAN},
+		{"SemDet", {NFA}, BOOLEAN},
 	};
 
 	void distribute_functions();
