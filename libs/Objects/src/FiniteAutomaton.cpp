@@ -2293,49 +2293,47 @@ bool FiniteAutomaton::semdet_entry(bool traps_removed, iLogTemplate* log) const 
 		return f + arrow + t;
 	};
 	std::string ambiguous_transitions = "";
-	for (int i = 0; i < states.size(); i++) {
-		for (int j = 0; j < states.size(); j++) {
-			for (auto transition = states[j].transitions.begin();
-				 transition != states[j].transitions.end(); transition++) {
-				bool verified_ambiguity = false;
-				if (transition->second.size() > 1) {
-					ambiguous_transitions += "Ambigous: ";
-					for (auto it = transition->second.begin();
-						 it != transition->second.end(); it++) {
-						ambiguous_transitions +=
-							make_string_transition(j, transition->first, *it) +
-							",";
-					}
-				}
+	for (int j = 0; j < states.size(); j++) {
+		for (auto transition = states[j].transitions.begin();
+				transition != states[j].transitions.end(); transition++) {
+			bool verified_ambiguity = false;
+			if (transition->second.size() > 1) {
+				ambiguous_transitions += "Ambigous: ";
 				for (auto it = transition->second.begin();
-					 it != transition->second.end(); it++) {
-					bool reliability = true;
-					for (auto it2 = transition->second.begin();
-						 it2 != transition->second.end(); it2++) {
-						if (!state_languages[*it].subset(
-								state_languages[*it2])) {
-							reliability = false;
-							break;
-						}
-					}
-					verified_ambiguity |= reliability;
-					if (reliability && transition->second.size() > 1) {
-						ambiguous_transitions +=
-							"Reliable:" + 
-							make_string_transition(j, transition->first, *it) +
-							+"\\\\";
+						it != transition->second.end(); it++) {
+					ambiguous_transitions +=
+						make_string_transition(j, transition->first, *it) +
+						",";
+				}
+			}
+			for (auto it = transition->second.begin();
+					it != transition->second.end(); it++) {
+				bool reliability = true;
+				for (auto it2 = transition->second.begin();
+						it2 != transition->second.end(); it2++) {
+					if (!state_languages[*it].subset(
+							state_languages[*it2])) {
+						reliability = false;
+						break;
 					}
 				}
-				if (!verified_ambiguity) {
-					// Logger::log("Результат SemDet", "false");
-					// Logger::finish_step();
-					ambiguous_transitions += "Reliable: none\\\\";
-					if (log) {
-						log->set_parameter("semdet1", ambiguous_transitions);
-						log->set_parameter("semdet2", "false");
-					}
-					return false;
+				verified_ambiguity |= reliability;
+				if (reliability && transition->second.size() > 1) {
+					ambiguous_transitions +=
+						"Reliable:" + 
+						make_string_transition(j, transition->first, *it) +
+						+"\\\\";
 				}
+			}
+			if (!verified_ambiguity) {
+				// Logger::log("Результат SemDet", "false");
+				// Logger::finish_step();
+				ambiguous_transitions += "Reliable: none\\\\";
+				if (log) {
+					log->set_parameter("semdet1", ambiguous_transitions);
+					log->set_parameter("semdet2", "false\\\\");
+				}
+				return false;
 			}
 		}
 	}
@@ -2344,7 +2342,7 @@ bool FiniteAutomaton::semdet_entry(bool traps_removed, iLogTemplate* log) const 
 			ambiguous_transitions = "None";
 		}
 		log->set_parameter("semdet1", ambiguous_transitions);
-		log->set_parameter("semdet2", "true");
+		log->set_parameter("semdet2", "true\\\\");
 	}
 	return true;
 }
