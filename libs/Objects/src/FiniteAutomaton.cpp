@@ -413,14 +413,19 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 	new_nfa.initial_state = 0;
 	new_nfa.states = new_states;
 	new_nfa = new_nfa.remove_unreachable_states();
-	Logger::log("Автомат до удаления eps-переходов",
+	if (log) {
+		log->set_parameter("oldautomaton", *this);
+		log->set_parameter("result", new_nfa);
+	}
+	/*Logger::log("Автомат до удаления eps-переходов",
 				"Автомат после удаления eps-переходов", *this, new_nfa);
-	Logger::finish_step();
+	Logger::finish_step();*/
 	return new_nfa;
 }
 
-FiniteAutomaton FiniteAutomaton::remove_eps_additional() const {
-	Logger::init_step("RemEps");
+FiniteAutomaton FiniteAutomaton::remove_eps_additional(
+	iLogTemplate* log) const {
+	// Logger::init_step("RemEps");
 	FiniteAutomaton new_nfa(initial_state, states, language);
 
 	for (auto& state : new_nfa.states)
