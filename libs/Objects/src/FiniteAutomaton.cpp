@@ -2250,9 +2250,11 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 	return ans;
 }
 
-bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
+void FiniteAutomaton::get_state_languages(bool annoted,
+										  vector<Regex>& state_languages) const{
 	if (!annoted) {
-		return annote().remove_trap_states().semdet_entry(true, log);
+		annote().remove_trap_states().get_state_languages(true, state_languages);
+		return;
 	}
 	// Logger::log(
 	//"Получение языка из производной регулярки автомата по префиксу");
@@ -2261,35 +2263,28 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 	for (int i = 0; i < states.size(); i++) {
 		if (states[i].is_terminal) final_states.push_back(i);
 	}
-	std::vector<Regex> state_languages;
 	state_languages.resize(states.size());
 	for (int i = 0; i < states.size(); i++) {
 		auto prefix = get_prefix(initial_state, i, was);
 		was.clear();
-		// cout << "Try " << i << "\n";
 		if (!prefix.has_value()) continue;
 		Regex reg;
 		// Получение языка из производной регулярки автомата по префиксу:
-		//		this -> reg (arden?)
 		reg = to_regex();
-		//  cout << "State: " << i << "\n";
-		//  cout << "Prefix: " << prefix.value() << "\n";
-		//  cout << "Regex: " << reg.to_txt() << "\n";
-		// Logger::log("State", to_string(i));
-		// Logger::log("Prefix", prefix.value());
-		// Logger::log("Regex", reg.to_txt());
 		auto derivative = reg.prefix_derivative(prefix.value());
 		if (!derivative.has_value()) continue;
 		state_languages[i].from_string(derivative.value().to_txt());
-		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
-		// Logger::log("Derevative", state_languages[i].to_txt());
-		/*if (log) {
-			log->set_parameter("state", i);
-			log->set_parameter("prefix", prefix.value());
-			log->set_parameter("regex", reg);
-			log->set_parameter("deverative", state_languages[i]);
-		}*/
+		state_languages[i] = state_languages[i].deannote();
+		cout << state_languages[i].to_txt() << "\n";
 	}
+}
+
+bool FiniteAutomaton::semdet_entry(bool traps_removed, iLogTemplate* log) const {
+	if (!traps_removed) {
+		return remove_trap_states().semdet_entry(true, log);
+	}
+	vector<Regex> state_languages;
+	get_state_languages(false, state_languages);
 	auto make_string_transition = [=](int from, alphabet_symbol through,
 									  int to) {
 		string f = "${q_" + std::to_string(from) + "}";
@@ -2337,7 +2332,7 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 					ambiguous_transitions += "Reliable: none\\\\";
 					if (log) {
 						log->set_parameter("semdet1", ambiguous_transitions);
-						log->set_parameter("semdet2", false);
+						log->set_parameter("semdet2", "false");
 					}
 					return false;
 				}
