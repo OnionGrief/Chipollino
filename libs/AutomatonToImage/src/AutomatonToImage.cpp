@@ -23,8 +23,6 @@ string AutomatonToImage::to_image(string automat) {
 	// для Linux:
 	//system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
 	// для Windows
-	system("cd refal && IF EXIST Meta_input.data DEL Meta_input.data && IF "
-		   "EXIST Aux_input.data DEL Aux_input.data");
 
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
@@ -32,8 +30,10 @@ string AutomatonToImage::to_image(string automat) {
 	fclose(fo);
 	system(
 		"cd refal && refgo Preprocess+MathMode input.dot > error_refal0.txt");
+		"cd refal && refgo Preprocess+MathMode+FrameFormatter input.dot > error_refal0.txt");
 	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
 	system("cd refal && refgo Postprocess+MathMode input.tex > error_refal.txt "
+	system("cd refal && refgo Postprocess+MathMode+FrameFormatter input.tex > error_refal.txt "
 		   "2>&1");
 
 	// для Linux:
@@ -55,7 +55,6 @@ string AutomatonToImage::to_image(string automat) {
 	infile_for_R.close();
 
 	// TODO: разные команды для Linux и Windows
-	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm "
 		   "R_input.tex");
 
 	// таблица
@@ -70,7 +69,6 @@ string AutomatonToImage::to_image(string automat) {
 	}
 	infile_for_L.close();
 
-	system("cd refal && rm L_input.tex");
 
 	return graph.str();
 }

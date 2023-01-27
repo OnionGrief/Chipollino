@@ -10,15 +10,11 @@ Page parameters are taken from file pagedata
 
 *******************************/
 
-$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters, ASCIIStandard, NonASCII, Trim;
+$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters, ASCIIStandard, NonASCII, Trim, Nempty, Min, Max;
 
-$ENTRY Go {
- , <Numb <Arg 1>> : s.TestNum
- , <ExtractLimitations 'pagedata'> : s.DefWidth s.DefHeight
- , <Br 'MPFlag=-'> : e.Rubbish
-    =  <Open 'r' 1 '../resources/report.tex'><Open 'w' 2 '../resources/rendered_report.tex'>
-       <MakeFrames <FrameData Width> <Div <Mul <FrameData Width> s.DefWidth> <FrameData Height>> Normal <Get 1>>
-       <Close 1><Close 2>;
+$ENTRY Flatten {
+ e.x(e.y)e.z = e.x <Flatten e.y e.z>;
+ e.w = e.w;
 }
 
 Balanced {
@@ -28,7 +24,7 @@ Balanced {
  (e.BrPairs) e.y = True;
 }
 
-MakeFrames {
+$ENTRY MakeFrames {
   s.DW s.MPW Normal '%begin detailed'e.Endl
    = <MakeFrames s.DW s.MPW Theory <Get 1>>;
   s.DW s.MPW Theory e.Smth '%end detailed'e.Endl
@@ -55,6 +51,114 @@ TitleHeight {
   = 0;
  e.Anything = 40;
 }
+
+$ENTRY FrameData {
+ Height = 320; /* Space that can be really used */
+ MaxHeight = 350; /* This is for the zoom machinery of adjustbox */
+ Width = 600;
+ LabelWidth = 70; /* For automata labels */
+ MaxZoom = 250;
+ MinZoom = 50;
+ OptZoom = 150; /* div 100 */
+}
+
+$ENTRY ExSize {
+ normalsize = (<Div <FrameData Width> 70>)(<Div <FrameData MaxHeight> 30>);
+ small = (<Div <FrameData Width> 76>)(<Div <FrameData MaxHeight> 35>);
+ footnotesize = (<Div <FrameData Width> 85>)(<Div <FrameData MaxHeight> 40>);
+ scriptsize = (<Div <FrameData Width> 95>)(<Div <FrameData MaxHeight> 45>);
+}
+
+$ENTRY String_Length {
+ e.String = <Div <AuxLen String 0 e.String> 3>;
+}
+
+$ENTRY List_Length {
+ e.List = <AuxLen List 0 e.List>;
+}
+
+$ENTRY AllSeparators {
+ All = (','(NotBefore <Numbers>))
+   (')'(NotBefore ')*,}'('\\}')))
+   ('|'(NotBefore ))
+   (' '(NotBefore ))
+   (';'(NotBefore ))
+   ('='(NotBefore '!<>'))
+   ('}'(NotBefore ')*,'('\\}')))
+   ('*'(NotBefore '*),}'('\\}')));
+ Strict = (','(NotBefore <Numbers>))
+   ('='(NotBefore '!<>'))
+   (';'(NotBefore ))
+   ('}'(NotBefore ')*,'('\\}')));
+}
+
+/* Wanted Width + Letter Height + Wanted Size in letters + Lines accumulated */
+$ENTRY SplitToLines {
+ s.Mode s.DefWidth s.ExH s.Size (e.Lines) = (e.Lines)(s.Size)(<Mul s.ExH <Add 2 <List_Length e.Lines>>>);
+ s.Mode s.DefWidth s.ExH s.Size (e.Lines) e.Formula
+ , <TakePrefix <Mul s.Size 3> e.Formula> : e.Prefix (e.Next)
+ , e.Next :
+ { = (e.Lines (e.Prefix))(s.Size)(<Mul s.ExH <Add <List_Length e.Lines> 2>>);
+  e.Z
+ , <FindSeparator s.Mode Last ()(e.Next) e.Prefix> : 
+ { (e.Before) e.After OK
+  = <SplitToLines s.Mode s.DefWidth s.ExH s.Size (e.Lines (e.Before'\\\\')) e.After e.Next>;
+ (e.Before) NONE
+ , s.Mode :
+ {All
+     = <SplitToLines s.Mode s.DefWidth s.ExH s.Size (e.Lines (e.Before'\\\\')) e.Next>;
+  Strict = <SplitToLines s.Mode s.DefWidth s.ExH <Add s.Size 1> (e.Lines) e.Formula>; 
+ };
+ };
+ };
+}
+
+FindSeparator {
+ s.Mode Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
+ , <AllSeparators s.Mode> : e.S1 (s.Sym (NotBefore e.Set)) e.S2
+ , <FirstSym (e.Set) e.WholeSuffix> : False
+    = (e.Prefix s.Sym)e.AccSuffix OK;
+ s.Mode Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
+   = <FindSeparator s.Mode Last (s.Sym e.AccSuffix)(s.Sym e.WholeSuffix) e.Prefix>;
+ s.Mode Last (e.AccSuffix)(e.WholeSuffix) = (e.AccSuffix) NONE;
+}
+
+
+TakePrefix {
+  0 e.Rest = (e.Rest);
+ s.Size = ();
+ s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight s.Sym>> e.Rest>;
+}
+
+Weight {
+ '|' = 7;
+ '*' = 2;
+ ' ' = 1;
+ '=' = 9;
+ '(' = 2;
+ ')' = 2;
+ '{' = 2;
+ '}' = 2;
+ ',' = 1;
+ '.' = 1;
+ s.Num, <InSet (<Numbers>) s.Num> :
+ {True = 2;
+  False
+ , <InSet (<ASCIIStandard>) s.Num> :
+ {True = 3;
+  False = 1; /* Brute Unicode processing */
+ };
+ };
+}
+
+SafeSub {
+ s.N1 s.N2, <Compare s.N1 s.N2> : 
+ {'-' = 0;
+  s.Any = <Sub s.N1 s.N2>;
+ };
+}
+
+
 
 Tracer {
  =;
@@ -151,14 +255,10 @@ ChooseMaxCase {
  
 }
 
-
-Length {
- e.String = <Div <AuxLen 0 e.String> 3>;
-}
-
 AuxLen {
-s.Num = s.Num;
-s.Num s.Sym e.Rest = <AuxLen <Add s.Num <Weight s.Sym>> e.Rest>;
+s.Mode s.Num = s.Num;
+String s.Num s.Sym e.Rest = <AuxLen String <Add s.Num <Weight s.Sym>> e.Rest>;
+List s.Num t.Term e.Rest = <AuxLen List <Add s.Num 1> e.Rest>;
 }
 
 CountTextHeight {
@@ -168,7 +268,7 @@ s.DefaultWidth ()
   , <ExSize normalsize> : (s.ExW)(s.ExH)
  = s.ExH;
 s.DefaultWidth ((e.Line))
- , <Length e.Line> : s.Num
+ , <String_Length e.Line> : s.Num
  , <ExSize normalsize> : (s.ExW)(s.ExH)
  , <Add <Div <Mul s.Num s.ExW> s.DefaultWidth> 2> : s.TotalLines
    = <Mul s.ExH s.TotalLines>;
@@ -216,7 +316,7 @@ FormTableAux {
   = (s.DefaultWidth)(<Mul s.Lines <Add s.ExH 1>>);
  s.Oddity s.DefaultWidth s.ExSize s.Lines (e.Line) e.InnerTable
  , <ExSize s.ExSize> : (s.ExW)(s.ExH)
- , <Mul s.ExW <Length e.Line>> : s.RealWidth
+ , <Mul s.ExW <String_Length e.Line>> : s.RealWidth
  , <Compare s.DefaultWidth s.RealWidth> :
  {'-'
   , <SplitLongCells s.ExH s.DefaultWidth s.ExSize e.Line> : e.Data s.Height
@@ -225,36 +325,26 @@ FormTableAux {
  };
  }
 
-Flatten {
- e.x(e.y)e.z = e.x <Flatten e.y e.z>;
- e.w = e.w;
-}
-
 SplitLongCells {
  s.MaxHeight s.DefaultWidth s.ExSize e.L1'&'e.L2
- , <Compare <Length e.L1> 20> :
+ , <Compare <String_Length e.L1> 20> :
  {'+', <FormFormula <Div s.DefaultWidth 3> s.ExSize e.L1> : (e.Form)e.Rubbish(s.Height)
       = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n&\n'
         <SplitLongCells <Max s.MaxHeight s.Height> s.DefaultWidth s.ExSize e.L2>;
   s.Any = <TableMathMode e.L1>'&'<SplitLongCells s.MaxHeight s.DefaultWidth s.ExSize e.L2>; 
  };
  s.MaxHeight s.DefaultWidth s.ExSize e.Last'\\\\'e.Smth
- , <Compare <Length e.Last> 20> :
+ , <Compare <String_Length e.Last> 20> :
  {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
       = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n\\\\'e.Smth'\n'<Max s.MaxHeight s.Height>;
   s.Any = <TableMathMode e.Last>'\\\\'e.Smth s.MaxHeight; 
  };
  s.MaxHeight s.DefaultWidth s.ExSize e.Last
- , <Compare <Length e.Last> 20> :
+ , <Compare <String_Length e.Last> 20> :
  {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
       = '\\begin{array}{l}\n'<TableMathMode e.Form>'\\end{array}\n'<Max s.MaxHeight s.Height>;
   s.Any = <TableMathMode e.Last> s.MaxHeight; 
  };
-}
-
-Nempty {
-s.Sym e.Rest = True;
- = False;
 }
 
 /*
@@ -339,97 +429,19 @@ PrepareFormula {
    = (<FormFormula s.DefaultWidth s.ExSize e.Line>);
 }
 
-FrameData {
- Height = 320; /* Space that can be really used */
- MaxHeight = 350; /* This is for the zoom machinery of adjustbox */
- Width = 600;
- Zoom = 15; /* div 10 */
-}
 
 /*Returns a tuple: Formula (splitted to the lines) (width (in points)) (height (in points))*/
 FormFormula {
  s.DefWidth s.Size e.Formula
- , <Length e.Formula> : s.Len
+ , <String_Length e.Formula> : s.Len
  , <ExSize s.Size> : (s.ExW)(s.ExH)
  , <Mul s.ExW s.Len> : s.RealWidth
  , <Compare s.RealWidth s.DefWidth> :
-  { '+' = <SplitToLines s.DefWidth s.ExH <Max 1 <Div s.DefWidth s.ExW>> () e.Formula>;
+  { '+' = <SplitToLines All s.DefWidth s.ExH <Max 1 <Div s.DefWidth s.ExW>> () e.Formula>;
      s.Rest = ((e.Formula))(s.RealWidth)(<Add s.ExH s.ExH>);
    };
 }
 
-AllSeparators {
- = (','(NotBefore <Numbers>))
-   (')'(NotBefore ')*,'))
-   ('|'(NotBefore ))
-   (' '(NotBefore ))
-   ('='(NotBefore '!<>'))
-   ('}'(NotBefore ))
-   ('*'(NotBefore '*),'));
-}
-
-FindSeparator {
- Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
- , <AllSeparators> : e.S1 (s.Sym (NotBefore e.Set)) e.S2
- , <FirstSym (e.Set) e.WholeSuffix> : False
-    = (e.Prefix s.Sym)e.AccSuffix;
- Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
-   = <FindSeparator Last (s.Sym e.AccSuffix)(s.Sym e.WholeSuffix) e.Prefix>;
- Last (e.AccSuffix)(e.WholeSuffix) = (e.AccSuffix);
-}
-
-SplitToLines {
- s.DefWidth s.ExH s.Size (e.Lines) = (e.Lines)(s.Size)(<CountTextHeight s.DefWidth (e.Lines)>);
- s.DefWidth s.ExH s.Size (e.Lines) e.Formula
- , <TakePrefix <Mul s.Size 3> e.Formula> : e.Prefix (e.Next)
- , e.Next :
- { = (e.Lines (e.Prefix))(s.Size)(<CountTextHeight s.DefWidth (e.Lines (e.Prefix))>);
-  e.Z
- , <FindSeparator Last ()(e.Next) e.Prefix> : (e.Before)e.After
-  = <SplitToLines s.DefWidth s.ExH s.Size (e.Lines (e.Before'\\\\')) e.After e.Next>;
- };
-}
-
-TakePrefix {
-  0 e.Rest = (e.Rest);
- s.Size = ();
- s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight s.Sym>> e.Rest>;
-}
-
-Weight {
- '|' = 7;
- '*' = 2;
- ' ' = 1;
- '=' = 9;
- '(' = 2;
- ')' = 2;
- '{' = 2;
- '}' = 2;
- ',' = 1;
- '.' = 1;
- s.Num, <InSet (<Numbers>) s.Num> :
- {True = 2;
-  False
- , <InSet (<ASCIIStandard>) s.Num> :
- {True = 3;
-  False = 1; /* Brute Unicode processing */
- };
- };
-}
-
-SafeSub {
- s.N1 s.N2, <Compare s.N1 s.N2> : 
- {'-' = 0;
-  s.Any = <Sub s.N1 s.N2>;
- };
-}
-
-ExSize {
- normalsize = (<Div <FrameData Width> 70>)(<Div <FrameData MaxHeight> 30>);
- small = (<Div <FrameData Width> 76>)(<Div <FrameData MaxHeight> 35>);
- footnotesize = (<Div <FrameData Width> 85>)(<Div <FrameData MaxHeight> 40>);
- scriptsize = (<Div <FrameData Width> 95>)(<Div <FrameData MaxHeight> 45>);
-}
 
 MetaGenerationFormula {
  s.MaxW s.MaxH
@@ -456,7 +468,7 @@ BestCase {
 }
 
 
-ExtractLimitations {
+$ENTRY ExtractLimitations {
  e.Filename
  , <Open 'r' 7 e.Filename> : e.Rubbish
  , <Get 7> : e.Num';'e.Num2
@@ -483,7 +495,7 @@ EstimateZooms {
 
 GetZooms {
   s.WidthPercent s.HeightPercent s.WidthRealZoom s.HeightRealZoom
-  , <FrameData Zoom> : s.LZMax
+  , <Div <FrameData OptZoom> 10> : s.LZMax
   , <Div <Mul 100 s.WidthRealZoom> s.WidthPercent> : s.PerfectWZ
   , <Div <Mul 100 s.HeightRealZoom> s.HeightPercent> : s.PerfectHZ
   , <EstimateZooms s.PerfectHZ s.HeightRealZoom s.LZMax> : s.TypeHeight
@@ -533,22 +545,6 @@ PageEsteem {
   s.Any
    = '-+'<FrameData Height>;
  };
- };
-}
-
-Max {
- s.1 s.2
- , <Compare s.2 s.1> :
- {'-' = s.1;
-  s.Rest = s.2;
- };
-}
-
-Min {
- s.1 s.2
- , <Compare s.2 s.1> :
- {'-' = s.2;
-  s.Rest = s.1;
  };
 }
 
