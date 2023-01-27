@@ -424,7 +424,7 @@ string Regex::get_refal_rewrite_rule(pair<Regex, Regex> rule) {
 }
 void Regex::create_normalize_refal_code(
 	const vector<pair<Regex, Regex>>& rules) {
-	system("cd refal && cp normalize_template.ref normalize.ref");
+	system("cd ./refal && cp normalize_template.ref.txt normalize.ref");
 	std::ofstream fout("./refal/normalize.ref", std::ios::app);
 	if (fout.is_open()) {
 		fout << "\nNormalize {\n\t";
