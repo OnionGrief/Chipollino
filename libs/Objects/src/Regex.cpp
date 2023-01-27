@@ -1364,6 +1364,26 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym,
 	}
 }
 
+void Regex::eps_removing() {
+	switch (type) {
+	case Type::alt:
+	case Type::conc:
+		term_l->eps_removing();
+		term_r->eps_removing();
+		if (term_l->type == Type::eps && term_r->type == Type::eps) {
+			clear();
+			type = Type::eps;
+		}
+		break;
+	case Type::star:
+		term_l->eps_removing();
+		if (term_l->type == Type::eps) {
+			clear();
+			type = Type::eps;
+		}
+	}
+}
+
 bool Regex::partial_derivative_with_respect_to_sym(
 	Regex* respected_sym, const Regex* reg_e, vector<Regex>& result) const {
 	Regex cur_result;
@@ -1563,6 +1583,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 				if (!derivative_with_respect_to_str(*it, this, a)) {
 					continue;
 				}
+				a.eps_removing();
 				if (a.to_txt() != "")
 					pumped_prefix += "(" + a.to_txt() + ")";
 				Regex pumping(pumped_prefix);
