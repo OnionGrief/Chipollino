@@ -194,6 +194,8 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log,
 
 FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
 										  bool is_trim) const {
+	if (!is_trim)
+		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
 	// Logger::init_step("Minimize");
 	if (language->min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
@@ -320,7 +322,7 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
 	// minimized_dfa);
 	stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
-		ss << "\\{" << state.identifier << "\\} ";
+		ss << "\\{" << state.identifier << "\\}\;";
 	}
 	// Logger::log("Классы эквивалентности", ss.str());
 	// Logger::finish_step();
@@ -923,18 +925,27 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 }
 
 bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
-	if (log) log->set_parameter("oldregex", *this);
+	if (log) log->set_parameter("oldautomaton", *this);
 	// Logger::init_step("OneUnambiguity");
 	if (language->is_one_unambiguous_flag_cached()) {
-		if (log)
+
+		if (log) {
 			log->set_parameter("result", language->get_one_unambiguous_flag()
 											 ? "True"
 											 : "False");
+
+			log->set_parameter("cach",
+							   "(!) результат OneUnambiguous получен из кэша");
+		}
 		// Logger::log(language->get_one_unambiguous_flag() ? "True" : "False");
 		// Logger::finish_step();
 		return language->get_one_unambiguous_flag();
 	}
 	FiniteAutomaton min_fa;
+	if (language->min_dfa_cached() && log) {
+		log->set_parameter("cachedMINDFA",
+						   "Минимальный автомат сохранен в кэше");
+	}
 	if (states.size() == 1)
 		min_fa = minimize();
 	else
@@ -1303,8 +1314,8 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	for (auto& elem : class_to_nonterminals) {
 		ss << "\\{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
-			ss << elem.second[i]->name << ",";
-		ss << elem.second[elem.second.size() - 1]->name << "\\}";
+			ss << elem.second[i]->name << ",\\ ";
+		ss << elem.second[elem.second.size() - 1]->name << "\\}\;";
 	}
 	// Logger::log("Классы эквивалентности", ss.str());
 	// Logger::finish_step();
@@ -1634,11 +1645,14 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 																	 // logs
 		// Logger::log("(!) автоматы изначально принадлежат одному языку");
 	} else {
-			if ((!fa1.language->min_dfa_cached() || !fa2.language->min_dfa_cached()) && log) {
-				log->set_parameter("cachedMINDFA", "Минимальные автоматы сохранены в кэше");
-			}
+		if ((!fa1.language->min_dfa_cached() ||
+			 !fa2.language->min_dfa_cached()) &&
+			log) {
+			log->set_parameter("cachedMINDFA",
+							   "Минимальные автоматы сохранены в кэше");
+		}
 		result = equal(fa1.minimize(), fa2.minimize());
-               }
+	}
 	/*if (result)
 		Logger::log("Результат Equiv", "true");
 	else
@@ -1997,7 +2011,11 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 			"Количество диагональных классов по методу Глейстера-Шаллита",
 			to_string(language->get_nfa_minimum_size()));
 		Logger::finish_step();*/
-		if (log) log->set_parameter("result", language->get_nfa_minimum_size());
+		if (log) {
+			log->set_parameter("result", language->get_nfa_minimum_size());
+			log->set_parameter("cach", "(!) результат получен из кэша");
+			// TODO: таблицу из кэша
+		}
 		return language->get_nfa_minimum_size();
 	}
 
@@ -2104,8 +2122,13 @@ bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	// Logger::init_step("Minimal");
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
+		if ((language->min_dfa_cached())) {
+			log->set_parameter("cachedMINDFA",
+							   "Минимальный автомат сохранен в кэше");
+		}
 	}
 	bool result = states.size() == minimize().states.size();
+
 	if (log) {
 		log->set_parameter("result", result ? "True" : "False");
 	}
@@ -2645,13 +2668,18 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		for (int j = 0; j < data[i].size(); j++) {
 			// TODO: передача набора regex
 
-			full_logs +=
-				"\\ " + data[i][j]
-						  .regex_from_state
-						  ->to_txt(); // тут по идее должно быть без to_txt но у
-									  // нас не принимается Regex*
-			// Logger::log("regex in this state",
-			// data[i][j].regex_from_state->to_txt());
+			full_logs += "\\ ";
+			if (data[i][j].regex_from_state->to_txt() == "") {
+				full_logs += "eps";
+			} else {
+				full_logs +=
+					data[i][j]
+						.regex_from_state->to_txt(); // тут по идее должно быть
+													 // без to_txt но у нас не
+													 // принимается Regex*
+				// Logger::log("regex in this state",
+				// data[i][j].regex_from_state->to_txt());
+			}
 		}
 	}
 	if (log) log->set_parameter("step-by-step construction", full_logs);
