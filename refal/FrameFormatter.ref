@@ -221,7 +221,7 @@ FormTableAux {
  {'-'
   , <SplitLongCells s.ExH s.DefaultWidth s.ExSize e.Line> : e.Data s.Height
        = (<GenZebra s.Oddity> e.Data)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add s.Lines <Div s.Height s.ExH>> e.InnerTable>;
-  '+' = (<GenZebra s.Oddity><TableMathMode e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
+  s.Any = (<GenZebra s.Oddity><TableMathMode e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
  };
  }
 

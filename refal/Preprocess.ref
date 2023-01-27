@@ -208,13 +208,28 @@ DeleteDoubles {
 
 ProcessLabel {
  '\\begin{array}{'e.Header'}'e.Label'\\end{array}'
- , e.Label : e.V'\\\\'e.Rest
+ , <ChooseLongestStr (0 ) e.Label> : e.V
  , <Dg 'AuxInd'> : s.Num
  , <Br 'AuxCont=~@'<Symb s.Num>'@\\begin{array}{'e.Header'}'<MapArray TrueMathMode e.Label>'\\end{array}~'> : e.Rubbish
  , <Br 'AuxInd='<Add s.Num 1>> : e.Rubbish2
   = <AdjustAlts e.V>'@'<Symb s.Num>'@';
  e.Z = <AdjustAlts e.Z>;
 } 
+
+ChooseLongestStr {
+ (s.PrevLength e.Prev) e.X'\\\\'e.Y
+ , <LengthStr 0 e.X > : s.Len
+ , <Compare s.PrevLength s.Len> :
+ {'+' = <ChooseLongestStr (s.PrevLength e.Prev) e.Y>;
+  s.Any = <ChooseLongestStr (s.Len e.X) e.Y>;
+ };
+ (s.PrevLength e.Prev) e.X
+ , <LengthStr 0 e.X > : s.Len
+ , <Compare s.PrevLength s.Len> :
+ {'+' = e.Prev;
+  s.Any = e.X;
+ };
+}
 
 MapArray {
  s.Func e.x'\\\\'e.y = <MapArray s.Func e.x>'\\\\'<MapArray s.Func e.y>;
