@@ -1,6 +1,6 @@
-%begin detailed
-\section{Основные понятия}
 %include "Linearize.tex"
+%begin detailed
+\section{Основные понятия} %конфликт с section в линеаризации
 
 \begin{frame}{Множества $\First$, $\Last$, $\Follow$}
   \vspace{-5pt}%хак, чтобы вся документация влезла на слайд --- благо здесь она фиксированной длины
@@ -73,10 +73,6 @@
 
 	%template_result
 
-	Линеаризованное регулярное выражение:
-
-	%template_linearised regex
-
 	Множество $\First$:
 
 	%template_first
@@ -105,8 +101,13 @@
   \begin{alertblock}{\bf Примечание}
     Для $1$-однозначных регулярных выражений $r$ автомат $\Glushkov(r)$ является детерминированным. Эту его особенность активно используют в современных библиотеках регулярных выражений, например, в \textsc{RE2}. Выигрыш может получиться колоссальным: например, $\Thompson(\regexpstr(a\star)\star)$ является экспоненциально неоднозначным, а $\Glushkov(\regexpstr(a\star)\star)$ однозначен и детерминирован!
   \end{alertblock}% advanced documentation
+	linearised regex:
+
+	%template_linearised regex
+
 \end{frame}
 %end detailed
+
 
 
 

@@ -953,7 +953,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 	test.set_language(lang_l);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("result", test);
+		log->set_parameter("linearised regex", test);
 	}
 	// Logger::log(test.to_txt());
 	// Logger::finish_step();
