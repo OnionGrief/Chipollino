@@ -16,7 +16,7 @@ $ENTRY Go {
  , <Numb <Arg 1>> : s.TestNum
  , <ExtractLimitations 'pagedata'> : s.DefWidth s.DefHeight
  , <Br 'MPFlag=-'> : e.Rubbish
-    =  <Open 'r' 1 '../resources/report.tex'><Open 'w' 2 '../resources/rendered_report.tex'>
+    =  <Open 'r' 1 'report.tex'><Open 'w' 2 'rendered_report.tex'>
        <MakeFrames <FrameData Width> <Div <Mul <FrameData Width> s.DefWidth> <FrameData Height>> Normal <Get 1>>
        <Close 1><Close 2>;
 }
@@ -221,7 +221,7 @@ FormTableAux {
  {'-'
   , <SplitLongCells s.ExH s.DefaultWidth s.ExSize e.Line> : e.Data s.Height
        = (<GenZebra s.Oddity> e.Data)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add s.Lines <Div s.Height s.ExH>> e.InnerTable>;
-  '+' = (<GenZebra s.Oddity><TableMathMode e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
+  s.Any = (<GenZebra s.Oddity><TableMathMode e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
  };
  }
 

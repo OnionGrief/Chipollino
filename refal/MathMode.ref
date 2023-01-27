@@ -18,8 +18,8 @@ $ENTRY Trim {
 SeparateModes {
  (e.Eps) Normal (e.Prefix) e.Eps e.Rest
  , <Trim e.Prefix> :
- { = e.Eps <SeparateModes (e.Eps) Normal () e.Rest>;
-  e.Nempt  = '\\regexpstr{'<MathMode e.Nempt>'}'e.Eps 
+ { = '\\empt' <SeparateModes (e.Eps) Normal () e.Rest>;
+  e.Nempt  = '\\regexpstr{'<MathMode e.Nempt>'}\\empt' 
                           <SeparateModes (e.Eps) Normal () e.Rest>;
  };
  (e.Eps) Normal (e.Prefix) s.Sym e.Rest
