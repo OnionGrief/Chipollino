@@ -54,22 +54,22 @@ void LogTemplate::add_parameter(string parameter_name) {
 void LogTemplate::set_parameter(const string& key,
 								const FiniteAutomaton& value) {
 	parameters[key].value = value;
-	add_parameter(key);
+	// add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, Regex value) {
 	parameters[key].value = value;
-	add_parameter(key);
+	// add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, string value) {
 	parameters[key].value = value;
-	add_parameter(key);
+	// add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, int value) {
 	parameters[key].value = value;
-	add_parameter(key);
+	// add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, Table value) {
