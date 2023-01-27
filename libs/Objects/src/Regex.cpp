@@ -1441,21 +1441,37 @@ bool Regex::partial_derivative_with_respect_to_sym(
 	}
 }
 
+bool Regex::get_symbols_from_string(vector<Regex>& res){
+	if (type == Type::symb) {
+		res.push_back(*this);
+		return true;
+	}
+	if (type == Regex::conc) {
+		vector<Regex> resl, resr;
+		term_l->get_symbols_from_string(resl);
+		term_r->get_symbols_from_string(resr);
+		for (int i = 0; i < resl.size(); i++) {
+			res.push_back(resl[i]);
+		}
+		for (int i = 0; i < resr.size(); i++) {
+			res.push_back(resr[i]);
+		}
+		return true;
+	}
+	return false;
+}
+
 bool Regex::derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										   Regex& result) const {
 	bool success = true;
 	Regex cur = *reg_e;
 	Regex next = *reg_e;
-	// cout << "start getting derivative for prefix " << str << " in "
-	//	 << reg_e->to_txt() << "\n";
-	for (int i = 0; i < str.size(); i++) {
-		Regex sym;
-		sym.type = Type::symb;
-		sym.value.symbol = str[i];
-		next.clear();
-		success &= derivative_with_respect_to_sym(&sym, &cur, next);
-		// cout << "derivative for prefix " << sym->to_txt() << " in "
-		//	 << cur.to_txt() << " is " << next.to_txt() << "\n";
+	Regex symbols;
+	symbols.from_string(str);
+	vector<Regex> syms;
+	symbols.get_symbols_from_string(syms);
+	for (int i = 0; i < syms.size(); i++) {
+		success &= derivative_with_respect_to_sym(&syms[i], &cur, next);
 		if (!success) {
 			return false;
 		}
@@ -1503,7 +1519,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 	if (log) log->set_parameter("oldregex", *this);
 	if (language->pump_length_cached()) {
 		if (log) {
-			log->set_parameter("pumplength", language->get_pump_length());
+			log->set_parameter("pumplength1", language->get_pump_length());
 			log->set_parameter("cach", "(!) результат получен из кэша");
 		}
 		return language->get_pump_length();
@@ -1515,7 +1531,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 		if (prefs.empty()) {
 			language->set_pump_length(i);
 			if (log) {
-				log->set_parameter("pumplength", i);
+				log->set_parameter("pumplength1", i);
 			}
 			return i;
 		}
@@ -1530,15 +1546,25 @@ int Regex::pump_length(iLogTemplate* log) const {
 			}
 			if (was) continue;
 			bool infix_pumped = false;
-			for (int j = 0; j < it->size(); j++) {
+			Regex pref(*it);
+			vector<Regex> symbols;
+			pref.get_symbols_from_string(symbols);
+			for (int j = 0; j < symbols.size(); j++) {
 				std::string pumped_prefix;
-				pumped_prefix += it->substr(0, j);
-				pumped_prefix += "(" + it->substr(j, it->size()) + ")*";
+				for (int k = 0; k < j; k++) {
+					pumped_prefix += symbols[k].value.symbol;
+				}
+				pumped_prefix += "(";
+				for (int k = j; k < symbols.size(); k++) {
+					pumped_prefix += symbols[k].value.symbol;
+				}
+				pumped_prefix += ")*";
 				Regex a;
 				if (!derivative_with_respect_to_str(*it, this, a)) {
 					continue;
 				}
-				pumped_prefix += "(" + a.to_txt() + ")";
+				if (a.to_txt() != "")
+					pumped_prefix += "(" + a.to_txt() + ")";
 				Regex pumping(pumped_prefix);
 				if (subset(pumping)) {
 					checked_prefixes[*it] = true;
@@ -1551,7 +1577,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 		std::string ch_prefixes;
 		for (auto it = checked_prefixes.begin(); it != checked_prefixes.end();
 			 it++) {
-			if (it->second) ch_prefixes += it->first + "\n";
+			if (it->second) ch_prefixes += it->first + "\\\\";
 		}
 		if (pumped) {
 			language->set_pump_length(i);
