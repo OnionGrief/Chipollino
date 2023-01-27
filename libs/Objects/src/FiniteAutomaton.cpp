@@ -194,6 +194,8 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log,
 
 FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
 										  bool is_trim) const {
+	if (!is_trim)
+		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
 	// Logger::init_step("Minimize");
 	if (language->min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
@@ -926,15 +928,24 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	if (log) log->set_parameter("oldautomaton", *this);
 	// Logger::init_step("OneUnambiguity");
 	if (language->is_one_unambiguous_flag_cached()) {
-		if (log)
+
+		if (log) {
 			log->set_parameter("result", language->get_one_unambiguous_flag()
 											 ? "True"
 											 : "False");
+
+			log->set_parameter("cach",
+							   "(!) результат OneUnambiguous получен из кэша");
+		}
 		// Logger::log(language->get_one_unambiguous_flag() ? "True" : "False");
 		// Logger::finish_step();
 		return language->get_one_unambiguous_flag();
 	}
 	FiniteAutomaton min_fa;
+	if (language->min_dfa_cached() && log) {
+		log->set_parameter("cachedMINDFA",
+						   "Минимальный автомат сохранен в кэше");
+	}
 	if (states.size() == 1)
 		min_fa = minimize();
 	else
@@ -2000,7 +2011,11 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 			"Количество диагональных классов по методу Глейстера-Шаллита",
 			to_string(language->get_nfa_minimum_size()));
 		Logger::finish_step();*/
-		if (log) log->set_parameter("result", language->get_nfa_minimum_size());
+		if (log) {
+			log->set_parameter("result", language->get_nfa_minimum_size());
+			log->set_parameter("cach", "(!) результат получен из кэша");
+			// TODO: таблицу из кэша
+		}
 		return language->get_nfa_minimum_size();
 	}
 
@@ -2107,8 +2122,13 @@ bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	// Logger::init_step("Minimal");
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
+		if ((language->min_dfa_cached())) {
+			log->set_parameter("cachedMINDFA",
+							   "Минимальный автомат сохранен в кэше");
+		}
 	}
 	bool result = states.size() == minimize().states.size();
+
 	if (log) {
 		log->set_parameter("result", result ? "True" : "False");
 	}
