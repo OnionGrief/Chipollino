@@ -953,7 +953,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 	test.set_language(lang_l);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("result", test);
+		log->set_parameter("linearised regex", test);
 	}
 	// Logger::log(test.to_txt());
 	// Logger::finish_step();
@@ -1016,8 +1016,9 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 	for (auto& it1 : p) {
 		for (size_t i = 0; i < it1.second.size(); i++) {
-			str_pair = str_pair + "(" + string(list[it1.first]->value.symbol) + "," +
-					   string(list[it1.second[i]]->value.symbol)+")" + "\\ ";
+			str_pair = str_pair + "(" + string(list[it1.first]->value.symbol) +
+					   "," + string(list[it1.second[i]]->value.symbol) + ")" +
+					   "\\ ";
 		}
 	}
 
@@ -1119,7 +1120,7 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 	string str_follow;
 	for (size_t i = 0; i < new_states.size(); i++) {
 		int state_ind = new_states[i].index;
-		str_follow = str_follow + states[state_ind].identifier + ": ";
+		str_follow = str_follow + states[state_ind].identifier + ":\\ ";
 		for (auto j = states[state_ind].label.begin();
 			 j != states[state_ind].label.end(); j++) {
 			str_follow = str_follow + states[*j].identifier + "\\ ";
@@ -1504,6 +1505,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 		// Logger::finish_step();
 		if (log) {
 			log->set_parameter("pumplength", language->get_pump_length());
+			log->set_parameter("cach", "(!) результат получен из кэша");
 		}
 		return language->get_pump_length();
 	}
@@ -1705,8 +1707,13 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << out[j][0].to_txt() << " ";
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
-			deriv_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" +
-						 " = " + out[j][1].to_txt() + "\\\\";
+			deriv_log +=
+				out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" + "\\ =\\ ";
+			if (out[j][1].to_txt() == "") {
+				deriv_log += "eps\\\\";
+			} else {
+				deriv_log += out[j][1].to_txt() + "\\\\";
+			}
 			// Logger::log(deriv_log);
 			if (out[j][0].to_txt() == state) {
 				auto n = find(name_states.begin(), name_states.end(),
@@ -1797,13 +1804,16 @@ void Regex::print_tree() {
 }
 
 bool Regex::is_one_unambiguous(iLogTemplate* log) const {
+	if (log) {
+		log->set_parameter("oldregex", *this);
+	}
 	// Logger::init_step("OneUnambiguity");
 	FiniteAutomaton fa = to_glushkov();
 	bool res = fa.is_deterministic();
 	// Logger::log(res ? "True" : "False");
 	// Logger::finish_step();
 	if (log) {
-		log->set_parameter("is_one_unambiguous", res ? "True" : "False");
+		log->set_parameter("result", res ? "True" : "False");
 	}
 	return fa.is_deterministic();
 }
@@ -1821,6 +1831,8 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result",
 							   fa.language->get_one_unambiguous_regex());
+			log->set_parameter("cach",
+							   "(!) результат OneUnambiguous получен из кэша");
 		}
 		return fa.language->get_one_unambiguous_regex();
 	}
@@ -1835,10 +1847,16 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	}
 	string regl;
 	FiniteAutomaton min_fa;
+	if (!fa.language->min_dfa_cached() && log) {
+		log->set_parameter("cachedMINDFA",
+						   "Минимальный автомат сохранен в кэше");
+	}
 	if (fa.states.size() == 1)
 		min_fa = fa.minimize();
 	else
 		min_fa = fa.minimize().remove_trap_states();
+
+	
 
 	set<map<alphabet_symbol, set<int>>> final_states_transitions;
 	for (int i = 0; i < min_fa.states.size(); i++) {

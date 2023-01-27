@@ -190,3 +190,37 @@ void Interpreter::generate_brief_templates() {
 	}
 	return;
 }
+
+void Interpreter::generate_test_for_all_functions() {
+	ofstream outfile("./resources/all_functions.txt");
+	outfile << "R = {a}" << endl;
+	outfile << "A = Determinize.Glushkov R" << endl;
+	outfile << "V = Ambiguity A" << endl;
+	outfile << "B = Deterministic A" << endl;
+	outfile << "P = PrefixGrammar A" << endl;
+	for (auto func_item : names_to_functions) {
+		for (auto function : func_item.second) {
+			string func_id = function.name;
+			outfile << "N = " << func_id;
+			for (auto arg : function.input) {
+				if (arg == ObjectType::NFA || arg == ObjectType::DFA) {
+					outfile << " A";
+				} else if (arg == ObjectType::AmbiguityValue) {
+					outfile << " V";
+				} else if (arg == ObjectType::Boolean ||
+						   arg == ObjectType::OptionalBool) {
+					outfile << " B";
+				} else if (arg == ObjectType::PrefixGrammar) {
+					outfile << " P";
+				} else if (arg == ObjectType::Regex) {
+					outfile << " R";
+				} else if (arg == ObjectType::Array) {
+					outfile << " [[{a} {b}]]";
+				} else if (arg == ObjectType::Int) {
+					outfile << " 1";
+				}
+			}
+			outfile << endl;
+		}
+	}
+}
