@@ -11,6 +11,16 @@ AutomatonToImage::~AutomatonToImage() {}
 /*
 void AutomatonToImage::to_image(string automat, int name) {
 	char cmd[1024];
+
+	// для Linux:
+
+	/*sprintf(cmd,
+			"dot -Tpng ./resources/input.dot > "
+			"./resources/output%d.png && rm ./resources/input.dot",
+			name);
+
+	// для Windows:
+
 	sprintf(cmd,
 			"dot -Tpng ./resources/input.dot > "
 			"./resources/output%d.png && rm ./resources/input.dot",
