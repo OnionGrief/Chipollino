@@ -97,6 +97,7 @@ Interpreter::Interpreter() {
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
 	// generate_brief_templates();
+	//generate_test_for_all_functions();
 }
 
 bool Interpreter::run_line(const string& line) {

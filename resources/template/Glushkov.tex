@@ -1,15 +1,77 @@
-\section{Glushkov}
-\begin{frame}{Glushkov}
+%include "Linearize.tex"
+%begin detailed
+\section{Основные понятия} %конфликт с section в линеаризации
+
+\begin{frame}{Множества $\First$, $\Last$, $\Follow$}
+  \vspace{-5pt}%хак, чтобы вся документация влезла на слайд --- благо здесь она фиксированной длины
+  \begin{block}{\bf Определение}
+    Пусть $r\in\RegExp$, тогда:
+    \begin{itemize}
+      \item множество $\First$ --- это множество букв, с которых может начинаться слово из $\Lang(r)$ (если $\empt\in\Lang(r)$, то оно формально добавляется в $\First$);
+      \item множество $\Last$ --- это множество букв, которыми может заканчиваться слово из $\Lang(r)$;
+      \item множество $\Follow(c)$ --- это множество букв, которым может предшествовать $c$. Т.е. $\bigl\lbrace d\in\Sigma\mid \exists w_1,w_2(w_1 c d w_2\in\Lang(r))\bigr\rbrace$.
+    \end{itemize}
+  \end{block} % descriptive documentation
+
+  \begin{alertblock}{\bf Achtung!}
+    \small
+    Множество $\Follow$ в теории компиляции обычно определяется иначе --- это множество символов, которые могут идти за выводом из определённого нетерминального символа. Два этих определения можно унифицировать, если рассматривать каждую букву в $r$ как <<обёрнутую>> (в смысле, например, н.ф. Хомского).
+  \end{alertblock} % advanced documentation % overall documentation
+\end{frame}
+
+\begin{frame}{$\First$, $\Last$, $\Follow$ --- пример}
+  Построим указанные множества для регулярного выражения $r=${}$(\regexpstr{ba}\alter \regexpstr{b})\regexpstr{aa}(\regexpstr{a}\alter\regexpstr{ab})\star$.% the initial regexp placeholder #2
+
+  \only<1>{Начнём с исходного регулярного выражения.% counterexample documentation
+
+    \begin{exampleblock}{\bf Исходное регулярное выражение}
+      \begin{itemize}
+        \item $\First(r)=\bigl\lbrace\bigr.${}$\regexpstr{b}${}$\bigl.\bigr\rbrace$. % the initial regexp First placeholder #2
+        \item $\Last(r)=\bigl\lbrace\bigr.${}$\regexpstr{a},\regexpstr{b}${}$\bigl.\bigr\rbrace$. % the initial regexp Last placeholder #2
+        \item $\Follow_r(${}$\regexpstr{a}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{a},\regexpstr{b}${}$\bigl.\bigr\rbrace$; $\Follow_r(${}$\regexpstr{b}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{a}${}$\bigl.\bigr\rbrace$. %the initial regexp alphabet i-th letter placeholder #i*4-2 the initial regexp alphabet i-th letter Follow placeholder #i*4
+      \end{itemize}
+    \end{exampleblock}% counterexample documentation
+    Хотя данные множества описывают, как устроены слова из $\Lang(r)$ локально, однако они не исчерпывают всей информации о языке, поскольку разные вхождения букв в регулярное выражения никак не различаются.% counterexample documentation 
+
+    Например, по множествам $\First$ и $\Last$ можно предположить, что $\regexpstr{b}\in\Lang(r)$, хотя это не так. % specific documentation % counterexample documentation
+  }
+  \only<2>{
+  Вспомним, что $r_{\rm Lin} =${}$(\regexpstr{b_{1}a_{2}}\alter \regexpstr{b_{3}})\regexpstr{a_{4}a_{5}}(\regexpstr{a_{6}}\alter\regexpstr{a_{7}b_{8}})\star$.% the linearised regexp placeholder #2
+
+  \begin{exampleblock}{\bf Линеаризованное выражение}
+    \begin{itemize}
+      \item $\First(r_{\rm Lin})=\bigl\lbrace\bigr.${}$\regexpstr{b_{1}},\regexpstr{b_{3}}${}$\bigl.\bigr\rbrace$. % the linearised regexp First placeholder #2
+      \item $\Last(r_{\rm Lin})=\bigl\lbrace\bigr.${}$\regexpstr{a_{5}},\regexpstr{a_{6}},\regexpstr{b_{8}}${}$\bigl.\bigr\rbrace$. % the linearised regexp Last placeholder #2
+      \item $\Follow_{r_{\rm Lin}}(${}$\regexpstr{b_{1}}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{a_{2}}${}$\bigl.\bigr\rbrace$; $\Follow_{r_{\rm Lin}}(${}$\regexpstr{a_{2}}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{a_{4}}${}$\bigl.\bigr\rbrace$; $\Follow_{r_{\rm Lin}}(${}$\regexpstr{b_{3}}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{a_{4}}${}$\bigl.\bigr\rbrace$; $\Follow_{r_{\rm Lin}}(${}$\regexpstr{a_{4}}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{a_{5}}${}$\bigl.\bigr\rbrace$; $\Follow_{r_{\rm Lin}}(${}$\regexpstr{a_{5}}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{a_{6}},\regexpstr{a_{7}}${}$\bigl.\bigr\rbrace$; $\Follow_{r_{\rm Lin}}(${}$\regexpstr{a_{6}}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{a_{6}},\regexpstr{a_{7}}${}$\bigl.\bigr\rbrace$; $\Follow_{r_{\rm Lin}}(${}$\regexpstr{a_{7}}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{b_{8}}${}$\bigl.\bigr\rbrace$; $\Follow_{r_{\rm Lin}}(${}$\regexpstr{b_{8}}${}$)=\bigl\lbrace\bigr.${}$\regexpstr{a_{6}},\regexpstr{a_{7}}${}$\bigl.\bigr\rbrace$. %the linearised regexp alphabet i-th letter placeholder #i*4-2 the linearised regexp alphabet i-th letter Follow placeholder #i*4
+    \end{itemize}
+  \end{exampleblock}
+  В описании данных множеств содержится исчерпывающая информация о языке $\Lang(r_{\rm Lin})$. % overall documentation
+  }
+\end{frame}
+%end detailed
+\section{Автомат Глушкова}
+%begin detailed
+\begin{frame}{Конструкция автомата Глушкова}
+  \begin{block}{\bf Алгоритм построения $\Glushkov(r)$}
+    \begin{itemize}
+      \item Строим линеаризованную версию $r$: $r_{\rm Lin} =\Linearize(r)$.
+      \item Находим $\First(r_{\rm Lin})$, $\Last(r_{\rm Lin})$, а также $\Follow_{r_{\rm Lin}}(c)$ для всех $c\in\Sigma_{r_{\rm Lin}}$.
+      \item Все состояния автомата, кроме начального (назовём его $S$), соответствуют буквам $c\in\Sigma_{r_{\rm Lin}}$.
+      \item Из начального состояния строим переходы в те состояния, для которых $c\in\First(r_{\rm Lin})$. Переходы имеют вид $S\overset{c}{\rar}{c}$.
+      \item Переходы из состояния $c$ соответствуют элементам $d$ множества $\Follow_{r_{\rm Lin}}(c)$ и имеют вид $c\overset{d}{\rar}{d}$.
+      \item Конечные состояния --- такие, что $c\in\Last(r_{\rm Lin})$, а также $S$, если $\empt\in\Lang(R)$.
+      \item Теперь стираем разметку, построенную линеаризацией, на переходах автомата. Конструкция завершена.
+    \end{itemize}
+  \end{block} % descriptive documentation
+\end{frame}
+%end detailed
+\begin{frame}{Построение $\Glushkov\TypeIs\RegexTYPE\to\NFATYPE$}
 	Регулярное выражение:
 	%template_oldregex
 
 	Автомат:
 
 	%template_result
-
-	Линеаризованное регулярное выражение:
-
-	%template_linearised regex
 
 	Множество $\First$:
 
@@ -24,6 +86,27 @@
 	%template_pairs
 
 \end{frame}
+
+% overall documentation : section 
+%begin detailed
+\section{Обсуждение}
+%В разделе "обсуждение" можно добавлять всё что угодно по вкусу: историческую справку, какие-то интересные примеры, способы применения, связь с другими понятиями теории автоматов и т.д. Можно сделать дополнительный метакомментарий: basic documentation, добавляющую ещё какие-то простые пояснения.
+\begin{frame}{Cвойства автомата Глушкова}
+  \begin{itemize}
+    \item Не содержит $\empt$-переходов.
+    \item Число состояний равно длине регулярного выражения (без учёта регулярных операций), плюс один (стартовое состояние).
+    \item В общем случае недетерминированный.
+  \end{itemize}
+
+  \begin{alertblock}{\bf Примечание}
+    Для $1$-однозначных регулярных выражений $r$ автомат $\Glushkov(r)$ является детерминированным. Эту его особенность активно используют в современных библиотеках регулярных выражений, например, в \textsc{RE2}. Выигрыш может получиться колоссальным: например, $\Thompson(\regexpstr(a\star)\star)$ является экспоненциально неоднозначным, а $\Glushkov(\regexpstr(a\star)\star)$ однозначен и детерминирован!
+  \end{alertblock}% advanced documentation
+	linearised regex:
+
+	%template_linearised regex
+
+\end{frame}
+%end detailed
 
 
 

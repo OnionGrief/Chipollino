@@ -11,6 +11,16 @@ AutomatonToImage::~AutomatonToImage() {}
 /*
 void AutomatonToImage::to_image(string automat, int name) {
 	char cmd[1024];
+
+	// для Linux:
+
+	/*sprintf(cmd,
+			"dot -Tpng ./resources/input.dot > "
+			"./resources/output%d.png && rm ./resources/input.dot",
+			name);
+
+	// для Windows:
+
 	sprintf(cmd,
 			"dot -Tpng ./resources/input.dot > "
 			"./resources/output%d.png && rm ./resources/input.dot",
@@ -20,6 +30,9 @@ void AutomatonToImage::to_image(string automat, int name) {
 
 string AutomatonToImage::to_image(string automat) {
 
+	// для Linux:
+	//system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+	// для Windows
 	system("cd refal && IF EXIST Meta_input.data DEL Meta_input.data && IF "
 		   "EXIST Aux_input.data DEL Aux_input.data");
 
@@ -34,7 +47,8 @@ string AutomatonToImage::to_image(string automat) {
 		   "2>&1");
 
 	// для Linux:
-	// system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+	//system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+	// для Windows
 	system("cd refal && IF EXIST Meta_input.data DEL Meta_input.data && IF "
 		   "EXIST Aux_input.data DEL Aux_input.data");
 

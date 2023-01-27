@@ -269,6 +269,13 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 		log->set_parameter("oldautomaton", fa);
 	}
 	const vector<State>& states = fa.states;
+
+	// TODO:
+	/*if (!fa.language->min_dfa_cached() && log) {
+		log->set_parameter("cachedMINDFA",
+						   "Минимальный автомат сохранен в кэше");
+	}*/
+
 	TransformationMonoid a(fa.minimize());
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
 		a.get_rewriting_rules();
@@ -423,7 +430,8 @@ string Grammar::pg_to_txt() const {
 	for (const auto& elem : out) {
 		ss << elem << "\\\\";
 	}
-	ss << "------------ base words ------------" << "\\\\";
+	ss << "------------ base words ------------"
+	   << "\\\\";
 
 	for (int i = 0; i < prefix_grammar.size(); i++) {
 		if (prefix_grammar[i].is_terminal) {
