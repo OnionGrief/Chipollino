@@ -2242,8 +2242,8 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 				auto res = get_prefix(*it2, state_end, was);
 				if (res.has_value()) {
 					ans = (string)it->first + (string)res.value();
+					return ans;
 				}
-				return ans;
 			}
 		}
 	}
