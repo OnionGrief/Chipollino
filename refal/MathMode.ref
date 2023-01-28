@@ -21,9 +21,21 @@ SeparateModes {
  (e.S1 ((e.Spec)(e.Image)) e.S2) Normal (e.Prefix) e.Spec e.Rest
  , e.S1 ((e.Spec)(e.Image)) e.S2 : e.SymbList
  , <Trim e.Prefix> :
- { = e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
-  e.Nempt  = '\\regexpstr{'<MathMode e.Nempt>' }'e.Image 
-                          <SeparateModes (e.SymbList) Normal () e.Rest>;
+ {, e.Rest : s.1 s.2 e.s 
+  , <InSet (<AnnoteSym><LinearizeSym>)(s.1)><InSet (<Numbers>)s.2> :
+ {True True
+ 	= <SeparateModes (e.SymbList) Normal ('E') e.Rest>;
+  e.OtherValues = e.Image<SeparateModes (e.SymbList) Normal () e.Rest>; 
+  };
+  e.Nempt
+  , e.Rest : s.1 s.2 e.s 
+  , <InSet (<AnnoteSym><LinearizeSym>)(s.1)><InSet (<Numbers>)s.2> :
+ {True True
+ 	= <SeparateModes (e.SymbList) Normal (e.Prefix 'E') e.Rest>;
+  e.OtherValues = '\\regexpstr{'<MathMode e.Nempt>' }' e.Image<SeparateModes (e.SymbList) Normal () e.Rest>; 
+  }; 
+   = e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
+  e.Nempt = '\\regexpstr{'<MathMode e.Nempt>' }' e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
  };
  (e.Spec) Normal (e.Prefix) s.Sym e.Rest
  , <InSet (<ASCIIStandard>) s.Sym> :
