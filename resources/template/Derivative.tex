@@ -1,0 +1,35 @@
+\section{Производные регулярных выражений}
+%begin detailed
+\begin{frame}{Производные Бзрозовски}
+    \vspace{-5pt}
+    \begin{block}{\bf Определение}
+    Множество $a^{-1} U = \{w | aw \in U\}$ называется производным Бзрозовски множества $U$ относительно $a$. Если $\epsilon \in a^{-1} U$, тогда a распознаётся выражением U.
+    \end{block}
+    \begin{itemize}
+        \item $a^{-1}(\varnothing) = a^{-1}(\epsilon) = \varnothing$
+        \item $a^{-1}(b) = \varnothing, if\:b \neq a$
+        \item $a^{-1}(b) = \epsilon, if\ :b = a$
+        \item $a^{-1}(E|F) = a^{-1}(E) \union a^{-1}(F)$
+        \item $a^{-1}(EF) = a^{-1}(E)F \union a^{-1}(F), if \: \epsilon \in \Lang(E)$
+        \item $a^{-1}(EF) = a^{-1}(E)F, if \: \epsilon \notin \Lang(E)$
+        \item $a^{-1}(E \star ) = a^{-1}(E) E \star$
+    \end{itemize}
+\end{frame}
+\begin{frame}{Частичные производные}
+    \begin{block}{\bf Определение}
+    Для регулярного выражения $R$ частичная производная $D_a(R)$ — это регулярное выражение $R'$ такое, что если $w \in \Lang(R')$, то $aw \in L(R)$. Обратное не обязательно выполняется.
+    \end{block}
+    Частичная производная регулярного выражения по символу $a$ определяется следующими правилами:
+    \begin{itemize}
+        \item $D_a(\varnothing) = D_a(\epsilon) = \varnothing$
+        \item $D_\epsilon(a) = a$
+        \item $D_a(b) = \varnothing, if\:b \neq a$
+        \item $D_a(b) = \epsilon, if\:b = a$
+        \item $D_a(E | F) = D_a(E) | D_a(F)$
+        \item $D_a(EF) = D_a(E)F | D_a(F), if \: \epsilon \in \Lang(E)$
+        \item $D_a(EF) = D_a(E)F, if \: \epsilon \notin \Lang(E)$
+        \item $D_a(E \star ) = D_a(E) E \star$
+        \item $D_\epsilon(E) = E$
+    \end{itemize}
+\end{frame} % descriptive documentation
+%end detailed
