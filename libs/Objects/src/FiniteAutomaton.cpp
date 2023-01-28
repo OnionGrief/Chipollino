@@ -2286,11 +2286,11 @@ bool FiniteAutomaton::semdet_entry(bool traps_removed, iLogTemplate* log) const 
 	}
 	vector<Regex> state_languages;
 	get_state_languages(state_languages, false);
-	auto make_string_transition = [=](int from, alphabet_symbol through,
-									  int to) {
-		string f = "${q_" + std::to_string(from) + "}";
-		string arrow = "{\\xrightarrow{\\text{$" + string(through) + "$}}}";
-		string t = "{q_" + std::to_string(to) + "}$";
+	auto make_string_transition = [=](string from, alphabet_symbol through,
+									  string to) {
+		string f = from;
+		string arrow = ">->>{" + string(through) + "}";
+		string t = to;
 		return f + arrow + t;
 	};
 	std::string ambiguous_transitions = "";
@@ -2303,7 +2303,7 @@ bool FiniteAutomaton::semdet_entry(bool traps_removed, iLogTemplate* log) const 
 				for (auto it = transition->second.begin();
 						it != transition->second.end(); it++) {
 					ambiguous_transitions +=
-						make_string_transition(j, transition->first, *it) +
+						make_string_transition(states[j].identifier, transition->first, states[*it].identifier) +
 						",";
 				}
 			}
@@ -2322,7 +2322,7 @@ bool FiniteAutomaton::semdet_entry(bool traps_removed, iLogTemplate* log) const 
 				if (reliability && transition->second.size() > 1) {
 					ambiguous_transitions +=
 						"Reliable:" + 
-						make_string_transition(j, transition->first, *it) +
+						make_string_transition(states[j].identifier, transition->first, states[*it].identifier) +
 						+"\\\\";
 				}
 			}
@@ -2354,9 +2354,6 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 		log->set_parameter("oldautomaton", *this);
 	}
 	bool result = semdet_entry(false, log);
-	if (log) {
-		log->set_parameter("result", result);
-	}
 	return result;
 	// Logger::finish_step();
 }
