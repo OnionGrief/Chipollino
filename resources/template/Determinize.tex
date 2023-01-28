@@ -1,4 +1,42 @@
-\section{Determinize}
+\section{Детерминизация}
+%begin detailed
+\begin{frame}{Недетерминированный конечный автомат(NFA)}
+    \vspace{-5pt}
+    \begin{block}{\bf Определение}
+    Недетминированный конечный автомат(NFA) - это пятёрка $A = ⟨Q, \Sigma, q_0, F, \delta⟩$, где:
+    \begin{itemize}
+        \item $Q$ — множество состояний;
+        \item $\Sigma$ — алфавит терминалов;
+        \item $\delta$ — множество правил перехода вида $⟨q_i,(a_i|\epsilon),Mi⟩$, где $q_i \in Q, a_i \in \Sigma, M_i \in 2^Q$;
+        \item $q_0 \in Q$ — начальное состояние;
+        \item $F \subseteq Q$ — множество конечных состояний.
+    \end{itemize}
+    \end{block}
+\end{frame}
+\begin{frame}{Детерминированный конечный автомат(DFA)}
+    \vspace{-5pt}
+    \begin{block}{\bf Определение}
+    Детерминированный конечный автомат (DFA) — это пятёрка $A = ⟨Q, \Sigma, q_0, F, \delta⟩$, где:
+    \begin{itemize}
+        \item $Q$ — множество состояний;
+        \item $\Sigma$ — алфавит терминалов;
+        \item $\delta$ — множество правил перехода вида $⟨q_i, a_i, q_j⟩$, где $q_i, q_j \in Q, a_i \in \Sigma$, причём $\forall q_i, a_i \exists q_j (⟨q_i, a_i, q_j⟩ \in \delta \: \& \: \forall q_k (⟨q_i, a_i, q_k⟩ \in \delta \Rightarrow q_k = q_j))$;
+        \item $q_0 \in Q$ — начальное состояние;
+        \item $F \subseteq Q$ — множество конечных состояний.
+    \end{itemize}
+    \end{block}
+\end{frame}
+\begin{frame}{Детерминизация NFA}
+    \vspace{-5pt}
+    Для НФА $A$, можно постороить DFA $D(A)$, где состояния $D(A)$ — это состояния $m_i \in 2^Q$, где $Q$ — состояния NFA $A$, такие что:
+    \begin{itemize}
+        \item $m_0 = \{q_i | {q_0}\overset{\epsilon}{\rar}{q_i}\}$;
+        \item $m_i \in F_D \iff \exists q_i, q_j\{q_i \in m_i \& q_j\in F(A) \& {q_i}\overset{\epsilon}{\rar}{q_j}\}$;
+        \item $⟨m, a, m'⟩ \in \delta_D \iff m' = \{q_i | \exists q_j \in m({q_j}\overset{a}{\rar}{q_i})\}.$
+	
+    \end{itemize}
+\end{frame}
+%end detailed
 \begin{frame}{Преобразование $\Determinize\TypeIs\NFATYPE\to\DFATYPE$}
 	Автомат до преобразования:
 
