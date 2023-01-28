@@ -2250,10 +2250,10 @@ std::optional<std::string> FiniteAutomaton::get_prefix(
 	return ans;
 }
 
-void FiniteAutomaton::get_state_languages(bool annoted,
-										  vector<Regex>& state_languages) const{
+void FiniteAutomaton::get_state_languages(vector<Regex>& state_languages,
+										  bool annoted) const {
 	if (!annoted) {
-		annote().remove_trap_states().get_state_languages(true, state_languages);
+		annote().remove_trap_states().get_state_languages(state_languages, true);
 		return;
 	}
 	// Logger::log(
@@ -2272,10 +2272,11 @@ void FiniteAutomaton::get_state_languages(bool annoted,
 		// Получение языка из производной регулярки автомата по префиксу:
 		reg = to_regex();
 		auto derivative = reg.prefix_derivative(prefix.value());
+		//cout << prefix.value() << " " << reg.to_txt() << "\n";
 		if (!derivative.has_value()) continue;
 		state_languages[i].from_string(derivative.value().to_txt());
 		state_languages[i] = state_languages[i].deannote();
-		cout << state_languages[i].to_txt() << "\n";
+		//cout << state_languages[i].to_txt() << "\n";
 	}
 }
 
@@ -2284,7 +2285,7 @@ bool FiniteAutomaton::semdet_entry(bool traps_removed, iLogTemplate* log) const 
 		return remove_trap_states().semdet_entry(true, log);
 	}
 	vector<Regex> state_languages;
-	get_state_languages(false, state_languages);
+	get_state_languages(state_languages, false);
 	auto make_string_transition = [=](int from, alphabet_symbol through,
 									  int to) {
 		string f = "${q_" + std::to_string(from) + "}";
