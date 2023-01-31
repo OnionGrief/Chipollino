@@ -248,11 +248,12 @@ RenderFrame {
      <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
      <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (Formula e.ObjectData) (Formula e.ObjectDataNext) e.Rest
- , <Comment (Formula e.ObjectData)(Formula e.ObjectDataNext)> : (e.Comment)()
+ , e.ObjectData : ((e.Comment)e.Content) e.MD
+ , e.ObjectDataNext : (()e.ContentwithnoPreamble) e.MD2
  , <PutComment s.PageHeight Formula e.ObjectData> : 
  {s.RestPageHeight
  , <RenderAdjacentFormulas (e.Name) s.DefWidth s.DefHeight s.RestPageHeight 
-       (<Div <FrameData Width> 4> <Div <FrameData Width> 2>)(Formula e.ObjectData) (Formula e.ObjectDataNext) e.Rest>
+       (Formula (()e.Content)e.MD) (Formula e.ObjectDataNext) e.Rest>
     : {s.LeftPageHeight e.RestObjects
      = <RenderFrame (e.Name) s.DefWidth s.DefHeight s.LeftPageHeight e.RestObjects>;}; };
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object) e.Rest
@@ -274,48 +275,74 @@ Comment {
 ExtractWidth {
  (Formula (e.AllContent (Normal (e.C1) (e.C2) e.R) e.AC2) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
    = OVERFLOW (s.WidthNorm s.HeightNorm);
+ (Formula ((t.NotEmptyPreamble e.Rest) e.AllContent) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+   = OVERFLOW (s.WidthNorm s.HeightNorm);
  (Formula (e.AllContent) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
- , <Compare s.WidthNorm <FrameData Width>> 
+ , <Compare s.WidthNorm <Sub <FrameData Width> 20>> 
  : {'-' = s.WidthNorm (s.WidthNorm s.HeightNorm); 
     s.Any = OVERFLOW (s.WidthNorm s.HeightNorm);
  };
 }
 
-EstimateColumns {
-  OVERFLOW (s.W s.H) e.Y = One s.W s.H;
-  s.Any (s.W1 s.H1) OVERFLOW (s.W2 s.H2) e.Y = One s.W1 s.H1;
-  s.N1 (s.W1 s.H1) s.N2 (s.W2 s.H2) e.Y
-  , <Compare <Add s.N1 s.N2> <FrameData Width>> :
- { '+' =  One s.W1 s.H1;
-   s.Rest = Two s.W1 s.H1 s.W2 s.H2;
+AccumulateCols {
+ s.Num s.LeftWidth = s.LeftWidth s.Num;
+ 5 s.LeftWidth e.Rest = s.LeftWidth 5 e.Rest;
+ s.Num s.LeftWidth t.Formula e.Rest
+ , <ExtractWidth t.Formula> :
+ { OVERFLOW (s.WidthNorm s.HeightNorm)
+  , s.Num :
+  { 0 = (s.WidthNorm s.HeightNorm <PrepareAdjacentFormula t.Formula>) s.LeftWidth 1 e.Rest;
+    s.Other = s.LeftWidth s.Num t.Formula e.Rest;
+  };
+   s.NotOverflow (s.WidthNorm s.HeightNorm)
+   , <Compare <Sub s.LeftWidth 20> s.WidthNorm> :
+    { '+' = (s.WidthNorm s.HeightNorm <PrepareAdjacentFormula t.Formula>) 
+            <AccumulateCols <Add s.Num 1> <Sub <Sub s.LeftWidth s.WidthNorm> 20> e.Rest>;
+      s.NotPlus = s.LeftWidth s.Num t.Formula e.Rest;
+    };
+ };
+}
+
+PrepareAdjacentFormula {
+ (Formula ((e.Preamble) e.Content) e.MetaData) = (Formula (()e.Content));
+}
+
+GenManyMP {
+ s.FreeSpace s.DH s.DW s.Total (s.Width s.Height (s.Sort (e.AllContent)))
+   = <Putout 2 '\\begin{minipage}{'<ToVal <Div <Mul 100 <Add s.Width <Div s.FreeSpace s.Total>>> s.DW>>'\\textwidth}'>
+    <ChooseContent s.DH Normal s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}'>;
+ s.FreeSpace s.DH s.DW s.Total (s.Width s.Height (s.Sort (e.AllContent))) e.RestFormulas
+ , <Div <Mul 100 <Add s.Width <Div s.FreeSpace s.Total>>> s.DW> : s.PreVal
+ , <Compare s.PreVal 10> :
+ {'+'
+      = <Putout 2 '\\begin{minipage}{'<ToVal s.PreVal>'\\textwidth}'>
+    <ChooseContent s.DH Normal s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}\\hfill'><GenManyMP s.FreeSpace s.DH s.DW s.Total e.RestFormulas>;
+  s.Smaller
+    = <Putout 2 '\\begin{minipage}{'<ToVal <Add s.PreVal 5>>'\\textwidth}'>
+    <ChooseContent s.DH Normal s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}\\hfill'><GenManyMP s.FreeSpace s.DH s.DW s.Total e.RestFormulas>;
  };
 }
 
 RenderAdjacentFormulas {
- (e.Name) s.DW s.DH s.LeftHeight (s.BoundMin s.BoundMax)
-   t.Form1 t.Form2 e.Rest
-  , <EstimateColumns <ExtractWidth t.Form1><ExtractWidth t.Form2>> :
-  { One s.WidthNorm s.HeightNorm
+ (e.Name) s.DW s.DH s.LeftHeight  t.Form1 t.Form2 e.Rest
+  , <AccumulateCols 0 <Sub <FrameData Width> 20> t.Form1 t.Form2 e.Rest> :
+  { (s.WidthNorm s.HeightNorm t.Formula) s.LeftFree 1 e.RF
+   , t.Formula : (s.Sort (e.Content) e.MetaData)
    , <PageEsteem s.LeftHeight s.HeightNorm s.DH> : s.BeforeFlag s.NewPageFlag s.RestPage
-   , t.Form1 : (Formula ((e.Preamble) e.RestFormula) e.MP)
      = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
-     <GenContent Normal s.DW <ChooseHeight s.BeforeFlag s.HeightNorm s.LeftHeight> (Formula (() e.RestFormula))>
+     <GenContent Normal s.DW <ChooseHeight s.BeforeFlag s.HeightNorm s.LeftHeight> (s.Sort (e.Content))>
      <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
-     s.RestPage t.Form2 e.Rest; 
-   Two s.Width1 s.Height1 s.Width2 s.Height2
-   , <Div s.Height1 2> : s.TrueHeight
-   , <PageEsteem s.LeftHeight s.TrueHeight s.DH> : s.BeforeFlagV1 s.NewPageFlagV1 s.RestPageV1
-   , <PageEsteem s.LeftHeight s.TrueHeight s.DH> : s.BeforeFlagV2 s.NewPageFlagV2 s.RestPageV2
-   , <ChooseMaxCase s.BeforeFlagV1 s.BeforeFlagV2 s.NewPageFlagV1 s.NewPageFlagV2 s.RestPageV1 s.RestPageV2>
-          : s.BeforeFlag s.NewPageFlag s.RestPage
-   , t.Form1 : (Formula ((e.Preamble) (MiniPage e.Data2)(Normal e.Data1)) e.MP)
-   , t.Form2 : (Formula (() (MiniPage e.Data2_2)(Normal e.Data2_1)) e.MP2)
+     s.RestPage e.RF; 
+   (s.WidthNorm s.HeightNorm t.Formula) e.ListOfFormulas s.LeftFree s.OtherNum e.RF
+   , <Div s.HeightNorm 2> : s.TrueHeight
+   , <PageEsteem s.LeftHeight s.TrueHeight s.DH> : s.BeforeFlag s.NewPageFlag s.RestPage
    = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
-     <GenContent MiniPage s.DW <ChooseHeight s.BeforeFlag s.Height1 s.LeftHeight> (Formula (() (MiniPage e.Data1)(Normal e.Data1)))>
-     <Putout 2 '\\hfill'>
-     <GenContent MiniPage s.DW <ChooseHeight s.BeforeFlag s.Height2 s.LeftHeight> (Formula (() (MiniPage e.Data2_1)(Normal e.Data2_1)))>
+     <GenManyMP s.LeftFree s.DH <Sub <FrameData Width> 10> s.OtherNum (s.WidthNorm s.HeightNorm t.Formula) e.ListOfFormulas>
      <Putout 2 '\n'>
-     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag> s.RestPage e.Rest;
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag> s.RestPage e.RF;
   };
 }
 
@@ -369,7 +396,7 @@ TableTags {
 SwitchOddity {
  Even = Odd;
  Odd = Even;
-}
+}       
 
 GenZebra {
  Even = '\\rowcolor{HeaderColor!33}';
@@ -625,7 +652,8 @@ ToVal {
  s.Numb
  , <Symb s.Numb> : 
   {s.1 s.2 s.3 = ;
-   e.rest = '0.'e.rest;
+   s.1 s.2 = '0.'s.1 s.2;
+   s.1 = '0.0's.1;
   };
 }
 
