@@ -341,7 +341,7 @@ RenderAdjacentFormulas {
    , <PageEsteem s.LeftHeight s.TrueHeight s.DH> : s.BeforeFlag s.NewPageFlag s.RestPage
    = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
      <GenManyMP s.LeftFree s.DH <Sub <FrameData Width> 10> s.OtherNum (s.WidthNorm s.HeightNorm t.Formula) e.ListOfFormulas>
-     <Putout 2 '\n'>
+     <Putout 2 '\n\\vfill'>
      <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag> s.RestPage e.RF;
   };
 }
@@ -471,8 +471,9 @@ ParseFrame {
        <ParseFrame s.DefaultWidth s.MPWidth Diag ((e.Preamble)(<GetMP s.FlagM> <GetFrame s.FlagF> 
                        <CountAbsWidth <Numb e.WP1>><CountAbsHeight <Numb e.HP1>><CountAbsWidth <Numb e.WP0>><CountAbsHeight <Numb e.HP0>>))
            e.Rest>;
- s.DefaultWidth s.MPWidth Normal (e.Previous)(e.Line'%template_'e.TempInfo)e.Rest
- , <Nempty <Trim e.Line>> : True
+ s.DefaultWidth s.MPWidth Normal (e.Previous)(e.LineX'%template_'e.TempInfo)e.Rest
+ , <Nempty <Trim e.LineX>> : True
+ , <DeleteDuplicates e.LineX> : e.Line
  , <PrepareFormula s.DefaultWidth normalsize e.Line> : e.ListNormal
  , <PrepareFormula s.MPWidth small e.Line> : e.ListMP 
       = <MapFormulas (e.Previous)(e.ListNormal)(e.ListMP)>
@@ -491,6 +492,18 @@ ParseFrame {
  s.DefaultWidth s.MPWidth Normal (e.Preamble) = ;
  s.DefaultWidth s.MPWidth s.Special (e.Preamble) (e.Line) e.Rest
      = <ParseFrame s.DefaultWidth s.MPWidth s.Special (e.Preamble (e.Line)) e.Rest>;
+}
+
+
+/* This is to be processed inside log generation, but for now is placed in rendering module. */
+DeleteDuplicates {
+   e.L1'\\\\'e.L2'\\\\'e.L3'\\\\'e.L2'\\\\'e.L4
+    = <DeleteDuplicates e.L1'\\\\'e.L2'\\\\'e.L3'\\\\'e.L4>;
+   e.L1'\\\\'e.L2'\\\\'e.L3'\\\\'e.L2
+    = <DeleteDuplicates e.L1'\\\\'e.L2'\\\\'e.L3>;
+   e.L1'\\\\'e.L2'\\\\'e.L2'\\\\'e.L3
+    = <DeleteDuplicates e.L1'\\\\'e.L2'\\\\'e.L3>;
+   e.L = e.L;
 }
 
 MapFormulas {
