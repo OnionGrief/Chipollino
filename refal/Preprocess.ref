@@ -166,17 +166,30 @@ GenTableBottom {
  = '\\end{array}$';
 }
 
+ProcessEdgeBlock {
+ e.E1 
+  (e.Source' -> 'e.Dest' [label = \"'e.label'\"]'e.MetaData) e.E2
+  (e.Source' -> 'e.Dest' [label = \"'e.label2'\"]'e.MetaData) e.E3
+   = <ProcessEdgeBlock e.E1 (e.Source' -> 'e.Dest' [label = \"'e.label','e.label2'\"]'e.MetaData) e.E2 e.E3>;
+ (e.Label) e.Rest = <ProcessEdge e.Label><ProcessEdgeBlock e.Rest>;
+  = ;
+}
+
 CropGraph {
  s.Mode e.x 0 = <Prout 'Incorrect dot file.'>;
  Preamble e.x'digraph {'e.y = (e.x'digraph {'e.y) <CropGraph Graph Nodes () <Get 1>>;
  Preamble e.x = (e.x) <CropGraph Preamble <Get 1>>;
- Graph s.Mode (e.FullGraph) '}'e.y = e.FullGraph('}'e.y);
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges) '}'e.y = e.Edges <ProcessEdgeBlock e.CurrEdges>('}'e.y);
+ Graph s.Mode e.PossibleMeta (e.FullGraph) '}'e.y = e.FullGraph('}'e.y);
  Graph Nodes (e.Graph) e.Node
  , e.Node :
- { e.x1 'dummy ->' e.x2  = e.Graph <CropGraph Graph Edges (<ProcessEdge e.x1 'dummy ->' e.x2>) <Get 1>>;
+ { e.x1 'dummy ->' e.x2  = e.Graph <CropGraph Graph Edges ('dummy')((e.x1 'dummy ->' e.x2))( ) <Get 1>>;
    e.W = <CropGraph Graph Nodes (e.Graph <ProcessNode e.W>) <Get 1>>;
    };
- Graph Edges (e.Edges) e.E = <CropGraph Graph Edges (e.Edges <ProcessEdge e.E>)<Get 1>>;
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges)e.Source' -> 'e.E
+   = <CropGraph Graph Edges (e.Source)(e.CurrEdges(e.Source' -> 'e.E))(e.Edges) <Get 1>>;
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges)e.OtherSource' -> 'e.E
+   = <CropGraph Graph Edges (e.OtherSource)((e.OtherSource' -> 'e.E))(e.Edges <ProcessEdgeBlock e.CurrEdges>) <Get 1>>;
 }
 
 ProcessNode {
