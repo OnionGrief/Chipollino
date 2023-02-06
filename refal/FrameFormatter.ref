@@ -10,15 +10,11 @@ Page parameters are taken from file pagedata
 
 *******************************/
 
-$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters, ASCIIStandard, NonASCII, Trim;
+$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters, ASCIIStandard, NonASCII, Trim, Nempty, Min, Max;
 
-$ENTRY Go {
- , <Numb <Arg 1>> : s.TestNum
- , <ExtractLimitations 'pagedata'> : s.DefWidth s.DefHeight
- , <Br 'MPFlag=-'> : e.Rubbish
-    =  <Open 'r' 1 '../resources/report.tex'><Open 'w' 2 '../resources/rendered_report.tex'>
-       <MakeFrames <FrameData Width> <Div <Mul <FrameData Width> s.DefWidth> <FrameData Height>> Normal <Get 1>>
-       <Close 1><Close 2>;
+$ENTRY Flatten {
+ e.x(e.y)e.z = e.x <Flatten e.y e.z>;
+ e.w = e.w;
 }
 
 Balanced {
@@ -28,7 +24,7 @@ Balanced {
  (e.BrPairs) e.y = True;
 }
 
-MakeFrames {
+$ENTRY MakeFrames {
   s.DW s.MPW Normal '%begin detailed'e.Endl
    = <MakeFrames s.DW s.MPW Theory <Get 1>>;
   s.DW s.MPW Theory e.Smth '%end detailed'e.Endl
@@ -53,8 +49,130 @@ MakeFrames {
 
 TitleHeight {
   = 0;
- e.Anything = 40;
+ e.Anything = 35;
 }
+
+$ENTRY FrameData {
+ Height = 320; /* Space that can be really used */
+ MaxHeight = 350; /* This is for the zoom machinery of adjustbox */
+ Width = 600;
+ LabelWidth = 70; /* For automata labels */
+ MaxZoom = 250;
+ MinZoom = 50;
+ OptZoom = 150; /* div 100 */
+}
+
+$ENTRY ExSize {
+ normalsize = (<Div <FrameData Width> 72>)(<Div <FrameData MaxHeight> 30>);
+ small = (<Div <FrameData Width> 76>)(<Div <FrameData MaxHeight> 35>);
+ footnotesize = (<Div <FrameData Width> 85>)(<Div <FrameData MaxHeight> 40>);
+ scriptsize = (<Div <FrameData Width> 95>)(<Div <FrameData MaxHeight> 45>);
+}
+
+$ENTRY String_Length {
+ e.String = <Div <AuxLen String 0 e.String> 3>;
+}
+
+$ENTRY List_Length {
+ e.List = <AuxLen List 0 e.List>;
+}
+
+$ENTRY AllSeparators {
+ All = (','(NotBefore <Numbers>))
+   (')'(NotBefore ')*,}'('\\}')))
+   ('|'(NotBefore ))
+   (' '(NotBefore ))
+   (';'(NotBefore ))
+   ('='(NotBefore '!<>'))
+   ('}'(NotBefore ')*,'('\\}')))
+   ('*'(NotBefore '*),}'('\\}')));
+ Strict = (','(NotBefore <Numbers>))
+   ('='(NotBefore '!<>'))
+   (';'(NotBefore ))
+   ('}'(NotBefore ')*,'('\\}')));
+}
+
+/* Wanted Width + Letter Height + Wanted Size in letters + Lines accumulated */
+$ENTRY SplitToLines {
+ s.Mode s.DefWidth s.ExH s.Size (e.Lines) = (e.Lines)(s.Size)(<Mul s.ExH <Add 2 <List_Length e.Lines>>>);
+ s.Mode s.DefWidth s.ExH s.Size (e.Lines) e.Formula
+ , <TakePrefix <Mul s.Size 3> e.Formula> : e.Prefix (e.Next)
+ , e.Next :
+ { = (e.Lines (e.Prefix))(s.Size)(<Mul s.ExH <Add <List_Length e.Lines> 2>>);
+  e.Z
+ , <FindSeparator s.Mode Last ()(e.Next) e.Prefix> : 
+ { (e.Before) e.After OK
+  = <SplitToLines s.Mode s.DefWidth s.ExH s.Size (e.Lines (e.Before'\\\\')) e.After e.Next>;
+ (e.Before) NONE
+ , s.Mode :
+ {All
+     = <SplitToLines s.Mode s.DefWidth s.ExH s.Size (e.Lines (e.Before'\\\\')) e.Next>;
+  Strict = <SplitToLines s.Mode s.DefWidth s.ExH <Add s.Size 1> (e.Lines) e.Formula>; 
+ };
+ };
+ };
+}
+
+FindSeparator {
+ s.Mode Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
+ , <AllSeparators s.Mode> : e.S1 (s.Sym (NotBefore e.Set)) e.S2
+ , <FirstSym (e.Set) e.WholeSuffix> : False
+    = (e.Prefix s.Sym)e.AccSuffix OK;
+ s.Mode Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
+   = <FindSeparator s.Mode Last (s.Sym e.AccSuffix)(s.Sym e.WholeSuffix) e.Prefix>;
+ s.Mode Last (e.AccSuffix)(e.WholeSuffix) = (e.AccSuffix) NONE;
+}
+
+
+TakePrefix {
+  0 e.Rest = (e.Rest);
+ s.Size = ();
+ s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight (e.Rest) s.Sym>> e.Rest>;
+}
+
+Weight {
+ (e.Any) '|' = 7;
+ (e.Any) '-' = 4;
+ (' ') '*' = 4;
+ (e.Any) '*' = 2;
+ (e.Any) ' '
+ , <FirstSym (<ASCIIStandard>) e.Any> :
+ {True = 1;
+  False = 2;
+ };
+ (e.Any) '=' = 9;
+ (e.Any) '(' = 2;
+ (e.Any) ')' = 2;
+ (e.Any) '{' = 2;
+ (e.Any) '}' = 2;
+ (e.Any)','
+ , <FirstSym (<Numbers>) e.Any> :
+ {True = 0;
+  False = 3;
+ };
+ (e.Any)'.'
+ , <FirstSym (<Numbers>) e.Any> :
+ {True = 0;
+  False = 3;
+ };
+ (e.Any) s.Sym, <InSet (<Numbers>) s.Sym> :
+ {True = <Add 1 <Mod <Random 1> 2>>;
+  False
+ , <InSet (<ASCIIStandard>) s.Sym> :
+ {True = 3;
+  False = 1; /* Brute Unicode processing */
+ };
+ };
+}
+
+SafeSub {
+ s.N1 s.N2, <Compare s.N1 s.N2> : 
+ {'-' = 0;
+  s.Any = <Sub s.N1 s.N2>;
+ };
+}
+
+
 
 Tracer {
  =;
@@ -129,6 +247,16 @@ RenderFrame {
      <GenContent MiniPage s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent2 s.PageHeight> (Diagram (e.AllContent2))>
      <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
      <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (Formula e.ObjectData) (Formula e.ObjectDataNext) e.Rest
+ , e.ObjectData : ((e.Comment)e.Content) e.MD
+ , e.ObjectDataNext : (()e.ContentwithnoPreamble) e.MD2
+ , <InsertFillIfNeeded e.Comment> : e.Rubbish
+ , <PutComment s.PageHeight Formula e.ObjectData> : 
+ {s.RestPageHeight
+ , <RenderAdjacentFormulas (e.Name) s.DefWidth s.DefHeight s.RestPageHeight 
+       (Formula (()e.Content)e.MD) (Formula e.ObjectDataNext) e.Rest>
+    : {s.LeftPageHeight e.RestObjects
+     = <RenderFrame (e.Name) s.DefWidth s.DefHeight s.LeftPageHeight e.RestObjects>;}; };
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object) e.Rest
  , e.Object : s.Sort (e.AllContent) s.Any s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
    , s.WidNorm : s.WidthPercent
@@ -138,8 +266,81 @@ RenderFrame {
    = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
      <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>
      <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
-     <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
-     
+     <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;     
+}
+
+ExtractWidth {
+ (Formula (e.AllContent (Normal (e.C1) (e.C2) e.R) e.AC2) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+   = OVERFLOW (s.WidthNorm s.HeightNorm);
+ (Formula ((t.NotEmptyPreamble e.Rest) e.AllContent) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+   = OVERFLOW (s.WidthNorm s.HeightNorm);
+ (Formula (e.AllContent) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+ , <Compare s.WidthNorm <Sub <FrameData Width> 20>> 
+ : {'-' = s.WidthNorm (s.WidthNorm s.HeightNorm); 
+    s.Any = OVERFLOW (s.WidthNorm s.HeightNorm);
+ };
+}
+
+AccumulateCols {
+ s.Num s.LeftWidth = s.LeftWidth s.Num;
+ 5 s.LeftWidth e.Rest = s.LeftWidth 5 e.Rest;
+ s.Num s.LeftWidth t.Formula e.Rest
+ , <ExtractWidth t.Formula> :
+ { OVERFLOW (s.WidthNorm s.HeightNorm)
+  , s.Num :
+  { 0 = (s.WidthNorm s.HeightNorm <PrepareAdjacentFormula t.Formula>) s.LeftWidth 1 e.Rest;
+    s.Other = s.LeftWidth s.Num t.Formula e.Rest;
+  };
+   s.NotOverflow (s.WidthNorm s.HeightNorm)
+   , <Compare <Sub s.LeftWidth 20> s.WidthNorm> :
+    { '+' = (s.WidthNorm s.HeightNorm <PrepareAdjacentFormula t.Formula>) 
+            <AccumulateCols <Add s.Num 1> <Sub <Sub s.LeftWidth s.WidthNorm> 20> e.Rest>;
+      s.NotPlus = s.LeftWidth s.Num t.Formula e.Rest;
+    };
+ };
+}
+
+PrepareAdjacentFormula {
+ (Formula ((e.Preamble) e.Content) e.MetaData) = (Formula (()e.Content));
+}
+
+GenManyMP {
+ s.FreeSpace s.DH s.DW s.Total (s.Width s.Height (s.Sort (e.AllContent)))
+   = <Putout 2 '\\begin{minipage}{'<ToVal <Div <Mul 100 <Add s.Width <Div s.FreeSpace s.Total>>> s.DW>>'\\textwidth}'>
+    <ChooseContent s.DH Normal s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}'>;
+ s.FreeSpace s.DH s.DW s.Total (s.Width s.Height (s.Sort (e.AllContent))) e.RestFormulas
+ , <Div <Mul 100 <Add s.Width <Div s.FreeSpace s.Total>>> s.DW> : s.PreVal
+ , <Compare s.PreVal 10> :
+ {'+'
+      = <Putout 2 '\\begin{minipage}{'<ToVal s.PreVal>'\\textwidth}'>
+    <ChooseContent s.DH Normal s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}\\hfill'><GenManyMP s.FreeSpace s.DH s.DW s.Total e.RestFormulas>;
+  s.Smaller
+    = <Putout 2 '\\begin{minipage}{'<ToVal <Add s.PreVal 5>>'\\textwidth}'>
+    <ChooseContent s.DH Normal s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}\\hfill'><GenManyMP s.FreeSpace s.DH s.DW s.Total e.RestFormulas>;
+ };
+}
+
+RenderAdjacentFormulas {
+ (e.Name) s.DW s.DH s.LeftHeight  t.Form1 t.Form2 e.Rest
+  , <AccumulateCols 0 <Sub <FrameData Width> 20> t.Form1 t.Form2 e.Rest> :
+  { (s.WidthNorm s.HeightNorm t.Formula) s.LeftFree 1 e.RF
+   , t.Formula : (s.Sort (e.Content) e.MetaData)
+   , <PageEsteem s.LeftHeight s.HeightNorm s.DH> : s.BeforeFlag s.NewPageFlag s.RestPage
+     = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
+     <GenContent Normal s.DW <ChooseHeight s.BeforeFlag s.HeightNorm s.LeftHeight> (s.Sort (e.Content))>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
+     s.RestPage e.RF; 
+   (s.WidthNorm s.HeightNorm t.Formula) e.ListOfFormulas s.LeftFree s.OtherNum e.RF
+   , <Div s.HeightNorm 2> : s.TrueHeight
+   , <PageEsteem s.LeftHeight s.TrueHeight s.DH> : s.BeforeFlag s.NewPageFlag s.RestPage
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
+     <GenManyMP s.LeftFree s.DH <Sub <FrameData Width> 10> s.OtherNum (s.WidthNorm s.HeightNorm t.Formula) e.ListOfFormulas>
+     <Putout 2 '\n'>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag> s.RestPage e.RF;
+  };
 }
 
 ChooseMaxCase {
@@ -151,14 +352,10 @@ ChooseMaxCase {
  
 }
 
-
-Length {
- e.String = <Div <AuxLen 0 e.String> 3>;
-}
-
 AuxLen {
-s.Num = s.Num;
-s.Num s.Sym e.Rest = <AuxLen <Add s.Num <Weight s.Sym>> e.Rest>;
+s.Mode s.Num = s.Num;
+String s.Num s.Sym e.Rest = <AuxLen String <Add s.Num <Weight (e.Rest) s.Sym>> e.Rest>;
+List s.Num t.Term e.Rest = <AuxLen List <Add s.Num 1> e.Rest>;
 }
 
 CountTextHeight {
@@ -168,7 +365,7 @@ s.DefaultWidth ()
   , <ExSize normalsize> : (s.ExW)(s.ExH)
  = s.ExH;
 s.DefaultWidth ((e.Line))
- , <Length e.Line> : s.Num
+ , <String_Length e.Line> : s.Num
  , <ExSize normalsize> : (s.ExW)(s.ExH)
  , <Add <Div <Mul s.Num s.ExW> s.DefaultWidth> 2> : s.TotalLines
    = <Mul s.ExH s.TotalLines>;
@@ -196,7 +393,7 @@ TableTags {
 SwitchOddity {
  Even = Odd;
  Odd = Even;
-}
+}       
 
 GenZebra {
  Even = '\\rowcolor{HeaderColor!33}';
@@ -216,45 +413,35 @@ FormTableAux {
   = (s.DefaultWidth)(<Mul s.Lines <Add s.ExH 1>>);
  s.Oddity s.DefaultWidth s.ExSize s.Lines (e.Line) e.InnerTable
  , <ExSize s.ExSize> : (s.ExW)(s.ExH)
- , <Mul s.ExW <Length e.Line>> : s.RealWidth
+ , <Mul s.ExW <String_Length e.Line>> : s.RealWidth
  , <Compare s.DefaultWidth s.RealWidth> :
  {'-'
   , <SplitLongCells s.ExH s.DefaultWidth s.ExSize e.Line> : e.Data s.Height
        = (<GenZebra s.Oddity> e.Data)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add s.Lines <Div s.Height s.ExH>> e.InnerTable>;
-  '+' = (<GenZebra s.Oddity><TableMathMode e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
+  s.Any = (<GenZebra s.Oddity><TableMathMode e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
  };
  }
 
-Flatten {
- e.x(e.y)e.z = e.x <Flatten e.y e.z>;
- e.w = e.w;
-}
-
 SplitLongCells {
  s.MaxHeight s.DefaultWidth s.ExSize e.L1'&'e.L2
- , <Compare <Length e.L1> 20> :
+ , <Compare <String_Length e.L1> 20> :
  {'+', <FormFormula <Div s.DefaultWidth 3> s.ExSize e.L1> : (e.Form)e.Rubbish(s.Height)
       = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n&\n'
         <SplitLongCells <Max s.MaxHeight s.Height> s.DefaultWidth s.ExSize e.L2>;
   s.Any = <TableMathMode e.L1>'&'<SplitLongCells s.MaxHeight s.DefaultWidth s.ExSize e.L2>; 
  };
  s.MaxHeight s.DefaultWidth s.ExSize e.Last'\\\\'e.Smth
- , <Compare <Length e.Last> 20> :
+ , <Compare <String_Length e.Last> 20> :
  {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
       = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n\\\\'e.Smth'\n'<Max s.MaxHeight s.Height>;
   s.Any = <TableMathMode e.Last>'\\\\'e.Smth s.MaxHeight; 
  };
  s.MaxHeight s.DefaultWidth s.ExSize e.Last
- , <Compare <Length e.Last> 20> :
+ , <Compare <String_Length e.Last> 20> :
  {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
       = '\\begin{array}{l}\n'<TableMathMode e.Form>'\\end{array}\n'<Max s.MaxHeight s.Height>;
   s.Any = <TableMathMode e.Last> s.MaxHeight; 
  };
-}
-
-Nempty {
-s.Sym e.Rest = True;
- = False;
 }
 
 /*
@@ -281,8 +468,9 @@ ParseFrame {
        <ParseFrame s.DefaultWidth s.MPWidth Diag ((e.Preamble)(<GetMP s.FlagM> <GetFrame s.FlagF> 
                        <CountAbsWidth <Numb e.WP1>><CountAbsHeight <Numb e.HP1>><CountAbsWidth <Numb e.WP0>><CountAbsHeight <Numb e.HP0>>))
            e.Rest>;
- s.DefaultWidth s.MPWidth Normal (e.Previous)(e.Line'%template_'e.TempInfo)e.Rest
- , <Nempty <Trim e.Line>> : True
+ s.DefaultWidth s.MPWidth Normal (e.Previous)(e.LineX'%template_'e.TempInfo)e.Rest
+ , <Nempty <Trim e.LineX>> : True
+ , <DeleteDuplicates Start () e.LineX> : e.Line
  , <PrepareFormula s.DefaultWidth normalsize e.Line> : e.ListNormal
  , <PrepareFormula s.MPWidth small e.Line> : e.ListMP 
       = <MapFormulas (e.Previous)(e.ListNormal)(e.ListMP)>
@@ -301,6 +489,34 @@ ParseFrame {
  s.DefaultWidth s.MPWidth Normal (e.Preamble) = ;
  s.DefaultWidth s.MPWidth s.Special (e.Preamble) (e.Line) e.Rest
      = <ParseFrame s.DefaultWidth s.MPWidth s.Special (e.Preamble (e.Line)) e.Rest>;
+}
+
+
+/* This is to be processed inside log generation, but for now is placed in rendering module. */
+DeleteDuplicates {
+   Start (e.Acc) '\\\\'e.L
+  , e.L :
+   { e.L1'\\\\'e.Acc'\\\\'e.L2 = <DeleteDuplicates Start (e.Acc)'\\\\'e.L1'\\\\'e.L2>;
+     e.Rest = <DeleteDuplicates Base () e.Acc'\\\\'e.L>;
+   };
+   Start (e.Acc) s.Sym e.L =
+    <DeleteDuplicates Start (e.Acc s.Sym) e.L>;
+   Start (e.Acc) = e.Acc;
+   Base (e.Acc) e.L1'\\\\'e.L2'\\\\'e.L3'\\\\'e.L2'\\\\'e.L4
+    = <DeleteDuplicates Base (e.Acc e.L1)'\\\\' e.L2'\\\\'e.L3'\\\\'e.L4>;
+   Base (e.Acc) e.Rest = <DeleteDuplicates Adjacent () e.Acc e.Rest>;
+   Adjacent (e.Acc) e.L1'\\\\'e.L2'\\\\'e.L2'\\\\'e.L3
+    = <DeleteDuplicates Adjacent (e.Acc e.L1)'\\\\' e.L2'\\\\'e.L3>;
+   Adjacent (e.Acc) e.Rest = <DeleteDuplicates Final () e.Acc e.Rest>;
+   Final (e.Acc) e.L'\\\\'
+   , e.L : {
+   e.L1'\\\\'e.Acc'\\\\'e.L2
+    = <DeleteDuplicates Final (e.Acc) e.L1'\\\\'e.L2>;
+   e.Rest = e.L'\\\\'e.Acc; };
+   Final (e.Acc) e.L s.Sym
+    = <DeleteDuplicates Final (s.Sym e.Acc) e.L>;
+   Final (e.Acc) 
+    = e.Acc;
 }
 
 MapFormulas {
@@ -339,97 +555,19 @@ PrepareFormula {
    = (<FormFormula s.DefaultWidth s.ExSize e.Line>);
 }
 
-FrameData {
- Height = 320; /* Space that can be really used */
- MaxHeight = 350; /* This is for the zoom machinery of adjustbox */
- Width = 600;
- Zoom = 15; /* div 10 */
-}
 
 /*Returns a tuple: Formula (splitted to the lines) (width (in points)) (height (in points))*/
 FormFormula {
  s.DefWidth s.Size e.Formula
- , <Length e.Formula> : s.Len
+ , <String_Length e.Formula> : s.Len
  , <ExSize s.Size> : (s.ExW)(s.ExH)
  , <Mul s.ExW s.Len> : s.RealWidth
  , <Compare s.RealWidth s.DefWidth> :
-  { '+' = <SplitToLines s.DefWidth s.ExH <Max 1 <Div s.DefWidth s.ExW>> () e.Formula>;
+  { '+' = <SplitToLines All s.DefWidth s.ExH <Max 1 <Div s.DefWidth s.ExW>> () e.Formula>;
      s.Rest = ((e.Formula))(s.RealWidth)(<Add s.ExH s.ExH>);
    };
 }
 
-AllSeparators {
- = (','(NotBefore <Numbers>))
-   (')'(NotBefore ')*,'))
-   ('|'(NotBefore ))
-   (' '(NotBefore ))
-   ('='(NotBefore '!<>'))
-   ('}'(NotBefore ))
-   ('*'(NotBefore '*),'));
-}
-
-FindSeparator {
- Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
- , <AllSeparators> : e.S1 (s.Sym (NotBefore e.Set)) e.S2
- , <FirstSym (e.Set) e.WholeSuffix> : False
-    = (e.Prefix s.Sym)e.AccSuffix;
- Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
-   = <FindSeparator Last (s.Sym e.AccSuffix)(s.Sym e.WholeSuffix) e.Prefix>;
- Last (e.AccSuffix)(e.WholeSuffix) = (e.AccSuffix);
-}
-
-SplitToLines {
- s.DefWidth s.ExH s.Size (e.Lines) = (e.Lines)(s.Size)(<CountTextHeight s.DefWidth (e.Lines)>);
- s.DefWidth s.ExH s.Size (e.Lines) e.Formula
- , <TakePrefix <Mul s.Size 3> e.Formula> : e.Prefix (e.Next)
- , e.Next :
- { = (e.Lines (e.Prefix))(s.Size)(<CountTextHeight s.DefWidth (e.Lines (e.Prefix))>);
-  e.Z
- , <FindSeparator Last ()(e.Next) e.Prefix> : (e.Before)e.After
-  = <SplitToLines s.DefWidth s.ExH s.Size (e.Lines (e.Before'\\\\')) e.After e.Next>;
- };
-}
-
-TakePrefix {
-  0 e.Rest = (e.Rest);
- s.Size = ();
- s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight s.Sym>> e.Rest>;
-}
-
-Weight {
- '|' = 7;
- '*' = 2;
- ' ' = 1;
- '=' = 9;
- '(' = 2;
- ')' = 2;
- '{' = 2;
- '}' = 2;
- ',' = 1;
- '.' = 1;
- s.Num, <InSet (<Numbers>) s.Num> :
- {True = 2;
-  False
- , <InSet (<ASCIIStandard>) s.Num> :
- {True = 3;
-  False = 1; /* Brute Unicode processing */
- };
- };
-}
-
-SafeSub {
- s.N1 s.N2, <Compare s.N1 s.N2> : 
- {'-' = 0;
-  s.Any = <Sub s.N1 s.N2>;
- };
-}
-
-ExSize {
- normalsize = (<Div <FrameData Width> 70>)(<Div <FrameData MaxHeight> 30>);
- small = (<Div <FrameData Width> 76>)(<Div <FrameData MaxHeight> 35>);
- footnotesize = (<Div <FrameData Width> 85>)(<Div <FrameData MaxHeight> 40>);
- scriptsize = (<Div <FrameData Width> 95>)(<Div <FrameData MaxHeight> 45>);
-}
 
 MetaGenerationFormula {
  s.MaxW s.MaxH
@@ -456,7 +594,7 @@ BestCase {
 }
 
 
-ExtractLimitations {
+$ENTRY ExtractLimitations {
  e.Filename
  , <Open 'r' 7 e.Filename> : e.Rubbish
  , <Get 7> : e.Num';'e.Num2
@@ -483,7 +621,7 @@ EstimateZooms {
 
 GetZooms {
   s.WidthPercent s.HeightPercent s.WidthRealZoom s.HeightRealZoom
-  , <FrameData Zoom> : s.LZMax
+  , <Div <FrameData OptZoom> 10> : s.LZMax
   , <Div <Mul 100 s.WidthRealZoom> s.WidthPercent> : s.PerfectWZ
   , <Div <Mul 100 s.HeightRealZoom> s.HeightPercent> : s.PerfectHZ
   , <EstimateZooms s.PerfectHZ s.HeightRealZoom s.LZMax> : s.TypeHeight
@@ -536,27 +674,12 @@ PageEsteem {
  };
 }
 
-Max {
- s.1 s.2
- , <Compare s.2 s.1> :
- {'-' = s.1;
-  s.Rest = s.2;
- };
-}
-
-Min {
- s.1 s.2
- , <Compare s.2 s.1> :
- {'-' = s.2;
-  s.Rest = s.1;
- };
-}
-
 ToVal {
  s.Numb
  , <Symb s.Numb> : 
   {s.1 s.2 s.3 = ;
-   e.rest = '0.'e.rest;
+   s.1 s.2 = '0.'s.1 s.2;
+   s.1 = '0.0's.1;
   };
 }
 
@@ -584,9 +707,26 @@ GenContent {
    = <ChooseContent s.DefHeight Normal s.Sort e.AllContent>;
 }
 
+PutComment {
+ s.PageLeft Formula ((/* No preamble */)e.Content ) e.Rest
+   = s.PageLeft;
+ s.PageLeft Formula ((e.Preamble) e.Content) e.Rest
+ , <CountTextHeight <FrameData Width> (e.Preamble)> : s.StrH
+ , <ExSize normalsize> : (s.ExW)(s.ExH)
+ , <Compare <Add s.StrH <Mul s.ExH 2>> s.PageLeft> :
+ { '-' = <PutByLines Raw e.Preamble><Sub s.PageLeft s.StrH>; 
+   s.Other = <InsertNewPageIfNeeded ()(This)'+'><PutByLines Raw e.Preamble><Sub <FrameData Height> s.StrH>;
+ };
+}
+
+InsertFillIfNeeded {
+  = ;
+ e.NonEmpty = <Putout 2 '\\vfill'>;
+}
+
 ChooseContent {
  s.DefHeight s.Flag Table (e.Preamble)e.R1(s.Flag (e.Head)e.Content(e.Bottom))e.R2
-  = <PutByLines Raw e.Preamble>
+  = <Putout 2 '\\vfill'><PutByLines Raw e.Preamble>
     <Putout 2 '\\vspace*{-0.5ex}\n\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.2\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
     <Putout 2 e.Head>
     <PutByLines Raw e.Content><Putout 2 e.Bottom><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
@@ -597,19 +737,20 @@ ChooseContent {
  { (e.1) t.2 e.Rest
    , <NonASCII (<ASCIIStandard>) e.1 > :
  {False
-  = <PutByLines Raw e.Preamble><Putout 2 '\\noindent $\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$\\vfill'>;
+  = <InsertFillIfNeeded e.Preamble>
+    <PutByLines Raw e.Preamble><Putout 2 '\\noindent $\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$'>;
   True
-   = <PutByLines Raw e.Preamble><PutByLines Raw ('\\noindent')e.Content><Putout 2 '\\vfill'>; };
+   = <InsertFillIfNeeded e.Preamble><PutByLines Raw e.Preamble><PutByLines Raw ('\\noindent')e.Content><Putout 2 '\\vfill'>; };
   (e.C)
   , <NonASCII (<ASCIIStandard>) e.C> :
- {False = <PutByLines Raw e.Preamble><Putout 2 '\\noindent $'<TrueMathMode e.C>'$\n\\vfill'>;
-  True = <PutByLines Raw e.Preamble><PutByLines Raw ('\\noindent')e.Content><Putout 2 '\\vfill'>;
+ {False = <InsertFillIfNeeded e.Preamble><PutByLines Raw e.Preamble><Putout 2 '\\noindent $'<TrueMathMode e.C>'$\n'>;
+  True = <InsertFillIfNeeded e.Preamble><PutByLines Raw e.Preamble><PutByLines Raw ('\\noindent')e.Content>;
  };
  };
  s.DefHeight s.Flag Theory e.Content
-  = <PutByLines Raw e.Content('\n\\vfill')>;
+  = <Putout 2 '\\vfill'><PutByLines Raw e.Content('\n\\vfill')>;
  s.DefHeight s.Flag Diagram (e.Preamble)e.Content
-  = <PutByLines Raw e.Preamble>
+  = <Putout 2 '\\vfill'><PutByLines Raw e.Preamble>
     <Putout 2 '\\vspace*{-1ex}\n\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
     <PutByLines Raw e.Content><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
 }
