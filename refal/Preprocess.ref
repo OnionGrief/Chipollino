@@ -31,7 +31,9 @@ The styles are derived automatically (TODO: use special names for distinguished 
 at most 20 styles are supported.
 *******************************/
 
-$EXTERN TrueMathMode, FirstSym, Numbers, Separator, Trim;
+$EXTERN TrueMathMode, FirstSym, Numbers, Separator, Trim, Min, Max; /* MathMode */
+
+$EXTERN SplitToLines, String_Length, List_Length, FrameData, ExSize, Flatten; /*FrameFormatter */
 
 $ENTRY Go {
  , <Arg 1> : e.from'.dot'
@@ -47,12 +49,6 @@ $ENTRY Go {
        <GenLegenda e.from><GenAux e.from><GenMetaData e.from><Close 1><Close 2>;
   False
     = <Prout 'No file ' e.from'.dot found.'>; }; 
-}
-
-FrameData {
- Height = 330;
- Width = 600;
- Zoom = 25; /* div 10 */
 }
 
 GetNodeMetaData {
@@ -170,17 +166,30 @@ GenTableBottom {
  = '\\end{array}$';
 }
 
+ProcessEdgeBlock {
+ e.E1 
+  (e.Source' -> 'e.Dest' [label = \"'e.label'\"]'e.MetaData) e.E2
+  (e.Source' -> 'e.Dest' [label = \"'e.label2'\"]'e.MetaData) e.E3
+   = <ProcessEdgeBlock e.E1 (e.Source' -> 'e.Dest' [label = \"'e.label','e.label2'\"]'e.MetaData) e.E2 e.E3>;
+ (e.Label) e.Rest = <ProcessEdge e.Label><ProcessEdgeBlock e.Rest>;
+  = ;
+}
+
 CropGraph {
  s.Mode e.x 0 = <Prout 'Incorrect dot file.'>;
  Preamble e.x'digraph {'e.y = (e.x'digraph {'e.y) <CropGraph Graph Nodes () <Get 1>>;
  Preamble e.x = (e.x) <CropGraph Preamble <Get 1>>;
- Graph s.Mode (e.FullGraph) '}'e.y = e.FullGraph('}'e.y);
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges) '}'e.y = e.Edges <ProcessEdgeBlock e.CurrEdges>('}'e.y);
+ Graph s.Mode e.PossibleMeta (e.FullGraph) '}'e.y = e.FullGraph('}'e.y);
  Graph Nodes (e.Graph) e.Node
  , e.Node :
- { e.x1 'dummy ->' e.x2  = e.Graph <CropGraph Graph Edges (<ProcessEdge e.x1 'dummy ->' e.x2>) <Get 1>>;
+ { e.x1 'dummy ->' e.x2  = e.Graph <CropGraph Graph Edges ('dummy')((e.x1 'dummy ->' e.x2))( ) <Get 1>>;
    e.W = <CropGraph Graph Nodes (e.Graph <ProcessNode e.W>) <Get 1>>;
    };
- Graph Edges (e.Edges) e.E = <CropGraph Graph Edges (e.Edges <ProcessEdge e.E>)<Get 1>>;
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges)e.Source' -> 'e.E
+   = <CropGraph Graph Edges (e.Source)(e.CurrEdges(e.Source' -> 'e.E))(e.Edges) <Get 1>>;
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges)e.OtherSource' -> 'e.E
+   = <CropGraph Graph Edges (e.OtherSource)((e.OtherSource' -> 'e.E))(e.Edges <ProcessEdgeBlock e.CurrEdges>) <Get 1>>;
 }
 
 ProcessNode {
@@ -208,13 +217,28 @@ DeleteDoubles {
 
 ProcessLabel {
  '\\begin{array}{'e.Header'}'e.Label'\\end{array}'
- , e.Label : e.V'\\\\'e.Rest
+ , <ChooseLongestStr (0 ) e.Label> : e.V
  , <Dg 'AuxInd'> : s.Num
  , <Br 'AuxCont=~@'<Symb s.Num>'@\\begin{array}{'e.Header'}'<MapArray TrueMathMode e.Label>'\\end{array}~'> : e.Rubbish
  , <Br 'AuxInd='<Add s.Num 1>> : e.Rubbish2
   = <AdjustAlts e.V>'@'<Symb s.Num>'@';
  e.Z = <AdjustAlts e.Z>;
 } 
+
+ChooseLongestStr {
+ (s.PrevLength e.Prev) e.X'\\\\'e.Y
+ , <String_Length e.X > : s.Len
+ , <Compare s.PrevLength s.Len> :
+ {'+' = <ChooseLongestStr (s.PrevLength e.Prev) e.Y>;
+  s.Any = <ChooseLongestStr (s.Len e.X) e.Y>;
+ };
+ (s.PrevLength e.Prev) e.X
+ , <String_Length e.X > : s.Len
+ , <Compare s.PrevLength s.Len> :
+ {'+' = e.Prev;
+  s.Any = e.X;
+ };
+}
 
 MapArray {
  s.Func e.x'\\\\'e.y = <MapArray s.Func e.x>'\\\\'<MapArray s.Func e.y>;
@@ -247,60 +271,34 @@ LengthStr {
  s.Num = s.Num; 
 }
 
-Lines {
- s.Block
- , <Compare s.Block 7> :
- {'-' = 2;
-   e.Z
- , <Compare s.Block 13> :
- {'-' = 3;
-   e.Z
-  , <Compare s.Block 21> :
- {'-' = 4;
-  e.Z = 5;
- };
- };};
-}
-
-BlockSize {
- s.Block s.Lines
- , <Div s.Block s.Lines> : s.PreSize
- , <Mul s.PreSize s.Lines> :
- {s.Block = s.PreSize;
-  e.Z = <Add s.PreSize 1>;
- };
-}
-
-SplitArray {
-  s.Size s.Size e.x t.Sep e.y, <Separator (e.x) t.Sep e.y> : True = e.x t.Sep'\\\\'<SplitArray 1 s.Size e.y>;
-  s.Curr s.Size e.x t.Sep e.y, <Separator (e.x) t.Sep e.y> : True = e.x t.Sep <SplitArray <Add s.Curr 1> s.Size e.y>;
-  s.Curr s.Size e.x = e.x;
-}
-
 SplitData {
   (s.Total s.Block) e.Data
- , <Compare <Div s.Total s.Block> 16> :
- { '+'
-   , <Dg 'LegendaInd'> : s.Num
-   , <Br 'LegendaInd='<Add s.Num 1>> : e.Rubbish
-   , <Br 'LegendaCont=''L'<Symb s.Num>'&'e.Data'\\\\'> : e.Rubbish2
-         = 'L'<Symb s.Num>;
-    e.Z
- , <Compare s.Block 3> :
- { '+'
- , <Compare <Div s.Total s.Block> 6> :
- { '+' =  <CreateArray <SplitArray 1 1 e.Data>>;
-   e.Any0 = <CreateArray <SplitArray 1 <BlockSize s.Block <Lines s.Block>> e.Data>>;
-  };
-    e.ZZ, <Compare <Div s.Total s.Block> 4><Compare s.Block 1> : 
-   {'++' = <CreateArray <SplitArray 1 1 e.Data>>;
-     e.Any = e.Data;
+   , <Compare s.Total 7> :
+ {'+'
+   , <ExSize normalsize> : (s.xW)(s.xH)
+   , <Div <FrameData LabelWidth> s.xW> : s.LineLen 
+   , <SplitToLines Strict <FrameData LabelWidth> s.xH s.LineLen () e.Data> : (e.Lines) t.Sizex (s.Height)
+   , <Flatten e.Lines> : e.ArrCont
+   , <Compare s.Total <Mul s.LineLen s.LineLen>><Compare <List_Length <ChooseLongestStr (0) e.ArrCont>> 14> :
+ {e.OptVal1 '+' e.OptVal2
+     , <Dg 'LegendaInd'> : s.Num
+     , <Br 'LegendaInd='<Add s.Num 1>> : e.Rubbish
+     , <Br 'LegendaCont=''L'<Symb s.Num>'&'e.Data'\\\\'> : e.Rubbish2
+         = 'L'<Symb s.Num>;  
+  e.BothLessOrEqual
+  , <Max <FrameData LabelWidth> s.Height> : s.NewWidth
+  , <SplitToLines Strict s.NewWidth s.xH <Add <Div s.NewWidth s.xW> 1> () e.Data> : (e.FinalLines) t.SizeS t.Height2
+  , <Compare s.Block 1> :
+  { '+' =  <CreateArray <Flatten e.FinalLines>>;
+    '0' = e.Data;
    };
- };};
+  };
+  s.SmallVal = e.Data;
+};
 }
 
 CreateArray {
-  e.w = '\\begin{array}{c}'e.w '\\end{array}';
+  e.w = '\\begin{array}{c}' e.w ' \\end{array}';
 }
 
 SectionEdge {

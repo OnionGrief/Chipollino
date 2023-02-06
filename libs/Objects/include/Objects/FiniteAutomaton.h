@@ -74,7 +74,11 @@ class FiniteAutomaton : public BaseObject {
 										  map<int, bool>& was) const;
 
 	// функция проверки на семантическую детерминированность
-	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
+	bool semdet_entry(bool traps_removed = false, iLogTemplate* log = nullptr) const;
+
+	// Поиск языков состояний
+	void get_state_languages(vector<Regex>& state_languages,
+							 bool annoted = false) const;
 
   public:
 	FiniteAutomaton();

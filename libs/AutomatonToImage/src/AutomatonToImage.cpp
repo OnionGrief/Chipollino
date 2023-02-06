@@ -39,11 +39,11 @@ string AutomatonToImage::to_image(string automat) {
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
 	fprintf(fo, "%s", automat.c_str());
-	fclose(fo);
+	fclose(fo);           
 	system(
-		"cd refal && refgo Preprocess+MathMode input.dot > error_refal0.txt");
+		"cd refal && refgo Preprocess+MathMode+FrameFormatter input.dot > error_refal0.txt");
 	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
-	system("cd refal && refgo Postprocess+MathMode input.tex > error_refal.txt "
+	system("cd refal && refgo Postprocess+MathMode+FrameFormatter input.tex > error_refal.txt "
 		   "2>&1");
 
 	// для Linux:
@@ -67,7 +67,6 @@ string AutomatonToImage::to_image(string automat) {
 	// TODO: разные команды для Linux и Windows
 	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm "
 		   "R_input.tex");
-
 	// таблица
 	ifstream infile_for_L("./refal/L_input.tex");
 

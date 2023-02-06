@@ -1,9 +1,6 @@
 /* Crazy Refal-style. Bracket balance is completely ignored, since it does not affect anything. We assume no epsilons in indices! */
 $ENTRY TrueMathMode {
- 'eps'e.Input = '\\empt'<TrueMathMode e.Input>;
-  e.Input'eps' = <TrueMathMode e.Input>'\\empt';
-   = ;
- e.Input = <SeparateModes (<EpsilonSym>) Normal () e.Input>;
+ e.Input = <SeparateModes (<SpecialSymbolList>) Normal () e.Input>;
 }
 
 $ENTRY Trim {
@@ -14,38 +11,62 @@ $ENTRY Trim {
  e.y = e.y;
 }
 
+/* Hacked derivatives. TODO: parameterize by indices activation */
+SpecialSymbolList {
+ = (NOREGEX ('eps')('\\empt'))(NOREGEX ('DERIV')('\\delta_'))(OK ('FIRST')('\\First'))(OK ('FOLLOW')('\\Follow'))(OK ('LAST')('\\Last'))
+   (OK ('UNION')('\\cup'))(NOREGEX ('LANG')('\\Lang'))(OK ('>->>')('\\transit'));
+}
 
 SeparateModes {
- (e.Eps) Normal (e.Prefix) e.Eps e.Rest
+ (e.S1 (s.Sort (e.Spec)(e.Image)) e.S2) Normal (e.Prefix) e.Spec e.Rest
+ , e.S1 (s.Sort (e.Spec)(e.Image)) e.S2 : e.SymbList
+ , s.Sort : 
+ {
+  NOREGEX
  , <Trim e.Prefix> :
- { = e.Eps <SeparateModes (e.Eps) Normal () e.Rest>;
-  e.Nempt  = '\\regexpstr{'<MathMode e.Nempt>'}'e.Eps 
-                          <SeparateModes (e.Eps) Normal () e.Rest>;
+ {, e.Rest : s.1 s.2 e.s 
+  , <InSet (<AnnoteSym><LinearizeSym>)(s.1)><InSet (<Numbers>)s.2> :
+ {True True
+ 	= <SeparateModes (e.SymbList) Normal ('E') e.Rest>;
+  e.OtherValues = e.Image<SeparateModes (e.SymbList) Normal () e.Rest>; 
+  };
+  e.Nempt
+  , e.Rest : s.1 s.2 e.s 
+  , <InSet (<AnnoteSym><LinearizeSym>)(s.1)><InSet (<Numbers>)s.2> :
+ {True True
+ 	= <SeparateModes (e.SymbList) Normal (e.Prefix 'E') e.Rest>;
+  e.OtherValues = '\\regexpstr{'<MathMode e.Nempt>' }' e.Image<SeparateModes (e.SymbList) Normal () e.Rest>; 
+  }; 
+   = e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
+  e.Nempt = '\\regexpstr{'<MathMode e.Nempt>' }' e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
  };
- (e.Eps) Normal (e.Prefix) s.Sym e.Rest
+ OK = <SeparateModes (e.SymbList) Normal (e.Prefix e.Image) e.Rest>;
+ };
+ (e.Spec) Normal (e.Prefix) s.Sym e.Rest
  , <InSet (<ASCIIStandard>) s.Sym> :
- { True = <SeparateModes (e.Eps) Normal (e.Prefix s.Sym) e.Rest>;
+ { True = <SeparateModes (e.Spec) Normal (e.Prefix s.Sym) e.Rest>;
    False
   , <Trim e.Prefix> :
-   { = <SeparateModes (e.Eps) Text (s.Sym) e.Rest>;
-    e.Nempty = '\\regexpstr{'<MathMode e.Nempty>'}'<SeparateModes (e.Eps) Text (s.Sym) e.Rest>;
+   { = <SeparateModes (e.Spec) Text (s.Sym) e.Rest>;
+    e.Nempty = '\\regexpstr{'<MathMode e.Nempty>' }'<SeparateModes (e.Spec) Text (s.Sym) e.Rest>;
    };
  };
- (e.Eps) Text (e.Prefix) s.Sym e.Rest
+ (e.Spec) Text (e.Prefix) s.Sym e.Rest
  , <InSet (<ASCIIStandard>) s.Sym> :
- { False = <SeparateModes (e.Eps) Text (e.Prefix s.Sym) e.Rest>;
+ { False = <SeparateModes (e.Spec) Text (e.Prefix s.Sym) e.Rest>;
    True
    , <InSet (<Punctuation>) s.Sym> :
-   { False = '\\text{'e.Prefix'}'<SeparateModes (e.Eps) Normal (s.Sym) e.Rest>;
+   { False = '\\text{'e.Prefix' }'<SeparateModes (e.Spec) Normal (s.Sym) e.Rest>;
      True
      , <FirstSym (<ASCIIStandard>) e.Rest> :
-      { False = <SeparateModes (e.Eps) Text (e.Prefix s.Sym) e.Rest>;
-        True = '\\text{'e.Prefix s.Sym'}'<SeparateModes (e.Eps) Normal ( ) e.Rest>;
+      { False = <SeparateModes (e.Spec) Text (e.Prefix s.Sym) e.Rest>;
+        True = '\\text{'e.Prefix s.Sym' }'<SeparateModes (e.Spec) Normal ( ) e.Rest>;
       };
    };
  };
- (e.Eps) Text (e.Prefix) = '\\text{'e.Prefix'}';
- (e.Eps) Normal (e.Prefix) = '\\regexpstr{'<MathMode e.Prefix>'}';
+ (e.Spec) Text (e.Prefix) = '\\text{'e.Prefix' }';
+ (e.Spec) Normal ( ) = ;
+ (e.Spec) Normal (e.Prefix) = '\\regexpstr{'<MathMode e.Prefix>' }';
 }
 
 AdjustSpaceBeforeStar {
@@ -58,7 +79,13 @@ AdjustSpaceBeforeStar {
 MathMode {
  e.x'->'e.y = <MathMode e.x>'\\rar '<MathMode e.y>;
  e.x'|'e.y = <MathMode e.x>'\\alter '<MathMode e.y>;
- e.x'*'e.y = <MathMode e.x>'{}'<AdjustSpaceBeforeStar e.x>'\\star '<MathMode e.y>;
+ e.x'*'e.y
+ , <LastSym (' \\\t')e.x><Nempty e.x> 
+ : { False True  = <MathMode e.x>'{}'<AdjustSpaceBeforeStar e.x>'\\star '<MathMode e.y>;
+     True True = <MathMode e.x>'\\;\\VerifParameter '<MathMode e.y>;
+     False False = '\\VerifParameter '<MathMode e.y>;
+ };
+  = ;
  e.x = <IndexModes Outer ()() e.x>;
 }
 
@@ -164,10 +191,6 @@ AnnoteSym {
  = (',');
 }
 
-EpsilonSym {
- = 'eps';
-}
-
 $ENTRY Numbers {
  = '0123456789';
 }
@@ -190,10 +213,11 @@ $ENTRY InSet {
 }
 
 $ENTRY FirstSym {
- (e.x) t.Next e.data
+ (e.x) s.Sym e.Next e.data
  , e.x :
- { e.x1 t.Next e.x2 = True;
-   e.xx = False;
+ { e.x1 (s.Sym e.Next) e.x2 = True;
+   e.x1 s.Sym e.x2 = True;
+   e.Z = False;
  };
  (e.x) = False;
 }
@@ -219,3 +243,25 @@ $ENTRY NonASCII {
 $ENTRY ASCIIStandard {
   = <Numbers><Letters>'$%&*()-_=+`~!@#;:\'\"<>,./?[]{}\\|^ \t\n';
 }
+
+$ENTRY Nempty {
+t.Sym e.Rest = True;
+ = False;
+}
+
+$ENTRY Min {
+ s.1 s.2
+ , <Compare s.1 s.2> :
+ {'-' = s.1;
+  s.Rest = s.2;
+ };
+}
+
+$ENTRY Max {
+ s.1 s.2
+ , <Compare s.2 s.1> :
+ {'-' = s.1;
+  s.Rest = s.2;
+ };
+}
+

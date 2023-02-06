@@ -1222,7 +1222,7 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 			term_r->get_prefix(len - k, prefs2);
 			for (auto i = prefs1->begin(); i != prefs1->end(); i++) {
 				for (auto j = prefs2->begin(); j != prefs2->end(); j++) {
-					prefs->insert(*i + *j);
+					if (prefix_derivative(*i + *j)) prefs->insert(*i + *j);
 				}
 			}
 			prefs1->clear();
@@ -1243,7 +1243,7 @@ void Regex::get_prefix(int len, std::set<std::string>* prefs) const {
 			get_prefix(len - k, prefs2);
 			for (auto i = prefs1->begin(); i != prefs1->end(); i++) {
 				for (auto j = prefs2->begin(); j != prefs2->end(); j++) {
-					prefs->insert(*i + *j);
+					if (prefix_derivative(*i + *j)) prefs->insert(*i + *j);
 				}
 			}
 			prefs1->clear();
@@ -1364,6 +1364,26 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym,
 	}
 }
 
+void Regex::eps_removing() {
+	switch (type) {
+	case Type::alt:
+	case Type::conc:
+		term_l->eps_removing();
+		term_r->eps_removing();
+		if (term_l->type == Type::eps && term_r->type == Type::eps) {
+			clear();
+			type = Type::eps;
+		}
+		break;
+	case Type::star:
+		term_l->eps_removing();
+		if (term_l->type == Type::eps) {
+			clear();
+			type = Type::eps;
+		}
+	}
+}
+
 bool Regex::partial_derivative_with_respect_to_sym(
 	Regex* respected_sym, const Regex* reg_e, vector<Regex>& result) const {
 	Regex cur_result;
@@ -1441,21 +1461,37 @@ bool Regex::partial_derivative_with_respect_to_sym(
 	}
 }
 
+bool Regex::get_symbols_from_string(vector<Regex>& res){
+	if (type == Type::symb) {
+		res.push_back(*this);
+		return true;
+	}
+	if (type == Regex::conc) {
+		vector<Regex> resl, resr;
+		term_l->get_symbols_from_string(resl);
+		term_r->get_symbols_from_string(resr);
+		for (int i = 0; i < resl.size(); i++) {
+			res.push_back(resl[i]);
+		}
+		for (int i = 0; i < resr.size(); i++) {
+			res.push_back(resr[i]);
+		}
+		return true;
+	}
+	return false;
+}
+
 bool Regex::derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										   Regex& result) const {
 	bool success = true;
 	Regex cur = *reg_e;
 	Regex next = *reg_e;
-	// cout << "start getting derevative for prefix " << str << " in "
-	//	 << reg_e->to_txt() << "\n";
-	for (int i = 0; i < str.size(); i++) {
-		Regex sym;
-		sym.type = Type::symb;
-		sym.value.symbol = str[i];
-		next.clear();
-		success &= derivative_with_respect_to_sym(&sym, &cur, next);
-		// cout << "derevative for prefix " << sym->to_txt() << " in "
-		//	 << cur.to_txt() << " is " << next.to_txt() << "\n";
+	Regex symbols;
+	symbols.from_string(str);
+	vector<Regex> syms;
+	symbols.get_symbols_from_string(syms);
+	for (int i = 0; i < syms.size(); i++) {
+		success &= derivative_with_respect_to_sym(&syms[i], &cur, next);
 		if (!success) {
 			return false;
 		}
@@ -1498,13 +1534,12 @@ std::optional<Regex> Regex::prefix_derivative(std::string respected_str) const {
 	return ans;
 }
 // Длина накачки
+// Длина накачки
 int Regex::pump_length(iLogTemplate* log) const {
-	// Logger::init_step("PumpLength");
+	if (log) log->set_parameter("oldregex", *this);
 	if (language->pump_length_cached()) {
-		// Logger::log("Длина накачки", to_string(language->get_pump_length()));
-		// Logger::finish_step();
 		if (log) {
-			log->set_parameter("pumplength", language->get_pump_length());
+			log->set_parameter("pumplength1", language->get_pump_length());
 			log->set_parameter("cach", "(!) результат получен из кэша");
 		}
 		return language->get_pump_length();
@@ -1515,14 +1550,12 @@ int Regex::pump_length(iLogTemplate* log) const {
 		get_prefix(i, &prefs);
 		if (prefs.empty()) {
 			language->set_pump_length(i);
-			/*Logger::log(
-				"Длина накачки совпадает с длиной регулярного выражения");
-			Logger::finish_step();*/
 			if (log) {
-				log->set_parameter("pumplength", i);
+				log->set_parameter("pumplength1", i);
 			}
 			return i;
 		}
+		bool pumped = true;
 		for (auto it = prefs.begin(); it != prefs.end(); it++) {
 			bool was = false;
 			for (int j = 0; j < it->size(); j++) {
@@ -1532,40 +1565,48 @@ int Regex::pump_length(iLogTemplate* log) const {
 				}
 			}
 			if (was) continue;
-			for (int j = 0; j < it->size(); j++) {
-				for (int k = j + 1; k <= it->size(); k++) {
-					Regex pumping;
-					std::string pumped_prefix;
-					pumped_prefix += it->substr(0, j);
-					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
-					pumped_prefix += it->substr(k, it->size() - k + j);
-					Regex a(pumped_prefix);
-					Regex b;
-					pumping.regex_union(&a, &b);
-					if (!derivative_with_respect_to_str(*it, this,
-														*pumping.term_r))
-						continue;
-					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language = make_shared<Language>(pumping.alphabet);
-					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
-					if (subset(pumping)) {
-						checked_prefixes[*it] = true;
-						language->set_pump_length(i);
-						/*cout << *it << "\n";
-						cout << pumping.to_txt() << "\n";
-						cout << to_txt() << "\n";
-						cout << subset(pumping) << "\n";
-						Regex pump2;
-						cout << subset(pump2);*/
-						// Logger::log("Длина накачки", to_string(i));
-						// Logger::finish_step();
-						if (log) {
-							log->set_parameter("pumplength", i);
-						}
-						return i;
-					}
+			bool infix_pumped = false;
+			Regex pref(*it);
+			vector<Regex> symbols;
+			pref.get_symbols_from_string(symbols);
+			for (int j = 0; j < symbols.size(); j++) {
+				std::string pumped_prefix;
+				for (int k = 0; k < j; k++) {
+					pumped_prefix += symbols[k].value.symbol;
+				}
+				pumped_prefix += "(";
+				for (int k = j; k < symbols.size(); k++) {
+					pumped_prefix += symbols[k].value.symbol;
+				}
+				pumped_prefix += ")*";
+				Regex a;
+				if (!derivative_with_respect_to_str(*it, this, a)) {
+					continue;
+				}
+				a.eps_removing();
+				if (a.to_txt() != "")
+					pumped_prefix += "(" + a.to_txt() + ")";
+				Regex pumping(pumped_prefix);
+				if (subset(pumping)) {
+					checked_prefixes[*it] = true;
+					infix_pumped = true;
+					break;
 				}
 			}
+			pumped &= infix_pumped;
+		}
+		std::string ch_prefixes;
+		for (auto it = checked_prefixes.begin(); it != checked_prefixes.end();
+			 it++) {
+			if (it->second) ch_prefixes += it->first + "\\\\";
+		}
+		if (pumped) {
+			language->set_pump_length(i);
+			if (log) {
+				log->set_parameter("pumplength1", i);
+				log->set_parameter("pumplength2", ch_prefixes);
+			}
+			return i;
 		}
 	}
 }
@@ -1643,7 +1684,9 @@ bool Regex::subset(const Regex& r, iLogTemplate* log) const {
 	// Logger::init_step("Subset");
 	// Logger::log("Первое регулярное выражение", to_txt());
 	// Logger::log("Второе регулярное выражение", r.to_txt());
-	bool result = to_ilieyu().subset(r.to_ilieyu());
+	auto il = to_ilieyu();
+	auto ril = r.to_ilieyu();
+	bool result = il.subset(ril);
 	/*if (result)
 		Logger::log("Результат Subset", "true");
 	else
