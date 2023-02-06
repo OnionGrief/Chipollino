@@ -1,5 +1,16 @@
 %include "TMtheory.tex"
 \section{MyhillNerode}
+%begin detailed
+\begin{frame}{Эквивалентность слов в DFA}
+    Пусть дан DFA $A$. Положим $w_1 {\equiv_A} w_2 \iff \exists q_i({q_0}\overset{w_1}{\rar}{q_i} \& {q_0}\overset{w_2}{\rar}{q_i})$.
+    Если $w_1 {\equiv_A} w_2$, тогда $\forall z({w_1}z \in \Lang(A) \iff  {w_2}z \in \Lang(A))$
+
+    $w_1 {\equiv_\Lang} w_2 \iff \forall z({w_1}z \in \Lang \iff  {w_2}z \in \Lang)$. Это отношение разбивает $\Lang$ на классы эквивалентности.
+    \begin{block}{\bf Теорема Майхилла-Нероуда}
+    Язык $\Lang$ регулярен тогда и только тогда, когда множество его классов эквивалентности по ${\equiv_\Lang}$ конечно.   
+    \end{block}
+\end{frame}
+%end detailed
 \begin{frame}{$\MyhillNerode\TypeIs\NFATYPE\to\IntTYPE$}
 	Автомат:
 
