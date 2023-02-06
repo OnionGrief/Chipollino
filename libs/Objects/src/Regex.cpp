@@ -1069,7 +1069,8 @@ FiniteAutomaton Regex::to_ilieyu() const {
 			State st2 = states[j];
 			map<alphabet_symbol, set<int>> map2 = st2.transitions;
 			bool flag = true;
-			if (i == j || map2.size() != map1.size()) {
+			if (i == j || map2.size() != map1.size() ||
+				st1.is_terminal != st2.is_terminal) {
 				continue;
 			}
 
