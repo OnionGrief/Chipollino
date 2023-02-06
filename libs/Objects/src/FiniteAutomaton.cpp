@@ -2331,8 +2331,8 @@ bool FiniteAutomaton::semdet_entry(bool traps_removed, iLogTemplate* log) const 
 				// Logger::finish_step();
 				ambiguous_transitions += "Reliable: none\\\\";
 				if (log) {
-					log->set_parameter("semdet1", ambiguous_transitions);
-					log->set_parameter("semdet2", "false\\\\");
+					log->set_parameter("ambiguous transitions", ambiguous_transitions);
+					log->set_parameter("semdet result", "false\\\\");
 				}
 				return false;
 			}
@@ -2342,8 +2342,8 @@ bool FiniteAutomaton::semdet_entry(bool traps_removed, iLogTemplate* log) const 
 		if (ambiguous_transitions == "") {
 			ambiguous_transitions = "None";
 		}
-		log->set_parameter("semdet1", ambiguous_transitions);
-		log->set_parameter("semdet2", "true\\\\");
+		log->set_parameter("ambiguous transitions", ambiguous_transitions);
+		log->set_parameter("semdet result", "true\\\\");
 	}
 	return true;
 }
