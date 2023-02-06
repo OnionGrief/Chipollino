@@ -49,6 +49,8 @@ if resizing is not needed.
 *******************************/
 $EXTERN TrueMathMode;
 
+$EXTERN FrameData, Min, Max;
+
 $ENTRY Go {
  , <Arg 1> : e.from'.tex'
  , <ExistFile e.from'.tex'> :
@@ -61,8 +63,8 @@ $ENTRY Go {
        <PutLines 2 
           (<CalcPreamble 
 	      <GetZooms s.WidthPercent s.HeightPercent 
-	         <Div <Mul 100 <Sub s.MaxW s.MinW>> <FrameSize Width>> 
-		 <Div <Mul 100 <Sub s.MaxH s.MinH>>  <FrameSize Height>>
+	         <Div <Mul 100 <Sub s.MaxW s.MinW>> <FrameData Width>> 
+		 <Div <Mul 100 <Sub s.MaxH s.MinH>>  <FrameData Height>>
 		 >>)
 	  e.Graph><Close 2>;
   False
@@ -98,13 +100,6 @@ TrimStrong {
  e.z = e.z;
 }
 
-FrameSize {
-  Height = 320;
-  Width = 600;
-  MaxZoom = 250 ; /* div 100 */
-  MinZoom = 45; /* div 100 , not used yet */
-}
-
 EstimateZooms {
   s.Opt s.Real s.LimitMax s.LimitMin
   , <Compare s.LimitMax s.Opt>
@@ -119,7 +114,7 @@ EstimateZooms {
 
 GetZooms {
   s.WidthPercent s.HeightPercent s.WidthRealZoom s.HeightRealZoom
-  , <FrameSize MaxZoom> <FrameSize MinZoom> : s.LZMax s.LZMin
+  , <FrameData MaxZoom> <FrameData MinZoom> : s.LZMax s.LZMin
   , <Div <Mul 100 s.WidthRealZoom> s.WidthPercent> : s.PerfectWZ
   , <Div <Mul 100 s.HeightRealZoom> s.HeightPercent> : s.PerfectHZ
   , <EstimateZooms s.PerfectHZ s.HeightRealZoom s.LZMax s.LZMin> : s.TypeHeight
@@ -231,22 +226,6 @@ UpdateMinimax {
   { s.Width s.Height = <UpdateMinimax (Size <Min s.Width s.MinW> <Max s.Width s.MaxW> <Min s.Height s.MinH> <Max s.Height s.MaxH>) e.x2>;
   };
   t.Size e.Rest = t.Size;
-}
-
-Min {
- s.1 s.2
- , <Compare s.1 s.2> :
- {'-' = s.1;
-  s.Rest = s.2;
- };
-}
-
-Max {
- s.1 s.2
- , <Compare s.2 s.1> :
- {'-' = s.1;
-  s.Rest = s.2;
- };
 }
 
 InsertPreamble {

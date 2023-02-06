@@ -99,6 +99,11 @@ class Regex : BaseObject {
 	void pre_order_travers() const;
 	void clear();
 
+	// Получение всех символов из строки
+	bool get_symbols_from_string(vector<Regex>& res);
+
+	void eps_removing();
+
   public:
 	Regex();
 	Regex(const string&);
