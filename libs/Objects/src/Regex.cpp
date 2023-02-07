@@ -389,14 +389,96 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 	language = new_language;
 }
 
+string Regex::to_refal_expr(map<string, string>* symbols) {
+	string str1 = "", str2 = "";
+	if (term_l) {
+		str1 = term_l->to_refal_expr(symbols);
+	}
+	if (term_r) {
+		str2 = term_r->to_refal_expr(symbols);
+	}
+	string symb;
+	if (type == Type::conc) {
+		if (term_l && term_l->type == Type::alt) {
+			str1 = "'('" + str1 + "')'";
+		}
+		if (term_r && term_r->type == Type::alt) {
+			str2 = "'('" + str2 + "')'";
+		}
+	}
+	if (type == Type::symb /*value.symbol*/) {
+		string temp = value.symbol;
+		if (symbols->count(temp) != 0) {
+			symb = (*symbols)[temp];
+		} else {
+			(*symbols)[temp] = " e." + to_string(symbols->size() + 1) + " ";
+			symb = (*symbols)[temp];
+		}
+	}
+	if (type == Type::eps) symb = "";
+	if (type == Type::alt) symb = "'|'";
+	if (type == Type::star) {
+		symb = "'*'";
+		if (term_l->type != Type::symb)
+			str1 = "'('" + str1 +
+				   "')'"; // ставим скобки при итерации, если символов > 1
+	}
+	if (type == Type::alt) return "'('" + str1 + symb + str2 + "')'";
+	return str1 + symb + str2;
+}
+string Regex::get_refal_rewrite_rule(pair<Regex, Regex> rule) {
+	map<string, string> temp;
+	string out;
+	out += "e.0 ";
+	out += rule.first.to_refal_expr(&temp);
+	out += "e.";
+	out += to_string(temp.size() + 1);
+	for (int i = 1; i <= temp.size(); i++) {
+		out += ",\n\t<MatchingBracketsBool <MatchingBrackets e." +
+			   to_string(i) + ">> : True";
+	}
+
+	out += " ";
+	out += "=<Normalize ";
+	out += "e.0 ";
+	out += rule.second.to_refal_expr(&temp);
+	out += "e.";
+	out += to_string(temp.size() + 1);
+	out += " ";
+	out += ">;\n\t";
+	return out;
+}
+void Regex::create_normalize_refal_code(
+	const vector<pair<Regex, Regex>>& rules) {
+	system("cd ./refal && cp normalize_template.ref.txt normalize.ref");
+	std::ofstream fout("./refal/normalize.ref", std::ios::app);
+	if (fout.is_open()) {
+		fout << "\nNormalize {\n\t";
+		for (int i = 0; i < rules.size(); i++) {
+			fout << get_refal_rewrite_rule(rules[i]);
+		}
+		fout << " e.1 = e.1;\n}\n";
+	}
+	fout.close();
+}
 Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules) const {
-	Logger::init_step("Normalize");
-	Regex regex = *this;
-	// regex.normalize_this_regex(rules);
-	Logger::log("Регулярное выражение до нормализации", regex.to_txt());
-	Logger::log("Регулярное выражение после нормализации", regex.to_txt());
-	Logger::finish_step();
-	return regex;
+	Regex a("");
+	a.create_normalize_refal_code(rules);
+	ofstream fout("./refal/out.txt");
+	fout << to_txt() << endl;
+	fout.close();
+	system("cd refal && refc normalize.ref > reflog0.txt && refgo normalize");
+	ifstream infile_for_R("./refal/out.txt");
+	string s;
+	stringstream newregex;
+
+	while (!infile_for_R.eof()) {
+		getline(infile_for_R, s);
+		newregex << s;
+	}
+	infile_for_R.close();
+	Regex out(newregex.str());
+	return out;
 }
 bool Regex::from_string(const string& str) {
 	if (!str.size()) {
@@ -415,8 +497,6 @@ bool Regex::from_string(const string& str) {
 
 		return false;
 	}
-
-	//*this = *(root->copy());
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
@@ -671,7 +751,8 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 				for (auto el : test_r.transitions) {
 					alphabet_symbol elem = el.first; // al->alphabet[i];
 					for (int transition_to : test_r.transitions[elem]) {
-						// trans.push_back(test.transitions[elem][j] + 1);
+						// trans.push_back(test.transitions[elem][j] +
+						// 1);
 						map_l[elem].insert(transition_to + al.first.size() - 1);
 					}
 					// map_l[elem] = trans;
@@ -1515,7 +1596,8 @@ int Regex::pump_length() const {
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
 					pumping.language = make_shared<Language>(pumping.alphabet);
-					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
+					// cout << pumped_prefix << " " <<
+					// pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
 						language->set_pump_length(i);
@@ -1917,4 +1999,53 @@ Regex Regex::get_one_unambiguous_regex() const {
 	Logger::finish_step();
 	language->set_one_unambiguous_regex(regl, fa.language);
 	return language->get_one_unambiguous_regex();
+}
+string Regex::regex_to_dot_helplify(int* i) {
+	stringstream ss;
+	(*i)++;
+	int cur = (*i);
+	if (term_l) {
+		ss << cur << "-> " << (*i) + 1 << "\n\t";
+		ss << term_l->regex_to_dot_helplify(i);
+	}
+	if (term_r) {
+		ss << cur << "-> " << (*i) + 1 << "\n\t";
+		ss << term_r->regex_to_dot_helplify(i);
+	}
+	string symb;
+
+	if (type == Type::conc) {
+		symb = "cons";
+	}
+	if (type == Type::symb) {
+		if (term_l) {
+			cout << "\\ есть l ветвь";
+		}
+		if (term_r) {
+			cout << "\\ есть r ветвь";
+		}
+		symb = (string)value.symbol + to_string(value.number + 1);
+	}
+	if (type == Type::eps) {
+		symb = "eps";
+	}
+	if (type == Type::conc) {
+		symb = ".";
+	}
+	if (type == Type::alt) symb = '|';
+	if (type == Type::star) {
+		symb = '*';
+	}
+	ss << cur << " [label = \"" << symb << "\", shape = doublecircle]\n\t";
+	return ss.str();
+}
+string Regex::regex_to_dot() {
+	stringstream ss;
+	int temp = 0;
+	int* i = &temp;
+	ss << "digraph {\n\tdummy [label = ";
+	ss << "\"\", shape = none]\n\tdummy -> 1\n\t";
+	ss << regex_to_dot_helplify(&temp);
+	ss << "}\n";
+	return ss.str();
 }

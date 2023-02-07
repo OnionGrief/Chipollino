@@ -1,0 +1,23 @@
+ /*this file is template for auto generated*/
+$ENTRY Go {=<Open 'r' 1 'out.txt'>
+	<Br 'answer' '=' <Normalize <Get 1>>>
+	<Close 1>
+	<Open 'w' 1 'out.txt'>
+	<Put 1 <Dg 'answer' >>
+	<Close 1>;
+}
+
+CompareNum {
+	e.0, <Compare e.0 0> : '+' = <Sub e.0 9999>;
+	e.1 = e.1;
+}
+MatchingBracketsBool {
+	0 = True;
+	e.0 = False;
+}
+MatchingBrackets {
+	'(' e.0 = <Add <CompareNum  <MatchingBrackets e.0>> 1>;
+	')' e.0 = <Sub <CompareNum <MatchingBrackets e.0>> 1>;
+	s.0 e.0 = <CompareNum <MatchingBrackets e.0>>;
+	 = 0;
+}

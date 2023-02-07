@@ -93,8 +93,9 @@ class Regex : BaseObject {
 		const Regex& replacing, const Regex& replaced_by,
 		Regex* original); //рекурсивный поиск заменяемого листа дерева*/
 	void normalize_this_regex(
-		const vector<pair<Regex, Regex>>&); //переписывание regex по
-											//пользовательским правилам
+		const vector<pair<Regex, Regex>>&); // переписывание regex по
+											// пользовательским правилам
+	string to_str_log() const;
 
 	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
@@ -103,6 +104,10 @@ class Regex : BaseObject {
 
 	void pre_order_travers() const;
 	void clear();
+	string regex_to_dot_helplify(int* i);
+	string get_refal_rewrite_rule(pair<Regex, Regex>);
+	void create_normalize_refal_code(const vector<pair<Regex, Regex>>&);
+	string to_refal_expr(map<string, string>*);
 
   public:
 	Regex();
@@ -133,7 +138,8 @@ class Regex : BaseObject {
 	static bool equal(const Regex&, const Regex&);
 	// проверка регулярок на эквивалентность
 	static bool equivalent(const Regex&, const Regex&);
-	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
+	// проверка регулярок на вложенность (проверяет вложен ли аргумент в
+	// this)
 	bool subset(const Regex&) const; // TODO
 
 	// Производная по символу
@@ -151,7 +157,7 @@ class Regex : BaseObject {
 	void regex_alt(Regex* a, Regex* b);
 	void regex_star(Regex* a);
 	void regex_eps();
-
+	string regex_to_dot(); // вывод regex в формате dot
 	Regex linearize() const;
 	Regex delinearize() const;
 	Regex deannote() const;
