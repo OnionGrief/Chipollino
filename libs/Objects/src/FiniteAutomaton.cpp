@@ -197,7 +197,7 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
 	if (!is_trim)
 		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
 	// Logger::init_step("Minimize");
-	if (language->min_dfa_cached()) {
+	if (language->is_min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
 		// Logger::log("Автомат до минимизации", "Автомат после минимизации",
 		//*this, language_min_dfa);
@@ -1032,7 +1032,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		return language->get_one_unambiguous_flag();
 	}
 	FiniteAutomaton min_fa;
-	if (language->min_dfa_cached() && log) {
+	if (language->is_min_dfa_cached() && log) {
 		log->set_parameter("cachedMINDFA",
 						   "Минимальный автомат сохранен в кэше");
 	}
@@ -1735,8 +1735,8 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 																	 // logs
 		// Logger::log("(!) автоматы изначально принадлежат одному языку");
 	} else {
-		if ((!fa1.language->min_dfa_cached() ||
-			 !fa2.language->min_dfa_cached()) &&
+		if ((!fa1.language->is_min_dfa_cached() ||
+			 !fa2.language->is_min_dfa_cached()) &&
 			log) {
 			log->set_parameter("cachedMINDFA",
 							   "Минимальные автоматы сохранены в кэше");
@@ -1990,7 +1990,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity(
 }
 
 TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
-	if (language->syntactic_monoid_cached()) {
+	if (language->is_syntactic_monoid_cached()) {
 		return language->get_syntactic_monoid();
 	}
 	FiniteAutomaton min_dfa = minimize();
@@ -2096,7 +2096,7 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 	iLogTemplate* log) const {
 	// Logger::init_step("GlaisterShallit");
 	if (log) log->set_parameter("oldautomaton", *this);
-	if (language->nfa_minimum_size_cached()) {
+	if (language->is_nfa_minimum_size_cached()) {
 		/*Logger::log(
 			"Количество диагональных классов по методу Глейстера-Шаллита",
 			to_string(language->get_nfa_minimum_size()));
@@ -2176,7 +2176,7 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 }
 
 optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
-	if (!language->pump_length_cached()) return nullopt;
+	if (!language->is_pump_length_cached()) return nullopt;
 	int language_pump_length = language->get_pump_length();
 
 	int transition_states_counter = 0;
@@ -2212,7 +2212,7 @@ bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	// Logger::init_step("Minimal");
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
-		if ((language->min_dfa_cached())) {
+		if ((language->is_min_dfa_cached())) {
 			log->set_parameter("cachedMINDFA",
 							   "Минимальный автомат сохранен в кэше");
 		}

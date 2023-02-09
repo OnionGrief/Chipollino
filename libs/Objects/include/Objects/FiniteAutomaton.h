@@ -2,13 +2,10 @@
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include "iLogTemplate.h"
-#include <functional>
 #include <iostream>
 #include <map>
-#include <math.h>
 #include <optional>
 #include <set>
-#include <stack>
 #include <string>
 #include <vector>
 using namespace std;
@@ -134,7 +131,7 @@ class FiniteAutomaton : public BaseObject {
 	FiniteAutomaton merge_bisimilar(iLogTemplate* log = nullptr) const;
 	// проверка автоматов на эквивалентность
 	static bool equivalent(const FiniteAutomaton&, const FiniteAutomaton&,
-						   iLogTemplate* log = nullptr); // TODO
+						   iLogTemplate* log = nullptr);
 	// проверка автоматов на равентсво(буквальное)
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&,
 					  iLogTemplate* log = nullptr);
@@ -148,9 +145,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверяет, распознаёт ли автомат слово
 	bool parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
-	bool subset(const FiniteAutomaton&,
-				iLogTemplate* log = nullptr) const; // TODO
-													// и тд
+	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
 	// начальное состояние
 	int get_initial();
 	// определяет меру неоднозначности

@@ -2,7 +2,6 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/iLogTemplate.h"
-#include <set>
 
 Regex::Lexem::Lexem(Type type, const alphabet_symbol& symbol, int number)
 	: type(type), symbol(symbol), number(number) {}
@@ -1500,7 +1499,7 @@ std::optional<Regex> Regex::prefix_derivative(std::string respected_str) const {
 // Длина накачки
 int Regex::pump_length(iLogTemplate* log) const {
 	// Logger::init_step("PumpLength");
-	if (language->pump_length_cached()) {
+	if (language->is_pump_length_cached()) {
 		// Logger::log("Длина накачки", to_string(language->get_pump_length()));
 		// Logger::finish_step();
 		if (log) {
@@ -1847,7 +1846,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	}
 	string regl;
 	FiniteAutomaton min_fa;
-	if (!fa.language->min_dfa_cached() && log) {
+	if (!fa.language->is_min_dfa_cached() && log) {
 		log->set_parameter("cachedMINDFA",
 						   "Минимальный автомат сохранен в кэше");
 	}
@@ -1855,8 +1854,6 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		min_fa = fa.minimize();
 	else
 		min_fa = fa.minimize().remove_trap_states();
-
-	
 
 	set<map<alphabet_symbol, set<int>>> final_states_transitions;
 	for (int i = 0; i < min_fa.states.size(); i++) {

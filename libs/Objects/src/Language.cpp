@@ -23,16 +23,20 @@ int Language::get_alphabet_size() {
 	return alphabet.size();
 }
 
+bool Language::is_pump_length_cached() const {
+	return pump_length.has_value();
+}
+
 void Language::set_pump_length(int pump_length_value) {
 	pump_length.emplace(pump_length_value);
 };
 
-bool Language::pump_length_cached() {
-	return pump_length.has_value();
-}
-
 int Language::get_pump_length() {
 	return pump_length.value();
+}
+
+bool Language::is_min_dfa_cached() const {
+	return min_dfa.has_value();
 }
 
 void Language::set_min_dfa(int initial_state, const vector<State>& states,
@@ -43,13 +47,13 @@ void Language::set_min_dfa(int initial_state, const vector<State>& states,
 	min_dfa.emplace(FA_structure(initial_state, renamed_states, language));
 }
 
-bool Language::min_dfa_cached() {
-	return min_dfa.has_value();
-}
-
 FiniteAutomaton Language::get_min_dfa() {
 	return FiniteAutomaton(min_dfa->initial_state, min_dfa->states,
 						   min_dfa->language.lock());
+}
+
+bool Language::is_syntactic_monoid_cached() const {
+	return syntactic_monoid.has_value();
 }
 
 void Language::set_syntactic_monoid(
@@ -57,27 +61,23 @@ void Language::set_syntactic_monoid(
 	syntactic_monoid.emplace(syntactic_monoid_value);
 }
 
-bool Language::syntactic_monoid_cached() {
-	return syntactic_monoid.has_value();
-}
-
 TransformationMonoid Language::get_syntactic_monoid() {
 	return syntactic_monoid.value();
+}
+
+bool Language::is_nfa_minimum_size_cached() const {
+	return nfa_minimum_size.has_value();
 }
 
 void Language::set_nfa_minimum_size(int nfa_minimum_size_value) {
 	nfa_minimum_size.emplace(nfa_minimum_size_value);
 };
 
-bool Language::nfa_minimum_size_cached() {
-	return nfa_minimum_size.has_value();
-}
-
 int Language::get_nfa_minimum_size() {
 	return nfa_minimum_size.value();
 }
 
-bool Language::is_one_unambiguous_flag_cached() {
+bool Language::is_one_unambiguous_flag_cached() const {
 	return is_one_unambiguous.has_value();
 }
 
@@ -89,7 +89,7 @@ bool Language::get_one_unambiguous_flag() {
 	return is_one_unambiguous.value();
 }
 
-bool Language::is_one_unambiguous_regex_cached() {
+bool Language::is_one_unambiguous_regex_cached() const {
 	return one_unambiguous_regex.has_value();
 }
 

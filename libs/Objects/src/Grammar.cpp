@@ -1,4 +1,5 @@
 #include "Objects/Grammar.h"
+#include "Objects/Language.h"
 #include "Objects/iLogTemplate.h"
 #include <sstream>
 
@@ -270,11 +271,10 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 	}
 	const vector<State>& states = fa.states;
 
-	// TODO:
-	/*if (!fa.language->min_dfa_cached() && log) {
+	if (!fa.language->is_min_dfa_cached() && log) {
 		log->set_parameter("cachedMINDFA",
 						   "Минимальный автомат сохранен в кэше");
-	}*/
+	}
 
 	TransformationMonoid a(fa.minimize());
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
