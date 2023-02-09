@@ -2,7 +2,9 @@
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include "iLogTemplate.h"
+#include <fstream>
 #include <iostream>
+#include <map>
 #include <optional>
 #include <set>
 #include <string>
