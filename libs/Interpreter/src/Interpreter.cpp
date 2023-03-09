@@ -97,7 +97,7 @@ Interpreter::Interpreter() {
 		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
 	// generate_brief_templates();
-	//generate_test_for_all_functions();
+	// generate_test_for_all_functions();
 }
 
 bool Interpreter::run_line(const string& line) {
@@ -503,7 +503,6 @@ optional<GeneralObject> Interpreter::apply_function(
 
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
-		// Logger::activate_step_counter();
 
 		if (holds_alternative<ObjectRegex>(resval) &&
 			holds_alternative<ObjectRegex>(predres)) {
@@ -520,7 +519,6 @@ optional<GeneralObject> Interpreter::apply_function(
 						   "\" has left automaton unchanged");
 			}
 
-		// Logger::deactivate_step_counter();
 		return res.value();
 	}
 
@@ -770,12 +768,6 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running declaration...");
-	/*if (decl.show_result) {
-		// Logger::activate();
-		logger.log("logger is activated for this task");
-	} else {
-		// Logger::deactivate();
-	}*/
 	if (const auto& expr = eval_expression(decl.expr); expr.has_value()) {
 		objects[decl.id] = *expr;
 	} else {
@@ -783,7 +775,6 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 		return false;
 	}
 	logger.log("assigned to " + decl.id);
-	// Logger::deactivate();
 	return true;
 }
 
@@ -791,7 +782,6 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running predicate...");
-	// Logger::activate();
 
 	FunctionSequence seq;
 	seq.functions = {pred.predicate};
@@ -816,7 +806,6 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 		success = false;
 	}
 
-	// Logger::deactivate();
 	return success;
 }
 
@@ -824,7 +813,6 @@ bool Interpreter::run_test(const Test& test) {
 	auto logger = init_log();
 	logger.log("");
 	logger.log("Running test...");
-	// Logger::activate();
 
 	auto language = eval_expression(test.language);
 	auto test_set = eval_expression(test.test_set);
@@ -859,7 +847,6 @@ bool Interpreter::run_test(const Test& test) {
 
 	tex_logger.add_log(log_template);
 
-	// Logger::deactivate();
 	return success;
 }
 

@@ -158,7 +158,6 @@ string LogTemplate::math_mode(string str) {
 	if (str.empty()) {
 		return str;
 	}
-	// cout << str << endl;
 	string str_math = "";
 	bool flag = true;
 	auto is_number = [](char c) { return c >= '0' && c <= '9'; };
@@ -167,8 +166,6 @@ string LogTemplate::math_mode(string str) {
 	};
 	for (size_t index = 0; index < str.size(); index++) {
 		char c = str[index];
-		// cout << "-------------" + index << endl;
-		// cout << c << endl;
 		if (c == ' ' && index != str.size() - 1) {
 			if (!flag) {
 				str_math += "}";
@@ -176,14 +173,11 @@ string LogTemplate::math_mode(string str) {
 			}
 			str_math += ", ";
 		} else if (c == '*') {
-			// str_math += "^*";
 			if (!flag) {
 				str_math += "}";
 				flag = true;
 			}
 			str_math += "\\star ";
-			// cout << "c is *" << endl;
-			// cout << "str_math " + str_math << endl;
 		} else if (c == '|') {
 			if (!flag) {
 				str_math += "}";
@@ -191,17 +185,13 @@ string LogTemplate::math_mode(string str) {
 			}
 			str_math += "\\alter ";
 		} else if (is_number(c)) {
-			// cout << "c number" << endl;
 			string num = "";
 			for (index; index < str.size() && is_number(str[index]); index++) {
 				num += str[index];
-				// cout << "num " + num << endl;
 			}
 			num = "_{" + num + "}";
 			str_math += num;
 			index--;
-			// cout << "index " + to_string(index) << endl;
-			// cout << "str_math " + str_math << endl;
 		} else if (is_symbol(c)) {
 			string sym = "";
 			if (flag) {
@@ -210,9 +200,7 @@ string LogTemplate::math_mode(string str) {
 			}
 			for (index; index < str.size() && is_symbol(str[index]); index++) {
 				sym += str[index];
-				// cout << "num " + num << endl;
 			}
-			// sym = "\\regexpstr{" + sym + "}";
 			str_math += sym;
 			index--;
 		} else {
@@ -222,11 +210,8 @@ string LogTemplate::math_mode(string str) {
 				flag = true;
 			}
 			str_math += c;
-			// cout << "c else" << endl;
-			// cout << "str_math " + str_math << endl;
 		}
 	}
-	// cout << str_math << endl;
 	if (!flag) {
 		str_math += "}";
 	}
@@ -234,8 +219,7 @@ string LogTemplate::math_mode(string str) {
 	return str_math;
 }
 
-string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> columns,
-							  vector<string> data*/) {
+string LogTemplate::log_table(Table t) {
 	string table = "";
 	string format = "c!{\\color{black!80}\\vline width .65pt}";
 	string cols = "  &";

@@ -264,8 +264,6 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, alphabet_symbol w,
 
 void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 								   iLogTemplate* log) {
-	// Logger::init_step("PrefixGrammar");
-	// Logger::log("Автомат", fa);
 	if (log) {
 		log->set_parameter("oldautomaton", fa);
 	}
@@ -348,12 +346,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 
 	if (count != equal_classes.size()) {
 		// в логер то что неопределенность и детерминизируем
-		// Logger::log("Неопределенность");
-		// Logger::log("Детерминизируем");
 		fa_to_prefix_grammar(fa.determinize());
-		// Logger::log("Построенная по нему префиксная грамматика:");
-		// Logger::log(pg_to_txt());
-		// Logger::finish_step();
 		if (log) {
 			log->set_parameter("text1", "Неопределенность");
 			log->set_parameter("text2", "Детерминизируем");
@@ -375,8 +368,6 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 			prefix_grammar[i].equivalence_class = {};
 		}
 	}
-	// Logger::log(pg_to_txt());
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("result", pg_to_txt());
 	}
@@ -451,10 +442,7 @@ string Grammar::pg_to_txt() const {
 }
 
 FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
-	// Logger::init_step("PrefixGrammar -> NFA");
-	// // TODO:
-	// Logger::log("Префиксная грамматика:");
-	// Logger::log(pg_to_txt());
+	// TODO:
 	if (log) {
 		log->set_parameter("grammar", pg_to_txt());
 	}
@@ -497,8 +485,6 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 		}
 	}
 	FiniteAutomaton res = FiniteAutomaton(initial_state, states, symbols);
-	// Logger::log("Построенный по ней автомат", res);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("result", res);
 	}
@@ -538,8 +524,6 @@ const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 
 void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa,
 									  iLogTemplate* log) {
-	/*Logger::init_step("PrefixGrammarTM");
-	Logger::log("Автомат", fa);*/
 	if (log) {
 		log->set_parameter("oldautomaton", fa);
 	}
@@ -592,12 +576,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa,
 	}
 	if (count != equal_classes.size()) {
 		// в логер то что неопределенность и детерменизируем
-		/*Logger::log("Неопределенность");
-		Logger::log("Детерминизируем");*/
 		fa_to_prefix_grammar_TM(fa.determinize());
-		/*Logger::log("Построенная по нему префиксная грамматика:");
-		Logger::log(pg_to_txt());
-		Logger::finish_step();*/
 		if (log) {
 			log->set_parameter("text1", "Неопределенность");
 			log->set_parameter("text2", "Детерминизируем");
@@ -641,9 +620,6 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa,
 			}
 		}
 	}
-	// Logger::log("Построенная по нему префиксная грамматика:");
-	//  Logger::log(pg_to_txt());
-	//  Logger::finish_step();
 	if (log) {
 		log->set_parameter("result", pg_to_txt());
 	}
