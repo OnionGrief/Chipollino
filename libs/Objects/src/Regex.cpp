@@ -1793,10 +1793,16 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		}
 		for (int elem : reachable_by_symb) {
 			is_symb_min_fa_consistent = true;
-			for (auto final_state_transitions : final_states_transitions) {
-				if (find(final_state_transitions[symb].begin(),
-						 final_state_transitions[symb].end(),
-						 elem) == final_state_transitions[symb].end()) {
+			for (const auto& final_state_transitions :
+				 final_states_transitions) {
+				// Из автомата удаляется ловушка,
+				// поэтому не по всем буквам есть переходы
+				if (final_state_transitions.find(symb) ==
+					final_state_transitions.end())
+					continue;
+				if (find(final_state_transitions.at(symb).begin(),
+						 final_state_transitions.at(symb).end(),
+						 elem) == final_state_transitions.at(symb).end()) {
 					is_symb_min_fa_consistent = false;
 					break;
 				}

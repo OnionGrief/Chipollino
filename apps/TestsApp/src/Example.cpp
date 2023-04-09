@@ -481,7 +481,6 @@ void Example::all_examples() {
 	// logger_test();
 	fa_to_pgrammar();
 	// Regex("abaa").pump_length();
-	get_one_unambiguous_regex();
 	cout << "all the examlples are successful" << endl;
 }
 
@@ -514,25 +513,6 @@ void Example::logger_test() {
 	Tester::test(r2, r1, 1, &log_template);
 	tex_logger.add_log(log_template);
 	tex_logger.render_to_file("./resources/report.tex");
-}
-
-void Example::get_one_unambiguous_regex() {
-	Regex r1("(a|b)*a");
-	Regex r2("(a|b)*(ac|bd)");
-	Regex r3("(a|b)*a(a|b)");
-	Regex r4("(c(a|b)*c)*");
-	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
-
-	// ok
-	cout << r1.get_one_unambiguous_regex().to_txt() << endl;
-	// doesn't fulfills the orbit property
-	cout << r2.get_one_unambiguous_regex().to_txt() << endl;
-	// consists of a single orbit, but neither a nor b is consistent
-	cout << r3.get_one_unambiguous_regex().to_txt() << endl;
-	// ok
-	cout << r4.get_one_unambiguous_regex().to_txt() << endl;
-	// doesn't fulfills the orbit property
-	cout << r5.get_one_unambiguous_regex().to_txt() << endl;
 }
 
 void Example::testing_with_generator(
@@ -580,6 +560,7 @@ void Example::test_all() {
 	test_arden();
 	test_pump_length();
 	test_is_one_unambiguous();
+	test_get_one_unambiguous_regex();
 	test_interpreter();
 	test_TransformationMonoid();
 	test_GlaisterShallit();
@@ -962,6 +943,25 @@ void Example::test_is_one_unambiguous() {
 	// doesn't fulfills the orbit property
 	assert(!r5.to_glushkov().is_one_unambiguous());
 };
+
+void Example::test_get_one_unambiguous_regex() {
+	auto check_one_unambiguous = [](string rgx_str, bool expected_res) {
+		assert(
+			Regex(rgx_str).get_one_unambiguous_regex().is_one_unambiguous() ==
+			expected_res);
+	};
+	// ok
+	check_one_unambiguous("(a|b)*a", true);
+	// doesn't fulfills the orbit property
+	check_one_unambiguous("(a|b)*(ac|bd)", false);
+	// consists of a single orbit, but neither a nor b is consistent
+	check_one_unambiguous("(a|b)*a(a|b)", false);
+	// ok
+	check_one_unambiguous("(c(a|b)*c)*", true);
+	// doesn't fulfills the orbit property
+	check_one_unambiguous("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|",
+						  false);
+}
 
 void Example::test_interpreter() {
 	Interpreter interpreter;
