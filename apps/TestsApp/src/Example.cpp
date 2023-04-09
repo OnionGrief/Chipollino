@@ -623,6 +623,18 @@ void Example::test_fa_equal() {
 	assert(FiniteAutomaton::equal(fa1, fa1));
 	assert(!FiniteAutomaton::equal(fa1, fa2));
 	assert(FiniteAutomaton::equal(fa1, fa3));
+	assert(
+		FiniteAutomaton::equal(Regex("(aab|aab)*").to_thompson().remove_eps(),
+							   Regex("(aab|aab)*").to_glushkov()));
+	assert(FiniteAutomaton::equal(
+		Regex("a(a)*ab(bb)*baa").to_thompson().remove_eps(),
+		Regex("a(a)*ab(bb)*baa").to_glushkov()));
+	assert(FiniteAutomaton::equal(
+		Regex("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|bbb*(aaa*bbb*)*")
+			.to_thompson()
+			.remove_eps(),
+		Regex("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|bbb*(aaa*bbb*)*")
+			.to_glushkov()));
 }
 
 void Example::test_fa_equiv() {
@@ -893,7 +905,7 @@ void Example::fa_to_pgrammar() {
 }
 
 void Example::test_fa_to_pgrammar() {
-	cout << "fa to grammar\n";
+	// cout << "fa to grammar\n";
 	vector<State> states1;
 	for (int i = 0; i < 5; i++) {
 		State s = {
@@ -915,13 +927,13 @@ void Example::test_fa_to_pgrammar() {
 
 	Grammar g;
 
-	cout << "1\n";
+	// cout << "1\n";
 	g.fa_to_prefix_grammar(dfa1);
-	cout << "2\n";
+	// cout << "2\n";
 	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
-	cout << "3\n";
+	// cout << "3\n";
 	g.fa_to_prefix_grammar_TM(dfa1);
-	cout << "4\n";
+	// cout << "4\n";
 	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
 }
 

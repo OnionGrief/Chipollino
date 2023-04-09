@@ -51,8 +51,6 @@ class LogTemplate : public iLogTemplate {
 	void add_parameter(string parameter_name);
 	// math mode
 	static string math_mode(string str);
-	// счетчик картинок
-	inline static int image_number = 0;
 	// таблицы в общем виде
 	static string log_table(Table t);
 	// Рекурсивно раскрывает include-выражения в файле

@@ -1306,7 +1306,6 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 }
 
 FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
-
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
 	vector<GrammarItem*> terminals;
@@ -2305,7 +2304,7 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	}
 	bool result = true;
 	for (int i = 0; i < states.size(); i++) {
-		for (auto elem : states[i].transitions) {
+		for (const auto& elem : states[i].transitions) {
 			if (elem.first == alphabet_symbol::epsilon()) {
 				result = false;
 				break;

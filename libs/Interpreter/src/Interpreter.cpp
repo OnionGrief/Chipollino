@@ -227,7 +227,14 @@ optional<GeneralObject> Interpreter::apply_function(
 
 	// имя шаблона по умолчанию - название ф/и в интерпретаторе + номер
 	// сигнатуры (если их несколько)
-	string func_id = get_func_id(function);
+	string func_id;
+	if (auto str = get_func_id(function); str.has_value()) {
+		func_id = str.value();
+	} else {
+		cerr << "Unable to get function id by name " + function.name + "\n";
+		cerr << *((int*)0);
+		return GeneralObject();
+	}
 
 	log_template.load_tex_template(func_id);
 	log_template.set_theory_flag(flags[Flag::log_theory]);
@@ -522,8 +529,7 @@ optional<GeneralObject> Interpreter::apply_function(
 		return res.value();
 	}
 
-	cerr << "Функция " + function.name + " страшная и мне не известная O_O"
-		 << endl;
+	cerr << "Функция " + function.name + " страшная и мне не известная O_O\n";
 
 	// FIXME: Ошибка *намеренно* вызывает сегфолт.
 	//          Придумай что-нибудь!
@@ -570,12 +576,14 @@ optional<int> Interpreter::find_func(string func,
 	return nullopt;
 }
 
-string Interpreter::get_func_id(Function function) {
-	string id = function.name;
-	if (names_to_functions[id].size() > 1) {
-		id += to_string(find_func(function.name, function.input).value() + 1);
+optional<string> Interpreter::get_func_id(Function function) {
+	string func_id = function.name;
+	if (names_to_functions[function.name].size() > 1) {
+		optional<int> id = find_func(function.name, function.input);
+		if (!id.has_value()) return nullopt;
+		func_id += to_string(id.value() + 1);
 	}
-	return id;
+	return func_id;
 }
 
 optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(

@@ -54,22 +54,18 @@ void LogTemplate::add_parameter(string parameter_name) {
 void LogTemplate::set_parameter(const string& key,
 								const FiniteAutomaton& value) {
 	parameters[key].value = value;
-	// add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, Regex value) {
 	parameters[key].value = value;
-	// add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, string value) {
 	parameters[key].value = value;
-	// add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, int value) {
 	parameters[key].value = value;
-	// add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, Table value) {
@@ -236,18 +232,17 @@ string LogTemplate::log_table(Table t) {
 	table += "$\\begin{array}{" + format + "}\\rowcolor{HeaderColor}\n";
 	table += cols + "\\hline\n";
 	int k = 0;
-	int j;
 	for (int i = 0; i < t.rows.size(); i++) {
 		string r = t.rows[i] == " " ? "eps" : t.rows[i];
 		row = r + " & ";
-		for (j = 0; j < t.columns.size(); j++) {
+		for (int j = 0; j < t.columns.size(); j++) {
 			if (j != t.columns.size() - 1) {
 				row = row + t.data[k + j] + " &";
 			} else {
 				row = row + t.data[k + j] + "\\\\";
 			}
 		}
-		k += j;
+		k += t.columns.size();
 		table += row + "\n";
 	}
 	table += "\\end{array}$\n";

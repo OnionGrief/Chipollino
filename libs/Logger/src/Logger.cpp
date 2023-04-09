@@ -6,14 +6,13 @@ void Logger::add_log(const LogTemplate& log) {
 }
 
 void Logger::render_to_file(const string& filename) {
-	// TODO
 	ifstream infile("./resources/template/head.tex");
 	ofstream outfile(filename);
 
 	string s;
 	for (; !infile.eof();) {
 		getline(infile, s);
-		outfile << s << endl;
+		outfile << s << "\n";
 	}
 	infile.close();
 
@@ -27,7 +26,7 @@ void Logger::render_to_file(const string& filename) {
 		cout << 100 * (i + 1) / logs_size << "% (template \""
 			 << logs[i].get_tex_template() << "\" is completed)\n";
 	}
-	outfile << "\\end{document}" << endl;
+	outfile << "\\end{document}\n";
 	outfile.close();
 
 	cout << "\nFrameFormatter + MathMode...\n";
@@ -38,7 +37,7 @@ void Logger::render_to_file(const string& filename) {
 
 	// sprintf(cmd, "cd resources && pdflatex report.tex > pdflatex.log");
 	system("pdflatex ./resources/report.tex > pdflatex.log");
-	
+
 	cout << "\nConverting to PDF 2...\n";
 	system("pdflatex ./resources/rendered_report.tex > pdflatex2.log");
 

@@ -17,7 +17,11 @@ using namespace Typization;
 
 class Interpreter {
   public:
-	enum class LogMode { all, errors, nothing };
+	enum class LogMode {
+		all,
+		errors,
+		nothing
+	};
 	Interpreter();
 	// Интерпретация строчки, возвращает true в случае успеха
 	bool run_line(const string& line);
@@ -268,7 +272,7 @@ class Interpreter {
 				   vector<ObjectType> input_type);
 	// выбрать подходящий вариант функции для данных аргументов (если он есть)
 	optional<int> find_func(string func, vector<ObjectType> input_type);
-	string get_func_id(Function function);
+	optional<string> get_func_id(Function function);
 
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(

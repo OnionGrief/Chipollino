@@ -182,7 +182,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
 		for (const auto& elem : states[i].transitions) {
 			for (int transition_to : elem.second) {
 				// смотрим все переходы из состояния transition_to
-				for (auto transition_elem : states[transition_to].transitions) {
+				for (const auto& transition_elem :
+					 states[transition_to].transitions) {
 					for (int k = 0; k < transition_elem.second.size(); k++) {
 						int nonterm_ind = fa_items[transition_to]
 											  .second[transition_elem.first][k]

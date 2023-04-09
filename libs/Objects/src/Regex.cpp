@@ -378,7 +378,7 @@ Regex::Regex(const string& str) : Regex() {
 			throw runtime_error("Regex::from_string() ERROR");
 		}
 	} catch (const runtime_error& re) {
-		cout << re.what() << endl;
+		cout << re.what() << "\n";
 		exit(EXIT_FAILURE);
 	}
 }
@@ -605,7 +605,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 
 		for (size_t i = 0; i < al.first.size(); i++) {
 			State test = al.first[i];
-			for (auto el : test.transitions) {
+			for (const auto& el : test.transitions) {
 				alphabet_symbol elem = el.first; // al->alphabet[i];
 				trans = {};
 				for (int transition_to : test.transitions[elem]) {
@@ -625,7 +625,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		offset = s.size();
 		for (size_t i = 0; i < ar.first.size(); i++) {
 			State test = ar.first[i];
-			for (auto el : test.transitions) {
+			for (const auto& el : test.transitions) {
 				alphabet_symbol elem = el.first;
 				trans = {};
 				for (int transition_to : test.transitions[elem]) {
@@ -655,7 +655,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 
 		for (size_t i = 0; i < al.first.size(); i++) {
 			State test = al.first[i];
-			for (auto el : test.transitions) {
+			for (const auto& el : test.transitions) {
 				alphabet_symbol elem = el.first; // al->alphabet[i];
 				trans = {};
 				for (int transition_to : test.transitions[elem]) {
@@ -666,7 +666,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 
 			if (test.is_terminal) {
 				State test_r = ar.first[0];
-				for (auto el : test_r.transitions) {
+				for (const auto& el : test_r.transitions) {
 					alphabet_symbol elem = el.first; // al->alphabet[i];
 					for (int transition_to : test_r.transitions[elem]) {
 						// trans.push_back(test.transitions[elem][j] + 1);
@@ -682,7 +682,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		offset = s.size();
 		for (size_t i = 1; i < ar.first.size(); i++) {
 			State test = ar.first[i];
-			for (auto el : test.transitions) {
+			for (const auto& el : test.transitions) {
 				alphabet_symbol elem = el.first; // al->alphabet[i];
 				trans = {};
 				// alfa.push_back(elem);
@@ -709,7 +709,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		for (size_t i = 0; i < al.first.size(); i++) {
 			State test;
 			test = al.first[i];
-			for (auto el : test.transitions) {
+			for (const auto& el : test.transitions) {
 				alphabet_symbol elem = el.first; // al->alphabet[i];
 				trans = {};
 				for (int transition_to : test.transitions[elem]) {
@@ -1747,7 +1747,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result",
 							   fa.language->get_one_unambiguous_regex());
-			log->set_parameter("cach",
+			log->set_parameter("cache",
 							   "(!) результат OneUnambiguous получен из кэша");
 		}
 		return fa.language->get_one_unambiguous_regex();
