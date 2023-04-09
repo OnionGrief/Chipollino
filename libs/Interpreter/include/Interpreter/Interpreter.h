@@ -174,7 +174,6 @@ class Interpreter {
 		{"auto_remove_trap_states", Flag::auto_remove_trap_states},
 		{"weak_type_comparison", Flag::weak_type_comparison},
 		{"log_theory", Flag::log_theory},
-		// Андрей, придумай сам названия
 	};
 
 	map<Flag, bool> flags = {
@@ -189,6 +188,9 @@ class Interpreter {
 		// флаг добавления теоретического блока к ф/ям в логгере
 		{Flag::log_theory, false},
 		// временный флаг для логирования в отчет, Андрей исправь
+		// отвечает за добавление шаблона функции в отчет
+		// верификатор выключает флаг во время тестирования, чтобы не логировать
+		// каждое действие (на условно 100 тестовых примерах)
 		{Flag::report, true},
 	};
 
