@@ -29,12 +29,12 @@ void AutomatonToImage::to_image(string automat, int name) {
 */
 
 string AutomatonToImage::to_image(string automat) {
-
-	// для Linux:
-	//system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
-	// для Windows
-	system("cd refal && IF EXIST Meta_input.data DEL Meta_input.data && IF "
-		   "EXIST Aux_input.data DEL Aux_input.data");
+#ifdef _WIN32
+	system("cd refal && IF EXIST Meta_input.data del Meta_input.data && IF "
+		   "EXIST Aux_input.data del Aux_input.data");
+#elif __unix || __unix__ || __linux__
+	system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+#endif
 
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
@@ -46,11 +46,12 @@ string AutomatonToImage::to_image(string automat) {
 	system("cd refal && refgo Postprocess+MathMode input.tex > error_refal.txt "
 		   "2>&1");
 
-	// для Linux:
-	//system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
-	// для Windows
-	system("cd refal && IF EXIST Meta_input.data DEL Meta_input.data && IF "
-		   "EXIST Aux_input.data DEL Aux_input.data");
+#ifdef _WIN32
+	system("cd refal && IF EXIST Meta_input.data del Meta_input.data && IF "
+		   "EXIST Aux_input.data del Aux_input.data");
+#elif __unix || __unix__ || __linux__
+	system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+#endif
 
 	// автомат
 	ifstream infile_for_R("./refal/R_input.tex");
@@ -60,13 +61,18 @@ string AutomatonToImage::to_image(string automat) {
 
 	while (!infile_for_R.eof()) {
 		getline(infile_for_R, s);
-		graph << s << endl;
+		graph << s << "\n";
 	}
 	infile_for_R.close();
 
-	// TODO: разные команды для Linux и Windows
+#ifdef _WIN32
+	system("cd refal && del input.dot && del input.tex && del Mod_input.dot && "
+		   "del "
+		   "R_input.tex");
+#elif __unix || __unix__ || __linux__
 	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm "
 		   "R_input.tex");
+#endif
 
 	// таблица
 	ifstream infile_for_L("./refal/L_input.tex");
@@ -76,11 +82,15 @@ string AutomatonToImage::to_image(string automat) {
 	// the table is adjusted for frames in the general renderer module
 	while (!infile_for_L.eof()) {
 		getline(infile_for_L, s);
-		graph << s << endl;
+		graph << s << "\n";
 	}
 	infile_for_L.close();
 
+#ifdef _WIN32
+	system("cd refal && del L_input.tex");
+#elif __unix || __unix__ || __linux__
 	system("cd refal && rm L_input.tex");
+#endif
 
 	return graph.str();
 }

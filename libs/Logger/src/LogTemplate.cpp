@@ -231,18 +231,16 @@ string LogTemplate::log_table(Table t) {
 	}
 	table += "$\\begin{array}{" + format + "}\\rowcolor{HeaderColor}\n";
 	table += cols + "\\hline\n";
-	int k = 0;
 	for (int i = 0; i < t.rows.size(); i++) {
 		string r = t.rows[i] == " " ? "eps" : t.rows[i];
 		row = r + " & ";
 		for (int j = 0; j < t.columns.size(); j++) {
 			if (j != t.columns.size() - 1) {
-				row = row + t.data[k + j] + " &";
+				row = row + t.data[i * t.columns.size() + j] + " &";
 			} else {
-				row = row + t.data[k + j] + "\\\\";
+				row = row + t.data[i * t.columns.size() + j] + "\\\\";
 			}
 		}
-		k += t.columns.size();
 		table += row + "\n";
 	}
 	table += "\\end{array}$\n";
