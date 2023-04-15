@@ -217,6 +217,7 @@ string LogTemplate::math_mode(string str) {
 
 string LogTemplate::log_table(Table t) {
 	string table = "";
+	if (!(t.columns.size() || t.rows.size())) return table;
 	string format = "c!{\\color{black!80}\\vline width .65pt}";
 	string cols = "  &";
 	string row = "";
