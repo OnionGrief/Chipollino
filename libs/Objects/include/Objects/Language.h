@@ -47,31 +47,31 @@ class Language {
 	void set_alphabet(set<alphabet_symbol>);
 	int get_alphabet_size();
 	// регулярка, описывающая язык
+	bool is_regular_expression_cached() const;
 	void set_regular_expression(int);
-	bool regular_expression_cached();
 	int get_regular_expression();
 	// накачка
+	bool is_pump_length_cached() const;
 	void set_pump_length(int);
-	bool pump_length_cached();
 	int get_pump_length();
 	// минимальный дка
+	bool is_min_dfa_cached() const;
 	void set_min_dfa(int initial_state, const vector<State>& states,
 					 const shared_ptr<Language>& Language);
-	bool min_dfa_cached();
 	FiniteAutomaton get_min_dfa();
 	// синтаксический моноид
+	bool is_syntactic_monoid_cached() const;
 	void set_syntactic_monoid(TransformationMonoid);
-	bool syntactic_monoid_cached();
 	TransformationMonoid get_syntactic_monoid();
 	// нижняя граница размера НКА для языка
+	bool is_nfa_minimum_size_cached() const;
 	void set_nfa_minimum_size(int);
-	bool nfa_minimum_size_cached();
 	int get_nfa_minimum_size();
 	// 1-однозначная регулярка
-	bool is_one_unambiguous_flag_cached();
+	bool is_one_unambiguous_flag_cached() const;
 	void set_one_unambiguous_flag(bool);
 	bool get_one_unambiguous_flag();
-	bool is_one_unambiguous_regex_cached();
+	bool is_one_unambiguous_regex_cached() const;
 	void set_one_unambiguous_regex(string, const shared_ptr<Language>&);
 	Regex get_one_unambiguous_regex();
 	//  и тд

@@ -101,7 +101,6 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log,
 											 bool is_trim) const {
 	if (!is_trim)
 		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
-	// Logger::init_step("Determinize");
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({initial_state}, true);
 
@@ -182,9 +181,6 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log,
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
-	// Logger::log("Автомат до детерминизации", "Автомат после детерминизации",
-	//*this, dfa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", dfa);
@@ -196,13 +192,8 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
 										  bool is_trim) const {
 	if (!is_trim)
 		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
-	// Logger::init_step("Minimize");
-	if (language->min_dfa_cached()) {
+	if (language->is_min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
-		// Logger::log("Автомат до минимизации", "Автомат после минимизации",
-		//*this, language_min_dfa);
-		// Logger::log();
-		// Logger::finish_step();
 		if (log) {
 			log->set_parameter("oldautomaton", *this);
 			log->set_parameter("cach",
@@ -318,14 +309,10 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
 	// кэширование
 	language->set_min_dfa(minimized_dfa.initial_state, minimized_dfa.states,
 						  minimized_dfa.language);
-	// Logger::log("Автомат до минимизации", "Автомат после минимизации", *this,
-	// minimized_dfa);
 	stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
 		ss << "\\{" << state.identifier << "\\}\;";
 	}
-	// Logger::log("Классы эквивалентности", ss.str());
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("equivclasses", ss.str());
@@ -335,7 +322,92 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
 }
 
 FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
-	// Logger::init_step("RemEps");
+	FiniteAutomaton new_nfa(initial_state, states, language);
+
+	vector<State> new_states;
+	map<set<int>, int> visited_states;
+
+	set<int> q = closure({initial_state}, true);
+	string initial_state_identifier;
+	for (auto elem : q) {
+		initial_state_identifier +=
+			(initial_state_identifier.empty() || states[elem].identifier.empty()
+				 ? ""
+				 : ", ") +
+			states[elem].identifier;
+	}
+	State new_initial_state = {0, q, initial_state_identifier, false,
+							   map<alphabet_symbol, set<int>>()};
+	visited_states[q] = 0;
+	new_states.push_back(new_initial_state);
+
+	stack<set<int>> s;
+	s.push(q);
+	set<int> x;
+	int states_counter = 1;
+	while (!s.empty()) {
+		q = s.top();
+		s.pop();
+		for (const alphabet_symbol& symb : language->get_alphabet()) {
+			x.clear();
+			for (int k : q) {
+				auto transitions_by_symbol = states[k].transitions.find(symb);
+				if (transitions_by_symbol != states[k].transitions.end()) {
+					for (int transition_by_symbol :
+						 transitions_by_symbol->second)
+						x.insert(transition_by_symbol);
+				}
+			}
+			set<int> q1;
+			set<int> x1;
+			for (int k : x) {
+				x1.clear();
+				q1 = closure({k}, true);
+				for (int m : q1) {
+					x1.insert(m);
+				}
+				if (!x1.empty()) {
+					if (visited_states.find(x1) == visited_states.end()) {
+						string new_state_identifier;
+						for (auto elem : x1) {
+							new_state_identifier +=
+								(new_state_identifier.empty() ||
+										 states[elem].identifier.empty()
+									 ? ""
+									 : ", ") +
+								states[elem].identifier;
+						}
+						State new_state = {states_counter, x1,
+										   new_state_identifier, false,
+										   map<alphabet_symbol, set<int>>()};
+						new_states.push_back(new_state);
+						visited_states[x1] = states_counter;
+						s.push(x1);
+						states_counter++;
+					}
+					new_states[visited_states[q]].transitions[symb].insert(
+						visited_states[x1]);
+				}
+			}
+		}
+	}
+	for (auto& state : new_states) {
+		for (auto elem : state.label) {
+			if (states[elem].is_terminal) state.is_terminal = true;
+		}
+	}
+	new_nfa.initial_state = 0;
+	new_nfa.states = new_states;
+	new_nfa = new_nfa.remove_unreachable_states();
+	if (log) {
+		log->set_parameter("oldautomaton", *this);
+		log->set_parameter("result", new_nfa);
+	}
+	return new_nfa;
+}
+
+FiniteAutomaton FiniteAutomaton::remove_eps_additional(
+	iLogTemplate* log) const {
 	FiniteAutomaton new_nfa(initial_state, states, language);
 
 	for (auto& state : new_nfa.states)
@@ -349,7 +421,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 			}
 		}
 		vector<set<int>> x;
-		for (alphabet_symbol symb : language->get_alphabet()) {
+		for (const alphabet_symbol& symb : language->get_alphabet()) {
 			x.clear();
 			for (int k : q) {
 				auto transitions_by_symbol = states[k].transitions.find(symb);
@@ -370,9 +442,6 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 		}
 	}
 	new_nfa = new_nfa.remove_unreachable_states();
-	// Logger::log("Автомат до удаления eps-переходов",
-	//"Автомат после удаления eps-переходов", *this, new_nfa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_nfa);
@@ -383,7 +452,6 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 											  const FiniteAutomaton& fa2,
 											  iLogTemplate* log) {
-	// Logger::init_step("Intersection");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -441,9 +509,6 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 		new_dfa.states[i].transitions = new_transitions;
 	}
 	new_dfa = new_dfa.remove_unreachable_states();
-	// Logger::log("Первый автомат", "Второй автомат", "Результат пересечения",
-	// fa1, fa2, new_dfa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("automaton1", fa1);
 		log->set_parameter("automaton2", fa2);
@@ -455,7 +520,6 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 										const FiniteAutomaton& fa2,
 										iLogTemplate* log) {
-	// Logger::init_step("Union");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -496,9 +560,6 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 		}
 	}
 	new_dfa = new_dfa.remove_unreachable_states();
-	// Logger::log("Первый автомат", "Второй автомат", "Результат объединения",
-	// fa1, fa2, new_dfa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("automaton1", fa1);
 		log->set_parameter("automaton2", fa2);
@@ -510,7 +571,6 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1,
 FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 											const FiniteAutomaton& fa2,
 											iLogTemplate* log) {
-	// Logger::init_step("Difference");
 	set<alphabet_symbol> merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
@@ -562,9 +622,6 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 		new_dfa.states[i].transitions = new_transitions;
 	}
 	new_dfa = new_dfa.remove_unreachable_states();
-	// Logger::log("Первый автомат", "Второй автомат", "Результат разности",
-	// fa1, fa2, new_dfa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("automaton1", fa1);
 		log->set_parameter("automaton2", fa2);
@@ -574,7 +631,6 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1,
 }
 
 FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
-	// Logger::init_step("Complement");
 	FiniteAutomaton new_dfa =
 		FiniteAutomaton(initial_state, states, language->get_alphabet());
 	new_dfa = new_dfa.add_trap_state();
@@ -585,9 +641,6 @@ FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
 	for (int i = 0; i < new_dfa.states.size(); i++)
 		if (new_dfa.states[i].is_terminal) final_states_counter++;
 	if (!final_states_counter) new_dfa = new_dfa.minimize();
-	// Logger::log("Автомат до дополнения", "Автомат после дополнения", *this,
-	// new_dfa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_dfa);
@@ -595,7 +648,6 @@ FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
 	return new_dfa;
 }
 FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
-	// Logger::init_step("Reverse");
 	FiniteAutomaton enfa =
 		FiniteAutomaton(states.size(), states, language->get_alphabet());
 	int final_states_counter = 0;
@@ -643,8 +695,6 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 	} else
 		enfa.initial_state = initial_state;
 	enfa = enfa.remove_unreachable_states();
-	// Logger::log("Автомат до обращения", "Автомат после обращения", *this,
-	// enfa); Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", enfa);
@@ -653,7 +703,6 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
-	// Logger::init_step("AddTrapState");
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
 	int count = new_dfa.states.size();
@@ -684,9 +733,6 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 				new_dfa.states.size() - 1);
 		}
 	}
-	// Logger::log("Автомат до добавления ловушки",
-	//"Автомат после добавления ловушки", *this, new_dfa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_dfa);
@@ -695,7 +741,6 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
-	// Logger::init_step("RemoveTrapState");
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = new_dfa.states.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
@@ -751,9 +796,6 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 		}
 	}
 	if (new_dfa.is_empty()) new_dfa = *this;
-	// Logger::log("Автомат до удаления ловушек", "Автомат после удаления
-	// ловушек", *this, new_dfa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_dfa);
@@ -815,7 +857,6 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 }
 
 FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
-	// Logger::init_step("Annote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
@@ -844,9 +885,6 @@ FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
-	// Logger::log("Автомат до навешивания разметки",
-	//"Автомат после навешивания разметки", *this, new_fa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_fa);
@@ -855,7 +893,6 @@ FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
-	// Logger::init_step("DeAnnote");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
@@ -879,9 +916,6 @@ FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
 	new_fa = new_fa.remove_trap_states();
-	/*Logger::log("Автомат до удаления разметки",
-				"Автомат после удаления разметки", *this, new_fa);
-	Logger::finish_step();*/
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_fa);
@@ -890,7 +924,6 @@ FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
-	// Logger::init_step("DeLinearize");
 	set<alphabet_symbol> new_alphabet;
 	FiniteAutomaton new_fa =
 		FiniteAutomaton(initial_state, states, make_shared<Language>());
@@ -914,9 +947,6 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
 	new_fa = new_fa.remove_trap_states();
-	// Logger::log("Автомат до удаления разметки",
-	//"Автомат после удаления разметки", *this, new_fa);
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_fa);
@@ -926,7 +956,6 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 
 bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	if (log) log->set_parameter("oldautomaton", *this);
-	// Logger::init_step("OneUnambiguity");
 	if (language->is_one_unambiguous_flag_cached()) {
 
 		if (log) {
@@ -937,12 +966,10 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 			log->set_parameter("cach",
 							   "(!) результат OneUnambiguous получен из кэша");
 		}
-		// Logger::log(language->get_one_unambiguous_flag() ? "True" : "False");
-		// Logger::finish_step();
 		return language->get_one_unambiguous_flag();
 	}
 	FiniteAutomaton min_fa;
-	if (language->min_dfa_cached() && log) {
+	if (language->is_min_dfa_cached() && log) {
 		log->set_parameter("cachedMINDFA",
 						   "Минимальный автомат сохранен в кэше");
 	}
@@ -1023,8 +1050,6 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result", "True");
 		}
-		// Logger::log("True");
-		// Logger::finish_step();
 		return true;
 	}
 
@@ -1037,8 +1062,6 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result", "False");
 		}
-		// Logger::log("False");
-		// Logger::finish_step();
 		return false;
 	}
 
@@ -1174,8 +1197,6 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result", "False");
 		}
-		// Logger::log("False");
-		// Logger::finish_step();
 		return false;
 	}
 
@@ -1232,8 +1253,6 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 				if (log) {
 					log->set_parameter("result", "False");
 				}
-				// Logger::log("False");
-				// Logger::finish_step();
 				return false;
 			}
 			orbit_automaton_initial_state++;
@@ -1242,8 +1261,6 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	}
 	language->set_one_unambiguous_flag(true);
 	if (log) log->set_parameter("result", "True");
-	// Logger::log("True");
-	// Logger::finish_step();
 	return true;
 }
 
@@ -1289,8 +1306,6 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(
 }
 
 FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
-	// Logger::init_step("MergeBisim");
-
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
 	vector<GrammarItem*> terminals;
@@ -1308,8 +1323,6 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 		classes.push_back(nont->class_number);
 	FiniteAutomaton result_fa = merge_equivalent_classes(classes);
 
-	// Logger::log("Автомат до преобразования", "Автомат после преобразования",
-	//*this, result_fa);
 	stringstream ss;
 	for (auto& elem : class_to_nonterminals) {
 		ss << "\\{";
@@ -1317,8 +1330,6 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 			ss << elem.second[i]->name << ",\\ ";
 		ss << elem.second[elem.second.size() - 1]->name << "\\}\;";
 	}
-	// Logger::log("Классы эквивалентности", ss.str());
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("equivclasses", ss.str()); // TODO: logs
@@ -1415,7 +1426,6 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 			ss << elem.second[i] << ",";
 		ss << elem.second[elem.second.size() - 1] << "\\}";
 	}
-	// Logger::log("Классы эквивалентности", ss.str());
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
@@ -1429,15 +1439,7 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 
 bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1,
 								const FiniteAutomaton& fa2, iLogTemplate* log) {
-	// Logger::init_step("Bisimilar");
-	// Logger::log("Автоматы:");
-	// Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
 	bool result = bisimilarity_checker(fa1, fa2);
-	/*if (result)
-		Logger::log("Результат Bisimilar", "true");
-	else
-		Logger::log("Результат Bisimilar", "false");
-	Logger::finish_step();*/
 	if (log) {
 		log->set_parameter("automaton1", fa1);
 		log->set_parameter("automaton2", fa2);
@@ -1613,15 +1615,7 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1,
 
 bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
 							const FiniteAutomaton& fa2, iLogTemplate* log) {
-	// Logger::init_step("Equal");
-	// Logger::log("Автоматы:");
-	// Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
 	bool result = equality_checker(fa1, fa2);
-	// if (result)
-	// Logger::log("Результат Equal", "true");
-	// else
-	// Logger::log("Результат Equal", "false");
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("automaton1", fa1);
 		log->set_parameter("automaton2", fa2);
@@ -1633,9 +1627,6 @@ bool FiniteAutomaton::equal(const FiniteAutomaton& fa1,
 bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 								 const FiniteAutomaton& fa2,
 								 iLogTemplate* log) {
-	// Logger::init_step("Equiv");
-	// Logger::log("Автоматы:");
-	// Logger::log("Первый автомат", "Второй автомат", fa1, fa2);
 	bool result = true;
 	if (fa1.language == fa2.language) {
 		if (log)
@@ -1643,21 +1634,15 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 				"samelanguage",
 				"(!) автоматы изначально принадлежат одному языку"); // TODO:
 																	 // logs
-		// Logger::log("(!) автоматы изначально принадлежат одному языку");
 	} else {
-		if ((!fa1.language->min_dfa_cached() ||
-			 !fa2.language->min_dfa_cached()) &&
+		if ((!fa1.language->is_min_dfa_cached() ||
+			 !fa2.language->is_min_dfa_cached()) &&
 			log) {
 			log->set_parameter("cachedMINDFA",
 							   "Минимальные автоматы сохранены в кэше");
 		}
 		result = equal(fa1.minimize(), fa2.minimize());
 	}
-	/*if (result)
-		Logger::log("Результат Equiv", "true");
-	else
-		Logger::log("Результат Equiv", "false");
-	Logger::finish_step();*/
 	if (log) {
 		log->set_parameter("automaton1", fa1);
 		log->set_parameter("automaton2", fa2);
@@ -1668,16 +1653,8 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1,
 
 bool FiniteAutomaton::subset(const FiniteAutomaton& fa,
 							 iLogTemplate* log) const {
-	// Logger::init_step("Subset");
-	// Logger::log("Автоматы:");
-	// Logger::log("Первый автомат", "Второй автомат", *this, fa);
 	FiniteAutomaton fa_instersection(intersection(*this, fa));
 	bool result = equivalent(fa_instersection, fa);
-	// if (result)
-	// Logger::log("Результат Subset", "true");
-	// else
-	// Logger::log("Результат Subset", "false");
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("automaton1", *this);
 		log->set_parameter("automaton2", fa);
@@ -1863,44 +1840,36 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity(
 	iLogTemplate* log) const {
-	// Logger::init_step("Ambiguity");
 	optional<int> word_length;
 	FiniteAutomaton::AmbiguityValue result =
 		get_ambiguity_value(300, word_length);
-	// Logger::log("Автомат:", *this);
 	if (log) log->set_parameter("oldautomaton", *this);
 	if (word_length.has_value()) {
 		if (log)
 			log->set_parameter("Для максимальной длины слова",
 							   to_string(*word_length));
-		// Logger::log("Для максимальной длины слова", to_string(*word_length));
 	}
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
-		// Logger::log("Результат Ambiguity", "Exponentially ambiguous");
 		if (log) log->set_parameter("result", "Exponentially ambiguous");
 		break;
 	case FiniteAutomaton::almost_unambigious:
 		if (log) log->set_parameter("result", "Almost unambigious");
-		// Logger::log("Результат Ambiguity", "Almost unambigious");
 		break;
 	case FiniteAutomaton::unambigious:
 		if (log) log->set_parameter("result", "Unambigious");
-		// Logger::log("Результат Ambiguity", "Unambigious");
 		break;
 	case FiniteAutomaton::polynomially_ambigious:
 		if (log) log->set_parameter("result", "Polynomially ambiguous");
-		// Logger::log("Результат Ambiguity", "Polynomially ambiguous");
 		break;
 	default:
 		break;
 	}
-	// Logger::finish_step();
 	return result;
 }
 
 TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
-	if (language->syntactic_monoid_cached()) {
+	if (language->is_syntactic_monoid_cached()) {
 		return language->get_syntactic_monoid();
 	}
 	FiniteAutomaton min_dfa = minimize();
@@ -2004,13 +1973,8 @@ void find_maximum_identity_matrix(vector<int>& rows,
 
 int FiniteAutomaton::get_classes_number_GlaisterShallit(
 	iLogTemplate* log) const {
-	// Logger::init_step("GlaisterShallit");
 	if (log) log->set_parameter("oldautomaton", *this);
-	if (language->nfa_minimum_size_cached()) {
-		/*Logger::log(
-			"Количество диагональных классов по методу Глейстера-Шаллита",
-			to_string(language->get_nfa_minimum_size()));
-		Logger::finish_step();*/
+	if (language->is_nfa_minimum_size_cached()) {
 		if (log) {
 			log->set_parameter("result", language->get_nfa_minimum_size());
 			log->set_parameter("cach", "(!) результат получен из кэша");
@@ -2076,9 +2040,6 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 		log->set_parameter("result", result);
 		log->set_parameter("table", t);
 	}
-	/*Logger::log("Количество диагональных классов по методу Глейстера-Шаллита",
-				to_string(result));
-	Logger::finish_step();*/
 
 	// кэширование
 	language->set_nfa_minimum_size(result);
@@ -2086,7 +2047,7 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(
 }
 
 optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
-	if (!language->pump_length_cached()) return nullopt;
+	if (!language->is_pump_length_cached()) return nullopt;
 	int language_pump_length = language->get_pump_length();
 
 	int transition_states_counter = 0;
@@ -2100,7 +2061,6 @@ optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
 }
 
 optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
-	// Logger::init_step("Minimal");
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 	}
@@ -2109,20 +2069,16 @@ optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result", result.value() ? "True" : "False");
 		}
-		// Logger::log(result.value() ? "True" : "False");
 	} else if (log) {
 		log->set_parameter("result", "Unknown");
 	}
-	// Logger::log("Unknown");
-	// Logger::finish_step();
 	return result;
 }
 
 bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
-	// Logger::init_step("Minimal");
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
-		if ((language->min_dfa_cached())) {
+		if ((language->is_min_dfa_cached())) {
 			log->set_parameter("cachedMINDFA",
 							   "Минимальный автомат сохранен в кэше");
 		}
@@ -2132,8 +2088,6 @@ bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("result", result ? "True" : "False");
 	}
-	// Logger::log(result ? "True" : "False");
-	// Logger::finish_step();
 	return result;
 }
 
@@ -2164,8 +2118,6 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 	if (!annoted) {
 		return annote().semdet_entry(true);
 	}
-	// Logger::log(
-	//"Получение языка из производной регулярки автомата по префиксу");
 	std::map<int, bool> was;
 	std::vector<int> final_states;
 	for (int i = 0; i < states.size(); i++) {
@@ -2185,14 +2137,10 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 		//  cout << "State: " << i << "\n";
 		//  cout << "Prefix: " << prefix.value() << "\n";
 		//  cout << "Regex: " << reg.to_txt() << "\n";
-		// Logger::log("State", to_string(i));
-		// Logger::log("Prefix", prefix.value());
-		// Logger::log("Regex", reg.to_txt());
 		auto derivative = reg.prefix_derivative(prefix.value());
 		if (!derivative.has_value()) continue;
 		state_languages[i] = derivative.value();
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
-		// Logger::log("Derevative", state_languages[i].to_txt());
 
 		// TODO: logs
 		if (log) {
@@ -2222,19 +2170,15 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 					verified_ambiguity |= reliability;
 				}
 				if (!verified_ambiguity) {
-					// Logger::log("Результат SemDet", "false");
-					// Logger::finish_step();
 					return false;
 				}
 			}
 		}
 	}
-	// Logger::log("Результат SemDet", "true");
 	return true;
 }
 
 bool FiniteAutomaton::semdet(iLogTemplate* log) const {
-	// Logger::init_step("SemDet");
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 	}
@@ -2243,7 +2187,6 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 		log->set_parameter("result", result);
 	}
 	return result;
-	// Logger::finish_step();
 }
 
 bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
@@ -2356,14 +2299,12 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 }
 
 bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
-	// Logger::init_step("Детерминизированность");
-	// Logger::log("Автомат", *this);
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 	}
 	bool result = true;
 	for (int i = 0; i < states.size(); i++) {
-		for (auto elem : states[i].transitions) {
+		for (const auto& elem : states[i].transitions) {
 			if (elem.first == alphabet_symbol::epsilon()) {
 				result = false;
 				break;
@@ -2377,8 +2318,6 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("result", result ? "True" : "False");
 	}
-	/*Logger::log(result ? "True" : "False");
-	Logger::finish_step();*/
 	return result;
 }
 
@@ -2392,9 +2331,6 @@ int FiniteAutomaton::get_initial() {
 }
 
 int FiniteAutomaton::states_number(iLogTemplate* log) const {
-	// Logger::init_step("States");
-	// Logger::log(to_string(states.size()));
-	// Logger::finish_step();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", states.size());
@@ -2575,7 +2511,6 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	// }
 
 	// переносим прошлые переходы и обьединяем (работаем с уравнениями)
-	// Logger::init_step("Arden");
 
 	for (int i = 0; i < data.size();
 		 i++) { // c конца начинаем переписывать уравнения
@@ -2664,7 +2599,6 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	for (int i = 0; i < data.size(); i++) {
 		if (i != 0) full_logs += "\\\\";
 		full_logs += "state " + to_string(i) + ":"; // TODO: logs
-		// Logger::log("State ", std::to_string(i));
 		for (int j = 0; j < data[i].size(); j++) {
 			// TODO: передача набора regex
 
@@ -2677,8 +2611,6 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 						.regex_from_state->to_txt(); // тут по идее должно быть
 													 // без to_txt но у нас не
 													 // принимается Regex*
-				// Logger::log("regex in this state",
-				// data[i][j].regex_from_state->to_txt());
 			}
 		}
 	}
@@ -2699,8 +2631,6 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result", temp);
 		}
-		// Logger::log("Result ", temp.to_txt());
-		// Logger::finish_step();
 		return temp;
 	}
 	// если принимающих состояний несколько - обьединяем через альтернативу
@@ -2723,7 +2653,5 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("result", temp1);
 	}
-	// Logger::log("Result ", temp1.to_txt());
-	// Logger::finish_step();
 	return temp1;
 }

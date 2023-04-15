@@ -24,12 +24,6 @@ class LogTemplate : public iLogTemplate {
 	void load_tex_template(string filename);
 	string get_tex_template();
 
-	// struct Table {
-	// 	vector<string> rows;	// названия строк
-	// 	vector<string> columns; // названия столбцов
-	// 	vector<string> data;	// данные
-	// };
-
   private:
 	// кеш отрендеренных автоматов
 	// inline static map<const FiniteAutomaton*, string> cache_automatons;
@@ -57,11 +51,8 @@ class LogTemplate : public iLogTemplate {
 	void add_parameter(string parameter_name);
 	// math mode
 	static string math_mode(string str);
-	// счетчик картинок
-	inline static int image_number = 0;
 	// таблицы в общем виде
-	static string log_table(Table t/*vector<string> rows, vector<string> columns,
-							vector<string> data*/);
+	static string log_table(Table t);
 	// Рекурсивно раскрывает include-выражения в файле
 	stringstream expand_includes(string filename) const;
 };

@@ -41,7 +41,6 @@ class Example {
 	static void step_interection();
 	static void table();
 	static void fa_semdet_check();
-	static void get_one_unambiguous_regex();
 	static void classes_number_GlaisterShallit();
 	static void testing_with_generator(
 		int regex_length, int star_num, int star_nesting, int alphabet_size,
@@ -62,6 +61,7 @@ class Example {
 	static void test_arden();
 	static void test_pump_length();
 	static void test_is_one_unambiguous();
+	static void test_get_one_unambiguous_regex();
 	static void test_interpreter();
 	static void test_TransformationMonoid();
 	static void test_GlaisterShallit();

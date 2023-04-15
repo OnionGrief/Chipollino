@@ -2,13 +2,10 @@
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include "iLogTemplate.h"
-#include <functional>
 #include <iostream>
 #include <map>
-#include <math.h>
 #include <optional>
 #include <set>
-#include <stack>
 #include <string>
 #include <vector>
 using namespace std;
@@ -86,11 +83,15 @@ class FiniteAutomaton : public BaseObject {
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
-	FiniteAutomaton determinize(iLogTemplate* log = nullptr, bool is_trim = true) const;
-	// построение eps-замыкания
+	FiniteAutomaton determinize(iLogTemplate* log = nullptr,
+								bool is_trim = true) const;
+	// удаление eps-переходов (построение eps-замыканий)
 	FiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
+	// удаление eps-переходов (доп. вариант)
+	FiniteAutomaton remove_eps_additional(iLogTemplate* log = nullptr) const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize(iLogTemplate* log = nullptr, bool is_trim = true) const;
+	FiniteAutomaton minimize(iLogTemplate* log = nullptr,
+							 bool is_trim = true) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(
@@ -130,7 +131,7 @@ class FiniteAutomaton : public BaseObject {
 	FiniteAutomaton merge_bisimilar(iLogTemplate* log = nullptr) const;
 	// проверка автоматов на эквивалентность
 	static bool equivalent(const FiniteAutomaton&, const FiniteAutomaton&,
-						   iLogTemplate* log = nullptr); // TODO
+						   iLogTemplate* log = nullptr);
 	// проверка автоматов на равентсво(буквальное)
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&,
 					  iLogTemplate* log = nullptr);
@@ -144,10 +145,8 @@ class FiniteAutomaton : public BaseObject {
 	// проверяет, распознаёт ли автомат слово
 	bool parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
-	bool subset(const FiniteAutomaton&,
-				iLogTemplate* log = nullptr) const; // TODO
-													// и тд
-	//начальное состояние
+	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
+	// начальное состояние
 	int get_initial();
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;

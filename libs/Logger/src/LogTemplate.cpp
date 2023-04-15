@@ -54,22 +54,18 @@ void LogTemplate::add_parameter(string parameter_name) {
 void LogTemplate::set_parameter(const string& key,
 								const FiniteAutomaton& value) {
 	parameters[key].value = value;
-	add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, Regex value) {
 	parameters[key].value = value;
-	add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, string value) {
 	parameters[key].value = value;
-	add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, int value) {
 	parameters[key].value = value;
-	add_parameter(key);
 }
 
 void LogTemplate::set_parameter(const string& key, Table value) {
@@ -158,7 +154,6 @@ string LogTemplate::math_mode(string str) {
 	if (str.empty()) {
 		return str;
 	}
-	// cout << str << endl;
 	string str_math = "";
 	bool flag = true;
 	auto is_number = [](char c) { return c >= '0' && c <= '9'; };
@@ -167,8 +162,6 @@ string LogTemplate::math_mode(string str) {
 	};
 	for (size_t index = 0; index < str.size(); index++) {
 		char c = str[index];
-		// cout << "-------------" + index << endl;
-		// cout << c << endl;
 		if (c == ' ' && index != str.size() - 1) {
 			if (!flag) {
 				str_math += "}";
@@ -176,14 +169,11 @@ string LogTemplate::math_mode(string str) {
 			}
 			str_math += ", ";
 		} else if (c == '*') {
-			// str_math += "^*";
 			if (!flag) {
 				str_math += "}";
 				flag = true;
 			}
 			str_math += "\\star ";
-			// cout << "c is *" << endl;
-			// cout << "str_math " + str_math << endl;
 		} else if (c == '|') {
 			if (!flag) {
 				str_math += "}";
@@ -191,17 +181,13 @@ string LogTemplate::math_mode(string str) {
 			}
 			str_math += "\\alter ";
 		} else if (is_number(c)) {
-			// cout << "c number" << endl;
 			string num = "";
 			for (index; index < str.size() && is_number(str[index]); index++) {
 				num += str[index];
-				// cout << "num " + num << endl;
 			}
 			num = "_{" + num + "}";
 			str_math += num;
 			index--;
-			// cout << "index " + to_string(index) << endl;
-			// cout << "str_math " + str_math << endl;
 		} else if (is_symbol(c)) {
 			string sym = "";
 			if (flag) {
@@ -210,9 +196,7 @@ string LogTemplate::math_mode(string str) {
 			}
 			for (index; index < str.size() && is_symbol(str[index]); index++) {
 				sym += str[index];
-				// cout << "num " + num << endl;
 			}
-			// sym = "\\regexpstr{" + sym + "}";
 			str_math += sym;
 			index--;
 		} else {
@@ -222,11 +206,8 @@ string LogTemplate::math_mode(string str) {
 				flag = true;
 			}
 			str_math += c;
-			// cout << "c else" << endl;
-			// cout << "str_math " + str_math << endl;
 		}
 	}
-	// cout << str_math << endl;
 	if (!flag) {
 		str_math += "}";
 	}
@@ -234,8 +215,7 @@ string LogTemplate::math_mode(string str) {
 	return str_math;
 }
 
-string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> columns,
-							  vector<string> data*/) {
+string LogTemplate::log_table(Table t) {
 	string table = "";
 	string format = "c!{\\color{black!80}\\vline width .65pt}";
 	string cols = "  &";
@@ -251,19 +231,16 @@ string LogTemplate::log_table(Table t/*vector<string> rows, vector<string> colum
 	}
 	table += "$\\begin{array}{" + format + "}\\rowcolor{HeaderColor}\n";
 	table += cols + "\\hline\n";
-	int k = 0;
-	int j;
 	for (int i = 0; i < t.rows.size(); i++) {
 		string r = t.rows[i] == " " ? "eps" : t.rows[i];
 		row = r + " & ";
-		for (j = 0; j < t.columns.size(); j++) {
+		for (int j = 0; j < t.columns.size(); j++) {
 			if (j != t.columns.size() - 1) {
-				row = row + t.data[k + j] + " &";
+				row = row + t.data[i * t.columns.size() + j] + " &";
 			} else {
-				row = row + t.data[k + j] + "\\\\";
+				row = row + t.data[i * t.columns.size() + j] + "\\\\";
 			}
 		}
-		k += j;
 		table += row + "\n";
 	}
 	table += "\\end{array}$\n";

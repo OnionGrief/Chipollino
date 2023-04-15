@@ -17,7 +17,11 @@ using namespace Typization;
 
 class Interpreter {
   public:
-	enum class LogMode { all, errors, nothing };
+	enum class LogMode {
+		all,
+		errors,
+		nothing
+	};
 	Interpreter();
 	// Интерпретация строчки, возвращает true в случае успеха
 	bool run_line(const string& line);
@@ -170,7 +174,6 @@ class Interpreter {
 		{"auto_remove_trap_states", Flag::auto_remove_trap_states},
 		{"weak_type_comparison", Flag::weak_type_comparison},
 		{"log_theory", Flag::log_theory},
-		// Андрей, придумай сам названия
 	};
 
 	map<Flag, bool> flags = {
@@ -185,6 +188,9 @@ class Interpreter {
 		// флаг добавления теоретического блока к ф/ям в логгере
 		{Flag::log_theory, false},
 		// временный флаг для логирования в отчет, Андрей исправь
+		// отвечает за добавление шаблона функции в отчет
+		// верификатор выключает флаг во время тестирования, чтобы не логировать
+		// каждое действие (на условно 100 тестовых примерах)
 		{Flag::report, true},
 	};
 
@@ -268,7 +274,7 @@ class Interpreter {
 				   vector<ObjectType> input_type);
 	// выбрать подходящий вариант функции для данных аргументов (если он есть)
 	optional<int> find_func(string func, vector<ObjectType> input_type);
-	string get_func_id(Function function);
+	optional<string> get_func_id(Function function);
 
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(
