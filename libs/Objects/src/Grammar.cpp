@@ -422,7 +422,7 @@ string Grammar::pg_to_txt() const {
 	for (const auto& elem : out) {
 		ss << elem << "\\\\";
 	}
-	ss << "------------ base words ------------"
+	ss << "------------------------- Базисные слова -----------------------"
 	   << "\\\\";
 
 	for (int i = 0; i < prefix_grammar.size(); i++) {

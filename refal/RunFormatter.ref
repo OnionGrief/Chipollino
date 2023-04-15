@@ -1,0 +1,21 @@
+/******************************
+Preamble is: head.tex
+report.tex is split to frames.
+Every frame is processed separatedly.
+Frame has the following attributes:
+(title)(list-of-objects) DefaultWidth DefaultHeight PageHeight
+list-of-objects:
+[((preamble)(rendered_object)MPFlag FrameFlag WidthPercent HeightPercent)]*
+Page parameters are taken from file pagedata
+
+*******************************/
+
+$EXTERN ExtractLimitations, FrameData, MakeFrames;
+
+$ENTRY Go {
+ , <ExtractLimitations 'pagedata'> : s.DefWidth s.DefHeight
+    =  <Open 'r' 1 '../resources/report.tex'><Open 'w' 2 '../resources/rendered_report.tex'>
+       <MakeFrames <FrameData Width> <Div <Mul <FrameData Width> s.DefWidth> <FrameData Height>> Normal <Get 1>>
+       <Close 1><Close 2>;
+}
+

@@ -39,7 +39,7 @@
 \usepackage[T1,T2A]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[russian,english]{babel}
-\usepackage{amsmath,mathrsfs} %ещё больше математических символов
+\usepackage{amsmath,mathrsfs,mathabx} %ещё больше математических символов
 \usepackage{amstext}
 \usepackage{graphicx,relsize}
 \graphicspath{ {./resources/} }
@@ -142,7 +142,7 @@
 \def\TypeIs{\;\bm{\textcolor{red}{:\,:}\;}}
 \def\toolongseq{\;\dots}
 
-
+\def\VerifParameter{\bigvarstar}
 \def\alter{\ensuremath{\mathrel{\vert}}}%отрендеренные регулярные операторы 
 \def\star{\ensuremath{^{*}}}%отрендеренные регулярные операторы 
 \def\regexpstr#1{\mathtt{#1}}%буквы внутри регулярок переписываются в моноширинный
@@ -157,6 +157,8 @@
 \newcommand{\RegExp}{\mathcal{RE}} %макрос для обозначения множества всех регулярок
 \newcommand{\Aut}{\mathscr{A}}
 \newcommand{\seq}{\;{=}\;}
+\def\VerifParameter{\bigvarstar}
+
 \newenvironment{wideitemize}{\itemize\addtolength{\itemsep}{8pt}}{\enditemize}
 
 \newenvironment{narritemize}{\itemize\addtolength{\itemsep}{-0.5ex}}{\enditemize}
