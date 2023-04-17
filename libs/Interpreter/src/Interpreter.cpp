@@ -875,7 +875,9 @@ bool Interpreter::run_verification(const Verification& verification) {
 	log_template.set_theory_flag(flags[Flag::log_theory]);
 	log_template.set_parameter("expr", expr.to_txt());
 
-	set_log_mode(LogMode::errors);
+	LogMode prev_log_mode = log_mode;
+	if (prev_log_mode == LogMode::all) set_log_mode(LogMode::errors);
+
 	flags[Flag::report] = false;
 
 	for (int i = 0; i < verification.size; i++) {
@@ -899,7 +901,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 	}
 
 	flags[Flag::report] = true;
-	set_log_mode(LogMode::all);
+	set_log_mode(prev_log_mode);
 
 	current_random_regex = nullopt;
 

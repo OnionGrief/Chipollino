@@ -3,7 +3,7 @@
 
 void LogTemplate::add_parameter(string parameter_name) {
 
-	ifstream infile(tex_template);
+	ifstream infile(template_fullpath);
 
 	if (!infile) return; // infile.close();
 
@@ -29,7 +29,7 @@ void LogTemplate::add_parameter(string parameter_name) {
 	infile.close();
 
 	if (!is_exist) {
-		infile.open(tex_template);
+		infile.open(template_fullpath);
 		string outstr = "";
 
 		int i = 0;
@@ -45,7 +45,7 @@ void LogTemplate::add_parameter(string parameter_name) {
 		}
 
 		infile.close();
-		ofstream outfile(tex_template);
+		ofstream outfile(template_fullpath);
 		outfile << outstr;
 		outfile.close();
 	}
@@ -78,7 +78,7 @@ void LogTemplate::set_theory_flag(bool value) {
 
 void LogTemplate::load_tex_template(string filename) {
 	template_filename = filename;
-	tex_template = template_path + filename + ".tex";
+	template_fullpath = template_path + filename + ".tex";
 }
 
 string LogTemplate::get_tex_template() {
@@ -86,7 +86,7 @@ string LogTemplate::get_tex_template() {
 }
 
 string LogTemplate::render() const {
-	stringstream infile = expand_includes(tex_template);
+	stringstream infile = expand_includes(template_fullpath);
 
 	// Строка-аккумулятор
 	string outstr = "";
@@ -217,7 +217,7 @@ string LogTemplate::math_mode(string str) {
 
 string LogTemplate::log_table(Table t) {
 	string table = "";
-	if (!(t.columns.size() || t.rows.size())) return table;
+	if (!(t.columns.size() && t.rows.size())) return table;
 	string format = "c!{\\color{black!80}\\vline width .65pt}";
 	string cols = "  &";
 	string row = "";

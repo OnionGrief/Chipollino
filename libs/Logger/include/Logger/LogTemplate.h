@@ -32,7 +32,7 @@ class LogTemplate : public iLogTemplate {
 	const string template_path = "./resources/template/";
 
 	// путь к LaTeX-шаблону
-	string tex_template;
+	string template_fullpath;
 	// имя файла шаблона
 	string template_filename;
 
@@ -49,9 +49,9 @@ class LogTemplate : public iLogTemplate {
 
 	// Добавление шаблона настоящего параметра
 	void add_parameter(string parameter_name);
-	// math mode
+	// Преобразование рег. выр-я в tex-формат (устаревший метод)
 	static string math_mode(string str);
-	// таблицы в общем виде
+	// Преобразование таблицы в tex-формат
 	static string log_table(Table t);
 	// Рекурсивно раскрывает include-выражения в файле
 	stringstream expand_includes(string filename) const;
