@@ -13,7 +13,6 @@ int main(int argc, char* argv[]) {
 
 	// Загружаем в интерпретатор файл с коммандами
 	string load_file = "test.txt";
-	// string load_file = "./resources/all_functions.txt";
 	if (argc > 1) load_file = argv[1];
 	if (interpreter.run_file(load_file)) {
 		interpreter.generate_log("./resources/report.tex");

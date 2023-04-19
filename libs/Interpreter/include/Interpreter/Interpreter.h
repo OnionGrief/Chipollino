@@ -266,9 +266,6 @@ class Interpreter {
 	bool run_set_flag(const SetFlag&);
 	bool run_operation(const GeneralOperation&);
 
-	// Список опреаций для последовательного выполнения
-	// vector<GeneralOperation> operations;
-
 	// Сравнение типов ожидаемых и полученных входных данных
 	bool typecheck(vector<ObjectType> func_input_type,
 				   vector<ObjectType> input_type);
