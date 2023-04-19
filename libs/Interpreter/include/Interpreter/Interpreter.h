@@ -17,11 +17,7 @@ using namespace Typization;
 
 class Interpreter {
   public:
-	enum class LogMode {
-		all,
-		errors,
-		nothing
-	};
+	enum class LogMode { all, errors, nothing };
 	Interpreter();
 	// Интерпретация строчки, возвращает true в случае успеха
 	bool run_line(const string& line);
@@ -35,8 +31,7 @@ class Interpreter {
 	enum class Flag {
 		auto_remove_trap_states,
 		weak_type_comparison,
-		log_theory,
-		report,
+		log_theory
 	};
 	bool set_flag(Flag key, bool value);
 
@@ -187,11 +182,6 @@ class Interpreter {
 		{Flag::weak_type_comparison, false},
 		// флаг добавления теоретического блока к ф/ям в логгере
 		{Flag::log_theory, false},
-		// временный флаг для логирования в отчет, Андрей исправь
-		// отвечает за добавление шаблона функции в отчет
-		// верификатор выключает флаг во время тестирования, чтобы не логировать
-		// каждое действие (на условно 100 тестовых примерах)
-		{Flag::report, true},
 	};
 
 	// Общий вид опрерации

@@ -197,7 +197,7 @@ optional<GeneralObject> Interpreter::apply_function_sequence(
 		} else {
 			return nullopt;
 		}
-		if (flags[Flag::report]) tex_logger.add_log(log_template);
+		tex_logger.add_log(log_template);
 	}
 
 	return arguments[0];
@@ -878,7 +878,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 	LogMode prev_log_mode = log_mode;
 	if (prev_log_mode == LogMode::all) set_log_mode(LogMode::errors);
 
-	flags[Flag::report] = false;
+	tex_logger.disable();
 
 	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
@@ -900,7 +900,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 		}
 	}
 
-	flags[Flag::report] = true;
+	tex_logger.enable();
 	set_log_mode(prev_log_mode);
 
 	current_random_regex = nullopt;

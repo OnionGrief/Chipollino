@@ -2,7 +2,9 @@
 #include <fstream>
 
 void Logger::add_log(const LogTemplate& log) {
-	logs.push_back(log);
+	if (enabled) {
+		logs.push_back(log);
+	}
 }
 
 void Logger::render_to_file(const string& filename) {
@@ -42,4 +44,12 @@ void Logger::render_to_file(const string& filename) {
 	system("pdflatex ./resources/rendered_report.tex > pdflatex2.log");
 
 	cout << "successfully created report\n";
+}
+
+void Logger::enable() {
+	enabled = true;
+}
+
+void Logger::disable() {
+	enabled = false;
 }
