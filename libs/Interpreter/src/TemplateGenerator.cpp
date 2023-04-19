@@ -1,7 +1,7 @@
 #include "Interpreter/Interpreter.h"
 #include <string>
 
-bool types_equiv(vector<ObjectType> input, ObjectType output) {
+bool types_equiv(const vector<ObjectType>& input, const ObjectType& output) {
 	if (!((output == input[0]) ||
 		  (output == ObjectType::DFA && input[0] == ObjectType::NFA) ||
 		  (output == ObjectType::NFA && input[0] == ObjectType::DFA))) {
