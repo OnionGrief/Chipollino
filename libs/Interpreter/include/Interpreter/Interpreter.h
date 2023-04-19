@@ -1,6 +1,7 @@
 #pragma once
 #include "InputGenerator/RegexGenerator.h"
 #include "Interpreter/Typization.h"
+#include "Logger/Logger.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
@@ -24,15 +25,25 @@ class Interpreter {
 	bool run_file(const string& path);
 	// Установит режим логгирования в консоль
 	void set_log_mode(LogMode mode);
+	// Выгружает лог в файл
+	void generate_log(const string& filename);
 
 	enum class Flag {
 		auto_remove_trap_states,
 		weak_type_comparison,
-		log_theory,
+		log_theory
 	};
 	bool set_flag(Flag key, bool value);
 
   private:
+	// Логгер для преобразований
+	Logger tex_logger;
+	// автогенерация кратких шаблонов
+	void generate_brief_templates();
+
+	// генерация теста для всех функций
+	void generate_test_for_all_functions();
+
 	//== Внутреннее логгирование ==============================================
 	// true, если во время исполнения произошла ошибка
 	bool error = false;
@@ -158,7 +169,6 @@ class Interpreter {
 		{"auto_remove_trap_states", Flag::auto_remove_trap_states},
 		{"weak_type_comparison", Flag::weak_type_comparison},
 		{"log_theory", Flag::log_theory},
-		// Андрей, придумай сам названия
 	};
 
 	map<Flag, bool> flags = {
@@ -229,7 +239,8 @@ class Interpreter {
 
 	// Применение функции к набору аргументов
 	optional<GeneralObject> apply_function(
-		const Function& function, const vector<GeneralObject>& arguments);
+		const Function& function, const vector<GeneralObject>& arguments,
+		LogTemplate& log_template);
 
 	// Вычисление выражения
 	optional<GeneralObject> eval_expression(const Expression& expr);
@@ -245,14 +256,12 @@ class Interpreter {
 	bool run_set_flag(const SetFlag&);
 	bool run_operation(const GeneralOperation&);
 
-	// Список опреаций для последовательного выполнения
-	vector<GeneralOperation> operations;
-
 	// Сравнение типов ожидаемых и полученных входных данных
 	bool typecheck(vector<ObjectType> func_input_type,
 				   vector<ObjectType> input_type);
 	// выбрать подходящий вариант функции для данных аргументов (если он есть)
 	optional<int> find_func(string func, vector<ObjectType> input_type);
+	optional<string> get_func_id(Function function);
 
 	// Построение последовательности функций по их названиям
 	optional<vector<Function>> build_function_sequence(

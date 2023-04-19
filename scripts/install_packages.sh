@@ -30,11 +30,15 @@ dos2unix MathMode.ref
 dos2unix Postprocess.ref
 dos2unix Preprocess.ref
 dos2unix TestGenerator.ref
+dos2unix FrameFormatter.ref
+dos2unix RunFormatter.ref
 export PATH=$PATH:/usr/src/refal
 refc MathMode.ref
 refc Postprocess.ref
 refc Preprocess.ref
 refc TestGenerator.ref
+refc FrameFormatter.ref
+refc RunFormatter.ref
 cat ./../scripts/chipollino.txt
 #Надо написать сборку рефал-программ когда они будут в одной ветке, возможно еще что-то надо (для текущего комиита все собирается) - вроде есть на будущее
 #make

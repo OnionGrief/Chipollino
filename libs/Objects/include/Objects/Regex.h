@@ -1,8 +1,7 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
-#include "Logger.h"
-#include <algorithm>
+#include "iLogTemplate.h"
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -68,14 +67,14 @@ class Regex : BaseObject {
 	// Множество префиксов длины len
 	void get_prefix(int len, std::set<std::string>* prefs) const;
 	// Производная по символу
-	bool derevative_with_respect_to_sym(Regex* respected_sym,
+	bool derivative_with_respect_to_sym(Regex* respected_sym,
 										const Regex* reg_e,
 										Regex& result) const;
-	bool partial_derevative_with_respect_to_sym(Regex* respected_sym,
+	bool partial_derivative_with_respect_to_sym(Regex* respected_sym,
 												const Regex* reg_e,
 												vector<Regex>& result) const;
 	// Производная по префиксу
-	bool derevative_with_respect_to_str(std::string str, const Regex* reg_e,
+	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const;
 	pair<vector<State>, int> get_thompson(int) const;
 
@@ -87,14 +86,9 @@ class Regex : BaseObject {
 	bool is_term(int, const vector<Lexem>&)
 		const; // возвращает true, если состояние конечно
 	static bool equality_checker(const Regex*, const Regex*);
-
-	/*
-	int search_replace_rec(
-		const Regex& replacing, const Regex& replaced_by,
-		Regex* original); //рекурсивный поиск заменяемого листа дерева*/
 	void normalize_this_regex(
-		const vector<pair<Regex, Regex>>&); //переписывание regex по
-											//пользовательским правилам
+		const vector<pair<Regex, Regex>>&); // переписывание regex по
+											// пользовательским правилам
 
 	// Рекурсивная генерация алфавита
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
@@ -112,10 +106,10 @@ class Regex : BaseObject {
 	// вывод дерева для дебага
 	void print_tree();
 
-	FiniteAutomaton to_thompson() const;
-	FiniteAutomaton to_glushkov() const;
-	FiniteAutomaton to_ilieyu() const;
-	FiniteAutomaton to_antimirov() const;
+	FiniteAutomaton to_thompson(iLogTemplate* log = nullptr) const;
+	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;
+	FiniteAutomaton to_ilieyu(iLogTemplate* log = nullptr) const;
+	FiniteAutomaton to_antimirov(iLogTemplate* log = nullptr) const;
 
 	~Regex();
 	Regex* copy() const;
@@ -127,24 +121,26 @@ class Regex : BaseObject {
 	// Генерация языка из алфавита
 	void make_language();
 	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const vector<pair<Regex, Regex>>&) const;
+	Regex normalize_regex(const vector<pair<Regex, Regex>>&,
+						  iLogTemplate* log = nullptr) const;
 	bool from_string(const string&);
 	// проверка регулярок на равентсво(буквальное)
-	static bool equal(const Regex&, const Regex&);
+	static bool equal(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на эквивалентность
-	static bool equivalent(const Regex&, const Regex&);
+	static bool equivalent(const Regex&, const Regex&,
+						   iLogTemplate* log = nullptr);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
-	bool subset(const Regex&) const; // TODO
+	bool subset(const Regex&, iLogTemplate* log = nullptr) const; // TODO
 
 	// Производная по символу
-	std::optional<Regex> symbol_derevative(const Regex& respected_sym) const;
+	std::optional<Regex> symbol_derivative(const Regex& respected_sym) const;
 	// Частичная производная по символу
-	void partial_symbol_derevative(const Regex& respected_sym,
+	void partial_symbol_derivative(const Regex& respected_sym,
 								   vector<Regex>& result) const;
 	// Производная по префиксу
-	std::optional<Regex> prefix_derevative(std::string respected_str) const;
+	std::optional<Regex> prefix_derivative(std::string respected_str) const;
 	// Длина накачки
-	int pump_length() const;
+	int pump_length(iLogTemplate* log = nullptr) const;
 	// Слово, в котором все итерации Клини раскрыты n раз
 	string get_iterated_word(int n) const;
 	void regex_union(Regex* a, Regex* b);
@@ -152,14 +148,14 @@ class Regex : BaseObject {
 	void regex_star(Regex* a);
 	void regex_eps();
 
-	Regex linearize() const;
-	Regex delinearize() const;
-	Regex deannote() const;
+	Regex linearize(iLogTemplate* log = nullptr) const;
+	Regex delinearize(iLogTemplate* log = nullptr) const;
+	Regex deannote(iLogTemplate* log = nullptr) const;
 
 	// проверка регулярки на 1-однозначность
-	bool is_one_unambiguous() const;
+	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
 	// извлечение 1-однозначной регулярки методом орбит Брюггеман-Вуда
-	Regex get_one_unambiguous_regex() const;
+	Regex get_one_unambiguous_regex(iLogTemplate* log = nullptr) const;
 };
 
 /*

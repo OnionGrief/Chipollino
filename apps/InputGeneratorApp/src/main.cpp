@@ -20,8 +20,6 @@ int main() {
 	*/
 
 	cout << "Input generator\n";
-	Logger::init();
-	Logger::activate();
 
 	// Инициализируем интерпретатор
 	Interpreter interpreter;
@@ -29,13 +27,10 @@ int main() {
 
 	// Используем сгенерированный тест
 	TasksGenerator TG;
-	TG.generate_task(3, 5, false, false);
+	TG.generate_task(10, 10, false, false);
 	TG.write_to_file("test.txt");
 
 	// Загружаем в интерпретатор файл с коммандами
 	interpreter.run_file("test.txt");
-
-	// Гененрируем выходной документ, завершаем работу логгера
-	Logger::finish();
-	Logger::deactivate();
+	interpreter.generate_log("./resources/report.tex");
 }

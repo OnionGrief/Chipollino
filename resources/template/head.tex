@@ -1,0 +1,207 @@
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[mathserif]{beamer} 
+\usepackage{eulervm} %красивый математический шрифт - по желанию
+\usepackage{ulem,adjustbox} %зачёркивания
+\usepackage{bm} %особо жирный математический
+\usepackage{schemata} %для красивых блочных переходов, пользуюсь редко
+\usepackage{mathtools} %улучшенная работа с типографией в math mode
+\setbeamertemplate{navigation symbols}{} %отключает управляющие символы в правом нижнем углу
+\usefonttheme{professionalfonts}
+\usepackage{cmap} %чтобы были работающие гиперссылки
+\usepackage{makeidx,fancybox,tikz,nicematrix}
+\usepackage[inkscapearea=page]{svg}
+\usetikzlibrary{automata, positioning, arrows,patterns}
+\usetikzlibrary{arrows.meta}
+\usepackage{tempora} %по желанию -- русские штрифты с засечками
+\usepackage{dirtree} %дерево вычислений
+
+\mode<presentation>
+{
+% \usetheme{Warsaw}
+%  \usetheme{Frankfurt}
+%  \usetheme{Singapore}
+%  \usetheme{Boadilla}
+%  \usetheme{Montpellier}
+%  \usetheme{Szeged}
+  \usetheme{CambridgeUS} %тут решайте сами, что выбрать
+    % or ...
+
+%  \usecolortheme{dolphin}
+  \usecolortheme{dove} %аналогично
+%  \usecolortheme{wolverine}
+%  \usecolortheme{crane}
+
+%  \usefonttheme{structurebold}
+%  \usefonttheme{structuresmallcapsserif}
+
+%  \setbeamercovered{transparent}
+}
+\usepackage[T1,T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian,english]{babel}
+\usepackage{amsmath,mathrsfs,mathabx} %ещё больше математических символов
+\usepackage{amstext}
+\usepackage{graphicx,relsize}
+\graphicspath{ {./resources/} }
+
+\usepackage{color}
+\definecolor{gray}{rgb}{0.4,.4,0.4} %здесь можно определить собственные цвета
+\definecolor{grey80}{rgb}{0.8,.8,0.8}
+\definecolor{grey90}{rgb}{0.9,.9,0.9}
+\definecolor{grey95}{rgb}{0.95,.95,0.95}
+\definecolor{green80}{rgb}{0.2,.6,0}
+\definecolor{teal80}{rgb}{0,.2,1}
+\definecolor{violet80}{rgb}{0.6,.0,4}
+\definecolor{yellow80}{rgb}{0.7,.7,0}
+\definecolor{HeaderColor}{rgb}{0.85,.86,0.95}
+
+\newcommand\redstroke{\bgroup\markoverwith
+{\textcolor{red}{\rule[0.5ex]{0.3ex}{0.2ex}}}\ULon} %зачёркивание красной чертой, масштабируется размером шрифта
+
+\newcommand\reduline{\bgroup\markoverwith
+{\textcolor{red}{\rule[-0.5ex]{2pt}{1.5pt}}}\ULon}%подчёркивание жирной красной чертой
+
+\newcommand\bluline{\bgroup\markoverwith
+{\textcolor{blue}{\rule[-0.5ex]{2pt}{1.5pt}}}\ULon}
+
+\newcommand\bolduline{\bgroup\markoverwith
+{\textcolor{white}{\rule[-0.5ex]{2pt}{1.5pt}}}\ULon}
+
+\title[] {Логи}
+
+\author[Chipollino]{Лучшая команда разработчиков по ТФЯ} % :((
+\date[] 
+{2023 г.}
+\subject{Computer Science}
+
+\newcommand{\Lang}{\mathscr{L}} %макрос для языка регулярки или автомата
+\def\logor{\mathrel{\vee}} %отрендеренные логические операторы (с правильными интервалами)
+\def\logimpl{\mathrel{\Rightarrow}}
+\def\logand{\mathrel{\&}}
+\def\lognot{\mathop{\neg}}
+\def\iff{\mathrel{\Leftrightarrow}}
+\def\quantall#1{\mathop{\forall #1}}
+\def\quantex#1{\mathop{\exists #1}} 
+
+\def\Linearize{\mathtt{Linearize}} %названия операций интерпретатора записываем моноширинным
+\def\First{\mathrm{First}} %названия прочих операций записываем обычным шрифтом, но не тем, который в math mode по умолчанию
+\def\Last{\mathrm{Last}}
+\def\Follow{\mathrm{Follow}}
+\def\Glushkov{\mathtt{Glushkov}}
+\def\Thompson{\mathtt{Thompson}}
+\def\MergeBisim{\mathtt{MergeBisim}}
+\def\Complement{\mathtt{Complement}}
+\def\RemEps{\mathtt{RemEps}}
+\def\IlieYu{\mathtt{IlieYu}}
+\def\Antimirov{\mathtt{Antimirov}}
+\def\Intersect{\mathtt{Intersect}}
+\def\Reverse{\mathtt{Reverse}}
+\def\Union{\mathtt{Union}}
+\def\DeLinearize{\mathtt{DeLinearize}}
+\def\Annote{\mathtt{Annote}}
+\def\DeAnnote{\mathtt{DeAnnote}}
+\def\Disambiguate{\mathtt{Disambiguate}}
+\def\Difference{\mathtt{Difference}}
+\def\PumpLength{\mathtt{PumpLength}}
+\def\ClassLength{\mathtt{ClassLength}}
+\def\States{\mathtt{States}}
+\def\Normalize{\mathtt{Normalize}}
+\def\ClassCard{\mathtt{ClassCard}}
+\def\Ambiguity{\mathtt{Ambiguity}}
+\def\MyhillNerode{\mathtt{MyhillNerode}}
+\def\GlaisterShallit{\mathtt{GlaisterShallit}}
+\def\PrefixGrammar{\mathtt{PrefixGrammar}}
+\def\PGtoNFA{\mathtt{PGtoNFA}}
+\def\Bisimilar{\mathtt{Bisimilar}}
+\def\Minimal{\mathtt{Minimal}}
+\def\Subset{\mathtt{Subset}}
+\def\Deterministic{\mathtt{Deterministic}}
+\def\Test{\mathtt{Test}}
+\def\Verify{\mathtt{Verify}}
+\def\Equiv{\mathtt{Equiv}}
+\def\Equal{\mathtt{Equal}}
+\def\OneUnambiguity{\mathtt{OneUnambiguity}}
+\def\SemDet{\mathtt{SemDet}}
+\def\Determinize{\mathtt{Determinize}}
+\def\Minimize{\mathtt{Minimize}}
+\def\Arden{\mathtt{Arden}}
+\def\RemoveTrap{\mathtt{RemoveTrap}}
+\def\Test{\mathtt{Test}}
+\def\Verify{\mathtt{Verify}}
+
+\def\VoidTYPE{\mathtt{VOID}}
+\def\RegexTYPE{\mathtt{Regex}}
+\def\DFATYPE{\mathtt{DFA}}
+\def\NFATYPE{\mathtt{NFA}}
+\def\IntTYPE{\mathtt{Int}}
+\def\PrefixGrammarTYPE{\mathtt{PrefixGrammar}}
+\def\BooleanTYPE{\mathtt{Bool}}
+\def\OptionalBoolTYPE{\mathtt{OptionalBool}}
+\def\AmbiguityValueTYPE{\mathtt{Value}}
+\def\ArrayTYPE{\mathtt{Array}}
+\def\TypeIs{\;\bm{\textcolor{red}{:\,:}\;}}
+\def\toolongseq{\;\dots}
+
+\def\VerifParameter{\bigvarstar}
+\def\alter{\ensuremath{\mathrel{\vert}}}%отрендеренные регулярные операторы 
+\def\star{\ensuremath{^{*}}}%отрендеренные регулярные операторы 
+\def\regexpstr#1{\mathtt{#1}}%буквы внутри регулярок переписываются в моноширинный
+\def\regexparg#1{\;\bigl\{\regexpstr{#1}\bigr\}}
+\newcommand{\Nat}{\mathbb N}
+\newcommand{\transit}[1]{\overset{#1}{\longrightarrow}} %переход по слову/букве
+\newcommand{\pair}[2]{\langle{#1},\;{#2}\rangle} %тип пары
+\newcommand{\var}[1]{\;\mathtt{#1}} %имя переменной
+\newcommand{\empt}{\varepsilon} %пустое слово
+\newcommand{\bottom}{\bot} %противоречие
+\newcommand{\rar}{\rightarrow} %стрелка вправо. Для экономии букв.
+\newcommand{\RegExp}{\mathcal{RE}} %макрос для обозначения множества всех регулярок
+\newcommand{\Aut}{\mathscr{A}}
+\newcommand{\seq}{\;{=}\;}
+\def\VerifParameter{\bigvarstar}
+
+\newenvironment{wideitemize}{\itemize\addtolength{\itemsep}{8pt}}{\enditemize}
+
+\newenvironment{narritemize}{\itemize\addtolength{\itemsep}{-0.5ex}}{\enditemize}
+%в преамбулу можно и нужно добавлять свои макросы
+
+\newcommand{\AddTRAPIcon}[1]{\raisebox{-1ex}{
+\begin{tikzpicture}[#1]%
+\draw [red!50!black] (0,0) -- (0,2ex);%
+\draw [red!50!black] (0,2ex) -- (2.5ex,2ex);%
+\draw [red!50!black] (2.5ex,2ex) -- (2.5ex,0);%
+\draw [red!50!black] (2.5ex,0) -- (0,0);%
+\draw [red!50!black] (1.25ex,0.95ex) node {$\mathsmaller{\mathtt{T}}$};
+\end{tikzpicture}%
+}}
+\newcommand{\RemoveTRAPIcon}[1]{\raisebox{-1ex}{
+\begin{tikzpicture}[#1]%
+\draw [red!50!black] (0,0) -- (0,2ex);%
+\draw [red!50!black] (0,2ex) -- (2.5ex,2ex);%
+\draw [red!50!black] (2.5ex,2ex) -- (2.5ex,0);%
+\draw [red!50!black] (2.5ex,0) -- (0,0);%
+\draw [red!50!black] (1.25ex,0.95ex) node {$\mathsmaller{\mathtt{T}}$};
+\draw [red!50!black,thick] (0,0) -- (2.5ex,2ex);%
+\end{tikzpicture}%
+}}
+\newcommand{\MinimalIcon}[1]{\raisebox{-1ex}{
+\begin{tikzpicture}[#1]%
+\draw [green!50!black] (0,0) -- (0,2ex);%
+\draw [green!50!black] (0,2ex) -- (2.5ex,2ex);%
+\draw [green!50!black] (2.5ex,2ex) -- (2.5ex,0);%
+\draw [green!50!black] (2.5ex,0) -- (0,0);%
+\draw [green!50!black] (1.25ex,0.95ex) node {$\mathsmaller{\mathsmaller{\mathsmaller{\mathtt{M\hspace*{-0.1ex}I\hspace*{-0.1ex}N}}}}$};
+\end{tikzpicture}%
+}}
+\newcommand{\MonoidIcon}[1]{\raisebox{-1ex}{
+\begin{tikzpicture}[#1]%
+\draw [teal80!60!black] (0,0) -- (0,2ex);%
+\draw [teal80!60!black] (0,2ex) -- (2.5ex,2ex);%
+\draw [teal80!60!black] (2.5ex,2ex) -- (2.5ex,0);%
+\draw [teal80!60!black] (2.5ex,0) -- (0,0);%
+\draw [teal80!60!black] (1.25ex,0.95ex) node {$\mathsmaller{\equiv}$};
+\end{tikzpicture}%
+}}
+
+\begin{document}
+
+\maketitle

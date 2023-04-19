@@ -1,0 +1,267 @@
+/* Crazy Refal-style. Bracket balance is completely ignored, since it does not affect anything. We assume no epsilons in indices! */
+$ENTRY TrueMathMode {
+ e.Input = <SeparateModes (<SpecialSymbolList>) Normal () e.Input>;
+}
+
+$ENTRY Trim {
+ e.y'\t' = <Trim e.y>;
+'\t'e.y = <Trim e.y>;
+ e.y' ' = <Trim e.y>;
+' 'e.y = <Trim e.y>;
+ e.y = e.y;
+}
+
+/* Hacked derivatives. TODO: parameterize by indices activation */
+SpecialSymbolList {
+ = (NOREGEX ('eps')('\\empt'))(NOREGEX ('DERIV')('\\delta_'))(OK ('FIRST')('\\First'))(OK ('FOLLOW')('\\Follow'))(OK ('LAST')('\\Last'))
+   (OK ('UNION')('\\cup'))(NOREGEX ('LANG')('\\Lang'))(OK ('>->>')('\\transit'));
+}
+
+SeparateModes {
+ (e.S1 (s.Sort (e.Spec)(e.Image)) e.S2) Normal (e.Prefix) e.Spec e.Rest
+ , e.S1 (s.Sort (e.Spec)(e.Image)) e.S2 : e.SymbList
+ , s.Sort : 
+ {
+  NOREGEX
+ , <Trim e.Prefix> :
+ {, e.Rest : s.1 s.2 e.s 
+  , <InSet (<AnnoteSym><LinearizeSym>)(s.1)><InSet (<Numbers>)s.2> :
+ {True True
+ 	= <SeparateModes (e.SymbList) Normal ('E') e.Rest>;
+  e.OtherValues = e.Image<SeparateModes (e.SymbList) Normal () e.Rest>; 
+  };
+  e.Nempt
+  , e.Rest : s.1 s.2 e.s 
+  , <InSet (<AnnoteSym><LinearizeSym>)(s.1)><InSet (<Numbers>)s.2> :
+ {True True
+ 	= <SeparateModes (e.SymbList) Normal (e.Prefix 'E') e.Rest>;
+  e.OtherValues = '\\regexpstr{'<MathMode e.Nempt>' }' e.Image<SeparateModes (e.SymbList) Normal () e.Rest>; 
+  }; 
+   = e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
+  e.Nempt = '\\regexpstr{'<MathMode e.Nempt>' }' e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
+ };
+ OK = <SeparateModes (e.SymbList) Normal (e.Prefix e.Image) e.Rest>;
+ };
+ (e.Spec) Normal (e.Prefix) s.Sym e.Rest
+ , <InSet (<ASCIIStandard>) s.Sym> :
+ { True = <SeparateModes (e.Spec) Normal (e.Prefix s.Sym) e.Rest>;
+   False
+  , <Trim e.Prefix> :
+   { = <SeparateModes (e.Spec) Text (s.Sym) e.Rest>;
+    e.Nempty = '\\regexpstr{'<MathMode e.Nempty>' }'<SeparateModes (e.Spec) Text (s.Sym) e.Rest>;
+   };
+ };
+ (e.Spec) Text (e.Prefix) s.Sym e.Rest
+ , <InSet (<ASCIIStandard>) s.Sym> :
+ { False = <SeparateModes (e.Spec) Text (e.Prefix s.Sym) e.Rest>;
+   True
+   , <InSet (<Punctuation>) s.Sym> :
+   { False = '\\text{'e.Prefix' }'<SeparateModes (e.Spec) Normal (s.Sym) e.Rest>;
+     True
+     , <FirstSym (<ASCIIStandard>) e.Rest> :
+      { False = <SeparateModes (e.Spec) Text (e.Prefix s.Sym) e.Rest>;
+        True = '\\text{'e.Prefix s.Sym' }'<SeparateModes (e.Spec) Normal ( ) e.Rest>;
+      };
+   };
+ };
+ (e.Spec) Text (e.Prefix) = '\\text{'e.Prefix' }';
+ (e.Spec) Normal ( ) = ;
+ (e.Spec) Normal (e.Prefix) = '\\regexpstr{'<MathMode e.Prefix>' }';
+}
+
+AdjustSpaceBeforeStar {
+ e.x, <LastSym (<Numbers>) e.x> :
+ { True = '\\hspace*{-0.5ex}';
+   False = '\\hspace*{-0.09ex}';
+ };
+}
+
+MathMode {
+ e.x'->'e.y = <MathMode e.x>'\\rar '<MathMode e.y>;
+ e.x'|'e.y = <MathMode e.x>'\\alter '<MathMode e.y>;
+ e.x'*'e.y
+ , <LastSym (' \\\t')e.x><Nempty e.x> 
+ : { False True  = <MathMode e.x>'{}'<AdjustSpaceBeforeStar e.x>'\\star '<MathMode e.y>;
+     True True = <MathMode e.x>'\\;\\VerifParameter '<MathMode e.y>;
+     False False = '\\VerifParameter '<MathMode e.y>;
+ };
+  = ;
+ e.x = <IndexModes Outer ()() e.x>;
+}
+
+AnnoteLinearizeIfNeeded {
+ e.Ind e.y
+ , <InSet (<AnnoteSym><LinearizeSym>)(e.Ind)> : True = <AnnoteLinearize e.Ind e.y>;
+ e.Z = <HorizHack e.Z>;
+}
+
+IndexModes {
+ s.AnyMode (e.Before)(e.Index) e.Ind e.y
+ , <InSet (<AnnoteSym><LinearizeSym>)(e.Ind)> : True
+ , <IndexCont e.y> : 
+  {True
+   , s.AnyMode :
+  {Index = <IndexModes Index (e.Before)(e.Index e.Ind) e.y>;
+   Outer
+   , <LastSym (<Letters>)e.Before> :
+   { True = <IndexModes Index (e.Before)(e.Ind) e.y>;
+     False = <IndexModes Outer (e.Before e.Ind)() e.y>;
+   };};
+   False
+  ,  s.AnyMode :
+  {Index
+    = e.Before'_{'<AnnoteLinearizeIfNeeded e.Index>'}'<IndexModes Outer (e.Ind)() e.y>;
+   Outer
+    = <IndexModes Outer (e.Before e.Ind)() e.y>;
+  }; };
+ s.AnyMode (e.Before)(e.Index) s.Sym e.y
+ , <InSet (<Numbers>) s.Sym > : 
+ { True
+  , s.AnyMode :
+ {Index = <IndexModes Index (e.Before)(e.Index s.Sym) e.y>;
+  Outer,
+   <LastSym (<Letters>)e.Before> :
+  {True = <IndexModes Index (e.Before)(e.Index s.Sym) e.y>;
+   False = <IndexModes Outer (e.Before s.Sym)() e.y>
+ };};
+   False
+  , s.AnyMode :
+  {Index = e.Before'_{'<AnnoteLinearizeIfNeeded e.Index>'}'<IndexModes Outer (s.Sym)() e.y>;
+   Outer = <IndexModes Outer (e.Before s.Sym)() e.y>;};
+ };
+ Outer (e.Before)() s.Any e.y
+   = <IndexModes Outer (e.Before s.Any)() e.y>;
+ Outer (e.Before)() = e.Before;
+ Index (e.Before)(e.Index) = e.Before'_{'<AnnoteLinearizeIfNeeded e.Index>'}';
+}
+
+IndexCont {
+ e.Ind e.y
+ , <InSet (<AnnoteSym><LinearizeSym>) (e.Ind)> : True
+  = <FirstSym (<Numbers>) e.y>;
+ s.Sym e.y = <InSet (<Numbers>) s.Sym>;
+ e.Z = False;
+}
+
+/* We assume that every numeric index is preceded with an annotation showing the annotation source
+   Namely, every index coming from Linearize is preceded with a dot, and every index coming from Annote is preceded with a comma
+   Rendered linearize indices are faint, and annote indices are full-colored. They are separated by 0.5ex intervals
+*/
+AnnoteLinearize {
+ e.Linear e.x e.y
+ , <InSet (<LinearizeSym>) (e.Linear)><InSet (<Numbers>) e.x><FirstSym (<Numbers>) e.y> : True True False
+   = '\\pgfsetfillopacity{0.6}{'<HorizHack e.x>'}\\pgfsetfillopacity{1}'<SeparateAnnote e.y><AnnoteLinearize e.y>;
+ e.Annote e.x e.y
+ , <InSet (<AnnoteSym>)(e.Annote)><InSet (<Numbers>) e.x><FirstSym (<Numbers>) e.y> : True True False
+   = '{'<HorizHack e.x>'}'<SeparateAnnote e.y><AnnoteLinearize e.y>;
+  e.y = <HorizHack e.y>; /* This must be a plain number without any annotation, so do nothing - merely HorizHack */
+}
+
+SeparateAnnote {
+ e.y, <FirstSym (<IndicesAlphabet>) e.y> :
+ { True = '\\hspace{-0.07ex},\\hspace{-0.05ex}';
+   False = ;
+ };
+}
+
+$ENTRY Separator {
+ (e.Before)',' e.After
+ , <FirstSym (<Numbers>) e.After> : 
+ { True = False;
+   False = True;
+ };
+ (e.Before) t.Any e.After = False;
+}
+
+
+HorizHack {
+  = ;
+ s.x e.y = '\\hspace*{-0.09ex}'s.x<HorizHack e.y>;
+}
+
+$ENTRY IndicesAlphabet {
+ = '0123456789.,';
+}
+
+LinearizeSym {
+ = ('.');
+}
+
+AnnoteSym {
+ = (',');
+}
+
+$ENTRY Numbers {
+ = '0123456789';
+}
+
+$ENTRY Punctuation {
+ = ' ,.:;';
+}
+
+$ENTRY Letters {
+ = 'qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM';
+}
+
+$ENTRY InSet {
+ (e.x) t.Next e.data
+ , e.x :
+ { e.x1 t.Next e.x2 = <InSet (e.x) e.data>;
+   e.xx = False;
+ };
+ (e.x) = True;
+}
+
+$ENTRY FirstSym {
+ (e.x) s.Sym e.Next e.data
+ , e.x :
+ { e.x1 (s.Sym e.Next) e.x2 = True;
+   e.x1 s.Sym e.x2 = True;
+   e.Z = False;
+ };
+ (e.x) = False;
+}
+
+$ENTRY LastSym {
+ (e.x) e.data t.Next 
+ , e.x :
+ { e.x1 t.Next e.x2 = True;
+   e.xx = False;
+ };
+ (e.x) = False;
+}
+
+$ENTRY NonASCII {
+ (e.Set) s.1 e.Rest
+ , e.Set : 
+ { e.S1 s.1 e.S2 = <NonASCII (e.Set) e.Rest>;
+   e.Fail = True;
+ };
+ (e.Set) = False;
+}
+
+$ENTRY ASCIIStandard {
+  = <Numbers><Letters>'$%&*()-_=+`~!@#;:\'\"<>,./?[]{}\\|^ \t\n';
+}
+
+$ENTRY Nempty {
+t.Sym e.Rest = True;
+ = False;
+}
+
+$ENTRY Min {
+ s.1 s.2
+ , <Compare s.1 s.2> :
+ {'-' = s.1;
+  s.Rest = s.2;
+ };
+}
+
+$ENTRY Max {
+ s.1 s.2
+ , <Compare s.2 s.1> :
+ {'-' = s.1;
+  s.Rest = s.2;
+ };
+}
+

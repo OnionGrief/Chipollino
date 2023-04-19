@@ -1,0 +1,756 @@
+/******************************
+Preamble is: head.tex
+report.tex is split to frames.
+Every frame is processed separatedly.
+Frame has the following attributes:
+(title)(list-of-objects) DefaultWidth DefaultHeight PageHeight
+list-of-objects:
+[((preamble)(rendered_object)MPFlag FrameFlag WidthPercent HeightPercent)]*
+Page parameters are taken from file pagedata
+
+*******************************/
+
+$EXTERN TrueMathMode,FirstSym, Numbers, InSet, Letters, ASCIIStandard, NonASCII, Trim, Nempty, Min, Max;
+
+$ENTRY Flatten {
+ e.x(e.y)e.z = e.x <Flatten e.y e.z>;
+ e.w = e.w;
+}
+
+Balanced {
+ (e.B1(t.Open t.Close)e.B2) e.y1 t.Open e.y2 t.Close e.y3
+   = <Balanced (e.B1(t.Open t.Close)e.B2) e.y1 e.y2 e.y3>;
+ (e.B1(e.Brs1 t.AnyBr e.Brs2) e.B2) e.y1 t.AnyBr e.y2 = False;
+ (e.BrPairs) e.y = True;
+}
+
+$ENTRY MakeFrames {
+  s.DW s.MPW Normal '%begin detailed'e.Endl
+   = <MakeFrames s.DW s.MPW Theory <Get 1>>;
+  s.DW s.MPW Theory e.Smth '%end detailed'e.Endl
+   = <Putout 2 e.Smth> <MakeFrames s.DW s.MPW Normal <Get 1>>;
+  s.DW s.MPW Theory e.Smth
+   = <Putout 2 e.Smth> <MakeFrames s.DW s.MPW Theory <Get 1>>;
+  s.DW s.MPW Normal '\\begin{frame}{'e.Name'}'e.Endl
+  , <Balanced (('{}'))e.Name> : True
+   = <MakeFrames s.DW s.MPW Frame (e.Name)() <Trim <Get 1>>>;
+  s.DW s.MPW Frame (e.Name)(e.Content) e.1'\\end{frame}'
+  , <Br 'First=+'> : e.Trash
+   = <Putout 2 '\\begin{frame}{'e.Name'}'><Putout 2 '\\footnotesize'><RenderFrame (e.Name)<GenAbsValues <ExtractLimitations 'pagedata'>> 
+                                          <Sub <FrameData Height> <TitleHeight e.Name>>  
+                          <ParseFrame s.DW s.MPW Normal () e.Content (e.1)>>
+			  <Putout 2 '\\end{frame}'>
+     <Tracer><MakeFrames s.DW s.MPW Normal <Get 1>>;
+  s.DW s.MPW Frame (e.Name)(e.Content) e.Line
+   = <MakeFrames s.DW s.MPW Frame (e.Name) (e.Content (e.Line)) <Trim <Get 1>>>;
+  s.DW s.MPW Normal e.Line 0 = ;
+  s.DW s.MPW Normal e.Line = <Putout 2 e.Line><MakeFrames s.DW s.MPW Normal <Get 1>>;
+} 
+
+TitleHeight {
+  = 0;
+ e.Anything = 35;
+}
+
+$ENTRY FrameData {
+ Height = 320; /* Space that can be really used */
+ MaxHeight = 350; /* This is for the zoom machinery of adjustbox */
+ Width = 600;
+ LabelWidth = 70; /* For automata labels */
+ MaxZoom = 250;
+ MinZoom = 50;
+ OptZoom = 150; /* div 100 */
+}
+
+$ENTRY ExSize {
+ normalsize = (<Div <FrameData Width> 72>)(<Div <FrameData MaxHeight> 30>);
+ small = (<Div <FrameData Width> 76>)(<Div <FrameData MaxHeight> 35>);
+ footnotesize = (<Div <FrameData Width> 85>)(<Div <FrameData MaxHeight> 40>);
+ scriptsize = (<Div <FrameData Width> 95>)(<Div <FrameData MaxHeight> 45>);
+}
+
+$ENTRY String_Length {
+ e.String = <Div <AuxLen String 0 e.String> 3>;
+}
+
+$ENTRY List_Length {
+ e.List = <AuxLen List 0 e.List>;
+}
+
+$ENTRY AllSeparators {
+ All = (','(NotBefore <Numbers>))
+   (')'(NotBefore ')*,}'('\\}')))
+   ('|'(NotBefore ))
+   (' '(NotBefore ))
+   (';'(NotBefore ))
+   ('='(NotBefore '!<>'))
+   ('}'(NotBefore ')*,'('\\}')))
+   ('*'(NotBefore '*),}'('\\}')));
+ Strict = (','(NotBefore <Numbers>))
+   ('='(NotBefore '!<>'))
+   (';'(NotBefore ))
+   ('}'(NotBefore ')*,'('\\}')));
+}
+
+/* Wanted Width + Letter Height + Wanted Size in letters + Lines accumulated */
+$ENTRY SplitToLines {
+ s.Mode s.DefWidth s.ExH s.Size (e.Lines) = (e.Lines)(s.Size)(<Mul s.ExH <Add 2 <List_Length e.Lines>>>);
+ s.Mode s.DefWidth s.ExH s.Size (e.Lines) e.Formula
+ , <TakePrefix <Mul s.Size 3> e.Formula> : e.Prefix (e.Next)
+ , e.Next :
+ { = (e.Lines (e.Prefix))(s.Size)(<Mul s.ExH <Add <List_Length e.Lines> 2>>);
+  e.Z
+ , <FindSeparator s.Mode Last ()(e.Next) e.Prefix> : 
+ { (e.Before) e.After OK
+  = <SplitToLines s.Mode s.DefWidth s.ExH s.Size (e.Lines (e.Before'\\\\')) e.After e.Next>;
+ (e.Before) NONE
+ , s.Mode :
+ {All
+     = <SplitToLines s.Mode s.DefWidth s.ExH s.Size (e.Lines (e.Before'\\\\')) e.Next>;
+  Strict = <SplitToLines s.Mode s.DefWidth s.ExH <Add s.Size 1> (e.Lines) e.Formula>; 
+ };
+ };
+ };
+}
+
+FindSeparator {
+ s.Mode Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
+ , <AllSeparators s.Mode> : e.S1 (s.Sym (NotBefore e.Set)) e.S2
+ , <FirstSym (e.Set) e.WholeSuffix> : False
+    = (e.Prefix s.Sym)e.AccSuffix OK;
+ s.Mode Last (e.AccSuffix)(e.WholeSuffix) e.Prefix s.Sym
+   = <FindSeparator s.Mode Last (s.Sym e.AccSuffix)(s.Sym e.WholeSuffix) e.Prefix>;
+ s.Mode Last (e.AccSuffix)(e.WholeSuffix) = (e.AccSuffix) NONE;
+}
+
+
+TakePrefix {
+  0 e.Rest = (e.Rest);
+ s.Size = ();
+ s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight (e.Rest) s.Sym>> e.Rest>;
+}
+
+Weight {
+ (e.Any) '|' = 7;
+ (e.Any) '-' = 4;
+ (' ') '*' = 4;
+ (e.Any) '*' = 2;
+ (e.Any) ' '
+ , <FirstSym (<ASCIIStandard>) e.Any> :
+ {True = 1;
+  False = 2;
+ };
+ (e.Any) '=' = 9;
+ (e.Any) '(' = 2;
+ (e.Any) ')' = 2;
+ (e.Any) '{' = 2;
+ (e.Any) '}' = 2;
+ (e.Any)','
+ , <FirstSym (<Numbers>) e.Any> :
+ {True = 0;
+  False = 3;
+ };
+ (e.Any)'.'
+ , <FirstSym (<Numbers>) e.Any> :
+ {True = 0;
+  False = 3;
+ };
+ (e.Any) s.Sym, <InSet (<Numbers>) s.Sym> :
+ {True = <Add 1 <Mod <Random 1> 2>>;
+  False
+ , <InSet (<ASCIIStandard>) s.Sym> :
+ {True = 3;
+  False = 1; /* Brute Unicode processing */
+ };
+ };
+}
+
+SafeSub {
+ s.N1 s.N2, <Compare s.N1 s.N2> : 
+ {'-' = 0;
+  s.Any = <Sub s.N1 s.N2>;
+ };
+}
+
+
+
+Tracer {
+ =;
+}
+
+GenAbsValues {
+ s.WidthPercent s.HeightPercent
+  = <Div <Mul <FrameData Width> s.WidthPercent> 100> 0 
+                      /*<Div <Mul <FrameData Height> s.HeightPercent> 100>*/; 
+}
+
+ChooseHeight {
+ '+' s.1 s.2 = <Min s.1 <FrameData Height>>;
+ '-' s.1 s.2 = <Min <Min s.1 s.2> <CurrentHeight>>;
+}
+
+CurrentHeight {
+ , <Cp 'First'> :
+ {'+' = <Sub <FrameData Height> <TitleHeight 'any'>>;
+  '-' = <FrameData Height>;
+ };
+}
+
+MakeBestZoom {
+ s.Width s.Height 
+ , <FrameData Width> <CurrentHeight> : s.MaxWidth s.MaxHeight
+ , <Div <Mul s.Width 100> s.MaxWidth> <Div <Mul s.Height 100> s.MaxHeight> : s.ZW s.ZH
+ , <Compare <Min s.ZW s.ZH> 30> :
+ { '-' = s.Height;
+   s.Any
+  , <Compare s.ZH 50> :
+  {'+'
+   , <ExtractLimitations 'pagedata'> : s.MP s.Fr = <Min <Div <Mul s.MaxHeight s.Fr> 100> s.Height>;
+   s.Any2 = s.Height;
+  };
+ };
+}
+
+RenderFrame {
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight = ; /* Nothing to render, all previous fits in minipages */
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.LastObject) /* The last object is always rendered normally */
+ , e.LastObject : s.Sort (e.AllContent) s.FlagMP s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
+   , s.WidNorm : s.WidthPercent
+   , s.HeightNorm : s.HeightPercent
+   , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
+     <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>;
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object) e.Rest
+ , e.Object : s.Sort (e.AllContent) Normal s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm /* If the object does not fit a minipage, it is rendered normally */
+   , s.WidNorm : s.WidthPercent
+   , s.HeightNorm : s.HeightPercent0
+   , <MakeBestZoom s.WidthPercent s.HeightPercent0> : s.HeightPercent
+   , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
+     <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
+     <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object)(e.NextObject) e.Rest
+ , e.Object : Diagram (e.AllContent) MiniPage s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
+ , e.NextObject : Diagram (e.AllContent2) MiniPage s.FlagF s.WidP2 s.HP2 s.WidNorm2 s.HeightNorm2
+   , s.WidP s.WidP2 : s.WidthPercent s.WidthPercent2
+   , s.HP s.HP2 : s.HeightPercent0 s.HeightPercent20
+   , <MakeBestZoom s.WidthPercent s.HeightPercent0>
+     <MakeBestZoom s.WidthPercent2 s.HeightPercent20> : s.HeightPercent s.HeightPercent2
+   , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlagV1 s.NewPageFlagV1 s.RestPageV1
+   , <PageEsteem s.PageHeight s.HeightPercent2 s.DefHeight> : s.BeforeFlagV2 s.NewPageFlagV2 s.RestPageV2
+   , <ChooseMaxCase s.BeforeFlagV1 s.BeforeFlagV2 s.NewPageFlagV1 s.NewPageFlagV2 s.RestPageV1 s.RestPageV2>
+          : s.BeforeFlag s.NewPageFlag s.RestPage
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
+     <GenContent MiniPage s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (Diagram (e.AllContent))>
+     <Putout 2 '\\hfill'>
+     <GenContent MiniPage s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent2 s.PageHeight> (Diagram (e.AllContent2))>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
+     <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (Formula e.ObjectData) (Formula e.ObjectDataNext) e.Rest
+ , e.ObjectData : ((e.Comment)e.Content) e.MD
+ , e.ObjectDataNext : (()e.ContentwithnoPreamble) e.MD2
+ , <InsertFillIfNeeded e.Comment> : e.Rubbish
+ , <PutComment s.PageHeight Formula e.ObjectData> : 
+ {s.RestPageHeight
+ , <RenderAdjacentFormulas (e.Name) s.DefWidth s.DefHeight s.RestPageHeight 
+       (Formula (()e.Content)e.MD) (Formula e.ObjectDataNext) e.Rest>
+    : {s.LeftPageHeight e.RestObjects
+     = <RenderFrame (e.Name) s.DefWidth s.DefHeight s.LeftPageHeight e.RestObjects>;}; };
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object) e.Rest
+ , e.Object : s.Sort (e.AllContent) s.Any s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
+   , s.WidNorm : s.WidthPercent
+   , s.HeightNorm : s.HeightPercent0
+   , <MakeBestZoom s.WidthPercent s.HeightPercent0> : s.HeightPercent
+   , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlag s.NewPageFlag s.RestPage
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
+     <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
+     <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;     
+}
+
+ExtractWidth {
+ (Formula (e.AllContent (Normal (e.C1) (e.C2) e.R) e.AC2) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+   = OVERFLOW (s.WidthNorm s.HeightNorm);
+ (Formula ((t.NotEmptyPreamble e.Rest) e.AllContent) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+   = OVERFLOW (s.WidthNorm s.HeightNorm);
+ (Formula (e.AllContent) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+ , <Compare s.WidthNorm <Sub <FrameData Width> 20>> 
+ : {'-' = s.WidthNorm (s.WidthNorm s.HeightNorm); 
+    s.Any = OVERFLOW (s.WidthNorm s.HeightNorm);
+ };
+}
+
+AccumulateCols {
+ s.Num s.LeftWidth = s.LeftWidth s.Num;
+ 5 s.LeftWidth e.Rest = s.LeftWidth 5 e.Rest;
+ s.Num s.LeftWidth t.Formula e.Rest
+ , <ExtractWidth t.Formula> :
+ { OVERFLOW (s.WidthNorm s.HeightNorm)
+  , s.Num :
+  { 0 = (s.WidthNorm s.HeightNorm <PrepareAdjacentFormula t.Formula>) s.LeftWidth 1 e.Rest;
+    s.Other = s.LeftWidth s.Num t.Formula e.Rest;
+  };
+   s.NotOverflow (s.WidthNorm s.HeightNorm)
+   , <Compare <Sub s.LeftWidth 20> s.WidthNorm> :
+    { '+' = (s.WidthNorm s.HeightNorm <PrepareAdjacentFormula t.Formula>) 
+            <AccumulateCols <Add s.Num 1> <Sub <Sub s.LeftWidth s.WidthNorm> 20> e.Rest>;
+      s.NotPlus = s.LeftWidth s.Num t.Formula e.Rest;
+    };
+ };
+}
+
+PrepareAdjacentFormula {
+ (Formula ((e.Preamble) e.Content) e.MetaData) = (Formula (()e.Content));
+}
+
+GenManyMP {
+ s.FreeSpace s.DH s.DW s.Total (s.Width s.Height (s.Sort (e.AllContent)))
+   = <Putout 2 '\\begin{minipage}{'<ToVal <Div <Mul 100 <Add s.Width <Div s.FreeSpace s.Total>>> s.DW>>'\\textwidth}'>
+    <ChooseContent s.DH Normal s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}'>;
+ s.FreeSpace s.DH s.DW s.Total (s.Width s.Height (s.Sort (e.AllContent))) e.RestFormulas
+ , <Div <Mul 100 <Add s.Width <Div s.FreeSpace s.Total>>> s.DW> : s.PreVal
+ , <Compare s.PreVal 10> :
+ {'+'
+      = <Putout 2 '\\begin{minipage}{'<ToVal s.PreVal>'\\textwidth}'>
+    <ChooseContent s.DH Normal s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}\\hfill'><GenManyMP s.FreeSpace s.DH s.DW s.Total e.RestFormulas>;
+  s.Smaller
+    = <Putout 2 '\\begin{minipage}{'<ToVal <Add s.PreVal 5>>'\\textwidth}'>
+    <ChooseContent s.DH Normal s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}\\hfill'><GenManyMP s.FreeSpace s.DH s.DW s.Total e.RestFormulas>;
+ };
+}
+
+RenderAdjacentFormulas {
+ (e.Name) s.DW s.DH s.LeftHeight  t.Form1 t.Form2 e.Rest
+  , <AccumulateCols 0 <Sub <FrameData Width> 20> t.Form1 t.Form2 e.Rest> :
+  { (s.WidthNorm s.HeightNorm t.Formula) s.LeftFree 1 e.RF
+   , t.Formula : (s.Sort (e.Content) e.MetaData)
+   , <PageEsteem s.LeftHeight s.HeightNorm s.DH> : s.BeforeFlag s.NewPageFlag s.RestPage
+     = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
+     <GenContent Normal s.DW <ChooseHeight s.BeforeFlag s.HeightNorm s.LeftHeight> (s.Sort (e.Content))>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
+     s.RestPage e.RF; 
+   (s.WidthNorm s.HeightNorm t.Formula) e.ListOfFormulas s.LeftFree s.OtherNum e.RF
+   , <Div s.HeightNorm 2> : s.TrueHeight
+   , <PageEsteem s.LeftHeight s.TrueHeight s.DH> : s.BeforeFlag s.NewPageFlag s.RestPage
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
+     <GenManyMP s.LeftFree s.DH <Sub <FrameData Width> 10> s.OtherNum (s.WidthNorm s.HeightNorm t.Formula) e.ListOfFormulas>
+     <Putout 2 '\n'>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag> s.RestPage e.RF;
+  };
+}
+
+ChooseMaxCase {
+ '+-'s.P1 s.P2 s.Val1 s.Val2 = '+'s.P1 s.Val1;
+ '-+'s.P1 s.P2 s.Val1 s.Val2 = '+'s.P2 s.Val2;
+ s.X s.X'+-' s.Val1 s.Val2 = s.X'+'s.Val1;
+ s.X s.X'-+' s.Val1 s.Val2 = s.X'+'s.Val2;
+ s.X s.X s.Y s.Y s.Val1 s.Val2 = s.X s.Y <Max s.Val1 s.Val2>;
+ 
+}
+
+AuxLen {
+s.Mode s.Num = s.Num;
+String s.Num s.Sym e.Rest = <AuxLen String <Add s.Num <Weight (e.Rest) s.Sym>> e.Rest>;
+List s.Num t.Term e.Rest = <AuxLen List <Add s.Num 1> e.Rest>;
+}
+
+CountTextHeight {
+s.DefaultWidth (e.Content1 () e.Content2) = <Add <CountTextHeight s.DefaultWidth (e.Content1)><CountTextHeight s.DefaultWidth (e.Content2)>>;
+s.DefaultWidth ((e.Line1)(e.Line2)e.Rest) = <CountTextHeight s.DefaultWidth ((e.Line1 e.Line2) e.Rest)>;
+s.DefaultWidth ()
+  , <ExSize normalsize> : (s.ExW)(s.ExH)
+ = s.ExH;
+s.DefaultWidth ((e.Line))
+ , <String_Length e.Line> : s.Num
+ , <ExSize normalsize> : (s.ExW)(s.ExH)
+ , <Add <Div <Mul s.Num s.ExW> s.DefaultWidth> 2> : s.TotalLines
+   = <Mul s.ExH s.TotalLines>;
+}
+
+TableMathMode {
+ e.x'\\\\'e.y = <TableMathMode e.x>'\\\\'<TableMathMode e.y>;
+ e.x'&'e.y = <DropTagsMM (<TableTags>) e.x>'&'<TableMathMode e.y>;
+ e.Z = <DropTagsMM (<TableTags>) e.Z>;
+}
+
+DropTagsMM {
+  (e.set (e.Element) e.set2) e.X e.Element e.Y
+  , <FirstSym (<Letters>) e.Y> : False
+  , e.set (e.Element) e.set2 : e.Whole
+    = <DropTagsMM (e.Whole) e.X>e.Element 
+      <DropTagsMM (e.Whole) e.Y>;
+  (e.Whole)e.Rest = <TrueMathMode e.Rest>;
+}
+
+TableTags {
+ = ('\\hline')('\\rowcolor{RowColor}')('\\rowcolor{HeaderColor}'); /* There to place all elements to be screened by math mode */
+}
+
+SwitchOddity {
+ Even = Odd;
+ Odd = Even;
+}       
+
+GenZebra {
+ Even = '\\rowcolor{HeaderColor!33}';
+ Odd = ;
+}
+
+FormTable {
+ s.DefaultWidth s.ExSize e.Lines
+ , <FormTableAux Odd s.DefaultWidth s.ExSize 1 e.Lines> : e.Code (s.Width)(s.Height)
+   = (e.Code)(s.Width)(s.Height);
+}
+
+/* quick and dirty code, assuming there are no more than two long cells in any table */
+FormTableAux {
+ s.Oddity s.DefaultWidth s.ExSize s.Lines
+ , <ExSize s.ExSize> : (s.ExW)(s.ExH)
+  = (s.DefaultWidth)(<Mul s.Lines <Add s.ExH 1>>);
+ s.Oddity s.DefaultWidth s.ExSize s.Lines (e.Line) e.InnerTable
+ , <ExSize s.ExSize> : (s.ExW)(s.ExH)
+ , <Mul s.ExW <String_Length e.Line>> : s.RealWidth
+ , <Compare s.DefaultWidth s.RealWidth> :
+ {'-'
+  , <SplitLongCells s.ExH s.DefaultWidth s.ExSize e.Line> : e.Data s.Height
+       = (<GenZebra s.Oddity> e.Data)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add s.Lines <Div s.Height s.ExH>> e.InnerTable>;
+  s.Any = (<GenZebra s.Oddity><TableMathMode e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
+ };
+ }
+
+SplitLongCells {
+ s.MaxHeight s.DefaultWidth s.ExSize e.L1'&'e.L2
+ , <Compare <String_Length e.L1> 20> :
+ {'+', <FormFormula <Div s.DefaultWidth 3> s.ExSize e.L1> : (e.Form)e.Rubbish(s.Height)
+      = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n&\n'
+        <SplitLongCells <Max s.MaxHeight s.Height> s.DefaultWidth s.ExSize e.L2>;
+  s.Any = <TableMathMode e.L1>'&'<SplitLongCells s.MaxHeight s.DefaultWidth s.ExSize e.L2>; 
+ };
+ s.MaxHeight s.DefaultWidth s.ExSize e.Last'\\\\'e.Smth
+ , <Compare <String_Length e.Last> 20> :
+ {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
+      = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n\\\\'e.Smth'\n'<Max s.MaxHeight s.Height>;
+  s.Any = <TableMathMode e.Last>'\\\\'e.Smth s.MaxHeight; 
+ };
+ s.MaxHeight s.DefaultWidth s.ExSize e.Last
+ , <Compare <String_Length e.Last> 20> :
+ {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
+      = '\\begin{array}{l}\n'<TableMathMode e.Form>'\\end{array}\n'<Max s.MaxHeight s.Height>;
+  s.Any = <TableMathMode e.Last> s.MaxHeight; 
+ };
+}
+
+/*
+
+Classes of Objects
+
+Theory (Content) Normal Normal Width Height Width Height
+
+Diagram ((Preamble) Content) Normal/MP Normal/NewFrame WidthMP HeightMP WidthNorm HeightNorm
+
+Formula ((Preamble)(MiniPage Content)(Normal Content)) MiniPage Normal WidthMP HeightMP WidthNorm HeightNorm
+
+Table ((Preamble)(MiniPage Content)(Normal Content)) MiniPage Normal WidthMP HeightMP WidthNorm HeightNorm
+*/
+ParseFrame {
+ s.DefaultWidth s.MPWidth Diag ((e.Preamble)(e.PageData)e.Previous)('\\end{tikzpicture}'e.Rubbish) e.Rest
+        = (Diagram ((e.Preamble) e.Previous ('\\end{tikzpicture}')) e.PageData) <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>; 
+ s.DefaultWidth s.MPWidth Normal ()('%begin detailed'e.Rubbish)e.Rest
+  = <ParseFrame s.DefaultWidth s.MPWidth Theory ((e.Rubbish)) e.Rest>;
+ s.DefaultWidth s.MPWidth Normal (e.Preamble)(e.Start'\\begin{array}'e.End)e.Rest
+  = <ParseFrame s.DefaultWidth s.MPWidth Table ((e.Preamble)(e.Start'\\begin{array}'e.End)) e.Rest>;
+ s.DefaultWidth s.MPWidth Normal (e.Preamble) (e.B1'Minipage 's.FlagM'; Frame 's.FlagF'; WidthMP percent 'e.WP1' ; HeightMP percent 'e.HP1
+             ' ; Width percent 'e.WP0' ; Height percent 'e.HP0) e.Rest = 
+       <ParseFrame s.DefaultWidth s.MPWidth Diag ((e.Preamble)(<GetMP s.FlagM> <GetFrame s.FlagF> 
+                       <CountAbsWidth <Numb e.WP1>><CountAbsHeight <Numb e.HP1>><CountAbsWidth <Numb e.WP0>><CountAbsHeight <Numb e.HP0>>))
+           e.Rest>;
+ s.DefaultWidth s.MPWidth Normal (e.Previous)(e.LineX'%template_'e.TempInfo)e.Rest
+ , <Nempty <Trim e.LineX>> : True
+ , <DeleteDuplicates Start () e.LineX> : e.Line
+ , <PrepareFormula s.DefaultWidth normalsize e.Line> : e.ListNormal
+ , <PrepareFormula s.MPWidth small e.Line> : e.ListMP 
+      = <MapFormulas (e.Previous)(e.ListNormal)(e.ListMP)>
+        <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
+ s.DefaultWidth s.MPWidth Table ((e.Preamble) (e.FirstLine) e.Table)(e.Smth'\\end{array}'e.Rubbish)e.Rest
+ , <FormTable s.DefaultWidth normalsize e.Table> : (e.NormForm)(s.WidthNorm)(s.HeightNorm)
+ , <FormTable s.MPWidth normalsize e.Table> : (e.MPForm)(s.WidthMP)(s.HeightMP)
+      = (Table ((e.Preamble)(MiniPage (e.FirstLine)e.MPForm (e.Smth'\\end{array}'e.Rubbish))
+                            (Normal (e.FirstLine)e.NormForm (e.Smth'\\end{array}'e.Rubbish))) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+         <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
+ s.DefaultWidth s.MPWidth Theory (e.Content)(e.Smth'%end detailed'e.Rubbish)e.Rest
+ , <CountTextHeight s.DefaultWidth (e.Content (e.Smth))> : s.ThHeight
+  = (Theory (e.Content (e.Smth)) Normal Normal s.DefaultWidth s.ThHeight s.DefaultWidth s.ThHeight)
+    <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
+ s.DefaultWidth s.MPWidth Normal (e.Preamble) (e.Line) e.Rest = <ParseFrame s.DefaultWidth s.MPWidth Normal (e.Preamble (e.Line)) e.Rest>;
+ s.DefaultWidth s.MPWidth Normal (e.Preamble) = ;
+ s.DefaultWidth s.MPWidth s.Special (e.Preamble) (e.Line) e.Rest
+     = <ParseFrame s.DefaultWidth s.MPWidth s.Special (e.Preamble (e.Line)) e.Rest>;
+}
+
+
+/* This is to be processed inside log generation, but for now is placed in rendering module. */
+DeleteDuplicates {
+   Start (e.Acc) '\\\\'e.L
+  , e.L :
+   { e.L1'\\\\'e.Acc'\\\\'e.L2 = <DeleteDuplicates Start (e.Acc)'\\\\'e.L1'\\\\'e.L2>;
+     e.Rest = <DeleteDuplicates Base () e.Acc'\\\\'e.L>;
+   };
+   Start (e.Acc) s.Sym e.L =
+    <DeleteDuplicates Start (e.Acc s.Sym) e.L>;
+   Start (e.Acc) = e.Acc;
+   Base (e.Acc) e.L1'\\\\'e.L2'\\\\'e.L3'\\\\'e.L2'\\\\'e.L4
+    = <DeleteDuplicates Base (e.Acc e.L1)'\\\\' e.L2'\\\\'e.L3'\\\\'e.L4>;
+   Base (e.Acc) e.Rest = <DeleteDuplicates Adjacent () e.Acc e.Rest>;
+   Adjacent (e.Acc) e.L1'\\\\'e.L2'\\\\'e.L2'\\\\'e.L3
+    = <DeleteDuplicates Adjacent (e.Acc e.L1)'\\\\' e.L2'\\\\'e.L3>;
+   Adjacent (e.Acc) e.Rest = <DeleteDuplicates Final () e.Acc e.Rest>;
+   Final (e.Acc) e.L'\\\\'
+   , e.L : {
+   e.L1'\\\\'e.Acc'\\\\'e.L2
+    = <DeleteDuplicates Final (e.Acc) e.L1'\\\\'e.L2>;
+   e.Rest = e.L'\\\\'e.Acc; };
+   Final (e.Acc) e.L s.Sym
+    = <DeleteDuplicates Final (s.Sym e.Acc) e.L>;
+   Final (e.Acc) 
+    = e.Acc;
+}
+
+MapFormulas {
+  (e.Preamble)()() = ;
+  (e.Preamble)(((e.NormForm)(s.WidthNorm)(s.HeightNorm))e.List1)
+               (((e.MPForm)(s.WidthMP)(s.HeightMP))e.List2)
+ 	       = (Formula ((e.Preamble)(MiniPage e.MPForm)(Normal e.NormForm)) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+	        <MapFormulas ()(e.List1)(e.List2)>;
+
+}
+
+GetMP {
+ '+' = MiniPage;
+ '-' = Normal;
+}
+
+GetFrame {
+ '+' = Normal;
+ '-' = NewFrame;
+}
+
+CountAbsWidth {
+  s.Percent = <Div <Mul s.Percent <FrameData Width>> 100>;
+}
+
+CountAbsHeight {
+  s.Percent
+, <ExSize normalsize> : (s.ExW)(s.ExH)  = <Add <Mul s.ExH 2><Div <Mul s.Percent <FrameData Height>> 100>>;
+}
+
+PrepareFormula {
+ s.DefaultWidth s.ExSize e.Line'\\\\'e.Lines
+   = (<FormFormula s.DefaultWidth s.ExSize e.Line>)<PrepareFormula s.DefaultWidth s.ExSize e.Lines>;
+ s.DefaultWidth s.ExSize = ;
+ s.DefaultWidth s.ExSize e.Line
+   = (<FormFormula s.DefaultWidth s.ExSize e.Line>);
+}
+
+
+/*Returns a tuple: Formula (splitted to the lines) (width (in points)) (height (in points))*/
+FormFormula {
+ s.DefWidth s.Size e.Formula
+ , <String_Length e.Formula> : s.Len
+ , <ExSize s.Size> : (s.ExW)(s.ExH)
+ , <Mul s.ExW s.Len> : s.RealWidth
+ , <Compare s.RealWidth s.DefWidth> :
+  { '+' = <SplitToLines All s.DefWidth s.ExH <Max 1 <Div s.DefWidth s.ExW>> () e.Formula>;
+     s.Rest = ((e.Formula))(s.RealWidth)(<Add s.ExH s.ExH>);
+   };
+}
+
+
+MetaGenerationFormula {
+ s.MaxW s.MaxH
+  , <ExtractLimitations 'pagedata'> : s.WidthPercent s.HeightPercent
+      =   <CalcPreamble 
+	               <GetZooms s.WidthPercent s.HeightPercent 
+	         <Div <Mul 100 s.MaxW> <FrameData Width>> 
+		 <Div <Mul 100 s.MaxH>  <FrameData Height>>
+		 >>;
+}
+
+CalcPreamble {
+ s.MPSort s.FrameSort s.RealWidthPercent s.RealHeightPercent s.WidthPercent s.HeightPercent
+ , <BestCase s.MPSort <Compare s.WidthPercent s.RealWidthPercent>> : s.MPType
+ , <BestCase s.MPSort <Compare s.HeightPercent s.RealHeightPercent>> : s.FrameType
+                     = '% Minipage 's.MPType
+		       '; Frame 's.FrameType
+                      '; Width percent 's.RealWidthPercent'; Height percent 's.RealHeightPercent;
+}
+
+BestCase {
+ New'-' = '-';
+ s.Some s.Any = '+';
+}
+
+
+$ENTRY ExtractLimitations {
+ e.Filename
+ , <Open 'r' 7 e.Filename> : e.Rubbish
+ , <Get 7> : e.Num';'e.Num2
+ = <Numb e.Num><Numb e.Num2><Close 7>;
+}
+
+TrimStrong {
+ e.x 0 = <TrimStrong e.x>;
+ e.x' 'e.y = <TrimStrong e.x e.y>;
+ e.z = e.z;
+}
+
+EstimateZooms {
+  s.Opt s.Real s.LimitMax
+  , <Compare s.LimitMax s.Opt>
+  : { '+' = Optimal; /* Zoomed to a given area */
+      s.Any
+      , <Compare s.LimitMax s.Real> :
+      { '+' = True; /* Zoomed to a new frame */
+	s.Any1 = Overflow; /* Zoomed to a new frame, overflowed */
+      };
+  };
+}
+
+GetZooms {
+  s.WidthPercent s.HeightPercent s.WidthRealZoom s.HeightRealZoom
+  , <Div <FrameData OptZoom> 10> : s.LZMax
+  , <Div <Mul 100 s.WidthRealZoom> s.WidthPercent> : s.PerfectWZ
+  , <Div <Mul 100 s.HeightRealZoom> s.HeightPercent> : s.PerfectHZ
+  , <EstimateZooms s.PerfectHZ s.HeightRealZoom s.LZMax> : s.TypeHeight
+  , <EstimateZooms s.PerfectWZ s.WidthRealZoom s.LZMax> : s.TypeWidth
+  , <GetTakenArea s.WidthRealZoom s.HeightRealZoom s.LZMax> : s.RealWPercent s.RealHPercent
+  , s.TypeWidth s.TypeHeight :
+  { Optimal Optimal = Default Default s.RealWPercent s.RealHPercent s.WidthPercent s.HeightPercent;
+    Optimal s.Any = Default New s.RealWPercent s.RealHPercent s.WidthPercent s.HeightPercent;
+    s.Any Optimal = New Default s.RealWPercent s.RealHPercent s.WidthPercent s.HeightPercent;
+    s.Any1 s.Any2 = New New s.RealWPercent s.RealHPercent s.WidthPercent s.HeightPercent;
+  };
+}
+
+GetTakenArea {
+ s.WidthRealZoom s.HeightRealZoom s.LZMax
+ , <Max <Max s.WidthRealZoom s.HeightRealZoom> 100> : s.MaxZoom
+  = <TakeNormPercent s.MaxZoom s.WidthRealZoom> <TakeNormPercent s.MaxZoom s.HeightRealZoom>;
+}
+
+TakeNormPercent {
+ s.Maximum s.Value = <Div <Mul 100 s.Value> s.Maximum>;
+}
+
+PageEsteem {
+ s.PageHeight s.CurrHeight s.NeededHeight
+ , <Cp 'First'> : '+'
+ , <Compare s.PageHeight <Sub <FrameData Height> <TitleHeight 'Any'>>> : '0'     /* Something must be present on the very first slide with title */
+ , <Compare s.CurrHeight s.PageHeight> :
+ { '+' = '-+'<FrameData Height>;
+   s.Any = '--'<Sub s.PageHeight s.CurrHeight>;
+ };
+ s.PageHeight s.CurrHeight s.NeededHeight
+ , <Compare s.CurrHeight s.PageHeight> : 
+ {'+'
+  , <Compare <FrameData Height> s.CurrHeight> :
+  {'-' = '++'<FrameData Height>;
+  s.Normal
+  , <Sub <FrameData Height> s.CurrHeight> : s.RestPage
+  , <Compare s.NeededHeight s.RestPage> :
+ { '-' = '+-'s.RestPage;
+   s.Any = '++'<FrameData Height>;
+ };};
+  s.Rest 
+ , <Sub s.PageHeight s.CurrHeight> : s.RestPage
+ , <Compare s.NeededHeight s.RestPage> :
+ {'-' = '--'s.RestPage;
+  s.Any
+   = '-+'<FrameData Height>;
+ };
+ };
+}
+
+ToVal {
+ s.Numb
+ , <Symb s.Numb> : 
+  {s.1 s.2 s.3 = ;
+   s.1 s.2 = '0.'s.1 s.2;
+   s.1 = '0.0's.1;
+  };
+}
+
+InsertNewPageIfNeeded {
+ (e.Name)(t.Term e.Rest) '+'
+  , <Dg 'First'> : e.Trash
+  , <Br 'First=-'> : e.Trash2
+      = <Putout 2 '\\end{frame}\n\\begin{frame}{}\n\\footnotesize'>;
+ (e.Name)(e.Any) s.Rest = ; /* Either no objects are left or page fits the next object */
+}
+
+
+PutByLines {
+ s.Mode  = ;
+ Math (e.Line) e.Rest = <Putout 2 <TableMathMode e.Line>><PutByLines Math e.Rest>;
+ Raw (e.Line) e.Rest = <Putout 2 e.Line><PutByLines Raw e.Rest>;
+}
+
+GenContent {
+ MiniPage s.DefWidth s.DefHeight (s.Sort (e.AllContent))
+   = <Putout 2 '\\begin{minipage}{'<ToVal <Div <Mul s.DefWidth 100><FrameData Width>>>'\\textwidth}'>
+    <ChooseContent s.DefHeight MiniPage s.Sort e.AllContent>
+    <Putout 2 '\\end{minipage}'>;
+ Normal s.DefWidth s.DefHeight (s.Sort (e.AllContent))
+   = <ChooseContent s.DefHeight Normal s.Sort e.AllContent>;
+}
+
+PutComment {
+ s.PageLeft Formula ((/* No preamble */)e.Content ) e.Rest
+   = s.PageLeft;
+ s.PageLeft Formula ((e.Preamble) e.Content) e.Rest
+ , <CountTextHeight <FrameData Width> (e.Preamble)> : s.StrH
+ , <ExSize normalsize> : (s.ExW)(s.ExH)
+ , <Compare <Add s.StrH <Mul s.ExH 2>> s.PageLeft> :
+ { '-' = <PutByLines Raw e.Preamble><Sub s.PageLeft s.StrH>; 
+   s.Other = <InsertNewPageIfNeeded ()(This)'+'><PutByLines Raw e.Preamble><Sub <FrameData Height> s.StrH>;
+ };
+}
+
+InsertFillIfNeeded {
+  = ;
+ e.NonEmpty = <Putout 2 '\\vfill'>;
+}
+
+ChooseContent {
+ s.DefHeight s.Flag Table (e.Preamble)e.R1(s.Flag (e.Head)e.Content(e.Bottom))e.R2
+  = <Putout 2 '\\vfill'><PutByLines Raw e.Preamble>
+    <Putout 2 '\\vspace*{-0.5ex}\n\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.2\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
+    <Putout 2 e.Head>
+    <PutByLines Raw e.Content><Putout 2 e.Bottom><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
+ s.DefHeight s.Flag Formula (e.Preamble)e.R1(s.Flag ())e.R2 = ;
+
+ s.DefHeight s.Flag Formula (e.Preamble)e.R1(s.Flag e.Content)e.R2
+ , e.Content :
+ { (e.1) t.2 e.Rest
+   , <NonASCII (<ASCIIStandard>) e.1 > :
+ {False
+  = <InsertFillIfNeeded e.Preamble>
+    <PutByLines Raw e.Preamble><Putout 2 '\\noindent $\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$'>;
+  True
+   = <InsertFillIfNeeded e.Preamble><PutByLines Raw e.Preamble><PutByLines Raw ('\\noindent')e.Content><Putout 2 '\\vfill'>; };
+  (e.C)
+  , <NonASCII (<ASCIIStandard>) e.C> :
+ {False = <InsertFillIfNeeded e.Preamble><PutByLines Raw e.Preamble><Putout 2 '\\noindent $'<TrueMathMode e.C>'$\n'>;
+  True = <InsertFillIfNeeded e.Preamble><PutByLines Raw e.Preamble><PutByLines Raw ('\\noindent')e.Content>;
+ };
+ };
+ s.DefHeight s.Flag Theory e.Content
+  = <Putout 2 '\\vfill'><PutByLines Raw e.Content('\n\\vfill')>;
+ s.DefHeight s.Flag Diagram (e.Preamble)e.Content
+  = <Putout 2 '\\vfill'><PutByLines Raw e.Preamble>
+    <Putout 2 '\\vspace*{-1ex}\n\\begin{center}\\adjustbox{max width=\\textwidth, min width=0.3\\textwidth, max height='<ToVal <Div <Mul s.DefHeight 100><FrameData MaxHeight>>>'\\textheight}{'>
+    <PutByLines Raw e.Content><Putout 2'}\\end{center}\n\\vspace*{-1ex}\\vfill'>;
+}

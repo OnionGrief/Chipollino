@@ -1,7 +1,8 @@
 #pragma once
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
-#include "Logger.h"
+#include "FiniteAutomaton.h"
+#include "iLogTemplate.h"
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -46,7 +47,7 @@ class TransformationMonoid {
 	};
 	TransformationMonoid();
 	TransformationMonoid(const FiniteAutomaton& in);
-	// получаем все эквивалентные классы
+	// получаем все классы эквивалентности
 	vector<Term> get_equalence_classes();
 	// получаем термы, что vw - в языке
 	vector<Term> get_equalence_classes_vw(const Term& w);
@@ -57,24 +58,24 @@ class TransformationMonoid {
 	// получаем правила переписывания
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
 	get_rewriting_rules();
-	// вывод эквивалентных классов
+	// вывод классов эквивалентных
 	string get_equalence_classes_txt();
 	map<string, vector<string>> get_equalence_classes_map();
 	// вывод правил переписывания
-	string get_rewriting_rules_txt();
+	string get_rewriting_rules_txt(iLogTemplate* log = nullptr);
 	// Вывод всей информации о Моноиде
 	string to_txt();
-	// Вернет	-1	если	не	синхронизирован	или
-	// номер состояния	с	которым синхронизирован
+	// Вернет -1 если не синхронизирован или
+	// номер состояния с которым синхронизирован
 	int is_synchronized(const Term& w);
 	// Вернет число классов эквивалентности
-	int class_card();
+	int class_card(iLogTemplate* log = nullptr);
 	// Вернет длину самого длинного слова в классе
-	int class_length();
+	int class_length(iLogTemplate* log = nullptr);
 	// Вычисление Минимальности по М-Н (true если минимальный)
-	bool is_minimal();
+	bool is_minimal(iLogTemplate* log = nullptr);
 	// Вычисление размера по М-Н
-	int get_classes_number_MyhillNerode();
+	int get_classes_number_MyhillNerode(iLogTemplate* log = nullptr);
 	// вывод таблицы М-Н
 	string to_txt_MyhillNerode();
 	// переписываем имя терма в  минимальное
@@ -88,7 +89,7 @@ class TransformationMonoid {
   private:
 	// Автомат
 	FiniteAutomaton automat;
-	// Эквивалентные классы
+	// Классы эквивалентности
 	vector<Term> terms;
 	// Правила переписывания
 	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> rules;

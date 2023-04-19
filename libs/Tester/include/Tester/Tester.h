@@ -1,8 +1,8 @@
 #pragma once
 #include "Objects/BaseObject.h"
 #include "Objects/FiniteAutomaton.h"
-#include "Objects/Logger.h"
 #include "Objects/Regex.h"
+#include "Objects/iLogTemplate.h"
 #include <chrono>
 #include <iostream>
 #include <regex>
@@ -30,7 +30,7 @@ class Tester {
 
   public:
 	static void test(const FiniteAutomaton& language, const Regex& regex,
-					 int iteration_step);
+					 int iteration_step, iLogTemplate* log = nullptr);
 	static void test(const Regex& language, const Regex& regex,
-					 int iteration_step);
+					 int iteration_step, iLogTemplate* log = nullptr);
 };

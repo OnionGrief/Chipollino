@@ -10,7 +10,7 @@ set(SOURCES
 	src/Language.cpp
 	src/Grammar.cpp
 	src/AlphabetSymbol.cpp
-    src/Logger.cpp)
+    )
 
 # Add a library with the above sources
 add_library(${PROJECT_NAME} ${SOURCES})

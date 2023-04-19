@@ -1,0 +1,313 @@
+/******************************
+      DOT Automaton Grammar
+*******************************
+[Automaton] ::= 'digraph {'[Preamble][NodeList][EdgeList]'}'
+[Preamble] ::= 'rankdir = LR;\n'
+[NodeList] ::= ([Node]'\n')*
+[Node] ::= [NodeName]' [label = \"'[NodeLabel]'\", shape = '[NodeShape]']'[NodeMetaData]?
+[EdgeList] ::= ([Edge]'\n')*
+[Edge] ::= [NodeName]' -> '[NodeName][EdgeLabel]?[EdgeMetaData]? 
+[NodeName] ::= 'dummy' | [Number]
+[NodeShape] ::= 'circle' | 'doublecircle' | 'none'
+[NodeLabel] ::= ([Regex]',')*[RegEx]
+[EdgeLabel] ::= ' [label = \"'[Symbol]'\"]'
+*******************************/
+
+/******************************
+General assumptions:
+
+Every edge is uniquely determined with its source, destination and label.
+Every node is uniquely determined with its NodeName
+Dummy node is always present and it is first
+dummy -> [Number] edge is always present and it is first
+
+*******************************
+Metadata:
+********************************
+For now, only node and edge groups are supported.
+They are specified by [comment_begin][AnythingElse]'group'[AnyName][comment_end] --- either following node data or following edge data.
+[AnyName] may contain digits and latin letters. Every name corresponds to an unique color style.
+The styles are derived automatically (TODO: use special names for distinguished styles, such as traps or finals) 
+at most 20 styles are supported.
+*******************************/
+
+$EXTERN TrueMathMode, FirstSym, Numbers, Separator, Trim, Min, Max; /* MathMode */
+
+$EXTERN SplitToLines, String_Length, List_Length, FrameData, ExSize, Flatten; /*FrameFormatter */
+
+$ENTRY Go {
+ , <Arg 1> : e.from'.dot'
+ , <ExistFile e.from'.dot'> :
+ {True
+ , <Br 'LegendaInd='0> : e.W
+ , <Br 'LegendaCont=!NULL!'> : e.WW
+ , <Br 'AuxInd='0> : e.V
+ , <Br 'AuxCont=!NULL!'> : e.VV
+ , <Br 'MetaData=!NULL!'> : e.D
+ , <Br 'MetaGroups='> : e.D
+    =  <Open 'w' 5 'L_input.tex'><Close 5><Open 'r' 1 e.from'.dot'><Open 'w' 2 'Mod_'e.from'.dot'><PutLines 2 <CropGraph Preamble <Get 1>>>
+       <GenLegenda e.from><GenAux e.from><GenMetaData e.from><Close 1><Close 2>;
+  False
+    = <Prout 'No file ' e.from'.dot found.'>; }; 
+}
+
+GetNodeMetaData {
+  (e.NodeName)e.x'/*'e.MD'*/'e.W
+  , e.MD : 
+   {e.M1'group'e.id
+    , <Dg 'MetaGroups'> :
+   {e.MG1'('e.id')'e.MG2
+      = <Br 'MetaGroups='e.MG1'('e.id')'e.MG2><Br 'MetaData=@'e.NodeName'@::='e.id>;
+    e.Rest = <Br 'MetaGroups='e.Rest'('e.id'),'><Br 'MetaData=@'e.NodeName'@::='e.id>;
+   };
+    e.Other = ; 
+   };
+  (e.NodeName)e.NoMetaData = ;
+}
+
+GetEdgeMetaData {
+  (e.Source)(e.Destination)(e.Label)e.MD
+  , e.MD : 
+   {e.M1'group'e.id
+    , <Dg 'MetaGroups'> :
+   {e.MG1'('e.id')'e.MG2
+      = <Br 'MetaGroups='e.MG1'('e.id')'e.MG2><Br 'MetaData=('e.Source')('e.Destination')@'<TrueMathMode e.Label>'@::='e.id>;
+    e.Rest = <Br 'MetaGroups='e.Rest'('e.id'),'><Br 'MetaData=('e.Source')('e.Destination')@'<TrueMathMode e.Label>'@::='e.id>;
+   };
+    e.Other = ; 
+   };
+}
+
+PutLines {
+ s.Stream (e.Line) e.Rest = <Putout s.Stream e.Line><PutLines s.Stream e.Rest>;
+ s.Stream = ;
+}
+
+GenLegenda {
+ e.from
+ , <Dg 'LegendaInd'> :
+ {0 = ;
+  s.Index = <Open 'w' 3 'L_'e.from'.tex'><PutLines 3 (<GenTablePreamble>)<DigBag ('LegendaCont') <Dg 'LegendaCont'>>(<GenTableBottom>)><Close 3>;
+ };
+}
+
+GenAux {
+ e.from
+ , <Dg 'AuxInd'> :
+ {0 = ;
+  s.Index = <Open 'w' 4 'Aux_'e.from'.data'><PutLines 4 <DigBag ('AuxCont') <Dg 'AuxCont'>>><Close 4>;
+ };
+}
+
+
+GenMetaData {
+ e.from
+ , <Dg 'MetaGroups'> :
+ { = ;
+  e.Rest
+  , <StyleTableGen <LenBlock 0 e.Rest> e.Rest> : e.StyleTable
+   = <Open 'w' 5 'Meta_'e.from'.data'><PutLines 5 <Stylize (e.StyleTable) <DigBag ('MetaData') <Dg 'MetaData'>>>><Close 5>;
+ };
+}
+
+Stylize {
+ (e.StyleTable)(e.D1'@::='e.id)e.Rest
+ , e.StyleTable : 
+ {e.S1 ((e.Color)'=('e.id')') e.S2
+  = (e.D1'@::='e.Color)<Stylize (e.StyleTable)e.Rest>;
+}; 
+ (e.StyleTable) = ;
+}
+
+StyleTableGen {
+  s.Styles e.Table
+ , <Compare s.Styles 5> :
+ {'+'
+  , <Div s.Styles 5> : s.S1
+  , <Mod s.Styles 5> : s.S2
+     = <ZipColors (<Renderize s.S1 <GetS 5 0 <ColorTable>>><GetS s.S2 0 <Renderize <Div <Add s.S2 1> 2> ('gray')('purple')('orange')>>) e.Table>;
+  e.Z = <ZipColors (<GetS s.Styles 0 <ColorTable>>) e.Table>;
+ };
+}
+
+ZipColors {
+ (t.Color e.Rest)'('e.id'),'e.List = (t.Color'=('e.id')')<ZipColors (e.Rest)e.List>;
+ () = ;
+}
+
+GetS {
+ s.Num s.Num e.List = ;
+ s.Max s.Curr t.El e.List = t.El <GetS s.Max <Add s.Curr 1> e.List>;
+}
+
+Renderize {
+  0 e.Colors = ;
+  1 e.Colors = e.Colors;
+  2 (e.Color) e.Rest = (e.Color'1')<Renderize 2 e.Rest>(e.Color'2');
+  3 (e.Color) e.Rest = (e.Color'1')(e.Color'2')<Renderize 3 e.Rest>(e.Color'3');
+  4 (e.Color) e.Rest = (e.Color'1')(e.Color'2')<Renderize 4 e.Rest>(e.Color'3')(e.Color'4');
+  s.Num = ;
+}
+
+ColorTable {
+ = ('blue')('green')('red')('violet')('yellow');
+}
+
+DigBag {
+ (e.BagName) '!NULL!' = ;
+ (e.BagName) e.Z = <DigBag (e.BagName) <Dg e.BagName>>(e.Z);
+}
+
+GenTablePreamble {
+ = '$\\begin{array}{r!{\\color{black!80}\\vline width .6pt}l}\\rowcolor{HeaderColor}\n Имя & Подробная метка состояния\\\\\\hline';
+}
+
+GenTableBottom {
+ = '\\end{array}$';
+}
+
+ProcessEdgeBlock {
+ e.E1 
+  (e.Source' -> 'e.Dest' [label = \"'e.label'\"]'e.MetaData) e.E2
+  (e.Source' -> 'e.Dest' [label = \"'e.label2'\"]'e.MetaData) e.E3
+   = <ProcessEdgeBlock e.E1 (e.Source' -> 'e.Dest' [label = \"'e.label','e.label2'\"]'e.MetaData) e.E2 e.E3>;
+ (e.Label) e.Rest = <ProcessEdge e.Label><ProcessEdgeBlock e.Rest>;
+  = ;
+}
+
+CropGraph {
+ s.Mode e.x 0 = <Prout 'Incorrect dot file.'>;
+ Preamble e.x'digraph {'e.y = (e.x'digraph {'e.y) <CropGraph Graph Nodes () <Get 1>>;
+ Preamble e.x = (e.x) <CropGraph Preamble <Get 1>>;
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges) '}'e.y = e.Edges <ProcessEdgeBlock e.CurrEdges>('}'e.y);
+ Graph s.Mode e.PossibleMeta (e.FullGraph) '}'e.y = e.FullGraph('}'e.y);
+ Graph Nodes (e.Graph) e.Node
+ , e.Node :
+ { e.x1 'dummy ->' e.x2  = e.Graph <CropGraph Graph Edges ('dummy')((e.x1 'dummy ->' e.x2))( ) <Get 1>>;
+   e.W = <CropGraph Graph Nodes (e.Graph <ProcessNode e.W>) <Get 1>>;
+   };
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges)e.Source' -> 'e.E
+   = <CropGraph Graph Edges (e.Source)(e.CurrEdges(e.Source' -> 'e.E))(e.Edges) <Get 1>>;
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges)e.OtherSource' -> 'e.E
+   = <CropGraph Graph Edges (e.OtherSource)((e.OtherSource' -> 'e.E))(e.Edges <ProcessEdgeBlock e.CurrEdges>) <Get 1>>;
+}
+
+ProcessNode {
+ e.x' [label = \"'e.NodeLabel'\"'e.z = (e.x' [label = \"'<ProcessLabel <SplitData <Classify <Prepare e.NodeLabel>>>>'\"'e.z)
+                                             <GetNodeMetaData (<Trim e.x>)e.z>; 
+ e.Other = (e.Other);
+}
+
+Prepare {
+ e.Label = <DeleteDoubles e.Label>; /* alternatives are too narrow, rendering is flawed */
+}
+
+AdjustAlts {
+ e.x'|'e.y = e.x'!|!'<AdjustAlts e.y>;
+ e.z = e.z;
+}
+
+DeleteDoubles {
+ e.y t.Sep e.y e.z, <Separator (e.y) t.Sep e.y e.z><FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.y e.z>;
+ e.x t.Sep e.y t.Sep e.y e.z, <Separator (e.x) t.Sep e.y><FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.x t.Sep e.y e.z>;
+ e.y t.Sep e.u t.Sep e.y e.z, <Separator (e.y) t.Sep e.u> <FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.y t.Sep e.u t.Sep e.z>;
+ e.x t.Sep e.y t.Sep e.u t.Sep e.y e.z, <Separator (e.x) t.Sep e.y><FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.x t.Sep e.y t.Sep e.u t.Sep e.z>;
+ e.w = e.w;
+}
+
+ProcessLabel {
+ '\\begin{array}{'e.Header'}'e.Label'\\end{array}'
+ , <ChooseLongestStr (0 ) e.Label> : e.V
+ , <Dg 'AuxInd'> : s.Num
+ , <Br 'AuxCont=~@'<Symb s.Num>'@\\begin{array}{'e.Header'}'<MapArray TrueMathMode e.Label>'\\end{array}~'> : e.Rubbish
+ , <Br 'AuxInd='<Add s.Num 1>> : e.Rubbish2
+  = <AdjustAlts e.V>'@'<Symb s.Num>'@';
+ e.Z = <AdjustAlts e.Z>;
+} 
+
+ChooseLongestStr {
+ (s.PrevLength e.Prev) e.X'\\\\'e.Y
+ , <String_Length e.X > : s.Len
+ , <Compare s.PrevLength s.Len> :
+ {'+' = <ChooseLongestStr (s.PrevLength e.Prev) e.Y>;
+  s.Any = <ChooseLongestStr (s.Len e.X) e.Y>;
+ };
+ (s.PrevLength e.Prev) e.X
+ , <String_Length e.X > : s.Len
+ , <Compare s.PrevLength s.Len> :
+ {'+' = e.Prev;
+  s.Any = e.X;
+ };
+}
+
+MapArray {
+ s.Func e.x'\\\\'e.y = <MapArray s.Func e.x>'\\\\'<MapArray s.Func e.y>;
+ s.Func e.x'&'e.y, <Screened e.x> : False = <Mu s.Func e.x>'&'<MapArray s.Func e.y>;
+ s.Func e.last = <Mu s.Func e.last>;
+}
+
+Screened {
+ e.w'\\' = True;
+ e.w1 = False;
+}
+
+Classify {
+ e.x = (<Len e.x>) e.x;
+}
+
+Len {
+ e.x1 t.Sep e.x2, <Separator (e.x1) t.Sep e.x2> : True  = <LengthStr 0 e.x1 e.x2> <LenBlock 2 e.x2>;
+ e.x = <LengthStr 0 e.x> 1;
+}
+
+LenBlock {
+ s.Num e.x t.Sep e.y, <Separator (e.x) t.Sep e.y> : True = <LenBlock <Add s.Num 1> e.y>;
+ s.Num e.Z = s.Num;
+}
+
+LengthStr {
+ s.Num t.Sep e.x, <Separator () t.Sep e.x> : True = <LengthStr s.Num e.x>;
+ s.Num t.s e.x = <LengthStr <Add s.Num 1> e.x>;
+ s.Num = s.Num; 
+}
+
+SplitData {
+  (s.Total s.Block) e.Data
+   , <Compare s.Total 7> :
+ {'+'
+   , <ExSize normalsize> : (s.xW)(s.xH)
+   , <Div <FrameData LabelWidth> s.xW> : s.LineLen 
+   , <SplitToLines Strict <FrameData LabelWidth> s.xH s.LineLen () e.Data> : (e.Lines) t.Sizex (s.Height)
+   , <Flatten e.Lines> : e.ArrCont
+   , <Compare s.Total <Mul s.LineLen s.LineLen>><Compare <List_Length <ChooseLongestStr (0) e.ArrCont>> 14> :
+ {e.OptVal1 '+' e.OptVal2
+     , <Dg 'LegendaInd'> : s.Num
+     , <Br 'LegendaInd='<Add s.Num 1>> : e.Rubbish
+     , <Br 'LegendaCont=''L'<Symb s.Num>'&'e.Data'\\\\'> : e.Rubbish2
+         = 'L'<Symb s.Num>;  
+  e.BothLessOrEqual
+  , <Max <FrameData LabelWidth> s.Height> : s.NewWidth
+  , <SplitToLines Strict s.NewWidth s.xH <Add <Div s.NewWidth s.xW> 1> () e.Data> : (e.FinalLines) t.SizeS t.Height2
+  , <Compare s.Block 1> :
+  { '+' =  <CreateArray <Flatten e.FinalLines>>;
+    '0' = e.Data;
+   };
+  };
+  s.SmallVal = e.Data;
+};
+}
+
+CreateArray {
+  e.w = '\\begin{array}{c}' e.w ' \\end{array}';
+}
+
+SectionEdge {
+ (e.x)e.y' [label ='e.l']'e.z'/*'e.MetaData'*/' = <GetEdgeMetaData (e.x)(e.y)(<Trim e.l>)e.MetaData>;
+ (e.x)e.y'/*'e.MetaData'*/' = <GetEdgeMetaData (e.x)(<Trim e.y>)()e.MetaData>;
+ e.W = ;
+}
+
+ProcessEdge {
+ e.x' -> 'e.y = (e.x' -> 'e.y)<SectionEdge (<Trim e.x>)e.y>;
+ e.Rubbish = (e.Rubbish);
+}

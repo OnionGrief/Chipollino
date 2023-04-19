@@ -1,0 +1,292 @@
+/******************************
+      DOT Automaton Grammar
+*******************************
+[Automaton] ::= 'digraph {'[Preamble][NodeList][EdgeList]'}'
+[Preamble] ::= 'rankdir = LR;\n'
+[NodeList] ::= ([Node]'\n')*
+[Node] ::= [NodeName]' [label = \"'[NodeLabel]'\", shape = '[NodeShape]']'[NodeMetaData]?
+[EdgeList] ::= ([Edge]'\n')*
+[Edge] ::= [NodeName]' -> '[NodeName][EdgeLabel]?[EdgeMetaData]? 
+[NodeName] ::= 'dummy' | [Number]
+[NodeShape] ::= 'circle' | 'doublecircle' | 'none'
+[NodeLabel] ::= ([Regex]',')*[RegEx]
+[EdgeLabel] ::= ' [label = \"'[Symbol]'\"]'
+*******************************/
+
+
+/******************************
+      Tikz Automaton Grammar
+*******************************
+[Automaton] ::= '\\begin{tikzpicture}[>=latex\',line join=bevel,]\n%\n%'[NodeList][EdgeList]'\\end{tikzpicture}'
+[NodeList] ::= ([Node]|[Rubbish]'\n')*
+[Node] ::= '\\node('[NodeName]') at ('[PositionX]','[PositionY]')  [draw,'[NodeShape]'] {$'[NodeLabel]'$};'
+[EdgeList] ::= ([Edge]\n[EdgeLabel]'\n'|[Rubbish])*
+[Edge] ::= '\\draw [->] ('[NodeName]') ..controls '[SplineData]'.. ('[NodeName]');' 
+[NodeName] ::= 'dummy' | [Number]
+[NodeShape] ::= 'draw=none' | 'circle' | 'circle, double'
+[NodeLabel] ::= ([Regex]',')*[RegEx]
+[EdgeLabel] ::= '\\draw ('[PositionX]','[PositionY]') node {$'[Symbol]'$};'
+[Rubbish] ::= anything else
+
+/******************************
+General assumptions:
+
+Every edge is uniquely determined with its source, destination and label.
+Every node is uniquely determined with its NodeName
+Dummy node is always present and it is first (not really used there)
+dummy -> [Number] edge is always present and it is first (not really used there)
+Every coordinate is presented in the form [numbers]+.[numbers]+bp
+
+The legenda, if present, is placed to 'L_'initial_filename'.tex' source.
+The resulting tikz code for the automaton is placed to 'R_'initial_filename'.tex' source.
+Both can be directly included in the generated log via the following environment:
+\adjustbox{max width=\textwidth, min width=0.3\textwidth, max height=\textheight}{
+\input{[TexSource]}}
+
+Or simply
+\input{[TexSource]}
+if resizing is not needed.  
+*******************************/
+$EXTERN TrueMathMode;
+
+$EXTERN FrameData, Min, Max;
+
+$ENTRY Go {
+ , <Arg 1> : e.from'.tex'
+ , <ExistFile e.from'.tex'> :
+ {True
+  , <ExtractGraph e.from> : e.Graph
+  , <Dg 'MinW'><Dg 'MaxW'><Dg 'MinH'><Dg 'MaxH'> : s.MinW s.MaxW s.MinH s.MaxH
+  , <Putout 0 s.MinW s.MaxW s.MinH s.MaxH> : e.Debug
+  , <ExtractLimitations 'pagedata'> : s.WidthPercent s.HeightPercent
+    =  <Open 'w' 2 'R_'e.from'.tex'>
+       <PutLines 2 
+          (<CalcPreamble 
+	      <GetZooms s.WidthPercent s.HeightPercent 
+	         <Div <Mul 100 <Sub s.MaxW s.MinW>> <FrameData Width>> 
+		 <Div <Mul 100 <Sub s.MaxH s.MinH>>  <FrameData Height>>
+		 >>)
+	  e.Graph><Close 2>;
+  False
+    = <Prout 'No file ' e.from'.tex found.'>; }; 
+}
+
+CalcPreamble {
+ s.MPSort s.FrameSort s.RealWidthPercent s.RealHeightPercent s.WidthPercent s.HeightPercent
+ , <BestCase s.MPSort <Compare s.WidthPercent s.RealWidthPercent>> : s.MPType
+ , <BestCase s.MPSort <Compare s.HeightPercent s.RealHeightPercent>> : s.FrameType
+                     = '% Minipage 's.MPType
+		       '; Frame 's.FrameType
+			'; WidthMP percent 's.RealWidthPercent'; HeightMP percent 's.RealHeightPercent
+                      '; Width percent 's.RealWidthPercent'; Height percent 's.RealHeightPercent;
+}
+
+BestCase {
+ New'-' = '-';
+ s.Some s.Any = '+';
+}
+
+
+ExtractLimitations {
+ e.Filename
+ , <Open 'r' 7 e.Filename> : e.Rubbish
+ , <Get 7> : e.Num';'e.Num2
+ = <Numb e.Num><Numb e.Num2><Close 7>;
+}
+
+TrimStrong {
+ e.x 0 = <TrimStrong e.x>;
+ e.x' 'e.y = <TrimStrong e.x e.y>;
+ e.z = e.z;
+}
+
+EstimateZooms {
+  s.Opt s.Real s.LimitMax s.LimitMin
+  , <Compare s.LimitMax s.Opt>
+  : { '+' = Optimal; /* Zoomed to a given area */
+      s.Any
+      , <Compare s.LimitMax s.Real> :
+      { '+' = True; /* Zoomed to a new frame */
+	s.Any1 = Overflow; /* Zoomed to a new frame, overflowed */
+      };
+  };
+}
+
+GetZooms {
+  s.WidthPercent s.HeightPercent s.WidthRealZoom s.HeightRealZoom
+  , <FrameData MaxZoom> <FrameData MinZoom> : s.LZMax s.LZMin
+  , <Div <Mul 100 s.WidthRealZoom> s.WidthPercent> : s.PerfectWZ
+  , <Div <Mul 100 s.HeightRealZoom> s.HeightPercent> : s.PerfectHZ
+  , <EstimateZooms s.PerfectHZ s.HeightRealZoom s.LZMax s.LZMin> : s.TypeHeight
+  , <EstimateZooms s.PerfectWZ s.WidthRealZoom s.LZMax s.LZMin> : s.TypeWidth
+  , <GetTakenArea s.WidthRealZoom s.HeightRealZoom s.LZMax> : s.RealWPercent s.RealHPercent
+  , s.TypeWidth s.TypeHeight :
+  { Optimal Optimal = Default Default s.RealWPercent s.RealHPercent s.WidthPercent s.HeightPercent;
+    Optimal s.Any = Default New s.RealWPercent s.RealHPercent s.WidthPercent s.HeightPercent;
+    s.Any Optimal = New Default s.RealWPercent s.RealHPercent s.WidthPercent s.HeightPercent;
+    s.Any1 s.Any2 = New New s.RealWPercent s.RealHPercent s.WidthPercent s.HeightPercent;
+  };
+}
+
+GetTakenArea {
+ s.WidthRealZoom s.HeightRealZoom s.LZMax
+ , <Max <Max s.WidthRealZoom s.HeightRealZoom> 100> : s.MaxZoom
+  = <TakeNormPercent s.MaxZoom s.WidthRealZoom> <TakeNormPercent s.MaxZoom s.HeightRealZoom>;
+}
+
+TakeNormPercent {
+ s.Maximum s.Value = <Div <Mul 100 s.Value> s.Maximum>;
+}
+
+ExtractGraph {
+ e.from = <Open 'r' 1 e.from'.tex'><ProcessMetaData (e.from) <ProcessNodeLabels (e.from)
+       <CropGraph Preamble (Size 1000 0 1000 0) <Get 1>>>><Close 1>;
+}
+
+PutLines {
+ s.Stream (e.Line) e.Rest = <Putout s.Stream e.Line><PutLines s.Stream e.Rest>;
+ s.Stream = ;
+}
+
+ProcessMetaData {
+  (e.FileName) e.Rows
+   , <ExistFile 'Meta_'e.FileName'.data'> :
+    { False = e.Rows;
+      True = <Open 'r' 4 'Meta_'e.FileName'.data'><ExtractStyles (<ReadLines 4 <Get 4>>)e.Rows><Close 4>;
+     };
+}
+
+ProcessNodeLabels {
+  (e.FileName) e.Rows
+   , <ExistFile 'Aux_'e.FileName'.data'> :
+    { False = e.Rows;
+      True = <Open 'r' 3 'Aux_'e.FileName'.data'><ExtractLabels (<ReadLines 3 <Get 3>>)e.Rows><Close 3>;
+     };
+}
+
+ExtractLabels {
+ (('~@'e.Name'@'e.TrueLabel'~') e.Labels) e.Rows
+  , e.Rows :
+  { e.R1 (e.Bg '\\node'e.D1'$'e.PrevLabel'@'e.Name'@$'e.D2) e.R2
+     = <ExtractLabels (e.Labels) e.R1 (e.Bg '\\node'e.D1'$'e.TrueLabel'$'e.D2) e.R2>;
+  };
+() e.Rows = e.Rows;
+}
+
+ReadLines {
+ s.Stream 0 = ;
+ s.Stream e.Z 0 = (e.Z);
+ s.Stream e.Z = (e.Z) <ReadLines s.Stream <Get s.Stream>>;
+}
+
+ExtractStyles {
+ (('('e.Start')('e.End')@\"\"@::='e.style) e.Styles) e.Data
+ , e.Data : 
+  {e.D1 (e.Bg'[->, thick] ('e.Start')'e.Inner'('e.End');') e.D2
+       = <ExtractStyles (e.Styles) e.D1 (e.Bg'[->, very thick,'<LineColor e.style>'] ('e.Start')'e.Inner'('e.End');') e.D2>;
+   };
+ (('('e.Start')('e.End')@\"'s.Sym e.Label'\"@::='e.style) e.Styles) e.Data
+ , e.Data : 
+  {e.D1 (e.Bg'[->, thick] ('e.Start')'e.Inner'('e.End');')(e.L1 '$'s.Sym e.Label'$' e.L2) e.D2
+       = <ExtractStyles (e.Styles) e.D1 (e.Bg'[->, very thick,'<LineColor e.style>'] ('e.Start')'e.Inner'('e.End');')(e.L1 '$'s.Sym e.Label'$' e.L2) e.D2>;
+   };
+ (('@'e.NodeName'@::='e.style) e.Styles) e.Data
+ , e.Data : 
+  {e.D1 (e.Bg '\\node ('e.NodeName') at ('e.Smth'[draw,'e.RestD'$'e.Label'$'e.Eg) e.D2
+  = <ExtractStyles (e.Styles) e.D1 (e.Bg '\\node('e.NodeName') at ('e.Smth'[draw,'<LineColor e.style>',fill='<FillColor e.style>','e.RestD'$\\textcolor{black}{'e.Label'}$'e.Eg) e.D2>;
+   };
+ () e.Data = e.Data;
+}
+
+CropGraph {
+ s.Mode t.Size e.x 0 = <Prout 'Incorrect tikz generated file.'>;
+ Preamble t.Size e.x'% Start of code'e.y = <CropGraph Graph Nodes t.Size () <Get 1>>;
+ Preamble t.Size e.x = <CropGraph Preamble t.Size <Get 1>>;
+ Graph s.Mode t.Size (e.FullGraph) e.x '% End of code'e.y
+ , t.Size : (Size s.MinW s.MaxW s.MinH s.MaxH)
+ , <Br 'MinW='s.MinW><Br 'MaxW='s.MaxW><Br 'MinH='s.MinH><Br 'MaxH='s.MaxH> : e.Rubbish
+          = e.FullGraph(<InsertPostfix>);
+ Graph Nodes t.Size () '\\begin{tikzpicture}'e.FakePreamble = (<InsertPreamble>) <CropGraph Graph Nodes t.Size () <Get 1>>;
+ Graph Nodes t.Size (e.Graph) e.Node
+ , e.Node :
+ { e.x1 '\\draw [->]' e.x2  = e.Graph <CropGraph Graph Edges <UpdateMinimax t.Size e.Node> (<ProcessEdge e.x1 '\\draw [->]' e.x2>) <Get 1>>;
+   e.W = <CropGraph Graph Nodes <UpdateMinimax t.Size e.Node> (e.Graph <ProcessNode e.W>) <Get 1>>;
+   };
+ Graph Edges t.Size (e.Edges) e.E = <CropGraph Graph Edges <UpdateMinimax t.Size e.E> (e.Edges <ProcessEdge e.E>)<Get 1>>;
+}
+
+Natural {
+ '-'e.v = '0';
+ e.v = e.v;
+}
+
+UpdateMinimax {
+  (Size s.MinW s.MaxW s.MinH s.MaxH) e.x'('e.v1'.'e.v2','e.h1'.'e.h2')'e.x2
+  , <Numb <Natural e.v1>> <Numb <Natural e.h1>> :
+  { s.Width s.Height = <UpdateMinimax (Size <Min s.Width s.MinW> <Max s.Width s.MaxW> <Min s.Height s.MinH> <Max s.Height s.MaxH>) e.x2>;
+  };
+  t.Size e.Rest = t.Size;
+}
+
+InsertPreamble {
+ = '\\begin{tikzpicture}[>=Triangle,line join=bevel,scale=0.55]\n\\tikzstyle{every node}+=[inner sep=0.4ex]';
+}
+
+InsertPostfix {
+ = '\\end{tikzpicture}';
+}
+
+ProcessNode {
+ e.x'circle, double]'e.y = <ProcessNode e.x'circle, double, double distance=1.5pt, thick]'e.y>;
+ e.x'circle]'e.y = <ProcessNode e.x'circle, thick]'e.y>;
+ e.x'$'e.NodeLabel'$'e.z = (e.x'$'<ProcessLabel e.NodeLabel>'$'e.z); 
+ e.Rubbish = ;
+}
+
+ProcessLabel {
+ e.Label'@'e.PlaceHolder = e.Label'@'e.PlaceHolder;
+ /*No Label */ = '\\;\\;\\;';
+ e.Label = <TrueMathMode <NormalizeAlts e.Label>>;
+}
+
+NormalizeAlts {
+ e.x'!|!'e.y = e.x'|'<NormalizeAlts e.y>;
+ e.z = e.z;
+} 
+
+ProcessEdge {
+ e.x'[->]'e.y = (e.x'[->, thick]'e.y);
+ e.x'$'e.NodeName'$'e.y = (e.x'$'<TrueMathMode e.NodeName>'$'e.y);
+ e.Rubbish = ;
+}
+
+FillColor {
+ e.Base'1' = <BaseFill e.Base>'!22';
+ e.Base'2' = <BaseFill e.Base>'!35';
+ e.Base'3' = <BaseFill e.Base>'!10';
+ e.Base'4' = <BaseFill e.Base>'!50';
+ e.Base = <BaseFill e.Base>'!15';
+}
+
+LineColor {
+ e.Base'1' = <BaseLine e.Base>;
+ e.Base'2' = <BaseLine e.Base>'!85!black';
+ e.Base'3' = <BaseLine e.Base>'!70!white';
+ e.Base'4' = <BaseLine e.Base>'!70!black';
+ e.Base = <BaseLine e.Base>;
+}
+
+BaseFill {
+ 'blue' = 'teal80';
+ 'violet' = 'violet80';
+ e.Z = e.Z;
+}
+
+BaseLine {
+ 'red' = 'red';
+ 'blue' = 'blue';
+ 'gray' = 'gray';
+ 'purple' = 'purple';
+ 'orange' = 'orange';
+ e.Z = e.Z'80';
+}

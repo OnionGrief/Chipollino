@@ -7,4 +7,5 @@ int main() {
 	// Тестирование
 	Example::test_all();
 	Example::all_examples();
+	Example::logger_test();
 }
