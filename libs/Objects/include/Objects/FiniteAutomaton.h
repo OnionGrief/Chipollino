@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <variant>
 using namespace std;
 
 class Regex;
@@ -29,6 +30,20 @@ struct State {
 	void set_transition(int, const alphabet_symbol&);
 };
 
+struct EdgeMeta {
+	int from;
+	int to;
+	alphabet_symbol label;
+	int group;
+};
+
+struct NodeMeta {
+	int id;
+	int group;
+};
+
+using Meta = variant<EdgeMeta, NodeMeta>;
+
 class FiniteAutomaton : public BaseObject {
   public:
 	enum AmbiguityValue {
@@ -42,6 +57,8 @@ class FiniteAutomaton : public BaseObject {
 	int initial_state = 0;
 	vector<State> states;
 
+	string colorize(vector<Meta> metadata) const;
+	vector<Meta> mark_all_transitions(set<int> from, set<int> to, alphabet_symbol by, int group_id) const;
 	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 	// преобразованиях всегда удаляем в конце ловушки.
 	// Если isTrim = false, тогда после удаления ловушки в результате
