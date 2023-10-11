@@ -30,8 +30,8 @@ void AutomatonToImage::to_image(string automat, int name) {
 
 string AutomatonToImage::to_image(string automat, string metadata) {
 #ifdef _WIN32
-	system("cd refal && IF EXIST Meta_input.data del Meta_input.data && IF "
-		   "EXIST Aux_input.data del Aux_input.data");
+	system("cd refal && IF EXIST Meta_input.data del Meta_input.data");
+	system("cd refal && IF EXIST Aux_input.data del Aux_input.data");
 #elif __unix || __unix__ || __linux__
 	system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
 #endif
@@ -47,8 +47,8 @@ string AutomatonToImage::to_image(string automat, string metadata) {
 		   "2>&1");
 
 #ifdef _WIN32
-	system("cd refal && IF EXIST Meta_input.data del Meta_input.data && IF "
-		   "EXIST Aux_input.data del Aux_input.data");
+	system("cd refal && IF EXIST Meta_input.data del Meta_input.data && "
+		   "IF EXIST Aux_input.data del Aux_input.data");
 #elif __unix || __unix__ || __linux__
 	system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
 #endif
@@ -72,25 +72,7 @@ string AutomatonToImage::to_image(string automat, string metadata) {
 #elif __unix || __unix__ || __linux__
 	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm "
 		   "R_input.tex");
-#endif
-
-	// таблица
-	ifstream infile_for_L("./refal/L_input.tex");
-
-	if (!infile_for_L) return graph.str();
-
-	// the table is adjusted for frames in the general renderer module
-	while (!infile_for_L.eof()) {
-		getline(infile_for_L, s);
-		graph << s << "\n";
-	}
-	infile_for_L.close();
-
-#ifdef _WIN32
-	system("cd refal && del L_input.tex");
-#elif __unix || __unix__ || __linux__
-	system("cd refal && rm L_input.tex");
-#endif
+#endif  
 
 	return graph.str();
 }
@@ -114,7 +96,7 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	 system("cd refal && DEL Meta_input.data");
 #elif __unix || __unix__ || __linux__
 	 system("cd refal && rm Meta_input.data");
-#endif
+#endif  
 	 }
 	else 
          infile_for_Final.open("./refal/Col_input.tex");           
@@ -131,10 +113,11 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	infile_for_Final.close();
 
 #ifdef _WIN32
-	system("cd refal && DEL Final_input.tex && DEL Col_input.tex");
+	system("cd refal && IF EXIST Final_input.tex DEL Final_input.tex");
+	system("cd refal && DEL Col_input.tex");
 #elif __unix || __unix__ || __linux__
-	system("cd refal && rm Final_input.tex && rm Col_input.tex");
-#endif
+	system("cd refal && rm -f Final_input.tex && rm Col_input.tex");
+#endif        
 	// таблица
 	ifstream infile_for_L("./refal/L_input.tex");
 
@@ -148,9 +131,9 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	infile_for_L.close();
 
 #ifdef _WIN32
-	system("cd refal && del L_input.tex");
+	system("cd refal && del L_input.tex && IF EXIST Aux_input.data del Aux_input.data");
 #elif __unix || __unix__ || __linux__
-	system("cd refal && rm L_input.tex");
+	system("cd refal && rm L_input.tex && rm -f Aux_input.data");
 #endif
 
 	return graph.str();
