@@ -16,7 +16,7 @@ class Tester {
 	struct word {			// доступ извне Tester::word
 		int iterations_num; // сколько проведено итераций
 		long long time;		// время парсинга в секундах
-		bool is_belongs;	// принадлежность языку
+		bool belongs;	// принадлежность языку
 	};
 
 	struct table {

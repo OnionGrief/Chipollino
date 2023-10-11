@@ -11,7 +11,7 @@
 \usepackage{makeidx,fancybox,tikz,nicematrix}
 \usepackage[inkscapearea=page]{svg}
 \usetikzlibrary{automata, positioning, arrows,patterns}
-\usetikzlibrary{arrows.meta}
+\usetikzlibrary{arrows.meta,patterns.meta, datavisualization}
 \usepackage{tempora} %по желанию -- русские штрифты с засечками
 \usepackage{dirtree} %дерево вычислений
 
@@ -54,6 +54,34 @@
 \definecolor{violet80}{rgb}{0.6,.0,4}
 \definecolor{yellow80}{rgb}{0.7,.7,0}
 \definecolor{HeaderColor}{rgb}{0.85,.86,0.95}
+\definecolor{Back_teal}{rgb}{0.2,.75,1}
+\definecolor{Back_teal1}{rgb}{0.4,.8,0.8}
+\definecolor{Back_yellow}{rgb}{0.95,.95,0.1}
+\definecolor{Back_yellow1}{rgb}{0.9,.9,0.3}
+\definecolor{Back_yellow2}{rgb}{1,1,0.1}
+\definecolor{Back_yellow3}{rgb}{0.8,1,0.4}
+\definecolor{Back_orange}{rgb}{0.95,.75,0.15}
+\definecolor{Back_orange1}{rgb}{0.9,.5,0.35}
+\definecolor{Back_orange2}{rgb}{0.85,1,0.5}
+\definecolor{Back_violet}{rgb}{0.95,.35,0.85}
+\definecolor{Back_violet1}{rgb}{0.8,.4,0.9}
+\definecolor{Back_violet2}{rgb}{0.7,.2,0.9}
+\definecolor{Back_violet3}{rgb}{1,0,1}
+\definecolor{Back_blue}{rgb}{0.6,.55,1}
+\definecolor{Back_blue1}{rgb}{0.5,.65,0.9}
+\definecolor{Back_blue2}{rgb}{0.4,.7,0.95}
+\definecolor{Back_blue3}{rgb}{0.3,.2,1}
+\definecolor{Back_green}{rgb}{0.25,0.9,0.2}
+\definecolor{Back_green1}{rgb}{0.2,0.85,0.3}
+\definecolor{Back_green2}{rgb}{0.3,1,0.1}
+\definecolor{Back_green3}{rgb}{0.4,0.7,0.2}
+\definecolor{Back_red}{rgb}{1,.45,.34}
+\definecolor{Back_red1}{rgb}{0.9,.35,.44}
+\definecolor{Back_red2}{rgb}{0.85,.6,.5}
+\definecolor{Back_red3}{rgb}{0.8,.2,.3}
+\definecolor{Back_purple}{rgb}{0.95,0.1,0.65}
+\definecolor{Back_purple1}{rgb}{0.8,.5,0.7}
+\definecolor{Trap}{rgb}{1,.5,0.55}
 
 \newcommand\redstroke{\bgroup\markoverwith
 {\textcolor{red}{\rule[0.5ex]{0.3ex}{0.2ex}}}\ULon} %зачёркивание красной чертой, масштабируется размером шрифта
@@ -123,11 +151,12 @@
 \def\OneUnambiguity{\mathtt{OneUnambiguity}}
 \def\SemDet{\mathtt{SemDet}}
 \def\Determinize{\mathtt{Determinize}}
+\def\DeterminizeP{\mathtt{Determinize+}}
+\def\MinimizeP{\mathtt{Minimize+}}
 \def\Minimize{\mathtt{Minimize}}
 \def\Arden{\mathtt{Arden}}
 \def\RemoveTrap{\mathtt{RemoveTrap}}
-\def\Test{\mathtt{Test}}
-\def\Verify{\mathtt{Verify}}
+\def\VerifParameter{\bigvarstar}
 
 \def\VoidTYPE{\mathtt{VOID}}
 \def\RegexTYPE{\mathtt{Regex}}
@@ -142,7 +171,7 @@
 \def\TypeIs{\;\bm{\textcolor{red}{:\,:}\;}}
 \def\toolongseq{\;\dots}
 
-\def\VerifParameter{\bigvarstar}
+
 \def\alter{\ensuremath{\mathrel{\vert}}}%отрендеренные регулярные операторы 
 \def\star{\ensuremath{^{*}}}%отрендеренные регулярные операторы 
 \def\regexpstr#1{\mathtt{#1}}%буквы внутри регулярок переписываются в моноширинный
@@ -157,11 +186,9 @@
 \newcommand{\RegExp}{\mathcal{RE}} %макрос для обозначения множества всех регулярок
 \newcommand{\Aut}{\mathscr{A}}
 \newcommand{\seq}{\;{=}\;}
-\def\VerifParameter{\bigvarstar}
-
 \newenvironment{wideitemize}{\itemize\addtolength{\itemsep}{8pt}}{\enditemize}
 
-\newenvironment{narritemize}{\itemize\addtolength{\itemsep}{-0.5ex}}{\enditemize}
+\newenvironment{narritemize}{\itemize[label=$\textcolor{black!75}{\bullet}$,labelsep=0.5ex]\addtolength{\itemsep}{-0.5ex}}{\enditemize}
 %в преамбулу можно и нужно добавлять свои макросы
 
 \newcommand{\AddTRAPIcon}[1]{\raisebox{-1ex}{
@@ -201,6 +228,24 @@
 \draw [teal80!60!black] (1.25ex,0.95ex) node {$\mathsmaller{\equiv}$};
 \end{tikzpicture}%
 }}
+
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+\usetikzlibrary{fit, calc}
+\usepackage{xparse}
+\makeatletter
+\NewDocumentCommand {\getnodedimen} {O{\nodewidth} O{\nodeheight} m} {
+  \begin{pgfinterruptboundingbox}
+  \begin{scope}[local bounding box=bb@temp]
+    \node[inner sep=0pt, fit=(#3)] {};
+  \end{scope}
+  \path ($(bb@temp.north east)-(bb@temp.south west)$);
+  \end{pgfinterruptboundingbox}
+  \pgfgetlastxy{#1}{#2}
+}
+\makeatother
 
 \begin{document}
 

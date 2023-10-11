@@ -166,6 +166,7 @@ void Example::parsing_nfa() {
 	regl = regl + regr;
 	regl = "a*bc*"; //"bbb*(aaa*bbb*)*";
 	Regex r(regl);
+	int steps;
 
 	FiniteAutomaton a;
 	FiniteAutomaton b;
@@ -175,7 +176,7 @@ void Example::parsing_nfa() {
 	c = r.to_ilieyu(); // to_thompson(-1);
 	cout << c.to_txt();
 	cout << "Parsing: aaaaaaaaaaaaaaaaaaabccccc\n";
-	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc")
+	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc", steps)  << " " << steps
 		 << endl; // true если распознал слово
 }
 

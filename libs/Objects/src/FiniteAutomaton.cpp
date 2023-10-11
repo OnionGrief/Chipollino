@@ -2233,29 +2233,37 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 	return false;
 }
 
-bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
-	// cout << s.size() << endl;
+bool FiniteAutomaton::parsing_nfa_for(const string& s, int& counter) const {
 	stack<State> stac_state;
-	stack<int> stack_s;
 	stack<int> stack_index;
-	stac_state.push(states[0]);
-	stack_s.push(0);
+	set<pair<int,pair<int,int>>> set_visited_eps, aux_eps;
+	// set<pair<int,int>> set_visited;
+	stac_state.push(states[initial_state]);
 	stack_index.push(0);
 	int n, n_eps;
+	counter = 0;
 	int index = 0;
-	int state_s = 0;
 	State state = stac_state.top();
 	// cout << !stac_state.empty() << endl;
 	while (!stac_state.empty()) {
-		state = stac_state.top();
-		state_s = stack_s.top();
-		index = stack_index.top();
 		if (state.is_terminal && index == s.size()) {
 			break;
 		}
+		state = stac_state.top();
+		index = stack_index.top();		
 		stac_state.pop();
-		stack_s.pop();
 		stack_index.pop();
+		// if (block_repeats && (set_visited.find(make_pair(state.index,index)) != set_visited.end() )) continue;
+		counter++;
+		if (set_visited_eps.size()>0) {
+		  for (auto pos : set_visited_eps)
+		  	 {if (pos.first<=index)
+			 	aux_eps.insert(pos);				
+			 }
+		    set_visited_eps = aux_eps;
+		    aux_eps.clear();
+		    }  
+		// if (block_repeats) {set_visited.insert(make_pair(state.index,index)); }
 		alphabet_symbol elem(s[index]);
 		set<int> tr = state.transitions[elem];
 		vector<int> trans{tr.begin(), tr.end()};
@@ -2264,38 +2272,29 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 				[alphabet_symbol::epsilon()]; // char_to_alphabet_symbol('\0')];
 		vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
 		// tr = {};
-		// cout << elem << " " << state.identifier << " " << index << " "
+		//cout << elem << " " << state.identifier << " " << index << " "
 		//	 << stac_state.size() << endl;
 		n = trans.size();
 		n_eps = trans_eps.size();
-		if (n + n_eps == 0) {
-			// stac_state.pop();
-			//  stack_s.pop();
-			if (state_s != 0) {
-				// index--;
-			}
-		}
 		for (size_t i = 0; i < n; i++) {
 			if (index + 1 <= s.size()) {
 				stac_state.push(states[trans[i]]);
-				stack_s.push(1);
 				stack_index.push(index + 1);
 			}
 		}
 		for (size_t i = 0; i < n_eps; i++) {
+			if (set_visited_eps.find(make_pair(index, make_pair(state.index,states[trans_eps[i]].index))) == set_visited_eps.end())
+                        { 
 			stac_state.push(states[trans_eps[i]]);
-			stack_s.push(0);
 			stack_index.push(index);
+			set_visited_eps.insert(make_pair(index,make_pair(state.index,states[trans_eps[i]].index)));
+                        }
 		}
-		// if (state_s != 0) {
-		//	index++;
-		// }
 	}
-	if (/*(stac_state.empty() && s.size() <= index) ||*/
-		(s.size() == index && state.is_terminal)) {
+	if (s.size() == index && state.is_terminal) {
 		return true;
 	}
-	return false;
+	return false; 
 }
 
 bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
@@ -2321,9 +2320,9 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	return result;
 }
 
-bool FiniteAutomaton::parsing_by_nfa(const string& s) const {
+bool FiniteAutomaton::parsing_by_nfa(const string& s, int& counter) const {
 	State state = states[0];
-	return parsing_nfa_for(s);
+	return parsing_nfa_for(s, counter);
 }
 
 int FiniteAutomaton::get_initial() {
