@@ -13,10 +13,15 @@ class iLogTemplate {
 		vector<string> data;	// данные
 	};
 
+	struct Plot {
+		vector<pair<pair<int,long>,string>> data;
+	};
+
 	virtual void set_parameter(const string& key,
-							   const FiniteAutomaton& value) = 0;
-	virtual void set_parameter(const string& key, Regex value) = 0;
-	virtual void set_parameter(const string& key, std::string value) = 0;
-	virtual void set_parameter(const string& key, int value) = 0;
-	virtual void set_parameter(const string& key, Table value) = 0;
+							   const FiniteAutomaton& value, string meta = "") = 0;
+	virtual void set_parameter(const string& key, Regex value, string meta = "") = 0;
+	virtual void set_parameter(const string& key, std::string value, string meta = "") = 0;
+	virtual void set_parameter(const string& key, int value, string meta = "") = 0;
+	virtual void set_parameter(const string& key, Table value, string meta = "") = 0;
+	virtual void set_parameter(const string& key, Plot value, string meta = "") = 0;
 };

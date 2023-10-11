@@ -6,5 +6,6 @@ class AutomatonToImage {
   public:
 	AutomatonToImage();
 	~AutomatonToImage();
-	static string to_image(string automat);
+	static string to_image(string automat, string metadata = "");
+	static string colorize(string automat, string metadata);
 };
