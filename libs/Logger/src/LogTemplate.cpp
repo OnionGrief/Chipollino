@@ -134,19 +134,18 @@ string LogTemplate::render() const {
 												renderer */
 				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
 					hash<string> hasher;
+					string c_graph;
 					string automaton =
 						get<FiniteAutomaton>(p.second.value).to_txt();
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
-						string c_graph = cache_automatons[hash];
-						c_graph = AutomatonToImage::colorize(c_graph,p.second.meta);	
-						s.insert(insert_place, c_graph);
+						c_graph = cache_automatons[hash];
 					} else {
-						string c_graph = AutomatonToImage::to_image(automaton);
+						c_graph = AutomatonToImage::to_image(automaton);
 						cache_automatons[hash] = c_graph;
-						c_graph = AutomatonToImage::colorize(c_graph,p.second.meta);
-						s.insert(insert_place, c_graph);
 					}
+					c_graph = AutomatonToImage::colorize(c_graph,p.second.meta);
+					s.insert(insert_place, c_graph);
 				} else if (holds_alternative<string>(p.second.value)) {
 					s.insert(insert_place, get<string>(p.second.value));
 				} else if (holds_alternative<int>(p.second.value)) {
