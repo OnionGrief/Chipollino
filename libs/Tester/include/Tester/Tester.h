@@ -8,6 +8,7 @@
 #include <regex>
 #include <string>
 #include <vector>
+#include <variant>
 
 using namespace std;
 
@@ -25,12 +26,15 @@ class Tester {
 		vector<word> words; // таблица
 	};
 
+
   private:
 	static bool parsing_by_regex(string, string);
 
+	using ParseDevice = variant<FiniteAutomaton, Regex>;
+
   public:
-	static void test(const FiniteAutomaton& language, const Regex& regex,
+	static void test(const ParseDevice& language, const Regex& regex,
 					 int iteration_step, iLogTemplate* log = nullptr);
-	static void test(const Regex& language, const Regex& regex,
-					 int iteration_step, iLogTemplate* log = nullptr);
+/*	static void test(const Regex& language, const Regex& regex,
+					 int iteration_step, iLogTemplate* log = nullptr);     */
 };

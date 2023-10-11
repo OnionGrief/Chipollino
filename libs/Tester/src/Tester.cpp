@@ -1,32 +1,48 @@
 #include "Tester/Tester.h"
 
-void Tester::test(const Regex& lang, const Regex& regex, int step,
+void Tester::test(const ParseDevice& lang, const Regex& regex, int step,
 				  iLogTemplate* log) {
 	iLogTemplate::Table t;
 	iLogTemplate::Plot plot;
 	vector<long> steps;
 	vector<long> words;
-	FiniteAutomaton thompson = lang.to_thompson();
-	FiniteAutomaton glushkov = lang.to_glushkov();
-	FiniteAutomaton smallNfa = glushkov.reverse().merge_bisimilar().reverse().merge_bisimilar().remove_eps();
-	FiniteAutomaton mindfa = smallNfa.minimize().remove_trap_states();
+	vector<string> labels;
+	vector<FiniteAutomaton> machines;
+        /* A counter for parsing objects */
+        int obj_types;
+        if (holds_alternative<Regex>(lang)) {
+		obj_types = 4;
+		Regex value = get<Regex>(lang);
+		machines.push_back(value.to_thompson());
+		labels.push_back("Thompson");
+		machines.push_back(value.to_glushkov());
+		labels.push_back("Glushkov");
+		machines.push_back(machines[1].reverse().merge_bisimilar().reverse().merge_bisimilar().remove_eps());
+		labels.push_back("Small NFA");
+                machines.push_back(machines[2].minimize().remove_trap_states());
+		labels.push_back("Minimal DFA");
+		}
+	else if (holds_alternative<FiniteAutomaton>(lang)) {
+		obj_types = 2;
+		FiniteAutomaton value = get<FiniteAutomaton>(lang);
+		machines.push_back(value);
+		labels.push_back("Current FA");
+		machines.push_back(value.minimize().remove_trap_states());
+		labels.push_back("Minimal DFA");
+		}
         bool belongs;
-	string id; 
 
 	using clock = std::chrono::high_resolution_clock;
 
-	for (int type = 0; type < 4; type++) {
+	for (int type = 0; type < obj_types; type++) {
 	steps.clear();
 	for (int i = 0; i < 13; i++) {
 		string word = regex.get_iterated_word(i * step);
 		// cout << word;
 		const auto start = clock::now();
 		int counter;
-		switch (type) {
-		 case 0: belongs = thompson.parsing_by_nfa(word, counter); id = "Thompson"; break;
-		 case 1: belongs = glushkov.parsing_by_nfa(word, counter); id = "Glushkov"; break;
-		 case 2: belongs = smallNfa.parsing_by_nfa(word, counter); id = "smallNFA"; break;
-		 default : belongs = mindfa.parsing_by_nfa(word, counter); id = "minDFA"; }
+	/*	if (holds_alternative<FiniteAutomaton&>(lang))     */
+		belongs = machines[type].parsing_by_nfa(word, counter);
 		const auto end = clock::now();
 		const long long elapsed =
 			std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
@@ -48,7 +64,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step,
 	}
 	for (int i = 0; i < steps.size(); i++)
 		{
-			plot.data.push_back(make_pair(make_pair(words[i], int(steps[i])),id));
+			plot.data.push_back(make_pair(make_pair(words[i], int(steps[i])),labels[type]));
 		}
 
 	}
@@ -57,7 +73,11 @@ void Tester::test(const Regex& lang, const Regex& regex, int step,
 	t.columns.push_back("Время парсинга");
 	t.columns.push_back("Принадлежность языку");
 	if (log) {
-		log->set_parameter("language", lang);
+		if (holds_alternative<FiniteAutomaton>(lang)) 
+			{ log->set_parameter("language", get<FiniteAutomaton>(lang));
+			}
+		else   { log->set_parameter("language", get<Regex>(lang));
+			}
 		log->set_parameter("regex", regex);
 		log->set_parameter("step", step);
 		log->set_parameter("table", t);
@@ -65,6 +85,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step,
 	}
 }
 
+/*
 void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step,
 				  iLogTemplate* log) {
 	vector<long> words, steps;
@@ -126,7 +147,7 @@ void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step,
 		log->set_parameter("table", t);
 		log->set_parameter("plot", plot);
 	}
-}
+}*/
 
 bool Tester::parsing_by_regex(string reg, string word) {
 	cmatch match_res;
