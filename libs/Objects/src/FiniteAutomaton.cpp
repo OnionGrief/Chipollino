@@ -412,7 +412,9 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 
 	vector<State> new_states;
 	map<set<int>, int> visited_states;
-
+	vector<Meta> old_meta, aux_meta;
+	vector<Meta> new_meta;
+	int group_counter = 0;
 	set<int> q = closure({initial_state}, true);
 	string initial_state_identifier;
 	for (auto elem : q) {
@@ -424,6 +426,13 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 	}
 	State new_initial_state = {0, q, initial_state_identifier, false,
 							   map<alphabet_symbol, set<int>>()};
+	if (q.size()>1) {
+		for (auto elem : q) { old_meta.push_back(NodeMeta{states[elem].index,group_counter}); }
+		aux_meta = mark_all_transitions(q, q, alphabet_symbol::epsilon(), group_counter);
+		old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
+		new_meta.push_back(NodeMeta{new_initial_state.index,group_counter}); 
+		group_counter++;
+		}
 	visited_states[q] = 0;
 	new_states.push_back(new_initial_state);
 
@@ -466,6 +475,15 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 						State new_state = {states_counter, x1,
 										   new_state_identifier, false,
 										   map<alphabet_symbol, set<int>>()};
+						if (q1.size()>1)
+							{for (auto elem : q1)
+								{ old_meta.push_back(NodeMeta{states[elem].index,group_counter}); }
+
+							aux_meta = mark_all_transitions(q1, q1, alphabet_symbol::epsilon(), group_counter);
+							old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
+							new_meta.push_back(NodeMeta{new_state.index,group_counter}); 
+							group_counter++;
+							}
 						new_states.push_back(new_state);
 						visited_states[x1] = states_counter;
 						s.push(x1);
@@ -486,8 +504,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 	new_nfa.states = new_states;
 	new_nfa = new_nfa.remove_unreachable_states();
 	if (log) {
-		log->set_parameter("oldautomaton", *this);
-		log->set_parameter("result", new_nfa);
+		log->set_parameter("oldautomaton", *this, colorize(old_meta));
+		log->set_parameter("result", new_nfa, colorize(new_meta));
 	}
 	return new_nfa;
 }
