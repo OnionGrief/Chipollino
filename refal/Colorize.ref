@@ -138,7 +138,8 @@ LenBlock {
 
 ZipColors {
  (t.Color e.Rest)(e.id) e.List = (t.Color'=('e.id')')<ZipColors (e.Rest)e.List>;
- () = ;
+ ()(e.id) e.List = (('Back_Overflow')'=('e.id')')<ZipColors (<Renderize 4 <ColorTable>>)e.List>;
+ (e.Colors) = ;
 }
 
 GetS {
@@ -153,6 +154,7 @@ Renderize {
   3 (e.Color) e.Rest = (e.Color'1')(e.Color'2')<Renderize 3 e.Rest>(e.Color'3');
   4 (e.Color) e.Rest = (e.Color'1')(e.Color'2')<Renderize 4 e.Rest>(e.Color'3')(e.Color'4');
   s.Num = ;
+  s.More e.Rest = <Renderize 4 e.Rest>;
 }
 
 ColorTable {
