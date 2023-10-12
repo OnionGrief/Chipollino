@@ -18,7 +18,8 @@ struct State;
 class Regex : BaseObject {
   private:
 	struct Lexem {
-		enum Type {
+		enum Type
+		{
 			error,
 			parL, // (
 			parR, // )
@@ -36,7 +37,8 @@ class Regex : BaseObject {
 			  int number = 0);
 	};
 
-	enum Type {
+	enum Type
+	{
 		// Epsilon
 		eps,
 		// Binary:

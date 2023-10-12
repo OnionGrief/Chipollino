@@ -7,8 +7,8 @@
 #include <iostream>
 #include <regex>
 #include <string>
-#include <vector>
 #include <variant>
+#include <vector>
 
 using namespace std;
 
@@ -17,7 +17,7 @@ class Tester {
 	struct word {			// доступ извне Tester::word
 		int iterations_num; // сколько проведено итераций
 		long long time;		// время парсинга в секундах
-		bool belongs;	// принадлежность языку
+		bool belongs;		// принадлежность языку
 	};
 
 	struct table {
@@ -25,7 +25,6 @@ class Tester {
 		int step;  // шаг итерации
 		vector<word> words; // таблица
 	};
-
 
   private:
 	static bool parsing_by_regex(string, string);
@@ -35,6 +34,6 @@ class Tester {
   public:
 	static void test(const ParseDevice& language, const Regex& regex,
 					 int iteration_step, iLogTemplate* log = nullptr);
-/*	static void test(const Regex& language, const Regex& regex,
-					 int iteration_step, iLogTemplate* log = nullptr);     */
+	/*	static void test(const Regex& language, const Regex& regex,
+						 int iteration_step, iLogTemplate* log = nullptr); */
 };

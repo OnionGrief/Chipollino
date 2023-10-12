@@ -25,7 +25,8 @@ struct PrefixGrammarItem {
 };
 
 struct GrammarItem {
-	enum Type {
+	enum Type
+	{
 		terminal,
 		nonterminal
 	};

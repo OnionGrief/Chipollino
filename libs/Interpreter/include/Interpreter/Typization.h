@@ -12,7 +12,8 @@
 namespace Typization {
 
 // Перечисление типов объектов
-enum class ObjectType {
+enum class ObjectType
+{
 	NFA,		 // недетерминированный КА
 	DFA,		 // детерминированный КА
 	Regex,		 // регулярное выражение

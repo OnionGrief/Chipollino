@@ -39,11 +39,12 @@ string AutomatonToImage::to_image(string automat, string metadata) {
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
 	fprintf(fo, "%s", automat.c_str());
-	fclose(fo);           
-	system(
-		"cd refal && refgo Preprocess+MathMode+FrameFormatter input.dot > error_refal0.txt");
+	fclose(fo);
+	system("cd refal && refgo Preprocess+MathMode+FrameFormatter input.dot > "
+		   "error_refal0.txt");
 	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
-	system("cd refal && refgo Postprocess+MathMode+FrameFormatter input.tex > error_refal.txt "
+	system("cd refal && refgo Postprocess+MathMode+FrameFormatter input.tex > "
+		   "error_refal.txt "
 		   "2>&1");
 
 #ifdef _WIN32
@@ -72,7 +73,7 @@ string AutomatonToImage::to_image(string automat, string metadata) {
 #elif __unix || __unix__ || __linux__
 	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm "
 		   "R_input.tex");
-#endif  
+#endif
 
 	return graph.str();
 }
@@ -84,22 +85,21 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	ifstream infile_for_Final;
 	fo = fopen("./refal/Col_input.tex", "wt");
 	fprintf(fo, "%s", automaton.c_str());
-	fclose(fo);           
-	if (metadata != "")
-	 {md = fopen("./refal/Meta_input.data", "wt");
-	 fprintf(md, "%s", metadata.c_str());
-      	 fclose(md);
-	 system(
-		"cd refal && refgo Colorize+MathMode Col_input.tex > error_colorize.txt");
-	 infile_for_Final.open("./refal/Final_input.tex");
+	fclose(fo);
+	if (metadata != "") {
+		md = fopen("./refal/Meta_input.data", "wt");
+		fprintf(md, "%s", metadata.c_str());
+		fclose(md);
+		system("cd refal && refgo Colorize+MathMode Col_input.tex > "
+			   "error_colorize.txt");
+		infile_for_Final.open("./refal/Final_input.tex");
 #ifdef _WIN32
-	 system("cd refal && DEL Meta_input.data");
+		system("cd refal && DEL Meta_input.data");
 #elif __unix || __unix__ || __linux__
-	 system("cd refal && rm Meta_input.data");
-#endif  
-	 }
-	else 
-         infile_for_Final.open("./refal/Col_input.tex");           
+		system("cd refal && rm Meta_input.data");
+#endif
+	} else
+		infile_for_Final.open("./refal/Col_input.tex");
 
 	// автомат
 	stringstream graph;
@@ -117,7 +117,7 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	system("cd refal && DEL Col_input.tex");
 #elif __unix || __unix__ || __linux__
 	system("cd refal && rm -f Final_input.tex && rm Col_input.tex");
-#endif        
+#endif
 	// таблица
 	ifstream infile_for_L("./refal/L_input.tex");
 
@@ -131,7 +131,8 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	infile_for_L.close();
 
 #ifdef _WIN32
-	system("cd refal && del L_input.tex && IF EXIST Aux_input.data del Aux_input.data");
+	system("cd refal && del L_input.tex && IF EXIST Aux_input.data del "
+		   "Aux_input.data");
 #elif __unix || __unix__ || __linux__
 	system("cd refal && rm L_input.tex && rm -f Aux_input.data");
 #endif

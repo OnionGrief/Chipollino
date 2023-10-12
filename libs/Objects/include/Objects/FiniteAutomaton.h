@@ -7,8 +7,8 @@
 #include <optional>
 #include <set>
 #include <string>
-#include <vector>
 #include <variant>
+#include <vector>
 using namespace std;
 
 class Regex;
@@ -46,7 +46,8 @@ using Meta = variant<EdgeMeta, NodeMeta>;
 
 class FiniteAutomaton : public BaseObject {
   public:
-	enum AmbiguityValue {
+	enum AmbiguityValue
+	{
 		exponentially_ambiguous,
 		almost_unambigious,
 		unambigious,
@@ -58,7 +59,8 @@ class FiniteAutomaton : public BaseObject {
 	vector<State> states;
 
 	string colorize(vector<Meta> metadata) const;
-	vector<Meta> mark_all_transitions(set<int> from, set<int> to, alphabet_symbol by, int group_id) const;
+	vector<Meta> mark_all_transitions(set<int> from, set<int> to,
+									  alphabet_symbol by, int group_id) const;
 	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 	// преобразованиях всегда удаляем в конце ловушки.
 	// Если isTrim = false, тогда после удаления ловушки в результате

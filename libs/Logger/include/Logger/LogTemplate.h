@@ -10,13 +10,17 @@
 using namespace std;
 class LogTemplate : public iLogTemplate {
   public:
-	void set_parameter(const string& key,
-					   const FiniteAutomaton& value, string meta = "") override;
-	void set_parameter(const string& key, Regex value, string meta = "") override;
-	void set_parameter(const string& key, string value, string meta = "") override;
+	void set_parameter(const string& key, const FiniteAutomaton& value,
+					   string meta = "") override;
+	void set_parameter(const string& key, Regex value,
+					   string meta = "") override;
+	void set_parameter(const string& key, string value,
+					   string meta = "") override;
 	void set_parameter(const string& key, int value, string meta = "") override;
-	void set_parameter(const string& key, Table value, string meta = "") override;
-	void set_parameter(const string& key, Plot value, string meta = "") override;
+	void set_parameter(const string& key, Table value,
+					   string meta = "") override;
+	void set_parameter(const string& key, Plot value,
+					   string meta = "") override;
 	void set_theory_flag(bool value);
 
 	// Рендерит все логи, возвращает строку
@@ -43,7 +47,8 @@ class LogTemplate : public iLogTemplate {
 	// Стуктура для хранения параметров
 	struct LogParameter {
 		variant<FiniteAutomaton, Regex, string, int, Table, Plot> value;
-		string meta;    /* Дополнительные данные о структуре, которые не кэшируются (раскраска) */
+		string meta; /* Дополнительные данные о структуре, которые не кэшируются
+						(раскраска) */
 	};
 
 	// Параметры
@@ -59,7 +64,7 @@ class LogTemplate : public iLogTemplate {
 	static string log_table(Table t/*vector<string> rows, vector<string> columns,
 							vector<string> data*/);
 	// графики
-	static string log_plot(Plot p/*vector<<int,long>,string>*/);
+	static string log_plot(Plot p /*vector<<int,long>,string>*/);
 	// Рекурсивно раскрывает include-выражения в файле
 	stringstream expand_includes(string filename) const;
 };
