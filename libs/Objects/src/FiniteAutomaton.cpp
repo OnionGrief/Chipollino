@@ -88,38 +88,44 @@ void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
 	}
 }
 
-string colorize_node(int id, int group_id) { 
-	return "@"+to_string(id)+"@::=group"+ to_string(group_id) + "\n";
+/* Если код похож на заклинание вызова демонов, то очевидно, он имеет отношение
+   к Рефалу. Это выглядит страшно, но именно тут так приходится, иначе не
+   получится использовать Рефал-стиль в модуле раскраски. */
+string colorize_node(int id, int group_id) {
+	return "@" + to_string(id) + "@::=group" + to_string(group_id) + "\n";
 }
 
-string colorize_edge(int from_ind, int to_id, alphabet_symbol by, int group_id) {
-	return "@"+ to_string(from_ind)+"-"+ to_string(to_id)
-					+ "@"+string(by)+"@::=group"+to_string(group_id)+"\n";
+string colorize_edge(int from_ind, int to_id, alphabet_symbol by,
+					 int group_id) {
+	return "@" + to_string(from_ind) + "-" + to_string(to_id) + "@" +
+		   string(by) + "@::=group" + to_string(group_id) + "\n";
 }
 
-vector<Meta> FiniteAutomaton::mark_all_transitions(set<int> from, set<int> to, 
-						alphabet_symbol by, int group_id) const {
-vector<Meta> metadata;
- for (auto elem : from)
-   for (auto trans : states[elem].transitions)
-	{for (auto reach : trans.second)
-	      if (to.find(reach) != to.end() && (trans.first == by))
-			metadata.push_back(EdgeMeta{states[elem].index, reach, trans.first, group_id});
-	}
-return metadata;
+vector<Meta> FiniteAutomaton::mark_all_transitions(set<int> from, set<int> to,
+												   alphabet_symbol by,
+												   int group_id) const {
+	vector<Meta> metadata;
+	for (auto elem : from)
+		for (auto trans : states[elem].transitions) {
+			for (auto reach : trans.second)
+				if (to.find(reach) != to.end() && (trans.first == by))
+					metadata.push_back(EdgeMeta{states[elem].index, reach,
+												trans.first, group_id});
+		}
+	return metadata;
 }
 
 string FiniteAutomaton::colorize(vector<Meta> raw_metadata) const {
 	string colors = "";
-	for (auto elem : raw_metadata)	{
-		if (holds_alternative<NodeMeta>(elem))
-			{auto node_m = get<NodeMeta>(elem);
-			colors+=colorize_node(node_m.id, node_m.group);
-			}
-		else {
+	for (auto elem : raw_metadata) {
+		if (holds_alternative<NodeMeta>(elem)) {
+			auto node_m = get<NodeMeta>(elem);
+			colors += colorize_node(node_m.id, node_m.group);
+		} else {
 			auto edge_m = get<EdgeMeta>(elem);
-			colors+=colorize_edge(edge_m.from, edge_m.to, edge_m.label, edge_m.group);
-		}	
+			colors += colorize_edge(edge_m.from, edge_m.to, edge_m.label,
+									edge_m.group);
+		}
 	}
 	return colors;
 }
@@ -154,15 +160,16 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log,
 							   map<alphabet_symbol, set<int>>()};
 	dfa.states.push_back(new_initial_state);
 
-	if (q0.size()>1)
-		{for (auto elem : q0)
-			{ old_meta.push_back(NodeMeta{states[elem].index, group_counter});
-			}
-		aux_meta = mark_all_transitions(q0, q0, alphabet_symbol::epsilon(), group_counter);
-		old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end()); 
+	if (q0.size() > 1) {
+		for (auto elem : q0) {
+			old_meta.push_back(NodeMeta{states[elem].index, group_counter});
+		}
+		aux_meta = mark_all_transitions(q0, q0, alphabet_symbol::epsilon(),
+										group_counter);
+		old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
 		new_meta.push_back(NodeMeta{new_initial_state.index, group_counter});
 		group_counter++;
-		}
+	}
 
 	stack<set<int>> s1;
 	stack<int> s2;
@@ -225,6 +232,18 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log,
 				dfa.states.push_back(q1);
 				s1.push(z1);
 				s2.push(index);
+				if (z1.size()>1) {
+					for (auto elem : z1) { 
+						old_meta.push_back(NodeMeta{states[elem].index, group_counter}); }
+					aux_meta = mark_all_transitions(z, z1, symb,
+										group_counter);
+					old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
+					aux_meta = mark_all_transitions(z1, z1, alphabet_symbol::epsilon(),
+										group_counter);
+					old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
+					new_meta.push_back(NodeMeta{q1.index, group_counter});
+					group_counter++;
+					}
 			}
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
@@ -2284,7 +2303,7 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 bool FiniteAutomaton::parsing_nfa_for(const string& s, int& counter) const {
 	stack<State> stac_state;
 	stack<int> stack_index;
-	set<pair<int,pair<int,int>>> set_visited_eps, aux_eps;
+	set<pair<int, pair<int, int>>> set_visited_eps, aux_eps;
 	// set<pair<int,int>> set_visited;
 	stac_state.push(states[initial_state]);
 	stack_index.push(0);
@@ -2298,20 +2317,21 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s, int& counter) const {
 			break;
 		}
 		state = stac_state.top();
-		index = stack_index.top();		
+		index = stack_index.top();
 		stac_state.pop();
 		stack_index.pop();
-		// if (block_repeats && (set_visited.find(make_pair(state.index,index)) != set_visited.end() )) continue;
+		// if (block_repeats && (set_visited.find(make_pair(state.index,index))
+		// != set_visited.end() )) continue;
 		counter++;
-		if (set_visited_eps.size()>0) {
-		  for (auto pos : set_visited_eps)
-		  	 {if (pos.first<=index)
-			 	aux_eps.insert(pos);				
-			 }
-		    set_visited_eps = aux_eps;
-		    aux_eps.clear();
-		    }  
-		// if (block_repeats) {set_visited.insert(make_pair(state.index,index)); }
+		if (set_visited_eps.size() > 0) {
+			for (auto pos : set_visited_eps) {
+				if (pos.first <= index) aux_eps.insert(pos);
+			}
+			set_visited_eps = aux_eps;
+			aux_eps.clear();
+		}
+		// if (block_repeats) {set_visited.insert(make_pair(state.index,index));
+		// }
 		alphabet_symbol elem(s[index]);
 		set<int> tr = state.transitions[elem];
 		vector<int> trans{tr.begin(), tr.end()};
@@ -2320,7 +2340,7 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s, int& counter) const {
 				[alphabet_symbol::epsilon()]; // char_to_alphabet_symbol('\0')];
 		vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
 		// tr = {};
-		//cout << elem << " " << state.identifier << " " << index << " "
+		// cout << elem << " " << state.identifier << " " << index << " "
 		//	 << stac_state.size() << endl;
 		n = trans.size();
 		n_eps = trans_eps.size();
@@ -2331,18 +2351,21 @@ bool FiniteAutomaton::parsing_nfa_for(const string& s, int& counter) const {
 			}
 		}
 		for (size_t i = 0; i < n_eps; i++) {
-			if (set_visited_eps.find(make_pair(index, make_pair(state.index,states[trans_eps[i]].index))) == set_visited_eps.end())
-                        { 
-			stac_state.push(states[trans_eps[i]]);
-			stack_index.push(index);
-			set_visited_eps.insert(make_pair(index,make_pair(state.index,states[trans_eps[i]].index)));
-                        }
+			if (set_visited_eps.find(
+					make_pair(index, make_pair(state.index,
+											   states[trans_eps[i]].index))) ==
+				set_visited_eps.end()) {
+				stac_state.push(states[trans_eps[i]]);
+				stack_index.push(index);
+				set_visited_eps.insert(make_pair(
+					index, make_pair(state.index, states[trans_eps[i]].index)));
+			}
 		}
 	}
 	if (s.size() == index && state.is_terminal) {
 		return true;
 	}
-	return false; 
+	return false;
 }
 
 bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
