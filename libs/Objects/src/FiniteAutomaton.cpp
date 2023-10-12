@@ -380,10 +380,29 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log,
 	for (const auto& state : minimized_dfa.states) {
 		ss << "\\{" << state.identifier << "\\}\;";
 	}
+	bool merged = false;
+	vector<Meta> old_meta;
+	vector<Meta> new_meta;
+	for (int i = 0; i < dfa.states.size(); i++) {
+		for (int j = 0; j < dfa.states.size(); j++)
+		 if (classes[i] == classes[j] && (i != j))
+		{ merged = true;
+		  old_meta.push_back(NodeMeta{dfa.states[i].index,classes[i]});	
+		  new_meta.push_back(NodeMeta{classes[i],classes[i]});
+		  break;
+		}
+	   }	
 	if (log) {
+	  if (!is_deterministic())
+		{ log->set_parameter("oldautomaton", *this);
+		  log->set_parameter("to_determ", "Автомат после предварительной детерминизации: ");
+		  log->set_parameter("detautomaton", dfa, colorize(old_meta));
+		} 
+	  else
+		{log->set_parameter("oldautomaton", dfa, colorize(old_meta));}
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("equivclasses", ss.str());
-		log->set_parameter("result", minimized_dfa);
+		log->set_parameter("result", minimized_dfa, colorize(new_meta));
 	}
 	return minimized_dfa;
 }
