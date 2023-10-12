@@ -28,14 +28,25 @@ void AutomatonToImage::to_image(string automat, int name) {
 	system(cmd);
 */
 
-string AutomatonToImage::to_image(string automat, string metadata) {
+void remove_file(string dir, string file, bool guarded = false) {
+	stringstream command;
+	command << "cd " << dir;
 #ifdef _WIN32
-	system("cd refal && IF EXIST Meta_input.data del Meta_input.data");
-	system("cd refal && IF EXIST Aux_input.data del Aux_input.data");
+	if (guarded)  
+		command << " && IF EXIST " << file << " DEL " << file ;
+	else
+		command << " && DEL " << file;
 #elif __unix || __unix__ || __linux__
-	system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
+	if (guarded)  
+		command << " && rm -f " << file;
+	else
+		command << " && rm " << file;
 #endif
+	system(command.str().c_str());
+}
 
+string AutomatonToImage::to_image(string automat) {
+	remove_file("refal", "Aux_input.data", true);
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
 	fprintf(fo, "%s", automat.c_str());
@@ -46,14 +57,8 @@ string AutomatonToImage::to_image(string automat, string metadata) {
 	system("cd refal && refgo Postprocess+MathMode+FrameFormatter input.tex > "
 		   "error_refal.txt "
 		   "2>&1");
-
-#ifdef _WIN32
-	system("cd refal && IF EXIST Meta_input.data del Meta_input.data && "
-		   "IF EXIST Aux_input.data del Aux_input.data");
-#elif __unix || __unix__ || __linux__
-	system("cd refal && rm -f Meta_input.data && rm -f Aux_input.data");
-#endif
-
+	remove_file("refal", "Meta_input.data", true);
+	remove_file("refal", "Aux_input.data", true);
 	// автомат
 	ifstream infile_for_R("./refal/R_input.tex");
 	stringstream graph;
@@ -66,14 +71,10 @@ string AutomatonToImage::to_image(string automat, string metadata) {
 	}
 	infile_for_R.close();
 
-#ifdef _WIN32
-	system("cd refal && del input.dot && del input.tex && del Mod_input.dot && "
-		   "del "
-		   "R_input.tex");
-#elif __unix || __unix__ || __linux__
-	system("cd refal && rm input.dot && rm input.tex && rm Mod_input.dot && rm "
-		   "R_input.tex");
-#endif
+	remove_file("refal", "input.dot");
+	remove_file("refal", "input.tex");
+	remove_file("refal", "Mod_input.dot");
+	remove_file("refal", "R_input.tex");
 
 	return graph.str();
 }
@@ -93,11 +94,7 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 		system("cd refal && refgo Colorize+MathMode Col_input.tex > "
 			   "error_colorize.txt");
 		infile_for_Final.open("./refal/Final_input.tex");
-#ifdef _WIN32
-		system("cd refal && DEL Meta_input.data");
-#elif __unix || __unix__ || __linux__
-		system("cd refal && rm Meta_input.data");
-#endif
+		remove_file("refal", "Meta_input.data");
 	} else
 		infile_for_Final.open("./refal/Col_input.tex");
 
@@ -112,12 +109,8 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	}
 	infile_for_Final.close();
 
-#ifdef _WIN32
-	system("cd refal && IF EXIST Final_input.tex DEL Final_input.tex");
-	system("cd refal && DEL Col_input.tex");
-#elif __unix || __unix__ || __linux__
-	system("cd refal && rm -f Final_input.tex && rm Col_input.tex");
-#endif
+	remove_file("refal", "Final_input.tex", true);
+	remove_file("refal", "Col_input.tex");
 	// таблица
 	ifstream infile_for_L("./refal/L_input.tex");
 
@@ -130,12 +123,9 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	}
 	infile_for_L.close();
 
-#ifdef _WIN32
-	system("cd refal && del L_input.tex && IF EXIST Aux_input.data del "
-		   "Aux_input.data");
-#elif __unix || __unix__ || __linux__
-	system("cd refal && rm L_input.tex && rm -f Aux_input.data");
-#endif
+	remove_file("refal", "Aux_input.data", true);
+	remove_file("refal", "L_input.tex", true);
 
 	return graph.str();
 }
+
