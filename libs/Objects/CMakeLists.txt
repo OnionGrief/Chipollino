@@ -13,6 +13,7 @@ set(SOURCES
         src/AlgExpression.cpp
         src/AbstractMachine.cpp
         src/MemoryFiniteAutomaton.cpp
+        src/BackRefRegex.cpp
         )
 
 # Add a library with the above sources

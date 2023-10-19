@@ -10,7 +10,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	MemoryFiniteAutomaton(const MemoryFiniteAutomaton& other);
 
 	template <typename T>
-	MemoryFiniteAutomaton* castToMFA(std::unique_ptr<T>&& uniquePtr);
+	MemoryFiniteAutomaton* castToMFA(unique_ptr<T>&& uptr);
 	// визуализация автомата
 	string to_txt() const override;
 };

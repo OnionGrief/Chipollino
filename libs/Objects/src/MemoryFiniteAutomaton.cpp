@@ -1,15 +1,14 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 
 template <typename T>
-MemoryFiniteAutomaton* MemoryFiniteAutomaton::castToMFA(
-	std::unique_ptr<T>&& uniquePtr) {
-	auto* fa = static_cast<MemoryFiniteAutomaton*>(uniquePtr.get());
+MemoryFiniteAutomaton* MemoryFiniteAutomaton::castToMFA(unique_ptr<T>&& uptr) {
+	auto* mfa = static_cast<MemoryFiniteAutomaton*>(uptr.get());
 
-	if (!fa) {
+	if (!mfa) {
 		throw std::runtime_error("Failed to cast to MemoryFiniteAutomaton");
 	}
 
-	return fa;
+	return mfa;
 }
 
 string MemoryFiniteAutomaton::to_txt() const {

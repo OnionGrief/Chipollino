@@ -29,7 +29,7 @@ struct State {
 	void set_transition(int, const alphabet_symbol&);
 };
 
-class FiniteAutomaton : protected AbstractMachine {
+class FiniteAutomaton : public AbstractMachine {
   public:
 	enum AmbiguityValue {
 		exponentially_ambiguous,
@@ -81,7 +81,7 @@ class FiniteAutomaton : protected AbstractMachine {
 	FiniteAutomaton(const FiniteAutomaton& other);
 
 	template <typename T>
-	static FiniteAutomaton* castToFA(std::unique_ptr<T>&& uniquePtr);
+	static FiniteAutomaton* castToFA(unique_ptr<T>&& uptr);
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
@@ -169,6 +169,7 @@ class FiniteAutomaton : protected AbstractMachine {
 	// проверка на минимальность для дка
 	bool is_dfa_minimal(iLogTemplate* log = nullptr) const;
 
+	friend class Regex;
 	friend class Regex;
 	friend class TransformationMonoid;
 	friend class Grammar;

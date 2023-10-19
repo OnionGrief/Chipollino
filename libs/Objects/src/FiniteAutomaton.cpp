@@ -42,8 +42,8 @@ FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 	  states(other.states) {}
 
 template <typename T>
-FiniteAutomaton* FiniteAutomaton::castToFA(std::unique_ptr<T>&& uniquePtr) {
-	auto* fa = static_cast<FiniteAutomaton*>(uniquePtr.get());
+FiniteAutomaton* FiniteAutomaton::castToFA(unique_ptr<T>&& uptr) {
+	auto* fa = static_cast<FiniteAutomaton*>(uptr.get());
 
 	if (!fa) {
 		throw std::runtime_error("Failed to cast to FiniteAutomaton");

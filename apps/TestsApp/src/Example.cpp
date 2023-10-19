@@ -556,7 +556,7 @@ void Example::test_all() {
 	test_regex_subset();
 	test_merge_bisimilar();
 	test_regex_equal();
-	//	test_ambiguity();
+	test_ambiguity();
 	test_arden();
 	test_pump_length();
 	test_is_one_unambiguous();
