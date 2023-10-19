@@ -2,6 +2,7 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/iLogTemplate.h"
+#include <unordered_map>
 
 vector<Regex::Lexeme> Regex::parse_string(string str) {
 	vector<Regex::Lexeme> lexems;
@@ -387,7 +388,6 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language)
 
 template <typename T> Regex* Regex::castToRegex(T* ptr) {
 	auto* r = static_cast<Regex*>(ptr);
-
 	if (!r) {
 		throw std::runtime_error("Failed to cast to Regex");
 	}
@@ -1726,6 +1726,54 @@ void Regex::print_tree() {
 		r_v = to_string(type);
 	cout << r_v << endl;
 	print_subtree(term_r, 1);
+}
+
+std::unordered_map<int, std::string> type_to_str = {
+	{0, "ε"}, {1, "|"}, {2, "."}, {3, "*"}, {4, "symb"}};
+
+string Regex::print_subdot(Regex* r, const string& parent_dot_node, int& id) {
+	string dot;
+	if (r) {
+		string dot_node = "node" + to_string(id++);
+
+		alphabet_symbol r_v;
+		if (r->value.symbol != "")
+			r_v = r->value.symbol;
+		else
+			r_v = type_to_str.at(r->type);
+
+		dot += dot_node + " [label=\"" + string(r_v) + "\"];\n";
+
+		if (!parent_dot_node.empty()) {
+			dot += parent_dot_node + " -- " + dot_node + ";\n";
+		}
+
+		dot += print_subdot(r->term_l, dot_node, id);
+		dot += print_subdot(r->term_r, dot_node, id);
+	}
+	return dot;
+}
+
+void Regex::print_dot() {
+	int id = 0;
+
+	string dot;
+	dot += "graph {\n";
+
+	alphabet_symbol r_v;
+	if (value.symbol != "")
+		r_v = value.symbol;
+	else
+		r_v = type_to_str.at(type);
+
+	string root_dot_node = "node" + to_string(id++);
+	dot += root_dot_node + " [label=\"" + string(r_v) + "\"];\n";
+
+	dot += print_subdot(term_l, root_dot_node, id);
+	dot += print_subdot(term_r, root_dot_node, id);
+
+	dot += "}\n";
+	cout << dot << endl;
 }
 
 bool Regex::is_one_unambiguous(iLogTemplate* log) const {

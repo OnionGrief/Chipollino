@@ -63,6 +63,8 @@ class Regex : public AlgExpression {
 	void generate_alphabet(set<alphabet_symbol>& _alphabet);
 	// для print_tree
 	void print_subtree(Regex* r, int level);
+	// для print_dot
+	string print_subdot(Regex* r, const std::string& parent_dot_node, int& id);
 
 	void pre_order_travers() const;
 	void clear();
@@ -77,6 +79,7 @@ class Regex : public AlgExpression {
 	string to_txt() const override;
 	// вывод дерева для дебага
 	void print_tree();
+	void print_dot();
 
 	FiniteAutomaton to_thompson(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;

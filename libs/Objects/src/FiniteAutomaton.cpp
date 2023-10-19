@@ -44,7 +44,6 @@ FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 template <typename T>
 FiniteAutomaton* FiniteAutomaton::castToFA(unique_ptr<T>&& uptr) {
 	auto* fa = static_cast<FiniteAutomaton*>(uptr.get());
-
 	if (!fa) {
 		throw std::runtime_error("Failed to cast to FiniteAutomaton");
 	}

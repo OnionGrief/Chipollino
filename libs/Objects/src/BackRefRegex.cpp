@@ -2,7 +2,6 @@
 
 template <typename T> BackRefRegex* BackRefRegex::castToBRegex(T* ptr) {
 	auto* r = static_cast<BackRefRegex*>(ptr);
-
 	if (!r) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
