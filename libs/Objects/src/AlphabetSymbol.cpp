@@ -71,7 +71,7 @@ alphabet_symbol::operator string() const {
 }
 
 string alphabet_symbol::vector_to_str(const vector<alphabet_symbol>& in) {
-	string out = "";
+	string out;
 	for (const auto& i : in)
 		out += i;
 	return out;
@@ -109,6 +109,6 @@ bool alphabet_symbol::is_annotated() const {
 	return !annote_numbers.empty();
 }
 
-bool alphabet_symbol::is_linearize() const {
+bool alphabet_symbol::is_linearized() const {
 	return !linearize_numbers.empty();
 }
