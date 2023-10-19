@@ -145,24 +145,24 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	int states_counter_old = 0;
 	int states_counter_new = 0;
 	states_counter_old =
-		in.states.size(); // для проверки ловушки на минимальность
+		in.size(); // для проверки ловушки на минимальность
 
 	automat = in.remove_trap_states(); // удаляем ловушки
-	states_counter_new = automat.states.size();
+	states_counter_new = automat.size();
 	if (states_counter_old - states_counter_new > 1) {
 		trap_not_minimal = true;
 		states_counter_old = states_counter_new;
 	}
 
 	automat.remove_unreachable_states(); // удаляем недостижимые ловушки
-	states_counter_new = automat.states.size();
+	states_counter_new = automat.size();
 	if (states_counter_old - states_counter_new > 1) {
 		trap_not_minimal = true;
 	}
 	// cout << automat.to_txt();
 	vector<TransformationMonoid::Transition>
 		initperehods; // получаем состояния по eps переходу (из себя в себя)
-	for (int i = 0; i < automat.states.size(); i++) {
+	for (int i = 0; i < automat.size(); i++) {
 		TransformationMonoid::Transition temp;
 		temp.first = i;
 		temp.second = i;
@@ -572,7 +572,7 @@ bool TransformationMonoid::is_minimal(iLogTemplate* log) {
 		}
 	}
 	// не уверен что правильно
-	bool is_minimal_bool = (log2(automat.states.size()) + 1) <=
+	bool is_minimal_bool = (log2(automat.size()) + 1) <=
 						   equivalence_classes_table_bool.size();
 	if (log) {
 		log->set_parameter("result", is_minimal_bool ? "true" : "false");

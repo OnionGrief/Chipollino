@@ -1,6 +1,6 @@
 #pragma once
+#include "AbstractMachine.h"
 #include "AlphabetSymbol.h"
-#include "BaseObject.h"
 #include "iLogTemplate.h"
 #include <iostream>
 #include <map>
@@ -29,7 +29,7 @@ struct State {
 	void set_transition(int, const alphabet_symbol&);
 };
 
-class FiniteAutomaton : public BaseObject {
+class FiniteAutomaton : protected AbstractMachine {
   public:
 	enum AmbiguityValue {
 		exponentially_ambiguous,
@@ -39,7 +39,6 @@ class FiniteAutomaton : public BaseObject {
 	};
 
   private:
-	int initial_state = 0;
 	vector<State> states;
 
 	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
@@ -74,12 +73,15 @@ class FiniteAutomaton : public BaseObject {
 	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
 
   public:
-	FiniteAutomaton();
+	FiniteAutomaton() = default;
 	FiniteAutomaton(int initial_state, vector<State> states,
 					shared_ptr<Language> language);
 	FiniteAutomaton(int initial_state, vector<State> states,
 					set<alphabet_symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
+
+	template <typename T>
+	static FiniteAutomaton* castToFA(std::unique_ptr<T>&& uniquePtr);
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
@@ -97,7 +99,7 @@ class FiniteAutomaton : public BaseObject {
 	static FiniteAutomaton intersection(
 		const FiniteAutomaton&, const FiniteAutomaton&,
 		iLogTemplate* log = nullptr); // меняет язык
-	// объединение НКА (на выходе - автомат, распознающий слова объединенеия
+	// объединение НКА (на выходе - автомат, распознающий слова объединения
 	// языков L1 и L2)
 	static FiniteAutomaton uunion(const FiniteAutomaton&,
 								  const FiniteAutomaton&,
@@ -153,7 +155,7 @@ class FiniteAutomaton : public BaseObject {
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
 	// возвращает количество состояний (пердикат States)
-	int states_number(iLogTemplate* log = nullptr) const;
+	int size(iLogTemplate* log = nullptr) const;
 	// проверка на пустоту
 	bool is_empty() const;
 	// метод Arden

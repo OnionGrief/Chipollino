@@ -360,8 +360,7 @@ optional<GeneralObject> Interpreter::apply_function(
 		return ObjectInt(trmon.class_length(&log_template));
 	}
 	if (function.name == "States") {
-		return ObjectInt(
-			get_automaton(arguments[0]).states_number(&log_template));
+		return ObjectInt(get_automaton(arguments[0]).size(&log_template));
 	}
 	if (function.name == "ClassCard") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));

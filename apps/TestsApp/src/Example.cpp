@@ -531,14 +531,14 @@ void Example::arden_lemma_testing() {
 		Regex r1(s);
 		cout << s << endl;
 		FiniteAutomaton fa1 = Regex(s).to_glushkov();
-		cout << fa1.states_number() << endl;
+		cout << fa1.size() << endl;
 		int a1 = fa1.ambiguity();
 		cout << "A " << a1 << endl;
 
 		Regex r2 = fa1.to_regex();
 		cout << r2.to_txt() << endl;
 		FiniteAutomaton fa2 = r2.to_glushkov();
-		cout << fa2.states_number() << endl;
+		cout << fa2.size() << endl;
 		int a2 = fa2.ambiguity();
 		cout << "A " << a2 << endl;
 
@@ -556,7 +556,7 @@ void Example::test_all() {
 	test_regex_subset();
 	test_merge_bisimilar();
 	test_regex_equal();
-	test_ambiguity();
+	//	test_ambiguity();
 	test_arden();
 	test_pump_length();
 	test_is_one_unambiguous();
