@@ -5,14 +5,10 @@
 #include <iostream>
 #include <map>
 #include <optional>
-#include <set>
-#include <string>
-#include <vector>
 using namespace std;
 
 class Regex;
 class Language;
-class Grammar;
 class TransformationMonoid;
 
 struct State {
@@ -27,6 +23,11 @@ struct State {
 	State(int index, set<int> label, string identifier, bool is_terminal,
 		  map<alphabet_symbol, set<int>> transitions);
 	void set_transition(int, const alphabet_symbol&);
+};
+
+struct expression_arden {
+	int fa_state_number; // индекс состояния на которое ссылаемся
+	Regex* regex_from_state; // Regex по которому переходят из состояния
 };
 
 class FiniteAutomaton : public AbstractMachine {
@@ -55,63 +56,53 @@ class FiniteAutomaton : public AbstractMachine {
 	set<int> closure(const set<int>&, bool) const;
 	// удаление недостижимых из начального состояний
 	FiniteAutomaton remove_unreachable_states() const;
-	static bool equality_checker(const FiniteAutomaton& fa1,
-								 const FiniteAutomaton& fa2);
-	static bool bisimilarity_checker(const FiniteAutomaton& fa1,
-									 const FiniteAutomaton& fa2);
+	static bool equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
+	static bool bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// принимает в качетве лимита максимальное количество цифр в
 	// числителе + знаменателе дроби, которая может встретиться при вычислениях
-	AmbiguityValue get_ambiguity_value(int digits_number_limit,
-									   optional<int>& word_length) const;
+	AmbiguityValue get_ambiguity_value(int digits_number_limit, optional<int>& word_length) const;
 	optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
-	std::optional<std::string> get_prefix(int state_beg, int state_end,
-										  map<int, bool>& was) const;
+	std::optional<std::string> get_prefix(int state_beg, int state_end, map<int, bool>& was) const;
 
 	// функция проверки на семантическую детерминированность
 	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
 
+	static vector<expression_arden> arden(const vector<expression_arden>& in, int index);
+	static vector<expression_arden> arden_minimize(const vector<expression_arden>& in);
+
   public:
 	FiniteAutomaton() = default;
-	FiniteAutomaton(int initial_state, vector<State> states,
-					shared_ptr<Language> language);
-	FiniteAutomaton(int initial_state, vector<State> states,
-					set<alphabet_symbol> alphabet);
+	FiniteAutomaton(int initial_state, vector<State> states, shared_ptr<Language> language);
+	FiniteAutomaton(int initial_state, vector<State> states, set<alphabet_symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
-	template <typename T>
-	static FiniteAutomaton* castToFA(unique_ptr<T>&& uptr);
+	template <typename T> static FiniteAutomaton* castToFA(unique_ptr<T>&& uptr);
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
-	FiniteAutomaton determinize(iLogTemplate* log = nullptr,
-								bool is_trim = true) const;
+	FiniteAutomaton determinize(iLogTemplate* log = nullptr, bool is_trim = true) const;
 	// удаление eps-переходов (построение eps-замыканий)
 	FiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
 	// удаление eps-переходов (доп. вариант)
 	FiniteAutomaton remove_eps_additional(iLogTemplate* log = nullptr) const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize(iLogTemplate* log = nullptr,
-							 bool is_trim = true) const;
+	FiniteAutomaton minimize(iLogTemplate* log = nullptr, bool is_trim = true) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
-	static FiniteAutomaton intersection(
-		const FiniteAutomaton&, const FiniteAutomaton&,
-		iLogTemplate* log = nullptr); // меняет язык
+	static FiniteAutomaton intersection(const FiniteAutomaton&, const FiniteAutomaton&,
+										iLogTemplate* log = nullptr); // меняет язык
 	// объединение НКА (на выходе - автомат, распознающий слова объединения
 	// языков L1 и L2)
-	static FiniteAutomaton uunion(const FiniteAutomaton&,
-								  const FiniteAutomaton&,
+	static FiniteAutomaton uunion(const FiniteAutomaton&, const FiniteAutomaton&,
 								  iLogTemplate* log = nullptr); // меняет язык
 	// разность НКА (на выходе - автомат, распознающий слова разности языков L1
 	// и L2)
-	static FiniteAutomaton difference(
-		const FiniteAutomaton&, const FiniteAutomaton&,
-		iLogTemplate* log = nullptr); // меняет язык
+	static FiniteAutomaton difference(const FiniteAutomaton&, const FiniteAutomaton&,
+									  iLogTemplate* log = nullptr); // меняет язык
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
-	FiniteAutomaton complement(
-		iLogTemplate* log = nullptr) const; // меняет язык
+	FiniteAutomaton complement(iLogTemplate* log = nullptr) const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
 	FiniteAutomaton reverse(iLogTemplate* log = nullptr) const; // меняет язык
 	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
@@ -135,8 +126,7 @@ class FiniteAutomaton : public AbstractMachine {
 	static bool equivalent(const FiniteAutomaton&, const FiniteAutomaton&,
 						   iLogTemplate* log = nullptr);
 	// проверка автоматов на равентсво(буквальное)
-	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&,
-					  iLogTemplate* log = nullptr);
+	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&, iLogTemplate* log = nullptr);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&,
 						  iLogTemplate* log = nullptr);
@@ -169,7 +159,6 @@ class FiniteAutomaton : public AbstractMachine {
 	// проверка на минимальность для дка
 	bool is_dfa_minimal(iLogTemplate* log = nullptr) const;
 
-	friend class Regex;
 	friend class Regex;
 	friend class TransformationMonoid;
 	friend class Grammar;

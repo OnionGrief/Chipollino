@@ -18,108 +18,48 @@ struct State;
 
 class Regex : public AlgExpression {
   private:
-	Regex* term_l = nullptr;
-	Regex* term_r = nullptr;
-
-	// Turns string into lexeme vector
-	vector<Lexeme> parse_string(string);
-	Regex* expr(const vector<Lexeme>&, int, int);
-	Regex* scan_conc(const vector<Lexeme>&, int, int);
-	Regex* scan_star(const vector<Lexeme>&, int, int);
-	Regex* scan_alt(const vector<Lexeme>&, int, int);
-	Regex* scan_symb(const vector<Lexeme>&, int, int);
-	Regex* scan_eps(const vector<Lexeme>&, int, int);
-	Regex* scan_par(const vector<Lexeme>&, int, int);
-
-	// Принадлежит ли эпсилон языку регулярки
-	bool is_eps_possible();
 	// Множество префиксов длины len
 	void get_prefix(int len, std::set<std::string>* prefs) const;
 	// Производная по символу
-	bool derivative_with_respect_to_sym(Regex* respected_sym,
-										const Regex* reg_e,
+	bool derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 										Regex& result) const;
-	bool partial_derivative_with_respect_to_sym(Regex* respected_sym,
-												const Regex* reg_e,
+	bool partial_derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 												vector<Regex>& result) const;
 	// Производная по префиксу
-	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
-										Regex& result) const;
+	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e, Regex& result) const;
 	pair<vector<State>, int> get_thompson(int) const;
 
-	vector<Lexeme>* first_state() const; // начальные состояния для to_glushkov
-	bool contains_eps() const; // проверяет, входит ли eps в дерево regex
-	vector<Lexeme>* end_state() const; // конечные состояния для to_glushkov
-	map<int, vector<int>> pairs() const;
-	vector<Regex*> pre_order_travers_vect(); // список листьев дерева regex
-	bool is_term(int, const vector<Lexeme>&)
-		const; // возвращает true, если состояние конечно
-	static bool equality_checker(const Regex*, const Regex*);
-	void normalize_this_regex(
-		const vector<pair<Regex, Regex>>&); // переписывание regex по
-											// пользовательским правилам
-
-	// Рекурсивная генерация алфавита
-	void generate_alphabet(set<alphabet_symbol>& _alphabet);
-	// для print_tree
-	void print_subtree(Regex* r, int level);
-	// для print_dot
-	string print_subdot(Regex* r, const std::string& parent_dot_node, int& id);
-
-	void pre_order_travers() const;
-	void clear();
+	void normalize_this_regex(const vector<pair<Regex, Regex>>&); // переписывание regex по
+																  // пользовательским правилам
 
   public:
-	Regex();
+	Regex() = default;
 	Regex(const string&);
 	Regex(const string&, const shared_ptr<Language>&);
 
 	template <typename T> static Regex* castToRegex(T* ptr);
-
-	string to_txt() const override;
-	// вывод дерева для дебага
-	void print_tree();
-	void print_dot();
+	template <typename T> static vector<Regex*> castToRegex(vector<T*> ptr);
 
 	FiniteAutomaton to_thompson(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_ilieyu(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_antimirov(iLogTemplate* log = nullptr) const;
 
-	~Regex();
-	Regex* copy() const;
-	Regex(const Regex&);
-	Regex& operator=(const Regex& other);
-
-	// Генерация языка из алфавита
-	void make_language();
-	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const vector<pair<Regex, Regex>>&,
-						  iLogTemplate* log = nullptr) const;
-	bool from_string(const string&);
-	// проверка регулярок на равентсво(буквальное)
+	// проверка регулярок на равенство(буквальное)
 	static bool equal(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на эквивалентность
-	static bool equivalent(const Regex&, const Regex&,
-						   iLogTemplate* log = nullptr);
+	static bool equivalent(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
-	bool subset(const Regex&, iLogTemplate* log = nullptr) const; // TODO
+	bool subset(const Regex&, iLogTemplate* log = nullptr) const;
 
 	// Производная по символу
-	std::optional<Regex> symbol_derivative(const Regex& respected_sym) const;
+	optional<Regex> symbol_derivative(const Regex& respected_sym) const;
 	// Частичная производная по символу
-	void partial_symbol_derivative(const Regex& respected_sym,
-								   vector<Regex>& result) const;
+	void partial_symbol_derivative(const Regex& respected_sym, vector<Regex>& result) const;
 	// Производная по префиксу
-	std::optional<Regex> prefix_derivative(std::string respected_str) const;
+	optional<Regex> prefix_derivative(string respected_str) const;
 	// Длина накачки
 	int pump_length(iLogTemplate* log = nullptr) const;
-	// Слово, в котором все итерации Клини раскрыты n раз
-	string get_iterated_word(int n) const;
-	void regex_union(Regex* a, Regex* b);
-	void regex_alt(Regex* a, Regex* b);
-	void regex_star(Regex* a);
-	void regex_eps();
 
 	Regex linearize(iLogTemplate* log = nullptr) const;
 	Regex delinearize(iLogTemplate* log = nullptr) const;
@@ -129,6 +69,9 @@ class Regex : public AlgExpression {
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
 	// извлечение 1-однозначной регулярки методом орбит Брюггеман-Вуда
 	Regex get_one_unambiguous_regex(iLogTemplate* log = nullptr) const;
+
+	// Переписывание regex по пользовательским правилам
+	Regex normalize_regex(const vector<pair<Regex, Regex>>&, iLogTemplate* log = nullptr) const;
 };
 
 /*

@@ -10,8 +10,7 @@
 using namespace std;
 class LogTemplate : public iLogTemplate {
   public:
-	void set_parameter(const string& key,
-					   const FiniteAutomaton& value) override;
+	void set_parameter(const string& key, const FiniteAutomaton& value) override;
 	void set_parameter(const string& key, Regex value) override;
 	void set_parameter(const string& key, string value) override;
 	void set_parameter(const string& key, int value) override;

@@ -3,8 +3,7 @@
 alphabet_symbol::alphabet_symbol(){};
 alphabet_symbol::alphabet_symbol(const string& s) : symbol(s), value(s){};
 alphabet_symbol::alphabet_symbol(const char* c) : symbol(c), value(c){};
-alphabet_symbol::alphabet_symbol(char c)
-	: symbol(string(1, c)), value(string(1, c)){};
+alphabet_symbol::alphabet_symbol(char c) : symbol(string(1, c)), value(string(1, c)){};
 
 alphabet_symbol::alphabet_symbol(const alphabet_symbol& other)
 	: symbol(other.symbol), annote_numbers(other.annote_numbers),
@@ -36,8 +35,7 @@ const alphabet_symbol& alphabet_symbol::operator=(char c) {
 	return *this;
 }
 
-const alphabet_symbol& alphabet_symbol::operator=(
-	const alphabet_symbol& other) {
+const alphabet_symbol& alphabet_symbol::operator=(const alphabet_symbol& other) {
 	symbol = other.symbol;
 	annote_numbers = other.annote_numbers;
 	linearize_numbers = other.linearize_numbers;

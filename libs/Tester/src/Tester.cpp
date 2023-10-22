@@ -1,7 +1,6 @@
 #include "Tester/Tester.h"
 
-void Tester::test(const Regex& lang, const Regex& regex, int step,
-				  iLogTemplate* log) {
+void Tester::test(const Regex& lang, const Regex& regex, int step, iLogTemplate* log) {
 	iLogTemplate::Table t;
 	FiniteAutomaton automaton = lang.to_glushkov();
 
@@ -13,8 +12,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step,
 		bool is_belongs = automaton.parsing_by_nfa(word);
 		const auto end = clock::now();
 		const long long elapsed =
-			std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-				.count();
+			std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 		double time = (double)elapsed / 1000;
 		t.rows.push_back(to_string(i + 1));
 		t.data.push_back(to_string(step));
@@ -39,8 +37,7 @@ void Tester::test(const Regex& lang, const Regex& regex, int step,
 	}
 }
 
-void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step,
-				  iLogTemplate* log) {
+void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step, iLogTemplate* log) {
 	iLogTemplate::Table t;
 	using clock = std::chrono::high_resolution_clock;
 
@@ -50,8 +47,7 @@ void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step,
 		bool is_belongs = lang.parsing_by_nfa(word);
 		const auto end = clock::now();
 		const long long elapsed =
-			std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-				.count();
+			std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 		double time = (double)elapsed / 1000;
 		t.rows.push_back(to_string(i + 1));
 		t.data.push_back(to_string(step));

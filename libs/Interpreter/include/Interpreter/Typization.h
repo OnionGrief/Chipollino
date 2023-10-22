@@ -51,13 +51,12 @@ struct ObjectArray;
 
 // Универсальный объект
 using GeneralObject =
-	variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString,
-			ObjectBoolean, ObjectOptionalBool, ObjectAmbiguityValue,
-			ObjectPrefixGrammar, ObjectArray>;
+	variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString, ObjectBoolean,
+			ObjectOptionalBool, ObjectAmbiguityValue, ObjectPrefixGrammar, ObjectArray>;
 
-#define OBJECT_DEFINITION(type, value)                                         \
-	struct Object##type : public ObjectHolder<ObjectType::type, value> {       \
-		using ObjectHolder::ObjectHolder;                                      \
+#define OBJECT_DEFINITION(type, value)                                                             \
+	struct Object##type : public ObjectHolder<ObjectType::type, value> {                           \
+		using ObjectHolder::ObjectHolder;                                                          \
 	};
 
 // Определение структур объектов

@@ -38,8 +38,8 @@ string Interpreter::Lexer::scan_until_space() {
 	string acc = "";
 	skip_spaces();
 	while (!eof() && current_symbol() != ' ' && current_symbol() != '\n' &&
-		   current_symbol() != '\t' && current_symbol() != '.' &&
-		   current_symbol() != '(' && current_symbol() != ')') {
+		   current_symbol() != '\t' && current_symbol() != '.' && current_symbol() != '(' &&
+		   current_symbol() != ')') {
 
 		acc += current_symbol();
 		next_symbol();
@@ -191,8 +191,7 @@ Interpreter::Lexem Interpreter::Lexer::scan_lexem() {
 		return lex;
 	}
 	auto logger = parent.init_log();
-	logger.log("Lexer: failed to scan \"" +
-			   input.str.substr(input.pos, input.str.size()) + "\"");
+	logger.log("Lexer: failed to scan \"" + input.str.substr(input.pos, input.str.size()) + "\"");
 	return Lexem(Lexem::error);
 }
 

@@ -56,8 +56,7 @@ class TransformationMonoid {
 	// получаем термы, что vwv - в языке
 	vector<TermDouble> get_equalence_classes_vwv(const Term& w);
 	// получаем правила переписывания
-	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>
-	get_rewriting_rules();
+	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> get_rewriting_rules();
 	// вывод классов эквивалентных
 	string get_equalence_classes_txt();
 	map<string, vector<string>> get_equalence_classes_map();
@@ -83,8 +82,8 @@ class TransformationMonoid {
 		const vector<alphabet_symbol>&,
 		const map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>&);
 	// возвращает таблицу М-Н
-	vector<vector<bool>> get_equivalence_classes_table(
-		vector<string>& table_rows, vector<string>& table_columns);
+	vector<vector<bool>> get_equivalence_classes_table(vector<string>& table_rows,
+													   vector<string>& table_columns);
 
   private:
 	// Автомат
@@ -111,8 +110,7 @@ class TransformationMonoid {
 	// флаг (неминимальны ли ловушки)
 	bool trap_not_minimal = false;
 	// проверяем имя терма на  переписываемость (вспомогательный)
-	static bool was_rewrite(const vector<alphabet_symbol>&,
-							const vector<alphabet_symbol>&);
+	static bool was_rewrite(const vector<alphabet_symbol>&, const vector<alphabet_symbol>&);
 	// проверка на присутствие терма
 	static bool was_transition(const set<TransformationMonoid::Transition>&,
 							   const TransformationMonoid::Transition&);
@@ -120,6 +118,5 @@ class TransformationMonoid {
 	bool searchrewrite(const vector<alphabet_symbol>&);
 	// генерируем новые переходы по алфавиту
 	void get_new_transition(const vector<TransformationMonoid::Transition>&,
-							const vector<alphabet_symbol>&,
-							const set<alphabet_symbol>&);
+							const vector<alphabet_symbol>&, const set<alphabet_symbol>&);
 };
