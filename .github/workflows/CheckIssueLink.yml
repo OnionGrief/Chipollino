@@ -1,0 +1,28 @@
+name: Check Issue Link
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check_commit_name:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+      
+    - name: Extract commit message
+      id: extract_commit_message
+      run: echo "::set-output name=commit_message::$(git log -1 --pretty=format:'%s')"
+      
+    - name: Check commit message format
+      run: |
+        COMMIT_MESSAGE=$(echo "${{ steps.extract_commit_message.outputs.commit_message }}")
+        if [[ $COMMIT_MESSAGE =~ \#([0-9]+) ]]; then
+          echo "Commit message format is correct."
+        else
+          echo "Error: Commit message format is incorrect. It should contain '#' followed by a number."
+          exit 1
+        fi
