@@ -91,8 +91,8 @@ class AlgExpression : public BaseObject {
 	void regex_star(AlgExpression* a);
 	void regex_eps();
 
-	// возвращает true, если состояние конечно
-	static bool is_final_state(int, const vector<Lexeme>&); //is_term
+	// возвращает true, если номер лексемы int есть в списке конечных лексем
+	static bool check_in_end_states(int, const vector<Lexeme>&); //is_term
 
   public:
 	AlgExpression();

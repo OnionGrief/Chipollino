@@ -318,7 +318,10 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 			tr[list[j]->value.symbol].insert(j + 1);
 		}
 		string s = list_annote[i].value.symbol;
-		st.push_back(State(i + 1, {}, s, is_final_state(elem.number, end), tr));
+		// тк лексемы были линиаризованны, то в векторе end лежат конечные лексемы  
+		// с определенными значениями в поле number -> is_final_state проверяет есть ли номер 
+		// лексемы в списке конечных лексем
+		st.push_back(State(i + 1, {}, s, check_in_end_states(elem.number, end), tr));
 	}
 
 	FiniteAutomaton fa(0, st, language);
