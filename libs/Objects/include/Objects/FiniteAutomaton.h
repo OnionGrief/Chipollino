@@ -149,7 +149,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// проверка на пустоту
 	bool is_empty() const;
 	// метод Arden
-	Regex to_regex(iLogTemplate* log = nullptr) const;
+	Regex to_regex(iLogTemplate* log = nullptr) const noexcept;
 	// возвращает число диагональных классов по методу Глейстера-Шаллита
 	int get_classes_number_GlaisterShallit(iLogTemplate* log = nullptr) const;
 	// построение синтаксического моноида по автомату
