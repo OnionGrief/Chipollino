@@ -3,6 +3,7 @@
 #include "BaseObject.h"
 #include "iLogTemplate.h"
 #include <map>
+#include <unordered_map>
 
 class AlgExpression : public BaseObject {
   protected:
@@ -83,7 +84,7 @@ class AlgExpression : public BaseObject {
 	vector<Lexeme> first_state() const;
 	// конечные состояния для to_glushkov
 	vector<Lexeme> end_state() const;
-	map<int, vector<int>> pairs() const;
+	unordered_map<int, vector<int>> pairs() const;
 
 	void regex_union(AlgExpression* a, AlgExpression* b);
 	void regex_alt(AlgExpression* a, AlgExpression* b);
@@ -91,7 +92,7 @@ class AlgExpression : public BaseObject {
 	void regex_eps();
 
 	// возвращает true, если состояние конечно
-	static bool is_term(int, const vector<Lexeme>&);
+	static bool is_final_state(int, const vector<Lexeme>&); //is_term
 
   public:
 	AlgExpression();

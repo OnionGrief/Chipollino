@@ -704,10 +704,10 @@ vector<AlgExpression::Lexeme> AlgExpression::end_state() const {
 	}
 }
 
-map<int, vector<int>> AlgExpression::pairs() const {
-	map<int, vector<int>> l;
-	map<int, vector<int>> r;
-	map<int, vector<int>> p;
+unordered_map<int, vector<int>> AlgExpression::pairs() const {
+	unordered_map<int, vector<int>> l;
+	unordered_map<int, vector<int>> r;
+	unordered_map<int, vector<int>> p;
 	vector<AlgExpression::Lexeme> rs;
 	vector<AlgExpression::Lexeme> ps;
 	switch (type) {
@@ -777,7 +777,7 @@ void AlgExpression::regex_eps() {
 	type = Type::eps;
 }
 
-bool AlgExpression::is_term(int number, const vector<AlgExpression::Lexeme>& list) {
+bool AlgExpression::is_final_state(int number, const vector<AlgExpression::Lexeme>& list) {
 	for (const auto& i : list) {
 		if (i.number == number) {
 			return true;

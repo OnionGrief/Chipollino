@@ -257,7 +257,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	vector<Lexeme> first = test.first_state(); // Множество начальных состояний
 	vector<Lexeme> end = test.end_state(); // Множество конечных состояний
 	int eps_in = test.contains_eps();
-	map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
+	unordered_map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
 	vector<State> st;						// Список состояний в автомате
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
 
@@ -318,7 +318,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 			tr[list[j]->value.symbol].insert(j + 1);
 		}
 		string s = list_annote[i].value.symbol;
-		st.push_back(State(i + 1, {}, s, is_term(elem.number, end), tr));
+		st.push_back(State(i + 1, {}, s, is_final_state(elem.number, end), tr));
 	}
 
 	FiniteAutomaton fa(0, st, language);
