@@ -80,9 +80,9 @@ class AlgExpression : public BaseObject {
 	string get_iterated_word(int n) const;
 
 	// начальные состояния для to_glushkov
-	vector<Lexeme>* first_state() const;
+	vector<Lexeme> first_state() const;
 	// конечные состояния для to_glushkov
-	vector<Lexeme>* end_state() const;
+	vector<Lexeme> end_state() const;
 	map<int, vector<int>> pairs() const;
 
 	void regex_union(AlgExpression* a, AlgExpression* b);

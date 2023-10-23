@@ -254,8 +254,8 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		list[i]->value.number = i;
 		list[i]->value.symbol.linearize(i);
 	}
-	vector<Lexeme>* first = test.first_state(); // Множество начальных состояний
-	vector<Lexeme>* end = test.end_state(); // Множество конечных состояний
+	vector<Lexeme> first = test.first_state(); // Множество начальных состояний
+	vector<Lexeme> end = test.end_state(); // Множество конечных состояний
 	int eps_in = test.contains_eps();
 	map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
 	vector<State> st;						// Список состояний в автомате
@@ -264,15 +264,13 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	string str_first;
 	string str_end;
 	string str_pair;
-	for (auto& i : *first) {
+	for (auto& i : first) {
 		str_first += string(i.symbol) + "\\ ";
 	}
 
 	set<string> end_set;
 
-	for (auto& i : *end) {
-		// str_end = str_end + string((*end)[i].symbol) +
-		//		  to_string((*end)[i].number + 1) + " ";
+	for (auto& i : end) {
 		end_set.insert(string(i.symbol));
 	}
 
@@ -301,7 +299,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		list_annote.push_back(*i);
 		i->value.symbol.delinearize();
 	}
-	for (auto& i : *first) {
+	for (auto& i : first) {
 		i.symbol.delinearize();
 		tr[i.symbol].insert(i.number + 1);
 	}
@@ -320,10 +318,9 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 			tr[list[j]->value.symbol].insert(j + 1);
 		}
 		string s = list_annote[i].value.symbol;
-		st.push_back(State(i + 1, {}, s, is_term(elem.number, (*end)), tr));
+		st.push_back(State(i + 1, {}, s, is_term(elem.number, end), tr));
 	}
-	delete first;
-	delete end;
+
 	FiniteAutomaton fa(0, st, language);
 	if (log) {
 		log->set_parameter("oldregex", test);

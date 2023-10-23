@@ -650,15 +650,14 @@ string AlgExpression::get_iterated_word(int n) const {
 	return str;
 }
 
-vector<AlgExpression::Lexeme>* AlgExpression::first_state() const {
-	vector<AlgExpression::Lexeme>* l;
-	vector<AlgExpression::Lexeme>* r;
+vector<AlgExpression::Lexeme> AlgExpression::first_state() const {
+	vector<AlgExpression::Lexeme> l;
+	vector<AlgExpression::Lexeme> r;
 	switch (type) {
 	case Type::alt:
 		l = term_l->first_state();
 		r = term_r->first_state();
-		l->insert(l->end(), r->begin(), r->end());
-		delete r;
+		l.insert(l.end(), r.begin(), r.end());
 		return l;
 	case Type::star:
 		l = term_l->first_state();
@@ -667,29 +666,25 @@ vector<AlgExpression::Lexeme>* AlgExpression::first_state() const {
 		l = term_l->first_state();
 		if (term_l->contains_eps()) {
 			r = term_r->first_state();
-			l->insert(l->end(), r->begin(), r->end());
-			delete r;
+			l.insert(l.end(), r.begin(), r.end());
 		}
 		return l;
 	case AlgExpression::eps:
-		l = new vector<AlgExpression::Lexeme>;
-		return l;
+		return {};
 	default:
-		l = new vector<AlgExpression::Lexeme>;
-		l->push_back(value);
+		l.push_back(value);
 		return l;
 	}
 }
 
-vector<AlgExpression::Lexeme>* AlgExpression::end_state() const {
-	vector<AlgExpression::Lexeme>* l;
-	vector<AlgExpression::Lexeme>* r;
+vector<AlgExpression::Lexeme> AlgExpression::end_state() const {
+	vector<AlgExpression::Lexeme> l;
+	vector<AlgExpression::Lexeme> r;
 	switch (type) {
 	case Type::alt:
 		l = term_l->end_state();
 		r = term_r->end_state();
-		l->insert(l->end(), r->begin(), r->end());
-		delete r;
+		l.insert(l.end(), r.begin(), r.end());
 		return l;
 	case Type::star:
 		l = term_l->end_state();
@@ -697,18 +692,14 @@ vector<AlgExpression::Lexeme>* AlgExpression::end_state() const {
 	case Type::conc:
 		l = term_r->end_state();
 		if (term_r->contains_eps()) {
-
 			r = term_l->end_state();
-			l->insert(l->end(), r->begin(), r->end());
-			delete r;
+			l.insert(l.end(), r.begin(), r.end());
 		}
 		return l;
 	case AlgExpression::eps:
-		l = new vector<AlgExpression::Lexeme>;
-		return l;
+		return {};
 	default:
-		l = new vector<AlgExpression::Lexeme>;
-		l->push_back(value);
+		l.push_back(value);
 		return l;
 	}
 }
@@ -717,8 +708,8 @@ map<int, vector<int>> AlgExpression::pairs() const {
 	map<int, vector<int>> l;
 	map<int, vector<int>> r;
 	map<int, vector<int>> p;
-	vector<AlgExpression::Lexeme>* rs;
-	vector<AlgExpression::Lexeme>* ps;
+	vector<AlgExpression::Lexeme> rs;
+	vector<AlgExpression::Lexeme> ps;
 	switch (type) {
 	case Type::alt:
 		l = term_l->pairs();
@@ -731,16 +722,14 @@ map<int, vector<int>> AlgExpression::pairs() const {
 		l = term_l->pairs();
 		rs = term_l->end_state();
 		ps = term_l->first_state();
-		for (auto& i : *rs) {
-			for (auto& p : *ps) {
+		for (auto& i : rs) {
+			for (auto& p : ps) {
 				r[i.number].push_back(p.number);
 			}
 		}
 		for (auto& it : r) {
 			l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
 		}
-		delete rs;
-		delete ps;
 		return l;
 	case Type::conc:
 		l = term_l->pairs();
@@ -752,16 +741,14 @@ map<int, vector<int>> AlgExpression::pairs() const {
 		rs = term_l->end_state();
 		ps = term_r->first_state();
 
-		for (size_t i = 0; i < rs->size(); i++) {
-			for (size_t j = 0; j < ps->size(); j++) {
-				r[(*rs)[i].number].push_back((*ps)[j].number);
+		for (size_t i = 0; i < rs.size(); i++) {
+			for (size_t j = 0; j < ps.size(); j++) {
+				r[rs[i].number].push_back(ps[j].number);
 			}
 		}
 		for (auto& it : r) {
 			l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
 		}
-		delete rs;
-		delete ps;
 		return l;
 	default:
 		break;
