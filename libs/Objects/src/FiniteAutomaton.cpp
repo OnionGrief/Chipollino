@@ -2435,10 +2435,6 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log = nullptr) const noexcept {
 		log->set_parameter("step-by-step construction", full_logs);
 	}
 
-	if (log) {
-		log->set_parameter("step-by-step construction", full_logs);
-	}
-
 	auto* tmp_regex = Regex::castToRegex(all_exprs[end_state[0]][0].regex_from_state->copy());
 
 	// если принимающих состояний несколько - обьединяем через альтернативу
