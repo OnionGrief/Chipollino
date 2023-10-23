@@ -4,7 +4,9 @@ project(TestsApp)
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
         src/Example.cpp
-        src/main.cpp)
+        src/main.cpp
+        src/UnitTests.cpp)
+
 
 # Add a library with the above sources
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -18,9 +20,9 @@ target_link_libraries(${PROJECT_NAME}
         Interpreter
         Tester
         Objects
+        gtest
         )
 
 enable_testing()
-
 add_test(NAME UnitTests
         COMMAND ${PROJECT_NAME})
