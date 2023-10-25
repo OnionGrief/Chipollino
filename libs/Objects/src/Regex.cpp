@@ -310,6 +310,11 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		st.push_back(State(0, {}, "S", false, tr));
 	}
 
+	unordered_map<int, char> end_lexem;
+	for (const auto& elem : end) {
+		end_lexem[elem.number] = 1;
+	}
+
 	for (size_t i = 0; i < list.size(); i++) {
 		Regex::Lexeme elem = list[i]->value;
 		tr = {};
@@ -318,10 +323,11 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 			tr[list[j]->value.symbol].insert(j + 1);
 		}
 		string s = list_annote[i].value.symbol;
-		// тк лексемы были линиаризованны, то в векторе end лежат конечные лексемы  
-		// с определенными значениями в поле number -> is_final_state проверяет есть ли номер 
+
+		// Лексемы были линиаризованны. В undored_map end_lexem номера конечных лексем
+		//  => end_lexem.count проверяет есть ли номер 
 		// лексемы в списке конечных лексем
-		st.push_back(State(i + 1, {}, s, check_in_end_states(elem.number, end), tr));
+		st.push_back(State(i + 1, {}, s, end_lexem.count(elem.number), tr));
 	}
 
 	FiniteAutomaton fa(0, st, language);

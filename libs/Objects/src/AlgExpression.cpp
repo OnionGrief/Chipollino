@@ -776,12 +776,3 @@ void AlgExpression::regex_star(AlgExpression* a) {
 void AlgExpression::regex_eps() {
 	type = Type::eps;
 }
-
-bool AlgExpression::check_in_end_states(int number, const vector<AlgExpression::Lexeme>& list) {
-	for (const auto& i : list) {
-		if (i.number == number) {
-			return true;
-		}
-	}
-	return false;
-}
