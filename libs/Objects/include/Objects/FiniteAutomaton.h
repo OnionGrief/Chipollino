@@ -78,7 +78,7 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton(int initial_state, vector<State> states, set<alphabet_symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
-	template <typename T> static FiniteAutomaton* castToFA(unique_ptr<T>&& uptr);
+	template <typename T> static FiniteAutomaton* cast(unique_ptr<T>&& uptr);
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА

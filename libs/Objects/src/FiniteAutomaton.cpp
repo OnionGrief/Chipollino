@@ -35,7 +35,7 @@ FiniteAutomaton::FiniteAutomaton(int initial_state, vector<State> states,
 FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 	: AbstractMachine(other.initial_state, other.language), states(other.states) {}
 
-template <typename T> FiniteAutomaton* FiniteAutomaton::castToFA(unique_ptr<T>&& uptr) {
+template <typename T> FiniteAutomaton* FiniteAutomaton::cast(unique_ptr<T>&& uptr) {
 	auto* fa = static_cast<FiniteAutomaton*>(uptr.get());
 	if (!fa) {
 		throw runtime_error("Failed to cast to FiniteAutomaton");
@@ -2199,7 +2199,7 @@ vector<expression_arden> FiniteAutomaton::arden_minimize(const vector<expression
 	// состояния)
 	for (auto i : in) {
 		if (!out_map.count(i.fa_state_number)) {
-			out_map[i.fa_state_number] = Regex::castToRegex(i.regex_from_state->copy());
+			out_map[i.fa_state_number] = Regex::cast(i.regex_from_state->copy());
 		} else {
 			auto* temp = new Regex();
 			temp->regex_alt(i.regex_from_state, out_map[i.fa_state_number]);
@@ -2227,7 +2227,7 @@ vector<expression_arden> FiniteAutomaton::arden(const vector<expression_arden>& 
 	// если таких переходов нет
 	if (indexcur == -1) {
 		for (auto i : in) {
-			Regex* r = Regex::castToRegex(i.regex_from_state->copy());
+			Regex* r = Regex::cast(i.regex_from_state->copy());
 			expression_arden temp = {i.fa_state_number, r};
 			out.push_back(temp);
 		}
@@ -2248,7 +2248,7 @@ vector<expression_arden> FiniteAutomaton::arden(const vector<expression_arden>& 
 			r->regex_star(in[indexcur].regex_from_state);
 			Regex* k;
 			if (in[i].regex_from_state->to_txt().empty()) {
-				k = Regex::castToRegex(r->copy());
+				k = Regex::cast(r->copy());
 			} else {
 				k = new Regex();
 				k->regex_union(in[i].regex_from_state, r);
@@ -2327,12 +2327,12 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 				for (int k = 0; k < data[data[i][j].fa_state_number].size(); k++) {
 					Regex* r;
 					if (data[i][j].regex_from_state->to_txt().empty()) {
-						r = Regex::castToRegex(
+						r = Regex::cast(
 							data[data[i][j].fa_state_number][k].regex_from_state->copy()); // тут 0
 					} else if (data[data[i][j].fa_state_number][k]
 								   .regex_from_state->to_txt()
 								   .empty()) {
-						r = Regex::castToRegex(data[i][j].regex_from_state->copy()); // тут б
+						r = Regex::cast(data[i][j].regex_from_state->copy()); // тут б
 																					 //	continue;
 					} else {
 						r = new Regex;
@@ -2415,7 +2415,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	// если у нас 1 принимающее состояние
 	if (end_state.size() < 2) {
 		Regex* r1;
-		r1 = Regex::castToRegex(data[end_state[0]][0].regex_from_state->copy());
+		r1 = Regex::cast(data[end_state[0]][0].regex_from_state->copy());
 		for (auto& i : data) {
 			for (auto& j : i) {
 				delete j.regex_from_state;
@@ -2432,7 +2432,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	}
 	// если принимающих состояний несколько - объединяем через альтернативу
 	Regex* r1;
-	r1 = Regex::castToRegex(data[end_state[0]][0].regex_from_state->copy());
+	r1 = Regex::cast(data[end_state[0]][0].regex_from_state->copy());
 	for (int i = 1; i < end_state.size(); i++) {
 		auto* r2 = new Regex;
 		r2->regex_alt(r1, data[end_state[i]][0].regex_from_state);

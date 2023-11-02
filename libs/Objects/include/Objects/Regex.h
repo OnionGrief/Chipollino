@@ -19,7 +19,7 @@ struct State;
 class Regex : public AlgExpression {
   private:
 	// Множество префиксов длины len
-	void get_prefix(int len, std::set<std::string>* prefs) const;
+	void get_prefix(int len, std::set<std::string>& prefs) const;
 	// Производная по символу
 	bool derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 										Regex& result) const;
@@ -37,8 +37,8 @@ class Regex : public AlgExpression {
 	Regex(const string&);
 	Regex(const string&, const shared_ptr<Language>&);
 
-	template <typename T> static Regex* castToRegex(T* ptr);
-	template <typename T> static vector<Regex*> castToRegex(vector<T*> ptr);
+	template <typename T> static Regex* cast(T* ptr);
+	template <typename T> static vector<Regex*> cast(vector<T*> ptr);
 
 	FiniteAutomaton to_thompson(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;

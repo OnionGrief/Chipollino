@@ -18,7 +18,7 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language) : Rege
 	language = new_language;
 }
 
-template <typename T> Regex* Regex::castToRegex(T* ptr) {
+template <typename T> Regex* Regex::cast(T* ptr) {
 	auto* r = static_cast<Regex*>(ptr);
 	if (!r) {
 		throw runtime_error("Failed to cast to Regex");
@@ -27,7 +27,7 @@ template <typename T> Regex* Regex::castToRegex(T* ptr) {
 	return r;
 }
 
-template <typename T> vector<Regex*> Regex::castToRegex(vector<T*> ptrs) {
+template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs) {
 	vector<Regex*> regexPointers;
 
 	for (T* ptr : ptrs) {
@@ -53,8 +53,8 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 	Language* alp; // Новый язык для автомата
 	switch (type) {
 	case Type::alt: // |
-		al = Regex::castToRegex(term_l)->get_thompson(max_index);
-		ar = Regex::castToRegex(term_r)->get_thompson(al.second);
+		al = Regex::cast(term_l)->get_thompson(max_index);
+		ar = Regex::cast(term_r)->get_thompson(al.second);
 		max_index = ar.second;
 
 		str = "q" + to_string(max_index + 1);
@@ -103,8 +103,8 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 
 		return {s, max_index + 2};
 	case Type::conc: // .
-		al = Regex::castToRegex(term_l)->get_thompson(max_index);
-		ar = Regex::castToRegex(term_r)->get_thompson(al.second);
+		al = Regex::cast(term_l)->get_thompson(max_index);
+		ar = Regex::cast(term_r)->get_thompson(al.second);
 		max_index = ar.second;
 
 		for (size_t i = 0; i < al.first.size(); i++) {
@@ -152,7 +152,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 
 		return {s, max_index};
 	case Type::star: // *
-		al = Regex::castToRegex(term_l)->get_thompson(max_index);
+		al = Regex::cast(term_l)->get_thompson(max_index);
 		max_index = al.second;
 
 		str = "q" + to_string(max_index + 1);
@@ -217,7 +217,7 @@ FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
 
 Regex Regex::linearize(iLogTemplate* log) const {
 	Regex test(*this);
-	vector<Regex*> list = Regex::castToRegex(test.pre_order_travers());
+	vector<Regex*> list = Regex::cast(test.pre_order_travers());
 	set<alphabet_symbol> lang_l;
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.symbol.linearize(i);
@@ -233,7 +233,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 
 Regex Regex::delinearize(iLogTemplate* log) const {
 	Regex test(*this);
-	vector<Regex*> list = Regex::castToRegex(test.pre_order_travers());
+	vector<Regex*> list = Regex::cast(test.pre_order_travers());
 	set<alphabet_symbol> lang_del;
 	for (auto& i : list) {
 		i->value.symbol.delinearize();
@@ -249,7 +249,7 @@ Regex Regex::delinearize(iLogTemplate* log) const {
 
 FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	Regex test(*this);
-	vector<Regex*> list = Regex::castToRegex(test.pre_order_travers());
+	vector<Regex*> list = Regex::cast(test.pre_order_travers());
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.number = i;
 		list[i]->value.symbol.linearize(i);
@@ -258,7 +258,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	vector<Lexeme> end = test.end_state(); // Множество конечных состояний
 	int eps_in = test.contains_eps();
 	unordered_map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
-	vector<State> st;						// Список состояний в автомате
+	vector<State> st;				   // Список состояний в автомате
 	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
 
 	string str_first;
@@ -325,7 +325,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		string s = list_annote[i].value.symbol;
 
 		// Лексемы были линиаризованны. В undored_map end_lexem номера конечных лексем
-		//  => end_lexem.count проверяет есть ли номер 
+		//  => end_lexem.count проверяет есть ли номер
 		// лексемы в списке конечных лексем
 		st.push_back(State(i + 1, {}, s, end_lexem.count(elem.number), tr));
 	}
@@ -422,74 +422,62 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 	return fa;
 }
 
-void Regex::get_prefix(int len, set<string>* prefs) const {
-	set<string>*prefs1, *prefs2;
+void Regex::get_prefix(int len, set<string>& prefs) const {
+	set<string> prefs1, prefs2;
 	if (len == 0) {
-		prefs->insert("");
+		prefs.insert("");
 		return;
 	}
 	switch (type) {
 	case Type::eps:
-		if (len == 0) prefs->insert("");
+		if (len == 0) prefs.insert("");
 		return;
 	case Type::symb:
 		if (len == 1) {
 			string res;
 			res += value.symbol;
-			prefs->insert(res);
+			prefs.insert(res);
 		}
 		return;
 	case Type::alt:
-		prefs1 = new set<string>();
-		prefs2 = new set<string>();
-		Regex::castToRegex(term_l)->get_prefix(len, prefs1);
-		Regex::castToRegex(term_r)->get_prefix(len, prefs2);
-		for (auto i = prefs1->begin(); i != prefs1->end(); i++) {
-			prefs->insert(*i);
+		Regex::cast(term_l)->get_prefix(len, prefs1);
+		Regex::cast(term_r)->get_prefix(len, prefs2);
+		for (auto i = prefs1.begin(); i != prefs1.end(); i++) {
+			prefs.insert(*i);
 		}
-		for (auto i = prefs2->begin(); i != prefs2->end(); i++) {
-			prefs->insert(*i);
+		for (auto i = prefs2.begin(); i != prefs2.end(); i++) {
+			prefs.insert(*i);
 		}
-		delete prefs1;
-		delete prefs2;
 		return;
 	case Type::conc:
-		prefs1 = new set<string>();
-		prefs2 = new set<string>();
 		for (int k = 0; k <= len; k++) {
-			Regex::castToRegex(term_l)->get_prefix(k, prefs1);
-			Regex::castToRegex(term_r)->get_prefix(len - k, prefs2);
-			for (auto i = prefs1->begin(); i != prefs1->end(); i++) {
-				for (auto j = prefs2->begin(); j != prefs2->end(); j++) {
-					prefs->insert(*i + *j);
+			Regex::cast(term_l)->get_prefix(k, prefs1);
+			Regex::cast(term_r)->get_prefix(len - k, prefs2);
+			for (auto i = prefs1.begin(); i != prefs1.end(); i++) {
+				for (auto j = prefs2.begin(); j != prefs2.end(); j++) {
+					prefs.insert(*i + *j);
 				}
 			}
-			prefs1->clear();
-			prefs2->clear();
+			prefs1.clear();
+			prefs2.clear();
 		}
-		delete prefs1;
-		delete prefs2;
 		return;
 	case Type::star:
 		if (len == 0) {
-			prefs->insert("");
+			prefs.insert("");
 			return;
 		}
-		prefs1 = new set<string>();
-		prefs2 = new set<string>();
 		for (int k = 1; k <= len; k++) {
-			Regex::castToRegex(term_l)->get_prefix(k, prefs1);
+			Regex::cast(term_l)->get_prefix(k, prefs1);
 			get_prefix(len - k, prefs2);
-			for (auto i = prefs1->begin(); i != prefs1->end(); i++) {
-				for (auto j = prefs2->begin(); j != prefs2->end(); j++) {
-					prefs->insert(*i + *j);
+			for (auto i = prefs1.begin(); i != prefs1.end(); i++) {
+				for (auto j = prefs2.begin(); j != prefs2.end(); j++) {
+					prefs.insert(*i + *j);
 				}
 			}
-			prefs1->clear();
-			prefs2->clear();
+			prefs1.clear();
+			prefs2.clear();
 		}
-		delete prefs1;
-		delete prefs2;
 		return;
 	}
 }
@@ -518,10 +506,10 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 		result.type = Type::eps;
 		return answer;
 	case Type::alt:
-		answer1 = derivative_with_respect_to_sym(respected_sym, Regex::castToRegex(reg_e->term_l),
-												 subresult);
-		answer2 = derivative_with_respect_to_sym(respected_sym, Regex::castToRegex(reg_e->term_r),
-												 subresult1);
+		answer1 =
+			derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l), subresult);
+		answer2 =
+			derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_r), subresult1);
 		// cout << "alt of " << reg_e->term_l->to_txt() << " and "
 		//	 << reg_e->term_r->to_txt() << "\n";
 		// cout << answer1 << " " << answer2 << "\n";
@@ -550,12 +538,12 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 	case Type::conc:
 		subresult.type = Type::conc;
 		if (subresult.term_l == nullptr) subresult.term_l = new Regex();
-		answer1 = derivative_with_respect_to_sym(respected_sym, Regex::castToRegex(reg_e->term_l),
-												 *Regex::castToRegex(subresult.term_l));
+		answer1 = derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
+												 *Regex::cast(subresult.term_l));
 		subresult.term_r = reg_e->term_r->copy();
-		if (Regex::castToRegex(reg_e->term_l)->contains_eps()) {
-			answer2 = derivative_with_respect_to_sym(respected_sym,
-													 Regex::castToRegex(reg_e->term_r), subresult1);
+		if (Regex::cast(reg_e->term_l)->contains_eps()) {
+			answer2 = derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_r),
+													 subresult1);
 			if (answer1 && answer2) {
 				result.type = Type::alt;
 				result.term_l = subresult.copy();
@@ -589,8 +577,8 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 	case Type::star:
 		result.type = Type::conc;
 		if (result.term_l == nullptr) result.term_l = new Regex();
-		bool answer = derivative_with_respect_to_sym(
-			respected_sym, Regex::castToRegex(reg_e->term_l), *Regex::castToRegex(result.term_l));
+		bool answer = derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
+													 *Regex::cast(result.term_l));
 		result.term_r = reg_e->copy();
 		return answer;
 	}
@@ -624,10 +612,10 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		result.push_back(cur_result);
 		return answer;
 	case Type::alt:
-		answer1 = partial_derivative_with_respect_to_sym(
-			respected_sym, Regex::castToRegex(reg_e->term_l), subresult);
-		answer2 = partial_derivative_with_respect_to_sym(
-			respected_sym, Regex::castToRegex(reg_e->term_r), subresult1);
+		answer1 = partial_derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
+														 subresult);
+		answer2 = partial_derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_r),
+														 subresult1);
 		for (const auto& i : subresult) {
 			result.push_back(i);
 		}
@@ -638,8 +626,8 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		return answer;
 	case Type::conc:
 		cur_subresult.type = Type::conc;
-		answer1 = partial_derivative_with_respect_to_sym(
-			respected_sym, Regex::castToRegex(reg_e->term_l), subresult);
+		answer1 = partial_derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
+														 subresult);
 		cur_subresult.term_r = reg_e->term_r->copy();
 		for (auto& i : subresult) {
 			cur_subresult.term_l = i.copy();
@@ -647,9 +635,9 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 			delete cur_subresult.term_l;
 			cur_subresult.term_l = nullptr;
 		}
-		if (Regex::castToRegex(reg_e->term_l)->contains_eps()) {
+		if (Regex::cast(reg_e->term_l)->contains_eps()) {
 			answer2 = partial_derivative_with_respect_to_sym(
-				respected_sym, Regex::castToRegex(reg_e->term_r), subresult1);
+				respected_sym, Regex::cast(reg_e->term_r), subresult1);
 			for (const auto& i : subresult1) {
 				result.push_back(i);
 			}
@@ -660,8 +648,8 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		return answer;
 	case Type::star:
 		cur_result.type = Type::conc;
-		bool answer = partial_derivative_with_respect_to_sym(
-			respected_sym, Regex::castToRegex(reg_e->term_l), subresult);
+		bool answer = partial_derivative_with_respect_to_sym(respected_sym,
+															 Regex::cast(reg_e->term_l), subresult);
 		cur_result.term_r = reg_e->copy();
 		for (auto& i : subresult) {
 			cur_result.term_l = i.copy();
@@ -702,7 +690,7 @@ optional<Regex> Regex::symbol_derivative(const Regex& respected_sym) const {
 	auto rs = respected_sym.copy();
 	Regex result;
 	optional<Regex> ans;
-	if (derivative_with_respect_to_sym(Regex::castToRegex(rs), this, result))
+	if (derivative_with_respect_to_sym(Regex::cast(rs), this, result))
 		ans = result;
 	else
 		ans = nullopt;
@@ -712,7 +700,7 @@ optional<Regex> Regex::symbol_derivative(const Regex& respected_sym) const {
 // Частичная производная по символу
 void Regex::partial_symbol_derivative(const Regex& respected_sym, vector<Regex>& result) const {
 	auto rs = respected_sym.copy();
-	partial_derivative_with_respect_to_sym(Regex::castToRegex(rs), this, result);
+	partial_derivative_with_respect_to_sym(Regex::cast(rs), this, result);
 	delete rs;
 }
 // Производная по префиксу
@@ -737,7 +725,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 	map<string, bool> checked_prefixes;
 	for (int i = 1;; i++) {
 		set<string> prefs;
-		get_prefix(i, &prefs);
+		get_prefix(i, prefs);
 		if (prefs.empty()) {
 			language->set_pump_length(i);
 			if (log) {
@@ -764,8 +752,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 					Regex a(pumped_prefix);
 					Regex b;
 					pumping.regex_union(&a, &b);
-					if (!derivative_with_respect_to_str(*it, this,
-														*Regex::castToRegex(pumping.term_r)))
+					if (!derivative_with_respect_to_str(*it, this, *Regex::cast(pumping.term_r)))
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
 					pumping.language = make_shared<Language>(pumping.alphabet);
@@ -914,7 +901,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 Regex Regex::deannote(iLogTemplate* log) const {
 	Regex test(*this);
-	vector<Regex*> list = Regex::castToRegex(test.pre_order_travers());
+	vector<Regex*> list = Regex::cast(test.pre_order_travers());
 	set<alphabet_symbol> lang_deann;
 	for (auto& i : list) {
 		i->value.symbol.deannote();
