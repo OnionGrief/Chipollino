@@ -3,8 +3,11 @@
 using namespace std;
 
 class BackRefRegex : public AlgExpression {
-  public:
-	template <typename T> static BackRefRegex* cast(T* ptr);
+  private:
+	// возвращает указатель на new BackRefRegex
+	AlgExpression* make() const override;
 
-	string to_txt() const override;
+  public:
+	// dynamic_cast к типу BackRefRegex*
+	template <typename T> static BackRefRegex* cast(T* ptr);
 };

@@ -18,8 +18,12 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language) : Rege
 	language = new_language;
 }
 
+AlgExpression* Regex::make() const {
+	return new Regex;
+}
+
 template <typename T> Regex* Regex::cast(T* ptr) {
-	auto* r = static_cast<Regex*>(ptr);
+	auto* r = dynamic_cast<Regex*>(ptr);
 	if (!r) {
 		throw runtime_error("Failed to cast to Regex");
 	}
@@ -31,7 +35,7 @@ template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs) {
 	vector<Regex*> regexPointers;
 
 	for (T* ptr : ptrs) {
-		auto* r = static_cast<Regex*>(ptr);
+		auto* r = dynamic_cast<Regex*>(ptr);
 		if (!r) {
 			throw runtime_error("Failed to cast to Regex");
 		}

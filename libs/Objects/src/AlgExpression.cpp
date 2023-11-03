@@ -34,7 +34,7 @@ AlgExpression::~AlgExpression() {
 }
 
 AlgExpression* AlgExpression::copy() const {
-	auto* c = new AlgExpression();
+	auto* c = make();
 	c->alphabet = alphabet;
 	c->type = type;
 	c->value = value;
@@ -433,7 +433,7 @@ AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lex
 				return p;
 			}
 
-			p = new AlgExpression;
+			p = make();
 			p->term_l = l;
 			p->term_r = r;
 			p->value = lexemes[i];
@@ -467,7 +467,7 @@ AlgExpression* AlgExpression::scan_star(const vector<AlgExpression::Lexeme>& lex
 				return p;
 			}
 
-			p = new AlgExpression;
+			p = make();
 			p->term_l = l;
 
 			p->term_r = nullptr;
@@ -502,7 +502,7 @@ AlgExpression* AlgExpression::scan_alt(const vector<AlgExpression::Lexeme>& lexe
 				return nullptr;
 			}
 
-			p = new AlgExpression;
+			p = make();
 			p->term_l = l;
 			p->term_r = r;
 
@@ -527,7 +527,7 @@ AlgExpression* AlgExpression::scan_symb(const vector<AlgExpression::Lexeme>& lex
 		return nullptr;
 	}
 
-	p = new AlgExpression;
+	p = make();
 	p->value = lexemes[index_start];
 	p->type = AlgExpression::symb;
 
@@ -548,7 +548,7 @@ AlgExpression* AlgExpression::scan_eps(const vector<AlgExpression::Lexeme>& lexe
 		return nullptr;
 	}
 
-	p = new AlgExpression;
+	p = make();
 	p->value = lexemes[index_start];
 	p->type = AlgExpression::eps;
 

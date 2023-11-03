@@ -36,7 +36,7 @@ FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 	: AbstractMachine(other.initial_state, other.language), states(other.states) {}
 
 template <typename T> FiniteAutomaton* FiniteAutomaton::cast(unique_ptr<T>&& uptr) {
-	auto* fa = static_cast<FiniteAutomaton*>(uptr.get());
+	auto* fa = dynamic_cast<FiniteAutomaton*>(uptr.get());
 	if (!fa) {
 		throw runtime_error("Failed to cast to FiniteAutomaton");
 	}
@@ -2155,7 +2155,7 @@ int FiniteAutomaton::get_initial() {
 	return initial_state;
 }
 
-int FiniteAutomaton::size(iLogTemplate* log) const {
+size_t FiniteAutomaton::size(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", states.size());
@@ -2333,7 +2333,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 								   .regex_from_state->to_txt()
 								   .empty()) {
 						r = Regex::cast(data[i][j].regex_from_state->copy()); // тут б
-																					 //	continue;
+																			  //	continue;
 					} else {
 						r = new Regex;
 						r->regex_union(

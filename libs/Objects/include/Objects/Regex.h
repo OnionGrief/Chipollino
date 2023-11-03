@@ -18,6 +18,9 @@ struct State;
 
 class Regex : public AlgExpression {
   private:
+	// возвращает указатель на new Regex
+	AlgExpression* make() const override;
+
 	// Множество префиксов длины len
 	void get_prefix(int len, std::set<std::string>& prefs) const;
 	// Производная по символу
@@ -37,7 +40,9 @@ class Regex : public AlgExpression {
 	Regex(const string&);
 	Regex(const string&, const shared_ptr<Language>&);
 
+	// dynamic_cast к типу Regex*
 	template <typename T> static Regex* cast(T* ptr);
+	// dynamic_cast каждого элемента вектора к типу Regex*
 	template <typename T> static vector<Regex*> cast(vector<T*> ptr);
 
 	FiniteAutomaton to_thompson(iLogTemplate* log = nullptr) const;

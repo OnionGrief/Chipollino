@@ -1,14 +1,14 @@
 #include "Objects/BackRefRegex.h"
 
+AlgExpression* BackRefRegex::make() const {
+	return new BackRefRegex;
+}
+
 template <typename T> BackRefRegex* BackRefRegex::cast(T* ptr) {
-	auto* r = static_cast<BackRefRegex*>(ptr);
+	auto* r = dynamic_cast<BackRefRegex*>(ptr);
 	if (!r) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
 
 	return r;
-}
-
-string BackRefRegex::to_txt() const {
-	return "";
 }

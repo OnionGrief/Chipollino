@@ -44,6 +44,9 @@ class AlgExpression : public BaseObject {
 	AlgExpression* term_l = nullptr;
 	AlgExpression* term_r = nullptr;
 
+	// возвращает указатель на 'new' объект соответствующего типа
+	virtual AlgExpression* make() const = 0;
+
 	void clear();
 
 	// Создает новый язык с алфавитом
@@ -61,13 +64,15 @@ class AlgExpression : public BaseObject {
 	// Turns string into lexeme vector
 	static vector<Lexeme> parse_string(string);
 	bool from_string(const string&);
-	static AlgExpression* expr(const vector<Lexeme>&, int, int);
-	static AlgExpression* scan_conc(const vector<Lexeme>&, int, int);
-	static AlgExpression* scan_star(const vector<Lexeme>&, int, int);
-	static AlgExpression* scan_alt(const vector<Lexeme>&, int, int);
-	static AlgExpression* scan_symb(const vector<Lexeme>&, int, int);
-	static AlgExpression* scan_eps(const vector<Lexeme>&, int, int);
-	static AlgExpression* scan_par(const vector<Lexeme>&, int, int);
+	// возвращаемый тип нижеперечисленных методов зависит от типа объекта (Regex/BackRefRegex)
+	// внутреннее состояние не имеет значения
+	AlgExpression* expr(const vector<Lexeme>&, int, int);
+	AlgExpression* scan_conc(const vector<Lexeme>&, int, int);
+	AlgExpression* scan_star(const vector<Lexeme>&, int, int);
+	AlgExpression* scan_alt(const vector<Lexeme>&, int, int);
+	AlgExpression* scan_symb(const vector<Lexeme>&, int, int);
+	AlgExpression* scan_eps(const vector<Lexeme>&, int, int);
+	AlgExpression* scan_par(const vector<Lexeme>&, int, int);
 
 	// список листьев дерева regex
 	vector<AlgExpression*> pre_order_travers();

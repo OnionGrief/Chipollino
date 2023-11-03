@@ -78,6 +78,7 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton(int initial_state, vector<State> states, set<alphabet_symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
+	// dynamic_cast unique_ptr к типу FiniteAutomaton*
 	template <typename T> static FiniteAutomaton* cast(unique_ptr<T>&& uptr);
 	// визуализация автомата
 	string to_txt() const override;
@@ -145,7 +146,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
 	// возвращает количество состояний (пердикат States)
-	int size(iLogTemplate* log = nullptr) const;
+	size_t size(iLogTemplate* log = nullptr) const;
 	// проверка на пустоту
 	bool is_empty() const;
 	// метод Arden
