@@ -798,6 +798,7 @@ void Example::test_ambiguity() {
 		}
 	});
 }
+
 void Example::test_arden() {
 	auto test_equivalence = [](string rgx_str) {
 		Regex reg(rgx_str);
@@ -818,6 +819,7 @@ void Example::test_arden() {
 	test_equivalence("((b(((ba|b)|||(b))*)))");
 	test_equivalence("(((((a*)((a*)|bb)(((|||((b)))))))))");
 }
+
 void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
 }
