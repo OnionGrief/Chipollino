@@ -9,8 +9,8 @@ struct alphabet_symbol {
   private:
 	vector<string> annote_numbers;
 	vector<string> linearize_numbers;
-	string symbol = "";
-	string value = "";
+	string symbol;
+	string value;
 	void update_value();
 
   public:
@@ -46,7 +46,7 @@ struct alphabet_symbol {
 	void deannote();
 	void delinearize();
 	bool is_annotated() const;
-	bool is_linearize() const;
+	bool is_linearized() const;
 };
 
 ostream& operator<<(ostream& os, const alphabet_symbol& item);

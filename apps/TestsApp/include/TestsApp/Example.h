@@ -42,9 +42,9 @@ class Example {
 	static void table();
 	static void fa_semdet_check();
 	static void classes_number_GlaisterShallit();
-	static void testing_with_generator(
-		int regex_length, int star_num, int star_nesting, int alphabet_size,
-		const function<void(string& rgx_str)>& check_function);
+	static void testing_with_generator(int regex_length, int star_num, int star_nesting,
+									   int alphabet_size,
+									   const function<void(string& rgx_str)>& check_function);
 	static void arden_lemma_testing();
 	static void fa_to_pgrammar();
 	static void logger_test();

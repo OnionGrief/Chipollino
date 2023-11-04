@@ -21,7 +21,7 @@ class Tester {
 
 	struct table {
 		string r2; // слова порождаются регуляркой r2 и шагом итерации
-		int step;  // шаг итерации
+		int step;			// шаг итерации
 		vector<word> words; // таблица
 	};
 
@@ -29,8 +29,8 @@ class Tester {
 	static bool parsing_by_regex(string, string);
 
   public:
-	static void test(const FiniteAutomaton& language, const Regex& regex,
-					 int iteration_step, iLogTemplate* log = nullptr);
-	static void test(const Regex& language, const Regex& regex,
-					 int iteration_step, iLogTemplate* log = nullptr);
+	static void test(const FiniteAutomaton& language, const Regex& regex, int iteration_step,
+					 iLogTemplate* log = nullptr);
+	static void test(const Regex& language, const Regex& regex, int iteration_step,
+					 iLogTemplate* log = nullptr);
 };

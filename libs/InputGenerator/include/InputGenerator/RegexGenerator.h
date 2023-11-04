@@ -38,8 +38,7 @@ class RegexGenerator {
 	RegexGenerator(int regex_length, int star_num, int star_nesting);
 	/*генератор регулярных выражений, параметрирозованных длиной, кол-вом
 	итераций Клини, звездной вложенностью и размером алфавита*/
-	RegexGenerator(int regex_length, int star_num, int star_nesting,
-				   int alphabet_size);
+	RegexGenerator(int regex_length, int star_num, int star_nesting, int alphabet_size);
 	/*сгенерировать регулярное выражение, параметрирозованное длиной, кол-вом
 	итераций Клини, звездной вложенностью и размером алфавита*/
 	string generate_regex();

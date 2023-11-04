@@ -17,7 +17,11 @@ using namespace Typization;
 
 class Interpreter {
   public:
-	enum class LogMode { all, errors, nothing };
+	enum class LogMode {
+		all,
+		errors,
+		nothing
+	};
 	Interpreter();
 	// Интерпретация строчки, возвращает true в случае успеха
 	bool run_line(const string& line);
@@ -185,8 +189,7 @@ class Interpreter {
 	};
 
 	// Общий вид опрерации
-	using GeneralOperation =
-		variant<Declaration, Test, Predicate, SetFlag, Verification>;
+	using GeneralOperation = variant<Declaration, Test, Predicate, SetFlag, Verification>;
 
 	//== Парсинг ==============================================================
 
@@ -197,11 +200,9 @@ class Interpreter {
 
 	optional<Id> scan_id(const vector<Lexem>&, int& pos, size_t end);
 	optional<Regex> scan_regex(const vector<Lexem>&, int& pos, size_t end);
-	optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&,
-													  int& pos, size_t end);
+	optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&, int& pos, size_t end);
 	optional<Array> scan_array(const vector<Lexem>&, int& pos, size_t end);
-	optional<Expression> scan_expression(const vector<Lexem>&, int& pos,
-										 size_t end);
+	optional<Expression> scan_expression(const vector<Lexem>&, int& pos, size_t end);
 
 	// перевод ObjectType в String (для логирования и дебага)
 	map<ObjectType, string> types_to_string = {
@@ -234,13 +235,13 @@ class Interpreter {
 	optional<Regex> current_random_regex;
 
 	// Применение цепочки функций к набору аргументов
-	optional<GeneralObject> apply_function_sequence(
-		const vector<Function>& functions, vector<GeneralObject> arguments);
+	optional<GeneralObject> apply_function_sequence(const vector<Function>& functions,
+													vector<GeneralObject> arguments);
 
 	// Применение функции к набору аргументов
-	optional<GeneralObject> apply_function(
-		const Function& function, const vector<GeneralObject>& arguments,
-		LogTemplate& log_template);
+	optional<GeneralObject> apply_function(const Function& function,
+										   const vector<GeneralObject>& arguments,
+										   LogTemplate& log_template);
 
 	// Вычисление выражения
 	optional<GeneralObject> eval_expression(const Expression& expr);
@@ -257,15 +258,14 @@ class Interpreter {
 	bool run_operation(const GeneralOperation&);
 
 	// Сравнение типов ожидаемых и полученных входных данных
-	bool typecheck(vector<ObjectType> func_input_type,
-				   vector<ObjectType> input_type);
+	bool typecheck(vector<ObjectType> func_input_type, vector<ObjectType> input_type);
 	// выбрать подходящий вариант функции для данных аргументов (если он есть)
 	optional<int> find_func(string func, vector<ObjectType> input_type);
 	optional<string> get_func_id(Function function);
 
 	// Построение последовательности функций по их названиям
-	optional<vector<Function>> build_function_sequence(
-		vector<string> function_names, vector<ObjectType> first_type);
+	optional<vector<Function>> build_function_sequence(vector<string> function_names,
+													   vector<ObjectType> first_type);
 
 	// Соответствие между названиями функций и сигнатурами
 	map<string, vector<Function>> names_to_functions;

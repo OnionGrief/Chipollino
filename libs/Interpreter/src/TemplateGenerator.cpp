@@ -2,8 +2,7 @@
 #include <string>
 
 bool types_equiv(const vector<ObjectType>& input, const ObjectType& output) {
-	if (!((output == input[0]) ||
-		  (output == ObjectType::DFA && input[0] == ObjectType::NFA) ||
+	if (!((output == input[0]) || (output == ObjectType::DFA && input[0] == ObjectType::NFA) ||
 		  (output == ObjectType::NFA && input[0] == ObjectType::DFA))) {
 		return false;
 	}
@@ -59,8 +58,7 @@ void Interpreter::generate_brief_templates() {
 
 				//========= Шаблон для парных входных данных ===========
 
-				bool input_types_equal =
-					types_equiv(function.input, function.input[1]);
+				bool input_types_equal = types_equiv(function.input, function.input[1]);
 
 				for (int index = 0; index < (function.input.size()); index++) {
 
@@ -70,12 +68,10 @@ void Interpreter::generate_brief_templates() {
 						if (input_types_equal) {
 							if (index == 0) {
 								outfile << "\tПервый автомат:\n\n";
-								outfile << "\t%template_automaton" << index + 1
-										<< "\n\n";
+								outfile << "\t%template_automaton" << index + 1 << "\n\n";
 							} else {
 								outfile << "\tВторой автомат:\n\n";
-								outfile << "\t%template_automaton" << index + 1
-										<< "\n\n";
+								outfile << "\t%template_automaton" << index + 1 << "\n\n";
 							}
 						} else {
 							outfile << "\tАвтомат:\n\n";
@@ -94,12 +90,10 @@ void Interpreter::generate_brief_templates() {
 						if (input_types_equal) {
 							if (index == 0) {
 								outfile << "\tПервое регулярное выражение:\n";
-								outfile << "\t%template_regex" << index + 1
-										<< "\n\n";
+								outfile << "\t%template_regex" << index + 1 << "\n\n";
 							} else {
 								outfile << "\tВторое регулярное выражение:\n";
-								outfile << "\t%template_regex" << index + 1
-										<< "\n\n";
+								outfile << "\t%template_regex" << index + 1 << "\n\n";
 							}
 						} else {
 							outfile << "\tРегулярное выражение:\n";
@@ -119,15 +113,11 @@ void Interpreter::generate_brief_templates() {
 						function.input[index] == ObjectType::Boolean ||
 						function.input[index] == ObjectType::OptionalBool) {
 						if (input_types_equal) {
-							outfile << "\t"
-									<< types_to_string[function.input[index]]
-									<< index + 1 << ":\n\n";
-							outfile << "\t%template_value" << index + 1
-									<< "\n\n";
+							outfile << "\t" << types_to_string[function.input[index]] << index + 1
+									<< ":\n\n";
+							outfile << "\t%template_value" << index + 1 << "\n\n";
 						} else {
-							outfile << "\t"
-									<< types_to_string[function.input[index]]
-									<< "\n\n";
+							outfile << "\t" << types_to_string[function.input[index]] << "\n\n";
 							outfile << "\t%template_value\n\n";
 						}
 					}
@@ -137,8 +127,7 @@ void Interpreter::generate_brief_templates() {
 			//========= Шаблон для выходных данных ===================
 
 			// Для автоматов
-			if (function.output == ObjectType::NFA ||
-				function.output == ObjectType::DFA) {
+			if (function.output == ObjectType::NFA || function.output == ObjectType::DFA) {
 				outfile << "\tАвтомат";
 
 				if (equal_types) {
@@ -150,8 +139,7 @@ void Interpreter::generate_brief_templates() {
 
 			// Для Regex, Int, Bool, optionalbool
 			if (function.output == ObjectType::AmbiguityValue ||
-				function.output == ObjectType::Int ||
-				function.output == ObjectType::Boolean ||
+				function.output == ObjectType::Int || function.output == ObjectType::Boolean ||
 				function.output == ObjectType::OptionalBool) {
 				outfile << "\tРезультат:\n";
 
@@ -199,8 +187,7 @@ void Interpreter::generate_test_for_all_functions() {
 					outfile << " A";
 				} else if (arg == ObjectType::AmbiguityValue) {
 					outfile << " V";
-				} else if (arg == ObjectType::Boolean ||
-						   arg == ObjectType::OptionalBool) {
+				} else if (arg == ObjectType::Boolean || arg == ObjectType::OptionalBool) {
 					outfile << " B";
 				} else if (arg == ObjectType::PrefixGrammar) {
 					outfile << " P";
