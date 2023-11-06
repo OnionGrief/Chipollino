@@ -13,7 +13,7 @@
 #include <iostream>
 #include "gtest/gtest.h"
 
-TEST(TestCaseName, GlaisterShallit) {
+TEST(TestCaseName, Test_GlaisterShallit) {
 
 	auto check_classes_number = [](string rgx_str) {
 		return (Regex(rgx_str).to_glushkov().get_classes_number_GlaisterShallit());
