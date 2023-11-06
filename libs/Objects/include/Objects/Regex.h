@@ -18,8 +18,9 @@ struct State;
 
 class Regex : public AlgExpression {
   private:
+	void copy(const AlgExpression*) override;
 	// возвращает указатель на new Regex
-	AlgExpression* make() const override;
+	Regex* make() const override;
 
 	// Множество префиксов длины len
 	void get_prefix(int len, std::set<std::string>& prefs) const;
@@ -40,8 +41,12 @@ class Regex : public AlgExpression {
 	Regex(const string&);
 	Regex(const string&, const shared_ptr<Language>&);
 
+	Regex* make_copy() const override;
+	Regex(const Regex&) = default;
+
 	// dynamic_cast к типу Regex*
 	template <typename T> static Regex* cast(T* ptr);
+	template <typename T> static const Regex* cast(const T* ptr);
 	// dynamic_cast каждого элемента вектора к типу Regex*
 	template <typename T> static vector<Regex*> cast(vector<T*> ptr);
 

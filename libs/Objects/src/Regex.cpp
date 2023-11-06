@@ -18,12 +18,39 @@ Regex::Regex(const string& str, const shared_ptr<Language>& new_language) : Rege
 	language = new_language;
 }
 
-AlgExpression* Regex::make() const {
+void Regex::copy(const AlgExpression* other) {
+	auto* tmp = cast(other);
+	alphabet = tmp->alphabet;
+	type = tmp->type;
+	value = tmp->value;
+	language = tmp->language;
+	if (tmp->term_l != nullptr)
+		term_l = tmp->term_l->make_copy();
+	if (tmp->term_r != nullptr)
+		term_r = tmp->term_r->make_copy();
+}
+
+Regex* Regex::make_copy() const {
+	auto* c = new Regex;
+	c->copy(this);
+	return c;
+}
+
+Regex* Regex::make() const {
 	return new Regex;
 }
 
 template <typename T> Regex* Regex::cast(T* ptr) {
 	auto* r = dynamic_cast<Regex*>(ptr);
+	if (!r) {
+		throw runtime_error("Failed to cast to Regex");
+	}
+
+	return r;
+}
+
+template <typename T> const Regex* Regex::cast(const T* ptr) {
+	auto* r = dynamic_cast<const Regex*>(ptr);
 	if (!r) {
 		throw runtime_error("Failed to cast to Regex");
 	}
@@ -519,8 +546,8 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 		// cout << answer1 << " " << answer2 << "\n";
 		if (answer1 && answer2) {
 			result.type = Type::alt;
-			result.term_l = subresult.copy();
-			result.term_r = subresult1.copy();
+			result.term_l = subresult.make_copy();
+			result.term_r = subresult1.make_copy();
 			// cout << result.to_txt() << "\n";
 			return true;
 		}
@@ -544,24 +571,28 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 		if (subresult.term_l == nullptr) subresult.term_l = new Regex();
 		answer1 = derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
 												 *Regex::cast(subresult.term_l));
-		subresult.term_r = reg_e->term_r->copy();
+		subresult.term_r = reg_e->term_r->make_copy();
 		if (Regex::cast(reg_e->term_l)->contains_eps()) {
 			answer2 = derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_r),
 													 subresult1);
 			if (answer1 && answer2) {
 				result.type = Type::alt;
-				result.term_l = subresult.copy();
-				result.term_r = subresult1.copy();
+				result.term_l = subresult.make_copy();
+				result.term_r = subresult1.make_copy();
 			}
 			if (answer1 && !answer2) {
 				result.type = subresult.type;
-				if (subresult.term_l != nullptr) result.term_l = subresult.term_l->copy();
-				if (subresult.term_r != nullptr) result.term_r = subresult.term_r->copy();
+				if (subresult.term_l != nullptr)
+					result.term_l = subresult.term_l->make_copy();
+				if (subresult.term_r != nullptr)
+					result.term_r = subresult.term_r->make_copy();
 			}
 			if (answer2 && !answer1) {
 				result.type = subresult1.type;
-				if (subresult1.term_l != nullptr) result.term_l = subresult1.term_l->copy();
-				if (subresult1.term_r != nullptr) result.term_r = subresult1.term_r->copy();
+				if (subresult1.term_l != nullptr)
+					result.term_l = subresult1.term_l->make_copy();
+				if (subresult1.term_r != nullptr)
+					result.term_r = subresult1.term_r->make_copy();
 			}
 			// cout << "conc of " << reg_e->term_l->to_txt() << " and "
 			//	 << reg_e->term_r->to_txt() << "\n";
@@ -574,8 +605,10 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 			// cout << answer1 << "\n";
 			answer = answer1;
 			result.type = subresult.type;
-			if (subresult.term_l != nullptr) result.term_l = subresult.term_l->copy();
-			if (subresult.term_r != nullptr) result.term_r = subresult.term_r->copy();
+			if (subresult.term_l != nullptr)
+				result.term_l = subresult.term_l->make_copy();
+			if (subresult.term_r != nullptr)
+				result.term_r = subresult.term_r->make_copy();
 		}
 		return answer;
 	case Type::star:
@@ -583,7 +616,7 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 		if (result.term_l == nullptr) result.term_l = new Regex();
 		bool answer = derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
 													 *Regex::cast(result.term_l));
-		result.term_r = reg_e->copy();
+		result.term_r = reg_e->make_copy();
 		return answer;
 	}
 }
@@ -597,8 +630,10 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 	}
 	if (respected_sym->type == Type::eps) {
 		cur_result.type = reg_e->type;
-		if (reg_e->term_l != nullptr) cur_result.term_l = reg_e->term_l->copy();
-		if (reg_e->term_l) cur_result.term_r = reg_e->term_l->copy();
+		if (reg_e->term_l != nullptr)
+			cur_result.term_l = reg_e->term_l->make_copy();
+		if (reg_e->term_l)
+			cur_result.term_r = reg_e->term_l->make_copy();
 		result.push_back(cur_result);
 		return true;
 	}
@@ -632,9 +667,9 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		cur_subresult.type = Type::conc;
 		answer1 = partial_derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
 														 subresult);
-		cur_subresult.term_r = reg_e->term_r->copy();
+		cur_subresult.term_r = reg_e->term_r->make_copy();
 		for (auto& i : subresult) {
-			cur_subresult.term_l = i.copy();
+			cur_subresult.term_l = i.make_copy();
 			result.push_back(cur_subresult);
 			delete cur_subresult.term_l;
 			cur_subresult.term_l = nullptr;
@@ -654,9 +689,9 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		cur_result.type = Type::conc;
 		bool answer = partial_derivative_with_respect_to_sym(respected_sym,
 															 Regex::cast(reg_e->term_l), subresult);
-		cur_result.term_r = reg_e->copy();
+		cur_result.term_r = reg_e->make_copy();
 		for (auto& i : subresult) {
-			cur_result.term_l = i.copy();
+			cur_result.term_l = i.make_copy();
 			result.push_back(cur_result);
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
@@ -691,7 +726,7 @@ bool Regex::derivative_with_respect_to_str(string str, const Regex* reg_e, Regex
 
 // Производная по символу
 optional<Regex> Regex::symbol_derivative(const Regex& respected_sym) const {
-	auto rs = respected_sym.copy();
+	auto rs = respected_sym.make_copy();
 	Regex result;
 	optional<Regex> ans;
 	if (derivative_with_respect_to_sym(Regex::cast(rs), this, result))
@@ -703,7 +738,7 @@ optional<Regex> Regex::symbol_derivative(const Regex& respected_sym) const {
 }
 // Частичная производная по символу
 void Regex::partial_symbol_derivative(const Regex& respected_sym, vector<Regex>& result) const {
-	auto rs = respected_sym.copy();
+	auto rs = respected_sym.make_copy();
 	partial_derivative_with_respect_to_sym(Regex::cast(rs), this, result);
 	delete rs;
 }

@@ -39,7 +39,11 @@ class AlgExpression : public BaseObject {
 		// Unary:
 		star,
 		// Terminal:
-		symb
+		symb,
+		// [i]
+		cellWriter,
+		// Reference
+		ref,
 	};
 
 	set<alphabet_symbol> alphabet;
@@ -49,6 +53,8 @@ class AlgExpression : public BaseObject {
 	AlgExpression* term_l = nullptr;
 	AlgExpression* term_r = nullptr;
 
+	// копирует объект (!!! не чистит память !!!)
+	virtual void copy(const AlgExpression*) = 0;
 	// возвращает указатель на 'new' объект соответствующего типа
 	virtual AlgExpression* make() const = 0;
 
@@ -62,22 +68,25 @@ class AlgExpression : public BaseObject {
 	void make_language();
 
 	// для print_tree
-	void print_subtree(AlgExpression* expr, int level);
+	void print_subtree(AlgExpression* expr, int level) const;
 	// для print_dot
-	string print_subdot(AlgExpression* expr, const std::string& parent_dot_node, int& id);
+	string print_subdot(AlgExpression* expr, const std::string& parent_dot_node, int& id) const;
+	virtual string type_to_str() const;
+	static bool is_terminal_type(Type);
 
 	// Turns string into lexeme vector
 	static vector<Lexeme> parse_string(string);
 	bool from_string(const string&);
 	// возвращаемый тип нижеперечисленных методов зависит от типа объекта (Regex/BackRefRegex)
 	// внутреннее состояние не имеет значения
-	AlgExpression* expr(const vector<Lexeme>&, int, int);
+	virtual AlgExpression* expr(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_conc(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_star(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_alt(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_symb(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_eps(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_par(const vector<Lexeme>&, int, int);
+	static bool update_balance(const AlgExpression::Lexeme&, int&);
 
 	// список листьев дерева regex
 	vector<AlgExpression*> pre_order_travers();
@@ -106,16 +115,17 @@ class AlgExpression : public BaseObject {
 	AlgExpression(shared_ptr<Language>, Type, const Lexeme&, const set<alphabet_symbol>&);
 	AlgExpression(set<alphabet_symbol>);
 
-	~AlgExpression();
+	virtual ~AlgExpression();
 
-	AlgExpression* copy() const;
+	// возвращает указатель на копию себя
+	virtual AlgExpression* make_copy() const = 0;
 	AlgExpression(const AlgExpression&);
 	AlgExpression& operator=(const AlgExpression& other);
 
 	string to_txt() const override;
 	// вывод дерева для дебага
-	void print_tree();
-	void print_dot();
+	void print_tree() const;
+	void print_dot() const;
 
 	friend class FiniteAutomaton;
 	friend class Tester;

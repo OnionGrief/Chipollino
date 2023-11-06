@@ -7,8 +7,6 @@
 
 AlgExpression::AlgExpression() {
 	type = AlgExpression::eps;
-	term_l = nullptr;
-	term_r = nullptr;
 }
 
 AlgExpression::AlgExpression(shared_ptr<Language> language, Type type, const Lexeme& value,
@@ -35,41 +33,21 @@ AlgExpression::~AlgExpression() {
 	clear();
 }
 
-AlgExpression* AlgExpression::copy() const {
-	auto* c = make();
-	c->alphabet = alphabet;
-	c->type = type;
-	c->value = value;
-	c->language = language;
-	if (type != AlgExpression::eps && type != AlgExpression::symb) {
-		c->term_l = term_l->copy();
-		if (type != Type::star) c->term_r = term_r->copy();
-	}
-	return c;
-}
-
-AlgExpression::AlgExpression(const AlgExpression& other)
-	: AlgExpression(other.language, other.type, other.value, other.alphabet) {
+AlgExpression::AlgExpression(const AlgExpression& other) : AlgExpression() {
+	alphabet = other.alphabet;
+	type = other.type;
+	value = other.value;
+	language = other.language;
 	if (other.term_l != nullptr)
-		term_l = other.term_l->copy();
-	else
-		term_l = nullptr;
-
+		term_l = other.term_l->make_copy();
 	if (other.term_r != nullptr)
-		term_r = other.term_r->copy();
-	else
-		term_r = nullptr;
+		term_r = other.term_r->make_copy();
 }
 
 AlgExpression& AlgExpression::operator=(const AlgExpression& other) {
 	if (this != &other) {
 		clear();
-		language = other.language;
-		type = other.type;
-		value = other.value;
-		alphabet = other.alphabet;
-		if (other.term_l) term_l = other.term_l->copy();
-		if (other.term_r) term_r = other.term_r->copy();
+		copy(&other);
 	}
 	return *this;
 }
@@ -96,6 +74,10 @@ void AlgExpression::make_language() {
 	language = make_shared<Language>(alphabet);
 }
 
+bool AlgExpression::is_terminal_type(Type t) {
+	return t == Type::symb || t == Type::cellWriter || t == Type::ref;
+}
+
 string AlgExpression::to_txt() const {
 	string str1, str2;
 	if (term_l) {
@@ -105,29 +87,39 @@ string AlgExpression::to_txt() const {
 		str2 = term_r->to_txt();
 	}
 	string symb;
-	if (type == Type::conc) {
+	switch (type) {
+	case Type::conc:
 		if (term_l && term_l->type == Type::alt) {
 			str1 = "(" + str1 + ")";
 		}
-		if (term_r && term_r->type == Type::alt) {
+		if (term_r && term_l->type == Type::alt) {
 			str2 = "(" + str2 + ")";
 		}
-	}
-	if (type == Type::symb) symb = value.symbol;
-	if (type == Type::eps) symb = "";
-	if (type == Type::alt) symb = '|';
-	if (type == Type::star) {
+		break;
+	case Type::symb:
+		symb = value.symbol;
+		break;
+	case Type::eps:
+		symb = "";
+		break;
+	case Type::alt:
+		symb = '|';
+		break;
+	case Type::star:
 		symb = '*';
-		if (term_l->type != Type::symb)
+		if (!is_terminal_type(term_l->type))
 			// ставим скобки при итерации, если символов > 1
 			str1 = "(" + str1 + ")";
+		break;
+	default:
+		break;
 	}
 
 	return str1 + symb + str2;
 }
 
 // для дебага
-void AlgExpression::print_subtree(AlgExpression* expr, int level) {
+void AlgExpression::print_subtree(AlgExpression* expr, int level) const {
 	if (expr) {
 		print_subtree(expr->term_l, level + 1);
 		for (int i = 0; i < level; i++)
@@ -142,7 +134,7 @@ void AlgExpression::print_subtree(AlgExpression* expr, int level) {
 	}
 }
 
-void AlgExpression::print_tree() {
+void AlgExpression::print_tree() const {
 	print_subtree(term_l, 1);
 	for (int i = 0; i < 0; i++)
 		cout << "   ";
@@ -155,19 +147,34 @@ void AlgExpression::print_tree() {
 	print_subtree(term_r, 1);
 }
 
-std::unordered_map<int, std::string> type_to_str = {
-	{0, "ε"}, {1, "|"}, {2, "."}, {3, "*"}, {4, "symb"}};
+string AlgExpression::type_to_str() const {
+	if (value.symbol != "")
+		return value.symbol;
+	switch (type) {
+	case Type::eps:
+		return "ε";
+	case Type::alt:
+		return "|";
+	case Type::conc:
+		return ".";
+	case Type::star:
+		return "*";
+	case Type::symb:
+		return "symb";
+	default:
+		break;
+	}
+	return {};
+}
 
-string AlgExpression::print_subdot(AlgExpression* expr, const string& parent_dot_node, int& id) {
+string AlgExpression::print_subdot(AlgExpression* expr, const string& parent_dot_node,
+								   int& id) const {
 	string dot;
 	if (expr) {
 		string dot_node = "node" + to_string(id++);
 
 		alphabet_symbol r_v;
-		if (expr->value.symbol != "")
-			r_v = expr->value.symbol;
-		else
-			r_v = type_to_str.at(expr->type);
+		r_v = expr->type_to_str();
 
 		dot += dot_node + " [label=\"" + string(r_v) + "\"];\n";
 
@@ -181,17 +188,14 @@ string AlgExpression::print_subdot(AlgExpression* expr, const string& parent_dot
 	return dot;
 }
 
-void AlgExpression::print_dot() {
+void AlgExpression::print_dot() const {
 	int id = 0;
 
 	string dot;
 	dot += "graph {\n";
 
 	alphabet_symbol r_v;
-	if (value.symbol != "")
-		r_v = value.symbol;
-	else
-		r_v = type_to_str.at(type);
+	r_v = type_to_str();
 
 	string root_dot_node = "node" + to_string(id++);
 	dot += root_dot_node + " [label=\"" + string(r_v) + "\"];\n";
@@ -245,7 +249,6 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		case '[':
 			lexeme.type = Lexeme::Type::squareBrL;
 			brackets_checker.push('[');
-			memory_opening_indexes.push(lexemes.size());
 			brackets_are_empty = true;
 			break;
 		case ']':
@@ -343,6 +346,10 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			lexemes.emplace_back(Lexeme::Type::eps);
 		}
 
+		if (lexeme.type == Lexeme::Type::squareBrL) {
+			memory_opening_indexes.push(lexemes.size());
+		}
+
 		lexemes.push_back(lexeme);
 	}
 
@@ -394,16 +401,9 @@ bool AlgExpression::from_string(const string& str) {
 		return false;
 	}
 
-	value = root->value;
-	type = root->type;
-	alphabet = root->alphabet;
+	copy(root);
 	language = make_shared<Language>(alphabet);
-	if (root->term_l != nullptr) {
-		term_l = root->term_l->copy();
-	}
-	if (root->term_r != nullptr) {
-		term_r = root->term_r->copy();
-	}
+
 	delete root;
 	return true;
 }
@@ -430,21 +430,26 @@ AlgExpression* AlgExpression::expr(const vector<AlgExpression::Lexeme>& lexemes,
 	return p;
 }
 
+bool AlgExpression::update_balance(const AlgExpression::Lexeme& l, int& balance) {
+	if (l.type == Lexeme::Type::parL || l.type == Lexeme::Type::squareBrL) {
+		balance++;
+	}
+	if (l.type == Lexeme::Type::parR || l.type == Lexeme::Type::squareBrR) {
+		balance--;
+	}
+	return balance >= 0;
+}
+
 AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lexemes,
 										int index_start, int index_end) {
 	AlgExpression* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (lexemes[i].type == Lexeme::Type::parL) { // LEFT_BRACKET
-			balance++;
-		}
-		if (lexemes[i].type == Lexeme::Type::parR) { // RIGHT_BRACKET
-			balance--;
-		}
+		if (!update_balance(lexemes[i], balance))
+			return nullptr;
 		if (lexemes[i].type == Lexeme::Type::conc && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
 			AlgExpression* r = expr(lexemes, i + 1, index_end);
-
 			if (l == nullptr || r == nullptr || r->type == AlgExpression::eps ||
 				l->type == AlgExpression::eps) { // Проверка на адекватность)
 				delete r;
@@ -472,15 +477,10 @@ AlgExpression* AlgExpression::scan_star(const vector<AlgExpression::Lexeme>& lex
 	AlgExpression* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (lexemes[i].type == Lexeme::Type::parL) { // LEFT_BRACKET
-			balance++;
-		}
-		if (lexemes[i].type == Lexeme::Type::parR) { // RIGHT_BRACKET
-			balance--;
-		}
+		if (!update_balance(lexemes[i], balance))
+			return nullptr;
 		if (lexemes[i].type == Lexeme::Type::star && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
-
 			if (l == nullptr || l->type == AlgExpression::eps) {
 				delete l;
 				return p;
@@ -488,13 +488,10 @@ AlgExpression* AlgExpression::scan_star(const vector<AlgExpression::Lexeme>& lex
 
 			p = make();
 			p->term_l = l;
-
-			p->term_r = nullptr;
 			p->value = lexemes[i];
 			p->type = Type::star;
 
-			set<alphabet_symbol> s = l->alphabet;
-			p->alphabet = s;
+			p->alphabet = l->alphabet;
 			return p;
 		}
 	}
@@ -506,16 +503,12 @@ AlgExpression* AlgExpression::scan_alt(const vector<AlgExpression::Lexeme>& lexe
 	AlgExpression* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (lexemes[i].type == Lexeme::Type::parL) { // LEFT_BRACKET
-			balance++;
-		}
-		if (lexemes[i].type == Lexeme::Type::parR) { // RIGHT_BRACKET
-			balance--;
-		}
+		if (!update_balance(lexemes[i], balance))
+			return nullptr;
 		if (lexemes[i].type == Lexeme::Type::alt && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
 			AlgExpression* r = expr(lexemes, i + 1, index_end);
-			if (((l == nullptr) || (r == nullptr))) { // Проверка на адекватность)
+			if (l == nullptr || r == nullptr) { // Проверка на адекватность)
 				delete r;
 				delete l;
 				return nullptr;
@@ -528,10 +521,8 @@ AlgExpression* AlgExpression::scan_alt(const vector<AlgExpression::Lexeme>& lexe
 			p->value = lexemes[i];
 			p->type = Type::alt;
 
-			set<alphabet_symbol> s = l->alphabet;
-			s.insert(r->alphabet.begin(), r->alphabet.end());
-
-			p->alphabet = s;
+			p->alphabet = l->alphabet;
+			p->alphabet.insert(r->alphabet.begin(), r->alphabet.end());
 			return p;
 		}
 	}
@@ -541,28 +532,22 @@ AlgExpression* AlgExpression::scan_alt(const vector<AlgExpression::Lexeme>& lexe
 AlgExpression* AlgExpression::scan_symb(const vector<AlgExpression::Lexeme>& lexemes,
 										int index_start, int index_end) {
 	AlgExpression* p = nullptr;
-	if ((lexemes.size() <= index_start) || (lexemes[index_start].type != Lexeme::Type::symb) ||
-		(index_end - index_start > 1)) {
+	if (index_start >= lexemes.size() || (index_end - index_start > 1) ||
+		lexemes[index_start].type != Lexeme::Type::symb) {
 		return nullptr;
 	}
 
 	p = make();
 	p->value = lexemes[index_start];
 	p->type = AlgExpression::symb;
-
-	vector<alphabet_symbol> v = {lexemes[index_start].symbol};
-	set<alphabet_symbol> s(v.begin(), v.end());
-
-	p->alphabet = s;
-	p->term_l = nullptr;
-	p->term_r = nullptr;
+	p->alphabet = {lexemes[index_start].symbol};
 	return p;
 }
 
 AlgExpression* AlgExpression::scan_eps(const vector<AlgExpression::Lexeme>& lexemes,
 									   int index_start, int index_end) {
 	AlgExpression* p = nullptr;
-	if (lexemes.size() <= (index_start) || (index_end - index_start != 1) ||
+	if (index_start >= lexemes.size() || (index_end - index_start != 1) ||
 		lexemes[index_start].type != Lexeme::Type::eps) {
 		return nullptr;
 	}
@@ -570,19 +555,13 @@ AlgExpression* AlgExpression::scan_eps(const vector<AlgExpression::Lexeme>& lexe
 	p = make();
 	p->value = lexemes[index_start];
 	p->type = AlgExpression::eps;
-
-	set<alphabet_symbol> s;
-
-	p->alphabet = s;
-	p->term_l = nullptr;
-	p->term_r = nullptr;
 	return p;
 }
 
 AlgExpression* AlgExpression::scan_par(const vector<AlgExpression::Lexeme>& lexemes,
 									   int index_start, int index_end) {
 	AlgExpression* p = nullptr;
-	if (lexemes.size() <= (index_end - 1) || (lexemes[index_start].type != Lexeme::Type::parL ||
+	if ((index_end - 1) >= lexemes.size() || (lexemes[index_start].type != Lexeme::Type::parL ||
 											  lexemes[index_end - 1].type != Lexeme::Type::parR)) {
 		return nullptr;
 	}
@@ -777,19 +756,19 @@ unordered_map<int, vector<int>> AlgExpression::pairs() const {
 
 void AlgExpression::regex_union(AlgExpression* a, AlgExpression* b) {
 	type = Type::conc;
-	term_l = a->copy();
-	term_r = b->copy();
+	term_l = a->make_copy();
+	term_r = b->make_copy();
 }
 
 void AlgExpression::regex_alt(AlgExpression* a, AlgExpression* b) {
 	type = Type::alt;
-	term_l = a->copy();
-	term_r = b->copy();
+	term_l = a->make_copy();
+	term_r = b->make_copy();
 }
 
 void AlgExpression::regex_star(AlgExpression* a) {
 	type = Type::star;
-	term_l = a->copy();
+	term_l = a->make_copy();
 }
 
 void AlgExpression::regex_eps() {
