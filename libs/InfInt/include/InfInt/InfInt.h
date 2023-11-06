@@ -42,8 +42,8 @@
 #include <sstream>
 #include <vector>
 
-//#include <limits.h>
-//#include <stdlib.h>
+// #include <limits.h>
+// #include <stdlib.h>
 
 #ifdef _WIN32
 #define LONG_LONG_MIN LLONG_MIN
@@ -60,8 +60,7 @@ typedef long long PRODUCT_TYPE;
 static const ELEM_TYPE BASE = 1000000000;
 static const ELEM_TYPE UPPER_BOUND = 999999999;
 static const ELEM_TYPE DIGIT_COUNT = 9;
-static const int powersOfTen[] = {1,	  10,	   100,		 1000,	   10000,
-								  100000, 1000000, 10000000, 100000000};
+static const int powersOfTen[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
 #ifdef INFINT_USE_EXCEPTIONS
 class InfIntException : public std::exception {
@@ -463,9 +462,8 @@ inline const InfInt& InfInt::operator+=(const InfInt& rhs) {
 		val.resize(rhs.val.size(), 0);
 	}
 	for (size_t i = 0; i < val.size(); ++i) {
-		val[i] =
-			(pos ? val[i] : -val[i]) +
-			(i < rhs.val.size() ? (rhs.pos ? rhs.val[i] : -rhs.val[i]) : 0);
+		val[i] = (pos ? val[i] : -val[i]) +
+				 (i < rhs.val.size() ? (rhs.pos ? rhs.val[i] : -rhs.val[i]) : 0);
 	}
 	correct();
 	return *this;
@@ -477,9 +475,8 @@ inline const InfInt& InfInt::operator-=(const InfInt& rhs) {
 		val.resize(rhs.val.size(), 0);
 	}
 	for (size_t i = 0; i < val.size(); ++i) {
-		val[i] =
-			(pos ? val[i] : -val[i]) -
-			(i < rhs.val.size() ? (rhs.pos ? rhs.val[i] : -rhs.val[i]) : 0);
+		val[i] = (pos ? val[i] : -val[i]) -
+				 (i < rhs.val.size() ? (rhs.pos ? rhs.val[i] : -rhs.val[i]) : 0);
 	}
 	correct();
 	return *this;
@@ -524,12 +521,12 @@ inline const InfInt& InfInt::operator%=(const InfInt& rhs) {
 	return *this;
 	//    if (rhs == 0)
 	//    {
-	//#ifdef INFINT_USE_EXCEPTIONS
+	// #ifdef INFINT_USE_EXCEPTIONS
 	//        throw InfIntException("division by zero");
-	//#else
+	// #else
 	//        std::cerr << "Division by zero!" << std::endl;
 	//        return *this;
-	//#endif
+	// #endif
 	//    }
 	//    InfInt D = (rhs.pos ? rhs : -rhs), N = (pos ? *this : -*this);
 	//    bool oldpos = pos;
@@ -565,12 +562,10 @@ inline InfInt InfInt::operator-() const {
 inline InfInt InfInt::operator+(const InfInt& rhs) const {
 	// PROFINY_SCOPE
 	InfInt result;
-	result.val.resize(val.size() > rhs.val.size() ? val.size() : rhs.val.size(),
-					  0);
+	result.val.resize(val.size() > rhs.val.size() ? val.size() : rhs.val.size(), 0);
 	for (size_t i = 0; i < val.size() || i < rhs.val.size(); ++i) {
-		result.val[i] =
-			(i < val.size() ? (pos ? val[i] : -val[i]) : 0) +
-			(i < rhs.val.size() ? (rhs.pos ? rhs.val[i] : -rhs.val[i]) : 0);
+		result.val[i] = (i < val.size() ? (pos ? val[i] : -val[i]) : 0) +
+						(i < rhs.val.size() ? (rhs.pos ? rhs.val[i] : -rhs.val[i]) : 0);
 	}
 	result.correct();
 	return result;
@@ -579,12 +574,10 @@ inline InfInt InfInt::operator+(const InfInt& rhs) const {
 inline InfInt InfInt::operator-(const InfInt& rhs) const {
 	// PROFINY_SCOPE
 	InfInt result;
-	result.val.resize(val.size() > rhs.val.size() ? val.size() : rhs.val.size(),
-					  0);
+	result.val.resize(val.size() > rhs.val.size() ? val.size() : rhs.val.size(), 0);
 	for (size_t i = 0; i < val.size() || i < rhs.val.size(); ++i) {
-		result.val[i] =
-			(i < val.size() ? (pos ? val[i] : -val[i]) : 0) -
-			(i < rhs.val.size() ? (rhs.pos ? rhs.val[i] : -rhs.val[i]) : 0);
+		result.val[i] = (i < val.size() ? (pos ? val[i] : -val[i]) : 0) -
+						(i < rhs.val.size() ? (rhs.pos ? rhs.val[i] : -rhs.val[i]) : 0);
 	}
 	result.correct();
 	return result;
@@ -604,8 +597,7 @@ inline InfInt InfInt::operator*(const InfInt& rhs) const {
 		bool found = false;
 		for (size_t i = digit < rhs.val.size() ? 0 : digit - rhs.val.size() + 1;
 			 i < val.size() && i <= digit; ++i) {
-			PRODUCT_TYPE pval =
-				result.val[digit] + val[i] * (PRODUCT_TYPE)rhs.val[digit - i];
+			PRODUCT_TYPE pval = result.val[digit] + val[i] * (PRODUCT_TYPE)rhs.val[digit - i];
 			if (pval >= BASE || pval <= -BASE) {
 				lldiv_t dt = my_lldiv(pval, BASE);
 				carry += dt.quot;
@@ -624,9 +616,7 @@ inline InfInt InfInt::operator*(const InfInt& rhs) const {
 		carry = dt.quot;
 	}
 	result.correct();
-	result.pos = (result.val.size() == 1 && result.val[0] == 0)
-					 ? true
-					 : (pos == rhs.pos);
+	result.pos = (result.val.size() == 1 && result.val[0] == 0) ? true : (pos == rhs.pos);
 	return result;
 }
 
@@ -681,9 +671,7 @@ inline InfInt InfInt::operator*(ELEM_TYPE rhs) const {
 	ELEM_TYPE factor = rhs < 0 ? -rhs : rhs;
 	multiplyByDigit(factor, result.val);
 	result.correct();
-	result.pos = (result.val.size() == 1 && result.val[0] == 0)
-					 ? true
-					 : (pos == (rhs >= 0));
+	result.pos = (result.val.size() == 1 && result.val[0] == 0) ? true : (pos == (rhs >= 0));
 	return result;
 }
 
@@ -834,8 +822,7 @@ inline InfInt InfInt::intSqrt() const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("intSqrt called for non-positive integer");
 #else
-		std::cerr << "intSqrt called for non-positive integer: " << *this
-				  << std::endl;
+		std::cerr << "intSqrt called for non-positive integer: " << *this << std::endl;
 		return 0;
 #endif
 	}
@@ -886,9 +873,7 @@ inline size_t InfInt::numberOfDigits() const {
 												   ? 4
 												   : (val.back() > 99
 														  ? 3
-														  : (val.back() > 9
-																 ? 2
-																 : 1))))))));
+														  : (val.back() > 9 ? 2 : 1))))))));
 }
 
 inline std::string InfInt::toString() const {
@@ -1030,8 +1015,7 @@ inline bool InfInt::equalizeSigns() {
 		for (; i >= 0; --i) {
 			if (val[i] < 0) {
 				int k = 0, index = i + 1;
-				for (; (size_t)(index) < val.size() && val[index] == 0;
-					 ++k, ++index)
+				for (; (size_t)(index) < val.size() && val[index] == 0; ++k, ++index)
 					; // count adjacent zeros on left
 				// if ((size_t)(index) < val.size() && val[index] > 0)
 				{ // number on the left is positive
@@ -1047,8 +1031,7 @@ inline bool InfInt::equalizeSigns() {
 		for (; i >= 0; --i) {
 			if (val[i] > 0) {
 				int k = 0, index = i + 1;
-				for (; (size_t)(index) < val.size() && val[index] == 0;
-					 ++k, ++index)
+				for (; (size_t)(index) < val.size() && val[index] == 0; ++k, ++index)
 					; // count adjacent zeros on right
 				// if ((size_t)(index) < val.size() && val[index] < 0)
 				{ // number on the left is negative
@@ -1083,8 +1066,7 @@ inline void InfInt::correct(bool justCheckLeadingZeros, bool hasValidSign) {
 		truncateToBase();
 
 		if (equalizeSigns()) {
-			pos = ((val.size() == 1 && val[0] == 0) || !hasValidSign) ? true
-																	  : pos;
+			pos = ((val.size() == 1 && val[0] == 0) || !hasValidSign) ? true : pos;
 		} else {
 			pos = hasValidSign ? !pos : false;
 			for (size_t i = 0; i < val.size(); ++i) {
@@ -1139,8 +1121,7 @@ inline ELEM_TYPE InfInt::dInR(const InfInt& R, const InfInt& D) {
 	return min;
 }
 
-inline void InfInt::multiplyByDigit(ELEM_TYPE factor,
-									std::vector<ELEM_TYPE>& val) {
+inline void InfInt::multiplyByDigit(ELEM_TYPE factor, std::vector<ELEM_TYPE>& val) {
 	// PROFINY_SCOPE
 	ELEM_TYPE carry = 0;
 	for (size_t i = 0; i < val.size(); ++i) {

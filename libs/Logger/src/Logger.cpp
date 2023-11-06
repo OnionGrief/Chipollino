@@ -25,8 +25,8 @@ void Logger::render_to_file(const string& filename) {
 	// That's just a demo
 	for (size_t i = 0; i < logs.size(); i++) {
 		outfile << logs[i].render() << "\n";
-		cout << 100 * (i + 1) / logs_size << "% (template \""
-			 << logs[i].get_tex_template() << "\" is completed)\n";
+		cout << 100 * (i + 1) / logs_size << "% (template \"" << logs[i].get_tex_template()
+			 << "\" is completed)\n";
 	}
 	outfile << "\\end{document}\n";
 	outfile.close();

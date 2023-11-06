@@ -31,19 +31,16 @@ class TasksGenerator {
 	int max_num_of_func_in_seq = 5; // максимальное кол-во функций в посл-ти
 	int id_num = 0; // кол-во объявленных идентификаторов
 	bool for_static_Tpchkr = false,
-		 for_dinamic_Tpchkr =
-			 false; // для статического тайпчекера - генерируем все функции
-					// подряд, для динамического - dfa = nfa, если оба false, то
-					// генерируем гарантированно правильные последовательности
-					// команд
-	map<string, vector<Function>>
-		funcInput; // разделение функций (с единственным аргументом) по
-				   // принимаемым значениям
+		 for_dinamic_Tpchkr = false; // для статического тайпчекера - генерируем все функции
+									 // подряд, для динамического - dfa = nfa, если оба false, то
+									 // генерируем гарантированно правильные последовательности
+									 // команд
+	map<string, vector<Function>> funcInput; // разделение функций (с единственным аргументом) по
+											 // принимаемым значениям
 	map<string, vector<Id>> ids; // поиск идентификатора по его типу
 
-	string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int",
-		   VALUE = "Value", BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA",
-		   ARRAY = "Array", PG = "PG";
+	string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int", VALUE = "Value",
+		   BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA", ARRAY = "Array", PG = "PG";
 	vector<Function> functions = {
 		{"Thompson", {REGEX}, NFA},
 		{"IlieYu", {REGEX}, NFA},
@@ -79,16 +76,11 @@ class TasksGenerator {
 	};
 
 	vector<Function> predicates = {
-		{"Subset", {REGEX, REGEX}, BOOLEAN},
-		{"Subset", {NFA, NFA}, BOOLEAN},
-		{"Equiv", {NFA, NFA}, BOOLEAN},
-		{"Equiv", {REGEX, REGEX}, BOOLEAN},
-		{"OneUnambiguity", {NFA}, BOOLEAN},
-		{"OneUnambiguity", {REGEX}, BOOLEAN},
-		{"Bisimilar", {NFA, NFA}, BOOLEAN},
-		{"Minimal", {NFA}, BOOLEAN},
-		{"Equal", {NFA, NFA}, BOOLEAN},
-		{"SemDet", {NFA}, BOOLEAN},
+		{"Subset", {REGEX, REGEX}, BOOLEAN}, {"Subset", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {NFA, NFA}, BOOLEAN},		 {"Equiv", {REGEX, REGEX}, BOOLEAN},
+		{"OneUnambiguity", {NFA}, BOOLEAN},	 {"OneUnambiguity", {REGEX}, BOOLEAN},
+		{"Bisimilar", {NFA, NFA}, BOOLEAN},	 {"Minimal", {NFA}, BOOLEAN},
+		{"Equal", {NFA, NFA}, BOOLEAN},		 {"SemDet", {NFA}, BOOLEAN},
 	};
 
 	void distribute_functions();
@@ -104,8 +96,8 @@ class TasksGenerator {
 	Объявление: [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
 	Специальная форма test
 	Предикат [предикат] [объект]+ */
-	string generate_task(int opNum, int max_num_of_func_in_seq_,
-						 bool for_static_Tpchkr_, bool for_dinamic_Tpchkr_);
+	string generate_task(int opNum, int max_num_of_func_in_seq_, bool for_static_Tpchkr_,
+						 bool for_dinamic_Tpchkr_);
 	/* генерирует объявление:
 	[идентификатор] = ([функция].)*[функция]? [объект]+ (!!)? */
 	string generate_declaration();

@@ -5,13 +5,10 @@
 
 PrefixGrammarItem::PrefixGrammarItem() : state_index(-1) {}
 
-GrammarItem::GrammarItem()
-	: type(terminal), state_index(-1), class_number(-1), name("") {}
+GrammarItem::GrammarItem() : type(terminal), state_index(-1), class_number(-1), name("") {}
 
-GrammarItem::GrammarItem(Type type, string name, int state_index,
-						 int class_number)
-	: type(type), name(name), state_index(state_index),
-	  class_number(class_number) {}
+GrammarItem::GrammarItem(Type type, string name, int state_index, int class_number)
+	: type(type), name(name), state_index(state_index), class_number(class_number) {}
 
 GrammarItem::GrammarItem(Type type, string name, int state_index)
 	: type(type), name(name), state_index(state_index) {}
@@ -37,9 +34,8 @@ ostream& operator<<(ostream& os, const GrammarItem& item) {
 		return os << "S" << item.state_index;
 }
 
-void Grammar::update_classes(
-	set<int>& checker,
-	map<set<string>, vector<GrammarItem*>>& classes_check_map) {
+void Grammar::update_classes(set<int>& checker,
+							 map<set<string>, vector<GrammarItem*>>& classes_check_map) {
 	int classNum = 0;
 	checker.clear();
 	for (const auto& elem : classes_check_map) {
@@ -51,10 +47,9 @@ void Grammar::update_classes(
 	}
 }
 
-void Grammar::check_classes(
-	vector<vector<vector<GrammarItem*>>>& rules,
-	map<set<string>, vector<GrammarItem*>>& classes_check_map,
-	vector<GrammarItem*>& nonterminals) {
+void Grammar::check_classes(vector<vector<vector<GrammarItem*>>>& rules,
+							map<set<string>, vector<GrammarItem*>>& classes_check_map,
+							vector<GrammarItem*>& nonterminals) {
 	classes_check_map.clear();
 	for (int i = 0; i < nonterminals.size(); i++) {
 		set<string> temp_rules;
@@ -75,8 +70,7 @@ void Grammar::check_classes(
 }
 
 vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
-	vector<vector<vector<GrammarItem*>>>& rules,
-	vector<GrammarItem*>& nonterminals,
+	vector<vector<vector<GrammarItem*>>>& rules, vector<GrammarItem*>& nonterminals,
 	vector<GrammarItem*>& bisimilar_nonterminals,
 	map<int, vector<GrammarItem*>>& class_to_nonterminals) {
 	class_to_nonterminals.clear();
@@ -101,8 +95,7 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 			vector<GrammarItem*> tempRule;
 			for (GrammarItem* item : rule) {
 				if (item->type == GrammarItem::nonterminal) {
-					tempRule.push_back(
-						class_to_nonterminals[item->class_number][0]);
+					tempRule.push_back(class_to_nonterminals[item->class_number][0]);
 				} else
 					tempRule.push_back(item);
 			}
@@ -114,16 +107,17 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 	return bisimilar_rules;
 }
 
-vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
-	const vector<State>& states, const set<alphabet_symbol>& alphabet,
-	vector<GrammarItem>& fa_items, vector<GrammarItem*>& nonterminals,
-	vector<GrammarItem*>& terminals) {
+vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(const vector<State>& states,
+															const set<alphabet_symbol>& alphabet,
+															vector<GrammarItem>& fa_items,
+															vector<GrammarItem*>& nonterminals,
+															vector<GrammarItem*>& terminals) {
 	vector<vector<vector<GrammarItem*>>> rules(states.size());
 	fa_items.resize(states.size() + alphabet.size() + 2);
 	int item_ind = 0;
 	while (item_ind < states.size()) {
-		fa_items[item_ind] = GrammarItem(
-			GrammarItem::nonterminal, states[item_ind].identifier, item_ind, 0);
+		fa_items[item_ind] =
+			GrammarItem(GrammarItem::nonterminal, states[item_ind].identifier, item_ind, 0);
 		nonterminals.push_back(&fa_items[item_ind]);
 		item_ind++;
 	}
@@ -142,8 +136,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
 	for (int i = 0; i < states.size(); i++) {
 		for (const auto& elem : states[i].transitions) {
 			for (int transition_to : elem.second)
-				rules[i].push_back({terminals[terminal_index[elem.first]],
-									nonterminals[transition_to]});
+				rules[i].push_back(
+					{terminals[terminal_index[elem.first]], nonterminals[transition_to]});
 		}
 		if (states[i].is_terminal) rules[i].push_back({terminals[0]});
 	}
@@ -153,23 +147,22 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
 
 vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
 	const vector<State>& states, const vector<GrammarItem*>& fa_nonterminals,
-	vector<pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>>&
-		fa_items,
+	vector<pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>>& fa_items,
 	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
 	// fa_items вектор пар <терминал (состояние), map нетерминалов (переходов)>
 	fa_items.resize(states.size());
 	int ind = 0;
 	for (int i = 0; i < states.size(); i++) {
 		// имя терминала - класс  эквивалентности состояния
-		fa_items[i].first = GrammarItem(
-			GrammarItem::terminal, to_string(fa_nonterminals[i]->class_number));
+		fa_items[i].first =
+			GrammarItem(GrammarItem::terminal, to_string(fa_nonterminals[i]->class_number));
 		terminals.push_back(&fa_items[i].first);
 		for (const auto& elem : states[i].transitions) {
 			vector<GrammarItem>& item_vec = fa_items[i].second[elem.first];
 			item_vec.resize(elem.second.size());
 			for (int j = 0; j < elem.second.size(); j++) {
-				item_vec[j] = (GrammarItem(GrammarItem::nonterminal,
-										   "Tr" + to_string(ind), ind, 0));
+				item_vec[j] =
+					(GrammarItem(GrammarItem::nonterminal, "Tr" + to_string(ind), ind, 0));
 				nonterminals.push_back(&item_vec[j]);
 				ind++;
 			}
@@ -182,20 +175,16 @@ vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
 		for (const auto& elem : states[i].transitions) {
 			for (int transition_to : elem.second) {
 				// смотрим все переходы из состояния transition_to
-				for (const auto& transition_elem :
-					 states[transition_to].transitions) {
+				for (const auto& transition_elem : states[transition_to].transitions) {
 					for (int k = 0; k < transition_elem.second.size(); k++) {
-						int nonterm_ind = fa_items[transition_to]
-											  .second[transition_elem.first][k]
-											  .state_index;
-						rules[ind].push_back({terminals[transition_to],
-											  nonterminals[nonterm_ind]});
+						int nonterm_ind =
+							fa_items[transition_to].second[transition_elem.first][k].state_index;
+						rules[ind].push_back({terminals[transition_to], nonterminals[nonterm_ind]});
 					}
 				}
 				if (states[transition_to].is_terminal)
-					rules[ind].push_back(
-						{terminals[transition_to]}); // переход в финальное
-													 // состояние
+					rules[ind].push_back({terminals[transition_to]}); // переход в финальное
+																	  // состояние
 				ind++;
 			}
 		}
@@ -205,9 +194,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
 }
 
 vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
-	vector<vector<vector<GrammarItem*>>>& rules,
-	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals,
-	int initial_state) {
+	vector<vector<vector<GrammarItem*>>>& rules, vector<GrammarItem*>& nonterminals,
+	vector<GrammarItem*>& terminals, int initial_state) {
 	vector<vector<vector<GrammarItem*>>> reverse_rules(rules.size());
 	for (int i = 0; i < rules.size(); i++) {
 		for (int j = 0; j < rules[i].size(); j++) {
@@ -221,15 +209,13 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 }
 
 // vector<vector<GrammarItem>>
-const int Grammar::fa_to_g(const FiniteAutomaton& fa, alphabet_symbol w,
-						   int index, int index_back,
+const int Grammar::fa_to_g(const FiniteAutomaton& fa, alphabet_symbol w, int index, int index_back,
 						   const vector<PrefixGrammarItem*>& grammar_items,
 						   const set<string>& monoid_rules, string word) {
 	const State& st = fa.states[index];
 	const State& st_back = fa.states[index_back];
 	PrefixGrammarItem* g = grammar_items[index];
-	const set<string>& equivalence_class_back =
-		grammar_items[index_back]->equivalence_class;
+	const set<string>& equivalence_class_back = grammar_items[index_back]->equivalence_class;
 
 	g->rules[w].insert(index_back);
 	if (g->is_visit) {
@@ -252,8 +238,7 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, alphabet_symbol w,
 			}
 			if (index != ind) {
 				string l = string(w);
-				fa_to_g(fa, alpha, ind, index, grammar_items, monoid_rules,
-						word + l);
+				fa_to_g(fa, alpha, ind, index, grammar_items, monoid_rules, word + l);
 
 			} else {
 				g->rules[alpha].insert(index);
@@ -263,16 +248,14 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, alphabet_symbol w,
 	return 0;
 }
 
-void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
-								   iLogTemplate* log) {
+void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log) {
 	if (log) {
 		log->set_parameter("oldautomaton", fa);
 	}
 	const vector<State>& states = fa.states;
 
 	if (!fa.language->is_min_dfa_cached() && log) {
-		log->set_parameter("cachedMINDFA",
-						   "Минимальный автомат сохранен в кэше");
+		log->set_parameter("cachedMINDFA", "Минимальный автомат сохранен в кэше");
 	}
 
 	TransformationMonoid a(fa.minimize());
@@ -320,8 +303,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa,
 				if (alpha.is_epsilon()) {
 					alpha = "";
 				}
-				fa_to_g(fa, alpha, ind, fa.initial_state, grammar_items, m_r,
-						"");
+				fa_to_g(fa, alpha, ind, fa.initial_state, grammar_items, m_r, "");
 			}
 		}
 	}
@@ -386,8 +368,7 @@ string Grammar::pg_to_txt() const {
 				alphabet_symbol a = elem.first;
 				// int index = elem.second;
 				for (const auto& w_back : elem.second) {
-					for (const auto& eq_back :
-						 prefix_grammar[w_back].equivalence_class) {
+					for (const auto& eq_back : prefix_grammar[w_back].equivalence_class) {
 						string eq = eq_back;
 						string wt = w;
 						if (eq == "") {
@@ -399,8 +380,7 @@ string Grammar::pg_to_txt() const {
 						if (a == "") {
 							a = "eps";
 						}
-						if (!g.is_started &&
-							prefix_grammar[w_back].is_started) {
+						if (!g.is_started && prefix_grammar[w_back].is_started) {
 							eq = "eps";
 						}
 						if (wt == "eps") {
@@ -461,11 +441,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 			is_terminal = true;
 		}
 
-		State s = {i,
-				   {i},
-				   to_string(i),
-				   is_terminal,
-				   map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), is_terminal, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -492,8 +468,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 	return res;
 }
 
-const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
-							  int index_back,
+const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index, int index_back,
 							  const vector<PrefixGrammarItem*>& grammar_items,
 							  const set<string>& monoid_rules, string word) {
 	const State& st = fa.states[index];
@@ -512,8 +487,7 @@ const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 				alpha = "";
 			}
 			if (index != ind) {
-				fa_to_g_TM(fa, alpha, ind, index, grammar_items, monoid_rules,
-						   word + w);
+				fa_to_g_TM(fa, alpha, ind, index, grammar_items, monoid_rules, word + w);
 
 			} else {
 				g->rules[alpha].insert(index);
@@ -523,8 +497,7 @@ const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index,
 	return 0;
 }
 
-void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa,
-									  iLogTemplate* log) {
+void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTemplate* log) {
 	if (log) {
 		log->set_parameter("oldautomaton", fa);
 	}
@@ -554,8 +527,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa,
 			for (size_t j = 0; j < elem.second.size(); j += 2) {
 				if (elem.second[j] == st0.identifier &&
 					elem.second[j + 1] == states[i].identifier) {
-					grammar_items[states[i].index]->equivalence_class.insert(
-						term);
+					grammar_items[states[i].index]->equivalence_class.insert(term);
 				}
 			}
 		}
@@ -608,8 +580,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa,
 				if (alpha.is_epsilon()) {
 					alpha = "";
 				}
-				fa_to_g_TM(fa, alpha, ind, fa.initial_state, grammar_items, m_r,
-						   "");
+				fa_to_g_TM(fa, alpha, ind, fa.initial_state, grammar_items, m_r, "");
 			}
 		}
 	}

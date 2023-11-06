@@ -22,7 +22,7 @@ class Tester {
 
 	struct table {
 		string r2; // слова порождаются регуляркой r2 и шагом итерации
-		int step;  // шаг итерации
+		int step;			// шаг итерации
 		vector<word> words; // таблица
 	};
 

@@ -3,8 +3,7 @@
 void Example::determinize() {
 	vector<State> states;
 	for (int i = 0; i < 6; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -31,8 +30,7 @@ void Example::determinize() {
 void Example::remove_eps() {
 	vector<State> states;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -52,8 +50,7 @@ void Example::remove_eps() {
 void Example::minimize() {
 	vector<State> states;
 	for (int i = 0; i < 8; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -84,14 +81,12 @@ void Example::minimize() {
 void Example::intersection() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	vector<State> states2;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 
@@ -194,19 +189,6 @@ void Example::tasks_generating() {
 	cout << "\n" << TG.generate_task(5, 6, false, true); // для динам. тайпчека
 }
 
-void Example::random_regex_parsing() {
-	RegexGenerator rg(15, 10, 5, 3);
-	for (int i = 0; i < 30; i++) {
-		string str = rg.generate_regex();
-		cout << "\n" << str << "\n";
-		Regex r1(str);
-		string r1_str = r1.to_txt();
-		Regex r2(r1_str);
-		cout << r1_str << endl;
-		assert(Regex::equivalent(r1, r2));
-	}
-}
-
 void Example::parsing_regex(string str) {
 	cout << str << endl;
 	Regex r(str);
@@ -217,8 +199,7 @@ void Example::transformation_monoid_example() {
 	FiniteAutomaton fa = Regex("(ba)*bc").to_ilieyu();
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	// states1[0].set_transition(0, "b");
@@ -245,8 +226,7 @@ void Example::transformation_monoid_example() {
 void Example::fa_subset_check() {
 	vector<State> states1;
 	for (int i = 0; i < 4; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -259,8 +239,7 @@ void Example::fa_subset_check() {
 
 	vector<State> states2;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 	states2[0].set_transition(1, "b");
@@ -285,8 +264,7 @@ void Example::normalize_regex() {
 void Example::to_image() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -314,8 +292,7 @@ void Example::to_image() {
 void Example::step() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -355,14 +332,12 @@ void Example::tester() {
 void Example::step_interection() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	vector<State> states2;
 	for (int i = 0; i < 3; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 
@@ -428,8 +403,7 @@ void Example::table() {
 void Example::fa_semdet_check() {
 	vector<State> states;
 	for (int i = 0; i < 4; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 	states[0].set_transition(1, "a");
@@ -516,9 +490,9 @@ void Example::logger_test() {
 	tex_logger.render_to_file("./resources/report.tex");
 }
 
-void Example::testing_with_generator(
-	int regex_length, int star_num, int star_nesting, int alphabet_size,
-	const function<void(string&)>& check_function) {
+void Example::testing_with_generator(int regex_length, int star_num, int star_nesting,
+									 int alphabet_size,
+									 const function<void(string&)>& check_function) {
 	RegexGenerator RG(regex_length, star_num, star_nesting, alphabet_size);
 	for (int i = 0; i < 100; i++) {
 		string s = RG.generate_regex();
@@ -532,14 +506,14 @@ void Example::arden_lemma_testing() {
 		Regex r1(s);
 		cout << s << endl;
 		FiniteAutomaton fa1 = Regex(s).to_glushkov();
-		cout << fa1.states_number() << endl;
+		cout << fa1.size() << endl;
 		int a1 = fa1.ambiguity();
 		cout << "A " << a1 << endl;
 
 		Regex r2 = fa1.to_regex();
 		cout << r2.to_txt() << endl;
 		FiniteAutomaton fa2 = r2.to_glushkov();
-		cout << fa2.states_number() << endl;
+		cout << fa2.size() << endl;
 		int a2 = fa2.ambiguity();
 		cout << "A " << a2 << endl;
 
@@ -548,6 +522,7 @@ void Example::arden_lemma_testing() {
 	});
 }
 
+<<<<<<< HEAD
 // TEST
 
 void Example::test_all() {
@@ -858,17 +833,17 @@ void Example::test_pump_length() {
 	assert(Regex("abaa").pump_length() == 5);
 }
 
+=======
+>>>>>>> main
 void Example::fa_to_pgrammar() {
-	FiniteAutomaton a1 =
-		Regex("(c,1(ab*a|b*)*d,1)|(c,2(ba*b|a*)*d,25)")
-			.to_glushkov()
-			.merge_bisimilar(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
+	FiniteAutomaton a1 = Regex("(c,1(ab*a|b*)*d,1)|(c,2(ba*b|a*)*d,25)")
+							 .to_glushkov()
+							 .merge_bisimilar(); // Regex("b*a(a|c)*b(b|c)*").to_ilieyu();
 	// cout << a1.to_txt();
 
 	vector<State> states1;
 	for (int i = 0; i < 5; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	// states1[0].set_transition(0, "b");
@@ -904,173 +879,4 @@ void Example::fa_to_pgrammar() {
 	cout << g.pg_to_txt();
 	cout << "+++++++++++++++++++++++++++++" << endl;
 	cout << g.prefix_grammar_to_automaton().to_txt();
-}
-
-void Example::test_fa_to_pgrammar() {
-	// cout << "fa to grammar\n";
-	vector<State> states1;
-	for (int i = 0; i < 5; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
-	}
-
-	states1[4].set_transition(1, "a");
-	states1[1].set_transition(2, "b");
-	states1[1].set_transition(4, "c");
-	states1[2].set_transition(2, "b");
-	states1[2].set_transition(2, "c");
-	states1[2].is_terminal = true;
-	states1[0].set_transition(4, "c");
-	states1[3].set_transition(0, "a");
-	states1[3].set_transition(0, "b");
-	states1[4].is_terminal = true;
-	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
-
-	Grammar g;
-
-	// cout << "1\n";
-	g.fa_to_prefix_grammar(dfa1);
-	// cout << "2\n";
-	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
-	// cout << "3\n";
-	g.fa_to_prefix_grammar_TM(dfa1);
-	// cout << "4\n";
-	assert(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
-}
-
-void Example::test_is_one_unambiguous() {
-	Regex r1("(a|b)*a");
-	Regex r2("(a|b)*(ac|bd)");
-	Regex r3("(a|b)*a(a|b)");
-	Regex r4("(c(a|b)*c)*");
-	Regex r5("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|");
-
-	// ok
-	assert(r1.to_glushkov().is_one_unambiguous());
-	// doesn't fulfills the orbit property
-	assert(!r2.to_glushkov().is_one_unambiguous());
-	// consists of a single orbit, but neither a nor b is consistent
-	assert(!r3.to_glushkov().is_one_unambiguous());
-	// ok
-	assert(r4.to_glushkov().is_one_unambiguous());
-	// doesn't fulfills the orbit property
-	assert(!r5.to_glushkov().is_one_unambiguous());
-};
-
-void Example::test_get_one_unambiguous_regex() {
-	auto check_one_unambiguous = [](string rgx_str, bool expected_res) {
-		assert(
-			Regex(rgx_str).get_one_unambiguous_regex().is_one_unambiguous() ==
-			expected_res);
-	};
-	// ok
-	check_one_unambiguous("(a|b)*a", true);
-	// doesn't fulfills the orbit property
-	check_one_unambiguous("(a|b)*(ac|bd)", false);
-	// consists of a single orbit, but neither a nor b is consistent
-	check_one_unambiguous("(a|b)*a(a|b)", false);
-	// ok
-	check_one_unambiguous("(c(a|b)*c)*", true);
-	// doesn't fulfills the orbit property
-	check_one_unambiguous("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|",
-						  false);
-}
-
-void Example::test_interpreter() {
-	Interpreter interpreter;
-	interpreter.set_log_mode(Interpreter::LogMode::nothing);
-	assert(!interpreter.run_line("A =	 Annote (Glushkova {a})"));
-	assert(interpreter.run_line(
-		"  N1 =	(   (   Glushkov ({ab|a})    ))      "));
-	assert(interpreter.run_line(" N2 =  (Annote N1)"));
-	assert(!interpreter.run_line("N2 =  (Glushkov N1)"));
-	assert(!interpreter.run_line("Equiv N1 N3"));
-	assert(interpreter.run_line(
-		"  Equiv ((  N1)) (   (Reverse   .Reverse (N2) !!		))"));
-	assert(interpreter.run_line("Test (Glushkov {a*}) {a*} 1"));
-
-	assert(interpreter.run_line("A = Annote.Glushkov.DeAnnote {a}"));
-	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a})"));
-	assert(interpreter.run_line("B = Annote (Glushkov(DeAnnote {a}))"));
-	assert(interpreter.run_line("A = Annote   .Glushkov.   DeAnnote {a} !!  "));
-	assert(interpreter.run_line("B = Annote (Glushkov.DeAnnote {a}) !!   "));
-	assert(interpreter.run_line("B = Annote (   Glushkov(DeAnnote {a})) !! "));
-	assert(interpreter.run_line("B = Annote (Glushkov {a} !!)"));
-	assert(
-		interpreter.run_line("B = Annote (Glushkov(DeAnnote {a} !!) !!) !!"));
-
-	// Arrays
-	assert(interpreter.run_line("A = []"));
-	assert(interpreter.run_line("A = [[] []]"));
-	assert(interpreter.run_line("A = [{a} {b}]"));
-	assert(interpreter.run_line("A = [[(([{a}]))] [{a} []]]"));
-	assert(!interpreter.run_line("A = [[(([{a}])] [{a} []]]"));
-	assert(!interpreter.run_line("A = [[([{a}]))] [{a} []]]"));
-	assert(!interpreter.run_line("A = [[(([{a}]))] [{a} []]"));
-	assert(!interpreter.run_line(
-		"A = [[(([a}]))] [{a} (Glushkov(DeAnnote {a} !!) !!) []]]"));
-
-	// Normalize
-	assert(interpreter.run_line("A = Normalize {abc} [[{a} {b}]]"));
-	assert(!interpreter.run_line("A = Normalize {abc} [[{a} []]]"));
-}
-
-void Example::test_TransformationMonoid() {
-	FiniteAutomaton fa1 = Regex("a*b*c*").to_thompson().minimize();
-	TransformationMonoid tm1(fa1);
-	assert(tm1.class_card() == 7);
-	assert(tm1.class_length() == 2);
-	assert(tm1.is_minimal());
-	assert(tm1.get_classes_number_MyhillNerode() == 3);
-
-	vector<State> states;
-	for (int i = 0; i < 5; i++) {
-		State s = {
-			i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states.push_back(s);
-	}
-	states[0].set_transition(1, "a");
-	states[1].set_transition(2, "c");
-	states[2].set_transition(3, "a");
-	states[3].set_transition(2, "c");
-	states[3].set_transition(4, "b");
-	states[4].set_transition(4, "b");
-	states[4].set_transition(4, "c");
-	states[4].is_terminal = true;
-	FiniteAutomaton fa2(0, states, {"a", "b", "c"});
-	TransformationMonoid tm2(fa2);
-	assert(tm2.class_card() == 12);
-	assert(tm2.class_length() == 4);
-	assert(tm2.is_minimal() == 1);
-	assert(tm2.get_classes_number_MyhillNerode() == 5);
-
-	FiniteAutomaton fa3 = Regex("ab|b").to_glushkov().minimize();
-	TransformationMonoid tm3(fa3);
-	assert(tm3.is_minimal());
-
-	FiniteAutomaton fa4 = Regex("a").to_glushkov().minimize();
-	TransformationMonoid tm4(fa4);
-	assert(tm4.is_minimal());
-
-	FiniteAutomaton fa5 = Regex("b*a*").to_thompson().minimize();
-	TransformationMonoid tm5(fa5);
-	assert(tm5.is_minimal());
-}
-
-void Example::test_GlaisterShallit() {
-	auto check_classes_number = [](string rgx_str, int num) {
-		assert(
-			Regex(rgx_str).to_glushkov().get_classes_number_GlaisterShallit() ==
-			num);
-	};
-	check_classes_number("abc", 4);
-	check_classes_number("a*b*c*", 3);
-	check_classes_number("aa*bb*cc*", 4);
-	check_classes_number("ab|abc", 4);
-	check_classes_number("a(a|b)*(a|b)", 3);
-	check_classes_number("a((a|b)*)*(b|c)", 3);
-	check_classes_number("a(b|c)(a|b)(b|c)", 5);
-	check_classes_number("abc|bca", 6);
-	check_classes_number("abc|bbc", 4);
 }

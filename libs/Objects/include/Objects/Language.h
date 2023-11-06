@@ -14,8 +14,7 @@ struct FA_structure {
 	// будут созданы разные shared_ptr
 	weak_ptr<Language> language;
 
-	FA_structure(int initial_state, vector<State> states,
-				 weak_ptr<Language> language);
+	FA_structure(int initial_state, vector<State> states, weak_ptr<Language> language);
 };
 
 struct Regex_structure {

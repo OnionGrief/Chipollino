@@ -11,8 +11,7 @@ void TasksGenerator::change_seed() {
 }
 
 string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
-									 bool for_static_Tpchkr_,
-									 bool for_dinamic_Tpchkr_) {
+									 bool for_static_Tpchkr_, bool for_dinamic_Tpchkr_) {
 	change_seed();
 	res_str = "";
 	id_num = 0;
@@ -58,8 +57,7 @@ string TasksGenerator::generate_predicate() {
 	// да, не логично, но второй аргумент всегда повторяется,
 	// а значит можно забить на их проверку
 
-	while (!for_static_Tpchkr &&
-		   !(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
+	while (!for_static_Tpchkr && !(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
 		   ((input_type == DFA && !ids.count(DFA)) ||
 			(input_type == NFA) && !(ids.count(NFA) || ids.count(DFA)))) {
 		predicate = rand_pred();
@@ -136,8 +134,7 @@ string TasksGenerator::generate_declaration() {
 	string str = "";
 	id_num++;
 	str += "N" + to_string(id_num) + " = ";
-	int funcNum =
-		max_num_of_func_in_seq > 0 ? rand() % (max_num_of_func_in_seq + 1) : 0;
+	int funcNum = max_num_of_func_in_seq > 0 ? rand() % (max_num_of_func_in_seq + 1) : 0;
 
 	string prevOutput;
 	string func_str = "";
@@ -148,14 +145,13 @@ string TasksGenerator::generate_declaration() {
 		string input_type = first_func.input[0]; // исправить для ksubset!!!
 
 		// Андрей не дает мне делать большие комменты((
-		while (
-			(!for_static_Tpchkr &&
-			 !(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
-			 ((input_type == DFA && !ids.count(DFA)) ||
-			  (input_type == NFA) && !(ids.count(NFA) || ids.count(DFA)))) ||
-			((first_func.output == INT || first_func.output == VALUE) &&
-			 !for_static_Tpchkr && funcNum > 1) ||
-			(!ids.count(input_type) && input_type != REGEX)) {
+		while ((!for_static_Tpchkr &&
+				!(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
+				((input_type == DFA && !ids.count(DFA)) ||
+				 (input_type == NFA) && !(ids.count(NFA) || ids.count(DFA)))) ||
+			   ((first_func.output == INT || first_func.output == VALUE) && !for_static_Tpchkr &&
+				funcNum > 1) ||
+			   (!ids.count(input_type) && input_type != REGEX)) {
 			first_func = rand_func();
 			input_type = first_func.input[0];
 		} // вроде работает
@@ -180,8 +176,7 @@ string TasksGenerator::generate_declaration() {
 						Id rand_id = possible_ids[rand() % possible_ids.size()];
 						func_str += " N" + to_string(rand_id.num);
 					} else {
-						func_str +=
-							" " + regex_generator.generate_framed_regex();
+						func_str += " " + regex_generator.generate_framed_regex();
 					}
 				}
 
@@ -247,16 +242,14 @@ string TasksGenerator::generate_declaration() {
 
 	// запоминаем идентификатор N#
 	ids[prevOutput].push_back({id_num, prevOutput});
-	if (prevOutput == DFA || prevOutput == NFA)
-		ids[NFA_DFA].push_back({id_num, prevOutput});
+	if (prevOutput == DFA || prevOutput == NFA) ids[NFA_DFA].push_back({id_num, prevOutput});
 
 	if (/*rand() % 2 && */ funcNum > 0) str += " !!";
 
 	return str;
 }
 
-TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput,
-															int funcNum) {
+TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput, int funcNum) {
 	Function str;
 	if (for_static_Tpchkr)
 		str = rand_func();
@@ -281,8 +274,7 @@ void TasksGenerator::distribute_functions() {
 		if (functions[i].input.size() == 1) {
 			string input_type = functions[i].input[0];
 			funcInput[input_type].push_back(functions[i]);
-			if (input_type == NFA || input_type == DFA)
-				funcInput[NFA_DFA].push_back(functions[i]);
+			if (input_type == NFA || input_type == DFA) funcInput[NFA_DFA].push_back(functions[i]);
 		}
 	}
 }

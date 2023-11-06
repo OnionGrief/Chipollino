@@ -36,8 +36,8 @@ void LogTemplate::add_parameter(string parameter_name) {
 		while (!infile.eof()) {
 			getline(infile, s);
 			if (str_endframe_place == i) {
-				outstr += "\t" + parameter_name + ":\n\n\t%template_" +
-						  parameter_name + "\n\n" + s + "\n";
+				outstr += "\t" + parameter_name + ":\n\n\t%template_" + parameter_name + "\n\n" +
+						  s + "\n";
 			} else {
 				outstr += s + "\n";
 			}
@@ -51,8 +51,7 @@ void LogTemplate::add_parameter(string parameter_name) {
 	}
 }
 
-void LogTemplate::set_parameter(const string& key, const FiniteAutomaton& value,
-								string meta) {
+void LogTemplate::set_parameter(const string& key, const FiniteAutomaton& value) {
 	parameters[key].value = value;
 	parameters[key].meta = meta;
 }
@@ -129,9 +128,8 @@ string LogTemplate::render() const {
 
 				if (holds_alternative<Regex>(p.second.value)) {
 					s.insert(insert_place,
-							 get<Regex>(p.second.value)
-								 .to_txt()); /* Math mode is done in global
-												renderer */
+							 get<Regex>(p.second.value).to_txt()); /* Math mode is done in global
+																	  renderer */
 				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
 					hash<string> hasher;
 					string c_graph;
@@ -173,9 +171,7 @@ string LogTemplate::math_mode(string str) {
 	string str_math = "";
 	bool flag = true;
 	auto is_number = [](char c) { return c >= '0' && c <= '9'; };
-	auto is_symbol = [](char c) {
-		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
-	};
+	auto is_symbol = [](char c) { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'; };
 	for (size_t index = 0; index < str.size(); index++) {
 		char c = str[index];
 		if (c == ' ' && index != str.size() - 1) {
@@ -321,8 +317,7 @@ stringstream LogTemplate::expand_includes(string filename) const {
 
 	ifstream infile(filename);
 	if (!infile) {
-		cerr << "ERROR: while rendering template. Unknown filename " +
-					filename + "\n";
+		cerr << "ERROR: while rendering template. Unknown filename " + filename + "\n";
 		return outstream;
 	}
 
@@ -336,11 +331,9 @@ stringstream LogTemplate::expand_includes(string filename) const {
 			int l_bound = s.find("\"");
 			int r_bound = s.find("\"", l_bound + 1);
 			if (l_bound != -1 && r_bound != -1) {
-				string input_file_name =
-					s.substr(l_bound + 1, r_bound - l_bound - 1);
+				string input_file_name = s.substr(l_bound + 1, r_bound - l_bound - 1);
 
-				outstream
-					<< expand_includes(template_path + input_file_name).str();
+				outstream << expand_includes(template_path + input_file_name).str();
 			} else {
 				cout << "ERROR: Expected quotes \"\" after %include statement";
 			}
