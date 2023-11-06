@@ -321,20 +321,24 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 				// AlgExpression::Lexeme left
 				lexemes.back().type == Lexeme::Type::symb ||
 				lexemes.back().type == Lexeme::Type::star ||
-				lexemes.back().type == Lexeme::Type::parR) &&
+				lexemes.back().type == Lexeme::Type::parR ||
+				lexemes.back().type == Lexeme::Type::squareBrR ||
+				lexemes.back().type == Lexeme::Type::ref) &&
 			(
 				// AlgExpression::Lexeme right
-				lexeme.type == Lexeme::Type::symb || lexeme.type == Lexeme::Type::parL)) {
-
+				lexeme.type == Lexeme::Type::symb || lexeme.type == Lexeme::Type::parL ||
+				lexeme.type == Lexeme::Type::squareBrL || lexeme.type == Lexeme::Type::ref)) {
 			// We place . between
 			lexemes.emplace_back(Lexeme::Type::conc);
 		}
 
 		if (!lexemes.empty() &&
-			((lexemes.back().type == Lexeme::Type::parL &&
-			  (lexeme.type == Lexeme::Type::parR || lexeme.type == Lexeme::Type::alt)) ||
-			 (lexemes.back().type == Lexeme::Type::alt && lexeme.type == Lexeme::Type::parR) ||
-			 (lexemes.back().type == Lexeme::Type::alt && lexeme.type == Lexeme::Type::alt))) {
+			((lexeme.type == Lexeme::Type::alt &&
+			  (lexemes.back().type == Lexeme::Type::parL ||
+			   lexemes.back().type == Lexeme::Type::squareBrL)) ||
+			 (lexemes.back().type == Lexeme::Type::alt &&
+			  (lexeme.type == Lexeme::Type::parR || lexeme.type == Lexeme::Type::squareBrR ||
+			   lexeme.type == Lexeme::Type::alt)))) {
 			//  We place eps between
 			lexemes.emplace_back(Lexeme::Type::eps);
 		}
