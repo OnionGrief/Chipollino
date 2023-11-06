@@ -10,18 +10,23 @@ class AlgExpression : public BaseObject {
 	struct Lexeme {
 		enum Type {
 			error,
-			parL, // (
-			parR, // )
-			alt,  // |
-			conc, // .
-			star, // *
-			symb, // alphabet symbol
-			eps,  // Epsilon
+			parL,	   // (
+			parR,	   // )
+			alt,	   // |
+			conc,	   // .
+			star,	   // *
+			symb,	   // alphabet symbol
+			eps,	   // Epsilon
+			squareBrL, // [
+			squareBrR, // ]
+			ref,	   // &
 		};
 
 		Type type = error;
 		alphabet_symbol symbol = "";
-		int number = 0; // Нужно для линеаризации в глушкове
+		int number = 0; // Для линеаризации Type::symb (возможно это применение неактуально)
+						// либо для указания номера ячейки памяти
+						// Type::squareBrL, Type::squareBrL, Type::ref
 		Lexeme(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
 	};
 

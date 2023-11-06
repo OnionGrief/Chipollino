@@ -3,7 +3,7 @@ UseTab: Always
 TabWidth: 4
 BreakBeforeBraces: Attach
 PointerAlignment: Left
-AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortIfStatementsOnASingleLine: Never
 SpaceBeforeParens: ControlStatements
 AllowShortFunctionsOnASingleLine: Empty
 AlignAfterOpenBracket: Align

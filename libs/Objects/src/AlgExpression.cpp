@@ -1,6 +1,8 @@
 #include "Objects/AlgExpression.h"
 #include "Objects/Language.h"
+#include <stack>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 AlgExpression::AlgExpression() {
@@ -201,102 +203,116 @@ void AlgExpression::print_dot() {
 	cout << dot << endl;
 }
 
+bool read_number(const string& str, size_t& pos, int& res) {
+	if (pos >= str.size() || !isdigit(str[pos])) {
+		return false;
+	}
+
+	res = 0;
+	while (pos < str.size() && isdigit(str[pos])) {
+		res = res * 10 + (str[pos] - '0');
+		pos++;
+	}
+
+	pos--;
+	return true;
+}
+
 vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 	vector<AlgExpression::Lexeme> lexemes;
-	lexemes = {};
-	bool flag_alt = false;
+	stack<char> brackets_checker;
+	bool brackets_are_empty = true;
+	stack<size_t> memory_opening_indexes;
+
 	bool regex_is_eps = true;
 	auto is_symbol = [](char c) { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'; };
 
 	for (size_t index = 0; index < str.size(); index++) {
 		char c = str[index];
-		AlgExpression::Lexeme lexeme;
+		Lexeme lexeme;
 		switch (c) {
 		case '(':
 			lexeme.type = Lexeme::Type::parL;
-			flag_alt = true;
+			brackets_checker.push('(');
+			brackets_are_empty = true;
 			break;
 		case ')':
 			lexeme.type = Lexeme::Type::parR;
-			if ((index != 0) && (flag_alt || lexemes.back().type == Lexeme::Type::parL)) {
-				lexeme.type = Lexeme::Type::error;
-				lexemes = {};
-				lexemes.push_back(lexeme);
-				return lexemes;
-			} else if (index == 0) {
-				lexeme.type = Lexeme::Type::error;
-				lexemes = {};
-				lexemes.push_back(lexeme);
-				return lexemes;
-			}
+			if (brackets_are_empty || brackets_checker.empty() || brackets_checker.top() != '(')
+				return {Lexeme::Type::error};
+			brackets_checker.pop();
+			break;
+		case '[':
+			lexeme.type = Lexeme::Type::squareBrL;
+			brackets_checker.push('[');
+			memory_opening_indexes.push(lexemes.size());
+			brackets_are_empty = true;
+			break;
+		case ']':
+			if (brackets_are_empty || brackets_checker.empty() || brackets_checker.top() != '[')
+				return {Lexeme::Type::error};
+			brackets_checker.pop();
+
+			index++;
+			if (index >= str.size() && str[index] != ':')
+				return {Lexeme::Type::error};
+
+			if (!read_number(str, ++index, lexeme.number))
+				return {Lexeme::Type::error};
+
+			lexeme.type = Lexeme::Type::squareBrR;
+			lexemes[memory_opening_indexes.top()].number = lexeme.number;
+			memory_opening_indexes.pop();
+			break;
+		case '&':
+			if (!read_number(str, ++index, lexeme.number))
+				return {Lexeme::Type::error};
+
+			lexeme.type = Lexeme::Type::ref;
+			regex_is_eps = false;
+			brackets_are_empty = false;
 			break;
 		case '|':
 			lexeme.type = Lexeme::Type::alt;
 			break;
 		case '*':
-			if ((index != 0) && (lexemes.back().type == Lexeme::Type::star ||
-								 lexemes.back().type == Lexeme::Type::alt)) {
-				lexeme.type = Lexeme::Type::error;
-				lexemes = {};
-				lexemes.push_back(lexeme);
-				return lexemes;
-			} else if (index == 0) {
-				lexeme.type = Lexeme::Type::error;
-				lexemes = {};
-				lexemes.push_back(lexeme);
-				return lexemes;
-			}
+			if (index == 0 || (index != 0 && (lexemes.back().type == Lexeme::Type::star ||
+											  lexemes.back().type == Lexeme::Type::alt)))
+				return {Lexeme::Type::error};
 			lexeme.type = Lexeme::Type::star;
 			break;
 		default:
 			if (is_symbol(c)) {
-				regex_is_eps = false;
 				lexeme.type = Lexeme::Type::symb;
 				lexeme.symbol = c;
 				for (size_t j = index + 1; j < str.size(); j++) {
 					bool lin = false;
 					bool annote = false;
-					if (str[j] == alphabet_symbol::linearize_marker) {
+					if (str[j] == alphabet_symbol::linearize_marker)
 						lin = true;
-					}
-					if (str[j] == alphabet_symbol::annote_marker) {
-						annote = true;
-					}
-					if (!lin && !annote) {
-						break;
-					}
-					string number;
-					for (size_t i = j + 1; i < str.size(); i++) {
-						if (str[i] >= '0' && str[i] <= '9') {
-							number += str[i];
-						} else {
-							break;
-						}
-						index = i;
-						j = i;
-					}
-					if (number.length() == 0) {
-						lexeme.type = Lexeme::Type::error;
-						lexemes = {};
-						lexemes.push_back(lexeme);
-						return lexemes;
-					}
-					int numb = stoi(number);
-					if (lin) {
-						lexeme.symbol.linearize(numb);
-					}
-					if (annote) {
-						lexeme.symbol.annote(numb);
-					}
-				}
-				flag_alt = false;
 
-			} else {
-				lexeme.type = Lexeme::Type::error;
-				lexemes = {};
-				lexemes.push_back(lexeme);
-				return lexemes;
-			}
+					if (str[j] == alphabet_symbol::annote_marker)
+						annote = true;
+
+					if (!lin && !annote)
+						break;
+
+					int number;
+					if (!read_number(str, ++j, number))
+						return {Lexeme::Type::error};
+					index = j;
+
+					if (lin)
+						lexeme.symbol.linearize(number);
+
+					if (annote)
+						lexeme.symbol.annote(number);
+				}
+
+				regex_is_eps = false;
+				brackets_are_empty = false;
+			} else
+				return {Lexeme::Type::error};
 			break;
 		}
 
@@ -325,10 +341,25 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 
 		lexemes.push_back(lexeme);
 	}
-	if (regex_is_eps) {
-		lexemes = {};
-		lexemes.emplace_back(Lexeme::Type::error);
-		return lexemes;
+
+	if (regex_is_eps || !brackets_checker.empty())
+		return {Lexeme::Type::error};
+
+	// проверка на отсутствие вложенных захватов памяти для одной ячейки
+	unordered_set<int> opened_memory_cells;
+	for (const auto& l : lexemes) {
+		switch (l.type) {
+		case Lexeme::Type::squareBrL:
+			if (opened_memory_cells.count(l.number))
+				return {Lexeme::Type::error};
+			opened_memory_cells.insert(l.number);
+			break;
+		case Lexeme::Type::squareBrR:
+			opened_memory_cells.erase(l.number);
+			break;
+		default:
+			break;
+		}
 	}
 
 	if (!lexemes.empty() && lexemes[0].type == Lexeme::Type::alt) {
@@ -337,22 +368,6 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 
 	if (lexemes.back().type == Lexeme::Type::alt) {
 		lexemes.emplace_back(Lexeme::Type::eps);
-	}
-
-	int balance = 0;
-	for (auto& lexeme : lexemes) {
-		if (lexeme.type == Lexeme::Type::parL) {
-			balance++;
-		}
-		if (lexeme.type == Lexeme::Type::parR) {
-			balance--;
-		}
-	}
-
-	if (balance != 0) {
-		lexemes = {};
-		lexemes.emplace_back(Lexeme::Type::error);
-		return lexemes;
 	}
 
 	return lexemes;
