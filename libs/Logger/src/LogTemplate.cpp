@@ -1,5 +1,7 @@
 #include "Logger/LogTemplate.h"
 #include <variant>
+#include <algorithm>
+#include <cmath>
 
 void LogTemplate::add_parameter(string parameter_name) {
 
@@ -252,14 +254,14 @@ string LogTemplate::log_plot(Plot p) {
 		if (max_y < p.data[i].first.second) max_y = p.data[i].first.second;
 	}
 	max_x =
-		ceil((max_x * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
+		std::ceil((max_x * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
 	if (max_x > 10) {
-		max_x = floor(max_x / 10) * 10;
+		max_x = std::floor(max_x / 10) * 10;
 	}
 	max_y =
-		ceil((max_y * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
+		std::ceil((max_y * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
 	if (max_y > 10) {
-		max_y = floor(max_y / 10) * 10;
+		max_y = std::floor(max_y / 10) * 10;
 	}
 	visualization =
 		"\\begin{tikzpicture}\\scriptsize \%begin_plot\n "
