@@ -51,7 +51,7 @@ void LogTemplate::add_parameter(string parameter_name) {
 	}
 }
 
-void LogTemplate::set_parameter(const string& key, const FiniteAutomaton& value) {
+void LogTemplate::set_parameter(const string& key, const FiniteAutomaton& value, string meta) {
 	parameters[key].value = value;
 	parameters[key].meta = meta;
 }

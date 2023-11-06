@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <optional>
+#include <variant>
 using namespace std;
 
 class Regex;
@@ -25,7 +26,6 @@ struct State {
 	void set_transition(int, const alphabet_symbol&);
 };
 
-<<<<<<< HEAD
 struct EdgeMeta {
 	int from;
 	int to;
@@ -40,15 +40,12 @@ struct NodeMeta {
 
 using Meta = variant<EdgeMeta, NodeMeta>;
 
-class FiniteAutomaton : public BaseObject {
-=======
 struct expression_arden {
 	int fa_state_number; // индекс состояния на которое ссылаемся
 	Regex* regex_from_state; // Regex по которому переходят из состояния
 };
 
 class FiniteAutomaton : public AbstractMachine {
->>>>>>> main
   public:
 	enum AmbiguityValue
 	{
@@ -60,6 +57,7 @@ class FiniteAutomaton : public AbstractMachine {
 
   private:
 	vector<State> states;
+	vector<Meta> metadata;
 
 	string colorize(vector<Meta> metadata) const;
 	vector<Meta> mark_all_transitions(set<int> from, set<int> to,
