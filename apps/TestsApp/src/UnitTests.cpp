@@ -1,33 +1,14 @@
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "InputGenerator/RegexGenerator.h"
-#include "InputGenerator/TasksGenerator.h"
 #include "Interpreter/Interpreter.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
-#include "Objects/iLogTemplate.h"
 #include "Tester/Tester.h"
-#include <functional>
-#include <iostream>
 #include "gtest/gtest.h"
-
-TEST(TestCaseName, Test_glaister_shallit) {
-
-	auto check_classes_number = [](string rgx_str) {
-		return (Regex(rgx_str).to_glushkov().get_classes_number_GlaisterShallit());
-	};
-	ASSERT_EQ(1, 1);
-	ASSERT_EQ(check_classes_number("abs"), 4);
-	ASSERT_EQ(check_classes_number("a*b*c*"), 3);
-	ASSERT_EQ(check_classes_number("aa*bb*cc*"), 4);
-	ASSERT_EQ(check_classes_number("ab|abc"), 4);
-	ASSERT_EQ(check_classes_number("a(b|c)(a|b)(b|c)"), 5);
-	
-}
-
-
+#include <functional>
 
 TEST(TestCaseName, Test_random_regex_parsing) {
 	RegexGenerator rg(15, 10, 5, 3);
@@ -39,7 +20,6 @@ TEST(TestCaseName, Test_random_regex_parsing) {
 		ASSERT_EQ(true, Regex::equivalent(r1, r2));
 	}
 }
-
 
 TEST(TestCaseName, Test_fa_equal) {
 	vector<State> states1;
@@ -94,16 +74,15 @@ TEST(TestCaseName, Test_fa_equal) {
 	ASSERT_TRUE(!FiniteAutomaton::equal(fa1, fa2));
 	ASSERT_TRUE(FiniteAutomaton::equal(fa1, fa3));
 	ASSERT_TRUE(FiniteAutomaton::equal(Regex("(aab|aab)*").to_thompson().remove_eps(),
-								  Regex("(aab|aab)*").to_glushkov()));
+									   Regex("(aab|aab)*").to_glushkov()));
 	ASSERT_TRUE(FiniteAutomaton::equal(Regex("a(a)*ab(bb)*baa").to_thompson().remove_eps(),
-								  Regex("a(a)*ab(bb)*baa").to_glushkov()));
+									   Regex("a(a)*ab(bb)*baa").to_glushkov()));
 	ASSERT_TRUE(FiniteAutomaton::equal(
 		Regex("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|bbb*(aaa*bbb*)*")
 			.to_thompson()
 			.remove_eps(),
 		Regex("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|bbb*(aaa*bbb*)*").to_glushkov()));
 }
-
 
 TEST(TestCaseName, Test_fa_equiv) {
 	vector<State> states1;
@@ -139,8 +118,7 @@ TEST(TestCaseName, Test_fa_equiv) {
 	ASSERT_TRUE(FiniteAutomaton::equivalent(fa1, fa2));
 }
 
-
-TEST(TestCaseName, Test__bisimilar) {
+TEST(TestCaseName, Test_bisimilar) {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
 		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
@@ -211,7 +189,6 @@ TEST(TestCaseName, Test_merge_bisimilar) {
 	ASSERT_TRUE(FiniteAutomaton::equal(Regex("(a|b)*b").to_ilieyu(), fa1));
 	ASSERT_TRUE(FiniteAutomaton::equal(fa2.merge_bisimilar(), fa3));
 }
-
 
 TEST(TestCaseName, Test_regex_subset) {
 	Regex r1("a*baa");
@@ -289,8 +266,8 @@ TEST(TestCaseName, Test_ambiguity) {
 	});
 }
 
-TEST(TestCaseName,Test_arden) {
-	auto test_equivalence = [](string rgx_str) {
+TEST(TestCaseName, Test_arden) {
+	auto test_equivalence = [](const string& rgx_str) {
 		Regex reg(rgx_str);
 		ASSERT_TRUE(Regex::equivalent(reg, reg.to_thompson().to_regex()));
 		ASSERT_TRUE(Regex::equivalent(reg, reg.to_glushkov().to_regex()));
@@ -355,29 +332,30 @@ TEST(TestCaseName, Test_is_one_unambiguous) {
 
 	// ok
 	ASSERT_TRUE(r1.to_glushkov().is_one_unambiguous());
-	// doesn't fulfills the orbit property
+	// doesn't fulfill the orbit property
 	ASSERT_TRUE(!r2.to_glushkov().is_one_unambiguous());
 	// consists of a single orbit, but neither a nor b is consistent
 	ASSERT_TRUE(!r3.to_glushkov().is_one_unambiguous());
 	// ok
 	ASSERT_TRUE(r4.to_glushkov().is_one_unambiguous());
-	// doesn't fulfills the orbit property
+	// doesn't fulfill the orbit property
 	ASSERT_TRUE(!r5.to_glushkov().is_one_unambiguous());
-};
+}
 
 TEST(TestCaseName, Test_get_one_unambiguous_regex) {
-	auto check_one_unambiguous = [](string rgx_str, bool expected_res) {
-		ASSERT_TRUE(Regex(rgx_str).get_one_unambiguous_regex().is_one_unambiguous() == expected_res);
+	auto check_one_unambiguous = [](const string& rgx_str, bool expected_res) {
+		ASSERT_TRUE(Regex(rgx_str).get_one_unambiguous_regex().is_one_unambiguous() ==
+					expected_res);
 	};
 	// ok
 	check_one_unambiguous("(a|b)*a", true);
-	// doesn't fulfills the orbit property
+	// doesn't fulfill the orbit property
 	check_one_unambiguous("(a|b)*(ac|bd)", false);
 	// consists of a single orbit, but neither a nor b is consistent
 	check_one_unambiguous("(a|b)*a(a|b)", false);
 	// ok
 	check_one_unambiguous("(c(a|b)*c)*", true);
-	// doesn't fulfills the orbit property
+	// doesn't fulfill the orbit property
 	check_one_unambiguous("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|", false);
 }
 
@@ -458,7 +436,7 @@ TEST(TestCaseName, Test_TransformationMonoid) {
 }
 
 TEST(TestCaseName, Test_GlaisterShallit) {
-	auto check_classes_number = [](string rgx_str, int num) {
+	auto check_classes_number = [](const string& rgx_str, int num) {
 		ASSERT_TRUE(Regex(rgx_str).to_glushkov().get_classes_number_GlaisterShallit() == num);
 	};
 	check_classes_number("abc", 4);
