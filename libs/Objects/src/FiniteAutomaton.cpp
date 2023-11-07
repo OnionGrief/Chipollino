@@ -84,17 +84,24 @@ void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index, 
 	}
 }
 
+string to_color_id(int group_id) {
+	switch (group_id) {
+		case trap_color : return("Trap");
+		default : return("group" + to_string(group_id));
+	}
+}
+
 /* Если код похож на заклинание вызова демонов, то очевидно, он имеет отношение
    к Рефалу. Это выглядит страшно, но именно тут так приходится, иначе не
    получится использовать Рефал-стиль в модуле раскраски. */
 string colorize_node(int id, int group_id) {
-	return "@" + to_string(id) + "@::=group" + to_string(group_id) + "\n";
+	return "@" + to_string(id) + "@::=" + to_color_id(group_id) + "\n";
 }
 
 string colorize_edge(int from_ind, int to_id, alphabet_symbol by,
 					 int group_id) {
 	return "@" + to_string(from_ind) + "-" + to_string(to_id) + "@" +
-		   string(by) + "@::=group" + to_string(group_id) + "\n";
+		   string(by) + "@::=" + to_color_id(group_id) + "\n";
 }
 
 vector<Meta> FiniteAutomaton::mark_all_transitions(set<int> from, set<int> to,
@@ -758,17 +765,19 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
-	int count = new_dfa.size();
+	vector<Meta> new_meta;
+	int count = static_cast<int>(new_dfa.size());
 	for (int i = 0; i < count; i++) {
 		for (const alphabet_symbol& symb : language->get_alphabet()) {
 			if (new_dfa.states[i].transitions[symb].empty()) {
 				if (flag) {
 					new_dfa.states[i].set_transition(new_dfa.size(), symb);
-					int size = new_dfa.size();
 					new_dfa.states.push_back(
-						{size, {size}, "", false, map<alphabet_symbol, set<int>>()});
+						{count, {count}, "", false, map<alphabet_symbol, set<int>>()});
+		      	   		new_meta.push_back(EdgeMeta{new_dfa.states[i].index, count, symb, trap_color});	
 				} else {
-					new_dfa.states[i].set_transition(new_dfa.size() - 1, symb);
+					new_dfa.states[i].set_transition(count, symb);
+					new_meta.push_back(EdgeMeta{new_dfa.states[i].index, count, symb, trap_color});	
 				}
 				flag = false;
 			}
@@ -776,19 +785,22 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 	}
 	if (!flag) {
 		for (const alphabet_symbol& symb : language->get_alphabet()) {
-			new_dfa.states[new_dfa.size() - 1].transitions[symb].insert(new_dfa.size() - 1);
+			new_dfa.states[count].transitions[symb].insert(count);
+			new_meta.push_back(EdgeMeta{count, count, symb, trap_color});	
 		}
 	}
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
-		log->set_parameter("result", new_dfa);
+		log->set_parameter("result", new_dfa, colorize(new_meta));
 	}
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
-	int count = new_dfa.size();
+	int count = static_cast<int>(new_dfa.size());
+	int traps = 0; /* Поправка, чтобы можно было вычислить реальное число состояний прежнего автомата. */
+	vector<Meta> old_meta;
 	for (int i = 0; i >= 0 && i < count; i++) {
 		bool is_trap_state = true;
 		set<int> reachable_states = new_dfa.closure({i}, false);
@@ -805,6 +817,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 			}
 		}
 		if (is_trap_state) {
+			old_meta.push_back(NodeMeta{states[i+traps].index, trap_color});
 			vector<State> new_states;
 			for (int j = 0; j < new_dfa.size(); j++) {
 				if (j < i) {
@@ -836,12 +849,17 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 				new_dfa.states[j].transitions = new_transitions;
 			}
 			i--;
+			traps++;
 			count--;
 		}
 	}
-	if (new_dfa.is_empty()) new_dfa = *this;
+	/* Если весь автомат состоит из ловушек, то останется лишь одна из них. */
+	if (new_dfa.is_empty())  
+		{new_dfa = *this;
+		 new_dfa = new_dfa.minimize();
+		}
 	if (log) {
-		log->set_parameter("oldautomaton", *this);
+		log->set_parameter("oldautomaton", *this, colorize(old_meta));
 		log->set_parameter("result", new_dfa);
 	}
 	return new_dfa;

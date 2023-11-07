@@ -12,6 +12,8 @@ class Regex;
 class Language;
 class TransformationMonoid;
 
+const int trap_color = 100;
+
 struct State {
 	int index;
 	// используется для объединения состояний в процессе работы алгоритмов
