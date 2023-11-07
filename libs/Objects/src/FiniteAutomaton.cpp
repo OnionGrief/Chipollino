@@ -3,6 +3,7 @@
 #include "InfInt/InfInt.h"
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
+#include "Objects/MetaInfo.h"
 #include "Objects/TransformationMonoid.h"
 #include "Objects/iLogTemplate.h"
 #include <algorithm>
@@ -84,55 +85,6 @@ void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index, 
 	}
 }
 
-string to_color_id(int group_id) {
-	switch (group_id) {
-		case trap_color : return("Trap");
-		default : return("group" + to_string(group_id));
-	}
-}
-
-/* Если код похож на заклинание вызова демонов, то очевидно, он имеет отношение
-   к Рефалу. Это выглядит страшно, но именно тут так приходится, иначе не
-   получится использовать Рефал-стиль в модуле раскраски. */
-string colorize_node(int id, int group_id) {
-	return "@" + to_string(id) + "@::=" + to_color_id(group_id) + "\n";
-}
-
-string colorize_edge(int from_ind, int to_id, alphabet_symbol by,
-					 int group_id) {
-	return "@" + to_string(from_ind) + "-" + to_string(to_id) + "@" +
-		   string(by) + "@::=" + to_color_id(group_id) + "\n";
-}
-
-vector<Meta> FiniteAutomaton::mark_all_transitions(set<int> from, set<int> to,
-												   alphabet_symbol by,
-												   int group_id) const {
-	vector<Meta> metadata;
-	for (auto elem : from)
-		for (auto trans : states[elem].transitions) {
-			for (auto reach : trans.second)
-				if (to.find(reach) != to.end() && (trans.first == by))
-					metadata.push_back(EdgeMeta{states[elem].index, reach,
-												trans.first, group_id});
-		}
-	return metadata;
-}
-
-string FiniteAutomaton::colorize(vector<Meta> raw_metadata) const {
-	string colors = "";
-	for (auto elem : raw_metadata) {
-		if (holds_alternative<NodeMeta>(elem)) {
-			auto node_m = get<NodeMeta>(elem);
-			colors += colorize_node(node_m.id, node_m.group);
-		} else {
-			auto edge_m = get<EdgeMeta>(elem);
-			colors += colorize_edge(edge_m.from, edge_m.to, edge_m.label,
-									edge_m.group);
-		}
-	}
-	return colors;
-}
-
 set<int> FiniteAutomaton::closure(const set<int>& indices,
 								  bool use_epsilons_only) const {
 	set<int> reachable;
@@ -146,8 +98,8 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({initial_state}, true);
-	vector<Meta> old_meta, aux_meta;
-	vector<Meta> new_meta;
+	MetaInfo old_meta = MetaInfo();
+	MetaInfo new_meta = MetaInfo();
 	set<int> label = q0;
 	string new_identifier;
 	int group_counter = 0;
@@ -160,12 +112,11 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 
 	if (q0.size() > 1) {
 		for (auto elem : q0) {
-			old_meta.push_back(NodeMeta{states[elem].index, group_counter});
+			old_meta.Upd(NodeMeta{states[elem].index, group_counter});
 		}
-		aux_meta = mark_all_transitions(q0, q0, alphabet_symbol::epsilon(),
+		old_meta.MarkTransitions(*this, q0, q0, alphabet_symbol::epsilon(),
 										group_counter);
-		old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
-		new_meta.push_back(NodeMeta{new_initial_state.index, group_counter});
+		new_meta.Upd(NodeMeta{new_initial_state.index, group_counter});
 		group_counter++;
 	}
 
@@ -229,14 +180,10 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 				s2.push(index);
 				if (z1.size()>1) {
 					for (auto elem : z1) { 
-						old_meta.push_back(NodeMeta{states[elem].index, group_counter}); }
-					aux_meta = mark_all_transitions(z, z1, symb,
+						old_meta.Upd(NodeMeta{states[elem].index, group_counter}); }
+					old_meta.MarkTransitions(*this, z, z1, symb,
 										group_counter);
-					old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
-					aux_meta = mark_all_transitions(z1, z1, alphabet_symbol::epsilon(),
-										group_counter);
-					old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
-					new_meta.push_back(NodeMeta{q1.index, group_counter});
+					new_meta.Upd(NodeMeta{q1.index, group_counter});
 					group_counter++;
 					}
 			}
@@ -244,8 +191,8 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 		}
 	}
 	if (log) {
-		log->set_parameter("oldautomaton", *this, colorize(old_meta));
-		log->set_parameter("result", dfa, colorize(new_meta));
+		log->set_parameter("oldautomaton", *this, old_meta.Colorize());
+		log->set_parameter("result", dfa, new_meta.Colorize());
 	}
 	return dfa;
 }
@@ -370,14 +317,14 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 		ss << "\\{" << state.identifier << "\\}\;";
 	}
 	bool merged = false;
-	vector<Meta> old_meta;
-	vector<Meta> new_meta;
+	MetaInfo old_meta = MetaInfo();
+	MetaInfo new_meta = MetaInfo();
 	for (int i = 0; i < dfa.states.size(); i++) {
 		for (int j = 0; j < dfa.states.size(); j++)
 		 if (classes[i] == classes[j] && (i != j))
 		{ merged = true;
-		  old_meta.push_back(NodeMeta{dfa.states[i].index,classes[i]});	
-		  new_meta.push_back(NodeMeta{classes[i],classes[i]});
+		  old_meta.Upd(NodeMeta{dfa.states[i].index,classes[i]});	
+		  new_meta.Upd(NodeMeta{classes[i],classes[i]});
 		  break;
 		}
 	   }	
@@ -385,13 +332,13 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 	  if (!is_deterministic())
 		{ log->set_parameter("oldautomaton", *this);
 		  log->set_parameter("to_determ", "Автомат после предварительной детерминизации: ");
-		  log->set_parameter("detautomaton", dfa, colorize(old_meta));
+		  log->set_parameter("detautomaton", dfa, old_meta.Colorize());
 		} 
 	  else
-		{log->set_parameter("oldautomaton", dfa, colorize(old_meta));}
+		{log->set_parameter("oldautomaton", dfa, old_meta.Colorize());}
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("equivclasses", ss.str());
-		log->set_parameter("result", minimized_dfa, colorize(new_meta));
+		log->set_parameter("result", minimized_dfa, new_meta.Colorize());
 	}
 	return minimized_dfa;
 }
@@ -401,8 +348,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 
 	vector<State> new_states;
 	map<set<int>, int> visited_states;
-	vector<Meta> old_meta, aux_meta;
-	vector<Meta> new_meta;
+	MetaInfo old_meta = MetaInfo();
+	MetaInfo new_meta = MetaInfo();
 	int group_counter = 0;
 	set<int> q = closure({initial_state}, true);
 	string initial_state_identifier;
@@ -414,10 +361,9 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 	State new_initial_state = {0, q, initial_state_identifier, false,
 							   map<alphabet_symbol, set<int>>()};
 	if (q.size()>1) {
-		for (auto elem : q) { old_meta.push_back(NodeMeta{states[elem].index,group_counter}); }
-		aux_meta = mark_all_transitions(q, q, alphabet_symbol::epsilon(), group_counter);
-		old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
-		new_meta.push_back(NodeMeta{new_initial_state.index,group_counter}); 
+		for (auto elem : q) { old_meta.Upd(NodeMeta{states[elem].index,group_counter}); }
+		old_meta.MarkTransitions(*this, q, q, alphabet_symbol::epsilon(), group_counter);
+		new_meta.Upd(NodeMeta{new_initial_state.index,group_counter}); 
 		group_counter++;
 		}
 	visited_states[q] = 0;
@@ -461,11 +407,10 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 										   map<alphabet_symbol, set<int>>()};
 						if (q1.size()>1)
 							{for (auto elem : q1)
-								{ old_meta.push_back(NodeMeta{states[elem].index,group_counter}); }
+								{ old_meta.Upd(NodeMeta{states[elem].index,group_counter}); }
 
-							aux_meta = mark_all_transitions(q1, q1, alphabet_symbol::epsilon(), group_counter);
-							old_meta.insert(old_meta.end(), aux_meta.begin(), aux_meta.end());
-							new_meta.push_back(NodeMeta{new_state.index,group_counter}); 
+							old_meta.MarkTransitions(*this, q1, q1, alphabet_symbol::epsilon(), group_counter);
+							new_meta.Upd(NodeMeta{new_state.index,group_counter}); 
 							group_counter++;
 							}
 						new_states.push_back(new_state);
@@ -487,8 +432,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 	new_nfa.states = new_states;
 	new_nfa = new_nfa.remove_unreachable_states();
 	if (log) {
-		log->set_parameter("oldautomaton", *this, colorize(old_meta));
-		log->set_parameter("result", new_nfa, colorize(new_meta));
+		log->set_parameter("oldautomaton", *this, old_meta.Colorize());
+		log->set_parameter("result", new_nfa, new_meta.Colorize());
 	}
 	return new_nfa;
 }
@@ -765,7 +710,7 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
-	vector<Meta> new_meta;
+	MetaInfo new_meta = MetaInfo();
 	int count = static_cast<int>(new_dfa.size());
 	for (int i = 0; i < count; i++) {
 		for (const alphabet_symbol& symb : language->get_alphabet()) {
@@ -774,10 +719,10 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 					new_dfa.states[i].set_transition(new_dfa.size(), symb);
 					new_dfa.states.push_back(
 						{count, {count}, "", false, map<alphabet_symbol, set<int>>()});
-		      	   		new_meta.push_back(EdgeMeta{new_dfa.states[i].index, count, symb, trap_color});	
+		      	   		new_meta.Upd(EdgeMeta{new_dfa.states[i].index, count, symb, MetaInfo::trap_color});	
 				} else {
 					new_dfa.states[i].set_transition(count, symb);
-					new_meta.push_back(EdgeMeta{new_dfa.states[i].index, count, symb, trap_color});	
+					new_meta.Upd(EdgeMeta{new_dfa.states[i].index, count, symb, MetaInfo::trap_color});	
 				}
 				flag = false;
 			}
@@ -786,12 +731,12 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 	if (!flag) {
 		for (const alphabet_symbol& symb : language->get_alphabet()) {
 			new_dfa.states[count].transitions[symb].insert(count);
-			new_meta.push_back(EdgeMeta{count, count, symb, trap_color});	
+			new_meta.Upd(EdgeMeta{count, count, symb, MetaInfo::trap_color});	
 		}
 	}
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
-		log->set_parameter("result", new_dfa, colorize(new_meta));
+		log->set_parameter("result", new_dfa, new_meta.Colorize());
 	}
 	return new_dfa;
 }
@@ -800,7 +745,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = static_cast<int>(new_dfa.size());
 	int traps = 0; /* Поправка, чтобы можно было вычислить реальное число состояний прежнего автомата. */
-	vector<Meta> old_meta;
+	MetaInfo old_meta = MetaInfo();
 	for (int i = 0; i >= 0 && i < count; i++) {
 		bool is_trap_state = true;
 		set<int> reachable_states = new_dfa.closure({i}, false);
@@ -817,7 +762,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 			}
 		}
 		if (is_trap_state) {
-			old_meta.push_back(NodeMeta{states[i+traps].index, trap_color});
+			old_meta.Upd(NodeMeta{states[i+traps].index, MetaInfo::trap_color});
 			vector<State> new_states;
 			for (int j = 0; j < new_dfa.size(); j++) {
 				if (j < i) {
@@ -859,7 +804,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 		 new_dfa = new_dfa.minimize();
 		}
 	if (log) {
-		log->set_parameter("oldautomaton", *this, colorize(old_meta));
+		log->set_parameter("oldautomaton", *this, old_meta.Colorize());
 		log->set_parameter("result", new_dfa);
 	}
 	return new_dfa;

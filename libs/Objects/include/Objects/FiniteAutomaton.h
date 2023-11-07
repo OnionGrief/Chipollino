@@ -9,6 +9,7 @@
 using namespace std;
 
 class Regex;
+class MetaInfo;
 class Language;
 class TransformationMonoid;
 
@@ -28,20 +29,6 @@ struct State {
 	void set_transition(int, const alphabet_symbol&);
 };
 
-struct EdgeMeta {
-	int from;
-	int to;
-	alphabet_symbol label;
-	int group;
-};
-
-struct NodeMeta {
-	int id;
-	int group;
-};
-
-using Meta = variant<EdgeMeta, NodeMeta>;
-
 struct expression_arden {
 	int fa_state_number; // индекс состояния на которое ссылаемся
 	Regex* regex_from_state; // Regex по которому переходят из состояния
@@ -59,11 +46,7 @@ class FiniteAutomaton : public AbstractMachine {
 
   private:
 	vector<State> states;
-	vector<Meta> metadata;
 
-	string colorize(vector<Meta> metadata) const;
-	vector<Meta> mark_all_transitions(set<int> from, set<int> to,
-									  alphabet_symbol by, int group_id) const;
 	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 	// преобразованиях всегда удаляем в конце ловушки.
 	// Если isTrim = false, тогда после удаления ловушки в результате
@@ -183,6 +166,7 @@ class FiniteAutomaton : public AbstractMachine {
 	bool is_dfa_minimal(iLogTemplate* log = nullptr) const;
 
 	friend class Regex;
+	friend class MetaInfo;
 	friend class TransformationMonoid;
 	friend class Grammar;
 };
