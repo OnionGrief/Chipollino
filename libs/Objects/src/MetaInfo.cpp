@@ -7,7 +7,7 @@ using namespace std;
 
 string to_color_id(int group_id) {
 	switch (group_id) {
-		case trap_color : return("Trap");
+		case MetaInfo::trap_color : return("Trap");
 		default : return("group" + to_string(group_id));
 	}
 }

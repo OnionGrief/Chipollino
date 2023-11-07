@@ -271,9 +271,9 @@ TEST(TestCaseName, Test_remove_trap) {
 	Regex r2("caa*b*");
 	FiniteAutomaton fa1 = r1.to_glushkov().determinize().complement();
 	FiniteAutomaton fa2 = r2.to_glushkov().determinize();
-	FiniteAutomaton fa3 = FiniteAutomaton::intersection(fa1, fa2).remove_trap_state();
+	FiniteAutomaton fa3 = FiniteAutomaton::intersection(fa1, fa2).remove_trap_states();
 
-	ASSERT_TRUE((fa2.size() - fa2.remove_trap_state().size()) == 1); /* В норме детерминизация добавляет одну ловушку */
+	ASSERT_TRUE((fa2.size() - fa2.remove_trap_states().size()) == 1); /* В норме детерминизация добавляет одну ловушку */
 	ASSERT_TRUE(fa3.size() == 1); /* Кейс, когда осталось несколько ловушек, и они коллапсируют в одну, чтобы не получился пустой автомат. */
 }
 
