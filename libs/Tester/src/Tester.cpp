@@ -49,8 +49,7 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step,
 			belongs = machines[type].parsing_by_nfa(word, counter);
 			const auto end = clock::now();
 			const long long elapsed =
-				std::chrono::duration_cast<std::chrono::milliseconds>(end -
-																	  start)
+				std::chrono::duration_cast<std::chrono::milliseconds>(end -start)
 					.count();
 			double time = (double)elapsed / 1000;
 			steps.push_back(counter);
@@ -89,69 +88,6 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step,
 		log->set_parameter("plot", plot);
 	}
 }
-
-/*
-void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step,
-				  iLogTemplate* log) {
-	vector<long> words, steps;
-	FiniteAutomaton mindfa = lang.minimize().remove_trap_states();
-	iLogTemplate::Table t;
-	iLogTemplate::Plot plot;
-	using clock = std::chrono::high_resolution_clock;
-	string id;
-	int counter;
-	bool belongs;
-
-	for (int type = 0; type < 2; type ++)  {
-		steps.clear();
-		if (!type) {
-			id = "NFA";
-			}
-				else
-			{ id = "minDFA";}
-		for (int i = 0; i < 13; i++) {
-			string word = regex.get_iterated_word(i * step);
-			const auto start = clock::now();
-			if (!type) {
-				belongs = lang.parsing_by_nfa(word, counter);
-				} else
-				{belongs = mindfa.parsing_by_nfa(word, counter);
-				}
-			const auto end = clock::now();
-			const long long elapsed =
-				std::chrono::duration_cast<std::chrono::milliseconds>(end -
-start) .count(); double time = (double)elapsed / 1000; steps.push_back(counter);
-			if (!type) {
-				t.rows.push_back(to_string(i + 1));
-				t.data.push_back(to_string(counter));
-				t.data.push_back(to_string(word.length()));
-				t.data.push_back(to_string(time));
-				words.push_back(word.length());
-			  if (belongs)
-				t.data.push_back("true");
-				  else
-				t.data.push_back("false");
-			}
-			if (time >= 180) return;
-		}
-	for (int i = 0; i < steps.size(); i++)
-		{
-			plot.data.push_back(make_pair(make_pair(words[i],
-int(steps[i])),id));
-		}
-	}
-	t.columns.push_back("Количество итераций");
-	t.columns.push_back("Длина строки");
-	t.columns.push_back("Время парсинга");
-	t.columns.push_back("Принадлежность языку");
-	if (log) {
-		log->set_parameter("language", lang);
-		log->set_parameter("regex", regex);
-		log->set_parameter("step", step);
-		log->set_parameter("table", t);
-		log->set_parameter("plot", plot);
-	}
-}*/
 
 bool Tester::parsing_by_regex(string reg, string word) {
 	cmatch match_res;

@@ -32,8 +32,7 @@ class Interpreter {
 	// Выгружает лог в файл
 	void generate_log(const string& filename);
 
-	enum class Flag
-	{
+	enum class Flag {
 		auto_remove_trap_states,
 		weak_type_comparison,
 		log_theory
@@ -274,10 +273,9 @@ class Interpreter {
 	//== Лексер ===============================================================
 
 	struct Lexem {
-		enum Type
-		{ // TODO добавить тип строки (для filename)
+		enum Type { // TODO добавить тип строки (для filename)
 			error,
-			equalSign,
+		 	equalSign,
 			star,
 			doubleExclamation,
 			parL,
