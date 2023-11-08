@@ -229,7 +229,7 @@ string LogTemplate::log_plot(Plot p) {
 		styling = p.data[0].second;
 		legenda = p.data[0].second + " = {label in legend={text="
 				   + decorate_element(p.data[0].second, regexstyle, none, false)
-				   + "},\n";
+				   + "}},\n";
 		max_x = unsigned(p.data[0].first.first);
 		max_y = unsigned(p.data[0].first.second);
 	}
@@ -241,7 +241,7 @@ string LogTemplate::log_plot(Plot p) {
 			legenda += p.data[i].second +
 					   " = {label in legend={text=" 
 					   + decorate_element(p.data[i].second, regexstyle, none, false)
-					   + "},\n";
+					   + "}},\n";
 		}
 		if (max_x < p.data[i].first.first) max_x = p.data[i].first.first;
 		if (max_y < p.data[i].first.second) max_y = p.data[i].first.second;
