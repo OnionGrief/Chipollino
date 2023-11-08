@@ -953,6 +953,7 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 
 bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	if (log) log->set_parameter("oldautomaton", *this);
+	MetaInfo meta = MetaInfo();
 	if (language->is_one_unambiguous_flag_cached()) {
 
 		if (log) {
@@ -1032,11 +1033,21 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		min_fa_orbits.insert(orbit_of_state);
 	}
 
+	int curr_orbit = 0;
+	for (auto iter_orbit : min_fa_orbits)
+		{ if (iter_orbit.size() > 1) 
+			{for (auto iter_state : iter_orbit)
+				meta.Upd(NodeMeta{iter_state, curr_orbit});
+			for (auto symbol : language->get_alphabet())
+			meta.MarkTransitions(min_fa, iter_orbit, iter_orbit, symbol, curr_orbit);
+			curr_orbit++;}
+		}
 	// check if min_fa has a single, trivial orbit
 	// return true if it exists
 	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1) {
 		language->set_one_unambiguous_flag(true);
 		if (log) {
+			log->set_parameter("mindfa", min_fa, meta.Colorize());
 			log->set_parameter("result", "True");
 		}
 		return true;
@@ -1049,6 +1060,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		min_fa_consistent.empty()) {
 		language->set_one_unambiguous_flag(false);
 		if (log) {
+			log->set_parameter("mindfa", min_fa, meta.Colorize());
 			log->set_parameter("result", "False");
 		}
 		return false;
@@ -1172,6 +1184,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	if (!is_min_fa_cut_has_an_orbit_property) {
 		language->set_one_unambiguous_flag(false);
 		if (log) {
+			log->set_parameter("mindfa", min_fa, meta.Colorize());
 			log->set_parameter("result", "False");
 		}
 		return false;
@@ -1220,6 +1233,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 			if (!orbit_automaton.is_one_unambiguous()) {
 				language->set_one_unambiguous_flag(false);
 				if (log) {
+					log->set_parameter("mindfa", min_fa, meta.Colorize());
 					log->set_parameter("result", "False");
 				}
 				return false;
@@ -1229,7 +1243,10 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		i++;
 	}
 	language->set_one_unambiguous_flag(true);
-	if (log) log->set_parameter("result", "True");
+	if (log) {
+		log->set_parameter("mindfa", min_fa, meta.Colorize());
+		log->set_parameter("result", "True");
+	}
 	return true;
 }
 
@@ -1272,6 +1289,8 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
 	vector<GrammarItem*> terminals;
+	MetaInfo old_meta = MetaInfo();
+	MetaInfo new_meta = MetaInfo();
 	vector<vector<vector<GrammarItem*>>> rules =
 		Grammar::fa_to_grammar(states, language->get_alphabet(), fa_items, nonterminals, terminals);
 	vector<GrammarItem*> bisimilar_nonterminals;
@@ -1285,6 +1304,15 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 		classes.push_back(nont->class_number);
 	FiniteAutomaton result_fa = merge_equivalent_classes(classes);
 
+	for (int i = 0; i < classes.size(); i++) {
+		for (int j = 0; j < classes.size(); j++)
+		 if (classes[i] == classes[j] && (i != j))
+		{
+		old_meta.Upd(NodeMeta{i, classes[i]});	
+		new_meta.Upd(NodeMeta{classes[i], classes[i]});
+		}
+	   }	
+
 	stringstream ss;
 	for (auto& elem : class_to_nonterminals) {
 		ss << "\\{";
@@ -1293,9 +1321,9 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 		ss << elem.second[elem.second.size() - 1]->name << "\\}\;";
 	}
 	if (log) {
-		log->set_parameter("oldautomaton", *this);
+		log->set_parameter("oldautomaton", *this, old_meta.Colorize());
 		log->set_parameter("equivclasses", ss.str()); // TODO: logs
-		log->set_parameter("result", result_fa);
+		log->set_parameter("result", result_fa, new_meta.Colorize());
 	}
 	return result_fa;
 }
