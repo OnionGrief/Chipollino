@@ -53,11 +53,11 @@ void LogTemplate::add_parameter(string parameter_name) {
 	}
 }
 
-void LogTemplate::set_parameter(const string& key, const FiniteAutomaton& value, string meta) {
-	parameters[key].value = value;
-	parameters[key].meta = meta;
+void LogTemplate::set_parameter(const string& key, const LogObject& value,
+		 string meta) {
+	parameters[key] = {value, meta};
 }
-
+/*
 void LogTemplate::set_parameter(const string& key, Regex value, string meta) {
 	parameters[key].value = value;
 	parameters[key].meta = meta;
@@ -82,7 +82,7 @@ void LogTemplate::set_parameter(const string& key, Plot value, string meta) {
 	parameters[key].value = value;
 	parameters[key].meta = meta;
 	add_parameter(key);
-}
+}*/
 
 void LogTemplate::set_theory_flag(bool value) {
 	render_theory = value;
