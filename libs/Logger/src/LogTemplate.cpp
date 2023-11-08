@@ -94,21 +94,21 @@ string LogTemplate::render() const {
 
 		// Отображаем строчку
 		if (show) {
-			for (const auto& p : parameters) {
-				int insert_place = s.find("%template_" + p.first);
+			for (const auto& [key, param] : parameters) {
+				int insert_place = s.find("%template_" + key);
 				if (insert_place == -1) {
 					continue;
 				}
 
-				if (holds_alternative<Regex>(p.second.value)) {
+				if (holds_alternative<Regex>(param.value)) {
 					s.insert(insert_place,
-							 get<Regex>(p.second.value).to_txt()); /* Math mode is done in global
+							 get<Regex>(param.value).to_txt()); /* Math mode is done in global
 																	  renderer */
-				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
+				} else if (holds_alternative<FiniteAutomaton>(param.value)) {
 					hash<string> hasher;
 					string c_graph;
 					string automaton =
-						get<FiniteAutomaton>(p.second.value).to_txt();
+						get<FiniteAutomaton>(param.value).to_txt();
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
@@ -117,17 +117,17 @@ string LogTemplate::render() const {
 						cache_automatons[hash] = c_graph;
 					}
 					c_graph =
-						AutomatonToImage::colorize(c_graph, p.second.meta);
+						AutomatonToImage::colorize(c_graph, param.meta);
 					s.insert(insert_place, c_graph);
-				} else if (holds_alternative<string>(p.second.value)) {
-					s.insert(insert_place, get<string>(p.second.value));
-				} else if (holds_alternative<int>(p.second.value)) {
-					s.insert(insert_place, to_string(get<int>(p.second.value)));
-				} else if (holds_alternative<Table>(p.second.value)) {
+				} else if (holds_alternative<string>(param.value)) {
+					s.insert(insert_place, get<string>(param.value));
+				} else if (holds_alternative<int>(param.value)) {
+					s.insert(insert_place, to_string(get<int>(param.value)));
+				} else if (holds_alternative<Table>(param.value)) {
 					s.insert(insert_place,
-							 log_table(get<Table>(p.second.value)));
-				} else if (holds_alternative<Plot>(p.second.value)) {
-					s.insert(insert_place, log_plot(get<Plot>(p.second.value)));
+							 log_table(get<Table>(param.value)));
+				} else if (holds_alternative<Plot>(param.value)) {
+					s.insert(insert_place, log_plot(get<Plot>(param.value)));
 				}
 			}
 			outstr += s;
@@ -136,6 +136,25 @@ string LogTemplate::render() const {
 	}
 
 	return outstr;
+}
+
+
+unordered_map<Decoration, pair<string, bool>> decor_data = {
+	{italic, {"\\textit", false}}, {regexstyle, {"\\regexpstr", true}}, {typewriter, {"\\ttfamily", false}}, {roman, {"\\mathrm", true}}};
+
+string math_switcher(bool modifier, bool mathmode) {
+	if (modifier && !mathmode) { 
+		return "$";
+	} else return "";
+}
+
+unordered_map<TextSize, string> textsize_to_str = {
+	{footnote, "\\footnotesize"}, {small, "\\small"}, {normal, "\\normalsize"}, {large, "\\large"}, {none, ""}};
+
+string decorate_element(string label, Decoration d, TextSize s, bool in_math) {
+  string mode_switcher = math_switcher(decor_data.at(d).second, in_math);
+  return "{" + textsize_to_str.at(s) + mode_switcher
+		 + decor_data.at(d).first + "{" + label + "}" + mode_switcher + "}"; 
 }
 
 string LogTemplate::math_mode(string str) {
@@ -208,8 +227,9 @@ string LogTemplate::log_plot(Plot p) {
 	if (p.data.size()) {
 		styles.push_back(p.data[0].second);
 		styling = p.data[0].second;
-		legenda = p.data[0].second + " = {label in legend={text=$\\regexpstr{" +
-				  p.data[0].second + "}$}},\n";
+		legenda = p.data[0].second + " = {label in legend={text="
+				   + decorate_element(p.data[0].second, regexstyle, none, false)
+				   + "},\n";
 		max_x = unsigned(p.data[0].first.first);
 		max_y = unsigned(p.data[0].first.second);
 	}
@@ -219,8 +239,9 @@ string LogTemplate::log_plot(Plot p) {
 			styles.push_back(p.data[i].second);
 			styling += ", " + p.data[i].second;
 			legenda += p.data[i].second +
-					   " = {label in legend={text=$\\regexpstr{" +
-					   p.data[i].second + "}$}},\n";
+					   " = {label in legend={text=" 
+					   + decorate_element(p.data[i].second, regexstyle, none, false)
+					   + "},\n";
 		}
 		if (max_x < p.data[i].first.first) max_x = p.data[i].first.first;
 		if (max_y < p.data[i].first.second) max_y = p.data[i].first.second;
@@ -239,8 +260,8 @@ string LogTemplate::log_plot(Plot p) {
 		"\\begin{tikzpicture}\\scriptsize \%begin_plot\n "
 		"\\datavisualization[scientific axes=clean, visualize as line/.list={" +
 		styling + "},\n x axis={ticks={step=" + to_string(max_x) +
-		"}, label=\\footnotesize\\textit{длина слова}}, y axis={ticks={step=" +
-		to_string(max_y) + "}, label=\\footnotesize\\textit{шаги}},\n" +
+		"}, label=" + decorate_element("длина слова", italic, footnote, false) + "}, y axis={ticks={step=" +
+		to_string(max_y) + "}, label=" + decorate_element("шаги", italic, footnote, false) + "},\n" +
 		legenda +
 		"style sheet = vary hue, style sheet = vary dashing]\n "
 		"data[headline={x, y, set}] {\n";

@@ -2,16 +2,31 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
-#include <map>
 #include <sstream>
 #include <string>
 #include <variant>
+#include <unordered_map>
 
 using namespace std;
 
+enum Decoration {
+			italic,
+			regexstyle,
+			typewriter,
+			roman	
+		};
+
+enum TextSize {
+			footnote,
+			small,
+			normal,
+			large,
+			none	
+		};
 
 
 class LogTemplate : public iLogTemplate {
+
 
   public:
 	void set_parameter(const string& key, const LogObject& value,
@@ -47,7 +62,7 @@ class LogTemplate : public iLogTemplate {
 	};
 
 	// Параметры
-	map<string, LogParameter> parameters;
+	unordered_map<string, LogParameter> parameters;
 
 	// Добавление шаблона настоящего параметра
 	void add_parameter(string parameter_name);
@@ -62,4 +77,5 @@ class LogTemplate : public iLogTemplate {
 	static string log_plot(Plot p /*vector<<int,long>,string>*/);
 	// Рекурсивно раскрывает include-выражения в файле
 	stringstream expand_includes(string filename) const;
+
 };
