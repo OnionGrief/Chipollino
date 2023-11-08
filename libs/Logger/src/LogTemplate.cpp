@@ -1,5 +1,4 @@
 #include "Logger/LogTemplate.h"
-#include <variant>
 #include <algorithm>
 #include <cmath>
 

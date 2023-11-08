@@ -3,6 +3,7 @@
 #include "Objects/Language.h"
 #include <algorithm>
 #include <iostream>
+
 using namespace std;
 vector<alphabet_symbol> union_words(vector<alphabet_symbol> a, vector<alphabet_symbol> b) {
 	vector<alphabet_symbol> newword;
@@ -429,7 +430,7 @@ int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
 	}
 	if (log) {
 		/*TODO: logs */
-		log->set_parameter("result", equivalence_classes_table_bool.size());
+		log->set_parameter("result", static_cast<int>(equivalence_classes_table_bool.size()));
 		log->set_parameter("table", t);
 	}
 	return equivalence_classes_table_bool.size();
