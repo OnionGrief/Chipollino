@@ -14,7 +14,9 @@ using namespace std;
 class LogTemplate : public iLogTemplate {
 
   public:
-	void set_parameter(const string& key, const LogObject& value,
+/*	void set_parameter(const string& key, const FiniteAutomaton& value,
+					   string meta = "");    */
+	void set_parameter(const string& key, LogObject value,
 					   string meta = "");
 	void set_theory_flag(bool value);
 
