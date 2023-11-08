@@ -861,11 +861,15 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 
 FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 	set<alphabet_symbol> new_alphabet;
+	MetaInfo meta = MetaInfo();
+	int group_id = 1;
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
 	vector<map<alphabet_symbol, set<int>>> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
 			if (elem.second.size() > 1) {
+				meta.MarkTransitions(*this, {i}, elem.second, elem.first, group_id);
+				group_id++;
 				int counter = 1;
 				for (int transition_to : elem.second) {
 					alphabet_symbol new_symb = elem.first;
@@ -887,7 +891,7 @@ FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
 	if (log) {
-		log->set_parameter("oldautomaton", *this);
+		log->set_parameter("oldautomaton", *this, meta.Colorize());
 		log->set_parameter("result", new_fa);
 	}
 	return new_fa;
@@ -1035,13 +1039,14 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 
 	int curr_orbit = 0;
 	for (auto iter_orbit : min_fa_orbits)
-		{ if (iter_orbit.size() > 1) 
+		if (iter_orbit.size() > 1) 
 			{for (auto iter_state : iter_orbit)
 				meta.Upd(NodeMeta{iter_state, curr_orbit});
 			for (auto symbol : language->get_alphabet())
 			meta.MarkTransitions(min_fa, iter_orbit, iter_orbit, symbol, curr_orbit);
-			curr_orbit++;}
-		}
+			curr_orbit++;
+			}
+		
 	// check if min_fa has a single, trivial orbit
 	// return true if it exists
 	if (min_fa_orbits.size() == 1 && states_with_trivial_orbit.size() == 1) {
