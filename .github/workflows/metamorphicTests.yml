@@ -1,4 +1,4 @@
-name: UnitTests
+name: MetamorphicTests
 
 on: [ push ]
 
@@ -30,6 +30,6 @@ jobs:
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         # ну почему не из корня ...
         #run: ctest -C ${{env.BUILD_TYPE}}
-        run: ./build/apps/UnitTestsApp/UnitTestsApp
+        run: ./build/apps/MetamorphicTestsApp/MetamorphicTestsApp
     
         

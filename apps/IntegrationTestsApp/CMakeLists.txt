@@ -1,5 +1,5 @@
 # Set the project name
-project(TestsApp)
+project(IntegrationTestsApp)
 
 # Create a sources variable with a link to all cpp files to compile
 
@@ -13,9 +13,8 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 set(SOURCES
-        src/Example.cpp
         src/main.cpp
-        src/UnitTests.cpp)
+        src/IntegrationTests.cpp)
 
 
 # Add a library with the above sources
@@ -34,5 +33,5 @@ target_link_libraries(${PROJECT_NAME}
         )
 
 enable_testing()
-add_test(NAME UnitTests
+add_test(NAME IntegrationTests
         COMMAND ${PROJECT_NAME})
