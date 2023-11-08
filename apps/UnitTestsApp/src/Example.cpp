@@ -1,4 +1,4 @@
-#include "TestsApp/Example.h"
+#include "UnitTestsApp/Example.h"
 
 void Example::determinize() {
 	vector<State> states;
