@@ -275,7 +275,7 @@ class Interpreter {
 	struct Lexem {
 		enum Type { // TODO добавить тип строки (для filename)
 			error,
-		 	equalSign,
+			equalSign,
 			star,
 			doubleExclamation,
 			parL,
