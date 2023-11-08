@@ -21,10 +21,7 @@ class iLogTemplate {
 
   using LogObject = variant<FiniteAutomaton, Regex, string, int, Table, Plot>;
 
-/*	virtual void set_parameter(const string& key, const FiniteAutomaton& value,
-					   string meta = "") = 0;   */
-
-	virtual void set_parameter(const string& key, LogObject value,
+	virtual void set_parameter(const string& key, const LogObject& value,
 							   string meta = "") = 0;
 
 };

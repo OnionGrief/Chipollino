@@ -14,9 +14,7 @@ using namespace std;
 class LogTemplate : public iLogTemplate {
 
   public:
-/*	void set_parameter(const string& key, const FiniteAutomaton& value,
-					   string meta = "");    */
-	void set_parameter(const string& key, LogObject value,
+	void set_parameter(const string& key, const LogObject& value,
 					   string meta = "");
 	void set_theory_flag(bool value);
 
@@ -53,7 +51,7 @@ class LogTemplate : public iLogTemplate {
 
 	// Добавление шаблона настоящего параметра
 	void add_parameter(string parameter_name);
-	// math mode
+	// math mode (устаревший метод)
 	static string math_mode(string str);
 	// счетчик картинок
 	inline static int image_number = 0;
