@@ -2262,7 +2262,7 @@ int FiniteAutomaton::get_initial() {
 size_t FiniteAutomaton::size(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
-		log->set_parameter("result", states.size());
+		log->set_parameter("result", static_cast<int>(states.size()));
 	}
 	return states.size();
 }
