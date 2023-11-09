@@ -222,7 +222,7 @@ string LogTemplate::math_mode(string str) {
 	return str_math;
 }
 
-int step_size(int maxscale, int objsize, int datasize) {
+int step_size(int maxscale, size_t objsize, size_t datasize) {
 	int step = std::ceil((maxscale * (static_cast<int>(objsize) + 3)) / max(static_cast<int>(datasize) - 2, 1));
 	return (step > 10 ? std::floor(step / 10) * 10 : step);	
 }
