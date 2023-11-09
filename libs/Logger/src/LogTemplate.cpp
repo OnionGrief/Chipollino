@@ -52,7 +52,7 @@ void LogTemplate::add_parameter(string parameter_name) {
 	}
 }
 
-void LogTemplate::set_parameter(const string& key, const LogObject& value, string meta) {
+void LogTemplate::set_parameter(const string& key, const LogObject& value, const MetaInfo& meta) {
 	parameters[key] = {value, meta};
 }
 
@@ -107,8 +107,7 @@ string LogTemplate::render() const {
 				} else if (holds_alternative<FiniteAutomaton>(param.value)) {
 					hash<string> hasher;
 					string c_graph;
-					string automaton =
-						get<FiniteAutomaton>(param.value).to_txt();
+					string automaton = get<FiniteAutomaton>(param.value).to_txt();
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
@@ -116,16 +115,14 @@ string LogTemplate::render() const {
 						c_graph = AutomatonToImage::to_image(automaton);
 						cache_automatons[hash] = c_graph;
 					}
-					c_graph =
-						AutomatonToImage::colorize(c_graph, param.meta);
+					c_graph = AutomatonToImage::colorize(c_graph, param.meta.Colorize());
 					s.insert(insert_place, c_graph);
 				} else if (holds_alternative<string>(param.value)) {
 					s.insert(insert_place, get<string>(param.value));
 				} else if (holds_alternative<int>(param.value)) {
 					s.insert(insert_place, to_string(get<int>(param.value)));
 				} else if (holds_alternative<Table>(param.value)) {
-					s.insert(insert_place,
-							 log_table(get<Table>(param.value)));
+					s.insert(insert_place, log_table(get<Table>(param.value)));
 				} else if (holds_alternative<Plot>(param.value)) {
 					s.insert(insert_place, log_plot(get<Plot>(param.value)));
 				}
@@ -138,23 +135,28 @@ string LogTemplate::render() const {
 	return outstr;
 }
 
-
-unordered_map<Decoration, pair<string, bool>> decor_data = {
-	{italic, {"\\textit", false}}, {regexstyle, {"\\regexpstr", true}}, {typewriter, {"\\ttfamily", false}}, {roman, {"\\mathrm", true}}};
+unordered_map<Decoration, pair<string, bool>> decor_data = {{italic, {"\\textit", false}},
+															{regexstyle, {"\\regexpstr", true}},
+															{typewriter, {"\\ttfamily", false}},
+															{roman, {"\\mathrm", true}}};
 
 string math_switcher(bool modifier, bool mathmode) {
-	if (modifier && !mathmode) { 
+	if (modifier && !mathmode) {
 		return "$";
-	} else return "";
+	} else
+		return "";
 }
 
-unordered_map<TextSize, string> textsize_to_str = {
-	{footnote, "\\footnotesize"}, {small, "\\small"}, {normal, "\\normalsize"}, {large, "\\large"}, {none, ""}};
+unordered_map<TextSize, string> textsize_to_str = {{footnote, "\\footnotesize"},
+												   {small, "\\small"},
+												   {normal, "\\normalsize"},
+												   {large, "\\large"},
+												   {none, ""}};
 
 string decorate_element(string label, Decoration d, TextSize s, bool in_math) {
-  string mode_switcher = math_switcher(decor_data.at(d).second, in_math);
-  return "{" + textsize_to_str.at(s) + mode_switcher
-		 + decor_data.at(d).first + "{" + label + "}" + mode_switcher + "}"; 
+	string mode_switcher = math_switcher(decor_data.at(d).second, in_math);
+	return "{" + textsize_to_str.at(s) + mode_switcher + decor_data.at(d).first + "{" + label +
+		   "}" + mode_switcher + "}";
 }
 
 string LogTemplate::math_mode(string str) {
@@ -227,48 +229,41 @@ string LogTemplate::log_plot(Plot p) {
 	if (p.data.size()) {
 		styles.push_back(p.data[0].second);
 		styling = p.data[0].second;
-		legenda = p.data[0].second + " = {label in legend={text="
-				   + decorate_element(p.data[0].second, regexstyle, none, false)
-				   + "}},\n";
+		legenda = p.data[0].second + " = {label in legend={text=" +
+				  decorate_element(p.data[0].second, regexstyle, none, false) + "}},\n";
 		max_x = unsigned(p.data[0].first.first);
 		max_y = unsigned(p.data[0].first.second);
 	}
 	for (int i = 1; i < p.data.size(); i++) {
-		if (find(styles.begin(), styles.end(), p.data[i].second) ==
-			styles.end()) {
+		if (find(styles.begin(), styles.end(), p.data[i].second) == styles.end()) {
 			styles.push_back(p.data[i].second);
 			styling += ", " + p.data[i].second;
-			legenda += p.data[i].second +
-					   " = {label in legend={text=" 
-					   + decorate_element(p.data[i].second, regexstyle, none, false)
-					   + "}},\n";
+			legenda += p.data[i].second + " = {label in legend={text=" +
+					   decorate_element(p.data[i].second, regexstyle, none, false) + "}},\n";
 		}
 		if (max_x < p.data[i].first.first) max_x = p.data[i].first.first;
 		if (max_y < p.data[i].first.second) max_y = p.data[i].first.second;
 	}
-	max_x =
-		std::ceil((max_x * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
+	max_x = std::ceil((max_x * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
 	if (max_x > 10) {
 		max_x = std::floor(max_x / 10) * 10;
 	}
-	max_y =
-		std::ceil((max_y * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
+	max_y = std::ceil((max_y * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
 	if (max_y > 10) {
 		max_y = std::floor(max_y / 10) * 10;
 	}
-	visualization =
-		"\\begin{tikzpicture}\\scriptsize \%begin_plot\n "
-		"\\datavisualization[scientific axes=clean, visualize as line/.list={" +
-		styling + "},\n x axis={ticks={step=" + to_string(max_x) +
-		"}, label=" + decorate_element("длина слова", italic, footnote, false) + "}, y axis={ticks={step=" +
-		to_string(max_y) + "}, label=" + decorate_element("шаги", italic, footnote, false) + "},\n" +
-		legenda +
-		"style sheet = vary hue, style sheet = vary dashing]\n "
-		"data[headline={x, y, set}] {\n";
+	visualization = "\\begin{tikzpicture}\\scriptsize \%begin_plot\n "
+					"\\datavisualization[scientific axes=clean, visualize as line/.list={" +
+					styling + "},\n x axis={ticks={step=" + to_string(max_x) +
+					"}, label=" + decorate_element("длина слова", italic, footnote, false) +
+					"}, y axis={ticks={step=" + to_string(max_y) +
+					"}, label=" + decorate_element("шаги", italic, footnote, false) + "},\n" +
+					legenda +
+					"style sheet = vary hue, style sheet = vary dashing]\n "
+					"data[headline={x, y, set}] {\n";
 	for (int i = 0; i < p.data.size(); i++) {
 		visualization += to_string(p.data[i].first.first) + ", " +
-						 to_string(p.data[i].first.second) + ", " +
-						 p.data[i].second + "\n";
+						 to_string(p.data[i].first.second) + ", " + p.data[i].second + "\n";
 	}
 	visualization += "};\n \\end{tikzpicture} \%end_plot\n\n";
 	return visualization;

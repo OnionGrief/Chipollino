@@ -1,36 +1,34 @@
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "Objects/FiniteAutomaton.h"
+#include "Objects/MetaInfo.h"
 #include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 #include <sstream>
 #include <string>
-#include <variant>
 #include <unordered_map>
+#include <variant>
 
 using namespace std;
 
 enum Decoration {
-			italic,
-			regexstyle,
-			typewriter,
-			roman	
-		};
+	italic,
+	regexstyle,
+	typewriter,
+	roman
+};
 
 enum TextSize {
-			footnote,
-			small,
-			normal,
-			large,
-			none	
-		};
-
+	footnote,
+	small,
+	normal,
+	large,
+	none
+};
 
 class LogTemplate : public iLogTemplate {
 
-
   public:
-	void set_parameter(const string& key, const LogObject& value,
-					   string meta = "");
+	void set_parameter(const string& key, const LogObject& value, const MetaInfo& meta = {});
 	void set_theory_flag(bool value);
 
 	// Рендерит все логи, возвращает строку
@@ -57,7 +55,7 @@ class LogTemplate : public iLogTemplate {
 	// Стуктура для хранения параметров
 	struct LogParameter {
 		LogObject value;
-		string meta; /* Дополнительные данные о структуре, которые не кэшируются
+		MetaInfo meta; /* Дополнительные данные о структуре, которые не кэшируются
 						(раскраска) */
 	};
 
@@ -77,5 +75,4 @@ class LogTemplate : public iLogTemplate {
 	static string log_plot(Plot p /*vector<<int,long>,string>*/);
 	// Рекурсивно раскрывает include-выражения в файле
 	stringstream expand_includes(string filename) const;
-
 };

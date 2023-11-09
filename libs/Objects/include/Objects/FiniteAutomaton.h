@@ -34,8 +34,7 @@ struct expression_arden {
 
 class FiniteAutomaton : public AbstractMachine {
   public:
-	enum AmbiguityValue
-	{
+	enum AmbiguityValue {
 		exponentially_ambiguous,
 		almost_unambigious,
 		unambigious,

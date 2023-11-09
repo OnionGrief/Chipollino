@@ -32,12 +32,12 @@ void remove_file(string dir, string file, bool guarded = false) {
 	stringstream command;
 	command << "cd " << dir;
 #ifdef _WIN32
-	if (guarded)  
-		command << " && IF EXIST " << file << " DEL " << file ;
+	if (guarded)
+		command << " && IF EXIST " << file << " DEL " << file;
 	else
 		command << " && DEL " << file;
 #elif __unix || __unix__ || __linux__
-	if (guarded)  
+	if (guarded)
 		command << " && rm -f " << file;
 	else
 		command << " && rm " << file;
@@ -128,4 +128,3 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 
 	return graph.str();
 }
-

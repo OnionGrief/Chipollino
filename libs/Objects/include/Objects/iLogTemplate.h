@@ -1,4 +1,5 @@
 #pragma once
+#include "Objects/MetaInfo.h"
 #include <string>
 #include <variant>
 
@@ -19,9 +20,8 @@ class iLogTemplate {
 		vector<pair<pair<int, long>, string>> data;
 	};
 
-  using LogObject = variant<FiniteAutomaton, Regex, string, int, Table, Plot>;
+	using LogObject = variant<FiniteAutomaton, Regex, string, int, Table, Plot>;
 
 	virtual void set_parameter(const string& key, const LogObject& value,
-							   string meta = "") = 0;
-
+							   const MetaInfo& meta = {}) = 0;
 };

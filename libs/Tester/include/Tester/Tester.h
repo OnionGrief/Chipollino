@@ -32,8 +32,8 @@ class Tester {
 	using ParseDevice = variant<FiniteAutomaton, Regex>;
 
   public:
-	static void test(const ParseDevice& language, const Regex& regex,
-					 int iteration_step, iLogTemplate* log = nullptr);
+	static void test(const ParseDevice& language, const Regex& regex, int iteration_step,
+					 iLogTemplate* log = nullptr);
 	/*	static void test(const Regex& language, const Regex& regex,
 						 int iteration_step, iLogTemplate* log = nullptr); */
 };

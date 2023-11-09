@@ -1,7 +1,6 @@
 #include "Tester/Tester.h"
 
-void Tester::test(const ParseDevice& lang, const Regex& regex, int step,
-				  iLogTemplate* log) {
+void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTemplate* log) {
 	iLogTemplate::Table t;
 	iLogTemplate::Plot plot;
 	vector<long> steps;
@@ -17,12 +16,8 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step,
 		labels.push_back("Thompson");
 		machines.push_back(value.to_glushkov());
 		labels.push_back("Glushkov");
-		machines.push_back(machines[1]
-							   .reverse()
-							   .merge_bisimilar()
-							   .reverse()
-							   .merge_bisimilar()
-							   .remove_eps());
+		machines.push_back(
+			machines[1].reverse().merge_bisimilar().reverse().merge_bisimilar().remove_eps());
 		labels.push_back("Small NFA");
 		machines.push_back(machines[2].minimize().remove_trap_states());
 		labels.push_back("Minimal DFA");
@@ -49,8 +44,7 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step,
 			belongs = machines[type].parsing_by_nfa(word, counter);
 			const auto end = clock::now();
 			const long long elapsed =
-				std::chrono::duration_cast<std::chrono::milliseconds>(end -start)
-					.count();
+				std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 			double time = (double)elapsed / 1000;
 			steps.push_back(counter);
 			words.push_back(word.length());
@@ -68,8 +62,7 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step,
 			if (time >= 180) break;
 		}
 		for (int i = 0; i < steps.size(); i++) {
-			plot.data.push_back(
-				make_pair(make_pair(words[i], int(steps[i])), labels[type]));
+			plot.data.push_back(make_pair(make_pair(words[i], int(steps[i])), labels[type]));
 		}
 	}
 	t.columns.push_back("Количество итераций");
