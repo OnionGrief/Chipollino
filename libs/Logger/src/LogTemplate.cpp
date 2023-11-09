@@ -223,26 +223,18 @@ string LogTemplate::math_mode(string str) {
 }
 
 string LogTemplate::log_plot(Plot p) {
-	size_t max_x, max_y;
+	size_t max_x = 0, max_y = 0;
 	string visualization = "", styling, legenda;
 	vector<string> styles;
-	if (p.data.size()) {
-		styles.push_back(p.data[0].second);
-		styling = p.data[0].second;
-		legenda = p.data[0].second + " = {label in legend={text=" +
-				  decorate_element(p.data[0].second, regexstyle, none, false) + "}},\n";
-		max_x = unsigned(p.data[0].first.first);
-		max_y = unsigned(p.data[0].first.second);
-	}
-	for (int i = 1; i < p.data.size(); i++) {
+	for (int i = 0; i < p.data.size(); i++) {
 		if (find(styles.begin(), styles.end(), p.data[i].second) == styles.end()) {
 			styles.push_back(p.data[i].second);
-			styling += ", " + p.data[i].second;
+			styling += (i == 0 ? "" : ", ") + p.data[i].second;
 			legenda += p.data[i].second + " = {label in legend={text=" +
 					   decorate_element(p.data[i].second, regexstyle, none, false) + "}},\n";
 		}
-		if (max_x < p.data[i].first.first) max_x = p.data[i].first.first;
-		if (max_y < p.data[i].first.second) max_y = p.data[i].first.second;
+		if (max_x < p.data[i].first.first) max_x = unsigned(p.data[i].first.first);
+		if (max_y < p.data[i].first.second) max_y = unsigned(p.data[i].first.second);
 	}
 	max_x = std::ceil((max_x * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
 	if (max_x > 10) {
