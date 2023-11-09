@@ -15,6 +15,7 @@ class AlgExpression : public BaseObject {
 			alt,	   // |
 			conc,	   // .
 			star,	   // *
+			minus, 	   // ^
 			symb,	   // alphabet symbol
 			eps,	   // Epsilon
 			squareBrL, // [
@@ -38,6 +39,7 @@ class AlgExpression : public BaseObject {
 		conc,
 		// Unary:
 		star,
+		minus,
 		// Terminal:
 		symb,
 		// [i]
@@ -86,7 +88,8 @@ class AlgExpression : public BaseObject {
 	AlgExpression* scan_symb(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_eps(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_par(const vector<Lexeme>&, int, int);
-	static bool update_balance(const AlgExpression::Lexeme&, int&);
+	AlgExpression* scan_minus(const vector<Lexeme>&, int, int);
+	static void update_balance(const AlgExpression::Lexeme&, int&);
 
 	// список листьев дерева regex
 	vector<AlgExpression*> pre_order_travers();

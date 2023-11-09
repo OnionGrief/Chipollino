@@ -111,6 +111,9 @@ string AlgExpression::to_txt() const {
 			// ставим скобки при итерации, если символов > 1
 			str1 = "(" + str1 + ")";
 		break;
+	case Type::minus:
+		symb = '^';
+		return symb + str1;
 	default:
 		break;
 	}
@@ -161,6 +164,8 @@ string AlgExpression::type_to_str() const {
 		return "*";
 	case Type::symb:
 		return "symb";
+	case Type::minus:
+		return "^";
 	default:
 		break;
 	}
@@ -235,6 +240,9 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		char c = str[index];
 		Lexeme lexeme;
 		switch (c) {
+		case '^':
+			lexeme.type = Lexeme::Type::minus;
+			break;
 		case '(':
 			lexeme.type = Lexeme::Type::parL;
 			brackets_checker.push('(');
@@ -330,7 +338,8 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			(
 				// AlgExpression::Lexeme right
 				lexeme.type == Lexeme::Type::symb || lexeme.type == Lexeme::Type::parL ||
-				lexeme.type == Lexeme::Type::squareBrL || lexeme.type == Lexeme::Type::ref)) {
+				lexeme.type == Lexeme::Type::squareBrL || lexeme.type == Lexeme::Type::ref ||
+				lexeme.type == Lexeme::Type::minus)) {
 			// We place . between
 			lexemes.emplace_back(Lexeme::Type::conc);
 		}
@@ -411,33 +420,60 @@ bool AlgExpression::from_string(const string& str) {
 AlgExpression* AlgExpression::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start,
 								   int index_end) {
 	AlgExpression* p;
-	p = scan_alt(lexemes, index_start, index_end);
+	p = scan_symb(lexemes, index_start, index_end);
+	if (!p) {
+		p = scan_eps(lexemes, index_start, index_end);
+	}
+
+	if (!p) {
+		p = scan_alt(lexemes, index_start, index_end);
+	}
 	if (!p) {
 		p = scan_conc(lexemes, index_start, index_end);
+	}
+	if (!p) {
+		p = scan_minus(lexemes, index_start, index_end);
 	}
 	if (!p) {
 		p = scan_star(lexemes, index_start, index_end);
 	}
 	if (!p) {
-		p = scan_symb(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_eps(lexemes, index_start, index_end);
-	}
-	if (!p) {
 		p = scan_par(lexemes, index_start, index_end);
 	}
+	
 	return p;
 }
 
-bool AlgExpression::update_balance(const AlgExpression::Lexeme& l, int& balance) {
+void AlgExpression::update_balance(const AlgExpression::Lexeme& l, int& balance) {
 	if (l.type == Lexeme::Type::parL || l.type == Lexeme::Type::squareBrL) {
 		balance++;
 	}
 	if (l.type == Lexeme::Type::parR || l.type == Lexeme::Type::squareBrR) {
 		balance--;
 	}
-	return balance >= 0;
+	return;
+}
+
+AlgExpression* AlgExpression::scan_minus(const vector<AlgExpression::Lexeme>& lexemes,
+										int index_start, int index_end) {
+	AlgExpression* p = nullptr;
+
+	if (lexemes[index_start].type != Lexeme::Type::minus) {
+		return nullptr;
+	}
+
+	AlgExpression* l = expr(lexemes, index_start + 1, index_end);
+	if (l == nullptr) {
+		delete l;
+		return nullptr;
+	}
+	p = make();
+	p->term_l = l;
+	p->value = lexemes[index_start];
+	p->type = minus;
+
+	p->alphabet = l->alphabet;
+	return p;									
 }
 
 AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lexemes,
@@ -445,8 +481,7 @@ AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lex
 	AlgExpression* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (!update_balance(lexemes[i], balance))
-			return nullptr;
+		update_balance(lexemes[i], balance);
 		if (lexemes[i].type == Lexeme::Type::conc && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
 			AlgExpression* r = expr(lexemes, i + 1, index_end);
@@ -477,8 +512,7 @@ AlgExpression* AlgExpression::scan_star(const vector<AlgExpression::Lexeme>& lex
 	AlgExpression* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (!update_balance(lexemes[i], balance))
-			return nullptr;
+		update_balance(lexemes[i], balance);
 		if (lexemes[i].type == Lexeme::Type::star && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
 			if (l == nullptr || l->type == AlgExpression::eps) {
@@ -503,8 +537,7 @@ AlgExpression* AlgExpression::scan_alt(const vector<AlgExpression::Lexeme>& lexe
 	AlgExpression* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (!update_balance(lexemes[i], balance))
-			return nullptr;
+		update_balance(lexemes[i], balance);
 		if (lexemes[i].type == Lexeme::Type::alt && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
 			AlgExpression* r = expr(lexemes, i + 1, index_end);
