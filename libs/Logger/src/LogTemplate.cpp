@@ -222,8 +222,13 @@ string LogTemplate::math_mode(string str) {
 	return str_math;
 }
 
+int step_size(int maxscale, int objsize, int datasize) {
+	int step = std::ceil((maxscale * (static_cast<int>(objsize) + 3)) / max(static_cast<int>(datasize) - 2, 1));
+	return (step > 10 ? std::floor(step / 10) * 10 : step);	
+}
+
 string LogTemplate::log_plot(Plot p) {
-	size_t max_x = 0, max_y = 0;
+	int max_x = 0, max_y = 0;
 	string visualization = "", styling, legenda;
 	vector<string> styles;
 	for (int i = 0; i < p.data.size(); i++) {
@@ -233,22 +238,14 @@ string LogTemplate::log_plot(Plot p) {
 			legenda += p.data[i].second + " = {label in legend={text=" +
 					   decorate_element(p.data[i].second, regexstyle, none, false) + "}},\n";
 		}
-		if (max_x < p.data[i].first.first) max_x = unsigned(p.data[i].first.first);
-		if (max_y < p.data[i].first.second) max_y = unsigned(p.data[i].first.second);
-	}
-	max_x = std::ceil((max_x * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
-	if (max_x > 10) {
-		max_x = std::floor(max_x / 10) * 10;
-	}
-	max_y = std::ceil((max_y * (styles.size() + 3)) / max(p.data.size() - 2, size_t(1)));
-	if (max_y > 10) {
-		max_y = std::floor(max_y / 10) * 10;
+		if (max_x < p.data[i].first.first) max_x = p.data[i].first.first;
+		if (max_y < p.data[i].first.second) max_y = p.data[i].first.second;
 	}
 	visualization = "\\begin{tikzpicture}\\scriptsize \%begin_plot\n "
 					"\\datavisualization[scientific axes=clean, visualize as line/.list={" +
-					styling + "},\n x axis={ticks={step=" + to_string(max_x) +
+					styling + "},\n x axis={ticks={step=" + to_string(step_size(max_x, styles.size(), p.data.size())) +
 					"}, label=" + decorate_element("длина слова", italic, footnote, false) +
-					"}, y axis={ticks={step=" + to_string(max_y) +
+					"}, y axis={ticks={step=" + to_string(step_size(max_y, styles.size(), p.data.size())) +
 					"}, label=" + decorate_element("шаги", italic, footnote, false) + "},\n" +
 					legenda +
 					"style sheet = vary hue, style sheet = vary dashing]\n "
