@@ -10,6 +10,14 @@
 #include "gtest/gtest.h"
 #include <functional>
 
+TEST(TestCaseName, Test_regex_minus) {
+	string str = "^(c^(a^(b)d))e";
+	Regex r1(str);
+	string r1_str = r1.to_txt();
+	Regex r2(r1_str);
+	ASSERT_EQ(true, Regex::equivalent(r1, r2));
+}
+
 TEST(TestCaseName, Test_random_regex_parsing) {
 	RegexGenerator rg(15, 10, 5, 3);
 	for (int i = 0; i < 30; i++) {

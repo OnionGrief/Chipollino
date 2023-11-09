@@ -92,7 +92,7 @@ string AlgExpression::to_txt() const {
 		if (term_l && term_l->type == Type::alt) {
 			str1 = "(" + str1 + ")";
 		}
-		if (term_r && term_l->type == Type::alt) {
+		if (term_r && term_r->type == Type::alt) {
 			str2 = "(" + str2 + ")";
 		}
 		break;
