@@ -65,7 +65,7 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 			plot.data.push_back(make_pair(make_pair(words[i], int(steps[i])), labels[type]));
 		}
 	}
-	t.columns.push_back("Количество итераций");
+	t.columns.push_back("Шаги");
 	t.columns.push_back("Длина строки");
 	t.columns.push_back("Время парсинга");
 	t.columns.push_back("Принадлежность языку");

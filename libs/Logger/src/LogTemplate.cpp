@@ -224,7 +224,7 @@ string LogTemplate::math_mode(string str) {
 
 int step_size(int maxscale, size_t objsize, size_t datasize) {
 	int step = std::ceil((maxscale * (static_cast<int>(objsize) + 3)) / max(static_cast<int>(datasize) - 2, 1));
-	return (step > 10 ? std::floor(step / 10) * 10 : step);	
+	return (step > 10 ? std::floor(step / 10) * 10 : max(step, 1));	
 }
 
 string LogTemplate::log_plot(Plot p) {
