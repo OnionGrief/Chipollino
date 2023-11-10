@@ -27,10 +27,10 @@ string colorize_edge(int from_ind, int to_id, alphabet_symbol by, int group_id) 
 void MetaInfo::mark_transitions(const FiniteAutomaton& fa, set<int> from, set<int> to,
 							   alphabet_symbol by, int group_id) {
 	for (auto elem : from)
-		for (auto trans : fa.states[elem].transitions) {
-			for (auto reach : trans.second)
-				if (to.find(reach) != to.end() && (trans.first == by))
-					this->upd(EdgeMeta{fa.states[elem].index, reach, trans.first, group_id});
+		for (auto [rune, reach_set] : fa.states[elem].transitions) {
+			for (auto reach : reach_set)
+				if (to.find(reach) != to.end() && (rune == by))
+					this->upd(EdgeMeta{fa.states[elem].index, reach, rune, group_id});
 		}
 }
 
