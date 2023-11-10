@@ -72,6 +72,55 @@ template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs) {
 	return regexPointers;
 }
 
+Regex* Regex::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start,
+								   int index_end) {
+	AlgExpression* p;
+	p = scan_symb(lexemes, index_start, index_end);
+	if (!p) {
+		p = scan_eps(lexemes, index_start, index_end);
+	}
+
+	if (!p) {
+		p = scan_alt(lexemes, index_start, index_end);
+	}
+	if (!p) {
+		p = scan_conc(lexemes, index_start, index_end);
+	}
+	if (!p) {
+		p = scan_minus(lexemes, index_start, index_end);
+	}
+	if (!p) {
+		p = scan_star(lexemes, index_start, index_end);
+	}
+	if (!p) {
+		p = scan_par(lexemes, index_start, index_end);
+	}
+	
+	return cast(p);
+}
+
+Regex* Regex::scan_minus(const vector<AlgExpression::Lexeme>& lexemes,
+										 int index_start, int index_end) {
+	Regex* p = nullptr;
+
+	if (lexemes[index_start].type != Lexeme::Type::negative) {
+		return nullptr;
+	}
+
+	Regex* l = expr(lexemes, index_start + 1, index_end);
+	if (l == nullptr) {
+		delete l;
+		return nullptr;
+	}
+	p = make();
+	p->term_l = l;
+	p->value = lexemes[index_start];
+	p->type = negative;
+
+	p->alphabet = l->alphabet;
+	return p;
+}
+
 // возвращает пару <вектор сотсояний, max_index>
 pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 	string str;			  // идентификатор состояния

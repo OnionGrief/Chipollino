@@ -36,6 +36,11 @@ class Regex : public AlgExpression {
 	void normalize_this_regex(const vector<pair<Regex, Regex>>&); // переписывание regex по
 																  // пользовательским правилам
 
+	// Построение из вектора лексем дерева регулярного выражения
+	// 2 и 3 аргумент - это начальный и конечный индекс рассматриваемых лексем в векторе
+	Regex* expr(const vector<Lexeme>&, int, int) override;
+	Regex* scan_minus(const vector<Lexeme>&, int, int);
+
   public:
 	Regex() = default;
 	Regex(const string&);

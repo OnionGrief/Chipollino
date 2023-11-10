@@ -1,18 +1,6 @@
-#include "AutomatonToImage/AutomatonToImage.h"
-#include "InputGenerator/RegexGenerator.h"
-#include "Interpreter/Interpreter.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Grammar.h"
-#include "Objects/Language.h"
-#include "Objects/Regex.h"
-#include "Objects/TransformationMonoid.h"
-#include "Tester/Tester.h"
-#include "gtest/gtest.h"
-#include <functional>
+#include "UnitTestsApp/UnitTests.h"
 
 TEST(ParseStringTest, Test_regex_lexer) {
-	using L = AlgExpression::Lexeme::Type;
-
 	struct Test {
 		string regex_str;
 		bool want_err;
@@ -30,6 +18,13 @@ TEST(ParseStringTest, Test_regex_lexer) {
 		{"&", true},
 		{"&1", false, 1},
 		{"[b[a]:1&1]:2&2", false, 11},
+		// тесты на отрицание
+		{"^a", false, 2},
+		{"a^|b", true},
+		{"d^*^b", true},
+		{"d|^|b", true},
+		{"a^", false, 4}, // a . ^ eps
+		{"a|(c^)", false, 8}, // a | ( c . ^ eps )
 	};
 
 	for (const auto& t : tests) {
@@ -37,13 +32,13 @@ TEST(ParseStringTest, Test_regex_lexer) {
 		message << "Case: " << t.regex_str << ", WantErr: " << t.want_err;
 		SCOPED_TRACE(message.str());
 
-		vector<AlgExpression::Lexeme> l = AlgExpression::parse_string(t.regex_str);
+		vector<UnitTests::Lexeme> l = UnitTests::parse_string(t.regex_str);
 		ASSERT_FALSE(l.empty());
 
 		if (t.want_err) {
-			ASSERT_EQ(L::error, l[0].type);
+			ASSERT_EQ(UnitTests::LexemeType::error, l[0].type);
 		} else {
-			ASSERT_NE(L::error, l[0].type);
+			ASSERT_NE(UnitTests::LexemeType::error, l[0].type);
 			ASSERT_EQ(t.lexemes_len, l.size());
 			// TODO: добавить проверку содержимого l
 		}

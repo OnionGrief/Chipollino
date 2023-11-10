@@ -111,7 +111,7 @@ string AlgExpression::to_txt() const {
 			// ставим скобки при итерации, если символов > 1
 			str1 = "(" + str1 + ")";
 		break;
-	case Type::minus:
+	case Type::negative:
 		symb = '^';
 		return symb + str1;
 	default:
@@ -164,7 +164,7 @@ string AlgExpression::type_to_str() const {
 		return "*";
 	case Type::symb:
 		return "symb";
-	case Type::minus:
+	case Type::negative:
 		return "^";
 	default:
 		break;
@@ -241,7 +241,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		Lexeme lexeme;
 		switch (c) {
 		case '^':
-			lexeme.type = Lexeme::Type::minus;
+			lexeme.type = Lexeme::Type::negative;
 			break;
 		case '(':
 			lexeme.type = Lexeme::Type::parL;
@@ -284,11 +284,14 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			brackets_are_empty = false;
 			break;
 		case '|':
+			if (index != 0 && lexemes.back().type == Lexeme::Type::negative)
+				return {Lexeme::Type::error};
 			lexeme.type = Lexeme::Type::alt;
 			break;
 		case '*':
 			if (index == 0 || (index != 0 && (lexemes.back().type == Lexeme::Type::star ||
-											  lexemes.back().type == Lexeme::Type::alt)))
+											  lexemes.back().type == Lexeme::Type::alt ||
+											  lexemes.back().type == Lexeme::Type::negative)))
 				return {Lexeme::Type::error};
 			lexeme.type = Lexeme::Type::star;
 			break;
@@ -339,7 +342,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 				// AlgExpression::Lexeme right
 				lexeme.type == Lexeme::Type::symb || lexeme.type == Lexeme::Type::parL ||
 				lexeme.type == Lexeme::Type::squareBrL || lexeme.type == Lexeme::Type::ref ||
-				lexeme.type == Lexeme::Type::minus)) {
+				lexeme.type == Lexeme::Type::negative)) {
 			// We place . between
 			lexemes.emplace_back(Lexeme::Type::conc);
 		}
@@ -348,7 +351,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			((lexeme.type == Lexeme::Type::alt &&
 			  (lexemes.back().type == Lexeme::Type::parL ||
 			   lexemes.back().type == Lexeme::Type::squareBrL)) ||
-			 (lexemes.back().type == Lexeme::Type::alt &&
+			 ((lexemes.back().type == Lexeme::Type::alt || lexemes.back().type == Lexeme::Type::negative) &&
 			  (lexeme.type == Lexeme::Type::parR || lexeme.type == Lexeme::Type::squareBrR ||
 			   lexeme.type == Lexeme::Type::alt)))) {
 			//  We place eps between
@@ -386,7 +389,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		lexemes.insert(lexemes.begin(), {Lexeme::Type::eps});
 	}
 
-	if (lexemes.back().type == Lexeme::Type::alt) {
+	if (lexemes.back().type == Lexeme::Type::alt || lexemes.back().type == Lexeme::Type::negative) {
 		lexemes.emplace_back(Lexeme::Type::eps);
 	}
 
@@ -432,9 +435,6 @@ AlgExpression* AlgExpression::expr(const vector<AlgExpression::Lexeme>& lexemes,
 		p = scan_conc(lexemes, index_start, index_end);
 	}
 	if (!p) {
-		p = scan_minus(lexemes, index_start, index_end);
-	}
-	if (!p) {
 		p = scan_star(lexemes, index_start, index_end);
 	}
 	if (!p) {
@@ -451,28 +451,6 @@ void AlgExpression::update_balance(const AlgExpression::Lexeme& l, int& balance)
 	if (l.type == Lexeme::Type::parR || l.type == Lexeme::Type::squareBrR) {
 		balance--;
 	}
-}
-
-AlgExpression* AlgExpression::scan_minus(const vector<AlgExpression::Lexeme>& lexemes,
-										 int index_start, int index_end) {
-	AlgExpression* p = nullptr;
-
-	if (lexemes[index_start].type != Lexeme::Type::minus) {
-		return nullptr;
-	}
-
-	AlgExpression* l = expr(lexemes, index_start + 1, index_end);
-	if (l == nullptr) {
-		delete l;
-		return nullptr;
-	}
-	p = make();
-	p->term_l = l;
-	p->value = lexemes[index_start];
-	p->type = minus;
-
-	p->alphabet = l->alphabet;
-	return p;
 }
 
 AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lexemes,
