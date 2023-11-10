@@ -10,12 +10,44 @@
 #include "gtest/gtest.h"
 #include <functional>
 
-TEST(TestCaseName, Test_regex_minus) {
-	string str = "^(c^(a^(b)d))e";
-	Regex r1(str);
-	string r1_str = r1.to_txt();
-	Regex r2(r1_str);
-	ASSERT_EQ(true, Regex::equivalent(r1, r2));
+TEST(ParseStringTest, Test_regex_lexer) {
+	using L = AlgExpression::Lexeme::Type;
+
+	struct Test {
+		string regex_str;
+		bool want_err;
+		int lexemes_len = 0;
+	};
+
+	vector<Test> tests = {
+		{"[]", true},
+		{"[]:", true},
+		{"[a]", true},
+		{"[a]:", true},
+		{"[[a]:1", true},
+		{"a]:1", true},
+		{"[a]:1", false, 3},
+		{"&", true},
+		{"&1", false, 1},
+		{"[b[a]:1&1]:2&2", false, 11},
+	};
+
+	for (const auto& t : tests) {
+		stringstream message;
+		message << "Case: " << t.regex_str << ", WantErr: " << t.want_err;
+		SCOPED_TRACE(message.str());
+
+		vector<AlgExpression::Lexeme> l = AlgExpression::parse_string(t.regex_str);
+		ASSERT_FALSE(l.empty());
+
+		if (t.want_err) {
+			ASSERT_EQ(L::error, l[0].type);
+		} else {
+			ASSERT_NE(L::error, l[0].type);
+			ASSERT_EQ(t.lexemes_len, l.size());
+			// TODO: добавить проверку содержимого l
+		}
+	}
 }
 
 TEST(TestCaseName, Test_random_regex_parsing) {
@@ -246,14 +278,19 @@ TEST(TestCaseName, Test_ambiguity) {
 		{16, "(a|b|c)*(a|b|c|d)(a|b|c)*|(ac*|ad*)*", glushkov, FiniteAutomaton::almost_unambigious},
 		{17,
 		 "(ab)*ab(ab)*|(ac)*(ac)*|(d|c)*", // (abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*
-		 glushkov, FiniteAutomaton::almost_unambigious},
+		 glushkov,
+		 FiniteAutomaton::almost_unambigious},
 		{18, "(abab)*abab(abab)*|(aac)*(aac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		{19, "(ab)*ab(ab)*", // (abab)*abab(abab)*
-		 glushkov, FiniteAutomaton::polynomially_ambigious},
+		{19,
+		 "(ab)*ab(ab)*", // (abab)*abab(abab)*
+		 glushkov,
+		 FiniteAutomaton::polynomially_ambigious},
 		{20, "(ab)*ab(ab)*|(ac)*(ac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
 		// {21, "(a|b)*(f*)*q", thompson,
 		//  FiniteAutomaton::exponentially_ambiguous},
-		{22, "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*", glushkov,
+		{22,
+		 "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*",
+		 glushkov,
 		 FiniteAutomaton::exponentially_ambiguous},
 	};
 

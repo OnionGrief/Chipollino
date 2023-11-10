@@ -8,3 +8,4 @@ SpaceBeforeParens: ControlStatements
 AllowShortFunctionsOnASingleLine: Empty
 AlignAfterOpenBracket: Align
 ColumnLimit: 100
+BinPackArguments: false

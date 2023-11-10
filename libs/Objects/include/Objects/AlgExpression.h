@@ -2,10 +2,13 @@
 
 #include "BaseObject.h"
 #include "iLogTemplate.h"
+#include "gtest/gtest.h"
 #include <map>
 #include <unordered_map>
 
 class AlgExpression : public BaseObject {
+	FRIEND_TEST(ParseStringTest, Test_regex_lexer);
+
   protected:
 	struct Lexeme {
 		enum Type {
@@ -15,7 +18,7 @@ class AlgExpression : public BaseObject {
 			alt,	   // |
 			conc,	   // .
 			star,	   // *
-			minus, 	   // ^
+			minus,	   // ^
 			symb,	   // alphabet symbol
 			eps,	   // Epsilon
 			squareBrL, // [

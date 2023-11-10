@@ -402,7 +402,7 @@ bool AlgExpression::from_string(const string& str) {
 		return true;
 	}
 
-	vector<Regex::Lexeme> l = parse_string(str);
+	vector<Lexeme> l = parse_string(str);
 	AlgExpression* root = expr(l, 0, l.size());
 
 	if (root == nullptr || root->type == eps) {
@@ -440,7 +440,7 @@ AlgExpression* AlgExpression::expr(const vector<AlgExpression::Lexeme>& lexemes,
 	if (!p) {
 		p = scan_par(lexemes, index_start, index_end);
 	}
-	
+
 	return p;
 }
 
@@ -451,11 +451,10 @@ void AlgExpression::update_balance(const AlgExpression::Lexeme& l, int& balance)
 	if (l.type == Lexeme::Type::parR || l.type == Lexeme::Type::squareBrR) {
 		balance--;
 	}
-	return;
 }
 
 AlgExpression* AlgExpression::scan_minus(const vector<AlgExpression::Lexeme>& lexemes,
-										int index_start, int index_end) {
+										 int index_start, int index_end) {
 	AlgExpression* p = nullptr;
 
 	if (lexemes[index_start].type != Lexeme::Type::minus) {
@@ -473,7 +472,7 @@ AlgExpression* AlgExpression::scan_minus(const vector<AlgExpression::Lexeme>& le
 	p->type = minus;
 
 	p->alphabet = l->alphabet;
-	return p;									
+	return p;
 }
 
 AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lexemes,
@@ -638,15 +637,19 @@ bool AlgExpression::contains_eps() const {
 }
 
 bool AlgExpression::equality_checker(const AlgExpression* expr1, const AlgExpression* expr2) {
-	if (expr1 == nullptr && expr2 == nullptr) return true;
-	if (expr1 == nullptr || expr2 == nullptr) return false;
-	if (expr1->value.type != expr2->value.type) return false;
+	if (expr1 == nullptr && expr2 == nullptr)
+		return true;
+	if (expr1 == nullptr || expr2 == nullptr)
+		return false;
+	if (expr1->value.type != expr2->value.type)
+		return false;
 
 	if (expr1->value.type == Lexeme::Type::symb) {
 		alphabet_symbol r1_symb, r2_symb;
 		r1_symb = expr1->value.symbol;
 		r2_symb = expr2->value.symbol;
-		if (r1_symb != r2_symb) return false;
+		if (r1_symb != r2_symb)
+			return false;
 	}
 
 	if (equality_checker(expr1->term_l, expr2->term_l) &&
