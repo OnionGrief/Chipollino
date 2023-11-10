@@ -40,18 +40,18 @@ Regex* Regex::make() const {
 	return new Regex;
 }
 
-template <typename T> Regex* Regex::cast(T* ptr) {
+template <typename T> Regex* Regex::cast(T* ptr, bool NotNullPtr) {
 	auto* r = dynamic_cast<Regex*>(ptr);
-	if (!r) {
+	if (!r && NotNullPtr) {
 		throw runtime_error("Failed to cast to Regex");
 	}
 
 	return r;
 }
 
-template <typename T> const Regex* Regex::cast(const T* ptr) {
+template <typename T> const Regex* Regex::cast(const T* ptr, bool NotNullPtr) {
 	auto* r = dynamic_cast<const Regex*>(ptr);
-	if (!r) {
+	if (!r && NotNullPtr) {
 		throw runtime_error("Failed to cast to Regex");
 	}
 
@@ -96,7 +96,7 @@ Regex* Regex::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start
 		p = scan_par(lexemes, index_start, index_end);
 	}
 	
-	return cast(p);
+	return cast(p, false);
 }
 
 Regex* Regex::scan_minus(const vector<AlgExpression::Lexeme>& lexemes,

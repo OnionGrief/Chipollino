@@ -39,18 +39,18 @@ BackRefRegex* BackRefRegex::make() const {
 	return new BackRefRegex;
 }
 
-template <typename T> BackRefRegex* BackRefRegex::cast(T* ptr) {
+template <typename T> BackRefRegex* BackRefRegex::cast(T* ptr, bool NotNullPtr) {
 	auto* r = dynamic_cast<BackRefRegex*>(ptr);
-	if (!r) {
+	if (!r && NotNullPtr) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
 
 	return r;
 }
 
-template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr) {
+template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr, bool NotNullPtr) {
 	auto* r = dynamic_cast<const BackRefRegex*>(ptr);
-	if (!r) {
+	if (!r && NotNullPtr) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
 
@@ -153,10 +153,7 @@ BackRefRegex* BackRefRegex::expr(const vector<AlgExpression::Lexeme>& lexemes, i
 	if (!p) {
 		p = scan_square_br(lexemes, index_start, index_end);
 	}
-	if (!p) {
-		return nullptr;
-	}
-	return cast(p);
+	return cast(p, false);
 }
 
 BackRefRegex* BackRefRegex::scan_ref(const vector<AlgExpression::Lexeme>& lexemes, int index_start,
