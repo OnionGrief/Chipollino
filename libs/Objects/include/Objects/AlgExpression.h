@@ -80,9 +80,12 @@ class AlgExpression : public BaseObject {
 	// Turns string into lexeme vector
 	static vector<Lexeme> parse_string(string);
 	bool from_string(const string&);
+	
 	// возвращаемый тип нижеперечисленных методов зависит от типа объекта (Regex/BackRefRegex)
 	// внутреннее состояние не имеет значения
-	virtual AlgExpression* expr(const vector<Lexeme>&, int, int);
+	// Построение из вектора лексем дерева регулярного выражения
+	// 2 и 3 аргумент - это начальный и конечный индекс рассматриваемых лексем в векторе
+	virtual AlgExpression* expr(const vector<Lexeme>&, int, int) = 0;
 	AlgExpression* scan_conc(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_star(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_alt(const vector<Lexeme>&, int, int);

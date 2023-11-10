@@ -420,30 +420,6 @@ bool AlgExpression::from_string(const string& str) {
 	return true;
 }
 
-AlgExpression* AlgExpression::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start,
-								   int index_end) {
-	AlgExpression* p;
-	p = scan_symb(lexemes, index_start, index_end);
-	if (!p) {
-		p = scan_eps(lexemes, index_start, index_end);
-	}
-
-	if (!p) {
-		p = scan_alt(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_conc(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_star(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_par(lexemes, index_start, index_end);
-	}
-
-	return p;
-}
-
 void AlgExpression::update_balance(const AlgExpression::Lexeme& l, int& balance) {
 	if (l.type == Lexeme::Type::parL || l.type == Lexeme::Type::squareBrL) {
 		balance++;

@@ -8,5 +8,5 @@ using namespace std;
 int main(int argc, char** argv) {
 	cout << "Unit Tests\n";
 	// Тестирование
-	return UnitTests::InitTests(argc, argv);
+	return UnitTests::RunTests(argc, argv);
 }

@@ -18,7 +18,7 @@ class UnitTests
 public:
     UnitTests(){};
     
-    static int  InitTests(int argc, char** argv) {
+    static int  RunTests(int argc, char** argv) {
         ::testing::InitGoogleTest(&argc, argv);
         return RUN_ALL_TESTS();
     };
