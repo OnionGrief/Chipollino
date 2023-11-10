@@ -131,6 +131,8 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 	pair<vector<State>, int> al; // для левого автомата относительно операции
 	pair<vector<State>, int> ar; // для правого автомата относительно операции
 	Language* alp; // Новый язык для автомата
+	FiniteAutomaton fa; // автомат для отрицания, строится обычный томпсон и перется дополнение
+
 	switch (type) {
 	case Type::alt: // |
 		al = Regex::cast(term_l)->get_thompson(max_index);
@@ -272,8 +274,20 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		s.push_back(State(1, {}, str, true, p));
 
 		return {s, max_index + 2};
+	case Type::negative:
+		// строим автомат для отрицания
+		fa = FiniteAutomaton(0, Regex::cast(term_l)->get_thompson(-1).first, Regex::cast(term_l)->alphabet);
+		fa = fa.determinize();
+		// берем дополнение автомата
+		fa = fa.complement();
+		// нумеруем состояния
+		for (int index = 0; index < fa.states.size(); index++) {
+			fa.states[index].identifier = "q" + to_string(max_index);
+			max_index++;
+		}
+		// возвращаем состояния и макс индекс
+		return {fa.states, max_index};
 	default:
-
 		str = "q" + to_string(max_index + 1);
 		// m[char_to_alphabet_symbol(value.symbol)] = {1};
 		m[value.symbol] = {1};
