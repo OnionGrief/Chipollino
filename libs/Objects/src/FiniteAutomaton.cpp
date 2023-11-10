@@ -314,12 +314,10 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 	for (const auto& state : minimized_dfa.states) {
 		ss << "\\{" << state.identifier << "\\}\;";
 	}
-	bool merged = false;
 	MetaInfo old_meta, new_meta;
 	for (int i = 0; i < dfa.states.size(); i++) {
 		for (int j = 0; j < dfa.states.size(); j++)
 			if (classes[i] == classes[j] && (i != j)) {
-				merged = true;
 				old_meta.upd(NodeMeta{dfa.states[i].index, classes[i]});
 				new_meta.upd(NodeMeta{classes[i], classes[i]});
 				break;
