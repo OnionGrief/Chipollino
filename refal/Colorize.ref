@@ -181,10 +181,10 @@ ProcessMetaData {
   (e.FileName) e.Rows
    , e.Rows : e.Body (e.X1'\\end{tikzpicture}'e.X2) e.Last
    , <ExtractEdgeCoords e.Body> : e.EdgeCoords
-   , <ExistFile 'Meta_'e.FileName'.data'> :
+   , <ExistFile 'Meta_'e.FileName'.raux'> :
     { False = e.Rows;
       True
-      , <Open 'r' 4 'Meta_'e.FileName'.data'><GenMetaData (e.EdgeCoords)<GetAllPostMetaData Start <Get 4>>> : e.Generated
+      , <Open 'r' 4 'Meta_'e.FileName'.raux'><GenMetaData (e.EdgeCoords)<GetAllPostMetaData Start <Get 4>>> : e.Generated
 	= 
 	    e.Body <AddBackgroundPreamble> <ExtractStyles e.Generated><AddBackgroundClosing> (e.X1'\\end{tikzpicture}'e.X2) e.Last <Close 4>;
      };

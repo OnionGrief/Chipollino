@@ -45,7 +45,7 @@ $ENTRY Go {
  , <Br 'AuxCont=!NULL!'> : e.VV
  , <Br 'MetaData=!NULL!'> : e.D
  , <Br 'MetaGroups='> : e.D
-    =  <Open 'a' 8 'Meta_log'>
+    =  <Open 'a' 8 'Meta_log.raux'>
 	<Open 'w' 5 'L_input.tex'><Close 5><Open 'r' 1 e.from'.dot'><Open 'w' 2 'Mod_'e.from'.dot'><PutLines 2 <CropGraph Preamble <Get 1>>>
        <GenLegenda e.from><GenAux e.from><GenMetaData e.from><Close 1><Close 2><Close 8>;
   False
@@ -113,7 +113,7 @@ GenAux {
  e.from
  , <Dg 'AuxInd'> :
  {0 = ;
-  s.Index = <Open 'w' 4 'Aux_'e.from'.data'><PutLines 4 <DigBag ('AuxCont') <Dg 'AuxCont'>>><Close 4>;
+  s.Index = <Open 'w' 4 'Aux_'e.from'.raux'><PutLines 4 <DigBag ('AuxCont') <Dg 'AuxCont'>>><Close 4>;
  };
 }
 
@@ -124,7 +124,7 @@ GenMetaData {
  { = ;
   e.Rest
   , <StyleTableGen <LenBlock 0 e.Rest> e.Rest> : e.StyleTable
-   = <Open 'w' 5 'Meta_'e.from'.data'><PutLines 5 <Stylize (e.StyleTable) <RemDoubles <DigBag ('MetaData') <Dg 'MetaData'>>>>><Close 5>;
+   = <Open 'w' 5 'Meta_'e.from'.raux'><PutLines 5 <Stylize (e.StyleTable) <RemDoubles <DigBag ('MetaData') <Dg 'MetaData'>>>>><Close 5>;
  };
 }
 

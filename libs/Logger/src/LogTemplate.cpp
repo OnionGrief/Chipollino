@@ -115,7 +115,7 @@ string LogTemplate::render() const {
 						c_graph = AutomatonToImage::to_image(automaton);
 						cache_automatons[hash] = c_graph;
 					}
-					c_graph = AutomatonToImage::colorize(c_graph, param.meta.Colorize());
+					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
 					s.insert(insert_place, c_graph);
 				} else if (holds_alternative<string>(param.value)) {
 					s.insert(insert_place, get<string>(param.value));
@@ -135,27 +135,10 @@ string LogTemplate::render() const {
 	return outstr;
 }
 
-unordered_map<Decoration, pair<string, bool>> decor_data = {{italic, {"\\textit", false}},
-															{regexstyle, {"\\regexpstr", true}},
-															{typewriter, {"\\ttfamily", false}},
-															{roman, {"\\mathrm", true}}};
-
-string math_switcher(bool modifier, bool mathmode) {
-	if (modifier && !mathmode) {
-		return "$";
-	} else
-		return "";
-}
-
-unordered_map<TextSize, string> textsize_to_str = {{footnote, "\\footnotesize"},
-												   {small, "\\small"},
-												   {normal, "\\normalsize"},
-												   {large, "\\large"},
-												   {none, ""}};
-
-string decorate_element(string label, Decoration d, TextSize s, bool in_math) {
-	string mode_switcher = math_switcher(decor_data.at(d).second, in_math);
-	return "{" + textsize_to_str.at(s) + mode_switcher + decor_data.at(d).first + "{" + label +
+// Функция заворачивания строки в декорацию (и размер), с учётом того, находится ли среда в мат. режиме
+string decorate_element(string label, Decoration d, TextSize s, bool now_in_math) {
+	string mode_switcher = LogTemplate::decor_data.at(d).is_math && !now_in_math ? "$" : "";
+	return "{" + LogTemplate::textsize_to_str.at(s) + mode_switcher + LogTemplate::decor_data.at(d).tag + "{" + label +
 		   "}" + mode_switcher + "}";
 }
 
@@ -222,24 +205,26 @@ string LogTemplate::math_mode(string str) {
 	return str_math;
 }
 
+// Вычисление шага для делений на графике
 int step_size(int maxscale, size_t objsize, size_t datasize) {
 	int step = std::ceil((maxscale * (static_cast<int>(objsize) + 3)) / max(static_cast<int>(datasize) - 2, 1));
 	return (step > 10 ? std::floor(step / 10) * 10 : max(step, 1));	
 }
 
+// Логирование графиков
 string LogTemplate::log_plot(Plot p) {
 	int max_x = 0, max_y = 0;
 	string visualization = "", styling, legenda;
 	vector<string> styles;
 	for (int i = 0; i < p.data.size(); i++) {
-		if (find(styles.begin(), styles.end(), p.data[i].second) == styles.end()) {
-			styles.push_back(p.data[i].second);
-			styling += (i == 0 ? "" : ", ") + p.data[i].second;
-			legenda += p.data[i].second + " = {label in legend={text=" +
-					   decorate_element(p.data[i].second, regexstyle, none, false) + "}},\n";
+		if (find(styles.begin(), styles.end(), p.data[i].plot_id) == styles.end()) {
+			styles.push_back(p.data[i].plot_id);
+			styling += (i == 0 ? "" : ", ") + p.data[i].plot_id;
+			legenda += p.data[i].plot_id + " = {label in legend={text=" +
+					   decorate_element(p.data[i].plot_id, regexstyle, none, false) + "}},\n";
 		}
-		if (max_x < p.data[i].first.first) max_x = p.data[i].first.first;
-		if (max_y < p.data[i].first.second) max_y = p.data[i].first.second;
+		if (max_x < p.data[i].x_coord) max_x = p.data[i].x_coord;
+		if (max_y < p.data[i].y_coord) max_y = p.data[i].y_coord;
 	}
 	visualization = "\\begin{tikzpicture}\\scriptsize \%begin_plot\n "
 					"\\datavisualization[scientific axes=clean, visualize as line/.list={" +
@@ -251,8 +236,8 @@ string LogTemplate::log_plot(Plot p) {
 					"style sheet = vary hue, style sheet = vary dashing]\n "
 					"data[headline={x, y, set}] {\n";
 	for (int i = 0; i < p.data.size(); i++) {
-		visualization += to_string(p.data[i].first.first) + ", " +
-						 to_string(p.data[i].first.second) + ", " + p.data[i].second + "\n";
+		visualization += to_string(p.data[i].x_coord) + ", " +
+						 to_string(p.data[i].y_coord) + ", " + p.data[i].plot_id + "\n";
 	}
 	visualization += "};\n \\end{tikzpicture} \%end_plot\n\n";
 	return visualization;

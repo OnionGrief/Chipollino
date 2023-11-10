@@ -10,6 +10,7 @@
 
 using namespace std;
 
+// Возможные заранее заданные стили текста
 enum Decoration {
 	italic,
 	regexstyle,
@@ -17,6 +18,7 @@ enum Decoration {
 	roman
 };
 
+// Возможные заранее заданные размеры текста
 enum TextSize {
 	footnote,
 	small,
@@ -36,6 +38,24 @@ class LogTemplate : public iLogTemplate {
 	// загрузка шаблона
 	void load_tex_template(string filename);
 	string get_tex_template();
+
+	struct TextStyle {
+		string tag;
+		bool is_math;
+	};
+
+	// Определяет мапу идентификатора декорации и пары <тег в латехе, нужен ли мат.режим>
+	inline static const unordered_map<Decoration, TextStyle> decor_data = {{italic, {"\\textit", false}},
+															{regexstyle, {"\\regexpstr", true}},
+															{typewriter, {"\\ttfamily", false}},
+															{roman, {"\\mathrm", true}}};
+
+	// Определяет мапу идентификатора размера и его тега в латехе 
+	inline static const unordered_map<TextSize, string> textsize_to_str = {{footnote, "\\footnotesize"},
+												   {small, "\\small"},
+												   {normal, "\\normalsize"},
+												   {large, "\\large"},
+												   {none, ""}};
 
   private:
 	// кеш отрендеренных автоматов
@@ -61,6 +81,7 @@ class LogTemplate : public iLogTemplate {
 
 	// Параметры
 	unordered_map<string, LogParameter> parameters;
+
 
 	// Добавление шаблона настоящего параметра
 	void add_parameter(string parameter_name);

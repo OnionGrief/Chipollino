@@ -171,7 +171,7 @@ void Example::parsing_nfa() {
 	c = r.to_ilieyu(); // to_thompson(-1);
 	cout << c.to_txt();
 	cout << "Parsing: aaaaaaaaaaaaaaaaaaabccccc\n";
-	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc", steps) << " " << steps
+	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc").second
 		 << endl; // true если распознал слово
 }
 

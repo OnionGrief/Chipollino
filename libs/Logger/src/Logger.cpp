@@ -33,7 +33,7 @@ void Logger::render_to_file(const string& filename) {
 
 	cout << "\nFrameFormatter + MathMode...\n";
 
-	system("cd refal && refgo RunFormatter+FrameFormatter+MathMode 2>err.txt");
+	system("cd refal && refgo RunFormatter+FrameFormatter+MathMode 2>error_FrameFormatter.raux");
 
 	cout << "\nConverting to PDF 1...\n";
 

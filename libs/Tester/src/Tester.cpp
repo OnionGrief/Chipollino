@@ -29,7 +29,6 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 		machines.push_back(value.minimize().remove_trap_states());
 		labels.push_back("Minimal DFA");
 	}
-	bool belongs;
 
 	using clock = std::chrono::high_resolution_clock;
 
@@ -39,21 +38,20 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 			string word = regex.get_iterated_word(i * step);
 			// cout << word;
 			const auto start = clock::now();
-			int counter;
 			/*	if (holds_alternative<FiniteAutomaton&>(lang))     */
-			belongs = machines[type].parsing_by_nfa(word, counter);
+			auto belongs = machines[type].parsing_by_nfa(word);
 			const auto end = clock::now();
 			const long long elapsed =
 				std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 			double time = (double)elapsed / 1000;
-			steps.push_back(counter);
+			steps.push_back(belongs.first);
 			words.push_back(word.length());
 			if (!type) {
 				t.rows.push_back(to_string(i + 1));
-				t.data.push_back(to_string(counter));
+				t.data.push_back(to_string(belongs.first));
 				t.data.push_back(to_string(word.length()));
 				t.data.push_back(to_string(time));
-				if (belongs)
+				if (belongs.second)
 					t.data.push_back("true");
 				else
 					t.data.push_back("false");
@@ -62,7 +60,7 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 			if (time >= 180) break;
 		}
 		for (int i = 0; i < steps.size(); i++) {
-			plot.data.push_back(make_pair(make_pair(words[i], int(steps[i])), labels[type]));
+			plot.data.push_back({labels[type], words[i], steps[i]});
 		}
 	}
 	t.columns.push_back("Шаги");

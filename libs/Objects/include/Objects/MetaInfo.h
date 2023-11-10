@@ -25,10 +25,14 @@ class MetaInfo {
 	vector<Meta> metadata;
 
   public:
-	void Upd(Meta item);
+	// Числовой идентификатор разметки ловушки
 	static const int trap_color = 100;
-	string Colorize() const;
-	void MarkTransitions(const FiniteAutomaton&, set<int> from, set<int> to, alphabet_symbol by,
+	// Добавление единственного элемента разметки
+	void upd(Meta item);
+	// Преобразование в формат, входной для модулей рефала (и печати во вспомогательный файл)
+	string to_output() const;
+	// Разметка всех переходов автомата из множества выделенных состояний from в множество to по символу by
+	void mark_transitions(const FiniteAutomaton&, set<int> from, set<int> to, alphabet_symbol by,
 						 int group_id);
 	MetaInfo() = default;
 };

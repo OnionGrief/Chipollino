@@ -12,6 +12,7 @@
 #include <queue>
 #include <set>
 #include <stack>
+#include <tuple>
 using namespace std;
 
 State::State() : index(0), is_terminal(false) {}
@@ -97,8 +98,7 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({initial_state}, true);
-	MetaInfo old_meta = MetaInfo();
-	MetaInfo new_meta = MetaInfo();
+	MetaInfo old_meta, new_meta;
 	set<int> label = q0;
 	string new_identifier;
 	int group_counter = 0;
@@ -111,10 +111,10 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 
 	if (q0.size() > 1) {
 		for (auto elem : q0) {
-			old_meta.Upd(NodeMeta{states[elem].index, group_counter});
+			old_meta.upd(NodeMeta{states[elem].index, group_counter});
 		}
-		old_meta.MarkTransitions(*this, q0, q0, alphabet_symbol::epsilon(), group_counter);
-		new_meta.Upd(NodeMeta{new_initial_state.index, group_counter});
+		old_meta.mark_transitions(*this, q0, q0, alphabet_symbol::epsilon(), group_counter);
+		new_meta.upd(NodeMeta{new_initial_state.index, group_counter});
 		group_counter++;
 	}
 
@@ -178,10 +178,10 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 				s2.push(index);
 				if (z1.size() > 1) {
 					for (auto elem : z1) {
-						old_meta.Upd(NodeMeta{states[elem].index, group_counter});
+						old_meta.upd(NodeMeta{states[elem].index, group_counter});
 					}
-					old_meta.MarkTransitions(*this, z, z1, symb, group_counter);
-					new_meta.Upd(NodeMeta{q1.index, group_counter});
+					old_meta.mark_transitions(*this, z, z1, symb, group_counter);
+					new_meta.upd(NodeMeta{q1.index, group_counter});
 					group_counter++;
 				}
 			}
@@ -315,14 +315,13 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 		ss << "\\{" << state.identifier << "\\}\;";
 	}
 	bool merged = false;
-	MetaInfo old_meta = MetaInfo();
-	MetaInfo new_meta = MetaInfo();
+	MetaInfo old_meta, new_meta;
 	for (int i = 0; i < dfa.states.size(); i++) {
 		for (int j = 0; j < dfa.states.size(); j++)
 			if (classes[i] == classes[j] && (i != j)) {
 				merged = true;
-				old_meta.Upd(NodeMeta{dfa.states[i].index, classes[i]});
-				new_meta.Upd(NodeMeta{classes[i], classes[i]});
+				old_meta.upd(NodeMeta{dfa.states[i].index, classes[i]});
+				new_meta.upd(NodeMeta{classes[i], classes[i]});
 				break;
 			}
 	}
@@ -346,8 +345,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 
 	vector<State> new_states;
 	map<set<int>, int> visited_states;
-	MetaInfo old_meta = MetaInfo();
-	MetaInfo new_meta = MetaInfo();
+	MetaInfo old_meta, new_meta;
 	int group_counter = 0;
 	set<int> q = closure({initial_state}, true);
 	string initial_state_identifier;
@@ -360,10 +358,10 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 							   map<alphabet_symbol, set<int>>()};
 	if (q.size() > 1) {
 		for (auto elem : q) {
-			old_meta.Upd(NodeMeta{states[elem].index, group_counter});
+			old_meta.upd(NodeMeta{states[elem].index, group_counter});
 		}
-		old_meta.MarkTransitions(*this, q, q, alphabet_symbol::epsilon(), group_counter);
-		new_meta.Upd(NodeMeta{new_initial_state.index, group_counter});
+		old_meta.mark_transitions(*this, q, q, alphabet_symbol::epsilon(), group_counter);
+		new_meta.upd(NodeMeta{new_initial_state.index, group_counter});
 		group_counter++;
 	}
 	visited_states[q] = 0;
@@ -407,12 +405,12 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 										   map<alphabet_symbol, set<int>>()};
 						if (q1.size() > 1) {
 							for (auto elem : q1) {
-								old_meta.Upd(NodeMeta{states[elem].index, group_counter});
+								old_meta.upd(NodeMeta{states[elem].index, group_counter});
 							}
 
-							old_meta.MarkTransitions(*this, q1, q1, alphabet_symbol::epsilon(),
+							old_meta.mark_transitions(*this, q1, q1, alphabet_symbol::epsilon(),
 													 group_counter);
-							new_meta.Upd(NodeMeta{new_state.index, group_counter});
+							new_meta.upd(NodeMeta{new_state.index, group_counter});
 							group_counter++;
 						}
 						new_states.push_back(new_state);
@@ -712,7 +710,7 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	bool flag = true;
-	MetaInfo new_meta = MetaInfo();
+	MetaInfo new_meta;
 	int count = static_cast<int>(new_dfa.size());
 	for (int i = 0; i < count; i++) {
 		for (const alphabet_symbol& symb : language->get_alphabet()) {
@@ -721,11 +719,11 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 					new_dfa.states[i].set_transition(new_dfa.size(), symb);
 					new_dfa.states.push_back(
 						{count, {count}, "", false, map<alphabet_symbol, set<int>>()});
-					new_meta.Upd(
+					new_meta.upd(
 						EdgeMeta{new_dfa.states[i].index, count, symb, MetaInfo::trap_color});
 				} else {
 					new_dfa.states[i].set_transition(count, symb);
-					new_meta.Upd(
+					new_meta.upd(
 						EdgeMeta{new_dfa.states[i].index, count, symb, MetaInfo::trap_color});
 				}
 				flag = false;
@@ -735,7 +733,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 	if (!flag) {
 		for (const alphabet_symbol& symb : language->get_alphabet()) {
 			new_dfa.states[count].transitions[symb].insert(count);
-			new_meta.Upd(EdgeMeta{count, count, symb, MetaInfo::trap_color});
+			new_meta.upd(EdgeMeta{count, count, symb, MetaInfo::trap_color});
 		}
 	}
 	if (log) {
@@ -750,7 +748,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 	int count = static_cast<int>(new_dfa.size());
 	// Поправка, чтобы можно было вычислить реальное число состояний прежнего автомата.
 	int traps = 0;
-	MetaInfo old_meta = MetaInfo();
+	MetaInfo old_meta;
 	for (int i = 0; i >= 0 && i < count; i++) {
 		bool is_trap_state = true;
 		set<int> reachable_states = new_dfa.closure({i}, false);
@@ -767,7 +765,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 			}
 		}
 		if (is_trap_state) {
-			old_meta.Upd(NodeMeta{states[i + traps].index, MetaInfo::trap_color});
+			old_meta.upd(NodeMeta{states[i + traps].index, MetaInfo::trap_color});
 			vector<State> new_states;
 			for (int j = 0; j < new_dfa.size(); j++) {
 				if (j < i) {
@@ -866,14 +864,14 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 
 FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 	set<alphabet_symbol> new_alphabet;
-	MetaInfo meta = MetaInfo();
+	MetaInfo meta;
 	int group_id = 1;
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
 	vector<map<alphabet_symbol, set<int>>> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
 			if (elem.second.size() > 1) {
-				meta.MarkTransitions(*this, {i}, elem.second, elem.first, group_id);
+				meta.mark_transitions(*this, {i}, elem.second, elem.first, group_id);
 				group_id++;
 				int counter = 1;
 				for (int transition_to : elem.second) {
@@ -962,7 +960,7 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 
 bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	if (log) log->set_parameter("oldautomaton", *this);
-	MetaInfo meta = MetaInfo();
+	MetaInfo meta;
 	if (language->is_one_unambiguous_flag_cached()) {
 
 		if (log) {
@@ -1046,9 +1044,9 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	for (auto iter_orbit : min_fa_orbits)
 		if (iter_orbit.size() > 1) {
 			for (auto iter_state : iter_orbit)
-				meta.Upd(NodeMeta{iter_state, curr_orbit});
+				meta.upd(NodeMeta{iter_state, curr_orbit});
 			for (auto symbol : language->get_alphabet())
-				meta.MarkTransitions(min_fa, iter_orbit, iter_orbit, symbol, curr_orbit);
+				meta.mark_transitions(min_fa, iter_orbit, iter_orbit, symbol, curr_orbit);
 			curr_orbit++;
 		}
 
@@ -1299,8 +1297,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	vector<GrammarItem> fa_items;
 	vector<GrammarItem*> nonterminals;
 	vector<GrammarItem*> terminals;
-	MetaInfo old_meta = MetaInfo();
-	MetaInfo new_meta = MetaInfo();
+	MetaInfo old_meta, new_meta;
 	vector<vector<vector<GrammarItem*>>> rules =
 		Grammar::fa_to_grammar(states, language->get_alphabet(), fa_items, nonterminals, terminals);
 	vector<GrammarItem*> bisimilar_nonterminals;
@@ -1317,8 +1314,8 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	for (int i = 0; i < classes.size(); i++) {
 		for (int j = 0; j < classes.size(); j++)
 			if (classes[i] == classes[j] && (i != j)) {
-				old_meta.Upd(NodeMeta{i, classes[i]});
-				new_meta.Upd(NodeMeta{classes[i], classes[i]});
+				old_meta.upd(NodeMeta{i, classes[i]});
+				new_meta.upd(NodeMeta{classes[i], classes[i]});
 			}
 	}
 
@@ -2164,70 +2161,53 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 	return false;
 }
 
-bool FiniteAutomaton::parsing_nfa_for(const string& s, int& counter) const {
-	stack<State> stac_state;
-	stack<int> stack_index;
-	set<pair<int, pair<int, int>>> set_visited_eps, aux_eps;
-	// set<pair<int,int>> set_visited;
-	stac_state.push(states[initial_state]);
-	stack_index.push(0);
-	int n, n_eps;
-	counter = 0;
-	int index = 0;
-	State state = stac_state.top();
-	// cout << !stac_state.empty() << endl;
+pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
+	// Пара (актуальный индекс элемента в строке, состояние)
+	stack<pair<int, State>> stac_state;
+	// Тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
+	set<tuple<int, int, int>> visited_eps, aux_eps;
+	int counter = 0;
+	int parsed_len = 0;
+	State state = states[initial_state];
+	stac_state.push({parsed_len, state});
 	while (!stac_state.empty()) {
-		if (state.is_terminal && index == s.size()) {
+		if (state.is_terminal && parsed_len == s.size()) {
 			break;
 		}
-		state = stac_state.top();
-		index = stack_index.top();
+		state = stac_state.top().second;
+		parsed_len = stac_state.top().first;
 		stac_state.pop();
-		stack_index.pop();
-		// if (block_repeats && (set_visited.find(make_pair(state.index,index))
-		// != set_visited.end() )) continue;
 		counter++;
-		if (set_visited_eps.size() > 0) {
-			for (auto pos : set_visited_eps) {
-				if (pos.first <= index) aux_eps.insert(pos);
+		alphabet_symbol elem(s[parsed_len]);
+		set<int> trans = state.transitions[elem];
+		// Переходы в новые состояния по очередному символу строки                
+		if (parsed_len + 1 <= s.size()) {		
+			for (auto new_state : trans) {
+				stac_state.push({parsed_len + 1, states[new_state]});
 			}
-			set_visited_eps = aux_eps;
+		}
+
+		// Если произошёл откат по строке, то эпсилон-переходы из рассмотренных состояний больше не считаются повторными                
+		if (visited_eps.size() > 0) {
+			for (auto pos : visited_eps) {
+				if (get<0>(pos) <= parsed_len) aux_eps.insert(pos);
+			}
+			visited_eps = aux_eps;
 			aux_eps.clear();
 		}
-		// if (block_repeats) {set_visited.insert(make_pair(state.index,index));
-		// }
-		alphabet_symbol elem(s[index]);
-		set<int> tr = state.transitions[elem];
-		vector<int> trans{tr.begin(), tr.end()};
-		set<int> tr_eps =
-			state.transitions[alphabet_symbol::epsilon()]; // char_to_alphabet_symbol('\0')];
-		vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
-		// tr = {};
-		// cout << elem << " " << state.identifier << " " << index << " "
-		//	 << stac_state.size() << endl;
-		n = trans.size();
-		n_eps = trans_eps.size();
-		for (size_t i = 0; i < n; i++) {
-			if (index + 1 <= s.size()) {
-				stac_state.push(states[trans[i]]);
-				stack_index.push(index + 1);
+		// Добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого состояния                 
+		auto reach_eps = state.transitions[alphabet_symbol::epsilon()];
+		for (int eps_tr : reach_eps) {
+			if (visited_eps.find({parsed_len, state.index, eps_tr}) == visited_eps.end()) {
+				stac_state.push({parsed_len, states[eps_tr]});
+				visited_eps.insert({parsed_len, state.index, eps_tr});
 			}
 		}
-		for (size_t i = 0; i < n_eps; i++) {
-			if (set_visited_eps.find(
-					make_pair(index, make_pair(state.index, states[trans_eps[i]].index))) ==
-				set_visited_eps.end()) {
-				stac_state.push(states[trans_eps[i]]);
-				stack_index.push(index);
-				set_visited_eps.insert(
-					make_pair(index, make_pair(state.index, states[trans_eps[i]].index)));
-			}
-		}
+	}                                            
+	if (s.size() == parsed_len && state.is_terminal) {
+		return {counter, true};
 	}
-	if (s.size() == index && state.is_terminal) {
-		return true;
-	}
-	return false;
+	return {counter, false};
 }
 
 bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
@@ -2253,9 +2233,9 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	return result;
 }
 
-bool FiniteAutomaton::parsing_by_nfa(const string& s, int& counter) const {
+pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	State state = states[0];
-	return parsing_nfa_for(s, counter);
+	return parsing_nfa_for(s);
 }
 
 int FiniteAutomaton::get_initial() {

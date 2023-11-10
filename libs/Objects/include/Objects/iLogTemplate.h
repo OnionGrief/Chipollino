@@ -16,8 +16,14 @@ class iLogTemplate {
 		vector<string> data;	// данные
 	};
 
+	struct Point {
+		string plot_id;
+		int x_coord;
+		long y_coord;
+	};
+	
 	struct Plot {
-		vector<pair<pair<int, long>, string>> data;
+		vector<Point> data;
 	};
 
 	using LogObject = variant<FiniteAutomaton, Regex, string, int, Table, Plot>;

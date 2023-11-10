@@ -27,6 +27,7 @@ cd ./build/
 cmake ../. && cmake --build .
 cd ../refal 
 dos2unix MathMode.ref
+dos2unix Colorize.ref
 dos2unix Postprocess.ref
 dos2unix Preprocess.ref
 dos2unix TestGenerator.ref
@@ -34,6 +35,7 @@ dos2unix FrameFormatter.ref
 dos2unix RunFormatter.ref
 export PATH=$PATH:/usr/src/refal
 refc MathMode.ref
+refc Colorize.ref
 refc Postprocess.ref
 refc Preprocess.ref
 refc TestGenerator.ref

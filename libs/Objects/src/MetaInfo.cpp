@@ -3,8 +3,7 @@
 #include <set>
 using namespace std;
 
-// MetaInfo::MetaInfo() {} констуктор уже объявлен в заголовке как default
-
+// Преобразование числового идентификатора цвета в строковый
 string to_color_id(int group_id) {
 	switch (group_id) {
 	case MetaInfo::trap_color:
@@ -14,30 +13,32 @@ string to_color_id(int group_id) {
 	}
 }
 
+// Преобразование метаданных для вершины графа в строку
 string colorize_node(int id, int group_id) {
 	return "@" + to_string(id) + "@::=" + to_color_id(group_id) + "\n";
 }
 
+// Преобразование метаданных для ребра графа в строку
 string colorize_edge(int from_ind, int to_id, alphabet_symbol by, int group_id) {
 	return "@" + to_string(from_ind) + "-" + to_string(to_id) + "@" + string(by) +
 		   "@::=" + to_color_id(group_id) + "\n";
 }
 
-void MetaInfo::MarkTransitions(const FiniteAutomaton& fa, set<int> from, set<int> to,
+void MetaInfo::mark_transitions(const FiniteAutomaton& fa, set<int> from, set<int> to,
 							   alphabet_symbol by, int group_id) {
 	for (auto elem : from)
 		for (auto trans : fa.states[elem].transitions) {
 			for (auto reach : trans.second)
 				if (to.find(reach) != to.end() && (trans.first == by))
-					this->Upd(EdgeMeta{fa.states[elem].index, reach, trans.first, group_id});
+					this->upd(EdgeMeta{fa.states[elem].index, reach, trans.first, group_id});
 		}
 }
 
-void MetaInfo::Upd(Meta item) {
+void MetaInfo::upd(Meta item) {
 	this->metadata.push_back(item);
 }
 
-string MetaInfo::Colorize() const {
+string MetaInfo::to_output() const {
 	string colors = "";
 	for (auto elem : metadata) {
 		if (holds_alternative<NodeMeta>(elem)) {
