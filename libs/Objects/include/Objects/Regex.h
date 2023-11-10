@@ -36,6 +36,9 @@ class Regex : public AlgExpression {
 	void normalize_this_regex(const vector<pair<Regex, Regex>>&); // переписывание regex по
 																  // пользовательским правилам
 
+	Regex* expr(const vector<Lexeme>&, int, int) override;
+	Regex* scan_minus(const vector<Lexeme>&, int, int);
+
   public:
 	Regex() = default;
 	Regex(const string&);
@@ -45,8 +48,8 @@ class Regex : public AlgExpression {
 	Regex(const Regex&) = default;
 
 	// dynamic_cast к типу Regex*
-	template <typename T> static Regex* cast(T* ptr);
-	template <typename T> static const Regex* cast(const T* ptr);
+	template <typename T> static Regex* cast(T* ptr, bool NotNullPtr = true);
+	template <typename T> static const Regex* cast(const T* ptr, bool NotNullPtr = true);
 	// dynamic_cast каждого элемента вектора к типу Regex*
 	template <typename T> static vector<Regex*> cast(vector<T*> ptr);
 

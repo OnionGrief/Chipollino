@@ -92,7 +92,7 @@ string AlgExpression::to_txt() const {
 		if (term_l && term_l->type == Type::alt) {
 			str1 = "(" + str1 + ")";
 		}
-		if (term_r && term_l->type == Type::alt) {
+		if (term_r && term_r->type == Type::alt) {
 			str2 = "(" + str2 + ")";
 		}
 		break;
@@ -111,6 +111,9 @@ string AlgExpression::to_txt() const {
 			// ставим скобки при итерации, если символов > 1
 			str1 = "(" + str1 + ")";
 		break;
+	case Type::negative:
+		symb = '^';
+		return symb + str1;
 	default:
 		break;
 	}
@@ -161,6 +164,8 @@ string AlgExpression::type_to_str() const {
 		return "*";
 	case Type::symb:
 		return "symb";
+	case Type::negative:
+		return "^";
 	default:
 		break;
 	}
@@ -235,6 +240,9 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		char c = str[index];
 		Lexeme lexeme;
 		switch (c) {
+		case '^':
+			lexeme.type = Lexeme::Type::negative;
+			break;
 		case '(':
 			lexeme.type = Lexeme::Type::parL;
 			brackets_checker.push('(');
@@ -276,11 +284,14 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			brackets_are_empty = false;
 			break;
 		case '|':
+			if (index != 0 && lexemes.back().type == Lexeme::Type::negative)
+				return {Lexeme::Type::error};
 			lexeme.type = Lexeme::Type::alt;
 			break;
 		case '*':
 			if (index == 0 || (index != 0 && (lexemes.back().type == Lexeme::Type::star ||
-											  lexemes.back().type == Lexeme::Type::alt)))
+											  lexemes.back().type == Lexeme::Type::alt ||
+											  lexemes.back().type == Lexeme::Type::negative)))
 				return {Lexeme::Type::error};
 			lexeme.type = Lexeme::Type::star;
 			break;
@@ -330,7 +341,8 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			(
 				// AlgExpression::Lexeme right
 				lexeme.type == Lexeme::Type::symb || lexeme.type == Lexeme::Type::parL ||
-				lexeme.type == Lexeme::Type::squareBrL || lexeme.type == Lexeme::Type::ref)) {
+				lexeme.type == Lexeme::Type::squareBrL || lexeme.type == Lexeme::Type::ref ||
+				lexeme.type == Lexeme::Type::negative)) {
 			// We place . between
 			lexemes.emplace_back(Lexeme::Type::conc);
 		}
@@ -339,7 +351,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			((lexeme.type == Lexeme::Type::alt &&
 			  (lexemes.back().type == Lexeme::Type::parL ||
 			   lexemes.back().type == Lexeme::Type::squareBrL)) ||
-			 (lexemes.back().type == Lexeme::Type::alt &&
+			 ((lexemes.back().type == Lexeme::Type::alt || lexemes.back().type == Lexeme::Type::negative) &&
 			  (lexeme.type == Lexeme::Type::parR || lexeme.type == Lexeme::Type::squareBrR ||
 			   lexeme.type == Lexeme::Type::alt)))) {
 			//  We place eps between
@@ -377,7 +389,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		lexemes.insert(lexemes.begin(), {Lexeme::Type::eps});
 	}
 
-	if (lexemes.back().type == Lexeme::Type::alt) {
+	if (lexemes.back().type == Lexeme::Type::alt || lexemes.back().type == Lexeme::Type::negative) {
 		lexemes.emplace_back(Lexeme::Type::eps);
 	}
 
@@ -393,7 +405,7 @@ bool AlgExpression::from_string(const string& str) {
 		return true;
 	}
 
-	vector<Regex::Lexeme> l = parse_string(str);
+	vector<Lexeme> l = parse_string(str);
 	AlgExpression* root = expr(l, 0, l.size());
 
 	if (root == nullptr || root->type == eps) {
@@ -408,36 +420,13 @@ bool AlgExpression::from_string(const string& str) {
 	return true;
 }
 
-AlgExpression* AlgExpression::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start,
-								   int index_end) {
-	AlgExpression* p;
-	p = scan_alt(lexemes, index_start, index_end);
-	if (!p) {
-		p = scan_conc(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_star(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_symb(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_eps(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_par(lexemes, index_start, index_end);
-	}
-	return p;
-}
-
-bool AlgExpression::update_balance(const AlgExpression::Lexeme& l, int& balance) {
+void AlgExpression::update_balance(const AlgExpression::Lexeme& l, int& balance) {
 	if (l.type == Lexeme::Type::parL || l.type == Lexeme::Type::squareBrL) {
 		balance++;
 	}
 	if (l.type == Lexeme::Type::parR || l.type == Lexeme::Type::squareBrR) {
 		balance--;
 	}
-	return balance >= 0;
 }
 
 AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lexemes,
@@ -445,8 +434,7 @@ AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lex
 	AlgExpression* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (!update_balance(lexemes[i], balance))
-			return nullptr;
+		update_balance(lexemes[i], balance);
 		if (lexemes[i].type == Lexeme::Type::conc && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
 			AlgExpression* r = expr(lexemes, i + 1, index_end);
@@ -477,8 +465,7 @@ AlgExpression* AlgExpression::scan_star(const vector<AlgExpression::Lexeme>& lex
 	AlgExpression* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (!update_balance(lexemes[i], balance))
-			return nullptr;
+		update_balance(lexemes[i], balance);
 		if (lexemes[i].type == Lexeme::Type::star && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
 			if (l == nullptr || l->type == AlgExpression::eps) {
@@ -503,8 +490,7 @@ AlgExpression* AlgExpression::scan_alt(const vector<AlgExpression::Lexeme>& lexe
 	AlgExpression* p = nullptr;
 	int balance = 0;
 	for (int i = index_start; i < index_end; i++) {
-		if (!update_balance(lexemes[i], balance))
-			return nullptr;
+		update_balance(lexemes[i], balance);
 		if (lexemes[i].type == Lexeme::Type::alt && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
 			AlgExpression* r = expr(lexemes, i + 1, index_end);
@@ -605,15 +591,19 @@ bool AlgExpression::contains_eps() const {
 }
 
 bool AlgExpression::equality_checker(const AlgExpression* expr1, const AlgExpression* expr2) {
-	if (expr1 == nullptr && expr2 == nullptr) return true;
-	if (expr1 == nullptr || expr2 == nullptr) return false;
-	if (expr1->value.type != expr2->value.type) return false;
+	if (expr1 == nullptr && expr2 == nullptr)
+		return true;
+	if (expr1 == nullptr || expr2 == nullptr)
+		return false;
+	if (expr1->value.type != expr2->value.type)
+		return false;
 
 	if (expr1->value.type == Lexeme::Type::symb) {
 		alphabet_symbol r1_symb, r2_symb;
 		r1_symb = expr1->value.symbol;
 		r2_symb = expr2->value.symbol;
-		if (r1_symb != r2_symb) return false;
+		if (r1_symb != r2_symb)
+			return false;
 	}
 
 	if (equality_checker(expr1->term_l, expr2->term_l) &&

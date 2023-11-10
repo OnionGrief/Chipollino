@@ -39,18 +39,18 @@ BackRefRegex* BackRefRegex::make() const {
 	return new BackRefRegex;
 }
 
-template <typename T> BackRefRegex* BackRefRegex::cast(T* ptr) {
+template <typename T> BackRefRegex* BackRefRegex::cast(T* ptr, bool NotNullPtr) {
 	auto* r = dynamic_cast<BackRefRegex*>(ptr);
-	if (!r) {
+	if (!r && NotNullPtr) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
 
 	return r;
 }
 
-template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr) {
+template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr, bool NotNullPtr) {
 	auto* r = dynamic_cast<const BackRefRegex*>(ptr);
-	if (!r) {
+	if (!r && NotNullPtr) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
 
@@ -58,7 +58,7 @@ template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr) {
 }
 
 string BackRefRegex::to_txt() const {
-	BackRefRegex* br_term_l;
+	BackRefRegex* br_term_l, *br_term_r;
 	string str1, str2;
 	if (term_l) {
 		str1 = term_l->to_txt();
@@ -66,6 +66,7 @@ string BackRefRegex::to_txt() const {
 	}
 	if (term_r) {
 		str2 = term_r->to_txt();
+		br_term_r = cast(term_r);
 	}
 	string symb;
 	switch (type) {
@@ -73,7 +74,7 @@ string BackRefRegex::to_txt() const {
 		if (term_l && br_term_l->type == Type::alt) {
 			str1 = "(" + str1 + ")";
 		}
-		if (term_r && br_term_l->type == Type::alt) {
+		if (term_r && br_term_r->type == Type::alt) {
 			str2 = "(" + str2 + ")";
 		}
 		break;
@@ -152,10 +153,7 @@ BackRefRegex* BackRefRegex::expr(const vector<AlgExpression::Lexeme>& lexemes, i
 	if (!p) {
 		p = scan_square_br(lexemes, index_start, index_end);
 	}
-	if (!p) {
-		return nullptr;
-	}
-	return cast(p);
+	return cast(p, false);
 }
 
 BackRefRegex* BackRefRegex::scan_ref(const vector<AlgExpression::Lexeme>& lexemes, int index_start,

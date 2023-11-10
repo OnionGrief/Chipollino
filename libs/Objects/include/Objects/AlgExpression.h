@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 class AlgExpression : public BaseObject {
+
   protected:
 	struct Lexeme {
 		enum Type {
@@ -15,6 +16,7 @@ class AlgExpression : public BaseObject {
 			alt,	   // |
 			conc,	   // .
 			star,	   // *
+			negative,	   // ^
 			symb,	   // alphabet symbol
 			eps,	   // Epsilon
 			squareBrL, // [
@@ -38,6 +40,7 @@ class AlgExpression : public BaseObject {
 		conc,
 		// Unary:
 		star,
+		negative,
 		// Terminal:
 		symb,
 		// [i]
@@ -77,16 +80,19 @@ class AlgExpression : public BaseObject {
 	// Turns string into lexeme vector
 	static vector<Lexeme> parse_string(string);
 	bool from_string(const string&);
+	
 	// возвращаемый тип нижеперечисленных методов зависит от типа объекта (Regex/BackRefRegex)
 	// внутреннее состояние не имеет значения
-	virtual AlgExpression* expr(const vector<Lexeme>&, int, int);
+	// Построение из вектора лексем дерева регулярного выражения
+	// 2 и 3 аргумент - это начальный и конечный индекс рассматриваемых лексем в векторе
+	virtual AlgExpression* expr(const vector<Lexeme>&, int, int) = 0;
 	AlgExpression* scan_conc(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_star(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_alt(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_symb(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_eps(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_par(const vector<Lexeme>&, int, int);
-	static bool update_balance(const AlgExpression::Lexeme&, int&);
+	static void update_balance(const AlgExpression::Lexeme&, int&);
 
 	// список листьев дерева regex
 	vector<AlgExpression*> pre_order_travers();
@@ -129,4 +135,5 @@ class AlgExpression : public BaseObject {
 
 	friend class FiniteAutomaton;
 	friend class Tester;
+	friend class UnitTests;
 };
