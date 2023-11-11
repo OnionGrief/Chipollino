@@ -1,8 +1,7 @@
-#include "UnitTestsApp/Example.h"
-#include "gtest/gtest.h"
 #include <iostream>
 #include <thread>
-using namespace std;
+#include "UnitTestsApp/Example.h"
+#include "gtest/gtest.h"
 
 int main(int argc, char** argv) {
 	cout << "Unit Tests\n";

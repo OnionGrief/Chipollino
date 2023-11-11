@@ -1,11 +1,10 @@
 #pragma once
-#include "Objects/BaseObject.h"
+#include <time.h>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <time.h>
 #include <vector>
-using namespace std;
+#include "Objects/BaseObject.h"
 
 class RegexGenerator {
   private:

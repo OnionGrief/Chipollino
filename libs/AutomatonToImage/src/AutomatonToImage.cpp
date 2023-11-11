@@ -1,8 +1,7 @@
-#include "AutomatonToImage/AutomatonToImage.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
-using namespace std;
+#include "AutomatonToImage/AutomatonToImage.h"
 
 AutomatonToImage::AutomatonToImage() {}
 
@@ -55,8 +54,8 @@ string AutomatonToImage::to_image(string automat) {
 #endif
 
 	// автомат
-	ifstream infile_for_R("./refal/R_input.tex");
-	stringstream graph;
+	std::ifstream infile_for_R("./refal/R_input.tex");
+	std::stringstream graph;
 	string s;
 	if (!infile_for_R) return "";
 
@@ -76,7 +75,7 @@ string AutomatonToImage::to_image(string automat) {
 #endif
 
 	// таблица
-	ifstream infile_for_L("./refal/L_input.tex");
+	std::ifstream infile_for_L("./refal/L_input.tex");
 
 	if (!infile_for_L) return graph.str();
 

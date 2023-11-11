@@ -2,7 +2,10 @@
 #include <iostream>
 #include <string>
 #include <vector>
-using namespace std;
+
+using std::cout;
+using std::vector;
+using std::string;
 
 // using alphabet_symbol = string;
 struct alphabet_symbol {
@@ -18,9 +21,9 @@ struct alphabet_symbol {
 	static const char annote_marker = ',';
 
 	alphabet_symbol();
-	alphabet_symbol(const string& s);
-	alphabet_symbol(const char* c);
-	alphabet_symbol(char c);
+	alphabet_symbol(const string& s);	// NOLINT(runtime/explicit)
+	alphabet_symbol(const char* c);	// NOLINT(runtime/explicit)
+	alphabet_symbol(char c);	// NOLINT(runtime/explicit)
 
 	alphabet_symbol(const alphabet_symbol& other);
 
@@ -49,4 +52,4 @@ struct alphabet_symbol {
 	bool is_linearized() const;
 };
 
-ostream& operator<<(ostream& os, const alphabet_symbol& item);
+std::ostream& operator<<(std::ostream& os, const alphabet_symbol& item);

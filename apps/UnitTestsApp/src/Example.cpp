@@ -3,7 +3,7 @@
 void Example::determinize() {
 	vector<State> states;
 	for (int i = 0; i < 6; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -30,7 +30,7 @@ void Example::determinize() {
 void Example::remove_eps() {
 	vector<State> states;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -50,7 +50,7 @@ void Example::remove_eps() {
 void Example::minimize() {
 	vector<State> states;
 	for (int i = 0; i < 8; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 
@@ -81,12 +81,12 @@ void Example::minimize() {
 void Example::intersection() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	vector<State> states2;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 
@@ -197,7 +197,7 @@ void Example::transformation_monoid_example() {
 	FiniteAutomaton fa = Regex("(ba)*bc").to_ilieyu();
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	// states1[0].set_transition(0, "b");
@@ -224,7 +224,7 @@ void Example::transformation_monoid_example() {
 void Example::fa_subset_check() {
 	vector<State> states1;
 	for (int i = 0; i < 4; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -237,7 +237,7 @@ void Example::fa_subset_check() {
 
 	vector<State> states2;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 	states2[0].set_transition(1, "b");
@@ -262,7 +262,7 @@ void Example::normalize_regex() {
 void Example::to_image() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -290,7 +290,7 @@ void Example::to_image() {
 void Example::step() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -330,12 +330,12 @@ void Example::tester() {
 void Example::step_interection() {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	vector<State> states2;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 
@@ -383,7 +383,7 @@ void Example::table() {
 		c.push_back("c");
 		r.push_back("r");
 		for (int j = 0; j < 3; j++) {
-			data.push_back(to_string(i + j));
+			data.push_back(std::to_string(i + j));
 		}
 	}
 	LogTemplate::Table t;
@@ -401,7 +401,7 @@ void Example::table() {
 void Example::fa_semdet_check() {
 	vector<State> states;
 	for (int i = 0; i < 4; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 	states[0].set_transition(1, "a");
@@ -490,7 +490,7 @@ void Example::logger_test() {
 
 void Example::testing_with_generator(int regex_length, int star_num, int star_nesting,
 									 int alphabet_size,
-									 const function<void(string&)>& check_function) {
+									 const std::function<void(string&)>& check_function) {
 	RegexGenerator RG(regex_length, star_num, star_nesting, alphabet_size);
 	for (int i = 0; i < 100; i++) {
 		string s = RG.generate_regex();
@@ -528,7 +528,7 @@ void Example::fa_to_pgrammar() {
 
 	vector<State> states1;
 	for (int i = 0; i < 5; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	// states1[0].set_transition(0, "b");

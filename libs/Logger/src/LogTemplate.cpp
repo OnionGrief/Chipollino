@@ -1,9 +1,9 @@
-#include "Logger/LogTemplate.h"
 #include <variant>
+#include "Logger/LogTemplate.h"
 
 void LogTemplate::add_parameter(string parameter_name) {
 
-	ifstream infile(template_fullpath);
+	std::ifstream infile(template_fullpath);
 
 	if (!infile) return; // infile.close();
 
@@ -45,7 +45,7 @@ void LogTemplate::add_parameter(string parameter_name) {
 		}
 
 		infile.close();
-		ofstream outfile(template_fullpath);
+		std::ofstream outfile(template_fullpath);
 		outfile << outstr;
 		outfile.close();
 	}
@@ -85,7 +85,7 @@ string LogTemplate::get_tex_template() {
 }
 
 string LogTemplate::render() const {
-	stringstream infile = expand_includes(template_fullpath);
+	std::stringstream infile = expand_includes(template_fullpath);
 
 	// Строка-аккумулятор
 	string outstr = "";
@@ -115,13 +115,13 @@ string LogTemplate::render() const {
 					continue;
 				}
 
-				if (holds_alternative<Regex>(p.second.value)) {
+				if (std::holds_alternative<Regex>(p.second.value)) {
 					s.insert(insert_place,
-							 get<Regex>(p.second.value).to_txt()); /* Math mode is done in global
-																	  renderer */
-				} else if (holds_alternative<FiniteAutomaton>(p.second.value)) {
-					hash<string> hasher;
-					string automaton = get<FiniteAutomaton>(p.second.value).to_txt();
+							 std::get<Regex>(p.second.value).to_txt()); // Math mode is done in global
+																	//  renderer 
+				} else if (std::holds_alternative<FiniteAutomaton>(p.second.value)) {
+					std::hash<string> hasher;
+					string automaton = std::get<FiniteAutomaton>(p.second.value).to_txt();
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						s.insert(insert_place, cache_automatons[hash]);
@@ -130,12 +130,12 @@ string LogTemplate::render() const {
 						cache_automatons[hash] = graph;
 						s.insert(insert_place, graph);
 					}
-				} else if (holds_alternative<string>(p.second.value)) {
-					s.insert(insert_place, get<string>(p.second.value));
-				} else if (holds_alternative<int>(p.second.value)) {
-					s.insert(insert_place, to_string(get<int>(p.second.value)));
-				} else if (holds_alternative<Table>(p.second.value)) {
-					s.insert(insert_place, log_table(get<Table>(p.second.value)));
+				} else if (std::holds_alternative<string>(p.second.value)) {
+					s.insert(insert_place, std::get<string>(p.second.value));
+				} else if (std::holds_alternative<int>(p.second.value)) {
+					s.insert(insert_place, std::to_string(std::get<int>(p.second.value)));
+				} else if (std::holds_alternative<Table>(p.second.value)) {
+					s.insert(insert_place, log_table(std::get<Table>(p.second.value)));
 				}
 			}
 			outstr += s;
@@ -242,12 +242,12 @@ string LogTemplate::log_table(Table t) {
 	return table;
 }
 
-stringstream LogTemplate::expand_includes(string filename) const {
-	stringstream outstream;
+std::stringstream LogTemplate::expand_includes(string filename) const {
+	std::stringstream outstream;
 
-	ifstream infile(filename);
+	std::ifstream infile(filename);
 	if (!infile) {
-		cerr << "ERROR: while rendering template. Unknown filename " + filename + "\n";
+		std::cerr << "ERROR: while rendering template. Unknown filename " + filename + "\n";
 		return outstream;
 	}
 

@@ -1,19 +1,20 @@
 #pragma once
+#include <cmath>
+#include <deque>
+#include <fstream>
+#include <map>
+#include <set>
+#include <vector>
+#include <string>
+#include <variant>
 #include "InputGenerator/RegexGenerator.h"
 #include "Interpreter/Typization.h"
 #include "Logger/Logger.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
-#include <cmath>
-#include <deque>
-#include <fstream>
-#include <map>
-#include <set>
-#include <string>
-#include <variant>
 
-using namespace Typization;
+using namespace Typization;	// NOLINT(build/namespaces)
 
 class Interpreter {
   public:
@@ -61,7 +62,7 @@ class Interpreter {
 	// Внутренний логгер. Контролирует уровень вложенности с учётом скопа
 	class InterpreterLogger {
 	  public:
-		InterpreterLogger(Interpreter& parent) : parent(parent) {
+		InterpreterLogger(Interpreter& parent) : parent(parent) { // NOLINT(runtime/explicit)
 			parent.log_nesting++;
 		}
 		~InterpreterLogger() {
@@ -93,9 +94,9 @@ class Interpreter {
 		vector<ObjectType> input;
 		// Тип выходного аргумента
 		ObjectType output;
-		Function(){};
+		Function(){}
 		Function(string name, vector<ObjectType> input, ObjectType output)
-			: name(name), input(input), output(output){};
+			: name(name), input(input), output(output){}
 	};
 
 	friend bool operator==(const Function& l, const Function& r);
@@ -117,7 +118,7 @@ class Interpreter {
 	// Общий вид выражения
 	struct Expression {
 		ObjectType type;
-		variant<int, FunctionSequence, Regex, string, Array> value;
+		std::variant<int, FunctionSequence, Regex, string, Array> value;
 		// Преобразование в текст
 		string to_txt() const;
 	};
@@ -189,7 +190,7 @@ class Interpreter {
 	};
 
 	// Общий вид опрерации
-	using GeneralOperation = variant<Declaration, Test, Predicate, SetFlag, Verification>;
+	using GeneralOperation = std::variant<Declaration, Test, Predicate, SetFlag, Verification>;
 
 	//== Парсинг ==============================================================
 
@@ -198,20 +199,20 @@ class Interpreter {
 	// Находит парную закрывающую скобку
 	int find_closing_par(const vector<Lexem>&, size_t pos);
 
-	optional<Id> scan_id(const vector<Lexem>&, int& pos, size_t end);
-	optional<Regex> scan_regex(const vector<Lexem>&, int& pos, size_t end);
-	optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&, int& pos, size_t end);
-	optional<Array> scan_array(const vector<Lexem>&, int& pos, size_t end);
-	optional<Expression> scan_expression(const vector<Lexem>&, int& pos, size_t end);
+	std::optional<Id> scan_id(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
+	std::optional<Regex> scan_regex(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
+	std::optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
+	std::optional<Array> scan_array(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
+	std::optional<Expression> scan_expression(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
 
-	// перевод ObjectType в String (для логирования и дебага)
+	// перевод ObjectType в string (для логирования и дебага)
 	map<ObjectType, string> types_to_string = {
 		{ObjectType::NFA, "NFA"},
 		{ObjectType::DFA, "DFA"},
 		{ObjectType::Regex, "Regex"},
 		{ObjectType::RandomRegex, "RandomRegex"},
 		{ObjectType::Int, "Int"},
-		{ObjectType::String, "String"},
+		{ObjectType::String, "string"},
 		{ObjectType::Boolean, "Boolean"},
 		{ObjectType::OptionalBool, "OptionalBool"},
 		{ObjectType::AmbiguityValue, "AmbiguityValue"},
@@ -222,32 +223,32 @@ class Interpreter {
 	// Типизация идентификаторов. Нужна для корректного составления опреаций
 	map<string, ObjectType> id_types;
 	// Считывание операции из набора лексем
-	optional<Declaration> scan_declaration(const vector<Lexem>&, int& pos);
-	optional<Test> scan_test(const vector<Lexem>&, int& pos);
-	optional<Verification> scan_verification(const vector<Lexem>&, int& pos);
-	optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);
-	optional<SetFlag> scan_flag(const vector<Lexem>&, int& pos);
-	optional<GeneralOperation> scan_operation(const vector<Lexem>&);
+	std::optional<Declaration> scan_declaration(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
+	std::optional<Test> scan_test(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
+	std::optional<Verification> scan_verification(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
+	std::optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
+	std::optional<SetFlag> scan_flag(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
+	std::optional<GeneralOperation> scan_operation(const vector<Lexem>&);
 
 	//== Исполнение комманд ===================================================
 
 	// Выражение для подстановки на место *
-	optional<Regex> current_random_regex;
+	std::optional<Regex> current_random_regex;
 
 	// Применение цепочки функций к набору аргументов
-	optional<GeneralObject> apply_function_sequence(const vector<Function>& functions,
+	std::optional<GeneralObject> apply_function_sequence(const vector<Function>& functions,
 													vector<GeneralObject> arguments);
 
 	// Применение функции к набору аргументов
-	optional<GeneralObject> apply_function(const Function& function,
+	std::optional<GeneralObject> apply_function(const Function& function,
 										   const vector<GeneralObject>& arguments,
-										   LogTemplate& log_template);
+										   LogTemplate& log_template); // NOLINT(runtime/references)
 
 	// Вычисление выражения
-	optional<GeneralObject> eval_expression(const Expression& expr);
+	std::optional<GeneralObject> eval_expression(const Expression& expr);
 
 	// Вычисление последовательности функций
-	optional<GeneralObject> eval_function_sequence(const FunctionSequence& seq);
+	std::optional<GeneralObject> eval_function_sequence(const FunctionSequence& seq);
 
 	// Исполнение операций
 	bool run_declaration(const Declaration&);
@@ -260,11 +261,11 @@ class Interpreter {
 	// Сравнение типов ожидаемых и полученных входных данных
 	bool typecheck(vector<ObjectType> func_input_type, vector<ObjectType> input_type);
 	// выбрать подходящий вариант функции для данных аргументов (если он есть)
-	optional<int> find_func(string func, vector<ObjectType> input_type);
-	optional<string> get_func_id(Function function);
+	std::optional<int> find_func(string func, vector<ObjectType> input_type);
+	std::optional<string> get_func_id(Function function);
 
 	// Построение последовательности функций по их названиям
-	optional<vector<Function>> build_function_sequence(vector<string> function_names,
+	std::optional<vector<Function>> build_function_sequence(vector<string> function_names,
 													   vector<ObjectType> first_type);
 
 	// Соответствие между названиями функций и сигнатурами
@@ -295,13 +296,13 @@ class Interpreter {
 		// Eсли type = number
 		int num = 0;
 
-		Lexem(Type type = error, string value = "");
-		Lexem(int num);
+		Lexem(Type type = error, string value = "");	// NOLINT(runtime/explicit)
+		Lexem(int num);	// NOLINT(runtime/explicit)
 	};
 
 	class Lexer {
 	  public:
-		Lexer(Interpreter& parent) : parent(parent) {}
+		Lexer(Interpreter& parent) : parent(parent) {}	// NOLINT(runtime/explicit)
 		// Возвращает лексемы, разбитые по строчкам
 		vector<vector<Lexem>> load_file(string path);
 		// Бьёт строку на лексемы (без перевода строки)
@@ -323,7 +324,7 @@ class Interpreter {
 			}
 
 		  private:
-			deque<int> saves;
+			std::deque<int> saves;
 
 		} input;
 

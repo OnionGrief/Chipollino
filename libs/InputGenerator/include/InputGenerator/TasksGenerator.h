@@ -1,13 +1,12 @@
 #pragma once
-#include "InputGenerator/RegexGenerator.h"
-#include "Objects/BaseObject.h"
-#include "Objects/Regex.h"
+#include <time.h>
 #include <fstream>
 #include <map>
 #include <string>
-#include <time.h>
 #include <vector>
-using namespace std;
+#include "InputGenerator/RegexGenerator.h"
+#include "Objects/BaseObject.h"
+#include "Objects/Regex.h"
 
 class TasksGenerator {
 

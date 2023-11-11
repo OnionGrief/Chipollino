@@ -1,9 +1,9 @@
 #include "Objects/Language.h"
 
-FA_structure::FA_structure(int initial_state, vector<State> states, weak_ptr<Language> language)
+FA_structure::FA_structure(int initial_state, vector<State> states, std::weak_ptr<Language> language)
 	: initial_state(initial_state), states(states), language(language) {}
 
-Regex_structure::Regex_structure(string str, weak_ptr<Language> language)
+Regex_structure::Regex_structure(string str, std::weak_ptr<Language> language)
 	: str(str), language(language) {}
 
 Language::Language() {}
@@ -28,7 +28,7 @@ bool Language::is_pump_length_cached() const {
 
 void Language::set_pump_length(int pump_length_value) {
 	pump_length.emplace(pump_length_value);
-};
+}
 
 int Language::get_pump_length() {
 	return pump_length.value();
@@ -39,10 +39,10 @@ bool Language::is_min_dfa_cached() const {
 }
 
 void Language::set_min_dfa(int initial_state, const vector<State>& states,
-						   const shared_ptr<Language>& language) {
+						   const std::shared_ptr<Language>& language) {
 	vector<State> renamed_states = states;
 	for (int i = 0; i < renamed_states.size(); i++)
-		renamed_states[i].identifier = to_string(i);
+		renamed_states[i].identifier = std::to_string(i);
 	min_dfa.emplace(FA_structure(initial_state, renamed_states, language));
 }
 
@@ -68,7 +68,7 @@ bool Language::is_nfa_minimum_size_cached() const {
 
 void Language::set_nfa_minimum_size(int nfa_minimum_size_value) {
 	nfa_minimum_size.emplace(nfa_minimum_size_value);
-};
+}
 
 int Language::get_nfa_minimum_size() {
 	return nfa_minimum_size.value();
@@ -90,7 +90,7 @@ bool Language::is_one_unambiguous_regex_cached() const {
 	return one_unambiguous_regex.has_value();
 }
 
-void Language::set_one_unambiguous_regex(string str, const shared_ptr<Language>& language) {
+void Language::set_one_unambiguous_regex(string str, const std::shared_ptr<Language>& language) {
 	one_unambiguous_regex.emplace(Regex_structure(str, language));
 }
 

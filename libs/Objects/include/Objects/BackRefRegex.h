@@ -1,6 +1,5 @@
 #pragma once
 #include "AlgExpression.h"
-using namespace std;
 
 class BackRefRegex : public AlgExpression {
   private:

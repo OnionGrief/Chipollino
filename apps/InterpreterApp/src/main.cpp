@@ -1,7 +1,6 @@
+#include <iostream>
 #include "Interpreter/Interpreter.h"
 #include "Objects/Regex.h"
-#include <iostream>
-using namespace std;
 
 int main(int argc, char* argv[]) {
 	// Приветствие

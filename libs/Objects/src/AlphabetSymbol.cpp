@@ -1,13 +1,13 @@
 #include "Objects/AlphabetSymbol.h"
 
-alphabet_symbol::alphabet_symbol(){};
-alphabet_symbol::alphabet_symbol(const string& s) : symbol(s), value(s){};
-alphabet_symbol::alphabet_symbol(const char* c) : symbol(c), value(c){};
-alphabet_symbol::alphabet_symbol(char c) : symbol(string(1, c)), value(string(1, c)){};
+alphabet_symbol::alphabet_symbol(){}
+alphabet_symbol::alphabet_symbol(const string& s) : symbol(s), value(s){}
+alphabet_symbol::alphabet_symbol(const char* c) : symbol(c), value(c){}
+alphabet_symbol::alphabet_symbol(char c) : symbol(string(1, c)), value(string(1, c)){}
 
 alphabet_symbol::alphabet_symbol(const alphabet_symbol& other)
 	: symbol(other.symbol), annote_numbers(other.annote_numbers),
-	  linearize_numbers(other.linearize_numbers), value(other.value){};
+	  linearize_numbers(other.linearize_numbers), value(other.value){}
 
 void alphabet_symbol::update_value() {
 	value = symbol;
@@ -75,17 +75,17 @@ string alphabet_symbol::vector_to_str(const vector<alphabet_symbol>& in) {
 	return out;
 }
 
-ostream& operator<<(ostream& os, const alphabet_symbol& as) {
+std::ostream& operator<<(std::ostream& os, const alphabet_symbol& as) {
 	return os << (string)as;
 }
 
 void alphabet_symbol::annote(int num) {
-	annote_numbers.push_back(annote_marker + to_string(num));
+	annote_numbers.push_back(annote_marker + std::to_string(num));
 	update_value();
 }
 
 void alphabet_symbol::linearize(int num) {
-	linearize_numbers.push_back(linearize_marker + to_string(num));
+	linearize_numbers.push_back(linearize_marker + std::to_string(num));
 	update_value();
 }
 

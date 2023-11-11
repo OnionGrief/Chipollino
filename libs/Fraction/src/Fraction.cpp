@@ -6,7 +6,7 @@ Fraction::Fraction() {
 }
 
 Fraction::Fraction(InfInt n, InfInt d) {
-	if (d == 0) throw invalid_argument("d");
+	if (d == 0) throw std::invalid_argument("d");
 	numerator = n;
 	denominator = d;
 	simplify();
@@ -89,7 +89,7 @@ bool Fraction::operator>=(const Fraction& f) {
 	return n >= 0;
 }
 
-ostream& operator<<(ostream& output, const Fraction& f) {
+std::ostream& operator<<(std::ostream& output, const Fraction& f) {
 	output << "(" << f.numerator << "/" << f.denominator << ")";
 	return output;
 }
