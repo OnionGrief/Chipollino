@@ -6,15 +6,15 @@ Regex::Regex(const string& str) : Regex() {
 	try {
 		bool res = from_string(str);
 		if (!res) {
-			throw runtime_error("Regex::from_string() ERROR");
+			throw std::runtime_error("Regex::from_string() ERROR");
 		}
-	} catch (const runtime_error& re) {
+	} catch (const std::runtime_error& re) {
 		cout << re.what() << "\n";
 		exit(EXIT_FAILURE);
 	}
 }
 
-Regex::Regex(const string& str, const shared_ptr<Language>& new_language) : Regex(str) {
+Regex::Regex(const string& str, const std::shared_ptr<Language>& new_language) : Regex(str) {
 	language = new_language;
 }
 
@@ -25,7 +25,7 @@ AlgExpression* Regex::make() const {
 template <typename T> Regex* Regex::cast(T* ptr) {
 	auto* r = dynamic_cast<Regex*>(ptr);
 	if (!r) {
-		throw runtime_error("Failed to cast to Regex");
+		throw std::runtime_error("Failed to cast to Regex");
 	}
 
 	return r;
@@ -37,7 +37,7 @@ template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs) {
 	for (T* ptr : ptrs) {
 		auto* r = dynamic_cast<Regex*>(ptr);
 		if (!r) {
-			throw runtime_error("Failed to cast to Regex");
+			throw std::runtime_error("Failed to cast to Regex");
 		}
 		regexPointers.push_back(r);
 	}
@@ -46,14 +46,14 @@ template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs) {
 }
 
 // возвращает пару <вектор сотсояний, max_index>
-pair<vector<State>, int> Regex::get_thompson(int max_index) const {
+std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 	string str;			  // идентификатор состояния
 	vector<State> s = {}; // вектор состояний нового автомата
 	map<alphabet_symbol, set<int>> m, p, map_l, map_r; // словари автоматов
 	set<int> trans;									   // новые транзишены
 	int offset; // сдвиг для старых индексов состояний в новом автомате
-	pair<vector<State>, int> al; // для левого автомата относительно операции
-	pair<vector<State>, int> ar; // для правого автомата относительно операции
+	std::pair<vector<State>, int> al; // для левого автомата относительно операции
+	std::pair<vector<State>, int> ar; // для правого автомата относительно операции
 	Language* alp; // Новый язык для автомата
 	switch (type) {
 	case Type::alt: // |
@@ -61,7 +61,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		ar = Regex::cast(term_r)->get_thompson(al.second);
 		max_index = ar.second;
 
-		str = "q" + to_string(max_index + 1);
+		str = "q" + std::to_string(max_index + 1);
 		m[alphabet_symbol::epsilon()] = {1, int(al.first.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
@@ -102,7 +102,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 			map_r = {};
 		}
 
-		str = "q" + to_string(max_index + 2);
+		str = "q" + std::to_string(max_index + 2);
 		s.push_back(State(int(al.first.size() + ar.first.size()) + 1, {}, str, true, p));
 
 		return {s, max_index + 2};
@@ -159,7 +159,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		al = Regex::cast(term_l)->get_thompson(max_index);
 		max_index = al.second;
 
-		str = "q" + to_string(max_index + 1);
+		str = "q" + std::to_string(max_index + 1);
 		m[alphabet_symbol::epsilon()] = {1, int(al.first.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
@@ -183,26 +183,26 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		}
 		offset = s.size();
 
-		str = "q" + to_string(max_index + 2);
+		str = "q" + std::to_string(max_index + 2);
 		s.push_back(State(int(al.first.size()) + 1, {}, str, true, p));
 
 		return {s, max_index + 2};
 	case Type::eps:
-		str = "q" + to_string(max_index + 1);
+		str = "q" + std::to_string(max_index + 1);
 
 		m[alphabet_symbol::epsilon()] = {1};
 		s.push_back(State(0, {}, str, false, m));
-		str = "q" + to_string(max_index + 2);
+		str = "q" + std::to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
 		return {s, max_index + 2};
 	default:
 
-		str = "q" + to_string(max_index + 1);
+		str = "q" + std::to_string(max_index + 1);
 		// m[char_to_alphabet_symbol(value.symbol)] = {1};
 		m[value.symbol] = {1};
 		s.push_back(State(0, {}, str, false, m));
-		str = "q" + to_string(max_index + 2);
+		str = "q" + std::to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
 		return {s, max_index + 2};
@@ -690,14 +690,14 @@ bool Regex::derivative_with_respect_to_str(string str, const Regex* reg_e, Regex
 }
 
 // Производная по символу
-optional<Regex> Regex::symbol_derivative(const Regex& respected_sym) const {
+std::optional<Regex> Regex::symbol_derivative(const Regex& respected_sym) const {
 	auto rs = respected_sym.copy();
 	Regex result;
-	optional<Regex> ans;
+	std::optional<Regex> ans;
 	if (derivative_with_respect_to_sym(Regex::cast(rs), this, result))
 		ans = result;
 	else
-		ans = nullopt;
+		ans = std::nullopt;
 	delete rs;
 	return ans;
 }
@@ -708,13 +708,13 @@ void Regex::partial_symbol_derivative(const Regex& respected_sym, vector<Regex>&
 	delete rs;
 }
 // Производная по префиксу
-optional<Regex> Regex::prefix_derivative(string respected_str) const {
+std::optional<Regex> Regex::prefix_derivative(string respected_str) const {
 	Regex result;
-	optional<Regex> ans;
+	std::optional<Regex> ans;
 	if (derivative_with_respect_to_str(respected_str, this, result))
 		ans = result;
 	else
-		ans = nullopt;
+		ans = std::nullopt;
 	return ans;
 }
 // Длина накачки
@@ -759,7 +759,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 					if (!derivative_with_respect_to_str(*it, this, *Regex::cast(pumping.term_r)))
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language = make_shared<Language>(pumping.alphabet);
+					pumping.language = std::make_shared<Language>(pumping.alphabet);
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
@@ -1021,9 +1021,9 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		bool alternate_flag = false;
 		// TODO
 		// сборка регулярок из строк будет ошибочной, если символы размечены
-		if (!counter)
+		if (!counter){
 			regl += "(" + (string)consistent_symb;
-		else {
+		} else {
 			regl += "|" + (string)consistent_symb;
 			alternate_flag = true;
 		}
@@ -1034,7 +1034,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 			}
 		}
 		for (int elem : reachable_by_consistent_symb) {
-			FiniteAutomaton consistent_symb_automaton(0, {}, make_shared<Language>());
+			FiniteAutomaton consistent_symb_automaton(0, {}, std::make_shared<Language>());
 			set<int> reachable_states = min_fa.closure({elem}, false);
 			vector<int> inserted_states_indices;
 			int consistent_symb_automaton_initial_state = 0;
@@ -1068,7 +1068,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 				}
 			}
 			consistent_symb_automaton.language =
-				make_shared<Language>(consistent_symb_automaton_alphabet);
+				std::make_shared<Language>(consistent_symb_automaton_alphabet);
 			FiniteAutomaton consistent_symb_automaton_cut = FiniteAutomaton(
 				consistent_symb_automaton.initial_state, consistent_symb_automaton.states,
 				consistent_symb_automaton.language);
@@ -1104,7 +1104,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	return res;
 }
 
-Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules, iLogTemplate* log) const {
+Regex Regex::normalize_regex(const vector<std::pair<Regex, Regex>>& rules, iLogTemplate* log) const {
 	Regex regex = *this;
 	if (log) {
 		log->set_parameter("oldregex", *this);

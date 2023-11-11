@@ -1,9 +1,21 @@
 #pragma once
 
-#include "BaseObject.h"
-#include "iLogTemplate.h"
 #include <map>
 #include <unordered_map>
+#include <vector>
+#include <memory>
+#include <set>
+#include <string>
+#include "BaseObject.h"
+#include "iLogTemplate.h"
+
+using std::cout;
+using std::endl;
+using std::vector;
+using std::string;
+using std::map;
+using std::unordered_map;
+using std::set;
 
 class AlgExpression : public BaseObject {
   protected:
@@ -22,7 +34,7 @@ class AlgExpression : public BaseObject {
 		Type type = error;
 		alphabet_symbol symbol = "";
 		int number = 0; // Нужно для линеаризации в глушкове
-		Lexeme(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
+		Lexeme(Type type = error, const alphabet_symbol& symbol = "", int number = 0);	// NOLINT(runtime/explicit)
 	};
 
 	enum Type {
@@ -52,14 +64,14 @@ class AlgExpression : public BaseObject {
 	// Создает новый язык с алфавитом
 	void set_language(const set<alphabet_symbol>& _alphabet);
 	// Рекурсивная генерация алфавита
-	void generate_alphabet(set<alphabet_symbol>& _alphabet);
+	void generate_alphabet(set<alphabet_symbol>& _alphabet);	// NOLINT(runtime/references)
 	// Генерация языка из алфавита
 	void make_language();
 
 	// для print_tree
 	void print_subtree(AlgExpression* expr, int level);
 	// для print_dot
-	string print_subdot(AlgExpression* expr, const std::string& parent_dot_node, int& id);
+	string print_subdot(AlgExpression* expr, const string& parent_dot_node, int& id);	// NOLINT(runtime/references)
 
 	// Turns string into lexeme vector
 	static vector<Lexeme> parse_string(string);
@@ -98,8 +110,8 @@ class AlgExpression : public BaseObject {
 
   public:
 	AlgExpression();
-	AlgExpression(shared_ptr<Language>, Type, const Lexeme&, const set<alphabet_symbol>&);
-	AlgExpression(set<alphabet_symbol>);
+	AlgExpression(std::shared_ptr<Language>, Type, const Lexeme&, const set<alphabet_symbol>&);
+	AlgExpression(set<alphabet_symbol>);	// NOLINT(runtime/explicit)
 
 	~AlgExpression();
 

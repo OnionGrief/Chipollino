@@ -1,8 +1,4 @@
 #pragma once
-#include "AlgExpression.h"
-#include "AlphabetSymbol.h"
-#include "BaseObject.h"
-#include "iLogTemplate.h"
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -10,7 +6,12 @@
 #include <set>
 #include <string>
 #include <vector>
-using namespace std;
+#include <memory> 
+#include <utility>
+#include "AlgExpression.h"
+#include "AlphabetSymbol.h"
+#include "BaseObject.h"
+#include "iLogTemplate.h"
 
 class Language;
 class FiniteAutomaton;
@@ -22,23 +23,23 @@ class Regex : public AlgExpression {
 	AlgExpression* make() const override;
 
 	// Множество префиксов длины len
-	void get_prefix(int len, std::set<std::string>& prefs) const;
+	void get_prefix(int len, set<string>& prefs) const;	// NOLINT(runtime/references)
 	// Производная по символу
 	bool derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
-										Regex& result) const;
+										Regex& result) const;	// NOLINT(runtime/references)
 	bool partial_derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
-												vector<Regex>& result) const;
+												vector<Regex>& result) const;	// NOLINT(runtime/references)
 	// Производная по префиксу
-	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e, Regex& result) const;
-	pair<vector<State>, int> get_thompson(int) const;
+	bool derivative_with_respect_to_str(string str, const Regex* reg_e, Regex& result) const;	// NOLINT(runtime/references)
+	std::pair<vector<State>, int> get_thompson(int) const;
 
-	void normalize_this_regex(const vector<pair<Regex, Regex>>&); // переписывание regex по
+	void normalize_this_regex(const vector<std::pair<Regex, Regex>>&); // переписывание regex по
 																  // пользовательским правилам
 
   public:
 	Regex() = default;
-	Regex(const string&);
-	Regex(const string&, const shared_ptr<Language>&);
+	Regex(const string&);	// NOLINT(runtime/explicit)
+	Regex(const string&, const std::shared_ptr<Language>&);
 
 	// dynamic_cast к типу Regex*
 	template <typename T> static Regex* cast(T* ptr);
@@ -58,11 +59,11 @@ class Regex : public AlgExpression {
 	bool subset(const Regex&, iLogTemplate* log = nullptr) const;
 
 	// Производная по символу
-	optional<Regex> symbol_derivative(const Regex& respected_sym) const;
+	std::optional<Regex> symbol_derivative(const Regex& respected_sym) const;
 	// Частичная производная по символу
-	void partial_symbol_derivative(const Regex& respected_sym, vector<Regex>& result) const;
+	void partial_symbol_derivative(const Regex& respected_sym, vector<Regex>& result) const;	// NOLINT(runtime/references)
 	// Производная по префиксу
-	optional<Regex> prefix_derivative(string respected_str) const;
+	std::optional<Regex> prefix_derivative(string respected_str) const;
 	// Длина накачки
 	int pump_length(iLogTemplate* log = nullptr) const;
 
@@ -76,7 +77,7 @@ class Regex : public AlgExpression {
 	Regex get_one_unambiguous_regex(iLogTemplate* log = nullptr) const;
 
 	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const vector<pair<Regex, Regex>>&, iLogTemplate* log = nullptr) const;
+	Regex normalize_regex(const vector<std::pair<Regex, Regex>>&, iLogTemplate* log = nullptr) const;
 };
 
 /*

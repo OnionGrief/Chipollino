@@ -1,5 +1,5 @@
-#include "Interpreter/Interpreter.h"
 #include <string>
+#include "Interpreter/Interpreter.h"
 
 bool types_equiv(const vector<ObjectType>& input, const ObjectType& output) {
 	if (!((output == input[0]) || (output == ObjectType::DFA && input[0] == ObjectType::NFA) ||

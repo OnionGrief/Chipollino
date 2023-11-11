@@ -28,7 +28,7 @@ void RegexGenerator::change_seed() {
 }
 
 void RegexGenerator::write_to_file(string filename) {
-	ofstream out(filename, ios::app);
+	std::ofstream out(filename, std::ios::app);
 	if (out.is_open()) out << res_str << "\n";
 	out.close();
 }
@@ -74,7 +74,7 @@ void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt>
 	} else if (v == 1) {
 		generate_conc_regex();
 	}
-};
+}
 
 void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex>
 											  // | пусто
@@ -82,7 +82,7 @@ void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex>
 	if (v) {
 		generate_conc_regex();
 	}
-};
+}
 
 void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 											 // | <simple-regex><conc-regex>
@@ -94,7 +94,7 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 		if (cur_regex_length < 1) return;
 		generate_conc_regex();
 	}
-};
+}
 
 void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 											   // <lbr><regex-without-eps><rbr><unary>?
@@ -116,15 +116,16 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 				star_chance += cur_regex_length / star_nesting;
 			if (star_chance < 2) star_chance += 2;
 			v2 = rand() % star_chance; // будет ли *
-		} else
+		} else {
 			v2 = 1;
+		}
 
 		if (!v2 && cur_star_num > 0 && cur_nesting < star_nesting) {
 			cur_star_num--;
 			cur_nesting++;
-		} else
+		} else {
 			v2 = 1;
-
+		}
 		res_str += '(';
 		generate_regex_();
 		res_str += ')';
@@ -143,8 +144,9 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 			int star_chance = cur_regex_length / cur_star_num;
 			if (star_chance < 2) star_chance = 2;
 			v2 = rand() % star_chance;
-		} else
+		} else {
 			v2 = 1;
+		}
 
 		if (!v2 && cur_star_num > 0 && cur_nesting < star_nesting) {
 			res_str += '*';
@@ -152,7 +154,7 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 		}
 		cur_regex_length--;
 	}
-};
+}
 
 char RegexGenerator::rand_symb() {
 	return alphabet[rand() % alphabet.size()];

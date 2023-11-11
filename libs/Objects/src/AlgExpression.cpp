@@ -1,7 +1,7 @@
-#include "Objects/AlgExpression.h"
-#include "Objects/Language.h"
 #include <unordered_map>
 #include <utility>
+#include "Objects/AlgExpression.h"
+#include "Objects/Language.h"
 
 AlgExpression::AlgExpression() {
 	type = AlgExpression::eps;
@@ -9,7 +9,7 @@ AlgExpression::AlgExpression() {
 	term_r = nullptr;
 }
 
-AlgExpression::AlgExpression(shared_ptr<Language> language, Type type, const Lexeme& value,
+AlgExpression::AlgExpression(std::shared_ptr<Language> language, Type type, const Lexeme& value,
 							 const set<alphabet_symbol>& alphabet)
 	: BaseObject(move(language)), type(type), value(value), alphabet(alphabet) {}
 
@@ -74,7 +74,7 @@ AlgExpression& AlgExpression::operator=(const AlgExpression& other) {
 
 void AlgExpression::set_language(const set<alphabet_symbol>& _alphabet) {
 	alphabet = _alphabet;
-	language = make_shared<Language>(alphabet);
+	language = std::make_shared<Language>(alphabet);
 }
 
 void AlgExpression::generate_alphabet(set<alphabet_symbol>& _alphabet) {
@@ -91,7 +91,7 @@ void AlgExpression::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 
 void AlgExpression::make_language() {
 	generate_alphabet(alphabet);
-	language = make_shared<Language>(alphabet);
+	language = std::make_shared<Language>(alphabet);
 }
 
 string AlgExpression::to_txt() const {
@@ -134,7 +134,7 @@ void AlgExpression::print_subtree(AlgExpression* expr, int level) {
 		if (expr->value.symbol != "")
 			r_v = expr->value.symbol;
 		else
-			r_v = to_string(expr->type);
+			r_v = std::to_string(expr->type);
 		cout << r_v << endl;
 		print_subtree(expr->term_r, level + 1);
 	}
@@ -148,18 +148,18 @@ void AlgExpression::print_tree() {
 	if (value.symbol != "")
 		r_v = value.symbol;
 	else
-		r_v = to_string(type);
+		r_v = std::to_string(type);
 	cout << r_v << endl;
 	print_subtree(term_r, 1);
 }
 
-std::unordered_map<int, std::string> type_to_str = {
+unordered_map<int, string> type_to_str = {
 	{0, "ε"}, {1, "|"}, {2, "."}, {3, "*"}, {4, "symb"}};
 
 string AlgExpression::print_subdot(AlgExpression* expr, const string& parent_dot_node, int& id) {
 	string dot;
 	if (expr) {
-		string dot_node = "node" + to_string(id++);
+		string dot_node = "node" + std::to_string(id++);
 
 		alphabet_symbol r_v;
 		if (expr->value.symbol != "")
@@ -191,7 +191,7 @@ void AlgExpression::print_dot() {
 	else
 		r_v = type_to_str.at(type);
 
-	string root_dot_node = "node" + to_string(id++);
+	string root_dot_node = "node" + std::to_string(id++);
 	dot += root_dot_node + " [label=\"" + string(r_v) + "\"];\n";
 
 	dot += print_subdot(term_l, root_dot_node, id);
@@ -363,7 +363,7 @@ bool AlgExpression::from_string(const string& str) {
 		value = Lexeme::Type::eps;
 		type = Type::eps;
 		alphabet = {};
-		language = make_shared<Language>(alphabet);
+		language = std::make_shared<Language>(alphabet);
 		return true;
 	}
 
@@ -378,7 +378,7 @@ bool AlgExpression::from_string(const string& str) {
 	value = root->value;
 	type = root->type;
 	alphabet = root->alphabet;
-	language = make_shared<Language>(alphabet);
+	language = std::make_shared<Language>(alphabet);
 	if (root->term_l != nullptr) {
 		term_l = root->term_l->copy();
 	}
@@ -638,8 +638,9 @@ string AlgExpression::get_iterated_word(int n) const {
 		if (type == Type::star) {
 			for (int i = 0; i < n; i++)
 				str += term_l->get_iterated_word(n);
-		} else
+		} else {
 			str += term_l->get_iterated_word(n);
+		}
 	}
 	if (term_r && type != Type::alt) {
 		str += term_r->get_iterated_word(n);

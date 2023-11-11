@@ -1,9 +1,8 @@
 #pragma once
-#include "LogTemplate.h"
 #include <string>
 #include <vector>
+#include "LogTemplate.h"
 
-using namespace std;
 
 class Logger {
   public:

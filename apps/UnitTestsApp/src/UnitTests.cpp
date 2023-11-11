@@ -1,3 +1,4 @@
+#include <functional>
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "Interpreter/Interpreter.h"
@@ -8,7 +9,6 @@
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
 #include "gtest/gtest.h"
-#include <functional>
 
 TEST(TestCaseName, Test_random_regex_parsing) {
 	RegexGenerator rg(15, 10, 5, 3);
@@ -24,7 +24,7 @@ TEST(TestCaseName, Test_random_regex_parsing) {
 TEST(TestCaseName, Test_fa_equal) {
 	vector<State> states1;
 	for (int i = 0; i < 6; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "b");
@@ -40,7 +40,7 @@ TEST(TestCaseName, Test_fa_equal) {
 
 	vector<State> states2;
 	for (int i = 0; i < 6; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 	states2[0].set_transition(1, "b");
@@ -56,7 +56,7 @@ TEST(TestCaseName, Test_fa_equal) {
 
 	vector<State> states3;
 	for (int i = 0; i < 6; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states3.push_back(s);
 	}
 	states3[5].set_transition(4, "b");
@@ -87,7 +87,7 @@ TEST(TestCaseName, Test_fa_equal) {
 TEST(TestCaseName, Test_fa_equiv) {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(0, "c");
@@ -101,7 +101,7 @@ TEST(TestCaseName, Test_fa_equiv) {
 
 	vector<State> states2;
 	for (int i = 0; i < 4; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 	states2[0].set_transition(0, "c");
@@ -121,7 +121,7 @@ TEST(TestCaseName, Test_fa_equiv) {
 TEST(TestCaseName, Test_bisimilar) {
 	vector<State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 	states1[0].set_transition(1, "a");
@@ -138,7 +138,7 @@ TEST(TestCaseName, Test_bisimilar) {
 
 	vector<State> states2;
 	for (int i = 0; i < 2; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 	states2[0].set_transition(1, "a");
@@ -158,7 +158,7 @@ TEST(TestCaseName, Test_merge_bisimilar) {
 
 	vector<State> states2;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states2.push_back(s);
 	}
 	states2[0].set_transition(1, "a");
@@ -175,7 +175,7 @@ TEST(TestCaseName, Test_merge_bisimilar) {
 
 	vector<State> states3;
 	for (int i = 0; i < 2; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states3.push_back(s);
 	}
 	states3[0].set_transition(0, "b");
@@ -216,7 +216,7 @@ TEST(TestCaseName, Test_ambiguity) {
 		glushkov,
 		ilieyu
 	};
-	using Test = tuple<int, string, AutomatonType, FiniteAutomaton::AmbiguityValue>;
+	using Test = std::tuple<int, string, AutomatonType, FiniteAutomaton::AmbiguityValue>;
 	vector<Test> tests = {
 		//{0, "(a*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
 		{1, "a*a*", glushkov, FiniteAutomaton::polynomially_ambigious},
@@ -288,14 +288,14 @@ TEST(TestCaseName, Test_arden) {
 }
 
 TEST(TestCaseName, Test_pump_length) {
-	ASSERT_TRUE(Regex("abaa").pump_length() == 5);
+	ASSERT_EQ(Regex("abaa").pump_length(),5);
 }
 
 TEST(TestCaseName, Test_fa_to_pgrammar) {
 	// cout << "fa to grammar\n";
 	vector<State> states1;
 	for (int i = 0; i < 5; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states1.push_back(s);
 	}
 
@@ -397,14 +397,14 @@ TEST(TestCaseName, test_interpreter) {
 TEST(TestCaseName, Test_TransformationMonoid) {
 	FiniteAutomaton fa1 = Regex("a*b*c*").to_thompson().minimize();
 	TransformationMonoid tm1(fa1);
-	ASSERT_TRUE(tm1.class_card() == 7);
-	ASSERT_TRUE(tm1.class_length() == 2);
+	ASSERT_EQ(tm1.class_card(),7);
+	ASSERT_EQ(tm1.class_length(),2);
 	ASSERT_TRUE(tm1.is_minimal());
-	ASSERT_TRUE(tm1.get_classes_number_MyhillNerode() == 3);
+	ASSERT_EQ(tm1.get_classes_number_MyhillNerode(),3);
 
 	vector<State> states;
 	for (int i = 0; i < 5; i++) {
-		State s = {i, {i}, to_string(i), false, map<alphabet_symbol, set<int>>()};
+		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
 		states.push_back(s);
 	}
 	states[0].set_transition(1, "a");
@@ -417,10 +417,10 @@ TEST(TestCaseName, Test_TransformationMonoid) {
 	states[4].is_terminal = true;
 	FiniteAutomaton fa2(0, states, {"a", "b", "c"});
 	TransformationMonoid tm2(fa2);
-	ASSERT_TRUE(tm2.class_card() == 12);
-	ASSERT_TRUE(tm2.class_length() == 4);
-	ASSERT_TRUE(tm2.is_minimal() == 1);
-	ASSERT_TRUE(tm2.get_classes_number_MyhillNerode() == 5);
+	ASSERT_EQ(tm2.class_card(),12);
+	ASSERT_EQ(tm2.class_length(),4);
+	ASSERT_EQ(tm2.is_minimal(),1);
+	ASSERT_EQ(tm2.get_classes_number_MyhillNerode(),5);
 
 	FiniteAutomaton fa3 = Regex("ab|b").to_glushkov().minimize();
 	TransformationMonoid tm3(fa3);

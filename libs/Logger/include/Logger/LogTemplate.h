@@ -1,13 +1,14 @@
-#include "AutomatonToImage/AutomatonToImage.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Regex.h"
-#include "Objects/iLogTemplate.h"
+#ifndef LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_
+#define LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_
 #include <map>
 #include <sstream>
 #include <string>
 #include <variant>
+#include "AutomatonToImage/AutomatonToImage.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Regex.h"
+#include "Objects/iLogTemplate.h"
 
-using namespace std;
 class LogTemplate : public iLogTemplate {
   public:
 	void set_parameter(const string& key, const FiniteAutomaton& value) override;
@@ -40,7 +41,7 @@ class LogTemplate : public iLogTemplate {
 
 	// Стуктура для хранения параметров
 	struct LogParameter {
-		variant<FiniteAutomaton, Regex, string, int, Table> value;
+		std::variant<FiniteAutomaton, Regex, string, int, Table> value;
 	};
 
 	// Параметры
@@ -53,5 +54,6 @@ class LogTemplate : public iLogTemplate {
 	// Преобразование таблицы в tex-формат
 	static string log_table(Table t);
 	// Рекурсивно раскрывает include-выражения в файле
-	stringstream expand_includes(string filename) const;
+	std::stringstream expand_includes(string filename) const;
 };
+#endif // LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_

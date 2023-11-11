@@ -14,10 +14,10 @@ void Tester::test(const Regex& lang, const Regex& regex, int step, iLogTemplate*
 		const long long elapsed =
 			std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 		double time = (double)elapsed / 1000;
-		t.rows.push_back(to_string(i + 1));
-		t.data.push_back(to_string(step));
-		t.data.push_back(to_string(word.length()));
-		t.data.push_back(to_string(time));
+		t.rows.push_back(std::to_string(i + 1));
+		t.data.push_back(std::to_string(step));
+		t.data.push_back(std::to_string(word.length()));
+		t.data.push_back(std::to_string(time));
 		if (is_belongs)
 			t.data.push_back("true");
 		else
@@ -49,10 +49,10 @@ void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step, iLo
 		const long long elapsed =
 			std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 		double time = (double)elapsed / 1000;
-		t.rows.push_back(to_string(i + 1));
-		t.data.push_back(to_string(step));
-		t.data.push_back(to_string(word.length()));
-		t.data.push_back(to_string(time));
+		t.rows.push_back(std::to_string(i + 1));
+		t.data.push_back(std::to_string(step));
+		t.data.push_back(std::to_string(word.length()));
+		t.data.push_back(std::to_string(time));
 		if (is_belongs)
 			t.data.push_back("true");
 		else
@@ -73,8 +73,8 @@ void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step, iLo
 }
 
 bool Tester::parsing_by_regex(string reg, string word) {
-	cmatch match_res;
-	regex regular(reg);
+	std::cmatch match_res;
+	std::regex regular(reg);
 	if (regex_match(word.c_str(), match_res, regular)) {
 		// cout << match_res[0].str();
 		return true;
