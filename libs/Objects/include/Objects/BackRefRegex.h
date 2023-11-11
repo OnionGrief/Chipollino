@@ -24,8 +24,8 @@ class BackRefRegex : public AlgExpression {
 	BackRefRegex(const BackRefRegex&);
 
 	// dynamic_cast к типу BackRefRegex*
-	template <typename T> static BackRefRegex* cast(T* ptr, bool NotNullPtr = true);
-	template <typename T> static const BackRefRegex* cast(const T* ptr, bool NotNullPtr = true);
+	template <typename T> static BackRefRegex* cast(T* ptr, bool not_null_ptr = true);
+	template <typename T> static const BackRefRegex* cast(const T* ptr, bool not_null_ptr = true);
 
 	string to_txt() const override;
 };

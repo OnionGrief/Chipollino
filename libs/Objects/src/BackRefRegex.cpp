@@ -2,7 +2,7 @@
 
 BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
 	try {
-		bool res = from_string(str);
+		bool res = from_string(str, true, false);
 		if (!res) {
 			throw runtime_error("BackRefRegex::from_string() ERROR");
 		}
@@ -39,18 +39,18 @@ BackRefRegex* BackRefRegex::make() const {
 	return new BackRefRegex;
 }
 
-template <typename T> BackRefRegex* BackRefRegex::cast(T* ptr, bool NotNullPtr) {
+template <typename T> BackRefRegex* BackRefRegex::cast(T* ptr, bool not_null_ptr) {
 	auto* r = dynamic_cast<BackRefRegex*>(ptr);
-	if (!r && NotNullPtr) {
+	if (!r && not_null_ptr) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
 
 	return r;
 }
 
-template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr, bool NotNullPtr) {
+template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr, bool not_null_ptr) {
 	auto* r = dynamic_cast<const BackRefRegex*>(ptr);
-	if (!r && NotNullPtr) {
+	if (!r && not_null_ptr) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
 

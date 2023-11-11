@@ -78,9 +78,9 @@ class AlgExpression : public BaseObject {
 	static bool is_terminal_type(Type);
 
 	// Turns string into lexeme vector
-	static vector<Lexeme> parse_string(string);
-	bool from_string(const string&);
-	
+	static vector<Lexeme> parse_string(string, bool allow_ref = false, bool allow_negation = true);
+	bool from_string(const string&, bool allow_ref = false, bool allow_negation = true);
+
 	// возвращаемый тип нижеперечисленных методов зависит от типа объекта (Regex/BackRefRegex)
 	// внутреннее состояние не имеет значения
 	// Построение из вектора лексем дерева регулярного выражения

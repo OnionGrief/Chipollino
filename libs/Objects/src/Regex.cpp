@@ -40,32 +40,32 @@ Regex* Regex::make() const {
 	return new Regex;
 }
 
-template <typename T> Regex* Regex::cast(T* ptr, bool NotNullPtr) {
+template <typename T> Regex* Regex::cast(T* ptr, bool not_null_ptr) {
 	auto* r = dynamic_cast<Regex*>(ptr);
-	if (!r && NotNullPtr) {
+	if (!r && not_null_ptr) {
 		throw runtime_error("Failed to cast to Regex");
 	}
 
 	return r;
 }
 
-template <typename T> const Regex* Regex::cast(const T* ptr, bool NotNullPtr) {
+template <typename T> const Regex* Regex::cast(const T* ptr, bool not_null_ptr) {
 	auto* r = dynamic_cast<const Regex*>(ptr);
-	if (!r && NotNullPtr) {
+	if (!r && not_null_ptr) {
 		throw runtime_error("Failed to cast to Regex");
 	}
 
 	return r;
 }
 
-template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs) {
+template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs, bool not_null_ptr) {
 	vector<Regex*> regexPointers;
-
 	for (T* ptr : ptrs) {
 		auto* r = dynamic_cast<Regex*>(ptr);
-		if (!r) {
+		if (!r && not_null_ptr) {
 			throw runtime_error("Failed to cast to Regex");
 		}
+		
 		regexPointers.push_back(r);
 	}
 

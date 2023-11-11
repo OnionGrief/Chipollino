@@ -48,10 +48,10 @@ class Regex : public AlgExpression {
 	Regex(const Regex&) = default;
 
 	// dynamic_cast к типу Regex*
-	template <typename T> static Regex* cast(T* ptr, bool NotNullPtr = true);
-	template <typename T> static const Regex* cast(const T* ptr, bool NotNullPtr = true);
+	template <typename T> static Regex* cast(T* ptr, bool not_null_ptr = true);
+	template <typename T> static const Regex* cast(const T* ptr, bool not_null_ptr = true);
 	// dynamic_cast каждого элемента вектора к типу Regex*
-	template <typename T> static vector<Regex*> cast(vector<T*> ptr);
+	template <typename T> static vector<Regex*> cast(vector<T*> ptr, bool not_null_ptr = true);
 
 	FiniteAutomaton to_thompson(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;

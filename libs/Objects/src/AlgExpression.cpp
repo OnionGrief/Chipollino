@@ -227,7 +227,8 @@ bool read_number(const string& str, size_t& pos, int& res) {
 	return true;
 }
 
-vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
+vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow_ref,
+														  bool allow_negation) {
 	vector<AlgExpression::Lexeme> lexemes;
 	stack<char> brackets_checker;
 	bool brackets_are_empty = true;
@@ -241,6 +242,9 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		Lexeme lexeme;
 		switch (c) {
 		case '^':
+			if (!allow_negation)
+				return {Lexeme::Type::error};
+
 			lexeme.type = Lexeme::Type::negative;
 			break;
 		case '(':
@@ -252,9 +256,13 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			lexeme.type = Lexeme::Type::parR;
 			if (brackets_are_empty || brackets_checker.empty() || brackets_checker.top() != '(')
 				return {Lexeme::Type::error};
+
 			brackets_checker.pop();
 			break;
 		case '[':
+			if (!allow_ref)
+				return {Lexeme::Type::error};
+
 			lexeme.type = Lexeme::Type::squareBrL;
 			brackets_checker.push('[');
 			brackets_are_empty = true;
@@ -276,6 +284,9 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			memory_opening_indexes.pop();
 			break;
 		case '&':
+			if (!allow_ref)
+				return {Lexeme::Type::error};
+
 			if (!read_number(str, ++index, lexeme.number))
 				return {Lexeme::Type::error};
 
@@ -286,6 +297,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		case '|':
 			if (index != 0 && lexemes.back().type == Lexeme::Type::negative)
 				return {Lexeme::Type::error};
+
 			lexeme.type = Lexeme::Type::alt;
 			break;
 		case '*':
@@ -293,6 +305,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 											  lexemes.back().type == Lexeme::Type::alt ||
 											  lexemes.back().type == Lexeme::Type::negative)))
 				return {Lexeme::Type::error};
+
 			lexeme.type = Lexeme::Type::star;
 			break;
 		default:
@@ -396,7 +409,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 	return lexemes;
 }
 
-bool AlgExpression::from_string(const string& str) {
+bool AlgExpression::from_string(const string& str, bool allow_ref, bool allow_negation) {
 	if (str.empty()) {
 		value = Lexeme::Type::eps;
 		type = Type::eps;
@@ -405,7 +418,7 @@ bool AlgExpression::from_string(const string& str) {
 		return true;
 	}
 
-	vector<Lexeme> l = parse_string(str);
+	vector<Lexeme> l = parse_string(str, allow_ref, allow_negation);
 	AlgExpression* root = expr(l, 0, l.size());
 
 	if (root == nullptr || root->type == eps) {

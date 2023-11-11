@@ -4,27 +4,30 @@ TEST(ParseStringTest, Test_regex_lexer) {
 	struct Test {
 		string regex_str;
 		bool want_err;
+		bool bref;
 		int lexemes_len = 0;
 	};
 
 	vector<Test> tests = {
-		{"[]", true},
-		{"[]:", true},
-		{"[a]", true},
-		{"[a]:", true},
-		{"[[a]:1", true},
-		{"a]:1", true},
-		{"[a]:1", false, 3},
-		{"&", true},
-		{"&1", false, 1},
-		{"[b[a]:1&1]:2&2", false, 11},
+		{"[]", true, true},
+		{"[]:", true, true},
+		{"[a]", true, true},
+		{"[a]:", true, true},
+		{"[[a]:1", true, true},
+		{"a]:1", true, true},
+		{"[a]:1", false, true, 3},
+		{"&", true, true},
+		{"&1", false, true, 1},
+		{"[b[a]:1&1]:2&2", false, true, 11},
 		// тесты на отрицание
-		{"^a", false, 2},
-		{"a^|b", true},
-		{"d^*^b", true},
-		{"d|^|b", true},
-		{"a^", false, 4}, // a . ^ eps
-		{"a|(c^)", false, 8}, // a | ( c . ^ eps )
+		{"^a", false, false, 2},
+		{"a^|b", true, false},
+		{"d^*^b", true, false},
+		{"d|^|b", true, false},
+		{"a^", false, false, 4},	 // a . ^ eps
+		{"a|(c^)", false, false, 8}, // a | ( c . ^ eps )
+		{"[b[a]:1&1]:2&2^a", true, true},
+		{"[b[a]:1&1]:2&2^a", true, false},
 	};
 
 	for (const auto& t : tests) {
@@ -32,7 +35,14 @@ TEST(ParseStringTest, Test_regex_lexer) {
 		message << "Case: " << t.regex_str << ", WantErr: " << t.want_err;
 		SCOPED_TRACE(message.str());
 
-		vector<UnitTests::Lexeme> l = UnitTests::parse_string(t.regex_str);
+		bool allow_ref = false;
+		bool allow_negation = true;
+		if (t.bref) {
+			allow_ref = true;
+			allow_negation = false;
+		}
+		vector<UnitTests::Lexeme> l =
+			UnitTests::parse_string(t.regex_str, allow_ref, allow_negation);
 		ASSERT_FALSE(l.empty());
 
 		if (t.want_err) {
