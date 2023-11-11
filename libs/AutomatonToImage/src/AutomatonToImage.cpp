@@ -97,17 +97,19 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 			   "error_Colorize.raux");
 		infile_for_Final.open("./refal/Final_input.tex");
 		remove_file("refal", "Meta_input.raux");
-	} else
+	} else {
 		infile_for_Final.open("./refal/Col_input.tex");
+	}
 
 	// автомат
 	std::stringstream graph;
 	string s;
-	if (!infile_for_Final) return "";
+	if (!infile_for_Final)
+		return "";
 
 	while (!infile_for_Final.eof()) {
 		getline(infile_for_Final, s);
-		graph << s << std::endl;
+		graph << s << "\n";
 	}
 	infile_for_Final.close();
 
@@ -122,7 +124,7 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	// the table is adjusted for frames in the general renderer module
 	while (!infile_for_L.eof()) {
 		getline(infile_for_L, s);
-		graph << s << std::endl;
+		graph << s << "\n";
 	}
 	infile_for_L.close();
 

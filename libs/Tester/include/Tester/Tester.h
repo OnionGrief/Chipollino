@@ -26,9 +26,9 @@ class Tester {
 	};
 
   private:
-	static bool parsing_by_regex(string, string);
+	static bool parsing_by_regex(const string&, const string&);
 
-	using ParseDevice = variant<FiniteAutomaton, Regex>;
+	using ParseDevice = std::variant<FiniteAutomaton, Regex>;
 
   public:
 	static void test(const ParseDevice& language, const Regex& regex, int iteration_step,

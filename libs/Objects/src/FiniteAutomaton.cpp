@@ -14,7 +14,6 @@
 #include "Objects/MetaInfo.h"
 #include "Objects/TransformationMonoid.h"
 #include "Objects/iLogTemplate.h"
-using namespace std;
 
 State::State() : index(0), is_terminal(false) {}
 
@@ -2260,11 +2259,11 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 	return false;
 }
 
-pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
+std::pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
 	// Пара (актуальный индекс элемента в строке, состояние)
-	stack<pair<int, State>> stac_state;
+	std::stack<std::pair<int, State>> stac_state;
 	// Тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
-	set<tuple<int, int, int>> visited_eps, aux_eps;
+	set<std::tuple<int, int, int>> visited_eps, aux_eps;
 	int counter = 0;
 	int parsed_len = 0;
 	State state = states[initial_state];
@@ -2287,9 +2286,10 @@ pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
 		}
 
 		// Если произошёл откат по строке, то эпсилон-переходы из рассмотренных состояний больше не считаются повторными
-		if (visited_eps.size() > 0) {
+		if (!visited_eps.empty()) {
 			for (auto pos : visited_eps) {
-				if (get<0>(pos) <= parsed_len) aux_eps.insert(pos);
+				if (std::get<0>(pos) <= parsed_len)
+					aux_eps.insert(pos);
 			}
 			visited_eps = aux_eps;
 			aux_eps.clear();
@@ -2332,7 +2332,7 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	return result;
 }
 
-pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
+std::pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	State state = states[0];
 	return parsing_nfa_for(s);
 }

@@ -9,25 +9,25 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 	vector<FiniteAutomaton> machines;
 	/* A counter for parsing objects */
 	int obj_types;
-	if (holds_alternative<Regex>(lang)) {
+	if (std::holds_alternative<Regex>(lang)) {
 		obj_types = 4;
-		Regex value = get<Regex>(lang);
+		Regex value = std::get<Regex>(lang);
 		machines.push_back(value.to_thompson());
-		labels.push_back("Thompson");
+		labels.emplace_back("Thompson");
 		machines.push_back(value.to_glushkov());
-		labels.push_back("Glushkov");
+		labels.emplace_back("Glushkov");
 		machines.push_back(
 			machines[1].reverse().merge_bisimilar().reverse().merge_bisimilar().remove_eps());
-		labels.push_back("Small NFA");
+		labels.emplace_back("Small NFA");
 		machines.push_back(machines[2].minimize().remove_trap_states());
-		labels.push_back("Minimal DFA");
-	} else if (holds_alternative<FiniteAutomaton>(lang)) {
+		labels.emplace_back("Minimal DFA");
+	} else if (std::holds_alternative<FiniteAutomaton>(lang)) {
 		obj_types = 2;
-		FiniteAutomaton value = get<FiniteAutomaton>(lang);
+		FiniteAutomaton value = std::get<FiniteAutomaton>(lang);
 		machines.push_back(value);
-		labels.push_back("Current FA");
+		labels.emplace_back("Current FA");
 		machines.push_back(value.minimize().remove_trap_states());
-		labels.push_back("Minimal DFA");
+		labels.emplace_back("Minimal DFA");
 	}
 
 	using clock = std::chrono::high_resolution_clock;
@@ -47,31 +47,32 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 			steps.push_back(belongs.first);
 			words.push_back(word.length());
 			if (!type) {
-				t.rows.push_back(to_string(i + 1));
-				t.data.push_back(to_string(belongs.first));
-				t.data.push_back(to_string(word.length()));
-				t.data.push_back(to_string(time));
+				t.rows.push_back(std::to_string(i + 1));
+				t.data.push_back(std::to_string(belongs.first));
+				t.data.push_back(std::to_string(word.length()));
+				t.data.push_back(std::to_string(time));
 				if (belongs.second)
 					t.data.push_back("true");
 				else
 					t.data.push_back("false");
 			}
 
-			if (time >= 180) break;
+			if (time >= 180)
+				break;
 		}
 		for (int i = 0; i < steps.size(); i++) {
 			plot.data.push_back({labels[type], words[i], steps[i]});
 		}
 	}
-	t.columns.push_back("Шаги");
-	t.columns.push_back("Длина строки");
-	t.columns.push_back("Время парсинга");
-	t.columns.push_back("Принадлежность языку");
+	t.columns.emplace_back("Шаги");
+	t.columns.emplace_back("Длина строки");
+	t.columns.emplace_back("Время парсинга");
+	t.columns.emplace_back("Принадлежность языку");
 	if (log) {
-		if (holds_alternative<FiniteAutomaton>(lang)) {
-			log->set_parameter("language", get<FiniteAutomaton>(lang));
+		if (std::holds_alternative<FiniteAutomaton>(lang)) {
+			log->set_parameter("language", std::get<FiniteAutomaton>(lang));
 		} else {
-			log->set_parameter("language", get<Regex>(lang));
+			log->set_parameter("language", std::get<Regex>(lang));
 		}
 		log->set_parameter("regex", regex);
 		log->set_parameter("step", step);
@@ -80,7 +81,7 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 	}
 }
 
-bool Tester::parsing_by_regex(string reg, string word) {
+bool Tester::parsing_by_regex(const string& reg, const string& word) {
 	std::cmatch match_res;
 	std::regex regular(reg);
 	if (regex_match(word.c_str(), match_res, regular)) {

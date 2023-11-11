@@ -26,7 +26,7 @@ class iLogTemplate {
 		vector<Point> data;
 	};
 
-	using LogObject = variant<FiniteAutomaton, Regex, string, int, Table, Plot>;
+	using LogObject = std::variant<FiniteAutomaton, Regex, string, int, Table, Plot>;
 
 	virtual void set_parameter(const string& key, const LogObject& value,
 							   const MetaInfo& meta = {}) = 0;

@@ -4,7 +4,9 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <variant>
+#include <vector>
 
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "Objects/FiniteAutomaton.h"
@@ -36,7 +38,7 @@ class LogTemplate : public iLogTemplate {
 	// Рендерит все логи, возвращает строку
 	string render() const;
 	// загрузка шаблона
-	void load_tex_template(string filename);
+	void load_tex_template(const string& filename);
 	string get_tex_template();
 
 	struct TextStyle {
@@ -75,8 +77,7 @@ class LogTemplate : public iLogTemplate {
 	// Стуктура для хранения параметров
 	struct LogParameter {
 		LogObject value;
-		MetaInfo meta; /* Дополнительные данные о структуре, которые не кэшируются
-						(раскраска) */
+		MetaInfo meta; // Дополнительные данные о структуре, которые не кэшируются (раскраска)
 	};
 
 	// Параметры
@@ -90,10 +91,9 @@ class LogTemplate : public iLogTemplate {
 	// счетчик картинок
 	inline static int image_number = 0;
 	// таблицы в общем виде
-	static string log_table(Table t/*vector<string> rows, vector<string> columns,
-							vector<string> data*/);
+	static string log_table(Table t);
 	// графики
-	static string log_plot(Plot p /*vector<<int,long>,string>*/);
+	static string log_plot(Plot p);
 	// Рекурсивно раскрывает include-выражения в файле
 	std::stringstream expand_includes(string filename) const;
 };
