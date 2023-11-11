@@ -81,8 +81,8 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 }
 
 bool Tester::parsing_by_regex(string reg, string word) {
-	cmatch match_res;
-	regex regular(reg);
+	std::cmatch match_res;
+	std::regex regular(reg);
 	if (regex_match(word.c_str(), match_res, regular)) {
 		// cout << match_res[0].str();
 		return true;

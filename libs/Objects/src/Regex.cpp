@@ -6,54 +6,129 @@ Regex::Regex(const string& str) : Regex() {
 	try {
 		bool res = from_string(str);
 		if (!res) {
-			throw runtime_error("Regex::from_string() ERROR");
+			throw std::runtime_error("Regex::from_string() ERROR");
 		}
-	} catch (const runtime_error& re) {
+	} catch (const std::runtime_error& re) {
 		cout << re.what() << "\n";
 		exit(EXIT_FAILURE);
 	}
 }
 
-Regex::Regex(const string& str, const shared_ptr<Language>& new_language) : Regex(str) {
+Regex::Regex(const string& str, const std::shared_ptr<Language>& new_language) : Regex(str) {
 	language = new_language;
 }
 
-AlgExpression* Regex::make() const {
+void Regex::copy(const AlgExpression* other) {
+	auto* tmp = cast(other);
+	alphabet = tmp->alphabet;
+	type = tmp->type;
+	value = tmp->value;
+	language = tmp->language;
+	if (tmp->term_l != nullptr)
+		term_l = tmp->term_l->make_copy();
+	if (tmp->term_r != nullptr)
+		term_r = tmp->term_r->make_copy();
+}
+
+Regex* Regex::make_copy() const {
+	auto* c = new Regex;
+	c->copy(this);
+	return c;
+}
+
+Regex* Regex::make() const {
 	return new Regex;
 }
 
-template <typename T> Regex* Regex::cast(T* ptr) {
+template <typename T> Regex* Regex::cast(T* ptr, bool not_null_ptr) {
 	auto* r = dynamic_cast<Regex*>(ptr);
-	if (!r) {
-		throw runtime_error("Failed to cast to Regex");
+	if (!r && not_null_ptr) {
+		throw std::runtime_error("Failed to cast to Regex");
 	}
 
 	return r;
 }
 
-template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs) {
-	vector<Regex*> regexPointers;
+template <typename T> const Regex* Regex::cast(const T* ptr, bool not_null_ptr) {
+	auto* r = dynamic_cast<const Regex*>(ptr);
+	if (!r && not_null_ptr) {
+		throw std::runtime_error("Failed to cast to Regex");
+	}
 
+	return r;
+}
+
+template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs, bool not_null_ptr) {
+	vector<Regex*> regexPointers;
 	for (T* ptr : ptrs) {
 		auto* r = dynamic_cast<Regex*>(ptr);
-		if (!r) {
-			throw runtime_error("Failed to cast to Regex");
+		if (!r && not_null_ptr) {
+			throw std::runtime_error("Failed to cast to Regex");
 		}
+
 		regexPointers.push_back(r);
 	}
 
 	return regexPointers;
 }
 
+Regex* Regex::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start, int index_end) {
+	AlgExpression* p;
+	p = scan_symb(lexemes, index_start, index_end);
+	if (!p) {
+		p = scan_eps(lexemes, index_start, index_end);
+	}
+
+	if (!p) {
+		p = scan_alt(lexemes, index_start, index_end);
+	}
+	if (!p) {
+		p = scan_conc(lexemes, index_start, index_end);
+	}
+	if (!p) {
+		p = scan_minus(lexemes, index_start, index_end);
+	}
+	if (!p) {
+		p = scan_star(lexemes, index_start, index_end);
+	}
+	if (!p) {
+		p = scan_par(lexemes, index_start, index_end);
+	}
+
+	return cast(p, false);
+}
+
+Regex* Regex::scan_minus(const vector<AlgExpression::Lexeme>& lexemes, int index_start,
+						 int index_end) {
+	Regex* p = nullptr;
+
+	if (lexemes[index_start].type != Lexeme::Type::negative) {
+		return nullptr;
+	}
+
+	Regex* l = expr(lexemes, index_start + 1, index_end);
+	if (l == nullptr) {
+		delete l;
+		return nullptr;
+	}
+	p = make();
+	p->term_l = l;
+	p->value = lexemes[index_start];
+	p->type = negative;
+
+	p->alphabet = l->alphabet;
+	return p;
+}
+
 // возвращает пару <вектор сотсояний, max_index>
-pair<vector<State>, int> Regex::get_thompson(int max_index) const {
+std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 	string str;			  // идентификатор состояния
 	vector<State> s = {}; // вектор состояний нового автомата
 	map<alphabet_symbol, set<int>> m, p, map_l, map_r; // словари автоматов
 	set<int> trans;									   // новые транзишены
 	int offset; // сдвиг для старых индексов состояний в новом автомате
-	pair<vector<State>, int> al; // для левого автомата относительно операции
-	pair<vector<State>, int> ar; // для правого автомата относительно операции
+	std::pair<vector<State>, int> al; // для левого автомата относительно операции
+	std::pair<vector<State>, int> ar; // для правого автомата относительно операции
 	Language* alp; // Новый язык для автомата
 	switch (type) {
 	case Type::alt: // |
@@ -61,7 +136,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		ar = Regex::cast(term_r)->get_thompson(al.second);
 		max_index = ar.second;
 
-		str = "q" + to_string(max_index + 1);
+		str = "q" + std::to_string(max_index + 1);
 		m[alphabet_symbol::epsilon()] = {1, int(al.first.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
@@ -102,7 +177,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 			map_r = {};
 		}
 
-		str = "q" + to_string(max_index + 2);
+		str = "q" + std::to_string(max_index + 2);
 		s.push_back(State(int(al.first.size() + ar.first.size()) + 1, {}, str, true, p));
 
 		return {s, max_index + 2};
@@ -149,8 +224,11 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 				map_r[elem] = trans;
 			}
 
-			s.push_back(State(ar.first[i].index + offset - 1, {}, ar.first[i].identifier,
-							  test.is_terminal, map_r));
+			s.push_back(State(ar.first[i].index + offset - 1,
+							  {},
+							  ar.first[i].identifier,
+							  test.is_terminal,
+							  map_r));
 			map_r = {};
 		}
 
@@ -159,7 +237,7 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		al = Regex::cast(term_l)->get_thompson(max_index);
 		max_index = al.second;
 
-		str = "q" + to_string(max_index + 1);
+		str = "q" + std::to_string(max_index + 1);
 		m[alphabet_symbol::epsilon()] = {1, int(al.first.size()) + 1};
 		s.push_back(State(0, {}, str, false, m));
 
@@ -183,26 +261,26 @@ pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		}
 		offset = s.size();
 
-		str = "q" + to_string(max_index + 2);
+		str = "q" + std::to_string(max_index + 2);
 		s.push_back(State(int(al.first.size()) + 1, {}, str, true, p));
 
 		return {s, max_index + 2};
 	case Type::eps:
-		str = "q" + to_string(max_index + 1);
+		str = "q" + std::to_string(max_index + 1);
 
 		m[alphabet_symbol::epsilon()] = {1};
 		s.push_back(State(0, {}, str, false, m));
-		str = "q" + to_string(max_index + 2);
+		str = "q" + std::to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
 		return {s, max_index + 2};
 	default:
 
-		str = "q" + to_string(max_index + 1);
+		str = "q" + std::to_string(max_index + 1);
 		// m[char_to_alphabet_symbol(value.symbol)] = {1};
 		m[value.symbol] = {1};
 		s.push_back(State(0, {}, str, false, m));
-		str = "q" + to_string(max_index + 2);
+		str = "q" + std::to_string(max_index + 2);
 		s.push_back(State(1, {}, str, true, p));
 
 		return {s, max_index + 2};
@@ -434,7 +512,8 @@ void Regex::get_prefix(int len, set<string>& prefs) const {
 	}
 	switch (type) {
 	case Type::eps:
-		if (len == 0) prefs.insert("");
+		if (len == 0)
+			prefs.insert("");
 		return;
 	case Type::symb:
 		if (len == 1) {
@@ -500,7 +579,8 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 	bool answer = true, answer1, answer2;
 	switch (reg_e->type) {
 	case Type::eps:
-		if (respected_sym->type != Type::eps) return false;
+		if (respected_sym->type != Type::eps)
+			return false;
 		result.type = Type::eps;
 		return answer;
 	case Type::symb:
@@ -519,8 +599,8 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 		// cout << answer1 << " " << answer2 << "\n";
 		if (answer1 && answer2) {
 			result.type = Type::alt;
-			result.term_l = subresult.copy();
-			result.term_r = subresult1.copy();
+			result.term_l = subresult.make_copy();
+			result.term_r = subresult1.make_copy();
 			// cout << result.to_txt() << "\n";
 			return true;
 		}
@@ -541,27 +621,32 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 		return answer;
 	case Type::conc:
 		subresult.type = Type::conc;
-		if (subresult.term_l == nullptr) subresult.term_l = new Regex();
-		answer1 = derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
-												 *Regex::cast(subresult.term_l));
-		subresult.term_r = reg_e->term_r->copy();
+		if (subresult.term_l == nullptr)
+			subresult.term_l = new Regex();
+		answer1 = derivative_with_respect_to_sym(
+			respected_sym, Regex::cast(reg_e->term_l), *Regex::cast(subresult.term_l));
+		subresult.term_r = reg_e->term_r->make_copy();
 		if (Regex::cast(reg_e->term_l)->contains_eps()) {
-			answer2 = derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_r),
-													 subresult1);
+			answer2 = derivative_with_respect_to_sym(
+				respected_sym, Regex::cast(reg_e->term_r), subresult1);
 			if (answer1 && answer2) {
 				result.type = Type::alt;
-				result.term_l = subresult.copy();
-				result.term_r = subresult1.copy();
+				result.term_l = subresult.make_copy();
+				result.term_r = subresult1.make_copy();
 			}
 			if (answer1 && !answer2) {
 				result.type = subresult.type;
-				if (subresult.term_l != nullptr) result.term_l = subresult.term_l->copy();
-				if (subresult.term_r != nullptr) result.term_r = subresult.term_r->copy();
+				if (subresult.term_l != nullptr)
+					result.term_l = subresult.term_l->make_copy();
+				if (subresult.term_r != nullptr)
+					result.term_r = subresult.term_r->make_copy();
 			}
 			if (answer2 && !answer1) {
 				result.type = subresult1.type;
-				if (subresult1.term_l != nullptr) result.term_l = subresult1.term_l->copy();
-				if (subresult1.term_r != nullptr) result.term_r = subresult1.term_r->copy();
+				if (subresult1.term_l != nullptr)
+					result.term_l = subresult1.term_l->make_copy();
+				if (subresult1.term_r != nullptr)
+					result.term_r = subresult1.term_r->make_copy();
 			}
 			// cout << "conc of " << reg_e->term_l->to_txt() << " and "
 			//	 << reg_e->term_r->to_txt() << "\n";
@@ -574,16 +659,19 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 			// cout << answer1 << "\n";
 			answer = answer1;
 			result.type = subresult.type;
-			if (subresult.term_l != nullptr) result.term_l = subresult.term_l->copy();
-			if (subresult.term_r != nullptr) result.term_r = subresult.term_r->copy();
+			if (subresult.term_l != nullptr)
+				result.term_l = subresult.term_l->make_copy();
+			if (subresult.term_r != nullptr)
+				result.term_r = subresult.term_r->make_copy();
 		}
 		return answer;
 	case Type::star:
 		result.type = Type::conc;
-		if (result.term_l == nullptr) result.term_l = new Regex();
-		bool answer = derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
-													 *Regex::cast(result.term_l));
-		result.term_r = reg_e->copy();
+		if (result.term_l == nullptr)
+			result.term_l = new Regex();
+		bool answer = derivative_with_respect_to_sym(
+			respected_sym, Regex::cast(reg_e->term_l), *Regex::cast(result.term_l));
+		result.term_r = reg_e->make_copy();
 		return answer;
 	}
 }
@@ -597,8 +685,10 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 	}
 	if (respected_sym->type == Type::eps) {
 		cur_result.type = reg_e->type;
-		if (reg_e->term_l != nullptr) cur_result.term_l = reg_e->term_l->copy();
-		if (reg_e->term_l) cur_result.term_r = reg_e->term_l->copy();
+		if (reg_e->term_l != nullptr)
+			cur_result.term_l = reg_e->term_l->make_copy();
+		if (reg_e->term_l)
+			cur_result.term_r = reg_e->term_l->make_copy();
 		result.push_back(cur_result);
 		return true;
 	}
@@ -616,10 +706,10 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		result.push_back(cur_result);
 		return answer;
 	case Type::alt:
-		answer1 = partial_derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
-														 subresult);
-		answer2 = partial_derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_r),
-														 subresult1);
+		answer1 = partial_derivative_with_respect_to_sym(
+			respected_sym, Regex::cast(reg_e->term_l), subresult);
+		answer2 = partial_derivative_with_respect_to_sym(
+			respected_sym, Regex::cast(reg_e->term_r), subresult1);
 		for (const auto& i : subresult) {
 			result.push_back(i);
 		}
@@ -630,11 +720,11 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		return answer;
 	case Type::conc:
 		cur_subresult.type = Type::conc;
-		answer1 = partial_derivative_with_respect_to_sym(respected_sym, Regex::cast(reg_e->term_l),
-														 subresult);
-		cur_subresult.term_r = reg_e->term_r->copy();
+		answer1 = partial_derivative_with_respect_to_sym(
+			respected_sym, Regex::cast(reg_e->term_l), subresult);
+		cur_subresult.term_r = reg_e->term_r->make_copy();
 		for (auto& i : subresult) {
-			cur_subresult.term_l = i.copy();
+			cur_subresult.term_l = i.make_copy();
 			result.push_back(cur_subresult);
 			delete cur_subresult.term_l;
 			cur_subresult.term_l = nullptr;
@@ -652,11 +742,11 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		return answer;
 	case Type::star:
 		cur_result.type = Type::conc;
-		bool answer = partial_derivative_with_respect_to_sym(respected_sym,
-															 Regex::cast(reg_e->term_l), subresult);
-		cur_result.term_r = reg_e->copy();
+		bool answer = partial_derivative_with_respect_to_sym(
+			respected_sym, Regex::cast(reg_e->term_l), subresult);
+		cur_result.term_r = reg_e->make_copy();
 		for (auto& i : subresult) {
-			cur_result.term_l = i.copy();
+			cur_result.term_l = i.make_copy();
 			result.push_back(cur_result);
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
@@ -690,31 +780,31 @@ bool Regex::derivative_with_respect_to_str(string str, const Regex* reg_e, Regex
 }
 
 // Производная по символу
-optional<Regex> Regex::symbol_derivative(const Regex& respected_sym) const {
-	auto rs = respected_sym.copy();
+std::optional<Regex> Regex::symbol_derivative(const Regex& respected_sym) const {
+	auto rs = respected_sym.make_copy();
 	Regex result;
-	optional<Regex> ans;
+	std::optional<Regex> ans;
 	if (derivative_with_respect_to_sym(Regex::cast(rs), this, result))
 		ans = result;
 	else
-		ans = nullopt;
+		ans = std::nullopt;
 	delete rs;
 	return ans;
 }
 // Частичная производная по символу
 void Regex::partial_symbol_derivative(const Regex& respected_sym, vector<Regex>& result) const {
-	auto rs = respected_sym.copy();
+	auto rs = respected_sym.make_copy();
 	partial_derivative_with_respect_to_sym(Regex::cast(rs), this, result);
 	delete rs;
 }
 // Производная по префиксу
-optional<Regex> Regex::prefix_derivative(string respected_str) const {
+std::optional<Regex> Regex::prefix_derivative(string respected_str) const {
 	Regex result;
-	optional<Regex> ans;
+	std::optional<Regex> ans;
 	if (derivative_with_respect_to_str(respected_str, this, result))
 		ans = result;
 	else
-		ans = nullopt;
+		ans = std::nullopt;
 	return ans;
 }
 // Длина накачки
@@ -745,7 +835,8 @@ int Regex::pump_length(iLogTemplate* log) const {
 					break;
 				}
 			}
-			if (was) continue;
+			if (was)
+				continue;
 			for (int j = 0; j < it->size(); j++) {
 				for (int k = j + 1; k <= it->size(); k++) {
 					Regex pumping;
@@ -759,7 +850,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 					if (!derivative_with_respect_to_str(*it, this, *Regex::cast(pumping.term_r)))
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language = make_shared<Language>(pumping.alphabet);
+					pumping.language = std::make_shared<Language>(pumping.alphabet);
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
@@ -943,7 +1034,8 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		}
 		return fa.language->get_one_unambiguous_regex();
 	}
-	if (!fa.language->is_one_unambiguous_flag_cached()) fa.is_one_unambiguous();
+	if (!fa.language->is_one_unambiguous_flag_cached())
+		fa.is_one_unambiguous();
 	if (!fa.language->get_one_unambiguous_flag()) {
 		if (log) {
 			log->set_parameter("result", "Язык не является 1-однозначным");
@@ -986,7 +1078,8 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 			for (const auto& final_state_transitions : final_states_transitions) {
 				// Из автомата удаляется ловушка,
 				// поэтому не по всем буквам есть переходы
-				if (final_state_transitions.find(symb) == final_state_transitions.end()) continue;
+				if (final_state_transitions.find(symb) == final_state_transitions.end())
+					continue;
 				if (find(final_state_transitions.at(symb).begin(),
 						 final_state_transitions.at(symb).end(),
 						 elem) == final_state_transitions.at(symb).end()) {
@@ -994,7 +1087,8 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 					break;
 				}
 			}
-			if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
+			if (is_symb_min_fa_consistent)
+				min_fa_consistent.insert(symb);
 		}
 	}
 
@@ -1021,9 +1115,9 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		bool alternate_flag = false;
 		// TODO
 		// сборка регулярок из строк будет ошибочной, если символы размечены
-		if (!counter)
+		if (!counter) {
 			regl += "(" + (string)consistent_symb;
-		else {
+		} else {
 			regl += "|" + (string)consistent_symb;
 			alternate_flag = true;
 		}
@@ -1034,7 +1128,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 			}
 		}
 		for (int elem : reachable_by_consistent_symb) {
-			FiniteAutomaton consistent_symb_automaton(0, {}, make_shared<Language>());
+			FiniteAutomaton consistent_symb_automaton(0, {}, std::make_shared<Language>());
 			set<int> reachable_states = min_fa.closure({elem}, false);
 			vector<int> inserted_states_indices;
 			int consistent_symb_automaton_initial_state = 0;
@@ -1068,10 +1162,11 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 				}
 			}
 			consistent_symb_automaton.language =
-				make_shared<Language>(consistent_symb_automaton_alphabet);
-			FiniteAutomaton consistent_symb_automaton_cut = FiniteAutomaton(
-				consistent_symb_automaton.initial_state, consistent_symb_automaton.states,
-				consistent_symb_automaton.language);
+				std::make_shared<Language>(consistent_symb_automaton_alphabet);
+			FiniteAutomaton consistent_symb_automaton_cut =
+				FiniteAutomaton(consistent_symb_automaton.initial_state,
+								consistent_symb_automaton.states,
+								consistent_symb_automaton.language);
 			for (int j = 0; j < consistent_symb_automaton.size(); j++) {
 				if (consistent_symb_automaton.states[j].is_terminal) {
 					map<alphabet_symbol, set<int>> new_transitions;
@@ -1088,14 +1183,17 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 			string consistent_symb_automaton_cut_to_regex =
 				consistent_symb_automaton_cut.to_regex().to_txt();
 			if (!consistent_symb_automaton_cut_to_regex.empty()) {
-				if (alternate_flag) regl += "(";
+				if (alternate_flag)
+					regl += "(";
 				regl += consistent_symb_automaton_cut_to_regex;
-				if (alternate_flag) regl += ")";
+				if (alternate_flag)
+					regl += ")";
 			}
 		}
 		counter++;
 	}
-	if (counter) regl += ")*";
+	if (counter)
+		regl += ")*";
 	language->set_one_unambiguous_regex(regl, fa.language);
 	Regex res = language->get_one_unambiguous_regex();
 	if (log) {
@@ -1104,7 +1202,8 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	return res;
 }
 
-Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules, iLogTemplate* log) const {
+Regex Regex::normalize_regex(const vector<std::pair<Regex, Regex>>& rules,
+							 iLogTemplate* log) const {
 	Regex regex = *this;
 	if (log) {
 		log->set_parameter("oldregex", *this);

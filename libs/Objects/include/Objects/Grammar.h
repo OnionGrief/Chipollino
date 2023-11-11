@@ -1,12 +1,14 @@
 #pragma once
-#include "AlphabetSymbol.h"
-#include "FiniteAutomaton.h"
-#include "TransformationMonoid.h"
 #include <iostream>
 #include <map>
 #include <set>
+#include <string>
+#include <utility>
 #include <vector>
-using namespace std;
+
+#include "AlphabetSymbol.h"
+#include "FiniteAutomaton.h"
+#include "TransformationMonoid.h"
 
 struct PrefixGrammarItem {
 	// конечное состояние автомата
@@ -40,7 +42,7 @@ struct GrammarItem {
 	void operator=(const GrammarItem& other);
 };
 // для отладки
-ostream& operator<<(ostream& os, const GrammarItem& item);
+std::ostream& operator<<(std::ostream& os, const GrammarItem& item);
 class Grammar {
   private:
 	vector<PrefixGrammarItem> prefix_grammar;
@@ -56,34 +58,40 @@ class Grammar {
 
   public:
 	// обновляет значение class_number для каждого нетерминала
-	static void update_classes(set<int>& checker,
-							   map<set<string>, vector<GrammarItem*>>& classes_check_map);
+	static void update_classes(
+		set<int>& checker,											// NOLINT(runtime/references)
+		map<set<string>, vector<GrammarItem*>>& classes_check_map); // NOLINT(runtime/references)
 	// строит новые классы эквивалентности по терминальным формам
-	static void check_classes(vector<vector<vector<GrammarItem*>>>& rules,
-							  map<set<string>, vector<GrammarItem*>>& classes_check_map,
-							  vector<GrammarItem*>& nonterminals);
+	static void check_classes(
+		vector<vector<vector<GrammarItem*>>>& rules,			   // NOLINT(runtime/references)
+		map<set<string>, vector<GrammarItem*>>& classes_check_map, // NOLINT(runtime/references)
+		vector<GrammarItem*>& nonterminals);					   // NOLINT(runtime/references)
 	// преобразует данную грамматику в бисимилярную
 	static vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
-		vector<vector<vector<GrammarItem*>>>& rules, vector<GrammarItem*>& nonterminals,
-		vector<GrammarItem*>& bisimilar_nonterminals,
-		map<int, vector<GrammarItem*>>& class_to_nonterminals);
+		vector<vector<vector<GrammarItem*>>>& rules,			// NOLINT(runtime/references)
+		vector<GrammarItem*>& nonterminals,						// NOLINT(runtime/references)
+		vector<GrammarItem*>& bisimilar_nonterminals,			// NOLINT(runtime/references)
+		map<int, vector<GrammarItem*>>& class_to_nonterminals); // NOLINT(runtime/references)
 	// преобразование конечного автомата в грамматику
 	// в векторе терминалов по 0му индексу лежит epsilon
-	static vector<vector<vector<GrammarItem*>>> fa_to_grammar(const vector<State>& states,
-															  const set<alphabet_symbol>& alphabet,
-															  vector<GrammarItem>& fa_items,
-															  vector<GrammarItem*>& nonterminals,
-															  vector<GrammarItem*>& terminals);
+	static vector<vector<vector<GrammarItem*>>> fa_to_grammar(
+		const vector<State>& states, const set<alphabet_symbol>& alphabet,
+		vector<GrammarItem>& fa_items,		// NOLINT(runtime/references)
+		vector<GrammarItem*>& nonterminals, // NOLINT(runtime/references)
+		vector<GrammarItem*>& terminals);	// NOLINT(runtime/references)
 	// преобразование переходов автомата в грамматику (переход -> состояние
 	// переход)
 	static vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
 		const vector<State>& states, const vector<GrammarItem*>& fa_nonterminals,
-		vector<pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>>& fa_items,
-		vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals);
+		vector<std::pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>>&
+			fa_items,						// NOLINT(runtime/references)
+		vector<GrammarItem*>& nonterminals, // NOLINT(runtime/references)
+		vector<GrammarItem*>& terminals); // NOLINT(runtime/references)
 	// построение обратной грамматики
 	static vector<vector<vector<GrammarItem*>>> get_reverse_grammar(
-		vector<vector<vector<GrammarItem*>>>& rules, vector<GrammarItem*>& nonterminals,
-		vector<GrammarItem*>& terminals, int initial_state);
+		vector<vector<vector<GrammarItem*>>>& rules,		 // NOLINT(runtime/references)
+		vector<GrammarItem*>& nonterminals,					 // NOLINT(runtime/references)
+		vector<GrammarItem*>& terminals, int initial_state); // NOLINT(runtime/references)
 	// создание пр грамматики по НКА
 	void fa_to_prefix_grammar(const FiniteAutomaton&, iLogTemplate* log = nullptr);
 	// создание пр грамматики по НКА с помощью ТМ

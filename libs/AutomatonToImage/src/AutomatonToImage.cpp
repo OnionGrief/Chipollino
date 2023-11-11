@@ -1,8 +1,8 @@
-#include "AutomatonToImage/AutomatonToImage.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
-using namespace std;
+
+#include "AutomatonToImage/AutomatonToImage.h"
 
 AutomatonToImage::AutomatonToImage() {}
 
@@ -29,7 +29,7 @@ void AutomatonToImage::to_image(string automat, int name) {
 */
 
 void remove_file(string dir, string file, bool guarded = false) {
-	stringstream command;
+	std::stringstream command;
 	command << "cd " << dir;
 #ifdef _WIN32
 	if (guarded)
@@ -61,10 +61,11 @@ string AutomatonToImage::to_image(string automat) {
 	remove_file("refal", "Meta_input.raux", true);
 	remove_file("refal", "Aux_input.raux", true);
 	// автомат
-	ifstream infile_for_R("./refal/R_input.tex");
-	stringstream graph;
+	std::ifstream infile_for_R("./refal/R_input.tex");
+	std::stringstream graph;
 	string s;
-	if (!infile_for_R) return "";
+	if (!infile_for_R)
+		return "";
 
 	while (!infile_for_R.eof()) {
 		getline(infile_for_R, s);
@@ -84,7 +85,7 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 
 	FILE* fo;
 	FILE* md;
-	ifstream infile_for_Final;
+	std::ifstream infile_for_Final;
 	fo = fopen("./refal/Col_input.tex", "wt");
 	fprintf(fo, "%s", automaton.c_str());
 	fclose(fo);
@@ -100,27 +101,28 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 		infile_for_Final.open("./refal/Col_input.tex");
 
 	// автомат
-	stringstream graph;
+	std::stringstream graph;
 	string s;
 	if (!infile_for_Final) return "";
 
 	while (!infile_for_Final.eof()) {
 		getline(infile_for_Final, s);
-		graph << s << endl;
+		graph << s << std::endl;
 	}
 	infile_for_Final.close();
 
 	remove_file("refal", "Final_input.tex", true);
 	remove_file("refal", "Col_input.tex");
 	// таблица
-	ifstream infile_for_L("./refal/L_input.tex");
+	std::ifstream infile_for_L("./refal/L_input.tex");
 
-	if (!infile_for_L) return graph.str();
+	if (!infile_for_L)
+		return graph.str();
 
 	// the table is adjusted for frames in the general renderer module
 	while (!infile_for_L.eof()) {
 		getline(infile_for_L, s);
-		graph << s << endl;
+		graph << s << std::endl;
 	}
 	infile_for_L.close();
 

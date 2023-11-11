@@ -1,8 +1,4 @@
 #pragma once
-#include "Objects/BaseObject.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Regex.h"
-#include "Objects/iLogTemplate.h"
 #include <chrono>
 #include <iostream>
 #include <regex>
@@ -10,7 +6,10 @@
 #include <variant>
 #include <vector>
 
-using namespace std;
+#include "Objects/BaseObject.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Regex.h"
+#include "Objects/iLogTemplate.h"
 
 class Tester {
   public:

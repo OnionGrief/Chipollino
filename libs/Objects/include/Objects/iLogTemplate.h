@@ -1,14 +1,14 @@
 #pragma once
-#include "Objects/MetaInfo.h"
 #include <string>
 #include <variant>
+#include <vector>
 
-using namespace std;
+#include "Objects/MetaInfo.h"
+
 class FiniteAutomaton;
 class Regex;
 
 class iLogTemplate {
-
   public:
 	struct Table {
 		vector<string> rows;	// названия строк
@@ -21,7 +21,7 @@ class iLogTemplate {
 		int x_coord;
 		long y_coord;
 	};
-	
+
 	struct Plot {
 		vector<Point> data;
 	};

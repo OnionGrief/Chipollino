@@ -33,13 +33,14 @@
  *
  */
 
-#ifndef INFINT_H_
-#define INFINT_H_
+#ifndef LIBS_INFINT_INCLUDE_INFINT_INFINT_H_
+#define LIBS_INFINT_INCLUDE_INFINT_INFINT_H_
 
 #include <climits>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
 
 // #include <limits.h>
@@ -55,6 +56,11 @@
 #include <exception>
 #endif
 
+using std::cout;
+using std::endl;
+using std::string;
+using std::vector;
+
 typedef int ELEM_TYPE;
 typedef long long PRODUCT_TYPE;
 static const ELEM_TYPE BASE = 1000000000;
@@ -65,16 +71,15 @@ static const int powersOfTen[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 1000
 #ifdef INFINT_USE_EXCEPTIONS
 class InfIntException : public std::exception {
   public:
-	InfIntException(const std::string& txt) throw();
+	InfIntException(const string& txt) throw(); // NOLINT(runtime/explicit)
 	~InfIntException() throw();
 	const char* what() const throw();
 
   private:
-	std::string txt;
+	string txt;
 };
 
-inline InfIntException::InfIntException(const std::string& txt) throw()
-	: std::exception(), txt(txt) {}
+inline InfIntException::InfIntException(const string& txt) throw() : std::exception(), txt(txt) {}
 
 inline InfIntException::~InfIntException() throw() {}
 
@@ -111,19 +116,19 @@ class InfInt {
   public:
 	/* constructors */
 	InfInt();
-	InfInt(const char* c);
-	InfInt(const std::string& s);
-	InfInt(int l);
-	InfInt(long l);
-	InfInt(long long l);
-	InfInt(unsigned int l);
-	InfInt(unsigned long l);
-	InfInt(unsigned long long l);
+	InfInt(const char* c);		  // NOLINT(runtime/explicit)
+	InfInt(const string& s);	  // NOLINT(runtime/explicit)
+	InfInt(int l);				  // NOLINT(runtime/explicit)
+	InfInt(long l);				  // NOLINT(runtime/explicit)
+	InfInt(long long l);		  // NOLINT(runtime/explicit)
+	InfInt(unsigned int l);		  // NOLINT(runtime/explicit)
+	InfInt(unsigned long l);	  // NOLINT(runtime/explicit)
+	InfInt(unsigned long long l); // NOLINT(runtime/explicit)
 	InfInt(const InfInt& l);
 
 	/* assignment operators */
 	const InfInt& operator=(const char* c);
-	const InfInt& operator=(const std::string& s);
+	const InfInt& operator=(const string& s);
 	const InfInt& operator=(int l);
 	const InfInt& operator=(long l);
 	const InfInt& operator=(long long l);
@@ -174,7 +179,7 @@ class InfInt {
 	size_t size() const;
 
 	/* string conversion */
-	std::string toString() const;
+	string toString() const;
 
 	/* conversion to primitive types */
 	int toInt() const;							   // throw
@@ -186,17 +191,18 @@ class InfInt {
 
   private:
 	static ELEM_TYPE dInR(const InfInt& R, const InfInt& D);
-	static void multiplyByDigit(ELEM_TYPE factor, std::vector<ELEM_TYPE>& val);
+	static void multiplyByDigit(ELEM_TYPE factor,
+								vector<ELEM_TYPE>& val); // NOLINT(runtime/references)
 
 	void correct(bool justCheckLeadingZeros = false, bool hasValidSign = false);
-	void fromString(const std::string& s);
-	void optimizeSqrtSearchBounds(InfInt& lo, InfInt& hi) const;
+	void fromString(const string& s);
+	void optimizeSqrtSearchBounds(InfInt& lo, InfInt& hi) const; // NOLINT(runtime/references)
 	void truncateToBase();
 	bool equalizeSigns();
 	void removeLeadingZeros();
 
-	std::vector<ELEM_TYPE> val; // number with base FACTOR
-	bool pos;					// true if number is positive
+	vector<ELEM_TYPE> val; // number with base FACTOR
+	bool pos;			   // true if number is positive
 };
 
 inline InfInt::InfInt() : pos(true) {
@@ -209,7 +215,7 @@ inline InfInt::InfInt(const char* c) {
 	fromString(c);
 }
 
-inline InfInt::InfInt(const std::string& s) {
+inline InfInt::InfInt(const string& s) {
 	// PROFINY_SCOPE
 	fromString(s);
 }
@@ -314,7 +320,7 @@ inline const InfInt& InfInt::operator=(const char* c) {
 	return *this;
 }
 
-inline const InfInt& InfInt::operator=(const std::string& s) {
+inline const InfInt& InfInt::operator=(const string& s) {
 	// PROFINY_SCOPE
 	fromString(s);
 	return *this;
@@ -495,7 +501,7 @@ inline const InfInt& InfInt::operator/=(const InfInt& rhs) {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("division by zero");
 #else
-		std::cerr << "Division by zero!" << std::endl;
+		std::cerr << "Division by zero!" << endl;
 		return *this;
 #endif
 	}
@@ -524,7 +530,7 @@ inline const InfInt& InfInt::operator%=(const InfInt& rhs) {
 	// #ifdef INFINT_USE_EXCEPTIONS
 	//        throw InfIntException("division by zero");
 	// #else
-	//        std::cerr << "Division by zero!" << std::endl;
+	//        std::cerr << "Division by zero!" << endl;
 	//        return *this;
 	// #endif
 	//    }
@@ -596,7 +602,8 @@ inline InfInt InfInt::operator*(const InfInt& rhs) const {
 
 		bool found = false;
 		for (size_t i = digit < rhs.val.size() ? 0 : digit - rhs.val.size() + 1;
-			 i < val.size() && i <= digit; ++i) {
+			 i < val.size() && i <= digit;
+			 ++i) {
 			PRODUCT_TYPE pval = result.val[digit] + val[i] * (PRODUCT_TYPE)rhs.val[digit - i];
 			if (pval >= BASE || pval <= -BASE) {
 				lldiv_t dt = my_lldiv(pval, BASE);
@@ -626,7 +633,7 @@ inline InfInt InfInt::operator/(const InfInt& rhs) const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("division by zero");
 #else
-		std::cerr << "Division by zero!" << std::endl;
+		std::cerr << "Division by zero!" << endl;
 		return 0;
 #endif
 	}
@@ -650,7 +657,7 @@ inline InfInt InfInt::operator%(const InfInt& rhs) const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("division by zero");
 #else
-		std::cerr << "Division by zero!" << std::endl;
+		std::cerr << "Division by zero!" << endl;
 		return 0;
 #endif
 	}
@@ -822,7 +829,7 @@ inline InfInt InfInt::intSqrt() const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("intSqrt called for non-positive integer");
 #else
-		std::cerr << "intSqrt called for non-positive integer: " << *this << std::endl;
+		std::cerr << "intSqrt called for non-positive integer: " << *this << endl;
 		return 0;
 #endif
 	}
@@ -849,7 +856,7 @@ inline char InfInt::digitAt(size_t i) const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("invalid digit index");
 #else
-		std::cerr << "Invalid digit index: " << i << std::endl;
+		std::cerr << "Invalid digit index: " << i << endl;
 		return -1;
 #endif
 	}
@@ -876,9 +883,9 @@ inline size_t InfInt::numberOfDigits() const {
 														  : (val.back() > 9 ? 2 : 1))))))));
 }
 
-inline std::string InfInt::toString() const {
+inline string InfInt::toString() const {
 	// PROFINY_SCOPE
-	std::ostringstream oss;
+	std::stringstream oss;
 	oss << *this;
 	return oss.str();
 }
@@ -894,7 +901,7 @@ inline int InfInt::toInt() const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("out of bounds");
 #else
-		std::cerr << "Out of INT bounds: " << *this << std::endl;
+		std::cerr << "Out of INT bounds: " << *this << endl;
 #endif
 	}
 	int result = 0;
@@ -910,7 +917,7 @@ inline long InfInt::toLong() const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("out of bounds");
 #else
-		std::cerr << "Out of LONG bounds: " << *this << std::endl;
+		std::cerr << "Out of LONG bounds: " << *this << endl;
 #endif
 	}
 	long result = 0;
@@ -926,7 +933,7 @@ inline long long InfInt::toLongLong() const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("out of bounds");
 #else
-		std::cerr << "Out of LLONG bounds: " << *this << std::endl;
+		std::cerr << "Out of LLONG bounds: " << *this << endl;
 #endif
 	}
 	long long result = 0;
@@ -942,7 +949,7 @@ inline unsigned int InfInt::toUnsignedInt() const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("out of bounds");
 #else
-		std::cerr << "Out of UINT bounds: " << *this << std::endl;
+		std::cerr << "Out of UINT bounds: " << *this << endl;
 #endif
 	}
 	unsigned int result = 0;
@@ -958,7 +965,7 @@ inline unsigned long InfInt::toUnsignedLong() const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("out of bounds");
 #else
-		std::cerr << "Out of ULONG bounds: " << *this << std::endl;
+		std::cerr << "Out of ULONG bounds: " << *this << endl;
 #endif
 	}
 	unsigned long result = 0;
@@ -974,7 +981,7 @@ inline unsigned long long InfInt::toUnsignedLongLong() const {
 #ifdef INFINT_USE_EXCEPTIONS
 		throw InfIntException("out of bounds");
 #else
-		std::cerr << "Out of ULLONG bounds: " << *this << std::endl;
+		std::cerr << "Out of ULLONG bounds: " << *this << endl;
 #endif
 	}
 	unsigned long long result = 0;
@@ -1078,7 +1085,7 @@ inline void InfInt::correct(bool justCheckLeadingZeros, bool hasValidSign) {
 	removeLeadingZeros();
 }
 
-inline void InfInt::fromString(const std::string& s) {
+inline void InfInt::fromString(const string& s) {
 	// PROFINY_SCOPE
 	pos = true;
 	val.clear();
@@ -1088,7 +1095,7 @@ inline void InfInt::fromString(const std::string& s) {
 		val.push_back(atoi(s.substr(i, DIGIT_COUNT).c_str()));
 	}
 	if (i > -DIGIT_COUNT) {
-		std::string ss = s.substr(0, i + DIGIT_COUNT);
+		string ss = s.substr(0, i + DIGIT_COUNT);
 		if (ss.size() == 1 && ss[0] == '-') {
 			pos = false;
 		} else {
@@ -1121,7 +1128,7 @@ inline ELEM_TYPE InfInt::dInR(const InfInt& R, const InfInt& D) {
 	return min;
 }
 
-inline void InfInt::multiplyByDigit(ELEM_TYPE factor, std::vector<ELEM_TYPE>& val) {
+inline void InfInt::multiplyByDigit(ELEM_TYPE factor, vector<ELEM_TYPE>& val) {
 	// PROFINY_SCOPE
 	ELEM_TYPE carry = 0;
 	for (size_t i = 0; i < val.size(); ++i) {
@@ -1146,7 +1153,7 @@ inline void InfInt::multiplyByDigit(ELEM_TYPE factor, std::vector<ELEM_TYPE>& va
 
 inline std::istream& operator>>(std::istream& s, InfInt& n) {
 	// PROFINY_SCOPE
-	std::string str;
+	string str;
 	s >> str;
 	n.fromString(str);
 	return s;
@@ -1169,4 +1176,4 @@ inline std::ostream& operator<<(std::ostream& s, const InfInt& n) {
 	return s;
 }
 
-#endif
+#endif // LIBS_INFINT_INCLUDE_INFINT_INFINT_H_

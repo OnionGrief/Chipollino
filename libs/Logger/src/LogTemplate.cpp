@@ -1,12 +1,15 @@
-#include "Logger/LogTemplate.h"
+#include <variant>
 #include <algorithm>
 #include <cmath>
 
+#include "Logger/LogTemplate.h"
+
 void LogTemplate::add_parameter(string parameter_name) {
 
-	ifstream infile(template_fullpath);
+	std::ifstream infile(template_fullpath);
 
-	if (!infile) return; // infile.close();
+	if (!infile)
+		return; // infile.close();
 
 	string s;
 	bool is_exist = false;
@@ -46,7 +49,7 @@ void LogTemplate::add_parameter(string parameter_name) {
 		}
 
 		infile.close();
-		ofstream outfile(template_fullpath);
+		std::ofstream outfile(template_fullpath);
 		outfile << outstr;
 		outfile.close();
 	}
@@ -70,7 +73,7 @@ string LogTemplate::get_tex_template() {
 }
 
 string LogTemplate::render() const {
-	stringstream infile = expand_includes(template_fullpath);
+	std::stringstream infile = expand_includes(template_fullpath);
 
 	// Строка-аккумулятор
 	string outstr = "";
@@ -100,14 +103,14 @@ string LogTemplate::render() const {
 					continue;
 				}
 
-				if (holds_alternative<Regex>(param.value)) {
+				if (std::holds_alternative<Regex>(param.value)) {
 					s.insert(insert_place,
-							 get<Regex>(param.value).to_txt()); /* Math mode is done in global
+							 std::get<Regex>(param.value).to_txt()); /* Math mode is done in global
 																	  renderer */
-				} else if (holds_alternative<FiniteAutomaton>(param.value)) {
-					hash<string> hasher;
+				} else if (std::holds_alternative<FiniteAutomaton>(param.value)) {
+					std::hash<string> hasher;
 					string c_graph;
-					string automaton = get<FiniteAutomaton>(param.value).to_txt();
+					string automaton = std::get<FiniteAutomaton>(param.value).to_txt();
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
@@ -117,13 +120,13 @@ string LogTemplate::render() const {
 					}
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
 					s.insert(insert_place, c_graph);
-				} else if (holds_alternative<string>(param.value)) {
+				} else if (std::holds_alternative<string>(param.value)) {
 					s.insert(insert_place, get<string>(param.value));
-				} else if (holds_alternative<int>(param.value)) {
+				} else if (std::holds_alternative<int>(param.value)) {
 					s.insert(insert_place, to_string(get<int>(param.value)));
-				} else if (holds_alternative<Table>(param.value)) {
+				} else if (std::holds_alternative<Table>(param.value)) {
 					s.insert(insert_place, log_table(get<Table>(param.value)));
-				} else if (holds_alternative<Plot>(param.value)) {
+				} else if (std::holds_alternative<Plot>(param.value)) {
 					s.insert(insert_place, log_plot(get<Plot>(param.value)));
 				}
 			}
@@ -208,7 +211,7 @@ string LogTemplate::math_mode(string str) {
 // Вычисление шага для делений на графике
 int step_size(int maxscale, size_t objsize, size_t datasize) {
 	int step = std::ceil((maxscale * (static_cast<int>(objsize) + 3)) / max(static_cast<int>(datasize) - 2, 1));
-	return (step > 10 ? std::floor(step / 10) * 10 : max(step, 1));	
+	return (step > 10 ? std::floor(step / 10) * 10 : max(step, 1));
 }
 
 // Логирование графиков
@@ -245,7 +248,8 @@ string LogTemplate::log_plot(Plot p) {
 
 string LogTemplate::log_table(Table t) {
 	string table = "";
-	if (!(t.columns.size() && t.rows.size())) return table;
+	if (!(t.columns.size() && t.rows.size()))
+		return table;
 	string format = "c!{\\color{black!80}\\vline width .65pt}";
 	string cols = "  &";
 	string row = "";
@@ -276,12 +280,12 @@ string LogTemplate::log_table(Table t) {
 	return table;
 }
 
-stringstream LogTemplate::expand_includes(string filename) const {
-	stringstream outstream;
+std::stringstream LogTemplate::expand_includes(string filename) const {
+	std::stringstream outstream;
 
-	ifstream infile(filename);
+	std::ifstream infile(filename);
 	if (!infile) {
-		cerr << "ERROR: while rendering template. Unknown filename " + filename + "\n";
+		std::cerr << "ERROR: while rendering template. Unknown filename " + filename + "\n";
 		return outstream;
 	}
 

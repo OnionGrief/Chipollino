@@ -1,14 +1,15 @@
-#include "AutomatonToImage/AutomatonToImage.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/MetaInfo.h"
-#include "Objects/Regex.h"
-#include "Objects/iLogTemplate.h"
+#ifndef LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_
+#define LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_
+
+#include <map>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 #include <variant>
 
-using namespace std;
+#include "AutomatonToImage/AutomatonToImage.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Regex.h"
+#include "Objects/iLogTemplate.h"
 
 // Возможные заранее заданные стили текста
 enum Decoration {
@@ -28,7 +29,6 @@ enum TextSize {
 };
 
 class LogTemplate : public iLogTemplate {
-
   public:
 	void set_parameter(const string& key, const LogObject& value, const MetaInfo& meta = {});
 	void set_theory_flag(bool value);
@@ -50,7 +50,7 @@ class LogTemplate : public iLogTemplate {
 															{typewriter, {"\\ttfamily", false}},
 															{roman, {"\\mathrm", true}}};
 
-	// Определяет мапу идентификатора размера и его тега в латехе 
+	// Определяет мапу идентификатора размера и его тега в латехе
 	inline static const unordered_map<TextSize, string> textsize_to_str = {{footnote, "\\footnotesize"},
 												   {small, "\\small"},
 												   {normal, "\\normalsize"},
@@ -95,5 +95,6 @@ class LogTemplate : public iLogTemplate {
 	// графики
 	static string log_plot(Plot p /*vector<<int,long>,string>*/);
 	// Рекурсивно раскрывает include-выражения в файле
-	stringstream expand_includes(string filename) const;
+	std::stringstream expand_includes(string filename) const;
 };
+#endif // LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_
