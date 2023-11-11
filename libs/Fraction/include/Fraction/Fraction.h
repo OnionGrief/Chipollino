@@ -1,7 +1,6 @@
 #pragma once
 #include "InfInt/InfInt.h"
 #include <iostream>
-using namespace std;
 
 class Fraction {
 	InfInt numerator;
@@ -22,7 +21,7 @@ class Fraction {
 	bool operator>(const Fraction& f);
 	bool operator==(const Fraction& f);
 	bool operator>=(const Fraction& f);
-	friend ostream& operator<<(ostream& output, const Fraction& f);
+	friend std::ostream& operator<<(std::ostream& output, const Fraction& f);
 
   private:
 	void simplify() {

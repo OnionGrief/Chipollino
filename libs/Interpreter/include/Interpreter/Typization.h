@@ -6,7 +6,9 @@
 #include <map>
 #include <optional>
 #include <set>
+#include <string>
 #include <variant>
+#include <vector>
 
 // Типизация входныx данных
 namespace Typization {
@@ -31,10 +33,10 @@ template <ObjectType T, class V> struct ObjectHolder {
 	V value;
 	ObjectType type() const {
 		return T;
-	};
+	}
 
-	explicit ObjectHolder(){};
-	explicit ObjectHolder(V value) : value(value){};
+	explicit ObjectHolder() {} // NOLINT(runtime/explicit)
+	explicit ObjectHolder(V value) : value(value) {}
 };
 
 // Сами структуры
@@ -51,8 +53,8 @@ struct ObjectArray;
 
 // Универсальный объект
 using GeneralObject =
-	variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString, ObjectBoolean,
-			ObjectOptionalBool, ObjectAmbiguityValue, ObjectPrefixGrammar, ObjectArray>;
+	std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString, ObjectBoolean,
+				 ObjectOptionalBool, ObjectAmbiguityValue, ObjectPrefixGrammar, ObjectArray>;
 
 #define OBJECT_DEFINITION(type, value)                                                             \
 	struct Object##type : public ObjectHolder<ObjectType::type, value> {                           \
@@ -66,7 +68,7 @@ OBJECT_DEFINITION(Regex, Regex)
 OBJECT_DEFINITION(Int, int)
 OBJECT_DEFINITION(String, string)
 OBJECT_DEFINITION(Boolean, bool)
-OBJECT_DEFINITION(OptionalBool, optional<bool>)
+OBJECT_DEFINITION(OptionalBool, std::optional<bool>)
 OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
 OBJECT_DEFINITION(PrefixGrammar, Grammar)
 OBJECT_DEFINITION(Array, vector<GeneralObject>)

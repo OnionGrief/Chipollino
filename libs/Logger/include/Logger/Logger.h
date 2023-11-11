@@ -3,8 +3,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 class Logger {
   public:
 	void add_log(const LogTemplate& log);

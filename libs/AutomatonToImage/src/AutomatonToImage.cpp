@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-using namespace std;
 
 AutomatonToImage::AutomatonToImage() {}
 
@@ -55,10 +54,11 @@ string AutomatonToImage::to_image(string automat) {
 #endif
 
 	// автомат
-	ifstream infile_for_R("./refal/R_input.tex");
-	stringstream graph;
+	std::ifstream infile_for_R("./refal/R_input.tex");
+	std::stringstream graph;
 	string s;
-	if (!infile_for_R) return "";
+	if (!infile_for_R)
+		return "";
 
 	while (!infile_for_R.eof()) {
 		getline(infile_for_R, s);
@@ -76,9 +76,10 @@ string AutomatonToImage::to_image(string automat) {
 #endif
 
 	// таблица
-	ifstream infile_for_L("./refal/L_input.tex");
+	std::ifstream infile_for_L("./refal/L_input.tex");
 
-	if (!infile_for_L) return graph.str();
+	if (!infile_for_L)
+		return graph.str();
 
 	// the table is adjusted for frames in the general renderer module
 	while (!infile_for_L.eof()) {

@@ -1,7 +1,8 @@
 #include "gtest/gtest.h"
 #include <iostream>
 #include <thread>
-using namespace std;
+
+using std::cout;
 
 int main(int argc, char** argv) {
 	cout << "Metamorphic Tests\n";

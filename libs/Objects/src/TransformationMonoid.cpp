@@ -3,7 +3,6 @@
 #include "Objects/Language.h"
 #include <algorithm>
 #include <iostream>
-using namespace std;
 vector<alphabet_symbol> union_words(vector<alphabet_symbol> a, vector<alphabet_symbol> b) {
 	vector<alphabet_symbol> newword;
 	for (int i = 0; i < a.size(); i++) {
@@ -124,7 +123,7 @@ void TransformationMonoid::get_new_transition(const vector<TransformationMonoid:
 		}
 		// получили новые переходы
 		Term curTerm;
-		std::vector<TransformationMonoid::Transition> v(out.size());
+		vector<TransformationMonoid::Transition> v(out.size());
 		std::copy(out.begin(), out.end(), v.begin());
 		curTerm.transitions = v;
 		vector<alphabet_symbol> tempword = word;
@@ -134,7 +133,7 @@ void TransformationMonoid::get_new_transition(const vector<TransformationMonoid:
 	}
 }
 
-TransformationMonoid::TransformationMonoid(){};
+TransformationMonoid::TransformationMonoid() {}
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	int states_counter_old = 0;
 	int states_counter_new = 0;
@@ -166,7 +165,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 		TransformationMonoid::Term cur = queueTerm.front();
 		queueTerm.pop();
 		if (!searchrewrite(cur.name)) { // если не переписывается
-			std::vector<TransformationMonoid::Term>::iterator rewritein =
+			vector<TransformationMonoid::Term>::iterator rewritein =
 				std::find(terms.begin(), terms.end(), cur);
 			if (rewritein != terms.end()) { // в правила переписывания
 				// cout << "\trewrite ";
@@ -187,7 +186,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 }
 
 string TransformationMonoid::to_txt() {
-	stringstream ss;
+	std::stringstream ss;
 	ss << "Equivalence classes:\n";
 	ss << get_equalence_classes_txt();
 	ss << "Rewriting rules:\n";
@@ -237,7 +236,7 @@ map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> TransformationMono
 }
 
 string TransformationMonoid::get_equalence_classes_txt() {
-	stringstream ss;
+	std::stringstream ss;
 	for (int i = 0; i < terms.size(); i++) {
 		ss << "Term	" << alphabet_symbol::vector_to_str(terms[i].name) << "	in	language	"
 		   << terms[i].isFinal << "\n";
@@ -262,7 +261,7 @@ map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 }
 
 string TransformationMonoid::get_rewriting_rules_txt(iLogTemplate* log) {
-	stringstream ss;
+	std::stringstream ss;
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
 			ss << alphabet_symbol::vector_to_str(item.second[i]) << "	->	"
@@ -393,9 +392,10 @@ int TransformationMonoid::is_synchronized(const Term& w) {
 
 // Вернет число классов эквивалентности
 int TransformationMonoid::class_card(iLogTemplate* log) {
-	if (log) log->set_parameter("oldautomaton", automat);
+	if (log)
+		log->set_parameter("oldautomaton", automat);
 	if (log) {
-		log->set_parameter("result", to_string(terms.size()));
+		log->set_parameter("result", std::to_string(terms.size()));
 	}
 	return terms.size();
 }
@@ -403,9 +403,10 @@ int TransformationMonoid::class_card(iLogTemplate* log) {
 // Вернет самое длинное слово в классе
 int TransformationMonoid::class_length(iLogTemplate* log) {
 
-	if (log) log->set_parameter("oldautomaton", automat);
+	if (log)
+		log->set_parameter("oldautomaton", automat);
 	if (log) {
-		log->set_parameter("result", to_string(terms[terms.size() - 1].name.size()));
+		log->set_parameter("result", std::to_string(terms[terms.size() - 1].name.size()));
 		// TODO: logs
 		log->set_parameter("One of the longest words",
 						   alphabet_symbol::vector_to_str(terms[terms.size() - 1].name));
@@ -415,7 +416,8 @@ int TransformationMonoid::class_length(iLogTemplate* log) {
 
 int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
 
-	if (log) log->set_parameter("oldautomaton", automat);
+	if (log)
+		log->set_parameter("oldautomaton", automat);
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
@@ -547,7 +549,7 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
-	stringstream ss;
+	std::stringstream ss;
 	// iLogTemplate::Table t;
 	int maxlen = terms[terms.size() - 1].name.size();
 	ss << string(maxlen + 2, ' ');

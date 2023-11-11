@@ -11,7 +11,6 @@
 #include <queue>
 #include <set>
 #include <stack>
-using namespace std;
 
 State::State() : index(0), is_terminal(false) {}
 
@@ -25,7 +24,7 @@ void State::set_transition(int to, const alphabet_symbol& symbol) {
 }
 
 FiniteAutomaton::FiniteAutomaton(int initial_state, vector<State> states,
-								 shared_ptr<Language> language)
+								 std::shared_ptr<Language> language)
 	: AbstractMachine(initial_state, move(language)), states(move(states)) {}
 
 FiniteAutomaton::FiniteAutomaton(int initial_state, vector<State> states,
@@ -35,23 +34,24 @@ FiniteAutomaton::FiniteAutomaton(int initial_state, vector<State> states,
 FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 	: AbstractMachine(other.initial_state, other.language), states(other.states) {}
 
-template <typename T> FiniteAutomaton* FiniteAutomaton::cast(unique_ptr<T>&& uptr) {
+template <typename T> FiniteAutomaton* FiniteAutomaton::cast(std::unique_ptr<T>&& uptr) {
 	auto* fa = dynamic_cast<FiniteAutomaton*>(uptr.get());
 	if (!fa) {
-		throw runtime_error("Failed to cast to FiniteAutomaton");
+		throw std::runtime_error("Failed to cast to FiniteAutomaton");
 	}
 
 	return fa;
 }
 
 string FiniteAutomaton::to_txt() const {
-	stringstream ss;
+	std::stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
 	for (int i = 0; i < states.size(); i++) {
 		ss << i << " [label = \"" << states[i].identifier << "\", shape = ";
 		ss << (states[i].is_terminal ? "doublecircle]\n\t" : "circle]\n\t");
 	}
-	if (states.size() > initial_state) ss << "dummy -> " << states[initial_state].index << "\n";
+	if (states.size() > initial_state)
+		ss << "dummy -> " << states[initial_state].index << "\n";
 
 	for (const auto& state : states) {
 		for (const auto& elem : state.transitions) {
@@ -67,7 +67,8 @@ string FiniteAutomaton::to_txt() const {
 }
 
 // обход автомата в глубину
-void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index, set<int>& reachable,
+void dfs(vector<State> states, const set<alphabet_symbol>& alphabet, int index,
+		 set<int>& reachable, // NOLINT(runtime/references)
 		 bool use_epsilons_only) {
 	if (reachable.find(index) == reachable.end()) {
 		reachable.insert(index);
@@ -93,7 +94,8 @@ set<int> FiniteAutomaton::closure(const set<int>& indices, bool use_epsilons_onl
 
 FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) const {
 	if (!is_trim)
-		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
+		if (log)
+			log->set_parameter("trap", " (с добавлением ловушки)");
 	FiniteAutomaton dfa = FiniteAutomaton(0, {}, language);
 	set<int> q0 = closure({initial_state}, true);
 
@@ -106,8 +108,8 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 	State new_initial_state = {0, label, new_identifier, false, map<alphabet_symbol, set<int>>()};
 	dfa.states.push_back(new_initial_state);
 
-	stack<set<int>> s1;
-	stack<int> s2;
+	std::stack<set<int>> s1;
+	std::stack<int> s2;
 	s1.push(q0);
 	s2.push(0);
 
@@ -155,10 +157,11 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 				}
 			}
 
-			if (!accessory_flag) index = -1;
-			if (index != -1)
+			if (!accessory_flag)
+				index = -1;
+			if (index != -1) {
 				q1 = dfa.states[index];
-			else {
+			} else {
 				index = dfa.size();
 				q1.index = index;
 				dfa.states.push_back(q1);
@@ -177,7 +180,8 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 
 FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const {
 	if (!is_trim)
-		if (log) log->set_parameter("trap", " (с добавлением ловушки)");
+		if (log)
+			log->set_parameter("trap", " (с добавлением ловушки)");
 	if (language->is_min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
 		if (log) {
@@ -288,9 +292,9 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 	}
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
 	// кэширование
-	language->set_min_dfa(minimized_dfa.initial_state, minimized_dfa.states,
-						  minimized_dfa.language);
-	stringstream ss;
+	language->set_min_dfa(
+		minimized_dfa.initial_state, minimized_dfa.states, minimized_dfa.language);
+	std::stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
 		ss << "\\{" << state.identifier << "\\}\;";
 	}
@@ -315,12 +319,12 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 			(initial_state_identifier.empty() || states[elem].identifier.empty() ? "" : ", ") +
 			states[elem].identifier;
 	}
-	State new_initial_state = {0, q, initial_state_identifier, false,
-							   map<alphabet_symbol, set<int>>()};
+	State new_initial_state = {
+		0, q, initial_state_identifier, false, map<alphabet_symbol, set<int>>()};
 	visited_states[q] = 0;
 	new_states.push_back(new_initial_state);
 
-	stack<set<int>> s;
+	std::stack<set<int>> s;
 	s.push(q);
 	set<int> x;
 	int states_counter = 1;
@@ -354,7 +358,10 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 									 : ", ") +
 								states[elem].identifier;
 						}
-						State new_state = {states_counter, x1, new_state_identifier, false,
+						State new_state = {states_counter,
+										   x1,
+										   new_state_identifier,
+										   false,
 										   map<alphabet_symbol, set<int>>()};
 						new_states.push_back(new_state);
 						visited_states[x1] = states_counter;
@@ -368,7 +375,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 	}
 	for (auto& state : new_states) {
 		for (auto elem : state.label) {
-			if (states[elem].is_terminal) state.is_terminal = true;
+			if (states[elem].is_terminal)
+				state.is_terminal = true;
 		}
 	}
 	new_nfa.initial_state = 0;
@@ -435,7 +443,7 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 	new_dfa2 = new_dfa2.determinize();
 	FiniteAutomaton new_dfa(0, {}, merged_alphabets);
 	int counter = 0;
-	vector<pair<int, int>> state_pair; // пары индексов состояний
+	vector<std::pair<int, int>> state_pair; // пары индексов состояний
 	for (const auto& state1 : new_dfa1.states) {
 		for (const auto& state2 : new_dfa2.states) {
 			string new_identifier;
@@ -460,8 +468,10 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 		}
 	}
 	set<alphabet_symbol> new_alphabet;
-	set_intersection(fa1.language->get_alphabet().begin(), fa1.language->get_alphabet().end(),
-					 fa2.language->get_alphabet().begin(), fa2.language->get_alphabet().end(),
+	set_intersection(fa1.language->get_alphabet().begin(),
+					 fa1.language->get_alphabet().end(),
+					 fa2.language->get_alphabet().begin(),
+					 fa2.language->get_alphabet().end(),
 					 inserter(new_alphabet, new_alphabet.begin()));
 	new_dfa.language->set_alphabet(new_alphabet);
 	for (int i = 0; i < new_dfa.size(); i++) {
@@ -494,7 +504,7 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1, const Finite
 	new_dfa2 = new_dfa2.determinize();
 	FiniteAutomaton new_dfa(0, {}, merged_alphabets);
 	int counter = 0;
-	vector<pair<int, int>> state_pair; // пары индексов состояний
+	vector<std::pair<int, int>> state_pair; // пары индексов состояний
 	for (const auto& state1 : new_dfa1.states) {
 		for (const auto& state2 : new_dfa2.states) {
 			string new_identifier;
@@ -539,7 +549,7 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1, const Fi
 	new_dfa2 = new_dfa2.determinize();
 	FiniteAutomaton new_dfa(0, {}, merged_alphabets);
 	int counter = 0;
-	vector<pair<int, int>> state_pair; // пары индексов состояний
+	vector<std::pair<int, int>> state_pair; // пары индексов состояний
 	for (const auto& state1 : new_dfa1.states) {
 		for (const auto& state2 : new_dfa2.states) {
 			string new_identifier;
@@ -590,8 +600,10 @@ FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
 	}
 	int final_states_counter = 0;
 	for (int i = 0; i < new_dfa.size(); i++)
-		if (new_dfa.states[i].is_terminal) final_states_counter++;
-	if (!final_states_counter) new_dfa = new_dfa.minimize();
+		if (new_dfa.states[i].is_terminal)
+			final_states_counter++;
+	if (!final_states_counter)
+		new_dfa = new_dfa.minimize();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_dfa);
@@ -640,8 +652,9 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 		for (int i = 0; i < enfa.size() - final_states_flag; i++) {
 			enfa.states[i].transitions = new_transition_matrix[i];
 		}
-	} else
+	} else {
 		enfa.initial_state = initial_state;
+	}
 	enfa = enfa.remove_unreachable_states();
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
@@ -706,13 +719,15 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 					new_states.push_back(new_dfa.states[j]);
 				}
 				if (j > i && i != count - 1) {
-					new_states.emplace_back(new_dfa.states[j].index - 1, new_dfa.states[j].label,
+					new_states.emplace_back(new_dfa.states[j].index - 1,
+											new_dfa.states[j].label,
 											new_dfa.states[j].identifier,
 											new_dfa.states[j].is_terminal,
 											new_dfa.states[j].transitions);
 				}
 			}
-			if (new_dfa.initial_state > i) new_dfa.initial_state -= 1;
+			if (new_dfa.initial_state > i)
+				new_dfa.initial_state -= 1;
 			new_dfa.states = new_states;
 			for (int j = 0; j < new_dfa.size(); j++) {
 				map<alphabet_symbol, set<int>> new_transitions;
@@ -726,7 +741,8 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 							new_transition.insert(transition_to - 1);
 						}
 					}
-					if (!new_transition.empty()) new_transitions[transition.first] = new_transition;
+					if (!new_transition.empty())
+						new_transitions[transition.first] = new_transition;
 				}
 				new_dfa.states[j].transitions = new_transitions;
 			}
@@ -734,7 +750,8 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 			count--;
 		}
 	}
-	if (new_dfa.is_empty()) new_dfa = *this;
+	if (new_dfa.is_empty())
+		new_dfa = *this;
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_dfa);
@@ -743,7 +760,8 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
-	if (states.size() == 1) return *this;
+	if (states.size() == 1)
+		return *this;
 	FiniteAutomaton new_dfa(initial_state, states, language);
 	int count = new_dfa.size();
 	for (int i = 0; i >= 0 && i < count; i++) {
@@ -759,13 +777,15 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 					new_states.push_back(new_dfa.states[j]);
 				}
 				if (j > i && i != count - 1) {
-					new_states.emplace_back(new_dfa.states[j].index - 1, new_dfa.states[j].label,
+					new_states.emplace_back(new_dfa.states[j].index - 1,
+											new_dfa.states[j].label,
 											new_dfa.states[j].identifier,
 											new_dfa.states[j].is_terminal,
 											new_dfa.states[j].transitions);
 				}
 			}
-			if (new_dfa.initial_state > i) new_dfa.initial_state -= 1;
+			if (new_dfa.initial_state > i)
+				new_dfa.initial_state -= 1;
 			new_dfa.states = new_states;
 			for (int j = 0; j < new_dfa.size(); j++) {
 				map<alphabet_symbol, set<int>> new_transitions;
@@ -779,7 +799,8 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 							new_transition.insert(transition_to - 1);
 						}
 					}
-					if (!new_transition.empty()) new_transitions[transition.first] = new_transition;
+					if (!new_transition.empty())
+						new_transitions[transition.first] = new_transition;
 				}
 				new_dfa.states[j].transitions = new_transitions;
 			}
@@ -787,13 +808,14 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 			count--;
 		}
 	}
-	if (new_dfa.is_empty()) new_dfa = *this;
+	if (new_dfa.is_empty())
+		new_dfa = *this;
 	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 	set<alphabet_symbol> new_alphabet;
-	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
+	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, std::make_shared<Language>());
 	vector<map<alphabet_symbol, set<int>>> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
@@ -814,7 +836,7 @@ FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 			}
 		}
 	}
-	new_fa.language = make_shared<Language>(new_alphabet);
+	new_fa.language = std::make_shared<Language>(new_alphabet);
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
@@ -827,7 +849,7 @@ FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 
 FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 	set<alphabet_symbol> new_alphabet;
-	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
+	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, std::make_shared<Language>());
 	vector<map<alphabet_symbol, set<int>>> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
@@ -837,12 +859,14 @@ FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 				for (int transition_to : elem.second) {
 					new_transitions[i][new_symb].insert(transition_to);
 				}
-			} else
+			} else {
 				new_transitions[i][new_symb] = elem.second;
-			if (!new_symb.is_epsilon()) new_alphabet.insert(new_symb);
+			}
+			if (!new_symb.is_epsilon())
+				new_alphabet.insert(new_symb);
 		}
 	}
-	new_fa.language = make_shared<Language>(new_alphabet);
+	new_fa.language = std::make_shared<Language>(new_alphabet);
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
@@ -856,7 +880,7 @@ FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 
 FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 	set<alphabet_symbol> new_alphabet;
-	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
+	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, std::make_shared<Language>());
 	vector<map<alphabet_symbol, set<int>>> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
@@ -866,12 +890,14 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 				for (int transition_to : elem.second) {
 					new_transitions[i][new_symb].insert(transition_to);
 				}
-			} else
+			} else {
 				new_transitions[i][new_symb] = elem.second;
-			if (!new_symb.is_epsilon()) new_alphabet.insert(new_symb);
+			}
+			if (!new_symb.is_epsilon())
+				new_alphabet.insert(new_symb);
 		}
 	}
-	new_fa.language = make_shared<Language>(new_alphabet);
+	new_fa.language = std::make_shared<Language>(new_alphabet);
 	for (int i = 0; i < new_transitions.size(); i++) {
 		new_fa.states[i].transitions = new_transitions[i];
 	}
@@ -884,7 +910,8 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 }
 
 bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
-	if (log) log->set_parameter("oldautomaton", *this);
+	if (log)
+		log->set_parameter("oldautomaton", *this);
 	if (language->is_one_unambiguous_flag_cached()) {
 
 		if (log) {
@@ -926,13 +953,15 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		for (int elem : reachable_by_symb) {
 			is_symb_min_fa_consistent = true;
 			for (auto final_state_transitions : final_states_transitions) {
-				if (find(final_state_transitions[symb].begin(), final_state_transitions[symb].end(),
+				if (find(final_state_transitions[symb].begin(),
+						 final_state_transitions[symb].end(),
 						 elem) == final_state_transitions[symb].end()) {
 					is_symb_min_fa_consistent = false;
 					break;
 				}
 			}
-			if (is_symb_min_fa_consistent) min_fa_consistent.insert(symb);
+			if (is_symb_min_fa_consistent)
+				min_fa_consistent.insert(symb);
 		}
 	}
 
@@ -953,7 +982,8 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		bool is_state_has_transitions_to_itself = false;
 		for (const auto& transition : min_fa.states[i].transitions) {
 			for (int elem : transition.second) {
-				if (elem == i) is_state_has_transitions_to_itself = true;
+				if (elem == i)
+					is_state_has_transitions_to_itself = true;
 			}
 		}
 		// check if orbit of this state is trivial
@@ -1038,7 +1068,8 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 					}
 				}
 			}
-			if (is_exists_transition_outside_orbit) gates_of_orbit.insert(elem);
+			if (is_exists_transition_outside_orbit)
+				gates_of_orbit.insert(elem);
 		}
 		min_fa_cut_gates.push_back(gates_of_orbit);
 	}
@@ -1068,7 +1099,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 			}
 			auto it2 = it1;
 			for (int j = i; j < min_fa_cut_orbit_gates.size(); j++) {
-				// check if for any pair q1 and q2 of gates in the same orbit
+				// check if for any std::pair q1 and q2 of gates in the same orbit
 				// q1 is final if and only if q2 is final
 				if (min_fa_cut.states[i].is_terminal != min_fa_cut.states[j].is_terminal) {
 					is_min_fa_cut_has_an_orbit_property = false;
@@ -1116,7 +1147,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		for (int state_of_orbit : min_fa_cut_orbit) {
 			// construction of an orbit automaton for a state_of_orbit
 			FiniteAutomaton orbit_automaton =
-				FiniteAutomaton(orbit_automaton_initial_state, {}, make_shared<Language>());
+				FiniteAutomaton(orbit_automaton_initial_state, {}, std::make_shared<Language>());
 			for (int elem : min_fa_cut_orbit) {
 				orbit_automaton.states.push_back(min_fa_cut.states[elem]);
 				orbit_automaton.states[orbit_automaton.size() - 1].index =
@@ -1148,7 +1179,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 				}
 				orbit_automaton.states[j].transitions = orbit_automaton_state_transitions;
 			}
-			orbit_automaton.language = make_shared<Language>(orbit_automaton_alphabet);
+			orbit_automaton.language = std::make_shared<Language>(orbit_automaton_alphabet);
 			if (!orbit_automaton.is_one_unambiguous()) {
 				language->set_one_unambiguous_flag(false);
 				if (log) {
@@ -1161,7 +1192,8 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		i++;
 	}
 	language->set_one_unambiguous_flag(true);
-	if (log) log->set_parameter("result", "True");
+	if (log)
+		log->set_parameter("result", "True");
 	return true;
 }
 
@@ -1195,7 +1227,8 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(vector<int> classes) c
 	}
 
 	for (const auto& elem : class_to_index)
-		if (states[elem.second[0]].is_terminal) new_states[elem.first].is_terminal = true;
+		if (states[elem.second[0]].is_terminal)
+			new_states[elem.first].is_terminal = true;
 
 	return FiniteAutomaton(classes[initial_state], new_states, language);
 }
@@ -1217,7 +1250,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 		classes.push_back(nont->class_number);
 	FiniteAutomaton result_fa = merge_equivalent_classes(classes);
 
-	stringstream ss;
+	std::stringstream ss;
 	for (auto& elem : class_to_nonterminals) {
 		ss << "\\{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
@@ -1246,9 +1279,11 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1, const Fin
 	vector<vector<vector<GrammarItem*>>> fa2_rules = Grammar::fa_to_grammar(
 		fa2.states, fa2.language->get_alphabet(), fa2_items, fa2_nonterminals, fa2_terminals);
 
-	if (fa1_terminals.size() != fa2_terminals.size()) return false;
+	if (fa1_terminals.size() != fa2_terminals.size())
+		return false;
 	for (int i = 0; i < fa1_terminals.size(); i++)
-		if (*fa1_terminals[i] != *fa2_terminals[i]) return false;
+		if (*fa1_terminals[i] != *fa2_terminals[i])
+			return false;
 	// сначала получаем бисимилярные грамматики из данных автоматов
 	vector<GrammarItem*> fa1_bisimilar_nonterminals;
 	map<int, vector<GrammarItem*>> fa1_class_to_nonterminals;
@@ -1259,11 +1294,12 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1, const Fin
 	map<int, vector<GrammarItem*>> fa2_class_to_nonterminals;
 	vector<vector<vector<GrammarItem*>>> fa2_bisimilar_rules = Grammar::get_bisimilar_grammar(
 		fa2_rules, fa2_nonterminals, fa2_bisimilar_nonterminals, fa2_class_to_nonterminals);
-	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size()) return false;
+	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size())
+		return false;
 	// из объединения полученных ранее получаем итоговую
 	vector<GrammarItem*> nonterminals(fa1_bisimilar_nonterminals);
-	nonterminals.insert(nonterminals.end(), fa2_bisimilar_nonterminals.begin(),
-						fa2_bisimilar_nonterminals.end());
+	nonterminals.insert(
+		nonterminals.end(), fa2_bisimilar_nonterminals.begin(), fa2_bisimilar_nonterminals.end());
 	vector<vector<vector<GrammarItem*>>> rules(fa1_bisimilar_rules);
 	rules.insert(rules.end(), fa2_bisimilar_rules.begin(), fa2_bisimilar_rules.end());
 
@@ -1299,7 +1335,7 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1, const Fin
 		class_to_nonterminals_names[nont_class].push_back("FA2:" + fa2_nonterminals[i]->name);
 	}
 	// log
-	stringstream ss;
+	std::stringstream ss;
 	for (auto& elem : class_to_nonterminals_names) {
 		ss << "\\{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
@@ -1311,7 +1347,8 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1, const Fin
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
 		fa2_nonterminals[fa2.initial_state]->class_number)
 		return false;
-	if (fa1_bisimilar_nonterminals.size() != bisimilar_nonterminals.size()) return false;
+	if (fa1_bisimilar_nonterminals.size() != bisimilar_nonterminals.size())
+		return false;
 
 	return true;
 }
@@ -1329,7 +1366,8 @@ bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1, const FiniteAutomato
 
 bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 	// проверка равенства количества состояний
-	if (fa1.size() != fa2.size()) return false;
+	if (fa1.size() != fa2.size())
+		return false;
 	// грамматики из состояний автоматов
 	vector<GrammarItem> fa1_items;
 	vector<GrammarItem*> fa1_nonterminals;
@@ -1343,9 +1381,11 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 	vector<vector<vector<GrammarItem*>>> fa2_rules = Grammar::fa_to_grammar(
 		fa2.states, fa2.language->get_alphabet(), fa2_items, fa2_nonterminals, fa2_terminals);
 	// проверка на равенство алфавитов
-	if (fa1_terminals.size() != fa2_terminals.size()) return false;
+	if (fa1_terminals.size() != fa2_terminals.size())
+		return false;
 	for (int i = 0; i < fa1_terminals.size(); i++)
-		if (*fa1_terminals[i] != *fa2_terminals[i]) return false;
+		if (*fa1_terminals[i] != *fa2_terminals[i])
+			return false;
 	// биективная бисимуляция состояний
 	vector<GrammarItem*> nonterminals(fa1_nonterminals);
 	nonterminals.insert(nonterminals.end(), fa2_nonterminals.begin(), fa2_nonterminals.end());
@@ -1368,7 +1408,8 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 	for (GrammarItem* nont : fa2_nonterminals)
 		classes[nont->class_number]--;
 	for (auto t : classes)
-		if (t != 0) return false;
+		if (t != 0)
+			return false;
 
 	vector<int> bisimilar_classes;
 	for (GrammarItem* nont : nonterminals)
@@ -1403,11 +1444,13 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 
 	int new_class = 0;
 	for (int i = 0; i < bisimilar_classes.size(); i++) {
-		if (nonterminals[i]->class_number != -1) continue;
+		if (nonterminals[i]->class_number != -1)
+			continue;
 		nonterminals[i]->class_number = new_class;
 		vector<int> equiv_nont; // нетерминалы с таким же классом, что и i-й
 		for (int j = i + 1; j < bisimilar_classes.size(); j++) {
-			if (bisimilar_classes[j] == bisimilar_classes[i]) equiv_nont.push_back(j);
+			if (bisimilar_classes[j] == bisimilar_classes[i])
+				equiv_nont.push_back(j);
 		}
 		for (int ind : equiv_nont)
 			if (reverse_bisimilar_classes[ind] == reverse_bisimilar_classes[i])
@@ -1420,12 +1463,15 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 	cout << endl;*/
 
 	// грамматики из переходов
-	vector<pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>> transitions1_items;
+	vector<std::pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>> transitions1_items;
 	vector<GrammarItem*> transitions1_nonterminals;
 	vector<GrammarItem*> transitions1_terminals;
 	vector<vector<vector<GrammarItem*>>> transitions1_rules =
-		Grammar::tansitions_to_grammar(fa1.states, fa1_nonterminals, transitions1_items,
-									   transitions1_nonterminals, transitions1_terminals);
+		Grammar::tansitions_to_grammar(fa1.states,
+									   fa1_nonterminals,
+									   transitions1_items,
+									   transitions1_nonterminals,
+									   transitions1_terminals);
 
 	/*for (int i = 0; i < transitions1_rules.size(); i++) {
 		cout << *transitions1_nonterminals[i] << ": ";
@@ -1438,29 +1484,35 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 		cout << endl;
 	}*/
 
-	vector<pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>> transitions2_items;
+	vector<std::pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>> transitions2_items;
 	vector<GrammarItem*> transitions2_nonterminals;
 	vector<GrammarItem*> transitions2_terminals;
 	vector<vector<vector<GrammarItem*>>> transitions2_rules =
-		Grammar::tansitions_to_grammar(fa2.states, fa2_nonterminals, transitions2_items,
-									   transitions2_nonterminals, transitions2_terminals);
+		Grammar::tansitions_to_grammar(fa2.states,
+									   fa2_nonterminals,
+									   transitions2_items,
+									   transitions2_nonterminals,
+									   transitions2_terminals);
 
 	// проверка равенства количества переходов
-	if (transitions1_nonterminals.size() != transitions2_nonterminals.size()) return false;
+	if (transitions1_nonterminals.size() != transitions2_nonterminals.size())
+		return false;
 	// биективная бисимуляция переходов
 	vector<GrammarItem*> transitions_nonterminals(transitions1_nonterminals);
 	transitions_nonterminals.insert(transitions_nonterminals.end(),
 									transitions2_nonterminals.begin(),
 									transitions2_nonterminals.end());
 	vector<vector<vector<GrammarItem*>>> transitions_rules(transitions1_rules);
-	transitions_rules.insert(transitions_rules.end(), transitions2_rules.begin(),
-							 transitions2_rules.end());
+	transitions_rules.insert(
+		transitions_rules.end(), transitions2_rules.begin(), transitions2_rules.end());
 	for (GrammarItem* nont : transitions_nonterminals)
 		nont->class_number = 0; // сбрасываю номера классов
 	vector<GrammarItem*> transitions_bisimilar_nonterminals;
 	vector<vector<vector<GrammarItem*>>> transitions_bisimilar_rules =
-		Grammar::get_bisimilar_grammar(transitions_rules, transitions_nonterminals,
-									   transitions_bisimilar_nonterminals, class_to_nonterminals);
+		Grammar::get_bisimilar_grammar(transitions_rules,
+									   transitions_nonterminals,
+									   transitions_bisimilar_nonterminals,
+									   class_to_nonterminals);
 	// проверяю бисимилярность переходов
 	classes.clear();
 	classes.resize(transitions_bisimilar_nonterminals.size(), 0);
@@ -1469,7 +1521,8 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 	for (auto t : transitions2_nonterminals)
 		classes[t->class_number]--;
 	for (auto t : classes)
-		if (t != 0) return false;
+		if (t != 0)
+			return false;
 
 	return true;
 }
@@ -1519,8 +1572,10 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa, iLogTemplate* log) const
 }
 
 Fraction calc_ambiguity(int i, int n, const vector<Fraction>& f1,
-						vector<vector<Fraction>>& calculated, vector<vector<char>>& is_calculated) {
-	if (i == 0) return f1[n];
+						vector<vector<Fraction>>& calculated,
+						vector<vector<char>>& is_calculated) { // NOLINT(runtime/references)
+	if (i == 0)
+		return f1[n];
 	Fraction d1, d2;
 	if (!is_calculated[i][n + 1]) {
 		calculated[i][n + 1] = calc_ambiguity(i - 1, n + 1, f1, calculated, is_calculated);
@@ -1536,7 +1591,7 @@ Fraction calc_ambiguity(int i, int n, const vector<Fraction>& f1,
 }
 
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
-	int digits_number_limit, optional<int>& word_length) const {
+	int digits_number_limit, std::optional<int>& word_length) const {
 	FiniteAutomaton fa = remove_eps();
 	FiniteAutomaton min_fa = fa.minimize().remove_trap_states();
 	fa = fa.remove_trap_states();
@@ -1568,7 +1623,7 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 	Fraction max_checker; // максимальное значение для проверки
 						  // на однозначность
 	bool max_return_flag = true;
-	optional<Fraction> prev_f1_val;
+	std::optional<Fraction> prev_f1_val;
 	Fraction max_delta_checker; // максимальный прирост для
 								// проверки на однозначность
 	Fraction prev_val;			// значение calc_ambiguity
@@ -1588,38 +1643,46 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 			for (int i = 0; i < s; i++) {
 				d[(k + 1) % 2][v] += InfInt(adjacency_matrix[i][v]) * d[k % 2][i];
 			}
-			if (fa.states[v].is_terminal) paths_number += d[(k + 1) % 2][v];
+			if (fa.states[v].is_terminal)
+				paths_number += d[(k + 1) % 2][v];
 		}
 		for (int v = 0; v < min_s; v++) {
 			for (int i = 0; i < min_s; i++) {
 				min_d[(k + 1) % 2][v] += InfInt(min_adjacency_matrix[i][v]) * min_d[k % 2][i];
 			}
-			if (min_fa.states[v].is_terminal) min_paths_number += min_d[(k + 1) % 2][v];
+			if (min_fa.states[v].is_terminal)
+				min_paths_number += min_d[(k + 1) % 2][v];
 		}
 		Fraction new_f1_value;
-		if (min_paths_number == 0)
+		if (min_paths_number == 0) {
 			new_f1_value = Fraction();
-		else {
+		} else {
 			new_f1_value = Fraction(paths_number, min_paths_number);
 			// обработка проверок на однозначность
-			if (!(new_f1_value == Fraction(1, 1))) unambigious_return_flag = false;
+			if (!(new_f1_value == Fraction(1, 1)))
+				unambigious_return_flag = false;
 			if (k < (s + 1) * 3) {
-				if (new_f1_value > max_checker) max_checker = new_f1_value;
+				if (new_f1_value > max_checker)
+					max_checker = new_f1_value;
 				if (!prev_f1_val) {
 					prev_f1_val = new_f1_value;
 				} else {
 					Fraction delta = new_f1_value - *prev_f1_val;
-					if (delta > max_delta_checker) max_delta_checker = delta;
+					if (delta > max_delta_checker)
+						max_delta_checker = delta;
 					prev_f1_val = new_f1_value;
 				}
 			} else if (max_return_flag || max_delta_return_flag) {
-				if (new_f1_value > max_checker) max_return_flag = false;
+				if (new_f1_value > max_checker)
+					max_return_flag = false;
 				Fraction delta = new_f1_value - *prev_f1_val;
-				if (delta >= max_delta_checker) max_delta_return_flag = false;
+				if (delta >= max_delta_checker)
+					max_delta_return_flag = false;
 				prev_f1_val = new_f1_value;
 			}
 		}
-		if (k >= s * s && unambigious_return_flag) return FiniteAutomaton::unambigious;
+		if (k >= s * s && unambigious_return_flag)
+			return FiniteAutomaton::unambigious;
 		if (k >= s * s && k >= (s + 1) * 3 && (max_return_flag || max_delta_return_flag))
 			return FiniteAutomaton::almost_unambigious;
 
@@ -1637,34 +1700,38 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 			}
 			calculated_check.emplace_back(f1_check.size());
 			is_calculated_check.emplace_back(f1_check.size(), 0);
-			Fraction val = calc_ambiguity(new_s + i, new_s * new_s + delta, f1_check,
-										  calculated_check, is_calculated_check);
+			Fraction val = calc_ambiguity(
+				new_s + i, new_s * new_s + delta, f1_check, calculated_check, is_calculated_check);
 			// limit check
 			if (Fraction::last_number_of_digits >= digits_number_limit ||
 				double(paths_number.numberOfDigits() + min_paths_number.numberOfDigits()) >=
 					double(digits_number_limit) / 2) {
 				word_length = k;
-				if (unambigious_return_flag) return FiniteAutomaton::unambigious;
+				if (unambigious_return_flag)
+					return FiniteAutomaton::unambigious;
 				if (k >= (s + 1) * 3 && (max_return_flag || max_delta_return_flag))
 					return FiniteAutomaton::almost_unambigious;
 				if (val > Fraction() && val >= prev_val)
 					return FiniteAutomaton::exponentially_ambiguous;
-				if (is_exponentially_ambiguous) return FiniteAutomaton::exponentially_ambiguous;
+				if (is_exponentially_ambiguous)
+					return FiniteAutomaton::exponentially_ambiguous;
 				return FiniteAutomaton::polynomially_ambigious;
 			}
 
 			if (Fraction() >= val) {
 				return_counter++;
-				if (k >= N && return_counter >= s) break;
+				if (k >= N && return_counter >= s)
+					break;
 				continue;
 			}
 
 			if (val >= prev_val) {
 				is_exponentially_ambiguous = true;
-				if (k >= N) return FiniteAutomaton::exponentially_ambiguous;
-			} else
+				if (k >= N)
+					return FiniteAutomaton::exponentially_ambiguous;
+			} else {
 				is_exponentially_ambiguous = false;
-
+			}
 			return_counter = 0;
 			calculated = calculated_check;
 			is_calculated = is_calculated_check;
@@ -1679,24 +1746,30 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 }
 
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity(iLogTemplate* log) const {
-	optional<int> word_length;
+	std::optional<int> word_length;
 	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value(300, word_length);
-	if (log) log->set_parameter("oldautomaton", *this);
+	if (log)
+		log->set_parameter("oldautomaton", *this);
 	if (word_length.has_value()) {
-		if (log) log->set_parameter("Для максимальной длины слова", to_string(*word_length));
+		if (log)
+			log->set_parameter("Для максимальной длины слова", std::to_string(*word_length));
 	}
 	switch (result) {
 	case FiniteAutomaton::exponentially_ambiguous:
-		if (log) log->set_parameter("result", "Exponentially ambiguous");
+		if (log)
+			log->set_parameter("result", "Exponentially ambiguous");
 		break;
 	case FiniteAutomaton::almost_unambigious:
-		if (log) log->set_parameter("result", "Almost unambigious");
+		if (log)
+			log->set_parameter("result", "Almost unambigious");
 		break;
 	case FiniteAutomaton::unambigious:
-		if (log) log->set_parameter("result", "Unambigious");
+		if (log)
+			log->set_parameter("result", "Unambigious");
 		break;
 	case FiniteAutomaton::polynomially_ambigious:
-		if (log) log->set_parameter("result", "Polynomially ambiguous");
+		if (log)
+			log->set_parameter("result", "Polynomially ambiguous");
 		break;
 	default:
 		break;
@@ -1716,17 +1789,19 @@ TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
 	return syntactic_monoid;
 }
 
-void set_result(int& res, int size, vector<pair<int, int>>& result_yx,
-				vector<pair<int, int>>& temp_result_yx) {
+void set_result(int& res, int size,
+				vector<std::pair<int, int>>& result_yx,		   // NOLINT(runtime/references)
+				vector<std::pair<int, int>>& temp_result_yx) { // NOLINT(runtime/references)
 	if (size > res) {
 		res = size;
 		result_yx = temp_result_yx;
 	}
 }
-void find_maximum_identity_matrix(vector<int>& rows, vector<vector<bool>>& table, int& res,
-								  int size, vector<pair<int, int>>& result_yx,
-								  vector<pair<int, int>> temp_result_yx, vector<bool> used_x,
-								  vector<bool> used_y, int unused_x, int unused_y) {
+void find_maximum_identity_matrix(
+	vector<int>& rows, vector<vector<bool>>& table, int& res, // NOLINT(runtime/references)
+	int size, vector<std::pair<int, int>>& result_yx,		  // NOLINT(runtime/references)
+	vector<std::pair<int, int>> temp_result_yx, vector<bool> used_x, vector<bool> used_y,
+	int unused_x, int unused_y) {
 	if (rows.empty()) {
 		set_result(res, size, result_yx, temp_result_yx);
 		return;
@@ -1734,10 +1809,13 @@ void find_maximum_identity_matrix(vector<int>& rows, vector<vector<bool>>& table
 	int n = table.size(), m = table[0].size();
 	vector<int> y_ind(m, -1);
 	for (int j = 0; j < m; j++) {
-		if (used_x[j]) continue;
+		if (used_x[j])
+			continue;
 		for (int i = 0; i < n; i++) {
-			if (used_y[i]) continue;
-			if (!table[i][j]) continue;
+			if (used_y[i])
+				continue;
+			if (!table[i][j])
+				continue;
 			if (y_ind[j] == -1)
 				y_ind[j] = i;
 			else
@@ -1747,8 +1825,10 @@ void find_maximum_identity_matrix(vector<int>& rows, vector<vector<bool>>& table
 	// отмечаю столбцы с единственной единицей
 	for (int j = 0; j < m; j++) {
 		if (y_ind[j] >= 0) {
-			if (used_y[y_ind[j]]) continue;
-			if (used_x[j]) continue;
+			if (used_y[y_ind[j]])
+				continue;
+			if (used_x[j])
+				continue;
 			used_x[j] = true;
 			used_y[y_ind[j]] = true;
 			unused_y--;
@@ -1763,17 +1843,22 @@ void find_maximum_identity_matrix(vector<int>& rows, vector<vector<bool>>& table
 	}
 	unused_y--;
 	for (auto row : rows) {
-		if (used_y[row]) continue;
+		if (used_y[row])
+			continue;
 		used_y[row] = true;
 		// ищу новую 1-цу на каждой строке
-		if (unused_x <= (res - size)) return;
-		if (unused_y < (res - size)) return;
+		if (unused_x <= (res - size))
+			return;
+		if (unused_y < (res - size))
+			return;
 		vector<bool> new_used_x = used_x;
 		int new_unused_x = unused_x;
 		vector<int> true_x;
 		for (int i = 0; i < table[row].size(); i++) {
-			if (new_used_x[i]) continue;
-			if (!table[row][i]) continue;
+			if (new_used_x[i])
+				continue;
+			if (!table[row][i])
+				continue;
 			true_x.push_back(i);
 			new_used_x[i] = true;
 			new_unused_x--;
@@ -1789,15 +1874,24 @@ void find_maximum_identity_matrix(vector<int>& rows, vector<vector<bool>>& table
 			int new_unused_y = unused_y;
 			vector<int> false_y;
 			for (int i = 0; i < table.size(); i++) {
-				if (new_used_y[i]) continue;
+				if (new_used_y[i])
+					continue;
 				false_y.push_back(i);
 			}
-			vector<pair<int, int>> new_result_yx = temp_result_yx;
+			vector<std::pair<int, int>> new_result_yx = temp_result_yx;
 			new_result_yx.emplace_back(row, x);
 			vector<bool> temp_used_x = new_used_x;
 			// перехожу на все свободные строки
-			find_maximum_identity_matrix(false_y, table, res, size + 1, result_yx, new_result_yx,
-										 temp_used_x, new_used_y, new_unused_x, new_unused_y);
+			find_maximum_identity_matrix(false_y,
+										 table,
+										 res,
+										 size + 1,
+										 result_yx,
+										 new_result_yx,
+										 temp_used_x,
+										 new_used_y,
+										 new_unused_x,
+										 new_unused_y);
 		}
 		//
 		used_y[row] = false;
@@ -1805,7 +1899,8 @@ void find_maximum_identity_matrix(vector<int>& rows, vector<vector<bool>>& table
 }
 
 int FiniteAutomaton::get_classes_number_GlaisterShallit(iLogTemplate* log) const {
-	if (log) log->set_parameter("oldautomaton", *this);
+	if (log)
+		log->set_parameter("oldautomaton", *this);
 	if (language->is_nfa_minimum_size_cached()) {
 		if (log) {
 			log->set_parameter("result", language->get_nfa_minimum_size());
@@ -1824,15 +1919,15 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(iLogTemplate* log) const
 		sm.get_equivalence_classes_table(table_rows, table_columns);
 
 	int result = -1;
-	vector<pair<int, int>> result_yx;
+	vector<std::pair<int, int>> result_yx;
 	int m = equivalence_classes_table[0].size(), n = equivalence_classes_table.size();
 	vector<bool> used_x(m);
 	vector<bool> used_y(n);
 	vector<int> rows;
 	for (int i = 0; i < n; i++)
 		rows.push_back(i);
-	find_maximum_identity_matrix(rows, equivalence_classes_table, result, 0, result_yx, {}, used_x,
-								 used_y, m, n);
+	find_maximum_identity_matrix(
+		rows, equivalence_classes_table, result, 0, result_yx, {}, used_x, used_y, m, n);
 
 	// DEBUG
 	// cout << sm.to_txt_MyhillNerode() << endl;
@@ -1876,25 +1971,28 @@ int FiniteAutomaton::get_classes_number_GlaisterShallit(iLogTemplate* log) const
 	return result;
 }
 
-optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
-	if (!language->is_pump_length_cached()) return nullopt;
+std::optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
+	if (!language->is_pump_length_cached())
+		return std::nullopt;
 	int language_pump_length = language->get_pump_length();
 
 	int transition_states_counter = 0;
 	for (const State& state : states)
-		if (!state.transitions.empty()) transition_states_counter++;
-	if (language_pump_length == transition_states_counter + 1) return true;
+		if (!state.transitions.empty())
+			transition_states_counter++;
+	if (language_pump_length == transition_states_counter + 1)
+		return true;
 	if (states.size() > language_pump_length)
 		return states.size() == get_classes_number_GlaisterShallit();
 
-	return nullopt;
+	return std::nullopt;
 }
 
-optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
+std::optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 	}
-	optional<bool> result = get_nfa_minimality_value();
+	std::optional<bool> result = get_nfa_minimality_value();
 	if (result.has_value()) {
 		if (log) {
 			log->set_parameter("result", result.value() ? "True" : "False");
@@ -1920,9 +2018,9 @@ bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	return result;
 }
 
-optional<string> FiniteAutomaton::get_prefix(int state_beg, int state_end,
-											 map<int, bool>& was) const {
-	optional<string> ans = nullopt;
+std::optional<string> FiniteAutomaton::get_prefix(int state_beg, int state_end,
+												  map<int, bool>& was) const {
+	std::optional<string> ans = std::nullopt;
 	if (state_beg == state_end) {
 		ans = "";
 		return ans;
@@ -1950,7 +2048,8 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 	map<int, bool> was;
 	vector<int> final_states;
 	for (int i = 0; i < states.size(); i++) {
-		if (states[i].is_terminal) final_states.push_back(i);
+		if (states[i].is_terminal)
+			final_states.push_back(i);
 	}
 	vector<Regex> state_languages;
 	state_languages.resize(states.size());
@@ -1958,7 +2057,8 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 		auto prefix = get_prefix(initial_state, i, was);
 		was.clear();
 		// cout << "Try " << i << "\n";
-		if (!prefix.has_value()) continue;
+		if (!prefix.has_value())
+			continue;
 		Regex reg;
 		// Получение языка из производной регулярки автомата по префиксу:
 		//		this -> reg (arden?)
@@ -1967,7 +2067,8 @@ bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
 		//  cout << "Prefix: " << prefix.value() << "\n";
 		//  cout << "Regex: " << reg.to_txt() << "\n";
 		auto derivative = reg.prefix_derivative(prefix.value());
-		if (!derivative.has_value()) continue;
+		if (!derivative.has_value())
+			continue;
 		state_languages[i] = derivative.value();
 		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 
@@ -2061,9 +2162,9 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 
 bool FiniteAutomaton::parsing_nfa_for(const string& s) const {
 	// cout << s.size() << endl;
-	stack<State> stac_state;
-	stack<int> stack_s;
-	stack<int> stack_index;
+	std::stack<State> stac_state;
+	std::stack<int> stack_s;
+	std::stack<int> stack_index;
 	stac_state.push(states[0]);
 	stack_s.push(0);
 	stack_index.push(0);
@@ -2262,7 +2363,8 @@ vector<expression_arden> FiniteAutomaton::arden(const vector<expression_arden>& 
 }
 Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 
-	if (log) log->set_parameter("oldautomaton", *this);
+	if (log)
+		log->set_parameter("oldautomaton", *this);
 
 	vector<int> end_state; // храним индексы принимающих состояний
 	vector<vector<expression_arden>> data;					  // все уравнения
@@ -2396,8 +2498,9 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	// вывод итоговых regex
 	string full_logs;
 	for (int i = 0; i < data.size(); i++) {
-		if (i != 0) full_logs += "\\\\";
-		full_logs += "state " + to_string(i) + ":"; // TODO: logs
+		if (i != 0)
+			full_logs += "\\\\";
+		full_logs += "state " + std::to_string(i) + ":"; // TODO: logs
 		for (auto& j : data[i]) {
 			// TODO: передача набора regex
 
@@ -2411,7 +2514,8 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			}
 		}
 	}
-	if (log) log->set_parameter("step-by-step construction", full_logs);
+	if (log)
+		log->set_parameter("step-by-step construction", full_logs);
 	// если у нас 1 принимающее состояние
 	if (end_state.size() < 2) {
 		Regex* r1;

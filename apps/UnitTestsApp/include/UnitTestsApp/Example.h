@@ -1,3 +1,5 @@
+#ifndef APPS_UNITTESTSAPP_INCLUDE_UNITTESTSAPP_EXAMPLE_H_
+#define APPS_UNITTESTSAPP_INCLUDE_UNITTESTSAPP_EXAMPLE_H_
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "InputGenerator/TasksGenerator.h"
@@ -12,6 +14,7 @@
 #include <cassert>
 #include <functional>
 #include <iostream>
+#include <string>
 /*
 Это статический класс, где вы можете писать примеры
 использования функций и, соответственно, их тестить.
@@ -43,8 +46,9 @@ class Example {
 	static void classes_number_GlaisterShallit();
 	static void testing_with_generator(int regex_length, int star_num, int star_nesting,
 									   int alphabet_size,
-									   const function<void(string& rgx_str)>& check_function);
+									   const std::function<void(string& rgx_str)>& check_function);
 	static void arden_lemma_testing();
 	static void fa_to_pgrammar();
 	static void logger_test();
 };
+#endif // APPS_UNITTESTSAPP_INCLUDE_UNITTESTSAPP_EXAMPLE_H_

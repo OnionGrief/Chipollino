@@ -9,8 +9,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 class Tester {
   public:
 	struct word {			// доступ извне Tester::word

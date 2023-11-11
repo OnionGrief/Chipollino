@@ -8,8 +8,8 @@ void Logger::add_log(const LogTemplate& log) {
 }
 
 void Logger::render_to_file(const string& filename) {
-	ifstream infile("./resources/template/head.tex");
-	ofstream outfile(filename);
+	std::ifstream infile("./resources/template/head.tex");
+	std::ofstream outfile(filename);
 
 	string s;
 	for (; !infile.eof();) {
