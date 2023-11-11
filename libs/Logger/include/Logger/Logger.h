@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "LogTemplate.h"
 
+#include "LogTemplate.h"
 
 class Logger {
   public:

@@ -23,7 +23,8 @@ void Tester::test(const Regex& lang, const Regex& regex, int step, iLogTemplate*
 		else
 			t.data.push_back("false");
 
-		if (time >= 180) break;
+		if (time >= 180)
+			break;
 	}
 	t.columns.push_back("Количество итераций");
 	t.columns.push_back("Длина строки");
@@ -57,7 +58,8 @@ void Tester::test(const FiniteAutomaton& lang, const Regex& regex, int step, iLo
 			t.data.push_back("true");
 		else
 			t.data.push_back("false");
-		if (time >= 180) return;
+		if (time >= 180)
+			return;
 	}
 
 	t.columns.push_back("Количество итераций");

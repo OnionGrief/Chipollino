@@ -1,4 +1,5 @@
 #include <sstream>
+
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
 #include "Objects/iLogTemplate.h"
@@ -28,7 +29,8 @@ void GrammarItem::operator=(const GrammarItem& other) {
 
 std::ostream& operator<<(std::ostream& os, const GrammarItem& item) {
 	if (item.type == GrammarItem::terminal) {
-		if (item.name == "\0") return os << "eps";
+		if (item.name == "\0")
+			return os << "eps";
 		return os << item.name;
 	} else {
 		return os << "S" << item.state_index;
@@ -82,7 +84,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 		set<int> temp = checker;
 		check_classes(rules, classes_check_map, nonterminals);
 		update_classes(checker, classes_check_map);
-		if (checker == temp) break;
+		if (checker == temp)
+			break;
 	}
 	// формирование бисимилярной грамматики
 	for (const auto& elem : classes_check_map)
@@ -141,7 +144,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(const vector<State>&
 				rules[i].push_back(
 					{terminals[terminal_index[elem.first]], nonterminals[transition_to]});
 		}
-		if (states[i].is_terminal) rules[i].push_back({terminals[0]});
+		if (states[i].is_terminal)
+			rules[i].push_back({terminals[0]});
 	}
 
 	return rules;

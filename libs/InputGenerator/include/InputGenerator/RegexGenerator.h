@@ -1,9 +1,10 @@
 #pragma once
-#include <time.h>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
+
 #include "Objects/BaseObject.h"
 
 class RegexGenerator {

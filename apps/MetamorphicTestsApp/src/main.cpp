@@ -1,5 +1,5 @@
 #include <iostream>
-#include <thread>
+
 #include "gtest/gtest.h"
 
 using std::cout;

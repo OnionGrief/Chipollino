@@ -40,8 +40,8 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <vector>
 #include <string>
+#include <vector>
 
 // #include <limits.h>
 // #include <stdlib.h>
@@ -58,8 +58,8 @@
 
 using std::cout;
 using std::endl;
-using std::vector;
 using std::string;
+using std::vector;
 
 typedef int ELEM_TYPE;
 typedef long long PRODUCT_TYPE;
@@ -71,7 +71,7 @@ static const int powersOfTen[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 1000
 #ifdef INFINT_USE_EXCEPTIONS
 class InfIntException : public std::exception {
   public:
-	InfIntException(const string& txt) throw();	// NOLINT(runtime/explicit)
+	InfIntException(const string& txt) throw(); // NOLINT(runtime/explicit)
 	~InfIntException() throw();
 	const char* what() const throw();
 
@@ -79,8 +79,7 @@ class InfIntException : public std::exception {
 	string txt;
 };
 
-inline InfIntException::InfIntException(const string& txt) throw()
-	: std::exception(), txt(txt) {}
+inline InfIntException::InfIntException(const string& txt) throw() : std::exception(), txt(txt) {}
 
 inline InfIntException::~InfIntException() throw() {}
 
@@ -117,14 +116,14 @@ class InfInt {
   public:
 	/* constructors */
 	InfInt();
-	InfInt(const char* c);	// NOLINT(runtime/explicit)
-	InfInt(const string& s);	// NOLINT(runtime/explicit)
-	InfInt(int l);	// NOLINT(runtime/explicit)
-	InfInt(long l);	// NOLINT(runtime/explicit)
-	InfInt(long long l);	// NOLINT(runtime/explicit)
-	InfInt(unsigned int l);	// NOLINT(runtime/explicit)
-	InfInt(unsigned long l);	// NOLINT(runtime/explicit)
-	InfInt(unsigned long long l);	// NOLINT(runtime/explicit)
+	InfInt(const char* c);		  // NOLINT(runtime/explicit)
+	InfInt(const string& s);	  // NOLINT(runtime/explicit)
+	InfInt(int l);				  // NOLINT(runtime/explicit)
+	InfInt(long l);				  // NOLINT(runtime/explicit)
+	InfInt(long long l);		  // NOLINT(runtime/explicit)
+	InfInt(unsigned int l);		  // NOLINT(runtime/explicit)
+	InfInt(unsigned long l);	  // NOLINT(runtime/explicit)
+	InfInt(unsigned long long l); // NOLINT(runtime/explicit)
 	InfInt(const InfInt& l);
 
 	/* assignment operators */
@@ -192,17 +191,18 @@ class InfInt {
 
   private:
 	static ELEM_TYPE dInR(const InfInt& R, const InfInt& D);
-	static void multiplyByDigit(ELEM_TYPE factor, vector<ELEM_TYPE>& val);	// NOLINT(runtime/references)
+	static void multiplyByDigit(ELEM_TYPE factor,
+								vector<ELEM_TYPE>& val); // NOLINT(runtime/references)
 
 	void correct(bool justCheckLeadingZeros = false, bool hasValidSign = false);
 	void fromString(const string& s);
-	void optimizeSqrtSearchBounds(InfInt& lo, InfInt& hi) const;	// NOLINT(runtime/references)
+	void optimizeSqrtSearchBounds(InfInt& lo, InfInt& hi) const; // NOLINT(runtime/references)
 	void truncateToBase();
 	bool equalizeSigns();
 	void removeLeadingZeros();
 
 	vector<ELEM_TYPE> val; // number with base FACTOR
-	bool pos;					// true if number is positive
+	bool pos;			   // true if number is positive
 };
 
 inline InfInt::InfInt() : pos(true) {
@@ -602,7 +602,8 @@ inline InfInt InfInt::operator*(const InfInt& rhs) const {
 
 		bool found = false;
 		for (size_t i = digit < rhs.val.size() ? 0 : digit - rhs.val.size() + 1;
-			 i < val.size() && i <= digit; ++i) {
+			 i < val.size() && i <= digit;
+			 ++i) {
 			PRODUCT_TYPE pval = result.val[digit] + val[i] * (PRODUCT_TYPE)rhs.val[digit - i];
 			if (pval >= BASE || pval <= -BASE) {
 				lldiv_t dt = my_lldiv(pval, BASE);
@@ -1175,4 +1176,4 @@ inline std::ostream& operator<<(std::ostream& s, const InfInt& n) {
 	return s;
 }
 
-#endif	// LIBS_INFINT_INCLUDE_INFINT_INFINT_H_
+#endif // LIBS_INFINT_INCLUDE_INFINT_INFINT_H_

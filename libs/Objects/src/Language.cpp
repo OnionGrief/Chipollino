@@ -1,6 +1,7 @@
 #include "Objects/Language.h"
 
-FA_structure::FA_structure(int initial_state, vector<State> states, std::weak_ptr<Language> language)
+FA_structure::FA_structure(int initial_state, vector<State> states,
+						   std::weak_ptr<Language> language)
 	: initial_state(initial_state), states(states), language(language) {}
 
 Regex_structure::Regex_structure(string str, std::weak_ptr<Language> language)

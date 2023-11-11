@@ -4,8 +4,8 @@
 #include <vector>
 
 using std::cout;
-using std::vector;
 using std::string;
+using std::vector;
 
 // using alphabet_symbol = string;
 struct alphabet_symbol {
@@ -21,9 +21,9 @@ struct alphabet_symbol {
 	static const char annote_marker = ',';
 
 	alphabet_symbol();
-	alphabet_symbol(const string& s);	// NOLINT(runtime/explicit)
-	alphabet_symbol(const char* c);	// NOLINT(runtime/explicit)
-	alphabet_symbol(char c);	// NOLINT(runtime/explicit)
+	alphabet_symbol(const string& s); // NOLINT(runtime/explicit)
+	alphabet_symbol(const char* c);	  // NOLINT(runtime/explicit)
+	alphabet_symbol(char c);		  // NOLINT(runtime/explicit)
 
 	alphabet_symbol(const alphabet_symbol& other);
 

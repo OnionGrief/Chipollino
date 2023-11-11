@@ -3,12 +3,13 @@
 #include <memory>
 #include <set>
 #include <string>
+
 #include "AlphabetSymbol.h"
 
 using std::cout;
-using std::vector;
-using std::string;
 using std::set;
+using std::string;
+using std::vector;
 
 class Language;
 
@@ -18,7 +19,7 @@ class BaseObject {
 
   public:
 	BaseObject();
-	BaseObject(std::shared_ptr<Language>);	// NOLINT(runtime/explicit)
-	BaseObject(set<alphabet_symbol>);	// NOLINT(runtime/explicit)
+	BaseObject(std::shared_ptr<Language>); // NOLINT(runtime/explicit)
+	BaseObject(set<alphabet_symbol>);	   // NOLINT(runtime/explicit)
 	virtual string to_txt() const = 0;
 };

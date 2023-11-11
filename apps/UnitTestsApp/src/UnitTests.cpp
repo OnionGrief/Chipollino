@@ -1,14 +1,59 @@
-#include <functional>
-#include "AutomatonToImage/AutomatonToImage.h"
-#include "InputGenerator/RegexGenerator.h"
-#include "Interpreter/Interpreter.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Grammar.h"
-#include "Objects/Language.h"
-#include "Objects/Regex.h"
-#include "Objects/TransformationMonoid.h"
-#include "Tester/Tester.h"
-#include "gtest/gtest.h"
+#include "UnitTestsApp/UnitTests.h"
+
+TEST(ParseStringTest, Test_regex_lexer) {
+	struct Test {
+		string regex_str;
+		bool want_err;
+		bool bref;
+		int lexemes_len = 0;
+	};
+
+	vector<Test> tests = {
+		{"[]", true, true},
+		{"[]:", true, true},
+		{"[a]", true, true},
+		{"[a]:", true, true},
+		{"[[a]:1", true, true},
+		{"a]:1", true, true},
+		{"[a]:1", false, true, 3},
+		{"&", true, true},
+		{"&1", false, true, 1},
+		{"[b[a]:1&1]:2&2", false, true, 11},
+		// тесты на отрицание
+		{"^a", false, false, 2},
+		{"a^|b", true, false},
+		{"d^*^b", true, false},
+		{"d|^|b", true, false},
+		{"a^", false, false, 4},	 // a . ^ eps
+		{"a|(c^)", false, false, 8}, // a | ( c . ^ eps )
+		{"[b[a]:1&1]:2&2^a", true, true},
+		{"[b[a]:1&1]:2&2^a", true, false},
+	};
+
+	for (const auto& t : tests) {
+		std::stringstream message;
+		message << "Case: " << t.regex_str << ", WantErr: " << t.want_err;
+		SCOPED_TRACE(message.str());
+
+		bool allow_ref = false;
+		bool allow_negation = true;
+		if (t.bref) {
+			allow_ref = true;
+			allow_negation = false;
+		}
+		vector<UnitTests::Lexeme> l =
+			UnitTests::parse_string(t.regex_str, allow_ref, allow_negation);
+		ASSERT_FALSE(l.empty());
+
+		if (t.want_err) {
+			ASSERT_EQ(UnitTests::LexemeType::error, l[0].type);
+		} else {
+			ASSERT_NE(UnitTests::LexemeType::error, l[0].type);
+			ASSERT_EQ(t.lexemes_len, l.size());
+			// TODO: добавить проверку содержимого l
+		}
+	}
+}
 
 TEST(TestCaseName, Test_random_regex_parsing) {
 	RegexGenerator rg(15, 10, 5, 3);
@@ -238,14 +283,19 @@ TEST(TestCaseName, Test_ambiguity) {
 		{16, "(a|b|c)*(a|b|c|d)(a|b|c)*|(ac*|ad*)*", glushkov, FiniteAutomaton::almost_unambigious},
 		{17,
 		 "(ab)*ab(ab)*|(ac)*(ac)*|(d|c)*", // (abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*
-		 glushkov, FiniteAutomaton::almost_unambigious},
+		 glushkov,
+		 FiniteAutomaton::almost_unambigious},
 		{18, "(abab)*abab(abab)*|(aac)*(aac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		{19, "(ab)*ab(ab)*", // (abab)*abab(abab)*
-		 glushkov, FiniteAutomaton::polynomially_ambigious},
+		{19,
+		 "(ab)*ab(ab)*", // (abab)*abab(abab)*
+		 glushkov,
+		 FiniteAutomaton::polynomially_ambigious},
 		{20, "(ab)*ab(ab)*|(ac)*(ac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
 		// {21, "(a|b)*(f*)*q", thompson,
 		//  FiniteAutomaton::exponentially_ambiguous},
-		{22, "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*", glushkov,
+		{22,
+		 "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*",
+		 glushkov,
 		 FiniteAutomaton::exponentially_ambiguous},
 	};
 
@@ -288,7 +338,7 @@ TEST(TestCaseName, Test_arden) {
 }
 
 TEST(TestCaseName, Test_pump_length) {
-	ASSERT_EQ(Regex("abaa").pump_length(),5);
+	ASSERT_EQ(Regex("abaa").pump_length(), 5);
 }
 
 TEST(TestCaseName, Test_fa_to_pgrammar) {
@@ -397,10 +447,10 @@ TEST(TestCaseName, test_interpreter) {
 TEST(TestCaseName, Test_TransformationMonoid) {
 	FiniteAutomaton fa1 = Regex("a*b*c*").to_thompson().minimize();
 	TransformationMonoid tm1(fa1);
-	ASSERT_EQ(tm1.class_card(),7);
-	ASSERT_EQ(tm1.class_length(),2);
+	ASSERT_EQ(tm1.class_card(), 7);
+	ASSERT_EQ(tm1.class_length(), 2);
 	ASSERT_TRUE(tm1.is_minimal());
-	ASSERT_EQ(tm1.get_classes_number_MyhillNerode(),3);
+	ASSERT_EQ(tm1.get_classes_number_MyhillNerode(), 3);
 
 	vector<State> states;
 	for (int i = 0; i < 5; i++) {
@@ -417,10 +467,10 @@ TEST(TestCaseName, Test_TransformationMonoid) {
 	states[4].is_terminal = true;
 	FiniteAutomaton fa2(0, states, {"a", "b", "c"});
 	TransformationMonoid tm2(fa2);
-	ASSERT_EQ(tm2.class_card(),12);
-	ASSERT_EQ(tm2.class_length(),4);
-	ASSERT_EQ(tm2.is_minimal(),1);
-	ASSERT_EQ(tm2.get_classes_number_MyhillNerode(),5);
+	ASSERT_EQ(tm2.class_card(), 12);
+	ASSERT_EQ(tm2.class_length(), 4);
+	ASSERT_EQ(tm2.is_minimal(), 1);
+	ASSERT_EQ(tm2.get_classes_number_MyhillNerode(), 5);
 
 	FiniteAutomaton fa3 = Regex("ab|b").to_glushkov().minimize();
 	TransformationMonoid tm3(fa3);

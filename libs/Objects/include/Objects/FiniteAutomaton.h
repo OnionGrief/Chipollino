@@ -1,20 +1,21 @@
 #pragma once
 #include <iostream>
 #include <map>
-#include <optional>
-#include <set> 
 #include <memory>
+#include <optional>
+#include <set>
+#include <string>
 #include <vector>
-#include <string> 
+
 #include "AbstractMachine.h"
 #include "AlphabetSymbol.h"
 #include "iLogTemplate.h"
 
 using std::cout;
-using std::vector;
-using std::string;
 using std::map;
 using std::set;
+using std::string;
+using std::vector;
 
 class Regex;
 class Language;
@@ -69,11 +70,15 @@ class FiniteAutomaton : public AbstractMachine {
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// принимает в качетве лимита максимальное количество цифр в
 	// числителе + знаменателе дроби, которая может встретиться при вычислениях
-	AmbiguityValue get_ambiguity_value(int digits_number_limit, std::optional<int>& word_length) const;	// NOLINT(runtime/references)
+	AmbiguityValue get_ambiguity_value(
+		int digits_number_limit,
+		std::optional<int>& word_length) // NOLINT(runtime/references)
+		const;
 	std::optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
-	std::optional<string> get_prefix(int state_beg, int state_end, map<int, bool>& was) const;		// NOLINT(runtime/references)
+	std::optional<string> get_prefix(int state_beg, int state_end,
+									 map<int, bool>& was) const; // NOLINT(runtime/references)
 
 	// функция проверки на семантическую детерминированность
 	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;

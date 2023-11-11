@@ -6,7 +6,8 @@ Fraction::Fraction() {
 }
 
 Fraction::Fraction(InfInt n, InfInt d) {
-	if (d == 0) throw std::invalid_argument("d");
+	if (d == 0)
+		throw std::invalid_argument("d");
 	numerator = n;
 	denominator = d;
 	simplify();

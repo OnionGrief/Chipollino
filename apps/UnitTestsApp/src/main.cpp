@@ -1,11 +1,11 @@
 #include <iostream>
-#include <thread>
-#include "UnitTestsApp/Example.h"
-#include "gtest/gtest.h"
+
+#include "UnitTestsApp/UnitTests.h"
+
+using std::cout;
 
 int main(int argc, char** argv) {
 	cout << "Unit Tests\n";
 	// Тестирование
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+	return UnitTests::RunTests(argc, argv);
 }

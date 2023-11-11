@@ -1,13 +1,13 @@
 #include "Objects/AlphabetSymbol.h"
 
-alphabet_symbol::alphabet_symbol(){}
-alphabet_symbol::alphabet_symbol(const string& s) : symbol(s), value(s){}
-alphabet_symbol::alphabet_symbol(const char* c) : symbol(c), value(c){}
-alphabet_symbol::alphabet_symbol(char c) : symbol(string(1, c)), value(string(1, c)){}
+alphabet_symbol::alphabet_symbol() {}
+alphabet_symbol::alphabet_symbol(const string& s) : symbol(s), value(s) {}
+alphabet_symbol::alphabet_symbol(const char* c) : symbol(c), value(c) {}
+alphabet_symbol::alphabet_symbol(char c) : symbol(string(1, c)), value(string(1, c)) {}
 
 alphabet_symbol::alphabet_symbol(const alphabet_symbol& other)
 	: symbol(other.symbol), annote_numbers(other.annote_numbers),
-	  linearize_numbers(other.linearize_numbers), value(other.value){}
+	  linearize_numbers(other.linearize_numbers), value(other.value) {}
 
 void alphabet_symbol::update_value() {
 	value = symbol;

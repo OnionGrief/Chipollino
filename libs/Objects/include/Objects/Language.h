@@ -1,9 +1,10 @@
 #pragma once
+#include <memory>
 #include <optional>
-#include <vector>
-#include <set> 
-#include <memory> 
+#include <set>
 #include <string>
+#include <vector>
+
 #include "AlphabetSymbol.h"
 #include "FiniteAutomaton.h"
 #include "Regex.h"
@@ -44,7 +45,7 @@ class Language {
 
   public:
 	Language();
-	Language(set<alphabet_symbol> alphabet);		// NOLINT(runtime/explicit)
+	Language(set<alphabet_symbol> alphabet); // NOLINT(runtime/explicit)
 	const set<alphabet_symbol>& get_alphabet();
 	void set_alphabet(set<alphabet_symbol>);
 	int get_alphabet_size();

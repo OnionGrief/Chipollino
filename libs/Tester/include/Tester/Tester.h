@@ -4,6 +4,7 @@
 #include <regex>
 #include <string>
 #include <vector>
+
 #include "Objects/BaseObject.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"

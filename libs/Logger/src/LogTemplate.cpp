@@ -1,11 +1,13 @@
 #include <variant>
+
 #include "Logger/LogTemplate.h"
 
 void LogTemplate::add_parameter(string parameter_name) {
 
 	std::ifstream infile(template_fullpath);
 
-	if (!infile) return; // infile.close();
+	if (!infile)
+		return; // infile.close();
 
 	string s;
 	bool is_exist = false;
@@ -116,9 +118,10 @@ string LogTemplate::render() const {
 				}
 
 				if (std::holds_alternative<Regex>(p.second.value)) {
-					s.insert(insert_place,
-							 std::get<Regex>(p.second.value).to_txt()); // Math mode is done in global
-																	//  renderer 
+					s.insert(
+						insert_place,
+						std::get<Regex>(p.second.value).to_txt()); // Math mode is done in global
+																   //  renderer
 				} else if (std::holds_alternative<FiniteAutomaton>(p.second.value)) {
 					std::hash<string> hasher;
 					string automaton = std::get<FiniteAutomaton>(p.second.value).to_txt();
@@ -211,7 +214,8 @@ string LogTemplate::math_mode(string str) {
 
 string LogTemplate::log_table(Table t) {
 	string table = "";
-	if (!(t.columns.size() && t.rows.size())) return table;
+	if (!(t.columns.size() && t.rows.size()))
+		return table;
 	string format = "c!{\\color{black!80}\\vline width .65pt}";
 	string cols = "  &";
 	string row = "";

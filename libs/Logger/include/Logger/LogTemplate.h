@@ -1,9 +1,11 @@
 #ifndef LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_
 #define LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_
+
 #include <map>
 #include <sstream>
 #include <string>
 #include <variant>
+
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"

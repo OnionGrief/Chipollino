@@ -1,8 +1,10 @@
 #include <algorithm>
 #include <iostream>
-#include "Objects/TransformationMonoid.h"
+
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
+#include "Objects/TransformationMonoid.h"
+
 vector<alphabet_symbol> union_words(vector<alphabet_symbol> a, vector<alphabet_symbol> b) {
 	vector<alphabet_symbol> newword;
 	for (int i = 0; i < a.size(); i++) {
@@ -133,7 +135,7 @@ void TransformationMonoid::get_new_transition(const vector<TransformationMonoid:
 	}
 }
 
-TransformationMonoid::TransformationMonoid(){}
+TransformationMonoid::TransformationMonoid() {}
 TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 	int states_counter_old = 0;
 	int states_counter_new = 0;
@@ -392,7 +394,8 @@ int TransformationMonoid::is_synchronized(const Term& w) {
 
 // Вернет число классов эквивалентности
 int TransformationMonoid::class_card(iLogTemplate* log) {
-	if (log) log->set_parameter("oldautomaton", automat);
+	if (log)
+		log->set_parameter("oldautomaton", automat);
 	if (log) {
 		log->set_parameter("result", std::to_string(terms.size()));
 	}
@@ -402,7 +405,8 @@ int TransformationMonoid::class_card(iLogTemplate* log) {
 // Вернет самое длинное слово в классе
 int TransformationMonoid::class_length(iLogTemplate* log) {
 
-	if (log) log->set_parameter("oldautomaton", automat);
+	if (log)
+		log->set_parameter("oldautomaton", automat);
 	if (log) {
 		log->set_parameter("result", std::to_string(terms[terms.size() - 1].name.size()));
 		// TODO: logs
@@ -414,7 +418,8 @@ int TransformationMonoid::class_length(iLogTemplate* log) {
 
 int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
 
-	if (log) log->set_parameter("oldautomaton", automat);
+	if (log)
+		log->set_parameter("oldautomaton", automat);
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}

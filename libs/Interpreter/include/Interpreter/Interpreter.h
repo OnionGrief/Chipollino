@@ -4,9 +4,10 @@
 #include <fstream>
 #include <map>
 #include <set>
-#include <vector>
 #include <string>
 #include <variant>
+#include <vector>
+
 #include "InputGenerator/RegexGenerator.h"
 #include "Interpreter/Typization.h"
 #include "Logger/Logger.h"
@@ -14,7 +15,7 @@
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
 
-using namespace Typization;	// NOLINT(build/namespaces)
+using namespace Typization; // NOLINT(build/namespaces)
 
 class Interpreter {
   public:
@@ -94,9 +95,9 @@ class Interpreter {
 		vector<ObjectType> input;
 		// Тип выходного аргумента
 		ObjectType output;
-		Function(){}
+		Function() {}
 		Function(string name, vector<ObjectType> input, ObjectType output)
-			: name(name), input(input), output(output){}
+			: name(name), input(input), output(output) {}
 	};
 
 	friend bool operator==(const Function& l, const Function& r);
@@ -199,11 +200,17 @@ class Interpreter {
 	// Находит парную закрывающую скобку
 	int find_closing_par(const vector<Lexem>&, size_t pos);
 
-	std::optional<Id> scan_id(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
-	std::optional<Regex> scan_regex(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
-	std::optional<FunctionSequence> scan_function_sequence(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
-	std::optional<Array> scan_array(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
-	std::optional<Expression> scan_expression(const vector<Lexem>&, int& pos, size_t end);	// NOLINT(runtime/references)
+	std::optional<Id> scan_id(const vector<Lexem>&, int& pos,		// NOLINT(runtime/references)
+							  size_t end);							// NOLINT(runtime/references)
+	std::optional<Regex> scan_regex(const vector<Lexem>&, int& pos, // NOLINT(runtime/references)
+									size_t end);					// NOLINT(runtime/references)
+	std::optional<FunctionSequence> scan_function_sequence(
+		const vector<Lexem>&, int& pos, size_t end);				// NOLINT(runtime/references)
+	std::optional<Array> scan_array(const vector<Lexem>&, int& pos, // NOLINT(runtime/references)
+									size_t end);					// NOLINT(runtime/references)
+	std::optional<Expression> scan_expression(const vector<Lexem>&,
+											  int& pos,	   // NOLINT(runtime/references)
+											  size_t end); // NOLINT(runtime/references)
 
 	// перевод ObjectType в string (для логирования и дебага)
 	map<ObjectType, string> types_to_string = {
@@ -223,11 +230,15 @@ class Interpreter {
 	// Типизация идентификаторов. Нужна для корректного составления опреаций
 	map<string, ObjectType> id_types;
 	// Считывание операции из набора лексем
-	std::optional<Declaration> scan_declaration(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
-	std::optional<Test> scan_test(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
-	std::optional<Verification> scan_verification(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
-	std::optional<Predicate> scan_predicate(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
-	std::optional<SetFlag> scan_flag(const vector<Lexem>&, int& pos);	// NOLINT(runtime/references)
+	std::optional<Declaration> scan_declaration(const vector<Lexem>&,
+												int& pos);		   // NOLINT(runtime/references)
+	std::optional<Test> scan_test(const vector<Lexem>&, int& pos); // NOLINT(runtime/references)
+	std::optional<Verification> scan_verification(
+		const vector<Lexem>&, // NOLINT(runtime/references)
+		int& pos);			  // NOLINT(runtime/references)
+	std::optional<Predicate> scan_predicate(const vector<Lexem>&,
+											int& pos);				  // NOLINT(runtime/references)
+	std::optional<SetFlag> scan_flag(const vector<Lexem>&, int& pos); // NOLINT(runtime/references)
 	std::optional<GeneralOperation> scan_operation(const vector<Lexem>&);
 
 	//== Исполнение комманд ===================================================
@@ -237,12 +248,12 @@ class Interpreter {
 
 	// Применение цепочки функций к набору аргументов
 	std::optional<GeneralObject> apply_function_sequence(const vector<Function>& functions,
-													vector<GeneralObject> arguments);
+														 vector<GeneralObject> arguments);
 
 	// Применение функции к набору аргументов
-	std::optional<GeneralObject> apply_function(const Function& function,
-										   const vector<GeneralObject>& arguments,
-										   LogTemplate& log_template); // NOLINT(runtime/references)
+	std::optional<GeneralObject> apply_function(
+		const Function& function, const vector<GeneralObject>& arguments,
+		LogTemplate& log_template); // NOLINT(runtime/references)
 
 	// Вычисление выражения
 	std::optional<GeneralObject> eval_expression(const Expression& expr);
@@ -266,7 +277,7 @@ class Interpreter {
 
 	// Построение последовательности функций по их названиям
 	std::optional<vector<Function>> build_function_sequence(vector<string> function_names,
-													   vector<ObjectType> first_type);
+															vector<ObjectType> first_type);
 
 	// Соответствие между названиями функций и сигнатурами
 	map<string, vector<Function>> names_to_functions;
@@ -296,13 +307,13 @@ class Interpreter {
 		// Eсли type = number
 		int num = 0;
 
-		Lexem(Type type = error, string value = "");	// NOLINT(runtime/explicit)
-		Lexem(int num);	// NOLINT(runtime/explicit)
+		Lexem(Type type = error, string value = ""); // NOLINT(runtime/explicit)
+		Lexem(int num);								 // NOLINT(runtime/explicit)
 	};
 
 	class Lexer {
 	  public:
-		Lexer(Interpreter& parent) : parent(parent) {}	// NOLINT(runtime/explicit)
+		Lexer(Interpreter& parent) : parent(parent) {} // NOLINT(runtime/explicit)
 		// Возвращает лексемы, разбитые по строчкам
 		vector<vector<Lexem>> load_file(string path);
 		// Бьёт строку на лексемы (без перевода строки)

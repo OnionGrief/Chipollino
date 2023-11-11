@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include "InputGenerator/TasksGenerator.h"
 #include "Interpreter/Interpreter.h"
 

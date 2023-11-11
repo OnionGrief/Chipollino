@@ -1,9 +1,11 @@
 #ifndef APPS_UNITTESTSAPP_INCLUDE_UNITTESTSAPP_EXAMPLE_H_
 #define APPS_UNITTESTSAPP_INCLUDE_UNITTESTSAPP_EXAMPLE_H_
+
 #include <cassert>
 #include <functional>
 #include <iostream>
-#include <string> 
+#include <string>
+
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "InputGenerator/TasksGenerator.h"

@@ -3,13 +3,13 @@
 #include <map>
 #include <optional>
 #include <set>
-#include <variant>
 #include <string>
+#include <variant>
 #include <vector>
+
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Grammar.h"
 #include "Objects/Regex.h"
-
 
 // Типизация входныx данных
 namespace Typization {
@@ -36,8 +36,8 @@ template <ObjectType T, class V> struct ObjectHolder {
 		return T;
 	}
 
-	explicit ObjectHolder(){}	// NOLINT(runtime/explicit)
-	explicit ObjectHolder(V value) : value(value){}
+	explicit ObjectHolder() {} // NOLINT(runtime/explicit)
+	explicit ObjectHolder(V value) : value(value) {}
 };
 
 // Сами структуры
@@ -55,7 +55,7 @@ struct ObjectArray;
 // Универсальный объект
 using GeneralObject =
 	std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString, ObjectBoolean,
-			ObjectOptionalBool, ObjectAmbiguityValue, ObjectPrefixGrammar, ObjectArray>;
+				 ObjectOptionalBool, ObjectAmbiguityValue, ObjectPrefixGrammar, ObjectArray>;
 
 #define OBJECT_DEFINITION(type, value)                                                             \
 	struct Object##type : public ObjectHolder<ObjectType::type, value> {                           \

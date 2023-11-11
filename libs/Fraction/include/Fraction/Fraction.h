@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+
 #include "InfInt/InfInt.h"
 
 class Fraction {

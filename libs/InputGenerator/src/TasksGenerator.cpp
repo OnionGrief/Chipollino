@@ -30,7 +30,8 @@ string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 void TasksGenerator::write_to_file(string filename) {
 	std::ofstream out;
 	out.open(filename, std::ofstream::trunc);
-	if (out.is_open()) out << res_str;
+	if (out.is_open())
+		out << res_str;
 	out.close();
 }
 
@@ -88,7 +89,8 @@ string TasksGenerator::generate_predicate() {
 
 			if (predicate.input[i] == NFA || predicate.input[i] == DFA) {
 				string id_type = predicate.input[i];
-				if (for_dinamic_Tpchkr || id_type == NFA) id_type = NFA_DFA;
+				if (for_dinamic_Tpchkr || id_type == NFA)
+					id_type = NFA_DFA;
 				vector<Id> possible_ids = ids[id_type];
 				int rand_num = rand() % possible_ids.size();
 				Id rand_id = possible_ids[rand_num];
@@ -189,7 +191,8 @@ string TasksGenerator::generate_declaration() {
 
 				if (first_func.input[i] == NFA || first_func.input[i] == DFA) {
 					string id_type = first_func.input[i];
-					if (for_dinamic_Tpchkr || id_type == NFA) id_type = NFA_DFA;
+					if (for_dinamic_Tpchkr || id_type == NFA)
+						id_type = NFA_DFA;
 					vector<Id> possible_ids = ids[id_type];
 					int rand_num = rand() % possible_ids.size();
 					Id rand_id = possible_ids[rand_num];
@@ -242,9 +245,11 @@ string TasksGenerator::generate_declaration() {
 
 	// запоминаем идентификатор N#
 	ids[prevOutput].push_back({id_num, prevOutput});
-	if (prevOutput == DFA || prevOutput == NFA) ids[NFA_DFA].push_back({id_num, prevOutput});
+	if (prevOutput == DFA || prevOutput == NFA)
+		ids[NFA_DFA].push_back({id_num, prevOutput});
 
-	if (/*rand() % 2 && */ funcNum > 0) str += " !!";
+	if (/*rand() % 2 && */ funcNum > 0)
+		str += " !!";
 
 	return str;
 }
@@ -264,7 +269,7 @@ TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput, i
 			str = possible_functions[rand() % possible_functions.size()];
 			if ((str.output == INT || str.output == VALUE) &&
 				funcNum != 0) // может возвращать int если
-							// последняя функция в посл-ти
+							  // последняя функция в посл-ти
 				str = generate_next_func(prevOutput, funcNum);
 		}
 	}
@@ -276,7 +281,8 @@ void TasksGenerator::distribute_functions() {
 		if (functions[i].input.size() == 1) {
 			string input_type = functions[i].input[0];
 			funcInput[input_type].push_back(functions[i]);
-			if (input_type == NFA || input_type == DFA) funcInput[NFA_DFA].push_back(functions[i]);
+			if (input_type == NFA || input_type == DFA)
+				funcInput[NFA_DFA].push_back(functions[i]);
 		}
 	}
 }
