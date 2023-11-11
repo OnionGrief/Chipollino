@@ -1,11 +1,14 @@
 #pragma once
+#include <string>
+#include <vector>
+
 #include "AlgExpression.h"
 
 class BackRefRegex : public AlgExpression {
   private:
 	int cell_number = 0;
 
-	void copy(const AlgExpression*) override;
+	void copy(const AlgExpression*) override; // NOLINT(build/include_what_you_use)
 	// возвращает указатель на new BackRefRegex
 	BackRefRegex* make() const override;
 
@@ -17,7 +20,7 @@ class BackRefRegex : public AlgExpression {
 
   public:
 	BackRefRegex() = default;
-	BackRefRegex(const string&);
+	BackRefRegex(const string&); // NOLINT(runtime/explicit)
 
 	BackRefRegex* make_copy() const override;
 	BackRefRegex(const BackRefRegex&);

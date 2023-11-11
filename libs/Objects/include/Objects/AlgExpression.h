@@ -1,13 +1,14 @@
 #pragma once
 
-#include "BaseObject.h"
-#include "iLogTemplate.h"
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "BaseObject.h"
+#include "iLogTemplate.h"
 
 using std::cout;
 using std::endl;
@@ -40,7 +41,8 @@ class AlgExpression : public BaseObject {
 		int number = 0; // Для линеаризации Type::symb (возможно это применение неактуально)
 						// либо для указания номера ячейки памяти
 						// Type::squareBrL, Type::squareBrL, Type::ref
-		Lexeme(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
+		Lexeme(Type type = error, const alphabet_symbol& symbol = "",
+			   int number = 0); // NOLINT(runtime/explicit)
 	};
 
 	enum Type {
@@ -68,7 +70,7 @@ class AlgExpression : public BaseObject {
 	AlgExpression* term_r = nullptr;
 
 	// копирует объект (!!! не чистит память !!!)
-	virtual void copy(const AlgExpression*) = 0;
+	virtual void copy(const AlgExpression*) = 0; // NOLINT(build/include_what_you_use)
 	// возвращает указатель на 'new' объект соответствующего типа
 	virtual AlgExpression* make() const = 0;
 

@@ -1,16 +1,17 @@
-#include "Objects/FiniteAutomaton.h"
-#include "Fraction/Fraction.h"
-#include "InfInt/InfInt.h"
-#include "Objects/Grammar.h"
-#include "Objects/Language.h"
-#include "Objects/TransformationMonoid.h"
-#include "Objects/iLogTemplate.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <queue>
 #include <set>
 #include <stack>
+
+#include "Fraction/Fraction.h"
+#include "InfInt/InfInt.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Grammar.h"
+#include "Objects/Language.h"
+#include "Objects/TransformationMonoid.h"
+#include "Objects/iLogTemplate.h"
 
 State::State() : index(0), is_terminal(false) {}
 
@@ -1572,7 +1573,7 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa, iLogTemplate* log) const
 }
 
 Fraction calc_ambiguity(int i, int n, const vector<Fraction>& f1,
-						vector<vector<Fraction>>& calculated,
+						vector<vector<Fraction>>& calculated,  // NOLINT(runtime/references)
 						vector<vector<char>>& is_calculated) { // NOLINT(runtime/references)
 	if (i == 0)
 		return f1[n];
@@ -1789,7 +1790,7 @@ TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
 	return syntactic_monoid;
 }
 
-void set_result(int& res, int size,
+void set_result(int& res, int size,							   // NOLINT(runtime/references)
 				vector<std::pair<int, int>>& result_yx,		   // NOLINT(runtime/references)
 				vector<std::pair<int, int>>& temp_result_yx) { // NOLINT(runtime/references)
 	if (size > res) {

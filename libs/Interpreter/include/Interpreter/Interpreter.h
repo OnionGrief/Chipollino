@@ -1,10 +1,4 @@
 #pragma once
-#include "InputGenerator/RegexGenerator.h"
-#include "Interpreter/Typization.h"
-#include "Logger/Logger.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Regex.h"
-#include "Objects/TransformationMonoid.h"
 #include <cmath>
 #include <deque>
 #include <fstream>
@@ -13,6 +7,13 @@
 #include <string>
 #include <variant>
 #include <vector>
+
+#include "InputGenerator/RegexGenerator.h"
+#include "Interpreter/Typization.h"
+#include "Logger/Logger.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Regex.h"
+#include "Objects/TransformationMonoid.h"
 
 using namespace Typization; // NOLINT(build/namespaces)
 
@@ -199,15 +200,16 @@ class Interpreter {
 	// Находит парную закрывающую скобку
 	int find_closing_par(const vector<Lexem>&, size_t pos);
 
-	std::optional<Id> scan_id(const vector<Lexem>&, int& pos,
-							  size_t end); // NOLINT(runtime/references)
-	std::optional<Regex> scan_regex(const vector<Lexem>&, int& pos,
-									size_t end); // NOLINT(runtime/references)
+	std::optional<Id> scan_id(const vector<Lexem>&, int& pos,		// NOLINT(runtime/references)
+							  size_t end);							// NOLINT(runtime/references)
+	std::optional<Regex> scan_regex(const vector<Lexem>&, int& pos, // NOLINT(runtime/references)
+									size_t end);					// NOLINT(runtime/references)
 	std::optional<FunctionSequence> scan_function_sequence(
-		const vector<Lexem>&, int& pos, size_t end); // NOLINT(runtime/references)
-	std::optional<Array> scan_array(const vector<Lexem>&, int& pos,
-									size_t end); // NOLINT(runtime/references)
-	std::optional<Expression> scan_expression(const vector<Lexem>&, int& pos,
+		const vector<Lexem>&, int& pos, size_t end);				// NOLINT(runtime/references)
+	std::optional<Array> scan_array(const vector<Lexem>&, int& pos, // NOLINT(runtime/references)
+									size_t end);					// NOLINT(runtime/references)
+	std::optional<Expression> scan_expression(const vector<Lexem>&,
+											  int& pos,	   // NOLINT(runtime/references)
 											  size_t end); // NOLINT(runtime/references)
 
 	// перевод ObjectType в string (для логирования и дебага)
@@ -231,8 +233,9 @@ class Interpreter {
 	std::optional<Declaration> scan_declaration(const vector<Lexem>&,
 												int& pos);		   // NOLINT(runtime/references)
 	std::optional<Test> scan_test(const vector<Lexem>&, int& pos); // NOLINT(runtime/references)
-	std::optional<Verification> scan_verification(const vector<Lexem>&,
-												  int& pos); // NOLINT(runtime/references)
+	std::optional<Verification> scan_verification(
+		const vector<Lexem>&, // NOLINT(runtime/references)
+		int& pos);			  // NOLINT(runtime/references)
 	std::optional<Predicate> scan_predicate(const vector<Lexem>&,
 											int& pos);				  // NOLINT(runtime/references)
 	std::optional<SetFlag> scan_flag(const vector<Lexem>&, int& pos); // NOLINT(runtime/references)

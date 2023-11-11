@@ -1,13 +1,14 @@
 #pragma once
-#include "AlphabetSymbol.h"
-#include "FiniteAutomaton.h"
-#include "Regex.h"
-#include "TransformationMonoid.h"
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
 #include <vector>
+
+#include "AlphabetSymbol.h"
+#include "FiniteAutomaton.h"
+#include "Regex.h"
+#include "TransformationMonoid.h"
 
 // нужна, чтобы хранить weak_ptr на язык
 struct FA_structure {

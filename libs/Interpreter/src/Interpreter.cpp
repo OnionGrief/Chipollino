@@ -1,6 +1,7 @@
+#include <algorithm>
+
 #include "Interpreter/Interpreter.h"
 #include "Tester/Tester.h"
-#include <algorithm>
 
 bool operator==(const Interpreter::Function& l, const Interpreter::Function& r) {
 	return l.name == r.name && l.input == r.input && l.output == r.output;

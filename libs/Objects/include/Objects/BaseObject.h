@@ -1,9 +1,10 @@
 #pragma once
-#include "AlphabetSymbol.h"
 #include <iostream>
 #include <memory>
 #include <set>
 #include <string>
+
+#include "AlphabetSymbol.h"
 
 using std::cout;
 using std::set;

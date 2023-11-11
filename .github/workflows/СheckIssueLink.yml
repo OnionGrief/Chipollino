@@ -14,7 +14,7 @@ jobs:
         id: check_commit_message
         run: |
           COMMIT_MESSAGE='${{ github.event.head_commit.message }}'
-          if [[ $COMMIT_MESSAGE =~ "Merge pull request" || $COMMIT_MESSAGE =~ \(#([0-9]+)\) ]]; then
+          if [[ $COMMIT_MESSAGE =~ "Merge pull request" || $COMMIT_MESSAGE =~ "Merge branch" || $COMMIT_MESSAGE =~ \(#([0-9]+)\) ]]; then
             echo "Commit message is valid."
           else
             echo "Commit message not contains a Issue Link."

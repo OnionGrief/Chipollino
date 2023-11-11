@@ -1,6 +1,8 @@
-#include "UnitTestsApp/UnitTests.h"
 #include <iostream>
-using namespace std;
+
+#include "UnitTestsApp/UnitTests.h"
+
+using std::cout;
 
 int main(int argc, char** argv) {
 	cout << "Unit Tests\n";

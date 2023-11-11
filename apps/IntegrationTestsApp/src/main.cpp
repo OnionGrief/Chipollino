@@ -1,6 +1,6 @@
-#include "gtest/gtest.h"
 #include <iostream>
-#include <thread>
+
+#include "gtest/gtest.h"
 
 using std::cout;
 

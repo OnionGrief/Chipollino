@@ -1,5 +1,6 @@
-#include "Logger/LogTemplate.h"
 #include <variant>
+
+#include "Logger/LogTemplate.h"
 
 void LogTemplate::add_parameter(string parameter_name) {
 

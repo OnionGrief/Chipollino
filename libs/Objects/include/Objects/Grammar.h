@@ -1,13 +1,14 @@
 #pragma once
-#include "AlphabetSymbol.h"
-#include "FiniteAutomaton.h"
-#include "TransformationMonoid.h"
 #include <iostream>
 #include <map>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "AlphabetSymbol.h"
+#include "FiniteAutomaton.h"
+#include "TransformationMonoid.h"
 
 struct PrefixGrammarItem {
 	// конечное состояние автомата
@@ -67,7 +68,7 @@ class Grammar {
 		vector<GrammarItem*>& nonterminals);					   // NOLINT(runtime/references)
 	// преобразует данную грамматику в бисимилярную
 	static vector<vector<vector<GrammarItem*>>> get_bisimilar_grammar(
-		vector<vector<vector<GrammarItem*>>>& rules,
+		vector<vector<vector<GrammarItem*>>>& rules,			// NOLINT(runtime/references)
 		vector<GrammarItem*>& nonterminals,						// NOLINT(runtime/references)
 		vector<GrammarItem*>& bisimilar_nonterminals,			// NOLINT(runtime/references)
 		map<int, vector<GrammarItem*>>& class_to_nonterminals); // NOLINT(runtime/references)
@@ -82,12 +83,13 @@ class Grammar {
 	// переход)
 	static vector<vector<vector<GrammarItem*>>> tansitions_to_grammar(
 		const vector<State>& states, const vector<GrammarItem*>& fa_nonterminals,
-		vector<std::pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>>& fa_items,
-		vector<GrammarItem*>& nonterminals,
+		vector<std::pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>>&
+			fa_items,						// NOLINT(runtime/references)
+		vector<GrammarItem*>& nonterminals, // NOLINT(runtime/references)
 		vector<GrammarItem*>& terminals); // NOLINT(runtime/references)
 	// построение обратной грамматики
 	static vector<vector<vector<GrammarItem*>>> get_reverse_grammar(
-		vector<vector<vector<GrammarItem*>>>& rules,
+		vector<vector<vector<GrammarItem*>>>& rules,		 // NOLINT(runtime/references)
 		vector<GrammarItem*>& nonterminals,					 // NOLINT(runtime/references)
 		vector<GrammarItem*>& terminals, int initial_state); // NOLINT(runtime/references)
 	// создание пр грамматики по НКА

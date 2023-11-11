@@ -1,17 +1,18 @@
 #pragma once
-#include "AlphabetSymbol.h"
-#include "BaseObject.h"
-#include "FiniteAutomaton.h"
-#include "iLogTemplate.h"
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <map>
-#include <math.h>
 #include <queue>
 #include <set>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "AlphabetSymbol.h"
+#include "BaseObject.h"
+#include "FiniteAutomaton.h"
+#include "iLogTemplate.h"
 
 using std::cout;
 using std::map;

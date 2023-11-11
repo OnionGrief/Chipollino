@@ -1,7 +1,8 @@
-#include "AutomatonToImage/AutomatonToImage.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
+#include "AutomatonToImage/AutomatonToImage.h"
 
 AutomatonToImage::AutomatonToImage() {}
 

@@ -1,6 +1,7 @@
+#include <iostream>
+
 #include "InputGenerator/TasksGenerator.h"
 #include "Interpreter/Interpreter.h"
-#include <iostream>
 
 int main() {
 

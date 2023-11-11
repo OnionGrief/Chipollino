@@ -1,7 +1,4 @@
 #pragma once
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Grammar.h"
-#include "Objects/Regex.h"
 #include <deque>
 #include <map>
 #include <optional>
@@ -9,6 +6,10 @@
 #include <string>
 #include <variant>
 #include <vector>
+
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Grammar.h"
+#include "Objects/Regex.h"
 
 // Типизация входныx данных
 namespace Typization {

@@ -1,6 +1,7 @@
 #pragma once
-#include "InfInt/InfInt.h"
 #include <iostream>
+
+#include "InfInt/InfInt.h"
 
 class Fraction {
 	InfInt numerator;

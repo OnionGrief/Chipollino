@@ -1,8 +1,10 @@
-#include "Objects/TransformationMonoid.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Language.h"
 #include <algorithm>
 #include <iostream>
+
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Language.h"
+#include "Objects/TransformationMonoid.h"
+
 vector<alphabet_symbol> union_words(vector<alphabet_symbol> a, vector<alphabet_symbol> b) {
 	vector<alphabet_symbol> newword;
 	for (int i = 0; i < a.size(); i++) {

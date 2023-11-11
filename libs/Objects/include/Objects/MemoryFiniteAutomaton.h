@@ -1,7 +1,8 @@
 #pragma once
-#include "AbstractMachine.h"
 #include <memory>
 #include <string>
+
+#include "AbstractMachine.h"
 
 class Language;
 

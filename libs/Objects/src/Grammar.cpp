@@ -1,7 +1,8 @@
+#include <sstream>
+
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
 #include "Objects/iLogTemplate.h"
-#include <sstream>
 
 PrefixGrammarItem::PrefixGrammarItem() : state_index(-1) {}
 

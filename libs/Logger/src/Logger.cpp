@@ -1,5 +1,6 @@
-#include "Logger/Logger.h"
 #include <fstream>
+
+#include "Logger/Logger.h"
 
 void Logger::add_log(const LogTemplate& log) {
 	if (enabled) {

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "BaseObject.h"
-#include "iLogTemplate.h"
 #include <memory>
 #include <set>
+
+#include "BaseObject.h"
+#include "iLogTemplate.h"
 
 class AbstractMachine : public BaseObject {
   protected:

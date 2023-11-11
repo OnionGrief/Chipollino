@@ -1,9 +1,10 @@
-#include "Objects/AlgExpression.h"
-#include "Objects/Language.h"
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+
+#include "Objects/AlgExpression.h"
+#include "Objects/Language.h"
 
 AlgExpression::AlgExpression() {
 	type = AlgExpression::eps;
@@ -212,7 +213,7 @@ void AlgExpression::print_dot() const {
 	cout << dot << endl;
 }
 
-bool read_number(const string& str, size_t& pos, int& res) {
+bool read_number(const string& str, size_t& pos, int& res) { // NOLINT(runtime/references)
 	if (pos >= str.size() || !isdigit(str[pos])) {
 		return false;
 	}
@@ -338,8 +339,9 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 
 				regex_is_eps = false;
 				brackets_are_empty = false;
-			} else
+			} else {
 				return {Lexeme::Type::error};
+			}
 			break;
 		}
 

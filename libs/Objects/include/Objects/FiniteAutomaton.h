@@ -1,7 +1,4 @@
 #pragma once
-#include "AbstractMachine.h"
-#include "AlphabetSymbol.h"
-#include "iLogTemplate.h"
 #include <iostream>
 #include <map>
 #include <memory>
@@ -9,6 +6,10 @@
 #include <set>
 #include <string>
 #include <vector>
+
+#include "AbstractMachine.h"
+#include "AlphabetSymbol.h"
+#include "iLogTemplate.h"
 
 using std::cout;
 using std::map;
@@ -69,8 +70,10 @@ class FiniteAutomaton : public AbstractMachine {
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// принимает в качетве лимита максимальное количество цифр в
 	// числителе + знаменателе дроби, которая может встретиться при вычислениях
-	AmbiguityValue get_ambiguity_value(int digits_number_limit, std::optional<int>& word_length)
-		const; // NOLINT(runtime/references)
+	AmbiguityValue get_ambiguity_value(
+		int digits_number_limit,
+		std::optional<int>& word_length) // NOLINT(runtime/references)
+		const;
 	std::optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end

@@ -1,6 +1,6 @@
-#include "Interpreter/Interpreter.h"
-#include "Objects/Regex.h"
 #include <iostream>
+
+#include "Interpreter/Interpreter.h"
 
 int main(int argc, char* argv[]) {
 	// Приветствие

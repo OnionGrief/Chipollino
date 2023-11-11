@@ -1,8 +1,4 @@
 #pragma once
-#include "AlgExpression.h"
-#include "AlphabetSymbol.h"
-#include "BaseObject.h"
-#include "iLogTemplate.h"
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -13,13 +9,18 @@
 #include <utility>
 #include <vector>
 
+#include "AlgExpression.h"
+#include "AlphabetSymbol.h"
+#include "BaseObject.h"
+#include "iLogTemplate.h"
+
 class Language;
 class FiniteAutomaton;
 struct State;
 
 class Regex : public AlgExpression {
   private:
-	void copy(const AlgExpression*) override;
+	void copy(const AlgExpression*) override; // NOLINT(build/include_what_you_use)
 	// возвращает указатель на new Regex
 	Regex* make() const override;
 
