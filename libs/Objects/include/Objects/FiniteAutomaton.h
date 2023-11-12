@@ -5,6 +5,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "AbstractMachine.h"
@@ -18,6 +19,7 @@ using std::string;
 using std::vector;
 
 class Regex;
+class MetaInfo;
 class Language;
 class TransformationMonoid;
 
@@ -59,7 +61,7 @@ class FiniteAutomaton : public AbstractMachine {
 	bool is_trim = true;
 
 	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
-	bool parsing_nfa_for(const string&) const;
+	std::pair<int, bool> parsing_nfa_for(const string&) const;
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
@@ -150,7 +152,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// проверка НКА на семантический детерминизм
 	bool semdet(iLogTemplate* log = nullptr) const;
 	// проверяет, распознаёт ли автомат слово
-	bool parsing_by_nfa(const string&) const;
+	std::pair<int, bool> parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
 	// начальное состояние
@@ -175,6 +177,7 @@ class FiniteAutomaton : public AbstractMachine {
 	bool is_dfa_minimal(iLogTemplate* log = nullptr) const;
 
 	friend class Regex;
+	friend class MetaInfo;
 	friend class TransformationMonoid;
 	friend class Grammar;
 };

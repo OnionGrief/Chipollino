@@ -316,6 +316,22 @@ TEST(TestCaseName, Test_ambiguity) {
 	});
 }
 
+TEST(TestCaseName, Test_remove_trap) {
+	Regex r1("ca*a(b|c)*");
+	Regex r2("caa*b*");
+	Regex r3("(a|b)*a(a|b)");
+	FiniteAutomaton fa1 = r1.to_glushkov().determinize().complement();
+	FiniteAutomaton fa2 = r2.to_glushkov().determinize();
+	FiniteAutomaton fa3 = r3.to_glushkov().determinize();
+	FiniteAutomaton fa4 = FiniteAutomaton::intersection(fa1, fa2).remove_trap_states();
+
+	ASSERT_EQ((fa2.size() - fa2.remove_trap_states().size()),
+			  1); // В норме детерминизация добавляет одну ловушку
+	ASSERT_EQ(fa4.size(), 1); // Кейс, когда осталось несколько ловушек, и они коллапсируют в
+							  //  одну, чтобы не получился пустой автомат.
+	ASSERT_EQ(fa3.size(), fa3.remove_trap_states().size()); // Кейс, когда ловушек нет.
+}
+
 TEST(TestCaseName, Test_arden) {
 	auto test_equivalence = [](const string& rgx_str) {
 		Regex reg(rgx_str);

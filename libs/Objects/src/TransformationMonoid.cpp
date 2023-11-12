@@ -433,7 +433,7 @@ int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
 	}
 	if (log) {
 		/*TODO: logs */
-		log->set_parameter("result", equivalence_classes_table_bool.size());
+		log->set_parameter("result", static_cast<int>(equivalence_classes_table_bool.size()));
 		log->set_parameter("table", t);
 	}
 	return equivalence_classes_table_bool.size();

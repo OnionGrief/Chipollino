@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
+#include <variant>
 #include <vector>
+
+#include "Objects/MetaInfo.h"
 
 class FiniteAutomaton;
 class Regex;
@@ -13,9 +16,18 @@ class iLogTemplate {
 		vector<string> data;	// данные
 	};
 
-	virtual void set_parameter(const string& key, const FiniteAutomaton& value) = 0;
-	virtual void set_parameter(const string& key, Regex value) = 0;
-	virtual void set_parameter(const string& key, string value) = 0;
-	virtual void set_parameter(const string& key, int value) = 0;
-	virtual void set_parameter(const string& key, Table value) = 0;
+	struct Point {
+		string plot_id;
+		int x_coord;
+		long y_coord;
+	};
+
+	struct Plot {
+		vector<Point> data;
+	};
+
+	using LogObject = std::variant<FiniteAutomaton, Regex, string, int, Table, Plot>;
+
+	virtual void set_parameter(const string& key, const LogObject& value,
+							   const MetaInfo& meta = {}) = 0;
 };
