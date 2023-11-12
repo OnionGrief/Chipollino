@@ -1,16 +1,24 @@
 #pragma once
+#include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <map>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include "FiniteAutomaton.h"
 #include "iLogTemplate.h"
-#include <algorithm>
-#include <iostream>
-#include <map>
-#include <math.h>
-#include <queue>
-#include <sstream>
-#include <vector>
-using namespace std;
+
+using std::cout;
+using std::map;
+using std::set;
+using std::string;
+using std::vector;
 
 class Language;
 class FiniteAutomaton;
@@ -46,7 +54,7 @@ class TransformationMonoid {
 		Term second;
 	};
 	TransformationMonoid();
-	TransformationMonoid(const FiniteAutomaton& in);
+	TransformationMonoid(const FiniteAutomaton& in); // NOLINT(runtime/explicit)
 	// получаем все классы эквивалентности
 	vector<Term> get_equalence_classes();
 	// получаем термы, что vw - в языке
@@ -82,8 +90,9 @@ class TransformationMonoid {
 		const vector<alphabet_symbol>&,
 		const map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>&);
 	// возвращает таблицу М-Н
-	vector<vector<bool>> get_equivalence_classes_table(vector<string>& table_rows,
-													   vector<string>& table_columns);
+	vector<vector<bool>> get_equivalence_classes_table(
+		vector<string>& table_rows,		// NOLINT(runtime/references)
+		vector<string>& table_columns); // NOLINT(runtime/references)
 
   private:
 	// Автомат
@@ -106,7 +115,7 @@ class TransformationMonoid {
 	// t | 1 0 1 1
 
 	// очередь на проверку термов (в ней лежат непроверенные кандидаты)
-	queue<Term> queueTerm;
+	std::queue<Term> queueTerm;
 	// флаг (неминимальны ли ловушки)
 	bool trap_not_minimal = false;
 	// проверяем имя терма на  переписываемость (вспомогательный)

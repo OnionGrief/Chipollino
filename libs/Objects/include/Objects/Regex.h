@@ -1,16 +1,18 @@
 #pragma once
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "AlgExpression.h"
 #include "AlphabetSymbol.h"
 #include "BaseObject.h"
 #include "iLogTemplate.h"
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <optional>
-#include <set>
-#include <string>
-#include <vector>
-using namespace std;
 
 class Language;
 class FiniteAutomaton;
@@ -18,27 +20,42 @@ struct State;
 
 class Regex : public AlgExpression {
   private:
+	void copy(const AlgExpression*) override; // NOLINT(build/include_what_you_use)
+	// возвращает указатель на new Regex
+	Regex* make() const override;
+
 	// Множество префиксов длины len
-	void get_prefix(int len, std::set<std::string>* prefs) const;
+	void get_prefix(int len, set<string>& prefs) const; // NOLINT(runtime/references)
 	// Производная по символу
 	bool derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
-										Regex& result) const;
-	bool partial_derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
-												vector<Regex>& result) const;
+										Regex& result) const; // NOLINT(runtime/references)
+	bool partial_derivative_with_respect_to_sym(
+		Regex* respected_sym, const Regex* reg_e,
+		vector<Regex>& result) const; // NOLINT(runtime/references)
 	// Производная по префиксу
-	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e, Regex& result) const;
-	pair<vector<State>, int> get_thompson(int) const;
+	bool derivative_with_respect_to_str(string str, const Regex* reg_e,
+										Regex& result) const; // NOLINT(runtime/references)
+	std::pair<vector<State>, int> get_thompson(int) const;
 
-	void normalize_this_regex(const vector<pair<Regex, Regex>>&); // переписывание regex по
-																  // пользовательским правилам
+	void normalize_this_regex(const vector<std::pair<Regex, Regex>>&); // переписывание regex по
+																	   // пользовательским правилам
+
+	Regex* expr(const vector<Lexeme>&, int, int) override;
+	Regex* scan_minus(const vector<Lexeme>&, int, int);
 
   public:
 	Regex() = default;
-	Regex(const string&);
-	Regex(const string&, const shared_ptr<Language>&);
+	Regex(const string&); // NOLINT(runtime/explicit)
+	Regex(const string&, const std::shared_ptr<Language>&);
 
-	template <typename T> static Regex* castToRegex(T* ptr);
-	template <typename T> static vector<Regex*> castToRegex(vector<T*> ptr);
+	Regex* make_copy() const override;
+	Regex(const Regex&) = default;
+
+	// dynamic_cast к типу Regex*
+	template <typename T> static Regex* cast(T* ptr, bool not_null_ptr = true);
+	template <typename T> static const Regex* cast(const T* ptr, bool not_null_ptr = true);
+	// dynamic_cast каждого элемента вектора к типу Regex*
+	template <typename T> static vector<Regex*> cast(vector<T*> ptr, bool not_null_ptr = true);
 
 	FiniteAutomaton to_thompson(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;
@@ -53,11 +70,12 @@ class Regex : public AlgExpression {
 	bool subset(const Regex&, iLogTemplate* log = nullptr) const;
 
 	// Производная по символу
-	optional<Regex> symbol_derivative(const Regex& respected_sym) const;
+	std::optional<Regex> symbol_derivative(const Regex& respected_sym) const;
 	// Частичная производная по символу
-	void partial_symbol_derivative(const Regex& respected_sym, vector<Regex>& result) const;
+	void partial_symbol_derivative(const Regex& respected_sym,
+								   vector<Regex>& result) const; // NOLINT(runtime/references)
 	// Производная по префиксу
-	optional<Regex> prefix_derivative(string respected_str) const;
+	std::optional<Regex> prefix_derivative(string respected_str) const;
 	// Длина накачки
 	int pump_length(iLogTemplate* log = nullptr) const;
 
@@ -71,7 +89,8 @@ class Regex : public AlgExpression {
 	Regex get_one_unambiguous_regex(iLogTemplate* log = nullptr) const;
 
 	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const vector<pair<Regex, Regex>>&, iLogTemplate* log = nullptr) const;
+	Regex normalize_regex(const vector<std::pair<Regex, Regex>>&,
+						  iLogTemplate* log = nullptr) const;
 };
 
 /*

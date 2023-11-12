@@ -1,3 +1,11 @@
+#ifndef APPS_UNITTESTSAPP_INCLUDE_UNITTESTSAPP_EXAMPLE_H_
+#define APPS_UNITTESTSAPP_INCLUDE_UNITTESTSAPP_EXAMPLE_H_
+
+#include <cassert>
+#include <functional>
+#include <iostream>
+#include <string>
+
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "InputGenerator/TasksGenerator.h"
@@ -9,9 +17,6 @@
 #include "Objects/TransformationMonoid.h"
 #include "Objects/iLogTemplate.h"
 #include "Tester/Tester.h"
-#include <cassert>
-#include <functional>
-#include <iostream>
 /*
 Это статический класс, где вы можете писать примеры
 использования функций и, соответственно, их тестить.
@@ -27,7 +32,6 @@ class Example {
 	static void intersection();
 	static void regex_parsing();
 	static void regex_generating();
-	static void random_regex_parsing();
 	static void tasks_generating();
 	static void parsing_regex(string);
 	static void transformation_monoid_example();
@@ -44,26 +48,9 @@ class Example {
 	static void classes_number_GlaisterShallit();
 	static void testing_with_generator(int regex_length, int star_num, int star_nesting,
 									   int alphabet_size,
-									   const function<void(string& rgx_str)>& check_function);
+									   const std::function<void(string& rgx_str)>& check_function);
 	static void arden_lemma_testing();
 	static void fa_to_pgrammar();
 	static void logger_test();
-
-	// запуск всех тестов
-	static void test_all();
-	static void test_fa_equal();
-	static void test_fa_equiv();
-	static void test_bisimilar();
-	static void test_regex_subset();
-	static void test_merge_bisimilar();
-	static void test_regex_equal();
-	static void test_ambiguity();
-	static void test_arden();
-	static void test_pump_length();
-	static void test_is_one_unambiguous();
-	static void test_get_one_unambiguous_regex();
-	static void test_interpreter();
-	static void test_TransformationMonoid();
-	static void test_GlaisterShallit();
-	static void test_fa_to_pgrammar();
 };
+#endif // APPS_UNITTESTSAPP_INCLUDE_UNITTESTSAPP_EXAMPLE_H_

@@ -45,10 +45,28 @@ $ENTRY Go {
  , <Br 'AuxCont=!NULL!'> : e.VV
  , <Br 'MetaData=!NULL!'> : e.D
  , <Br 'MetaGroups='> : e.D
-    =  <Open 'w' 5 'L_input.tex'><Close 5><Open 'r' 1 e.from'.dot'><Open 'w' 2 'Mod_'e.from'.dot'><PutLines 2 <CropGraph Preamble <Get 1>>>
-       <GenLegenda e.from><GenAux e.from><GenMetaData e.from><Close 1><Close 2>;
+    =  <Open 'a' 8 'Meta_log.raux'>
+	<Open 'w' 5 'L_input.tex'><Close 5><Open 'r' 1 e.from'.dot'><Open 'w' 2 'Mod_'e.from'.dot'><PutLines 2 <CropGraph Preamble <Get 1>>>
+       <GenLegenda e.from><GenAux e.from><GenMetaData e.from><Close 1><Close 2><Close 8>;
   False
     = <Prout 'No file ' e.from'.dot found.'>; }; 
+}
+
+GetAllPostMetaData {
+  Start e.x 0 = /* No Meta */ <Putout 8 'No metadata found in 'e.x>;
+  Start /* EMPTY */ = <GetAllPostMetaData Start <Get 1>>;
+  Start e.T1'/*'e.T2 = <Putout 8 'Some metadata is found.'><GetAllPostMetaData Inside <Get 1>>;
+  Inside e.T1'*/'e.T2 = ;
+  Inside e.Line = <GetPostMetaData e.Line><Putout 8 e.Line><GetAllPostMetaData Inside <Get 1>>; 
+}
+
+GetPostMetaData {
+ e.T1'@'e.NodeName'@::='e.id
+ , <Dg 'MetaGroups'> :
+   {e.MG1'('e.id')'e.MG2
+      = <Br 'MetaGroups='e.MG1'('e.id')'e.MG2><Br 'MetaData=@'e.NodeName'@::='e.id>;
+    e.Rest = <Br 'MetaGroups='e.Rest'('e.id'),'><Br 'MetaData=@'e.NodeName'@::='e.id>;
+   };
 }
 
 GetNodeMetaData {
@@ -95,7 +113,7 @@ GenAux {
  e.from
  , <Dg 'AuxInd'> :
  {0 = ;
-  s.Index = <Open 'w' 4 'Aux_'e.from'.data'><PutLines 4 <DigBag ('AuxCont') <Dg 'AuxCont'>>><Close 4>;
+  s.Index = <Open 'w' 4 'Aux_'e.from'.raux'><PutLines 4 <DigBag ('AuxCont') <Dg 'AuxCont'>>><Close 4>;
  };
 }
 
@@ -106,7 +124,7 @@ GenMetaData {
  { = ;
   e.Rest
   , <StyleTableGen <LenBlock 0 e.Rest> e.Rest> : e.StyleTable
-   = <Open 'w' 5 'Meta_'e.from'.data'><PutLines 5 <Stylize (e.StyleTable) <DigBag ('MetaData') <Dg 'MetaData'>>>><Close 5>;
+   = <Open 'w' 5 'Meta_'e.from'.raux'><PutLines 5 <Stylize (e.StyleTable) <RemDoubles <DigBag ('MetaData') <Dg 'MetaData'>>>>><Close 5>;
  };
 }
 
@@ -158,6 +176,11 @@ DigBag {
  (e.BagName) e.Z = <DigBag (e.BagName) <Dg e.BagName>>(e.Z);
 }
 
+RemDoubles {
+ e.X t.X1 e.Y t.X1 e.Z = <RemDoubles e.X t.X1 e.Y e.Z>;
+ e.Z = e.Z;
+}
+
 GenTablePreamble {
  = '$\\begin{array}{r!{\\color{black!80}\\vline width .6pt}l}\\rowcolor{HeaderColor}\n Имя & Подробная метка состояния\\\\\\hline';
 }
@@ -179,8 +202,9 @@ CropGraph {
  s.Mode e.x 0 = <Prout 'Incorrect dot file.'>;
  Preamble e.x'digraph {'e.y = (e.x'digraph {'e.y) <CropGraph Graph Nodes () <Get 1>>;
  Preamble e.x = (e.x) <CropGraph Preamble <Get 1>>;
- Graph Edges (e.Source)(e.CurrEdges)(e.Edges) '}'e.y = e.Edges <ProcessEdgeBlock e.CurrEdges>('}'e.y);
- Graph s.Mode e.PossibleMeta (e.FullGraph) '}'e.y = e.FullGraph('}'e.y);
+ Graph Edges (e.Source)(e.CurrEdges)(e.Edges) '}'e.y = e.Edges <ProcessEdgeBlock e.CurrEdges>('}'e.y)
+							<GetAllPostMetaData Start <Get 1>>;
+ Graph s.Mode e.PossibleMeta (e.FullGraph) '}'e.y = e.FullGraph('}'e.y)<GetAllPostMetaData Start <Get 1>>;
  Graph Nodes (e.Graph) e.Node
  , e.Node :
  { e.x1 'dummy ->' e.x2  = e.Graph <CropGraph Graph Edges ('dummy')((e.x1 'dummy ->' e.x2))( ) <Get 1>>;
@@ -208,6 +232,7 @@ AdjustAlts {
 }
 
 DeleteDoubles {
+ e.x = e.x; /* The real duplicate deletion is screened, because it is of no need. */
  e.y t.Sep e.y e.z, <Separator (e.y) t.Sep e.y e.z><FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.y e.z>;
  e.x t.Sep e.y t.Sep e.y e.z, <Separator (e.x) t.Sep e.y><FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.x t.Sep e.y e.z>;
  e.y t.Sep e.u t.Sep e.y e.z, <Separator (e.y) t.Sep e.u> <FirstSym (<Numbers>)e.z> : True False = <DeleteDoubles e.y t.Sep e.u t.Sep e.z>;
@@ -221,9 +246,18 @@ ProcessLabel {
  , <Dg 'AuxInd'> : s.Num
  , <Br 'AuxCont=~@'<Symb s.Num>'@\\begin{array}{'e.Header'}'<MapArray TrueMathMode e.Label>'\\end{array}~'> : e.Rubbish
  , <Br 'AuxInd='<Add s.Num 1>> : e.Rubbish2
-  = <AdjustAlts e.V>'@'<Symb s.Num>'@';
+  = <AdjustAlts e.V>'@'<Symb s.Num>;
  e.Z = <AdjustAlts e.Z>;
 } 
+
+PrepareLabelLen {
+ e.x'{'e.y'}'e.z = <PrepareLabelLen e.x'{'e.y e.z>;
+ e.x'{'e.y'{'e.z = <PrepareLabelLen e.x'{'e.y e.z>;
+ e.x'}'e.y'}'e.z = <PrepareLabelLen e.x'{'e.y e.z>;
+ e.x','e.y','e.z = e.x','<PrepareLabelLen e.y','e.z>;
+ e.x'.'e.y','e.z = e.x'.'<PrepareLabelLen e.y','e.z>;
+ e.w = e.w;
+}
 
 ChooseLongestStr {
  (s.PrevLength e.Prev) e.X'\\\\'e.Y
@@ -235,8 +269,8 @@ ChooseLongestStr {
  (s.PrevLength e.Prev) e.X
  , <String_Length e.X > : s.Len
  , <Compare s.PrevLength s.Len> :
- {'+' = e.Prev;
-  s.Any = e.X;
+ {'+' = <PrepareLabelLen e.Prev>;
+  s.Any = <PrepareLabelLen e.X>;
  };
 }
 

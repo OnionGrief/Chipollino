@@ -1,0 +1,390 @@
+/******************************
+      Tikz Automaton Grammar
+*******************************
+[Automaton] ::= '\\begin{tikzpicture}[>=latex\',line join=bevel,]\n%\n%'[NodeList][EdgeList]'\\end{tikzpicture}'
+[NodeList] ::= ([Node]|[Rubbish]'\n')*
+[Node] ::= '\\node('[NodeName]') at ('[PositionX]','[PositionY]')  [draw,'[NodeShape]'] {$'[NodeLabel]'$};'
+[EdgeList] ::= ([Edge]\n[EdgeLabel]'\n'|[Rubbish])*
+[Edge] ::= '\\draw [->] ('[NodeName]') ..controls '[SplineData]'.. ('[NodeName]');' 
+[NodeName] ::= 'dummy' | [Number]
+[NodeShape] ::= 'draw=none' | 'circle' | 'circle, double'
+[NodeLabel] ::= ([Regex]',')*[RegEx]
+[EdgeLabel] ::= '\\draw ('[PositionX]','[PositionY]') node {$'[Symbol]'$};'
+[Rubbish] ::= anything else
+
+/******************************
+      Meta Grammar
+*******************************
+
+[MetaData] ::= '@'[NodeName]'@::='[GroupId] | @[NodeName]@->@[NodeName]@[EdgeLabel]@::=[GroupId]
+[GroupId] ::= 'Trap' | 'Group'[Number] | 'Closure'[Number]
+
+/******************************
+General assumptions:
+
+Every edge is uniquely determined with its source, destination and label.
+Every node is uniquely determined with its NodeName
+Dummy node is always present and it is first (not really used there)
+dummy -> [Number] edge is always present and it is first (not really used there)
+Every coordinate is presented in the form [numbers]+.[numbers]+bp
+
+The legenda, if present, is placed to 'L_'initial_filename'.tex' source.
+The resulting tikz code for the automaton is placed to 'R_'initial_filename'.tex' source.
+Both can be directly included in the generated log via the following environment:
+\adjustbox{max width=\textwidth, min width=0.3\textwidth, max height=\textheight}{
+\input{[TexSource]}}
+
+Or simply
+\input{[TexSource]}
+if resizing is not needed.  
+*******************************/
+$EXTERN InSet, Letters;
+
+$ENTRY Go {
+ , <Arg 1> : 'Col_'e.from'.tex'
+ , <ExistFile 'Col_'e.from'.tex'> :
+ {True
+  , <ExtractGraph e.from> : e.Graph
+    =  <Open 'w' 2 'Final_'e.from'.tex'>
+       <PutLines 2 e.Graph><Close 2>;
+  False
+    = <Prout 'No file ' e.from'.tex found.'>; }; 
+}
+
+TrimStrong {
+ e.x 0 = <TrimStrong e.x>;
+ e.x' 'e.y = <TrimStrong e.x e.y>;
+ e.z = e.z;
+}
+
+GetAllPostMetaData {
+  Start e.x 0 = /* No Meta */;
+  Start /* EMPTY */ = <GetAllPostMetaData Start <Get 4>>;
+  Start e.Line
+  , <GetPostMetaData () e.Line> : (e.MetaGroup)e.NodeData
+   = <GetAllPostMetaData Inside (e.MetaGroup) <Get 4>> (e.NodeData);
+  Inside (e.MetaGroup) e.T1 0 = (e.MetaGroup) ;
+  Inside (e.MetaGroup) e.Line
+  , <GetPostMetaData (e.MetaGroup) e.Line> : (e.NewMetaGroup)e.NodeData
+  = <GetAllPostMetaData Inside (e.NewMetaGroup)<Get 4>> (e.NodeData); 
+}
+
+GetPostMetaData {
+ (e.MetaGroups) e.T1'@'e.NodeName'@::='e.id
+  , e.MetaGroups :
+   {e.MG1(e.id)e.MG2
+      = (e.MetaGroups)'@'e.NodeName'@::='e.id;
+    e.Rest = (e.MetaGroups (e.id))'@'e.NodeName'@::='e.id;
+   };
+}
+
+PutLines {
+ s.Stream (e.Line) e.Rest = <Putout s.Stream e.Line><PutLines s.Stream e.Rest>;
+ s.Stream = ;
+}
+
+GenMetaData {
+ (e.EdgeCoords)(e.MetaGroups) e.Markers
+  , <StyleTableGen <LenBlock 0 e.MetaGroups> e.MetaGroups> : e.StyleTable
+   = <ExtractMultipl (e.EdgeCoords)()()<Stylize (e.StyleTable) <RemDoubles e.Markers>>>;
+}
+
+ExtractMultipl {
+  (e.EdgeCoords)(e.Mp ((e.Name(e.radius)(e.coords)) s.Num))(e.Processed) e.V1 ('@'e.Name'@::='e.Style) e.V2
+	= <ExtractMultipl (e.EdgeCoords)(e.Mp ((e.Name(e.radius)(e.coords)) <Add s.Num 1>))(e.Processed ('@'e.Name'@::='e.Style)) e.V1 e.V2>;
+  (e.EdgeCoords)(e.Mp ((e.Name2) s.Num))(e.Processed) e.V1 ('@'e.Start'-'e.End'@'e.Label'@::='e.Style) e.V2
+  , e.Name2 : e.Start'X'e.End(e.radius)((e.x)(e.y)) 
+	= <ExtractMultipl (e.EdgeCoords)(e.Mp ((e.Name2) <Add s.Num 1>))(e.Processed ('@'e.Start'X'e.End'@::='e.Style)) e.V1 e.V2>;
+  (e.EdgeCoords)(e.Mp)(e.Processed) ('@'e.Start'-'e.End'@'e.Label'@::='e.Style) e.V2
+  , e.EdgeCoords : e.E1 (e.Start'X'e.End(e.radius)((e.x)(e.y))) e.E2
+	= <ExtractMultipl (e.EdgeCoords)(e.Mp ((e.Start'X'e.End(e.radius)((e.x)(e.y))) 1))(e.Processed ('@'e.Start'X'e.End'@::='e.Style)) e.V2>;
+  (e.EdgeCoords)(e.Mp)(e.Processed) ('@'e.Name'@::='e.Style) e.V2
+	= <ExtractMultipl (e.EdgeCoords)(e.Mp ((e.Name ('Node')((e.Name))) 1))(e.Processed ('@'e.Name'@::='e.Style)) e.V2>;
+  (e.EdgeCoords)(e.Mp)(e.Processed) = (<ReplicateMP e.Mp>)(e.Processed);
+}
+
+ReplicateMP {
+ ((e.Name) s.Num) e.Rest = ((e.Name) s.Num s.Num) <ReplicateMP e.Rest>;
+ /* EMPTY */ = /* EMPTY */;
+}
+
+Stylize {
+ (e.StyleTable)(e.D1'@::=Trap')e.Rest
+	 = (e.D1'@::=Trap')<Stylize (e.StyleTable)e.Rest>;
+ (e.StyleTable)(e.D1'@::='e.id)e.Rest
+ , e.StyleTable : 
+ {e.S1 ((e.Color)'=('e.id')') e.S2
+  = (e.D1'@::='e.Color)<Stylize (e.StyleTable)e.Rest>;
+}; 
+ (e.StyleTable) = ;
+}
+
+StyleTableGen {
+  s.Styles e.Table
+ , <Compare s.Styles 5> :
+ {'+'
+  , <Div s.Styles 5> : s.S1
+  , <Mod s.Styles 5> : s.S2
+  , <Renderize s.S1 <GetS 5 0 <ColorTable>>><GetS s.S2 0 <Renderize <Div <Add s.S2 1> 2> ('Back_teal')('Back_purple')('Back_orange')>> : e.ColorList
+     = <ZipColors (e.ColorList) e.Table>;
+  e.Z = <ZipColors (<GetS s.Styles 0 <ColorTable>>) e.Table>;
+ };
+}
+
+LenBlock {
+ s.Num t.X e.W = <LenBlock <Add s.Num 1> e.W>;
+ s.Num = s.Num;
+}
+
+ZipColors {
+ (t.Color e.Rest)(e.id) e.List = (t.Color'=('e.id')')<ZipColors (e.Rest)e.List>;
+ ()(e.id) e.List = (('Back_Overflow')'=('e.id')')<ZipColors (<Renderize 4 <ColorTable>>)e.List>;
+ (e.Colors) = ;
+}
+
+GetS {
+ s.Num s.Num e.List = ;
+ s.Max s.Curr t.El e.List = t.El <GetS s.Max <Add s.Curr 1> e.List>;
+}
+
+Renderize {
+  0 e.Colors = ;
+  1 e.Colors = e.Colors;
+  2 (e.Color) e.Rest = (e.Color'1')<Renderize 2 e.Rest>(e.Color'2');
+  3 (e.Color) e.Rest = (e.Color'1')(e.Color'2')<Renderize 3 e.Rest>(e.Color'3');
+  4 (e.Color) e.Rest = (e.Color'1')(e.Color'2')<Renderize 4 e.Rest>(e.Color'3')(e.Color'4');
+  s.Num = ;
+  s.More e.Rest = <Renderize 4 e.Rest>;
+}
+
+ColorTable {
+ = ('Back_blue')('Back_green')('Back_red')('Back_violet')('Back_yellow');
+}
+
+RemDoubles {
+ e.X t.X1 e.Y t.X1 e.Z = <RemDoubles e.X t.X1 e.Y e.Z>;
+ e.Z = e.Z;
+}
+
+ExtractGraph {
+ e.from = <Open 'r' 1 'Col_'e.from'.tex'><ProcessMetaData (e.from) <ReadGraph Preamble <Get 1>>><Close 1>;
+}
+
+AddBackgroundPreamble {
+  = ('\\begin{pgfonlayer}{background}');
+} 
+AddBackgroundClosing {
+  = ('\\end{pgfonlayer}');
+} 
+
+ProcessMetaData {
+  (e.FileName) e.Rows
+   , e.Rows : e.Body (e.X1'\\end{tikzpicture}'e.X2) e.Last
+   , <ExtractEdgeCoords e.Body> : e.EdgeCoords
+   , <ExistFile 'Meta_'e.FileName'.raux'> :
+    { False = e.Rows;
+      True
+      , <Open 'r' 4 'Meta_'e.FileName'.raux'><GenMetaData (e.EdgeCoords)<GetAllPostMetaData Start <Get 4>>> : e.Generated
+	= 
+	    e.Body <AddBackgroundPreamble> <ExtractStyles e.Generated><AddBackgroundClosing> (e.X1'\\end{tikzpicture}'e.X2) e.Last <Close 4>;
+     };
+}
+
+AA { '0X7' = <AA Error>;
+      e.X'X'e.Y = <Prout e.X'X'e.Y>;
+}
+
+ExtractSE {
+ Start e.x'[->, thick] 'e.y = <ExtractSE First e.y>;
+ First e.z1'('e.Start')'e.z2 = (e.Start)<ExtractSE Last ()e.z2>;
+ First s.any e.z2 = <ExtractSE First e.z2>;
+ Last (e.Any) '('e.Name')'e.z2 = <ExtractSE Last (e.Name) e.z2>;
+ Last (e.Prev) s.any e.z2 = <ExtractSE Last (e.Prev) e.z2>;
+ Last (e.Prev) = (e.Prev);
+}
+
+/*
+\draw [->, thick] (0) ..controls (154.85bp,155.95bp) and (175.42bp,162.32bp)  .. (1);
+\draw (168.4bp,169.65bp) node {$\empt$};
+\draw [->, thick] (0) ..controls (149.68bp,14.398bp) and (179.88bp,8.1482bp)  .. 
+(206.44bp,8.1482bp) .. controls (206.44bp,8.1482bp) and (206.44bp,8.1482bp)  .. (497.33bp,8.1482bp) .. 
+controls (519.51bp,8.1482bp) and (544.14bp,12.164bp)  .. (7);
+\draw (351.89bp,15.648bp) node {$\empt$};
+
+\draw [->, thick] (1) ..controls (230.32bp,87.33bp) and (238.22bp,93.196bp)  .. (245.59bp,98.148bp) .. 
+controls (255.47bp,104.78bp) and (266.66bp,111.58bp)  .. (2);
+\draw (255.59bp,116.65bp) node {$\empt$};
+*/
+ExtractEdgeCoords {
+ e.Before (e.EdgeData) 
+     (e.Tr1 'draw ('e.Xcoord'bp,'e.Ycoord'bp)'e.Y1 '$'e.Name'$'e.Y2) e.Rest
+ , <ExtractSE Start e.EdgeData> : 
+  {(e.Start)(e.End)
+ , <CountLen 0 e.Name> : e.T
+  = (e.Start'X'e.End (e.T'ex')((e.Xcoord)(e.Ycoord))) <ExtractEdgeCoords e.Rest>; };
+ e.Rest = ;
+}
+
+CountLen {
+ s.Sym e.Y '\\empt' e.Z
+	= <CountLen <Add s.Sym 1> e.Y e.Z>;
+ s.Sym e.Y '\\'e.tag'{'e.W'}'e.Z
+	= <CountLen s.Sym e.Y e.W e.Z>;
+ s.Sym e.Y s.Next e.Z
+ , <InSet (<Letters>) s.Next> : True
+   = <CountLen <Add s.Sym 1> e.Z>;
+ s.Sym e.W = <Symb <Mul s.Sym 2>>;
+}
+
+
+ReadLines {
+ s.Stream 0 = ;
+ s.Stream e.Z 0 = (e.Z);
+ s.Stream e.Z = (e.Z) <ReadLines s.Stream <Get s.Stream>>;
+}
+
+UpdMax {
+ s.InitMax s.Mult = <Add <Div <Mul <Sub s.Mult 1> s.InitMax> s.Mult> 1>;
+}
+
+CalculateWidth {
+ s.Max 1 1 = <Symb s.Max>;
+ s.InitMax s.Mult s.Quot
+ , <UpdMax s.InitMax s.Quot> : s.Max
+ , <Div <Mul s.Mult 10> s.Quot> : s.Intermediate
+ , <Mul s.Max s.Intermediate> : s.Real
+ , <Div s.Real 10><Mod s.Real 10> : s.N1 s.N2
+   = <Symb s.N1>'.'<Symb s.N2>;
+}
+
+CalculateSector {
+ s.Radius s.Start s.Quot
+ , <Div s.Radius s.Quot> : s.Val
+	= <Symb <Mul s.Val <Add s.Start 1>>>;
+}
+
+ExtractStyles {
+/* (e.Multiplicities)(('('e.Start')('e.End')@\"\"@::='e.style) e.Styles) e.Data
+ , e.Data : 
+  {e.D1 (e.Bg'[->, thick] ('e.Start')'e.Inner'('e.End');') e.D2
+       = <ExtractStyles (e.Styles) e.D1 (e.Bg'[->, very thick,'<LineColor e.style>'] ('e.Start')'e.Inner'('e.End');') e.D2>;
+   };
+ (('('e.Start')('e.End')@\"'s.Sym e.Label'\"@::='e.style) e.Styles) e.Data
+ , e.Data : 
+  {e.D1 (e.Bg'[->, thick] ('e.Start')'e.Inner'('e.End');')(e.L1 '$'s.Sym e.Label'$' e.L2) e.D2
+       = <ExtractStyles (e.Styles) e.D1 (e.Bg'[->, very thick,'<LineColor e.style>'] ('e.Start')'e.Inner'('e.End');')(e.L1 '$'s.Sym e.Label'$' e.L2) e.D2>;
+   };*/
+ (((e.NodeName (e.radius)(e.coords)) 1 1) e.MPOther)(e.Styles1 ('@'e.NodeName'@::='e.style) e.Styles2)
+  = <PlaceNodeDimen e.coords>
+    ('\\fill['<Upd Grad Single (e.radius)e.style>'] '<PlaceCoords e.coords>' circle ('<TakeRadius e.radius>'+0.2ex);')
+    ('\\fill['<Upd Single (e.radius)e.style>'] '<PlaceCoords e.coords>' circle ('<TakeRadius e.radius>');')
+    <ExtractStyles (e.MPOther)(e.Styles1 e.Styles2)>;
+ (((e.NodeName  (e.radius)(e.coords)) s.Mult s.Mult) e.MPOther)(e.Styles1 ('@'e.NodeName'@::='e.style) e.Styles2)
+  = <PlaceNodeDimen e.coords>
+    ('\\fill['<Upd Grad Multi (e.radius)e.style>'] '<PlaceCoords e.coords>' -- +('<CalculateSector 360 0 s.Mult>':'<TakeRadius e.radius>'+0.2ex) arc ('
+	<CalculateSector 360 0 s.Mult>':0:'<TakeRadius e.radius>'+0.2ex);')
+    ('\\fill['<Upd Multi (e.radius)e.style>'] '<PlaceCoords e.coords>' -- +('<CalculateSector 360 0 s.Mult>':'<TakeRadius e.radius>') arc ('
+	<CalculateSector 360 0 s.Mult>':0:'<TakeRadius e.radius>');')
+/*    ('\\draw['e.style', very thick] ('e.NodeName'.center) circle (\\nodewidth+'<CalculateWidth 7 1 1>'pt);') */
+    <ExtractStyles (((e.NodeName  (e.radius)(e.coords)) <Sub s.Mult 1> s.Mult) e.MPOther)(e.Styles1 e.Styles2)>;
+ (((e.NodeName  (e.radius)(e.coords)) 1 s.Mult) e.MPOther)
+ (e.Styles1 ('@'e.NodeName'@::='e.style) e.Styles2)
+ = ('\\fill['<Upd Grad Multi (e.radius)e.style>'] '<PlaceCoords e.coords>' -- +(0:'<TakeRadius e.radius>'+0.2ex) arc (0:-'
+	<CalculateSector 360 0 s.Mult>':'<TakeRadius e.radius>'+0.2ex);')
+   ('\\fill['<Upd Multi (e.radius)e.style>'] '<PlaceCoords e.coords>' -- +(0:'<TakeRadius e.radius>') arc (0:-'<CalculateSector 360 0 s.Mult>':'<TakeRadius e.radius>');')
+    <ExtractStyles (e.MPOther)(e.Styles1 e.Styles2)>;
+ (((e.NodeName  (e.radius)(e.coords)) s.OtherMult s.Mult) e.MPOther)(e.Styles1 ('@'e.NodeName'@::='e.style) e.Styles2)
+  = /*('\\draw['e.style', very thick] ('e.NodeName'.center) circle (\\nodewidth+'<CalculateWidth 7 s.OtherMult s.Mult>'pt);') */
+        ('\\fill['<Upd Grad Multi (e.radius)e.style>'] '<PlaceCoords e.coords>' -- +('<CalculateSector 360 <Sub s.Mult s.OtherMult> s.Mult>
+        ':'<TakeRadius e.radius>'+0.2ex) arc ('<CalculateSector 360 <Sub s.Mult s.OtherMult> s.Mult>':'
+           <CalculateSector 360 <Sub s.Mult <Add s.OtherMult 1>> s.Mult>':'<TakeRadius e.radius>'+0.2ex);')
+        ('\\fill['<Upd Multi (e.radius)e.style>'] '<PlaceCoords e.coords>' -- +('<CalculateSector 360 <Sub s.Mult s.OtherMult> s.Mult>
+        ':'<TakeRadius e.radius>') arc ('<CalculateSector 360 <Sub s.Mult s.OtherMult> s.Mult>':'
+           <CalculateSector 360 <Sub s.Mult <Add s.OtherMult 1>> s.Mult>':'<TakeRadius e.radius>');')
+	<ExtractStyles (((e.NodeName  (e.radius)(e.coords)) <Sub s.OtherMult 1> s.Mult) e.MPOther)(e.Styles1 e.Styles2)>;
+ ()(e.Styles) = ;
+}
+
+PlaceCoords {
+ (e.x)(e.y) = '('e.x'bp,'e.y'bp)';
+ (e.NodeName) = '('e.NodeName'.center)';
+}
+
+TakeRadius {
+ 'Node' = '\\nodewidth*1.4';
+ e.Radius = e.Radius;
+}
+
+PlaceNodeDimen {
+ (e.x)(e.y) = ;
+ (e.NodeName) = ('\\getnodedimen{'e.NodeName'}');
+}
+
+Upd {
+ Grad Single ('Node') e.Color = e.Color'!25';
+ Grad Single (e.Other) e.Color = e.Color'!15';
+ Single ('Node') e.Color = e.Color'!80';
+ Single (e.Other) e.Color = e.Color'!45';
+ Grad Multi ('Node') e.Color = e.Color'!35';
+ Grad Multi (e.Other) e.Color = e.Color'!20';
+ Multi ('Node') e.Color = e.Color'!95';
+ Multi (e.Other) e.Color = e.Color'!75';
+}
+
+ReadGraph {
+ s.Mode e.x 0 = <Prout 'Incorrect tikz generated file.'>;
+ Preamble e.x'\\begin{tikzpicture}'e.y = (e.x'\\begin{tikzpicture}'e.y)<ReadGraph Graph Nodes () <Get 1>>;
+ Preamble e.x = (e.x)<ReadGraph Preamble <Get 1>>;
+ Graph s.Mode (e.FullGraph) e.x '\\end{tikzpicture}'e.y
+          = e.FullGraph (e.x '\\end{tikzpicture}'e.y);
+ Graph Nodes (e.Graph) e.Node
+ , e.Node :
+ { e.x1 '\\draw [->]' e.x2  = e.Graph <ReadGraph Graph Edges (e.x1 '\\draw [->]' e.x2) <Get 1>>;
+   e.W = <ReadGraph Graph Nodes (e.Graph (e.W)) <Get 1>>;
+   };
+ Graph Edges (e.Edges) e.E = <ReadGraph Graph Edges (e.Edges (e.E))<Get 1>>;
+}
+
+FillColor {
+ e.Base'1' = <BaseFill e.Base>'!22';
+ e.Base'2' = <BaseFill e.Base>'!35';
+ e.Base'3' = <BaseFill e.Base>'!10';
+ e.Base'4' = <BaseFill e.Base>'!50';
+ e.Base = <BaseFill e.Base>'!15';
+}
+
+LineColor {
+ e.Base'1' = <BaseLine e.Base>;
+ e.Base'2' = <BaseLine e.Base>'!85!black';
+ e.Base'3' = <BaseLine e.Base>'!70!white';
+ e.Base'4' = <BaseLine e.Base>'!70!black';
+ e.Base = <BaseLine e.Base>;
+}
+
+BaseFill {
+ 'Trap' = 'red';
+ 'blue' = 'teal80';
+ 'violet' = 'violet80';
+ e.Z = e.Z;
+}
+
+BaseLine {
+ 'Trap' = 'red';
+ 'red' = 'red';
+ 'blue' = 'blue';
+ 'gray' = 'gray';
+ 'purple' = 'purple';
+ 'orange' = 'orange';
+ e.Z = e.Z'80';
+}
+
+/* Colorized Snake - for future...
+\begin{pgfonlayer}{foreground}
+\draw [-{Stealth[width=7.5pt,length=8.5pt, open]},line width=0.6, double distance=0.8pt] (1) ..controls (223.91bp,71.673bp)
+ and (226.88bp,80.595bp)  .. (233.44bp,80.595bp) .. controls (237.75bp,80.595bp) and (240.51bp,76.753bp)  .. (1);
+\draw [-{Stealth[scale=1]},thick,dash pattern=on 4pt off 4pt,Back_yellow] (1) ..controls (223.91bp,71.673bp) and 
+(226.88bp,80.595bp)  .. (233.44bp,80.595bp) .. controls (237.75bp,80.595bp) and (240.51bp,76.753bp)  .. (1);
+\draw [-{Stealth[scale=1]}, thick,dash pattern=on 4pt off 4pt,dash phase=4pt,Back_green] (1) ..controls (223.91bp,71.673bp) 
+and (226.88bp,80.595bp)  .. (233.44bp,80.595bp) .. controls (237.75bp,80.595bp) and (240.51bp,76.753bp)  .. (1);
+\end{pgfonlayer}
+*/

@@ -1,22 +1,22 @@
 #pragma once
-#include "Objects/BaseObject.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Regex.h"
-#include "Objects/iLogTemplate.h"
 #include <chrono>
 #include <iostream>
 #include <regex>
 #include <string>
+#include <variant>
 #include <vector>
 
-using namespace std;
+#include "Objects/BaseObject.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Regex.h"
+#include "Objects/iLogTemplate.h"
 
 class Tester {
   public:
 	struct word {			// доступ извне Tester::word
 		int iterations_num; // сколько проведено итераций
 		long long time;		// время парсинга в секундах
-		bool is_belongs;	// принадлежность языку
+		bool belongs;		// принадлежность языку
 	};
 
 	struct table {
@@ -26,11 +26,13 @@ class Tester {
 	};
 
   private:
-	static bool parsing_by_regex(string, string);
+	static bool parsing_by_regex(const string&, const string&);
+
+	using ParseDevice = std::variant<FiniteAutomaton, Regex>;
 
   public:
-	static void test(const FiniteAutomaton& language, const Regex& regex, int iteration_step,
+	static void test(const ParseDevice& language, const Regex& regex, int iteration_step,
 					 iLogTemplate* log = nullptr);
-	static void test(const Regex& language, const Regex& regex, int iteration_step,
-					 iLogTemplate* log = nullptr);
+	/*	static void test(const Regex& language, const Regex& regex,
+						 int iteration_step, iLogTemplate* log = nullptr); */
 };

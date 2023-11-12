@@ -150,24 +150,24 @@ PutLines {
 
 ProcessMetaData {
   (e.FileName) e.Rows
-   , <ExistFile 'Meta_'e.FileName'.data'> :
+   , <ExistFile 'Meta_'e.FileName'.raux'> :
     { False = e.Rows;
-      True = <Open 'r' 4 'Meta_'e.FileName'.data'><ExtractStyles (<ReadLines 4 <Get 4>>)e.Rows><Close 4>;
+      True = <Open 'r' 4 'Meta_'e.FileName'.raux'><ExtractStyles (<ReadLines 4 <Get 4>>)e.Rows><Close 4>;
      };
 }
 
 ProcessNodeLabels {
   (e.FileName) e.Rows
-   , <ExistFile 'Aux_'e.FileName'.data'> :
+   , <ExistFile 'Aux_'e.FileName'.raux'> :
     { False = e.Rows;
-      True = <Open 'r' 3 'Aux_'e.FileName'.data'><ExtractLabels (<ReadLines 3 <Get 3>>)e.Rows><Close 3>;
+      True = <Open 'r' 3 'Aux_'e.FileName'.raux'><ExtractLabels (<ReadLines 3 <Get 3>>)e.Rows><Close 3>;
      };
 }
 
 ExtractLabels {
  (('~@'e.Name'@'e.TrueLabel'~') e.Labels) e.Rows
   , e.Rows :
-  { e.R1 (e.Bg '\\node'e.D1'$'e.PrevLabel'@'e.Name'@$'e.D2) e.R2
+  { e.R1 (e.Bg '\\node'e.D1'$'e.PrevLabel'@'e.Name'$'e.D2) e.R2
      = <ExtractLabels (e.Labels) e.R1 (e.Bg '\\node'e.D1'$'e.TrueLabel'$'e.D2) e.R2>;
   };
 () e.Rows = e.Rows;
@@ -229,7 +229,7 @@ UpdateMinimax {
 }
 
 InsertPreamble {
- = '\\begin{tikzpicture}[>=Triangle,line join=bevel,scale=0.55]\n\\tikzstyle{every node}+=[inner sep=0.4ex]';
+ = '\\begin{tikzpicture}[>={Stealth[scale=1.2]},line join=bevel,scale=0.48]\n\\tikzstyle{every node}+=[inner sep=0.3ex]';
 }
 
 InsertPostfix {
@@ -237,8 +237,8 @@ InsertPostfix {
 }
 
 ProcessNode {
- e.x'circle, double]'e.y = <ProcessNode e.x'circle, double, double distance=1.5pt, thick]'e.y>;
- e.x'circle]'e.y = <ProcessNode e.x'circle, thick]'e.y>;
+ e.x'circle, double]'e.y = <ProcessNode e.x'circle, fill=white, double, double distance=1.5pt, thick]'e.y>;
+ e.x'circle]'e.y = <ProcessNode e.x'circle,fill=white, thick]'e.y>;
  e.x'$'e.NodeLabel'$'e.z = (e.x'$'<ProcessLabel e.NodeLabel>'$'e.z); 
  e.Rubbish = ;
 }
@@ -277,6 +277,7 @@ LineColor {
 }
 
 BaseFill {
+ 'Trap' = 'red!20';
  'blue' = 'teal80';
  'violet' = 'violet80';
  e.Z = e.Z;

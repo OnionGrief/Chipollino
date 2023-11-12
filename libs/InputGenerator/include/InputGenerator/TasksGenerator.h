@@ -1,13 +1,13 @@
 #pragma once
-#include "InputGenerator/RegexGenerator.h"
-#include "Objects/BaseObject.h"
-#include "Objects/Regex.h"
+#include <ctime>
 #include <fstream>
 #include <map>
 #include <string>
-#include <time.h>
 #include <vector>
-using namespace std;
+
+#include "InputGenerator/RegexGenerator.h"
+#include "Objects/BaseObject.h"
+#include "Objects/Regex.h"
 
 class TasksGenerator {
 
@@ -76,11 +76,16 @@ class TasksGenerator {
 	};
 
 	vector<Function> predicates = {
-		{"Subset", {REGEX, REGEX}, BOOLEAN}, {"Subset", {NFA, NFA}, BOOLEAN},
-		{"Equiv", {NFA, NFA}, BOOLEAN},		 {"Equiv", {REGEX, REGEX}, BOOLEAN},
-		{"OneUnambiguity", {NFA}, BOOLEAN},	 {"OneUnambiguity", {REGEX}, BOOLEAN},
-		{"Bisimilar", {NFA, NFA}, BOOLEAN},	 {"Minimal", {NFA}, BOOLEAN},
-		{"Equal", {NFA, NFA}, BOOLEAN},		 {"SemDet", {NFA}, BOOLEAN},
+		{"Subset", {REGEX, REGEX}, BOOLEAN},
+		{"Subset", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {NFA, NFA}, BOOLEAN},
+		{"Equiv", {REGEX, REGEX}, BOOLEAN},
+		{"OneUnambiguity", {NFA}, BOOLEAN},
+		{"OneUnambiguity", {REGEX}, BOOLEAN},
+		{"Bisimilar", {NFA, NFA}, BOOLEAN},
+		{"Minimal", {NFA}, BOOLEAN},
+		{"Equal", {NFA, NFA}, BOOLEAN},
+		{"SemDet", {NFA}, BOOLEAN},
 	};
 
 	void distribute_functions();

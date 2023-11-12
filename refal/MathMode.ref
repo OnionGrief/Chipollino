@@ -14,7 +14,8 @@ $ENTRY Trim {
 /* Hacked derivatives. TODO: parameterize by indices activation */
 SpecialSymbolList {
  = (NOREGEX ('eps')('\\empt'))(NOREGEX ('DERIV')('\\delta_'))(OK ('FIRST')('\\First'))(OK ('FOLLOW')('\\Follow'))(OK ('LAST')('\\Last'))
-   (OK ('UNION')('\\cup'))(NOREGEX ('LANG')('\\Lang'))(OK ('>->>')('\\transit'));
+   (OK ('UNION')('\\cup'))(OK ('\\{')('\\{'))(OK ('\\}')('\\}'))(OK ('{')('\\{'))(OK ('}')('\\}'))(OK ('[')('{'))(OK (']')('}'))
+   (NOREGEX ('LANG')('\\Lang'))(OK ('>->>')('\\transit'));
 }
 
 SeparateModes {

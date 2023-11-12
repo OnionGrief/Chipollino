@@ -5,10 +5,14 @@ RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {}
 RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting, int alphabet_size)
 	: regex_length(regex_length), star_num(star_num), star_nesting(star_nesting) {
 
-	if (regex_length < 1) return;
-	if (star_nesting < 0) star_nesting = 0;
-	if (star_num < 0) star_num = 0;
-	if (alphabet_size < 1) alphabet_size = 1;
+	if (regex_length < 1)
+		return;
+	if (star_nesting < 0)
+		star_nesting = 0;
+	if (star_num < 0)
+		star_num = 0;
+	if (alphabet_size < 1)
+		alphabet_size = 1;
 
 	for (char i = 'a'; i < 'a' + alphabet_size && i <= 'z'; i++) {
 		alphabet.push_back(i);
@@ -28,8 +32,9 @@ void RegexGenerator::change_seed() {
 }
 
 void RegexGenerator::write_to_file(string filename) {
-	ofstream out(filename, ios::app);
-	if (out.is_open()) out << res_str << "\n";
+	std::ofstream out(filename, std::ios::app);
+	if (out.is_open())
+		out << res_str << "\n";
 	out.close();
 }
 
@@ -37,7 +42,8 @@ int RegexGenerator::generate_alphabet(int regex_length) {
 	change_seed();
 	int max_alphabet_size = regex_length > 52 ? 52 : regex_length;
 	int alphabet_size = 0;
-	if (max_alphabet_size) alphabet_size = rand() % max_alphabet_size;
+	if (max_alphabet_size)
+		alphabet_size = rand() % max_alphabet_size;
 	return alphabet_size + 1;
 }
 
@@ -65,16 +71,19 @@ void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt>
 	else
 		v = rand() % 3; // выбираем какую из 3х альтернатив использовать
 
-	if (cur_regex_length < 1) return;
+	if (cur_regex_length < 1)
+		return;
 	if (v == 0) {
-		if (cur_regex_length > 1) generate_n_alt_regex();
-		if (cur_regex_length < 1) return;
+		if (cur_regex_length > 1)
+			generate_n_alt_regex();
+		if (cur_regex_length < 1)
+			return;
 		res_str += '|';
 		generate_regex_();
 	} else if (v == 1) {
 		generate_conc_regex();
 	}
-};
+}
 
 void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex>
 											  // | пусто
@@ -82,7 +91,7 @@ void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex>
 	if (v) {
 		generate_conc_regex();
 	}
-};
+}
 
 void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 											 // | <simple-regex><conc-regex>
@@ -91,10 +100,11 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 		generate_simple_regex();
 	} else {
 		generate_simple_regex();
-		if (cur_regex_length < 1) return;
+		if (cur_regex_length < 1)
+			return;
 		generate_conc_regex();
 	}
-};
+}
 
 void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 											   // <lbr><regex-without-eps><rbr><unary>?
@@ -114,17 +124,19 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 												 // звезды от max звездной высоты
 			else
 				star_chance += cur_regex_length / star_nesting;
-			if (star_chance < 2) star_chance += 2;
+			if (star_chance < 2)
+				star_chance += 2;
 			v2 = rand() % star_chance; // будет ли *
-		} else
+		} else {
 			v2 = 1;
+		}
 
 		if (!v2 && cur_star_num > 0 && cur_nesting < star_nesting) {
 			cur_star_num--;
 			cur_nesting++;
-		} else
+		} else {
 			v2 = 1;
-
+		}
 		res_str += '(';
 		generate_regex_();
 		res_str += ')';
@@ -141,10 +153,12 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 		int v2;
 		if (cur_star_num) {
 			int star_chance = cur_regex_length / cur_star_num;
-			if (star_chance < 2) star_chance = 2;
+			if (star_chance < 2)
+				star_chance = 2;
 			v2 = rand() % star_chance;
-		} else
+		} else {
 			v2 = 1;
+		}
 
 		if (!v2 && cur_star_num > 0 && cur_nesting < star_nesting) {
 			res_str += '*';
@@ -152,7 +166,7 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 		}
 		cur_regex_length--;
 	}
-};
+}
 
 char RegexGenerator::rand_symb() {
 	return alphabet[rand() % alphabet.size()];
