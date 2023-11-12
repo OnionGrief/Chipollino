@@ -15,6 +15,8 @@
 #include "Objects/TransformationMonoid.h"
 #include "Objects/iLogTemplate.h"
 
+using std::move;
+
 State::State() : index(0), is_terminal(false) {}
 
 State::State(int index, set<int> label, string identifier, bool is_terminal,
@@ -1896,6 +1898,7 @@ void set_result(int& res, int size,							   // NOLINT(runtime/references)
 		result_yx = temp_result_yx;
 	}
 }
+
 void find_maximum_identity_matrix(
 	vector<int>& rows, vector<vector<bool>>& table, int& res, // NOLINT(runtime/references)
 	int size, vector<std::pair<int, int>>& result_yx,		  // NOLINT(runtime/references)

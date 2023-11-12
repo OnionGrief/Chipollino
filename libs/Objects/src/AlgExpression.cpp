@@ -12,9 +12,9 @@ AlgExpression::AlgExpression() {
 
 AlgExpression::AlgExpression(std::shared_ptr<Language> language, Type type, const Lexeme& value,
 							 const set<alphabet_symbol>& alphabet)
-	: BaseObject(move(language)), type(type), value(value), alphabet(alphabet) {}
+	: BaseObject(std::move(language)), type(type), value(value), alphabet(alphabet) {}
 
-AlgExpression::AlgExpression(set<alphabet_symbol> alphabet) : BaseObject(move(alphabet)) {}
+AlgExpression::AlgExpression(set<alphabet_symbol> alphabet) : BaseObject(std::move(alphabet)) {}
 
 AlgExpression::Lexeme::Lexeme(Type type, const alphabet_symbol& symbol, int number)
 	: type(type), symbol(symbol), number(number) {}

@@ -9,6 +9,7 @@ TEST(ParseStringTest, Test_regex_lexer) {
 	};
 
 	vector<Test> tests = {
+		// тесты на ссылки и захваты памяти
 		{"[]", true, true},
 		{"[]:", true, true},
 		{"[a]", true, true},
@@ -18,6 +19,7 @@ TEST(ParseStringTest, Test_regex_lexer) {
 		{"[a]:1", false, true, 3},
 		{"&", true, true},
 		{"&1", false, true, 1},
+		{"[b[a]:1]:1", true, true},
 		{"[b[a]:1&1]:2&2", false, true, 11},
 		// тесты на отрицание
 		{"^a", false, false, 2},

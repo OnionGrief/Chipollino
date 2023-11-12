@@ -1,5 +1,7 @@
-#include "Objects/Regex.h"
+#include <unordered_set>
+
 #include "Objects/Language.h"
+#include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 
 Regex::Regex(const string& str) : Regex() {
@@ -330,92 +332,91 @@ Regex Regex::delinearize(iLogTemplate* log) const {
 }
 
 FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
-	Regex test(*this);
-	vector<Regex*> list = Regex::cast(test.pre_order_travers());
-	for (size_t i = 0; i < list.size(); i++) {
-		list[i]->value.number = i;
-		list[i]->value.symbol.linearize(i);
+	Regex temp_copy(*this);
+	vector<Regex*> symbols = Regex::cast(temp_copy.pre_order_travers());
+	for (size_t i = 0; i < symbols.size(); i++) {
+		symbols[i]->value.number = i;
+		symbols[i]->value.symbol.linearize(i);
 	}
-	vector<Lexeme> first = test.first_state(); // Множество начальных состояний
-	vector<Lexeme> end = test.end_state(); // Множество конечных состояний
-	int eps_in = test.contains_eps();
-	unordered_map<int, vector<int>> p = test.pairs(); // Множество возможных пар состояний
-	vector<State> st;				   // Список состояний в автомате
-	map<alphabet_symbol, set<int>> tr; // мап для переходов в каждом состоянии
+
+	vector<Lexeme> first = temp_copy.first_state(); // Множество начальных состояний
+	vector<Lexeme> end = temp_copy.end_state(); // Множество конечных состояний
+	unordered_map<int, vector<int>> following_states =
+		temp_copy.pairs(); // множество состояний, которым предшествует key-int
+	int eps_in = this->contains_eps();
+	vector<State> st; // Список состояний в автомате
 
 	string str_first;
 	string str_end;
 	string str_pair;
-	for (auto& i : first) {
+	for (const auto& i : first) {
 		str_first += string(i.symbol) + "\\ ";
 	}
 
 	set<string> end_set;
-
-	for (auto& i : end) {
+	for (const auto& i : end) {
 		end_set.insert(string(i.symbol));
 	}
-
-	for (auto& elem : end_set) {
+	for (const auto& elem : end_set) {
 		str_end = str_end + elem + "\\ ";
 	}
-
-	for (auto& it1 : p) {
-		for (size_t i = 0; i < it1.second.size(); i++) {
-			str_pair = str_pair + "(" + string(list[it1.first]->value.symbol) + "," +
-					   string(list[it1.second[i]]->value.symbol) + ")" + "\\ ";
-		}
-	}
-
 	if (eps_in) {
 		str_end = "eps" + str_end;
 	}
 
-	// cout << test.to_str_log() << endl;
+	for (auto& i : following_states) {
+		for (auto& to : i.second) {
+			str_pair = str_pair + "(" + string(symbols[i.first]->value.symbol) + "," +
+					   string(symbols[to]->value.symbol) + ")" + "\\ ";
+		}
+	}
+
+	// cout << temp_copy.to_str_log() << endl;
 	// cout << "First " << str_first << endl;
 	// cout << "End " << str_end << endl;
 	// cout << "Pairs " << str_pair << endl;
 
-	vector<Regex> list_annote;
-	for (auto& i : list) {
-		list_annote.push_back(*i);
+	vector<Regex> linearized_symbols;
+	for (auto& i : symbols) {
+		linearized_symbols.push_back(*i);
 		i->value.symbol.delinearize();
 	}
+
+	map<alphabet_symbol, set<int>> start_state_transitions;
 	for (auto& i : first) {
 		i.symbol.delinearize();
-		tr[i.symbol].insert(i.number + 1);
+		start_state_transitions[i.symbol].insert(i.number + 1);
 	}
 
 	if (eps_in) {
-		st.push_back(State(0, {}, "S", true, tr));
+		st.push_back(State(0, {}, "S", true, start_state_transitions));
 	} else {
-		st.push_back(State(0, {}, "S", false, tr));
+		st.push_back(State(0, {}, "S", false, start_state_transitions));
 	}
 
-	unordered_map<int, char> end_lexem;
+	std::unordered_set<int> end_lexemes;
 	for (const auto& elem : end) {
-		end_lexem[elem.number] = 1;
+		end_lexemes.insert(elem.number);
 	}
 
-	for (size_t i = 0; i < list.size(); i++) {
-		Regex::Lexeme elem = list[i]->value;
-		tr = {};
+	for (size_t i = 0; i < symbols.size(); i++) {
+		Lexeme lexeme = symbols[i]->value;
+		map<alphabet_symbol, set<int>> transitions;
 
-		for (int j : p[elem.number]) {
-			tr[list[j]->value.symbol].insert(j + 1);
+		for (int j : following_states[lexeme.number]) {
+			transitions[symbols[j]->value.symbol].insert(j + 1);
 		}
-		string s = list_annote[i].value.symbol;
+		string id_str = linearized_symbols[i].value.symbol;
 
-		// Лексемы были линиаризованны. В undored_map end_lexem номера конечных лексем
-		//  => end_lexem.count проверяет есть ли номер
-		// лексемы в списке конечных лексем
-		st.push_back(State(i + 1, {}, s, end_lexem.count(elem.number), tr));
+		// В end_lexemes номера конечных лексем => end_lexemes.count проверяет есть ли
+		// номер лексемы в списке конечных лексем (является ли состояние конечным)
+		st.push_back(State(i + 1, {}, id_str, end_lexemes.count(lexeme.number), transitions));
 	}
 
 	FiniteAutomaton fa(0, st, language);
 	if (log) {
-		log->set_parameter("oldregex", test);
-		log->set_parameter("linearised regex", test.linearize());
+		log->set_parameter("oldregex", temp_copy);
+		log->set_parameter("linearised regex", temp_copy.linearize());
 		log->set_parameter("first", str_first);
 		log->set_parameter("end", str_end);
 		log->set_parameter("pairs", str_pair);
