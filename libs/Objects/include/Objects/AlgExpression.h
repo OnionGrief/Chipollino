@@ -1,12 +1,24 @@
 #pragma once
 
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "BaseObject.h"
 #include "iLogTemplate.h"
-#include <map>
-#include <unordered_map>
+
+using std::cout;
+using std::endl;
+using std::map;
+using std::set;
+using std::string;
+using std::unordered_map;
+using std::vector;
 
 class AlgExpression : public BaseObject {
-
   protected:
 	struct Lexeme {
 		enum Type {
@@ -16,7 +28,7 @@ class AlgExpression : public BaseObject {
 			alt,	   // |
 			conc,	   // .
 			star,	   // *
-			negative,	   // ^
+			negative,  // ^
 			symb,	   // alphabet symbol
 			eps,	   // Epsilon
 			squareBrL, // [
@@ -29,7 +41,8 @@ class AlgExpression : public BaseObject {
 		int number = 0; // Для линеаризации Type::symb (возможно это применение неактуально)
 						// либо для указания номера ячейки памяти
 						// Type::squareBrL, Type::squareBrL, Type::ref
-		Lexeme(Type type = error, const alphabet_symbol& symbol = "", int number = 0);
+		Lexeme(Type type = error, const alphabet_symbol& symbol = "",
+			   int number = 0); // NOLINT(runtime/explicit)
 	};
 
 	enum Type {
@@ -57,7 +70,7 @@ class AlgExpression : public BaseObject {
 	AlgExpression* term_r = nullptr;
 
 	// копирует объект (!!! не чистит память !!!)
-	virtual void copy(const AlgExpression*) = 0;
+	virtual void copy(const AlgExpression*) = 0; // NOLINT(build/include_what_you_use)
 	// возвращает указатель на 'new' объект соответствующего типа
 	virtual AlgExpression* make() const = 0;
 
@@ -66,23 +79,27 @@ class AlgExpression : public BaseObject {
 	// Создает новый язык с алфавитом
 	void set_language(const set<alphabet_symbol>& _alphabet);
 	// Рекурсивная генерация алфавита
-	void generate_alphabet(set<alphabet_symbol>& _alphabet);
+	void generate_alphabet(set<alphabet_symbol>& _alphabet); // NOLINT(runtime/references)
 	// Генерация языка из алфавита
 	void make_language();
 
 	// для print_tree
 	void print_subtree(AlgExpression* expr, int level) const;
 	// для print_dot
-	string print_subdot(AlgExpression* expr, const std::string& parent_dot_node, int& id) const;
+	string print_subdot(AlgExpression* expr, const std::string& parent_dot_node,
+						int& id) const; // NOLINT(runtime/references)
 	virtual string type_to_str() const;
 	static bool is_terminal_type(Type);
 
 	// Turns string into lexeme vector
-	static vector<Lexeme> parse_string(string);
-	bool from_string(const string&);
+	static vector<Lexeme> parse_string(string, bool allow_ref = false, bool allow_negation = true);
+	bool from_string(const string&, bool allow_ref = false, bool allow_negation = true);
+
 	// возвращаемый тип нижеперечисленных методов зависит от типа объекта (Regex/BackRefRegex)
 	// внутреннее состояние не имеет значения
-	virtual AlgExpression* expr(const vector<Lexeme>&, int, int);
+	// Построение из вектора лексем дерева регулярного выражения
+	// 2 и 3 аргумент - это начальный и конечный индекс рассматриваемых лексем в векторе
+	virtual AlgExpression* expr(const vector<Lexeme>&, int, int) = 0;
 	AlgExpression* scan_conc(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_star(const vector<Lexeme>&, int, int);
 	AlgExpression* scan_alt(const vector<Lexeme>&, int, int);
@@ -115,8 +132,8 @@ class AlgExpression : public BaseObject {
 
   public:
 	AlgExpression();
-	AlgExpression(shared_ptr<Language>, Type, const Lexeme&, const set<alphabet_symbol>&);
-	AlgExpression(set<alphabet_symbol>);
+	AlgExpression(std::shared_ptr<Language>, Type, const Lexeme&, const set<alphabet_symbol>&);
+	AlgExpression(set<alphabet_symbol>); // NOLINT(runtime/explicit)
 
 	virtual ~AlgExpression();
 

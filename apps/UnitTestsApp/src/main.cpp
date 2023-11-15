@@ -1,12 +1,11 @@
-#include "UnitTestsApp/Example.h"
-#include "UnitTestsApp/UnitTests.h"
-#include "gtest/gtest.h"
 #include <iostream>
-#include <thread>
-using namespace std;
+
+#include "UnitTestsApp/UnitTests.h"
+
+using std::cout;
 
 int main(int argc, char** argv) {
 	cout << "Unit Tests\n";
 	// Тестирование
-	return UnitTests::InitTests(argc, argv);
+	return UnitTests::RunTests(argc, argv);
 }

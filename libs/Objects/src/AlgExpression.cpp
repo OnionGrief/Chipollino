@@ -1,15 +1,16 @@
-#include "Objects/AlgExpression.h"
-#include "Objects/Language.h"
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
+#include "Objects/AlgExpression.h"
+#include "Objects/Language.h"
+
 AlgExpression::AlgExpression() {
 	type = AlgExpression::eps;
 }
 
-AlgExpression::AlgExpression(shared_ptr<Language> language, Type type, const Lexeme& value,
+AlgExpression::AlgExpression(std::shared_ptr<Language> language, Type type, const Lexeme& value,
 							 const set<alphabet_symbol>& alphabet)
 	: BaseObject(move(language)), type(type), value(value), alphabet(alphabet) {}
 
@@ -54,7 +55,7 @@ AlgExpression& AlgExpression::operator=(const AlgExpression& other) {
 
 void AlgExpression::set_language(const set<alphabet_symbol>& _alphabet) {
 	alphabet = _alphabet;
-	language = make_shared<Language>(alphabet);
+	language = std::make_shared<Language>(alphabet);
 }
 
 void AlgExpression::generate_alphabet(set<alphabet_symbol>& _alphabet) {
@@ -71,7 +72,7 @@ void AlgExpression::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 
 void AlgExpression::make_language() {
 	generate_alphabet(alphabet);
-	language = make_shared<Language>(alphabet);
+	language = std::make_shared<Language>(alphabet);
 }
 
 bool AlgExpression::is_terminal_type(Type t) {
@@ -131,7 +132,7 @@ void AlgExpression::print_subtree(AlgExpression* expr, int level) const {
 		if (expr->value.symbol != "")
 			r_v = expr->value.symbol;
 		else
-			r_v = to_string(expr->type);
+			r_v = std::to_string(expr->type);
 		cout << r_v << endl;
 		print_subtree(expr->term_r, level + 1);
 	}
@@ -145,7 +146,7 @@ void AlgExpression::print_tree() const {
 	if (value.symbol != "")
 		r_v = value.symbol;
 	else
-		r_v = to_string(type);
+		r_v = std::to_string(type);
 	cout << r_v << endl;
 	print_subtree(term_r, 1);
 }
@@ -176,7 +177,7 @@ string AlgExpression::print_subdot(AlgExpression* expr, const string& parent_dot
 								   int& id) const {
 	string dot;
 	if (expr) {
-		string dot_node = "node" + to_string(id++);
+		string dot_node = "node" + std::to_string(id++);
 
 		alphabet_symbol r_v;
 		r_v = expr->type_to_str();
@@ -202,7 +203,7 @@ void AlgExpression::print_dot() const {
 	alphabet_symbol r_v;
 	r_v = type_to_str();
 
-	string root_dot_node = "node" + to_string(id++);
+	string root_dot_node = "node" + std::to_string(id++);
 	dot += root_dot_node + " [label=\"" + string(r_v) + "\"];\n";
 
 	dot += print_subdot(term_l, root_dot_node, id);
@@ -212,7 +213,7 @@ void AlgExpression::print_dot() const {
 	cout << dot << endl;
 }
 
-bool read_number(const string& str, size_t& pos, int& res) {
+bool read_number(const string& str, size_t& pos, int& res) { // NOLINT(runtime/references)
 	if (pos >= str.size() || !isdigit(str[pos])) {
 		return false;
 	}
@@ -227,11 +228,12 @@ bool read_number(const string& str, size_t& pos, int& res) {
 	return true;
 }
 
-vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
+vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow_ref,
+														  bool allow_negation) {
 	vector<AlgExpression::Lexeme> lexemes;
-	stack<char> brackets_checker;
+	std::stack<char> brackets_checker;
 	bool brackets_are_empty = true;
-	stack<size_t> memory_opening_indexes;
+	std::stack<size_t> memory_opening_indexes;
 
 	bool regex_is_eps = true;
 	auto is_symbol = [](char c) { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'; };
@@ -241,6 +243,9 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		Lexeme lexeme;
 		switch (c) {
 		case '^':
+			if (!allow_negation)
+				return {Lexeme::Type::error};
+
 			lexeme.type = Lexeme::Type::negative;
 			break;
 		case '(':
@@ -252,9 +257,13 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			lexeme.type = Lexeme::Type::parR;
 			if (brackets_are_empty || brackets_checker.empty() || brackets_checker.top() != '(')
 				return {Lexeme::Type::error};
+
 			brackets_checker.pop();
 			break;
 		case '[':
+			if (!allow_ref)
+				return {Lexeme::Type::error};
+
 			lexeme.type = Lexeme::Type::squareBrL;
 			brackets_checker.push('[');
 			brackets_are_empty = true;
@@ -276,6 +285,9 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			memory_opening_indexes.pop();
 			break;
 		case '&':
+			if (!allow_ref)
+				return {Lexeme::Type::error};
+
 			if (!read_number(str, ++index, lexeme.number))
 				return {Lexeme::Type::error};
 
@@ -286,6 +298,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		case '|':
 			if (index != 0 && lexemes.back().type == Lexeme::Type::negative)
 				return {Lexeme::Type::error};
+
 			lexeme.type = Lexeme::Type::alt;
 			break;
 		case '*':
@@ -293,6 +306,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 											  lexemes.back().type == Lexeme::Type::alt ||
 											  lexemes.back().type == Lexeme::Type::negative)))
 				return {Lexeme::Type::error};
+
 			lexeme.type = Lexeme::Type::star;
 			break;
 		default:
@@ -325,8 +339,9 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 
 				regex_is_eps = false;
 				brackets_are_empty = false;
-			} else
+			} else {
 				return {Lexeme::Type::error};
+			}
 			break;
 		}
 
@@ -351,7 +366,8 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 			((lexeme.type == Lexeme::Type::alt &&
 			  (lexemes.back().type == Lexeme::Type::parL ||
 			   lexemes.back().type == Lexeme::Type::squareBrL)) ||
-			 ((lexemes.back().type == Lexeme::Type::alt || lexemes.back().type == Lexeme::Type::negative) &&
+			 ((lexemes.back().type == Lexeme::Type::alt ||
+			   lexemes.back().type == Lexeme::Type::negative) &&
 			  (lexeme.type == Lexeme::Type::parR || lexeme.type == Lexeme::Type::squareBrR ||
 			   lexeme.type == Lexeme::Type::alt)))) {
 			//  We place eps between
@@ -369,7 +385,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 		return {Lexeme::Type::error};
 
 	// проверка на отсутствие вложенных захватов памяти для одной ячейки
-	unordered_set<int> opened_memory_cells;
+	std::unordered_set<int> opened_memory_cells;
 	for (const auto& l : lexemes) {
 		switch (l.type) {
 		case Lexeme::Type::squareBrL:
@@ -396,16 +412,16 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str) {
 	return lexemes;
 }
 
-bool AlgExpression::from_string(const string& str) {
+bool AlgExpression::from_string(const string& str, bool allow_ref, bool allow_negation) {
 	if (str.empty()) {
 		value = Lexeme::Type::eps;
 		type = Type::eps;
 		alphabet = {};
-		language = make_shared<Language>(alphabet);
+		language = std::make_shared<Language>(alphabet);
 		return true;
 	}
 
-	vector<Lexeme> l = parse_string(str);
+	vector<Lexeme> l = parse_string(str, allow_ref, allow_negation);
 	AlgExpression* root = expr(l, 0, l.size());
 
 	if (root == nullptr || root->type == eps) {
@@ -414,34 +430,10 @@ bool AlgExpression::from_string(const string& str) {
 	}
 
 	copy(root);
-	language = make_shared<Language>(alphabet);
+	language = std::make_shared<Language>(alphabet);
 
 	delete root;
 	return true;
-}
-
-AlgExpression* AlgExpression::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start,
-								   int index_end) {
-	AlgExpression* p;
-	p = scan_symb(lexemes, index_start, index_end);
-	if (!p) {
-		p = scan_eps(lexemes, index_start, index_end);
-	}
-
-	if (!p) {
-		p = scan_alt(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_conc(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_star(lexemes, index_start, index_end);
-	}
-	if (!p) {
-		p = scan_par(lexemes, index_start, index_end);
-	}
-
-	return p;
 }
 
 void AlgExpression::update_balance(const AlgExpression::Lexeme& l, int& balance) {
@@ -650,8 +642,9 @@ string AlgExpression::get_iterated_word(int n) const {
 		if (type == Type::star) {
 			for (int i = 0; i < n; i++)
 				str += term_l->get_iterated_word(n);
-		} else
+		} else {
 			str += term_l->get_iterated_word(n);
+		}
 	}
 	if (term_r && type != Type::alt) {
 		str += term_r->get_iterated_word(n);

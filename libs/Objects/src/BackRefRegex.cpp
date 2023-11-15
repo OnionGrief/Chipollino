@@ -2,11 +2,11 @@
 
 BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
 	try {
-		bool res = from_string(str);
+		bool res = from_string(str, true, false);
 		if (!res) {
-			throw runtime_error("BackRefRegex::from_string() ERROR");
+			throw std::runtime_error("BackRefRegex::from_string() ERROR");
 		}
-	} catch (const runtime_error& re) {
+	} catch (const std::runtime_error& re) {
 		cout << re.what() << "\n";
 		exit(EXIT_FAILURE);
 	}
@@ -39,18 +39,18 @@ BackRefRegex* BackRefRegex::make() const {
 	return new BackRefRegex;
 }
 
-template <typename T> BackRefRegex* BackRefRegex::cast(T* ptr) {
+template <typename T> BackRefRegex* BackRefRegex::cast(T* ptr, bool not_null_ptr) {
 	auto* r = dynamic_cast<BackRefRegex*>(ptr);
-	if (!r) {
+	if (!r && not_null_ptr) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
 
 	return r;
 }
 
-template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr) {
+template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr, bool not_null_ptr) {
 	auto* r = dynamic_cast<const BackRefRegex*>(ptr);
-	if (!r) {
+	if (!r && not_null_ptr) {
 		throw std::runtime_error("Failed to cast to BackRefRegex");
 	}
 
@@ -58,7 +58,7 @@ template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr) {
 }
 
 string BackRefRegex::to_txt() const {
-	BackRefRegex* br_term_l, *br_term_r;
+	BackRefRegex *br_term_l, *br_term_r;
 	string str1, str2;
 	if (term_l) {
 		str1 = term_l->to_txt();
@@ -94,10 +94,10 @@ string BackRefRegex::to_txt() const {
 			str1 = "(" + str1 + ")";
 		break;
 	case Type::cellWriter:
-		str1 = "[" + str1 + "]:" + to_string(cell_number);
+		str1 = "[" + str1 + "]:" + std::to_string(cell_number);
 		break;
 	case Type::ref:
-		symb = "&" + to_string(cell_number);
+		symb = "&" + std::to_string(cell_number);
 		break;
 	}
 
@@ -119,9 +119,9 @@ string BackRefRegex::type_to_str() const {
 	case Type::symb:
 		return "symb";
 	case Type::ref:
-		return "&" + to_string(cell_number);
+		return "&" + std::to_string(cell_number);
 	case Type::cellWriter:
-		return "[" + to_string(cell_number) + "]";
+		return "[" + std::to_string(cell_number) + "]";
 	default:
 		break;
 	}
@@ -153,10 +153,7 @@ BackRefRegex* BackRefRegex::expr(const vector<AlgExpression::Lexeme>& lexemes, i
 	if (!p) {
 		p = scan_square_br(lexemes, index_start, index_end);
 	}
-	if (!p) {
-		return nullptr;
-	}
-	return cast(p);
+	return cast(p, false);
 }
 
 BackRefRegex* BackRefRegex::scan_ref(const vector<AlgExpression::Lexeme>& lexemes, int index_start,

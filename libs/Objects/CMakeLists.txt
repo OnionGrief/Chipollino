@@ -4,6 +4,7 @@ project(Objects)
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
         src/TransformationMonoid.cpp
+        src/MetaInfo.cpp
         src/BaseObject.cpp
         src/FiniteAutomaton.cpp
         src/Regex.cpp

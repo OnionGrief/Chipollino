@@ -1,13 +1,25 @@
 #pragma once
+#include <iostream>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "AbstractMachine.h"
 #include "AlphabetSymbol.h"
 #include "iLogTemplate.h"
-#include <iostream>
-#include <map>
-#include <optional>
-using namespace std;
+
+using std::cout;
+using std::map;
+using std::set;
+using std::string;
+using std::vector;
 
 class Regex;
+class MetaInfo;
 class Language;
 class TransformationMonoid;
 
@@ -49,7 +61,7 @@ class FiniteAutomaton : public AbstractMachine {
 	bool is_trim = true;
 
 	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
-	bool parsing_nfa_for(const string&) const;
+	std::pair<int, bool> parsing_nfa_for(const string&) const;
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
@@ -60,11 +72,15 @@ class FiniteAutomaton : public AbstractMachine {
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// принимает в качетве лимита максимальное количество цифр в
 	// числителе + знаменателе дроби, которая может встретиться при вычислениях
-	AmbiguityValue get_ambiguity_value(int digits_number_limit, optional<int>& word_length) const;
-	optional<bool> get_nfa_minimality_value() const;
+	AmbiguityValue get_ambiguity_value(
+		int digits_number_limit,
+		std::optional<int>& word_length) // NOLINT(runtime/references)
+		const;
+	std::optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
-	std::optional<std::string> get_prefix(int state_beg, int state_end, map<int, bool>& was) const;
+	std::optional<string> get_prefix(int state_beg, int state_end,
+									 map<int, bool>& was) const; // NOLINT(runtime/references)
 
 	// функция проверки на семантическую детерминированность
 	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
@@ -74,12 +90,12 @@ class FiniteAutomaton : public AbstractMachine {
 
   public:
 	FiniteAutomaton() = default;
-	FiniteAutomaton(int initial_state, vector<State> states, shared_ptr<Language> language);
+	FiniteAutomaton(int initial_state, vector<State> states, std::shared_ptr<Language> language);
 	FiniteAutomaton(int initial_state, vector<State> states, set<alphabet_symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
 	// dynamic_cast unique_ptr к типу FiniteAutomaton*
-	template <typename T> static FiniteAutomaton* cast(unique_ptr<T>&& uptr);
+	template <typename T> static FiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
@@ -136,7 +152,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// проверка НКА на семантический детерминизм
 	bool semdet(iLogTemplate* log = nullptr) const;
 	// проверяет, распознаёт ли автомат слово
-	bool parsing_by_nfa(const string&) const;
+	std::pair<int, bool> parsing_by_nfa(const string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
 	// начальное состояние
@@ -156,11 +172,12 @@ class FiniteAutomaton : public AbstractMachine {
 	// построение синтаксического моноида по автомату
 	TransformationMonoid get_syntactic_monoid() const;
 	// проверка на минимальность для нка
-	optional<bool> is_nfa_minimal(iLogTemplate* log = nullptr) const;
+	std::optional<bool> is_nfa_minimal(iLogTemplate* log = nullptr) const;
 	// проверка на минимальность для дка
 	bool is_dfa_minimal(iLogTemplate* log = nullptr) const;
 
 	friend class Regex;
+	friend class MetaInfo;
 	friend class TransformationMonoid;
 	friend class Grammar;
 };
