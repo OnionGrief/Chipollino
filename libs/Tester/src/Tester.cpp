@@ -31,7 +31,6 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 		vector<int> words;
 		for (int i = 0; i < 13; i++) {
 			string word = regex.get_iterated_word(i * step);
-			// cout << word;
 			using clock = std::chrono::high_resolution_clock;
 			const auto start = clock::now();
 			auto [count, is_belongs] = machines[type].parsing_by_nfa(word);

@@ -99,13 +99,13 @@ class FiniteAutomaton : public AbstractMachine {
 	// визуализация автомата
 	string to_txt() const override;
 	// детерминизация ДКА
-	FiniteAutomaton determinize(iLogTemplate* log = nullptr, bool is_trim = true) const;
+	FiniteAutomaton determinize(iLogTemplate* log = nullptr, bool is_trim = false) const;
 	// удаление eps-переходов (построение eps-замыканий)
 	FiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
 	// удаление eps-переходов (доп. вариант)
 	FiniteAutomaton remove_eps_additional(iLogTemplate* log = nullptr) const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize(iLogTemplate* log = nullptr, bool is_trim = true) const;
+	FiniteAutomaton minimize(iLogTemplate* log = nullptr, bool is_trim = false) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&, const FiniteAutomaton&,

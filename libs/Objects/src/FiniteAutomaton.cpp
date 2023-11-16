@@ -192,6 +192,9 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
+	// удаление ловушки по желанию пользователя
+	if (is_trim)
+		dfa = dfa.remove_trap_states();
 	if (log) {
 		log->set_parameter("oldautomaton", *this, old_meta);
 		log->set_parameter("result", dfa, new_meta);
@@ -214,7 +217,7 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 								 // идентификаторами
 	}
 	// минимизация
-	FiniteAutomaton dfa = determinize();
+	FiniteAutomaton dfa = determinize(nullptr, is_trim);
 	vector<bool> table(dfa.size() * dfa.size());
 	int counter = 1;
 	for (int i = 1; i < dfa.size(); i++) {
@@ -328,6 +331,7 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 				break;
 			}
 	}
+
 	if (log) {
 		if (!is_deterministic()) {
 			log->set_parameter("oldautomaton", *this);

@@ -354,14 +354,14 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 	std::optional<GeneralObject> res;
 
 	if (function.name == "Determinize") {
-		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template));
+		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template, true));
 	}
 	if (function.name == "Determinize+") {
 		log_template.load_tex_template("Determinize");
 		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template, false));
 	}
 	if (function.name == "Minimize") {
-		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template));
+		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template, true));
 	}
 	if (function.name == "Minimize+") {
 		log_template.load_tex_template("Minimize");
