@@ -18,7 +18,7 @@ class iLogTemplate {
 
 	struct Point {
 		string plot_id;
-		int x_coord;
+		long x_coord;
 		long y_coord;
 	};
 

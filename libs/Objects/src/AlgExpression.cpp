@@ -655,56 +655,56 @@ string AlgExpression::get_iterated_word(int n) const {
 	return str;
 }
 
-vector<AlgExpression::Lexeme> AlgExpression::first_state() const {
-	vector<AlgExpression::Lexeme> l;
-	vector<AlgExpression::Lexeme> r;
+vector<AlgExpression*> AlgExpression::get_first_nodes() {
+	vector<AlgExpression*> l;
+	vector<AlgExpression*> r;
 	switch (type) {
 	case Type::alt:
-		l = term_l->first_state();
-		r = term_r->first_state();
+		l = term_l->get_first_nodes();
+		r = term_r->get_first_nodes();
 		l.insert(l.end(), r.begin(), r.end());
 		return l;
 	case Type::star:
-		l = term_l->first_state();
+		l = term_l->get_first_nodes();
 		return l;
 	case Type::conc:
-		l = term_l->first_state();
+		l = term_l->get_first_nodes();
 		if (term_l->contains_eps()) {
-			r = term_r->first_state();
+			r = term_r->get_first_nodes();
 			l.insert(l.end(), r.begin(), r.end());
 		}
 		return l;
 	case AlgExpression::eps:
 		return {};
 	default:
-		l.push_back(value);
+		l.push_back(this);
 		return l;
 	}
 }
 
-vector<AlgExpression::Lexeme> AlgExpression::end_state() const {
-	vector<AlgExpression::Lexeme> l;
-	vector<AlgExpression::Lexeme> r;
+vector<AlgExpression*> AlgExpression::get_last_nodes() {
+	vector<AlgExpression*> l;
+	vector<AlgExpression*> r;
 	switch (type) {
 	case Type::alt:
-		l = term_l->end_state();
-		r = term_r->end_state();
+		l = term_l->get_last_nodes();
+		r = term_r->get_last_nodes();
 		l.insert(l.end(), r.begin(), r.end());
 		return l;
 	case Type::star:
-		l = term_l->end_state();
+		l = term_l->get_last_nodes();
 		return l;
 	case Type::conc:
-		l = term_r->end_state();
+		l = term_r->get_last_nodes();
 		if (term_r->contains_eps()) {
-			r = term_l->end_state();
+			r = term_l->get_last_nodes();
 			l.insert(l.end(), r.begin(), r.end());
 		}
 		return l;
 	case AlgExpression::eps:
 		return {};
 	default:
-		l.push_back(value);
+		l.push_back(this);
 		return l;
 	}
 }
@@ -712,48 +712,43 @@ vector<AlgExpression::Lexeme> AlgExpression::end_state() const {
 unordered_map<int, vector<int>> AlgExpression::pairs() const {
 	unordered_map<int, vector<int>> l;
 	unordered_map<int, vector<int>> r;
-	unordered_map<int, vector<int>> p;
-	vector<AlgExpression::Lexeme> rs;
-	vector<AlgExpression::Lexeme> ps;
+	vector<AlgExpression*> last;
+	vector<AlgExpression*> first;
 	switch (type) {
 	case Type::alt:
 		l = term_l->pairs();
 		r = term_r->pairs();
-		for (auto& it : r) {
-			l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
+		for (auto& i : r) {
+			l[i.first].insert(l[i.first].end(), i.second.begin(), i.second.end());
 		}
+
 		return l;
 	case Type::star:
 		l = term_l->pairs();
-		rs = term_l->end_state();
-		ps = term_l->first_state();
-		for (auto& i : rs) {
-			for (auto& p : ps) {
-				r[i.number].push_back(p.number);
+		last = term_l->get_last_nodes();
+		first = term_l->get_first_nodes();
+		for (auto& i : last) {
+			for (auto& j : first) {
+				l[i->value.number].push_back(j->value.number);
 			}
 		}
-		for (auto& it : r) {
-			l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
-		}
+
 		return l;
 	case Type::conc:
 		l = term_l->pairs();
 		r = term_r->pairs();
-		for (auto& it : r) {
-			l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
+		for (auto& i : r) {
+			l[i.first].insert(l[i.first].end(), i.second.begin(), i.second.end());
 		}
-		r = {};
-		rs = term_l->end_state();
-		ps = term_r->first_state();
 
-		for (size_t i = 0; i < rs.size(); i++) {
-			for (size_t j = 0; j < ps.size(); j++) {
-				r[rs[i].number].push_back(ps[j].number);
+		last = term_l->get_last_nodes();
+		first = term_r->get_first_nodes();
+		for (auto& i : last) {
+			for (auto& j : first) {
+				l[i->value.number].push_back(j->value.number);
 			}
 		}
-		for (auto& it : r) {
-			l[it.first].insert(l[it.first].end(), it.second.begin(), it.second.end());
-		}
+
 		return l;
 	default:
 		break;

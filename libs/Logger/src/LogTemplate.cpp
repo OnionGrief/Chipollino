@@ -1,6 +1,6 @@
-#include <variant>
 #include <algorithm>
 #include <cmath>
+#include <variant>
 
 #include "Logger/LogTemplate.h"
 

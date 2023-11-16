@@ -13,6 +13,7 @@ struct alphabet_symbol {
 	vector<string> annote_numbers;
 	vector<string> linearize_numbers;
 	string symbol;
+	// symbol + разметка
 	string value;
 	void update_value();
 

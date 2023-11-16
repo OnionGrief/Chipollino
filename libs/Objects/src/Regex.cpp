@@ -300,35 +300,35 @@ FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
 }
 
 Regex Regex::linearize(iLogTemplate* log) const {
-	Regex test(*this);
-	vector<Regex*> list = Regex::cast(test.pre_order_travers());
+	Regex temp_copy(*this);
+	vector<Regex*> list = Regex::cast(temp_copy.pre_order_travers());
 	set<alphabet_symbol> lang_l;
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->value.symbol.linearize(i);
 		lang_l.insert(list[i]->value.symbol);
 	}
-	test.set_language(lang_l);
+	temp_copy.set_language(lang_l);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("linearised regex", test);
+		log->set_parameter("linearised regex", temp_copy);
 	}
-	return test;
+	return temp_copy;
 }
 
 Regex Regex::delinearize(iLogTemplate* log) const {
-	Regex test(*this);
-	vector<Regex*> list = Regex::cast(test.pre_order_travers());
+	Regex temp_copy(*this);
+	vector<Regex*> list = Regex::cast(temp_copy.pre_order_travers());
 	set<alphabet_symbol> lang_del;
 	for (auto& i : list) {
 		i->value.symbol.delinearize();
 		lang_del.insert(i->value.symbol);
 	}
-	test.set_language(lang_del);
+	temp_copy.set_language(lang_del);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("result", test);
+		log->set_parameter("result", temp_copy);
 	}
-	return test;
+	return temp_copy;
 }
 
 FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
@@ -339,8 +339,8 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		symbols[i]->value.symbol.linearize(i);
 	}
 
-	vector<Lexeme> first = temp_copy.first_state(); // Множество начальных состояний
-	vector<Lexeme> end = temp_copy.end_state(); // Множество конечных состояний
+	vector<Regex*> first = cast(temp_copy.get_first_nodes()); // Множество начальных состояний
+	vector<Regex*> last = cast(temp_copy.get_last_nodes()); // Множество конечных состояний
 	unordered_map<int, vector<int>> following_states =
 		temp_copy.pairs(); // множество состояний, которым предшествует key-int
 	int eps_in = this->contains_eps();
@@ -349,13 +349,13 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	string str_first;
 	string str_end;
 	string str_pair;
-	for (const auto& i : first) {
-		str_first += string(i.symbol) + "\\ ";
+	for (auto& i : first) {
+		str_first += string(i->value.symbol) + "\\ ";
 	}
 
 	set<string> end_set;
-	for (const auto& i : end) {
-		end_set.insert(string(i.symbol));
+	for (auto& i : last) {
+		end_set.insert(string(i->value.symbol));
 	}
 	for (const auto& elem : end_set) {
 		str_end = str_end + elem + "\\ ";
@@ -376,16 +376,15 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	// cout << "End " << str_end << endl;
 	// cout << "Pairs " << str_pair << endl;
 
-	vector<Regex> linearized_symbols;
+	vector<string> linearized_symbols;
 	for (auto& i : symbols) {
-		linearized_symbols.push_back(*i);
+		linearized_symbols.push_back(i->value.symbol);
 		i->value.symbol.delinearize();
 	}
 
 	map<alphabet_symbol, set<int>> start_state_transitions;
 	for (auto& i : first) {
-		i.symbol.delinearize();
-		start_state_transitions[i.symbol].insert(i.number + 1);
+		start_state_transitions[i->value.symbol].insert(i->value.number + 1);
 	}
 
 	if (eps_in) {
@@ -394,9 +393,9 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		st.push_back(State(0, {}, "S", false, start_state_transitions));
 	}
 
-	std::unordered_set<int> end_lexemes;
-	for (const auto& elem : end) {
-		end_lexemes.insert(elem.number);
+	std::unordered_set<int> last_lexemes;
+	for (auto& i : last) {
+		last_lexemes.insert(i->value.number);
 	}
 
 	for (size_t i = 0; i < symbols.size(); i++) {
@@ -406,11 +405,11 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		for (int j : following_states[lexeme.number]) {
 			transitions[symbols[j]->value.symbol].insert(j + 1);
 		}
-		string id_str = linearized_symbols[i].value.symbol;
+		string id_str = linearized_symbols[i];
 
-		// В end_lexemes номера конечных лексем => end_lexemes.count проверяет есть ли
+		// В last_lexemes номера конечных лексем => last_lexemes.count проверяет есть ли
 		// номер лексемы в списке конечных лексем (является ли состояние конечным)
-		st.push_back(State(i + 1, {}, id_str, end_lexemes.count(lexeme.number), transitions));
+		st.push_back(State(i + 1, {}, id_str, last_lexemes.count(lexeme.number), transitions));
 	}
 
 	FiniteAutomaton fa(0, st, language);
@@ -418,7 +417,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		log->set_parameter("oldregex", temp_copy);
 		log->set_parameter("linearised regex", temp_copy.linearize());
 		log->set_parameter("first", str_first);
-		log->set_parameter("end", str_end);
+		log->set_parameter("last", str_end);
 		log->set_parameter("pairs", str_pair);
 		log->set_parameter("result", fa);
 	}
@@ -996,19 +995,19 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 }
 
 Regex Regex::deannote(iLogTemplate* log) const {
-	Regex test(*this);
-	vector<Regex*> list = Regex::cast(test.pre_order_travers());
+	Regex temp_copy(*this);
+	vector<Regex*> list = Regex::cast(temp_copy.pre_order_travers());
 	set<alphabet_symbol> lang_deann;
 	for (auto& i : list) {
 		i->value.symbol.deannote();
 		lang_deann.insert(i->value.symbol);
 	}
-	test.set_language(lang_deann);
+	temp_copy.set_language(lang_deann);
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("result", test);
+		log->set_parameter("result", temp_copy);
 	}
-	return test;
+	return temp_copy;
 }
 
 bool Regex::is_one_unambiguous(iLogTemplate* log) const {

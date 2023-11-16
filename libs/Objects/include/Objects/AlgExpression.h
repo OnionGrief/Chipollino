@@ -119,10 +119,10 @@ class AlgExpression : public BaseObject {
 	// Слово, в котором все итерации Клини раскрыты n раз
 	string get_iterated_word(int n) const;
 
-	// начальные состояния для to_glushkov
-	vector<Lexeme> first_state() const;
-	// конечные состояния для to_glushkov
-	vector<Lexeme> end_state() const;
+	// возвращает множество нод, с которых может начинаться слово языка объекта
+	vector<AlgExpression*> get_first_nodes();
+	// возвращает множество нод, на которые может заканчиваться слово языка объекта
+	vector<AlgExpression*> get_last_nodes();
 	unordered_map<int, vector<int>> pairs() const;
 
 	void regex_union(AlgExpression* a, AlgExpression* b);
