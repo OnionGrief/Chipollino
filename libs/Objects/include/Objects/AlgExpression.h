@@ -57,7 +57,7 @@ class AlgExpression : public BaseObject {
 		// Terminal:
 		symb,
 		// [i]
-		cellWriter,
+		memoryWriter,
 		// Reference
 		ref,
 	};

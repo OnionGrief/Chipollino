@@ -364,7 +364,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		str_end = "eps" + str_end;
 	}
 
-	for (auto& i : following_states) {
+	for (const auto& i : following_states) {
 		for (auto& to : i.second) {
 			str_pair = str_pair + "(" + string(symbols[i.first]->value.symbol) + "," +
 					   string(symbols[to]->value.symbol) + ")" + "\\ ";

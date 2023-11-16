@@ -1293,8 +1293,7 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(vector<int> classes) c
 	map<int, vector<int>> class_to_index; // нужен для подсчета количества классов
 	for (int i = 0; i < classes.size(); i++)
 		class_to_index[classes[i]].push_back(i);
-	// индексы состояний в новом автомате соответсвуют номеру класса
-	// эквивалентности
+	// индексы состояний в новом автомате соответствуют номеру класса эквивалентности
 	vector<State> new_states;
 	for (int i = 0; i < class_to_index.size(); i++) {
 		string new_identifier;

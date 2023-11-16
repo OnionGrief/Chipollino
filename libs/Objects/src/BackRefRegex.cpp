@@ -93,7 +93,7 @@ string BackRefRegex::to_txt() const {
 			// ставим скобки при итерации, если символов > 1
 			str1 = "(" + str1 + ")";
 		break;
-	case Type::cellWriter:
+	case Type::memoryWriter:
 		str1 = "[" + str1 + "]:" + std::to_string(cell_number);
 		break;
 	case Type::ref:
@@ -120,7 +120,7 @@ string BackRefRegex::type_to_str() const {
 		return "symb";
 	case Type::ref:
 		return "&" + std::to_string(cell_number);
-	case Type::cellWriter:
+	case Type::memoryWriter:
 		return "[" + std::to_string(cell_number) + "]";
 	default:
 		break;
@@ -189,7 +189,7 @@ BackRefRegex* BackRefRegex::scan_square_br(const vector<AlgExpression::Lexeme>& 
 	p = new BackRefRegex();
 	p->term_l = l;
 	p->value = lexemes[index_start];
-	p->type = AlgExpression::cellWriter;
+	p->type = AlgExpression::memoryWriter;
 	p->cell_number = lexemes[index_start].number;
 	p->alphabet = l->alphabet;
 	return p;

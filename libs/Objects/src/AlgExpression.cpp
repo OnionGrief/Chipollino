@@ -76,7 +76,7 @@ void AlgExpression::make_language() {
 }
 
 bool AlgExpression::is_terminal_type(Type t) {
-	return t == Type::symb || t == Type::cellWriter || t == Type::ref;
+	return t == Type::symb || t == Type::memoryWriter || t == Type::ref;
 }
 
 string AlgExpression::to_txt() const {
@@ -718,7 +718,7 @@ unordered_map<int, vector<int>> AlgExpression::pairs() const {
 	case Type::alt:
 		l = term_l->pairs();
 		r = term_r->pairs();
-		for (auto& i : r) {
+		for (const auto& i : r) {
 			l[i.first].insert(l[i.first].end(), i.second.begin(), i.second.end());
 		}
 
@@ -737,7 +737,7 @@ unordered_map<int, vector<int>> AlgExpression::pairs() const {
 	case Type::conc:
 		l = term_l->pairs();
 		r = term_r->pairs();
-		for (auto& i : r) {
+		for (const auto& i : r) {
 			l[i.first].insert(l[i.first].end(), i.second.begin(), i.second.end());
 		}
 
