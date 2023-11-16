@@ -1,6 +1,6 @@
-#include <variant>
 #include <algorithm>
 #include <cmath>
+#include <variant>
 
 #include "Logger/LogTemplate.h"
 
@@ -146,69 +146,6 @@ string decorate_element(const string& label, Decoration d, TextSize s, bool now_
 		   LogTemplate::decor_data.at(d).tag + "{" + label + "}" + mode_switcher + "}";
 }
 
-string LogTemplate::math_mode(string str) {
-	if (str.empty()) {
-		return str;
-	}
-	string str_math;
-	bool flag = true;
-	auto is_number = [](char c) { return c >= '0' && c <= '9'; };
-	auto is_symbol = [](char c) { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'; };
-	for (size_t index = 0; index < str.size(); index++) {
-		char c = str[index];
-		if (c == ' ' && index != str.size() - 1) {
-			if (!flag) {
-				str_math += "}";
-				flag = true;
-			}
-			str_math += ", ";
-		} else if (c == '*') {
-			if (!flag) {
-				str_math += "}";
-				flag = true;
-			}
-			str_math += "\\star ";
-		} else if (c == '|') {
-			if (!flag) {
-				str_math += "}";
-				flag = true;
-			}
-			str_math += "\\alter ";
-		} else if (is_number(c)) {
-			string num;
-			for (index; index < str.size() && is_number(str[index]); index++) {
-				num += str[index];
-			}
-			num = "_{" + num + "}";
-			str_math += num;
-			index--;
-		} else if (is_symbol(c)) {
-			string sym;
-			if (flag) {
-				str_math += "\\regexpstr{";
-				flag = false;
-			}
-			for (index; index < str.size() && is_symbol(str[index]); index++) {
-				sym += str[index];
-			}
-			str_math += sym;
-			index--;
-		} else {
-
-			if (!flag) {
-				str_math += "}";
-				flag = true;
-			}
-			str_math += c;
-		}
-	}
-	if (!flag) {
-		str_math += "}";
-	}
-	str_math = "$" + str_math + "$";
-	return str_math;
-}
-
 // Вычисление шага для делений на графике
 int step_size(int maxscale, size_t objsize, size_t datasize) {
 	int step = std::ceil((maxscale * (static_cast<int>(objsize) + 3)) /
@@ -222,11 +159,11 @@ string LogTemplate::log_plot(Plot p) {
 	string visualization = "", styling, legenda;
 	vector<string> styles;
 	for (int i = 0; i < p.data.size(); i++) {
-		if (find(styles.begin(), styles.end(), p.data[i].plot_id) == styles.end()) {
-			styles.push_back(p.data[i].plot_id);
-			styling += (i == 0 ? "" : ", ") + p.data[i].plot_id;
-			legenda += p.data[i].plot_id + " = {label in legend={text=" +
-					   decorate_element(p.data[i].plot_id, regexstyle, none, false) + "}},\n";
+		if (find(styles.begin(), styles.end(), p.data[i].plot_label) == styles.end()) {
+			styles.push_back(p.data[i].plot_label);
+			styling += (i == 0 ? "" : ", ") + p.data[i].plot_label;
+			legenda += p.data[i].plot_label + " = {label in legend={text=" +
+					   decorate_element(p.data[i].plot_label, regexstyle, none, false) + "}},\n";
 		}
 		if (max_x < p.data[i].x_coord)
 			max_x = p.data[i].x_coord;
@@ -244,8 +181,8 @@ string LogTemplate::log_plot(Plot p) {
 		"style sheet = vary hue, style sheet = vary dashing]\n "
 		"data[headline={x, y, set}] {\n";
 	for (auto& i : p.data) {
-		visualization +=
-			std::to_string(i.x_coord) + ", " + std::to_string(i.y_coord) + ", " + i.plot_id + "\n";
+		visualization += std::to_string(i.x_coord) + ", " + std::to_string(i.y_coord) + ", " +
+						 i.plot_label + "\n";
 	}
 	visualization += "};\n \\end{tikzpicture} \%end_plot\n\n"; // NOLINT(build/printf_format)
 	return visualization;

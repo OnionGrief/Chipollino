@@ -60,8 +60,8 @@ class FiniteAutomaton : public AbstractMachine {
 	// преобразований добавляем её обратно
 	bool is_trim = true;
 
-	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
-	std::pair<int, bool> parsing_nfa_for(const string&) const;
+	// парсинг слова по нка (устаревший метод)
+	bool parsing_nfa(const string&, int) const;
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)

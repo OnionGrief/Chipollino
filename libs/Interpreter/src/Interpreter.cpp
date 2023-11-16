@@ -1230,10 +1230,7 @@ std::optional<Interpreter::SetFlag> Interpreter::scan_flag(const vector<Lexem>& 
 	i++;
 	if (lexems[i].type == Lexem::name &&
 		(lexems[i].value == "true" || lexems[i].value == "false")) {
-		if (lexems[i].value == "true")
-			flag.value = true;
-		else
-			flag.value = false;
+		flag.value = (lexems[i].value == "true") ? true : false;
 	} else {
 		logger.throw_error("Scan \"Set\": wrong type at position 2, boolean expected");
 		return std::nullopt;
@@ -1271,9 +1268,8 @@ std::optional<Interpreter::Verification> Interpreter::scan_verification(const ve
 			logger.throw_error("Scan verification: wrong type at position 2, number expected");
 			return std::nullopt;
 		}
-	i++;
 
-	pos = i;
+	pos = i + 1;
 	return verification;
 }
 

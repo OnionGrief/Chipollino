@@ -16,7 +16,7 @@ void Interpreter::generate_brief_templates() {
 			string func_id = get_func_id(function).value();
 			string filename = "./resources/template/";
 			filename += func_id + ".tex";
-			ofstream outfile(filename);
+			std::ofstream outfile(filename);
 			outfile << "\\section{" << function.name << "}\n";
 			outfile << "\\begin{frame}{" << function.name << "}\n";
 
@@ -57,7 +57,7 @@ void Interpreter::generate_brief_templates() {
 				}
 			} else {
 
-				//========= Шаблон для парных входных данных ===========
+				// ========= Шаблон для парных входных данных ===========
 
 				bool input_types_equal = types_equiv(function.input, function.input[1]);
 
@@ -173,8 +173,9 @@ void Interpreter::generate_brief_templates() {
 }
 
 void Interpreter::generate_test_for_all_functions() {
-	ofstream outfile("./resources/all_functions.txt");
-	outfile << "R = {a}\n";
+	std::ofstream outfile("./resources/all_functions.txt");
+	outfile << "Set log_theory true\n";
+	outfile << "R = {a*b*}\n";
 	outfile << "A = Determinize.Glushkov R\n";
 	outfile << "V = Ambiguity A\n";
 	outfile << "B = Deterministic A\n";

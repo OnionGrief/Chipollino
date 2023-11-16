@@ -357,8 +357,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 			(initial_state_identifier.empty() || states[elem].identifier.empty() ? "" : ", ") +
 			states[elem].identifier;
 	}
-	State new_initial_state = {0, q, initial_state_identifier, false,
-							   map<alphabet_symbol, set<int>>()};
+	State new_initial_state = {
+		0, q, initial_state_identifier, false, map<alphabet_symbol, set<int>>()};
 	if (q.size() > 1) {
 		for (auto elem : q) {
 			old_meta.upd(NodeMeta{states[elem].index, group_counter});
@@ -414,8 +414,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 								old_meta.upd(NodeMeta{states[elem].index, group_counter});
 							}
 
-							old_meta.mark_transitions(*this, q1, q1, alphabet_symbol::epsilon(),
-													 group_counter);
+							old_meta.mark_transitions(
+								*this, q1, q1, alphabet_symbol::epsilon(), group_counter);
 							new_meta.upd(NodeMeta{new_state.index, group_counter});
 							group_counter++;
 						}
@@ -2217,41 +2217,33 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 }
 
 bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
-	// cout << s.size() << endl;
 	State state = states[index_state];
 
 	if (s.empty() && state.is_terminal) {
 		return true;
 	}
-	set<int> tr_eps =
-		state.transitions[alphabet_symbol::epsilon()]; // char_to_alphabet_symbol('\0')];
+	set<int> tr_eps = state.transitions[alphabet_symbol::epsilon()];
 	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
-	int n;
-	// tr_eps = {};
+
 	if (s.empty() && !state.is_terminal) {
-		n = trans_eps.size();
-		for (size_t i = 0; i < trans_eps.size(); i++) {
-			// cout << trans_eps[i] << endl;
+		for (size_t i = 0; i < trans_eps.size(); i++)
 			if (parsing_nfa(s, trans_eps[i])) {
 				return true;
 			}
-		}
 		return false;
 	}
 
 	alphabet_symbol elem(s[0]);
 	set<int> tr = state.transitions[elem];
 	vector<int> trans{tr.begin(), tr.end()};
-	// tr = {};
-	n = trans.size();
-	for (size_t i = 0; i < n; i++) {
+
+	for (size_t i = 0; i < trans.size(); i++) {
 		if (parsing_nfa(s.substr(1), trans[i])) {
 			return true;
 		}
 	}
-	n = trans_eps.size();
-	for (size_t i = 0; i < n; i++) {
-		// cout << trans_eps[i] << endl;
+
+	for (size_t i = 0; i < trans_eps.size(); i++) {
 		if (parsing_nfa(s, trans_eps[i])) {
 			return true;
 		}
@@ -2259,33 +2251,34 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 	return false;
 }
 
-std::pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
+std::pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	// Пара (актуальный индекс элемента в строке, состояние)
-	std::stack<std::pair<int, State>> stac_state;
+	std::stack<std::pair<int, State>> stack_state;
 	// Тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
 	set<std::tuple<int, int, int>> visited_eps, aux_eps;
 	int counter = 0;
 	int parsed_len = 0;
 	State state = states[initial_state];
-	stac_state.push({parsed_len, state});
-	while (!stac_state.empty()) {
+	stack_state.push({parsed_len, state});
+	while (!stack_state.empty()) {
 		if (state.is_terminal && parsed_len == s.size()) {
 			break;
 		}
-		state = stac_state.top().second;
-		parsed_len = stac_state.top().first;
-		stac_state.pop();
+		state = stack_state.top().second;
+		parsed_len = stack_state.top().first;
+		stack_state.pop();
 		counter++;
 		alphabet_symbol elem(s[parsed_len]);
 		set<int> trans = state.transitions[elem];
 		// Переходы в новые состояния по очередному символу строки
 		if (parsed_len + 1 <= s.size()) {
 			for (auto new_state : trans) {
-				stac_state.push({parsed_len + 1, states[new_state]});
+				stack_state.push({parsed_len + 1, states[new_state]});
 			}
 		}
 
-		// Если произошёл откат по строке, то эпсилон-переходы из рассмотренных состояний больше не считаются повторными
+		// Если произошёл откат по строке, то эпсилон-переходы из рассмотренных состояний больше не
+		// считаются повторными
 		if (!visited_eps.empty()) {
 			for (auto pos : visited_eps) {
 				if (std::get<0>(pos) <= parsed_len)
@@ -2294,11 +2287,12 @@ std::pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
 			visited_eps = aux_eps;
 			aux_eps.clear();
 		}
-		// Добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого состояния
+		// Добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
+		// состояния
 		auto reach_eps = state.transitions[alphabet_symbol::epsilon()];
 		for (int eps_tr : reach_eps) {
 			if (visited_eps.find({parsed_len, state.index, eps_tr}) == visited_eps.end()) {
-				stac_state.push({parsed_len, states[eps_tr]});
+				stack_state.push({parsed_len, states[eps_tr]});
 				visited_eps.insert({parsed_len, state.index, eps_tr});
 			}
 		}
@@ -2330,11 +2324,6 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
-}
-
-std::pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
-	State state = states[0];
-	return parsing_nfa_for(s);
 }
 
 int FiniteAutomaton::get_initial() {

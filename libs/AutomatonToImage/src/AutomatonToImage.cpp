@@ -8,26 +8,6 @@ AutomatonToImage::AutomatonToImage() {}
 
 AutomatonToImage::~AutomatonToImage() {}
 
-/*
-void AutomatonToImage::to_image(string automat, int name) {
-	char cmd[1024];
-
-	// для Linux:
-
-	/*sprintf(cmd,
-			"dot -Tpng ./resources/input.dot > "
-			"./resources/output%d.png && rm ./resources/input.dot",
-			name);
-
-	// для Windows:
-
-	sprintf(cmd,
-			"dot -Tpng ./resources/input.dot > "
-			"./resources/output%d.png && rm ./resources/input.dot",
-			name);
-	system(cmd);
-*/
-
 void remove_file(string dir, string file, bool guarded = false) {
 	std::stringstream command;
 	command << "cd " << dir;
@@ -45,12 +25,12 @@ void remove_file(string dir, string file, bool guarded = false) {
 	system(command.str().c_str());
 }
 
-string AutomatonToImage::to_image(string automat) {
+string AutomatonToImage::to_image(string automaton) {
 	remove_file("refal", "Meta_log.raux", true);
 	remove_file("refal", "Aux_input.raux", true);
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
-	fprintf(fo, "%s", automat.c_str());
+	fprintf(fo, "%s", automaton.c_str());
 	fclose(fo);
 	system("cd refal && refgo Preprocess+MathMode+FrameFormatter input.dot > "
 		   "error_Preprocess.raux");

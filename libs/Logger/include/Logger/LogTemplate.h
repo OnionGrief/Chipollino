@@ -47,17 +47,19 @@ class LogTemplate : public iLogTemplate {
 	};
 
 	// Определяет мапу идентификатора декорации и пары <тег в латехе, нужен ли мат.режим>
-	inline static const unordered_map<Decoration, TextStyle> decor_data = {{italic, {"\\textit", false}},
-															{regexstyle, {"\\regexpstr", true}},
-															{typewriter, {"\\ttfamily", false}},
-															{roman, {"\\mathrm", true}}};
+	inline static const unordered_map<Decoration, TextStyle> decor_data = {
+		{italic, {"\\textit", false}},
+		{regexstyle, {"\\regexpstr", true}},
+		{typewriter, {"\\ttfamily", false}},
+		{roman, {"\\mathrm", true}}};
 
 	// Определяет мапу идентификатора размера и его тега в латехе
-	inline static const unordered_map<TextSize, string> textsize_to_str = {{footnote, "\\footnotesize"},
-												   {small, "\\small"},
-												   {normal, "\\normalsize"},
-												   {large, "\\large"},
-												   {none, ""}};
+	inline static const unordered_map<TextSize, string> textsize_to_str = {
+		{footnote, "\\footnotesize"},
+		{small, "\\small"},
+		{normal, "\\normalsize"},
+		{large, "\\large"},
+		{none, ""}};
 
   private:
 	// кеш отрендеренных автоматов
@@ -83,11 +85,8 @@ class LogTemplate : public iLogTemplate {
 	// Параметры
 	unordered_map<string, LogParameter> parameters;
 
-
 	// Добавление шаблона настоящего параметра
 	void add_parameter(string parameter_name);
-	// math mode (устаревший метод)
-	static string math_mode(string str);
 	// счетчик картинок
 	inline static int image_number = 0;
 	// таблицы в общем виде
