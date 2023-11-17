@@ -203,9 +203,8 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 }
 
 FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const {
-	if (!is_trim)
-		if (log)
-			log->set_parameter("trap", " (с добавлением ловушки)");
+	if (!is_trim && log)
+		log->set_parameter("trap", " (с добавлением ловушки)");
 	if (language->is_min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
 		if (log) {

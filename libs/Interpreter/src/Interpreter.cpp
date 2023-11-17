@@ -74,16 +74,17 @@ Interpreter::Interpreter() {
 bool Interpreter::run_line(const string& line) {
 	auto logger = init_log();
 	Lexer lexer(*this);
-	logger.log("running \"" + line + "\"");
 	auto lexems = lexer.parse_string(line);
+	if (lexems.size() == 0)
+		return true;
 	bool success = false;
+	logger.log("running \"" + line + "\"");
 	if (const auto op = scan_operation(lexems); op.has_value()) {
 		success = run_operation(*op);
 	} else {
 		logger.throw_error("failed to scan operation");
 		success = false;
 	}
-	logger.log("");
 	return success;
 }
 

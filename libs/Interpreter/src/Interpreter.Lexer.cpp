@@ -16,7 +16,7 @@ void Interpreter::Lexer::next_symbol() {
 }
 
 void Interpreter::Lexer::skip_spaces() {
-	while (current_symbol() == ' ' || current_symbol() == '\t') {
+	while (isspace(current_symbol())) {
 		next_symbol();
 	}
 }
@@ -37,9 +37,8 @@ bool Interpreter::Lexer::scan_word(string word) {
 string Interpreter::Lexer::scan_until_space() {
 	string acc = "";
 	skip_spaces();
-	while (!eof() && current_symbol() != ' ' && current_symbol() != '\n' &&
-		   current_symbol() != '\t' && current_symbol() != '.' && current_symbol() != '(' &&
-		   current_symbol() != ')') {
+	while (!eof() && !isspace(current_symbol()) && current_symbol() != '.' &&
+		   current_symbol() != '(' && current_symbol() != ')') {
 
 		acc += current_symbol();
 		next_symbol();
