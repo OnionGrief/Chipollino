@@ -355,18 +355,18 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 	std::optional<GeneralObject> res;
 
 	if (function.name == "Determinize") {
-		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template, true));
+		res = ObjectDFA(get_automaton(arguments[0]).determinize(true, &log_template));
 	}
 	if (function.name == "Determinize+") {
 		log_template.load_tex_template("Determinize");
-		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template, false));
+		res = ObjectDFA(get_automaton(arguments[0]).determinize(false, &log_template));
 	}
 	if (function.name == "Minimize") {
-		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template, true));
+		res = ObjectDFA(get_automaton(arguments[0]).minimize(true, &log_template));
 	}
 	if (function.name == "Minimize+") {
 		log_template.load_tex_template("Minimize");
-		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template, false));
+		res = ObjectDFA(get_automaton(arguments[0]).minimize(false, &log_template));
 	}
 	if (function.name == "Annote") {
 		res = ObjectDFA(get_automaton(arguments[0]).annote(&log_template));

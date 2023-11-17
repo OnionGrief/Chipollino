@@ -95,7 +95,7 @@ set<int> FiniteAutomaton::closure(const set<int>& indices, bool use_epsilons_onl
 	return reachable;
 }
 
-FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) const {
+FiniteAutomaton FiniteAutomaton::determinize(bool is_trim, iLogTemplate* log) const {
 	if (!is_trim)
 		if (log)
 			log->set_parameter("trap", " (с добавлением ловушки)");
@@ -202,7 +202,7 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 	return dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const {
+FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const {
 	if (!is_trim && log)
 		log->set_parameter("trap", " (с добавлением ловушки)");
 	if (language->is_min_dfa_cached()) {
@@ -216,7 +216,7 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 								 // идентификаторами
 	}
 	// минимизация
-	FiniteAutomaton dfa = determinize(nullptr, is_trim);
+	FiniteAutomaton dfa = determinize(is_trim);
 	vector<bool> table(dfa.size() * dfa.size());
 	int counter = 1;
 	for (int i = 1; i < dfa.size(); i++) {
@@ -339,7 +339,6 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 		} else {
 			log->set_parameter("oldautomaton", dfa, old_meta);
 		}
-		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("equivclasses", ss.str());
 		log->set_parameter("result", minimized_dfa, new_meta);
 	}
@@ -990,7 +989,6 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		log->set_parameter("oldautomaton", *this);
 	MetaInfo meta;
 	if (language->is_one_unambiguous_flag_cached()) {
-
 		if (log) {
 			log->set_parameter("result", language->get_one_unambiguous_flag() ? "True" : "False");
 
