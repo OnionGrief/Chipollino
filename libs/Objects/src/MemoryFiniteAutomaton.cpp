@@ -15,8 +15,7 @@ MemoryFiniteAutomaton::State::State(int index, string identifier, bool is_termin
 	: AbstractMachine::State::State(index, std::move(identifier), is_terminal),
 	  transitions(std::move(transitions)) {}
 
-void MemoryFiniteAutomaton::State::set_transition(const Transition& to,
-												  const alphabet_symbol& symbol) {
+void MemoryFiniteAutomaton::State::set_transition(const Transition& to, const Symbol& symbol) {
 	transitions[symbol].push_back(to);
 }
 

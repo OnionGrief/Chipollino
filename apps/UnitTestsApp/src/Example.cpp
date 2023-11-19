@@ -10,8 +10,7 @@ using std::vector;
 void Example::determinize() {
 	vector<FiniteAutomaton::State> states;
 	for (int i = 0; i < 6; i++) {
-		states.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 
 	states[0].set_transition(5, "x");
@@ -37,8 +36,7 @@ void Example::determinize() {
 void Example::remove_eps() {
 	vector<FiniteAutomaton::State> states;
 	for (int i = 0; i < 3; i++) {
-		states.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 
 	states[0].set_transition(0, "0");
@@ -57,8 +55,7 @@ void Example::remove_eps() {
 void Example::minimize() {
 	vector<FiniteAutomaton::State> states;
 	for (int i = 0; i < 8; i++) {
-		states.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 
 	states[0].set_transition(7, "0");
@@ -88,13 +85,11 @@ void Example::minimize() {
 void Example::intersection() {
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 3; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 3; i++) {
-		states2.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 
 	states1[0].set_transition(0, "b");
@@ -205,8 +200,7 @@ void Example::transformation_monoid_example() {
 	FiniteAutomaton fa = Regex("(ba)*bc").to_ilieyu();
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 3; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	// states1[0].set_transition(0, "b");
 	states1[0].set_transition(1, "a");
@@ -232,8 +226,7 @@ void Example::transformation_monoid_example() {
 void Example::fa_subset_check() {
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 4; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states1[0].set_transition(1, "a");
 	states1[0].set_transition(1, "b");
@@ -245,8 +238,7 @@ void Example::fa_subset_check() {
 
 	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 3; i++) {
-		states2.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states2[0].set_transition(1, "b");
 	states2[1].set_transition(2, "b");
@@ -270,8 +262,7 @@ void Example::normalize_regex() {
 void Example::to_image() {
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 3; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states1[0].set_transition(1, "a");
 	states1[0].set_transition(1, "eps");
@@ -298,8 +289,7 @@ void Example::to_image() {
 void Example::step() {
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 3; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states1[0].set_transition(1, "a");
 	states1[0].set_transition(1, "eps");
@@ -338,13 +328,11 @@ void Example::tester() {
 void Example::step_interection() {
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 3; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 3; i++) {
-		states2.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 
 	states1[0].set_transition(0, "b");
@@ -409,8 +397,7 @@ void Example::table() {
 void Example::fa_semdet_check() {
 	vector<FiniteAutomaton::State> states;
 	for (int i = 0; i < 4; i++) {
-		states.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states[0].set_transition(1, "a");
 	states[1].set_transition(1, "a");
@@ -536,8 +523,7 @@ void Example::fa_to_pgrammar() {
 
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 5; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	// states1[0].set_transition(0, "b");
 	states1[4].set_transition(1, "a");

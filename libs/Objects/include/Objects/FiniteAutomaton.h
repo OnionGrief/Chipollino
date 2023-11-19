@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "AbstractMachine.h"
-#include "AlphabetSymbol.h"
+#include "Symbol.h"
 #include "iLogTemplate.h"
 
 class Regex;
@@ -35,13 +35,13 @@ class FiniteAutomaton : public AbstractMachine {
 		// используется для объединения состояний в процессе работы алгоритмов
 		// преобразования автоматов возможно для визуализации
 		std::set<int> label;
-		std::map<alphabet_symbol, std::set<int>> transitions;
+		std::map<Symbol, std::set<int>> transitions;
 		State(int index, std::string identifier, bool is_terminal);
 		State(int index, std::string identifier, bool is_terminal,
-			  std::map<alphabet_symbol, std::set<int>> transitions);
+			  std::map<Symbol, std::set<int>> transitions);
 		State(int index, std::set<int> label, std::string identifier, bool is_terminal,
-			  std::map<alphabet_symbol, std::set<int>> transitions);
-		void set_transition(int, const alphabet_symbol&);
+			  std::map<Symbol, std::set<int>> transitions);
+		void set_transition(int, const Symbol&);
 	};
 
   private:
@@ -88,8 +88,7 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, std::vector<State> states,
 					std::shared_ptr<Language> language);
-	FiniteAutomaton(int initial_state, std::vector<State> states,
-					std::set<alphabet_symbol> alphabet);
+	FiniteAutomaton(int initial_state, std::vector<State> states, std::set<Symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
 	// dynamic_cast unique_ptr к типу FiniteAutomaton*

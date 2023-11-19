@@ -6,8 +6,8 @@
 #include <utility>
 #include <vector>
 
-#include "AlphabetSymbol.h"
 #include "FiniteAutomaton.h"
+#include "Symbol.h"
 #include "TransformationMonoid.h"
 
 struct PrefixGrammarItem {
@@ -21,7 +21,7 @@ struct PrefixGrammarItem {
 	// классы эквивалентности у состояния в автомате
 	std::set<std::string> equivalence_class;
 	// правила переписывания для данного состояния
-	std::map<alphabet_symbol, std::set<int>> rules;
+	std::map<Symbol, std::set<int>> rules;
 	PrefixGrammarItem();
 	// PrefixGrammarItem(Type type, int state_index);
 };
@@ -33,12 +33,12 @@ struct GrammarItem {
 	};
 	Type type = terminal;
 	int state_index = -1, class_number = -1;
-	std::string name = "";
+	std::string name;
 	GrammarItem();
 	GrammarItem(Type type, std::string name, int state_index, int class_number);
 	GrammarItem(Type type, std::string name, int state_index);
 	GrammarItem(Type type, std::string name);
-	bool operator!=(const GrammarItem& other);
+	bool operator!=(const GrammarItem& other) const;
 };
 // для отладки
 std::ostream& operator<<(std::ostream& os, const GrammarItem& item);
@@ -46,13 +46,13 @@ class Grammar {
   private:
 	std::vector<PrefixGrammarItem> prefix_grammar;
 
-	const int fa_to_g(const FiniteAutomaton&, alphabet_symbol, int, int,
-					  const std::vector<PrefixGrammarItem*>&, // вспомогательная функции для
-															  // получения префиксной грамматики
-					  const std::set<std::string>&, std::string);
-	const int fa_to_g_TM(const FiniteAutomaton&, std::string, int, int,
-						 const std::vector<PrefixGrammarItem*>&, const std::set<std::string>&,
-						 std::string); // вспомогательная функции для
+	int fa_to_g(const FiniteAutomaton&, Symbol, int, int,
+				const std::vector<PrefixGrammarItem*>&, // вспомогательная функции для
+														// получения префиксной грамматики
+				const std::set<std::string>&, std::string);
+	int fa_to_g_TM(const FiniteAutomaton&, std::string, int, int,
+				   const std::vector<PrefixGrammarItem*>&, const std::set<std::string>&,
+				   std::string); // вспомогательная функции для
 									   //  получения префиксной грамматики через ТМ
 
   public:
@@ -76,8 +76,7 @@ class Grammar {
 	// преобразование конечного автомата в грамматику
 	// в векторе терминалов по 0му индексу лежит epsilon
 	static std::vector<std::vector<std::vector<GrammarItem*>>> fa_to_grammar(
-		const std::vector<FiniteAutomaton::State>& states,
-		const std::set<alphabet_symbol>& alphabet,
+		const std::vector<FiniteAutomaton::State>& states, const std::set<Symbol>& alphabet,
 		std::vector<GrammarItem>& fa_items,		 // NOLINT(runtime/references)
 		std::vector<GrammarItem*>& nonterminals, // NOLINT(runtime/references)
 		std::vector<GrammarItem*>& terminals);	 // NOLINT(runtime/references)
@@ -86,7 +85,7 @@ class Grammar {
 	static std::vector<std::vector<std::vector<GrammarItem*>>> tansitions_to_grammar(
 		const std::vector<FiniteAutomaton::State>& states,
 		const std::vector<GrammarItem*>& fa_nonterminals,
-		std::vector<std::pair<GrammarItem, std::map<alphabet_symbol, std::vector<GrammarItem>>>>&
+		std::vector<std::pair<GrammarItem, std::map<Symbol, std::vector<GrammarItem>>>>&
 			fa_items,							 // NOLINT(runtime/references)
 		std::vector<GrammarItem*>& nonterminals, // NOLINT(runtime/references)
 		std::vector<GrammarItem*>& terminals);	 // NOLINT(runtime/references)

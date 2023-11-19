@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "AlgExpression.h"
-#include "AlphabetSymbol.h"
 #include "BaseObject.h"
+#include "Symbol.h"
 #include "iLogTemplate.h"
 
 class Language;
@@ -21,11 +21,11 @@ struct FAState {
 	int index;
 	std::string identifier;
 	bool is_terminal;
-	std::map<alphabet_symbol, std::set<int>> transitions;
+	std::map<Symbol, std::set<int>> transitions;
 	FAState(int index, std::string identifier, bool is_terminal,
-			std::map<alphabet_symbol, std::set<int>> transitions);
+			std::map<Symbol, std::set<int>> transitions);
 	FAState(int index, std::string identifier, bool is_terminal);
-	void set_transition(int, const alphabet_symbol&);
+	void set_transition(int, const Symbol&);
 };
 
 class Regex : public AlgExpression {

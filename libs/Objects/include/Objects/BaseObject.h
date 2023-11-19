@@ -4,7 +4,7 @@
 #include <set>
 #include <string>
 
-#include "AlphabetSymbol.h"
+#include "Symbol.h"
 
 class Language;
 
@@ -15,6 +15,6 @@ class BaseObject {
   public:
 	BaseObject();
 	BaseObject(std::shared_ptr<Language>); // NOLINT(runtime/explicit)
-	BaseObject(std::set<alphabet_symbol>); // NOLINT(runtime/explicit)
+	BaseObject(std::set<Symbol>);		   // NOLINT(runtime/explicit)
 	virtual std::string to_txt() const = 0;
 };

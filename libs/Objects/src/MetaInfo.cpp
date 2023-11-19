@@ -23,13 +23,13 @@ string colorize_node(int id, int group_id) {
 }
 
 // Преобразование метаданных для ребра графа в строку
-string colorize_edge(int from_ind, int to_id, const alphabet_symbol& by, int group_id) {
+string colorize_edge(int from_ind, int to_id, const Symbol& by, int group_id) {
 	return "@" + to_string(from_ind) + "-" + to_string(to_id) + "@" + string(by) +
 		   "@::=" + to_color_id(group_id) + "\n";
 }
 
 void MetaInfo::mark_transitions(const FiniteAutomaton& fa, const set<int>& from, set<int> to,
-								const alphabet_symbol& by, int group_id) {
+								const Symbol& by, int group_id) {
 	for (auto elem : from)
 		for (auto [rune, reach_set] : fa.states[elem].transitions) {
 			for (auto reach : reach_set)

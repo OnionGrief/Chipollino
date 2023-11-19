@@ -14,13 +14,13 @@ Language::Regex_structure::Regex_structure(string str, std::weak_ptr<Language> l
 
 Language::Language() {}
 
-Language::Language(set<alphabet_symbol> alphabet) : alphabet(alphabet) {}
+Language::Language(set<Symbol> alphabet) : alphabet(alphabet) {}
 
-void Language::set_alphabet(set<alphabet_symbol> _alphabet) {
+void Language::set_alphabet(set<Symbol> _alphabet) {
 	alphabet = _alphabet;
 }
 
-const set<alphabet_symbol>& Language::get_alphabet() {
+const set<Symbol>& Language::get_alphabet() {
 	return alphabet;
 }
 

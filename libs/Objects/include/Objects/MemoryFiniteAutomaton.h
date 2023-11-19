@@ -31,13 +31,12 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 		std::string get_actions_str() const;
 	};
 
-	using Transitions =
-		std::unordered_map<alphabet_symbol, std::vector<Transition>, AlphabetSymbolHasher>;
+	using Transitions = std::unordered_map<Symbol, std::vector<Transition>, SymbolHasher>;
 
 	struct State : AbstractMachine::State {
 		Transitions transitions;
 		State(int index, std::string identifier, bool is_terminal, Transitions transitions);
-		void set_transition(const Transition&, const alphabet_symbol&);
+		void set_transition(const Transition&, const Symbol&);
 	};
 
   private:

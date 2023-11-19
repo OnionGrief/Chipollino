@@ -76,8 +76,7 @@ TEST(TestCaseName, Test_random_regex_parsing) {
 TEST(TestCaseName, Test_fa_equal) {
 	vector<FiniteAutomaton::FiniteAutomaton::State> states1;
 	for (int i = 0; i < 6; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states1[0].set_transition(1, "b");
 	states1[0].set_transition(2, "b");
@@ -92,8 +91,7 @@ TEST(TestCaseName, Test_fa_equal) {
 
 	vector<FiniteAutomaton::FiniteAutomaton::State> states2;
 	for (int i = 0; i < 6; i++) {
-		states2.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states2[0].set_transition(1, "b");
 	states2[0].set_transition(2, "b");
@@ -108,8 +106,7 @@ TEST(TestCaseName, Test_fa_equal) {
 
 	vector<FiniteAutomaton::State> states3;
 	for (int i = 0; i < 6; i++) {
-		states3.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states3[5].set_transition(4, "b");
 	states3[5].set_transition(3, "b");
@@ -139,8 +136,7 @@ TEST(TestCaseName, Test_fa_equal) {
 TEST(TestCaseName, Test_fa_equiv) {
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 3; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states1[0].set_transition(0, "c");
 	states1[0].set_transition(1, "d");
@@ -153,8 +149,7 @@ TEST(TestCaseName, Test_fa_equiv) {
 
 	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 4; i++) {
-		states2.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states2[0].set_transition(0, "c");
 	states2[0].set_transition(1, "d");
@@ -173,8 +168,7 @@ TEST(TestCaseName, Test_fa_equiv) {
 TEST(TestCaseName, Test_bisimilar) {
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 3; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states1[0].set_transition(1, "a");
 	states1[0].set_transition(1, "eps");
@@ -190,8 +184,7 @@ TEST(TestCaseName, Test_bisimilar) {
 
 	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 2; i++) {
-		states2.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states2[0].set_transition(1, "a");
 	states2[0].set_transition(1, "eps");
@@ -210,8 +203,7 @@ TEST(TestCaseName, Test_merge_bisimilar) {
 
 	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 3; i++) {
-		states2.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states2[0].set_transition(1, "a");
 	states2[0].set_transition(1, "eps");
@@ -227,8 +219,7 @@ TEST(TestCaseName, Test_merge_bisimilar) {
 
 	vector<FiniteAutomaton::State> states3;
 	for (int i = 0; i < 2; i++) {
-		states3.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states3[0].set_transition(0, "b");
 	states3[0].set_transition(1, "a");
@@ -368,8 +359,7 @@ TEST(TestCaseName, Test_fa_to_pgrammar) {
 	// cout << "fa to grammar\n";
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 5; i++) {
-		states1.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 
 	states1[4].set_transition(1, "a");
@@ -477,8 +467,7 @@ TEST(TestCaseName, Test_TransformationMonoid) {
 
 	vector<FiniteAutomaton::State> states;
 	for (int i = 0; i < 5; i++) {
-		states.emplace_back(
-			i, set<int>({i}), std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states[0].set_transition(1, "a");
 	states[1].set_transition(2, "c");

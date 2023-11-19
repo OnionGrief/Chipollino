@@ -4,14 +4,14 @@
 #include <variant>
 #include <vector>
 
-#include "AlphabetSymbol.h"
+#include "Symbol.h"
 
 class FiniteAutomaton;
 
 struct EdgeMeta {
 	int from;
 	int to;
-	alphabet_symbol label;
+	Symbol label;
 	int group;
 };
 
@@ -36,6 +36,6 @@ class MetaInfo {
 	// Разметка всех переходов автомата из множества выделенных состояний from в множество to по
 	// символу by
 	void mark_transitions(const FiniteAutomaton&, const std::set<int>& from, std::set<int> to,
-						  const alphabet_symbol& by, int group_id);
+						  const Symbol& by, int group_id);
 	MetaInfo() = default;
 };

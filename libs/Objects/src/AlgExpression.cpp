@@ -21,12 +21,12 @@ AlgExpression::AlgExpression() {
 }
 
 AlgExpression::AlgExpression(std::shared_ptr<Language> language, Type type, const Lexeme& value,
-							 const set<alphabet_symbol>& alphabet)
+							 const set<Symbol>& alphabet)
 	: BaseObject(std::move(language)), type(type), value(value), alphabet(alphabet) {}
 
-AlgExpression::AlgExpression(set<alphabet_symbol> alphabet) : BaseObject(std::move(alphabet)) {}
+AlgExpression::AlgExpression(set<Symbol> alphabet) : BaseObject(std::move(alphabet)) {}
 
-AlgExpression::Lexeme::Lexeme(Type type, const alphabet_symbol& symbol, int number)
+AlgExpression::Lexeme::Lexeme(Type type, const Symbol& symbol, int number)
 	: type(type), symbol(symbol), number(number) {}
 
 void AlgExpression::clear() {
@@ -63,12 +63,12 @@ AlgExpression& AlgExpression::operator=(const AlgExpression& other) {
 	return *this;
 }
 
-void AlgExpression::set_language(const set<alphabet_symbol>& _alphabet) {
+void AlgExpression::set_language(const set<Symbol>& _alphabet) {
 	alphabet = _alphabet;
 	language = make_shared<Language>(alphabet);
 }
 
-void AlgExpression::generate_alphabet(set<alphabet_symbol>& _alphabet) {
+void AlgExpression::generate_alphabet(set<Symbol>& _alphabet) {
 	if (term_l != nullptr) {
 		term_l->generate_alphabet(alphabet);
 	}
@@ -138,7 +138,7 @@ void AlgExpression::print_subtree(AlgExpression* expr, int level) const {
 		print_subtree(expr->term_l, level + 1);
 		for (int i = 0; i < level; i++)
 			cout << "   ";
-		alphabet_symbol r_v;
+		Symbol r_v;
 		if (expr->value.symbol != "")
 			r_v = expr->value.symbol;
 		else
@@ -152,7 +152,7 @@ void AlgExpression::print_tree() const {
 	print_subtree(term_l, 1);
 	for (int i = 0; i < 0; i++)
 		cout << "   ";
-	alphabet_symbol r_v;
+	Symbol r_v;
 	if (value.symbol != "")
 		r_v = value.symbol;
 	else
@@ -189,7 +189,7 @@ string AlgExpression::print_subdot(AlgExpression* expr, const string& parent_dot
 	if (expr) {
 		string dot_node = "node" + to_string(id++);
 
-		alphabet_symbol r_v;
+		Symbol r_v;
 		r_v = expr->type_to_str();
 
 		dot += dot_node + " [label=\"" + string(r_v) + "\"];\n";
@@ -210,7 +210,7 @@ void AlgExpression::print_dot() const {
 	string dot;
 	dot += "graph {\n";
 
-	alphabet_symbol r_v;
+	Symbol r_v;
 	r_v = type_to_str();
 
 	string root_dot_node = "node" + to_string(id++);
@@ -302,6 +302,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 				return {Lexeme::Type::error};
 
 			lexeme.type = Lexeme::Type::ref;
+			// не будет входить в алфавит, нужно только для обозначения перехода в MFA
 			lexeme.symbol = '&' + to_string(lexeme.number);
 			regex_is_eps = false;
 			brackets_are_empty = false;
@@ -327,10 +328,10 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 				for (size_t j = index + 1; j < str.size(); j++) {
 					bool lin = false;
 					bool annote = false;
-					if (str[j] == alphabet_symbol::linearize_marker)
+					if (str[j] == Symbol::linearize_marker)
 						lin = true;
 
-					if (str[j] == alphabet_symbol::annote_marker)
+					if (str[j] == Symbol::annote_marker)
 						annote = true;
 
 					if (!lin && !annote)
@@ -607,7 +608,7 @@ bool AlgExpression::equality_checker(const AlgExpression* expr1, const AlgExpres
 		return false;
 
 	if (expr1->value.type == Lexeme::Type::symb) {
-		alphabet_symbol r1_symb, r2_symb;
+		Symbol r1_symb, r2_symb;
 		r1_symb = expr1->value.symbol;
 		r2_symb = expr2->value.symbol;
 		if (r1_symb != r2_symb)

@@ -29,11 +29,11 @@ class AlgExpression : public BaseObject {
 		};
 
 		Type type = error;
-		alphabet_symbol symbol = "";
+		Symbol symbol;
 		int number = 0; // Для указания номера (при линеаризации) в to_glushkov и to_mfa
 						// либо для указания номера ячейки памяти (Type: squareBrL, squareBrL, ref),
 						// чтобы использовать в scan_ref и scan_square_br
-		Lexeme(Type type = error, const alphabet_symbol& symbol = "",
+		Lexeme(Type type = error, const Symbol& symbol = Symbol(),
 			   int number = 0); // NOLINT(runtime/explicit)
 	};
 
@@ -54,7 +54,7 @@ class AlgExpression : public BaseObject {
 		ref,
 	};
 
-	std::set<alphabet_symbol> alphabet;
+	std::set<Symbol> alphabet;
 	Type type;
 	Lexeme value;
 
@@ -69,9 +69,9 @@ class AlgExpression : public BaseObject {
 	void clear();
 
 	// Создает новый язык с алфавитом
-	void set_language(const std::set<alphabet_symbol>& _alphabet);
+	void set_language(const std::set<Symbol>& _alphabet);
 	// Рекурсивная генерация алфавита
-	void generate_alphabet(std::set<alphabet_symbol>& _alphabet); // NOLINT(runtime/references)
+	void generate_alphabet(std::set<Symbol>& _alphabet); // NOLINT(runtime/references)
 	// Генерация языка из алфавита
 	void make_language();
 
@@ -122,8 +122,8 @@ class AlgExpression : public BaseObject {
 
   public:
 	AlgExpression();
-	AlgExpression(std::shared_ptr<Language>, Type, const Lexeme&, const std::set<alphabet_symbol>&);
-	AlgExpression(std::set<alphabet_symbol>); // NOLINT(runtime/explicit)
+	AlgExpression(std::shared_ptr<Language>, Type, const Lexeme&, const std::set<Symbol>&);
+	AlgExpression(std::set<Symbol>); // NOLINT(runtime/explicit)
 
 	virtual ~AlgExpression();
 

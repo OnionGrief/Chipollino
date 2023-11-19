@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "AlphabetSymbol.h"
 #include "FiniteAutomaton.h"
 #include "Regex.h"
+#include "Symbol.h"
 #include "TransformationMonoid.h"
 
 class Language {
@@ -31,7 +31,7 @@ class Language {
 		Regex_structure(std::string str, std::weak_ptr<Language> language);
 	};
 
-	std::set<alphabet_symbol> alphabet;
+	std::set<Symbol> alphabet;
 	// регулярка, описывающая язык
 	// optional<Regex> regular_expression;
 	std::optional<int> pump_length;
@@ -46,9 +46,9 @@ class Language {
 
   public:
 	Language();
-	Language(std::set<alphabet_symbol> alphabet); // NOLINT(runtime/explicit)
-	const std::set<alphabet_symbol>& get_alphabet();
-	void set_alphabet(std::set<alphabet_symbol>);
+	Language(std::set<Symbol> alphabet); // NOLINT(runtime/explicit)
+	const std::set<Symbol>& get_alphabet();
+	void set_alphabet(std::set<Symbol>);
 	int get_alphabet_size();
 	// регулярка, описывающая язык
 	bool is_regular_expression_cached() const;
