@@ -406,10 +406,10 @@ string Grammar::pg_to_txt() const {
 		}
 	}
 	for (const auto& elem : out) {
-		ss << elem << "\\\\\n";
+		ss << elem << "\\\\";
 	}
-	ss << "------------------------- Базисные слова -----------------------"
-	   << "\n\n";
+	ss << "Базисные слова: "
+	   << "\\\\";
 
 	for (int i = 0; i < prefix_grammar.size(); i++) {
 		if (prefix_grammar[i].is_terminal) {
@@ -417,9 +417,9 @@ string Grammar::pg_to_txt() const {
 			for (const auto& w : g.equivalence_class) {
 				if (w == "") {
 					ss << "eps"
-					   << ";";
+					   << " ";
 				} else {
-					ss << w << ";";
+					ss << w << " ";
 				}
 			}
 			ss << "\\\\";
