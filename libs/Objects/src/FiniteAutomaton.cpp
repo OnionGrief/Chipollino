@@ -50,7 +50,7 @@ string FiniteAutomaton::to_txt() const {
 	std::stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
 	for (int i = 0; i < states.size(); i++) {
-		ss << i << " [label = \"" << states[i].identifier << "\", shape = ";
+		ss << states[i].index << " [label = \"" << states[i].identifier << "\", shape = ";
 		ss << (states[i].is_terminal ? "doublecircle]\n\t" : "circle]\n\t");
 	}
 	if (states.size() > initial_state)
@@ -193,11 +193,20 @@ FiniteAutomaton FiniteAutomaton::determinize(bool is_trim, iLogTemplate* log) co
 		}
 	}
 	// удаление ловушки по желанию пользователя
-	if (is_trim)
+	FiniteAutomaton trap_dfa;
+	if (is_trim) { 
+		trap_dfa = dfa;
 		dfa = dfa.remove_trap_states();
+	}
 	if (log) {
 		log->set_parameter("oldautomaton", *this, old_meta);
-		log->set_parameter("result", dfa, new_meta);
+		if (is_trim) {
+			log->set_parameter("trapdfa", trap_dfa, new_meta);
+			log->set_parameter("to_removetrap", "Автомат перед удалением ловушки: ");
+			log->set_parameter("result", dfa);
+		} else {
+			log->set_parameter("result", dfa, new_meta);
+		}
 	}
 	return dfa;
 }

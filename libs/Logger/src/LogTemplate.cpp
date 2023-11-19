@@ -100,7 +100,8 @@ string LogTemplate::render() const {
 		if (show) {
 			for (const auto& [key, param] : parameters) {
 				int insert_place = s.find("%template_" + key);
-				if (insert_place == -1) {
+				// Если имя шаблона не заканчивает строку, то это может быть и другой шаблон
+				if ((insert_place != s.length() - 10 - key.length()) || (insert_place == -1)) {
 					continue;
 				}
 
