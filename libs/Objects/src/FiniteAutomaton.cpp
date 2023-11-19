@@ -207,16 +207,18 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 		log->set_parameter("trap", " (с добавлением ловушки)");
 	if (language->is_min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
+		// удаление ловушки по желанию пользователя
+		if (is_trim)
+			language_min_dfa = language_min_dfa.remove_trap_states();
 		if (log) {
 			log->set_parameter("oldautomaton", *this);
 			log->set_parameter("cach", "(!) минимальный автомат получен из кэша");
 			log->set_parameter("result", language_min_dfa);
 		}
-		return language_min_dfa; // TODO Нужно решить, что делаем с
-								 // идентификаторами
+		return language_min_dfa;
 	}
 	// минимизация
-	FiniteAutomaton dfa = determinize(is_trim);
+	FiniteAutomaton dfa = determinize();
 	vector<bool> table(dfa.size() * dfa.size());
 	int counter = 1;
 	for (int i = 1; i < dfa.size(); i++) {
@@ -314,9 +316,15 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 		}
 	}
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
+
 	// кэширование
 	language->set_min_dfa(
 		minimized_dfa.initial_state, minimized_dfa.states, minimized_dfa.language);
+
+	// удаление ловушки по желанию пользователя
+	if (is_trim)
+		minimized_dfa = minimized_dfa.remove_trap_states();
+
 	std::stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
 		ss << "\\{" << state.identifier << "\\}\;";
@@ -758,7 +766,9 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
-	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
+	// тест Regex("(a|b)*a").get_one_unambiguous_regex() ломается, если оставить этот вариант:
+	// FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
+	FiniteAutomaton new_dfa(*this);
 	int count = static_cast<int>(new_dfa.size());
 	// Поправка, чтобы можно было вычислить реальное число состояний прежнего автомата.
 	int traps = 0;
@@ -996,14 +1006,12 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		}
 		return language->get_one_unambiguous_flag();
 	}
-	FiniteAutomaton min_fa;
 	if (language->is_min_dfa_cached() && log) {
 		log->set_parameter("cachedMINDFA", "Минимальный автомат сохранен в кэше");
 	}
-	if (states.size() == 1)
-		min_fa = minimize();
-	else
-		min_fa = minimize().remove_trap_states();
+
+	FiniteAutomaton min_fa = minimize(true);
+
 	set<map<alphabet_symbol, set<int>>> final_states_transitions;
 	for (int i = 0; i < min_fa.size(); i++) {
 		if (min_fa.states[i].is_terminal) {
@@ -1693,7 +1701,7 @@ Fraction calc_ambiguity(int i, int n, const vector<Fraction>& f1,
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 	int digits_number_limit, std::optional<int>& word_length) const {
 	FiniteAutomaton fa = remove_eps();
-	FiniteAutomaton min_fa = fa.minimize().remove_trap_states();
+	FiniteAutomaton min_fa = fa.minimize(true);
 	fa = fa.remove_trap_states();
 
 	int i = 2;
@@ -1848,31 +1856,27 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity(iLogTemplate* log) const {
 	std::optional<int> word_length;
 	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value(300, word_length);
-	if (log)
+	if (log) {
 		log->set_parameter("oldautomaton", *this);
-	if (word_length.has_value()) {
-		if (log)
+		if (word_length.has_value()) {
 			log->set_parameter("Для максимальной длины слова", std::to_string(*word_length));
-	}
-	switch (result) {
-	case FiniteAutomaton::exponentially_ambiguous:
-		if (log)
+		}
+		switch (result) {
+		case FiniteAutomaton::exponentially_ambiguous:
 			log->set_parameter("result", "Exponentially ambiguous");
-		break;
-	case FiniteAutomaton::almost_unambigious:
-		if (log)
+			break;
+		case FiniteAutomaton::almost_unambigious:
 			log->set_parameter("result", "Almost unambigious");
-		break;
-	case FiniteAutomaton::unambigious:
-		if (log)
+			break;
+		case FiniteAutomaton::unambigious:
 			log->set_parameter("result", "Unambigious");
-		break;
-	case FiniteAutomaton::polynomially_ambigious:
-		if (log)
+			break;
+		case FiniteAutomaton::polynomially_ambigious:
 			log->set_parameter("result", "Polynomially ambiguous");
-		break;
-	default:
-		break;
+			break;
+		default:
+			break;
+		}
 	}
 	return result;
 }
