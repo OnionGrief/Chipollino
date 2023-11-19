@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <regex>
 #include <variant>
 
 #include "Logger/LogTemplate.h"
@@ -104,9 +105,10 @@ string LogTemplate::render() const {
 				}
 
 				if (std::holds_alternative<Regex>(param.value)) {
-					s.insert(insert_place,
-							 std::get<Regex>(param.value)
-								 .to_txt()); // Math mode is done in global renderer
+					// Math mode is done in global renderer
+					string r0 = std::get<Regex>(param.value).to_txt();
+					string r = std::regex_replace(r0, std::regex("\\^"), "\\textasciicircum ");
+					s.insert(insert_place, r);
 				} else if (std::holds_alternative<FiniteAutomaton>(param.value)) {
 					std::hash<string> hasher;
 					string c_graph;

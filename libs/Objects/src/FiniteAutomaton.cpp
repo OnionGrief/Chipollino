@@ -327,7 +327,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 
 	std::stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
-		ss << "\\{" << state.identifier << "\\}\;";
+		ss << "\\{" << state.identifier << "\\};";
 	}
 	MetaInfo old_meta, new_meta;
 	for (int i = 0; i < dfa.states.size(); i++) {
@@ -1363,7 +1363,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 		ss << "\\{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
 			ss << elem.second[i]->name << ",\\ ";
-		ss << elem.second[elem.second.size() - 1]->name << "\\}\;";
+		ss << elem.second[elem.second.size() - 1]->name << "\\};";
 	}
 	if (log) {
 		log->set_parameter("oldautomaton", *this, old_meta);

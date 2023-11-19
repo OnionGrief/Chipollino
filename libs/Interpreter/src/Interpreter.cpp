@@ -183,12 +183,10 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 	logger.log("running function \"" + function.name + "\"");
 
 	auto get_automaton = [](const GeneralObject& obj) -> const FiniteAutomaton& {
-		if (std::holds_alternative<ObjectNFA>(obj)) {
+		if (std::holds_alternative<ObjectNFA>(obj))
 			return std::get<ObjectNFA>(obj).value;
-		}
-		if (std::holds_alternative<ObjectDFA>(obj)) {
+		else
 			return std::get<ObjectDFA>(obj).value;
-		}
 	};
 
 	auto is_automaton = [](const GeneralObject& obj) -> const bool {
