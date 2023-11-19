@@ -4,6 +4,17 @@
 #include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 
+using std::cerr;
+using std::cout;
+using std::make_shared;
+using std::map;
+using std::pair;
+using std::set;
+using std::string;
+using std::to_string;
+using std::unordered_map;
+using std::vector;
+
 Regex::Regex(const string& str) : Regex() {
 	try {
 		bool res = from_string(str);
@@ -11,7 +22,7 @@ Regex::Regex(const string& str) : Regex() {
 			throw std::runtime_error("Regex::from_string() ERROR");
 		}
 	} catch (const std::runtime_error& re) {
-		cout << re.what() << "\n";
+		cerr << re.what() << "\n";
 		exit(EXIT_FAILURE);
 	}
 }
@@ -122,19 +133,34 @@ Regex* Regex::scan_minus(const vector<AlgExpression::Lexeme>& lexemes, int index
 	return p;
 }
 
+FAState::FAState(int index, string identifier, bool is_terminal,
+				 map<alphabet_symbol, set<int>> transitions)
+	: index(index), identifier(identifier), is_terminal(is_terminal), transitions(transitions) {}
+
+FAState::FAState(int index, string identifier, bool is_terminal)
+	: index(index), identifier(identifier), is_terminal(is_terminal) {}
+
+void FAState::set_transition(int to, const alphabet_symbol& symbol) {
+	transitions[symbol].insert(to);
+}
+
 // возвращает пару <вектор сотсояний, max_index>
-std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
-	string id_str;				  // идентификатор состояния
-	vector<State> fa_states = {}; // вектор состояний нового автомата
+pair<vector<FAState>, int> Regex::get_thompson(int max_index) const {
+	string id_str;					// идентификатор состояния
+	vector<FAState> fa_states = {}; // вектор состояний нового автомата
 	// для формирования поля transitions состояний автомата (структуры State)
 	map<alphabet_symbol, set<int>> state_transitons;
 	int offset; // сдвиг для старых индексов состояний в новом автомате
 	// список состояний и макс индекс состояния для левого автомата относительно операции
-	std::pair<vector<State>, int> fa_left;
+	pair<vector<FAState>, int> fa_left;
 	// список состояний и макс индекс состояния для правого автомата относительно операции
-	std::pair<vector<State>, int> fa_right;
+	pair<vector<FAState>, int> fa_right;
 	// автомат для отрицания, строится обычный томпсон и берется дополнение
 	FiniteAutomaton fa_negative;
+
+	vector<FAState> negative_states;
+	vector<FAState> res;
+	vector<FiniteAutomaton::State> states1;
 
 	switch (type) {
 	case Type::alt: // |
@@ -142,8 +168,8 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		fa_right = Regex::cast(term_r)->get_thompson(fa_left.second);
 		max_index = fa_right.second;
 
-		id_str = "q" + std::to_string(max_index + 1);
-		fa_states.push_back(State(0, {}, id_str, false, {}));
+		id_str = "q" + to_string(max_index + 1);
+		fa_states.emplace_back(0, id_str, false);
 		fa_states.back().set_transition(1, alphabet_symbol::epsilon());
 		fa_states.back().set_transition(int(fa_left.first.size()) + 1, alphabet_symbol::epsilon());
 
@@ -160,8 +186,7 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 					int(fa_left.first.size() + fa_right.first.size()) + 1};
 			}
 
-			fa_states.emplace_back(
-				state.index + 1, set<int>(), state.identifier, false, state_transitons);
+			fa_states.emplace_back(state.index + 1, state.identifier, false, state_transitons);
 		}
 
 		offset = fa_states.size();
@@ -178,16 +203,11 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 																int(fa_right.first.size())};
 			}
 
-			fa_states.emplace_back(
-				state.index + offset, set<int>(), state.identifier, false, state_transitons);
+			fa_states.emplace_back(state.index + offset, state.identifier, false, state_transitons);
 		}
 
-		id_str = "q" + std::to_string(max_index + 2);
-		fa_states.emplace_back(int(fa_left.first.size() + fa_right.first.size()) + 1,
-							   set<int>(),
-							   id_str,
-							   true,
-							   std::map<alphabet_symbol, std::set<int>>{});
+		id_str = "q" + to_string(max_index + 2);
+		fa_states.emplace_back(int(fa_left.first.size() + fa_right.first.size()) + 1, id_str, true);
 
 		return {fa_states, max_index + 2};
 	case Type::conc: // .
@@ -211,13 +231,12 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 				}
 			}
 
-			fa_states.emplace_back(
-				state.index, set<int>(), state.identifier, false, state_transitons);
+			fa_states.emplace_back(state.index, state.identifier, false, state_transitons);
 		}
 
 		offset = fa_states.size();
 		for (size_t i = 1; i < fa_right.first.size(); i++) {
-			const State& state = fa_right.first[i];
+			const FAState& state = fa_right.first[i];
 			state_transitons = {};
 			for (const auto& [symb, states] : state.transitions) {
 				for (int transition_to : states) {
@@ -225,11 +244,8 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 				}
 			}
 
-			fa_states.emplace_back(state.index + offset - 1,
-								   set<int>(),
-								   state.identifier,
-								   state.is_terminal,
-								   state_transitons);
+			fa_states.emplace_back(
+				state.index + offset - 1, state.identifier, state.is_terminal, state_transitons);
 		}
 
 		return {fa_states, max_index};
@@ -237,8 +253,8 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		fa_left = Regex::cast(term_l)->get_thompson(max_index);
 		max_index = fa_left.second;
 
-		id_str = "q" + std::to_string(max_index + 1);
-		fa_states.emplace_back(0, set<int>(), id_str, false, map<alphabet_symbol, set<int>>());
+		id_str = "q" + to_string(max_index + 1);
+		fa_states.emplace_back(0, id_str, false);
 		fa_states.back().set_transition(1, alphabet_symbol::epsilon());
 		fa_states.back().set_transition(int(fa_left.first.size()) + 1, alphabet_symbol::epsilon());
 
@@ -254,37 +270,35 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 				state_transitons[alphabet_symbol::epsilon()] = {1, int(fa_left.first.size()) + 1};
 			}
 
-			fa_states.emplace_back(
-				state.index + 1, set<int>(), state.identifier, false, state_transitons);
+			fa_states.emplace_back(state.index + 1, state.identifier, false, state_transitons);
 		}
 
-		id_str = "q" + std::to_string(max_index + 2);
-		fa_states.emplace_back(int(fa_left.first.size()) + 1,
-							   set<int>(),
-							   id_str,
-							   true,
-							   map<alphabet_symbol, set<int>>());
+		id_str = "q" + to_string(max_index + 2);
+		fa_states.emplace_back(int(fa_left.first.size()) + 1, id_str, true);
 
 		return {fa_states, max_index + 2};
 	case Type::eps:
-		id_str = "q" + std::to_string(max_index + 1);
-		fa_states.emplace_back(0, set<int>(), id_str, false, map<alphabet_symbol, set<int>>());
+		id_str = "q" + to_string(max_index + 1);
+		fa_states.emplace_back(0, id_str, false);
 		fa_states[0].set_transition(1, alphabet_symbol::epsilon());
 
-		id_str = "q" + std::to_string(max_index + 2);
-		fa_states.emplace_back(1, set<int>(), id_str, true, map<alphabet_symbol, set<int>>());
+		id_str = "q" + to_string(max_index + 2);
+		fa_states.emplace_back(1, id_str, true);
 
 		return {fa_states, max_index + 2};
 	case Type::negative:
 		// строим автомат для отрицания
-		fa_negative = FiniteAutomaton(
-			0, Regex::cast(term_l)->get_thompson(-1).first, Regex::cast(term_l)->alphabet);
+		res = Regex::cast(term_l)->get_thompson(-1).first;
+		for (const auto& i : res) {
+			states1.emplace_back(i.index, i.identifier, i.is_terminal, i.transitions);
+		}
+		fa_negative = FiniteAutomaton(0, states1, Regex::cast(term_l)->alphabet);
 		fa_negative = fa_negative.minimize();
 		// берем дополнение автомата
 		fa_negative = fa_negative.complement();
 		// нумеруем состояния
 		for (auto& state : fa_negative.states) {
-			state.identifier = "q" + std::to_string(max_index);
+			state.identifier = "q" + to_string(max_index);
 			if (state.is_terminal) {
 				state.is_terminal = false;
 				state.set_transition(fa_negative.states.size(), alphabet_symbol::epsilon());
@@ -293,21 +307,21 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 			max_index++;
 		}
 
-		id_str = "q" + std::to_string(max_index);
+		id_str = "q" + to_string(max_index);
 		max_index++;
-		fa_negative.states.emplace_back(int(fa_negative.states.size()),
-										set<int>(),
-										id_str,
-										true,
-										map<alphabet_symbol, set<int>>());
+		fa_negative.states.emplace_back(int(fa_negative.states.size()), id_str, true);
+
+		for (const auto& i : res) {
+			negative_states.emplace_back(i.index, i.identifier, i.is_terminal, i.transitions);
+		}
 		// возвращаем состояния и макс индекс
-		return {fa_negative.states, max_index};
+		return {negative_states, max_index};
 	default:
-		id_str = "q" + std::to_string(max_index + 1);
-		fa_states.emplace_back(0, set<int>(), id_str, false, map<alphabet_symbol, set<int>>());
+		id_str = "q" + to_string(max_index + 1);
+		fa_states.emplace_back(0, id_str, false);
 		fa_states[0].set_transition(1, value.symbol);
-		id_str = "q" + std::to_string(max_index + 2);
-		fa_states.emplace_back(1, set<int>(), id_str, true, map<alphabet_symbol, set<int>>());
+		id_str = "q" + to_string(max_index + 2);
+		fa_states.emplace_back(1, id_str, true);
 
 		return {fa_states, max_index + 2};
 	}
@@ -315,7 +329,12 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 }
 
 FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
-	FiniteAutomaton fa(0, get_thompson(-1).first, language);
+	vector<FAState> res = get_thompson(-1).first;
+	vector<FiniteAutomaton::State> states;
+	for (const auto& i : res) {
+		states.emplace_back(i.index, i.identifier, i.is_terminal, i.transitions);
+	}
+	FiniteAutomaton fa(0, states, language);
 	if (log) {
 		log->set_parameter("oldregex", *this);
 		log->set_parameter("result", fa);
@@ -341,7 +360,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 
 Regex Regex::delinearize(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = Regex::cast(temp_copy.pre_order_travers());
+	vector<Regex*> list = cast(temp_copy.pre_order_travers());
 	set<alphabet_symbol> lang_del;
 	for (auto& i : list) {
 		i->value.symbol.delinearize();
@@ -355,9 +374,29 @@ Regex Regex::delinearize(iLogTemplate* log) const {
 	return temp_copy;
 }
 
+vector<Regex*> Regex::pre_order_travers() {
+	vector<Regex*> res;
+	if (AlgExpression::symb == type) {
+		res.push_back(this);
+		return res;
+	}
+
+	if (term_l) {
+		vector<Regex*> l = cast(term_l)->pre_order_travers();
+		res.insert(res.end(), l.begin(), l.end());
+	}
+
+	if (term_r) {
+		vector<Regex*> r = cast(term_r)->pre_order_travers();
+		res.insert(res.end(), r.begin(), r.end());
+	}
+
+	return res;
+}
+
 FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> symbols = Regex::cast(temp_copy.pre_order_travers());
+	vector<Regex*> symbols = temp_copy.pre_order_travers();
 	for (size_t i = 0; i < symbols.size(); i++) {
 		symbols[i]->value.number = i;
 		symbols[i]->value.symbol.linearize(i);
@@ -368,7 +407,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	unordered_map<int, vector<int>> following_states =
 		temp_copy.pairs(); // множество состояний, которым предшествует key-int
 	int eps_in = this->contains_eps();
-	vector<State> st; // Список состояний в автомате
+	vector<FiniteAutomaton::State> states; // Список состояний в автомате
 
 	string str_first;
 	string str_end;
@@ -412,9 +451,9 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	}
 
 	if (eps_in) {
-		st.push_back(State(0, {}, "S", true, start_state_transitions));
+		states.emplace_back(0, "S", true, start_state_transitions);
 	} else {
-		st.push_back(State(0, {}, "S", false, start_state_transitions));
+		states.emplace_back(0, "S", false, start_state_transitions);
 	}
 
 	std::unordered_set<int> last_lexemes;
@@ -433,10 +472,10 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 		// В last_lexemes номера конечных лексем => last_lexemes.count проверяет есть ли
 		// номер лексемы в списке конечных лексем (является ли состояние конечным)
-		st.push_back(State(i + 1, {}, id_str, last_lexemes.count(lexeme.number), transitions));
+		states.emplace_back(i + 1, id_str, last_lexemes.count(lexeme.number), transitions);
 	}
 
-	FiniteAutomaton fa(0, st, language);
+	FiniteAutomaton fa(0, states, language);
 	if (log) {
 		log->set_parameter("oldregex", temp_copy);
 		log->set_parameter("linearised regex", temp_copy.linearize());
@@ -450,13 +489,13 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 	FiniteAutomaton glushkov = this->to_glushkov();
-	vector<State> states = glushkov.states;
+	vector<FiniteAutomaton::State> states = glushkov.states;
 	vector<int> follow;
 	for (size_t i = 0; i < states.size(); i++) {
-		State st1 = states[i];
+		FiniteAutomaton::State st1 = states[i];
 		map<alphabet_symbol, set<int>> map1 = st1.transitions;
 		for (size_t j = i + 1; j < states.size(); j++) {
-			State st2 = states[j];
+			FiniteAutomaton::State st2 = states[j];
 			map<alphabet_symbol, set<int>> map2 = st2.transitions;
 			bool flag = true;
 			if (i == j || map2.size() != map1.size() || st1.is_terminal != st2.is_terminal) {
@@ -478,7 +517,7 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 		}
 	}
 
-	vector<State> new_states;
+	vector<FiniteAutomaton::State> new_states;
 	for (auto& state : states) {
 		if (find(follow.begin(), follow.end(), state.index) == follow.end()) {
 			new_states.push_back(state);
@@ -498,7 +537,7 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 	// cout << str_follow;
 
 	for (size_t i = 0; i < new_states.size(); i++) {
-		State v1 = new_states[i];
+		FiniteAutomaton::State v1 = new_states[i];
 		map<alphabet_symbol, set<int>> old_map = v1.transitions;
 		map<alphabet_symbol, set<int>> new_map;
 		for (auto& it1 : old_map) {
@@ -874,7 +913,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 					if (!derivative_with_respect_to_str(*it, this, *Regex::cast(pumping.term_r)))
 						continue;
 					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language = std::make_shared<Language>(pumping.alphabet);
+					pumping.language = make_shared<Language>(pumping.alphabet);
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;
@@ -970,7 +1009,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 		name_states.push_back(state.to_txt());
 	}
 
-	vector<State> automat_state;
+	vector<FiniteAutomaton::State> automat_state;
 
 	string deriv_log;
 
@@ -1152,7 +1191,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 			}
 		}
 		for (int elem : reachable_by_consistent_symb) {
-			FiniteAutomaton consistent_symb_automaton(0, {}, std::make_shared<Language>());
+			FiniteAutomaton consistent_symb_automaton(0, {}, set<alphabet_symbol>());
 			set<int> reachable_states = min_fa.closure({elem}, false);
 			vector<int> inserted_states_indices;
 			int consistent_symb_automaton_initial_state = 0;
@@ -1186,7 +1225,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 				}
 			}
 			consistent_symb_automaton.language =
-				std::make_shared<Language>(consistent_symb_automaton_alphabet);
+				make_shared<Language>(consistent_symb_automaton_alphabet);
 			FiniteAutomaton consistent_symb_automaton_cut =
 				FiniteAutomaton(consistent_symb_automaton.initial_state,
 								consistent_symb_automaton.states,
@@ -1226,8 +1265,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	return res;
 }
 
-Regex Regex::normalize_regex(const vector<std::pair<Regex, Regex>>& rules,
-							 iLogTemplate* log) const {
+Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules, iLogTemplate* log) const {
 	Regex regex = *this;
 	if (log) {
 		log->set_parameter("oldregex", *this);

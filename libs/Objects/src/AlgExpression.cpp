@@ -6,6 +6,16 @@
 #include "Objects/AlgExpression.h"
 #include "Objects/Language.h"
 
+using std::cout;
+using std::endl;
+using std::make_shared;
+using std::map;
+using std::set;
+using std::string;
+using std::to_string;
+using std::unordered_map;
+using std::vector;
+
 AlgExpression::AlgExpression() {
 	type = AlgExpression::eps;
 }
@@ -55,7 +65,7 @@ AlgExpression& AlgExpression::operator=(const AlgExpression& other) {
 
 void AlgExpression::set_language(const set<alphabet_symbol>& _alphabet) {
 	alphabet = _alphabet;
-	language = std::make_shared<Language>(alphabet);
+	language = make_shared<Language>(alphabet);
 }
 
 void AlgExpression::generate_alphabet(set<alphabet_symbol>& _alphabet) {
@@ -72,7 +82,7 @@ void AlgExpression::generate_alphabet(set<alphabet_symbol>& _alphabet) {
 
 void AlgExpression::make_language() {
 	generate_alphabet(alphabet);
-	language = std::make_shared<Language>(alphabet);
+	language = make_shared<Language>(alphabet);
 }
 
 bool AlgExpression::is_terminal_type(Type t) {
@@ -132,7 +142,7 @@ void AlgExpression::print_subtree(AlgExpression* expr, int level) const {
 		if (expr->value.symbol != "")
 			r_v = expr->value.symbol;
 		else
-			r_v = std::to_string(expr->type);
+			r_v = to_string(expr->type);
 		cout << r_v << endl;
 		print_subtree(expr->term_r, level + 1);
 	}
@@ -146,7 +156,7 @@ void AlgExpression::print_tree() const {
 	if (value.symbol != "")
 		r_v = value.symbol;
 	else
-		r_v = std::to_string(type);
+		r_v = to_string(type);
 	cout << r_v << endl;
 	print_subtree(term_r, 1);
 }
@@ -177,7 +187,7 @@ string AlgExpression::print_subdot(AlgExpression* expr, const string& parent_dot
 								   int& id) const {
 	string dot;
 	if (expr) {
-		string dot_node = "node" + std::to_string(id++);
+		string dot_node = "node" + to_string(id++);
 
 		alphabet_symbol r_v;
 		r_v = expr->type_to_str();
@@ -203,7 +213,7 @@ void AlgExpression::print_dot() const {
 	alphabet_symbol r_v;
 	r_v = type_to_str();
 
-	string root_dot_node = "node" + std::to_string(id++);
+	string root_dot_node = "node" + to_string(id++);
 	dot += root_dot_node + " [label=\"" + string(r_v) + "\"];\n";
 
 	dot += print_subdot(term_l, root_dot_node, id);
@@ -292,6 +302,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 				return {Lexeme::Type::error};
 
 			lexeme.type = Lexeme::Type::ref;
+			lexeme.symbol = '&' + to_string(lexeme.number);
 			regex_is_eps = false;
 			brackets_are_empty = false;
 			break;
@@ -417,7 +428,7 @@ bool AlgExpression::from_string(const string& str, bool allow_ref, bool allow_ne
 		value = Lexeme::Type::eps;
 		type = Type::eps;
 		alphabet = {};
-		language = std::make_shared<Language>(alphabet);
+		language = make_shared<Language>(alphabet);
 		return true;
 	}
 
@@ -430,7 +441,7 @@ bool AlgExpression::from_string(const string& str, bool allow_ref, bool allow_ne
 	}
 
 	copy(root);
-	language = std::make_shared<Language>(alphabet);
+	language = make_shared<Language>(alphabet);
 
 	delete root;
 	return true;
@@ -467,9 +478,8 @@ AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lex
 			p->value = lexemes[i];
 			p->type = conc;
 
-			set<alphabet_symbol> s = l->alphabet;
-			s.insert(r->alphabet.begin(), r->alphabet.end());
-			p->alphabet = s;
+			p->alphabet = l->alphabet;
+			p->alphabet.insert(r->alphabet.begin(), r->alphabet.end());
 			return p;
 		}
 	}
@@ -572,26 +582,6 @@ AlgExpression* AlgExpression::scan_par(const vector<AlgExpression::Lexeme>& lexe
 	return p;
 }
 
-vector<AlgExpression*> AlgExpression::pre_order_travers() {
-	vector<AlgExpression*> res;
-	if (AlgExpression::symb == type) {
-		res.push_back(this);
-		return res;
-	}
-
-	if (term_l) {
-		vector<AlgExpression*> l = term_l->pre_order_travers();
-		res.insert(res.end(), l.begin(), l.end());
-	}
-
-	if (term_r) {
-		vector<AlgExpression*> r = term_r->pre_order_travers();
-		res.insert(res.end(), r.begin(), r.end());
-	}
-
-	return res;
-}
-
 bool AlgExpression::contains_eps() const {
 	switch (type) {
 	case Type::alt:
@@ -599,8 +589,10 @@ bool AlgExpression::contains_eps() const {
 	case conc:
 		return term_l->contains_eps() && term_r->contains_eps();
 	case Type::star:
-	case AlgExpression::eps:
+	case Type::eps:
 		return true;
+	case Type::memoryWriter:
+		return term_l->contains_eps();
 	default:
 		return false;
 	}
@@ -664,9 +656,6 @@ vector<AlgExpression*> AlgExpression::get_first_nodes() {
 		r = term_r->get_first_nodes();
 		l.insert(l.end(), r.begin(), r.end());
 		return l;
-	case Type::star:
-		l = term_l->get_first_nodes();
-		return l;
 	case Type::conc:
 		l = term_l->get_first_nodes();
 		if (term_l->contains_eps()) {
@@ -674,11 +663,13 @@ vector<AlgExpression*> AlgExpression::get_first_nodes() {
 			l.insert(l.end(), r.begin(), r.end());
 		}
 		return l;
+	case Type::star:
+	case Type::memoryWriter:
+		return term_l->get_first_nodes();
 	case AlgExpression::eps:
 		return {};
 	default:
-		l.push_back(this);
-		return l;
+		return {this};
 	}
 }
 
@@ -691,9 +682,6 @@ vector<AlgExpression*> AlgExpression::get_last_nodes() {
 		r = term_r->get_last_nodes();
 		l.insert(l.end(), r.begin(), r.end());
 		return l;
-	case Type::star:
-		l = term_l->get_last_nodes();
-		return l;
 	case Type::conc:
 		l = term_r->get_last_nodes();
 		if (term_r->contains_eps()) {
@@ -701,11 +689,13 @@ vector<AlgExpression*> AlgExpression::get_last_nodes() {
 			l.insert(l.end(), r.begin(), r.end());
 		}
 		return l;
+	case Type::star:
+	case Type::memoryWriter:
+		return term_l->get_last_nodes();
 	case AlgExpression::eps:
 		return {};
 	default:
-		l.push_back(this);
-		return l;
+		return {this};
 	}
 }
 
@@ -720,17 +710,6 @@ unordered_map<int, vector<int>> AlgExpression::pairs() const {
 		r = term_r->pairs();
 		for (const auto& i : r) {
 			l[i.first].insert(l[i.first].end(), i.second.begin(), i.second.end());
-		}
-
-		return l;
-	case Type::star:
-		l = term_l->pairs();
-		last = term_l->get_last_nodes();
-		first = term_l->get_first_nodes();
-		for (auto& i : last) {
-			for (auto& j : first) {
-				l[i->value.number].push_back(j->value.number);
-			}
 		}
 
 		return l;
@@ -750,6 +729,19 @@ unordered_map<int, vector<int>> AlgExpression::pairs() const {
 		}
 
 		return l;
+	case Type::star:
+		l = term_l->pairs();
+		last = term_l->get_last_nodes();
+		first = term_l->get_first_nodes();
+		for (auto& i : last) {
+			for (auto& j : first) {
+				l[i->value.number].push_back(j->value.number);
+			}
+		}
+
+		return l;
+	case Type::memoryWriter:
+		return term_l->pairs();
 	default:
 		break;
 	}

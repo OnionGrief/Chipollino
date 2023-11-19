@@ -1,5 +1,12 @@
 #include "InputGenerator/TasksGenerator.h"
 
+using std::map;
+using std::ofstream;
+using std::pair;
+using std::string;
+using std::to_string;
+using std::vector;
+
 TasksGenerator::TasksGenerator() {
 	change_seed();
 	distribute_functions();
@@ -28,8 +35,8 @@ string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 }
 
 void TasksGenerator::write_to_file(string filename) {
-	std::ofstream out;
-	out.open(filename, std::ofstream::trunc);
+	ofstream out;
+	out.open(filename, ofstream::trunc);
 	if (out.is_open())
 		out << res_str;
 	out.close();
@@ -70,7 +77,7 @@ string TasksGenerator::generate_predicate() {
 		if (for_static_Tpchkr) {
 			if (rand() % 4 && id_num > 1) {
 				int rand_id = rand() % id_num + 1;
-				str += " N" + std::to_string(rand_id);
+				str += " N" + to_string(rand_id);
 			} else {
 				str += " " + regex_generator.generate_framed_regex();
 			}
@@ -81,7 +88,7 @@ string TasksGenerator::generate_predicate() {
 				if (ids.count(REGEX) && rand() % 2) {
 					vector<Id> possible_ids = ids[REGEX];
 					Id rand_id = possible_ids[rand() % possible_ids.size()];
-					str += " N" + std::to_string(rand_id.num);
+					str += " N" + to_string(rand_id.num);
 				} else {
 					str += " " + regex_generator.generate_framed_regex();
 				}
@@ -94,7 +101,7 @@ string TasksGenerator::generate_predicate() {
 				vector<Id> possible_ids = ids[id_type];
 				int rand_num = rand() % possible_ids.size();
 				Id rand_id = possible_ids[rand_num];
-				str += " N" + std::to_string(rand_id.num);
+				str += " N" + to_string(rand_id.num);
 			}
 		}
 	}
@@ -111,11 +118,11 @@ string TasksGenerator::generate_test() {
 	if (rand() % 2 && ids.count(NFA_DFA)) {
 		vector<Id> possible_ids = ids[NFA_DFA];
 		Id rand_id = possible_ids[rand() % possible_ids.size()];
-		str += "N" + std::to_string(rand_id.num);
+		str += "N" + to_string(rand_id.num);
 	} else if (rand() % 2 && ids.count(REGEX)) {
 		vector<Id> possible_ids = ids[REGEX];
 		Id rand_id = possible_ids[rand() % possible_ids.size()];
-		str += "N" + std::to_string(rand_id.num);
+		str += "N" + to_string(rand_id.num);
 	} else {
 		str += regex_generator.generate_framed_regex();
 	}
@@ -126,7 +133,7 @@ string TasksGenerator::generate_test() {
 	str += regex_generator.generate_framed_regex();
 
 	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
-	str += " " + std::to_string(rand_num);
+	str += " " + to_string(rand_num);
 
 	return str;
 }
@@ -135,7 +142,7 @@ string TasksGenerator::generate_declaration() {
 	change_seed();
 	string str = "";
 	id_num++;
-	str += "N" + std::to_string(id_num) + " = ";
+	str += "N" + to_string(id_num) + " = ";
 	int funcNum = max_num_of_func_in_seq > 0 ? rand() % (max_num_of_func_in_seq + 1) : 0;
 
 	string prevOutput;
@@ -164,7 +171,7 @@ string TasksGenerator::generate_declaration() {
 			if (for_static_Tpchkr) {
 				if (rand() % 2 && id_num > 1) {
 					int rand_id = rand() % (id_num - 1) + 1;
-					func_str += " N" + std::to_string(rand_id);
+					func_str += " N" + to_string(rand_id);
 				} else {
 					func_str += " " + regex_generator.generate_framed_regex();
 				}
@@ -176,7 +183,7 @@ string TasksGenerator::generate_declaration() {
 					if (ids.count(REGEX) && rand() % 2) {
 						vector<Id> possible_ids = ids[REGEX];
 						Id rand_id = possible_ids[rand() % possible_ids.size()];
-						func_str += " N" + std::to_string(rand_id.num);
+						func_str += " N" + to_string(rand_id.num);
 					} else {
 						func_str += " " + regex_generator.generate_framed_regex();
 					}
@@ -186,7 +193,7 @@ string TasksGenerator::generate_declaration() {
 					// сгенерировать число или найти идентификатор (так можно??)
 					// таких функций пока нет
 					int rand_num = rand() % 5; // пусть будет до 5..
-					func_str += " " + std::to_string(rand_num);
+					func_str += " " + to_string(rand_num);
 				}
 
 				if (first_func.input[i] == NFA || first_func.input[i] == DFA) {
@@ -196,7 +203,7 @@ string TasksGenerator::generate_declaration() {
 					vector<Id> possible_ids = ids[id_type];
 					int rand_num = rand() % possible_ids.size();
 					Id rand_id = possible_ids[rand_num];
-					func_str += " N" + std::to_string(rand_id.num);
+					func_str += " N" + to_string(rand_id.num);
 				}
 
 				// TODO:
@@ -208,7 +215,7 @@ string TasksGenerator::generate_declaration() {
 				if (first_func.input[i] == PG) {
 					vector<Id> possible_ids = ids[PG];
 					Id rand_id = possible_ids[rand() % possible_ids.size()];
-					func_str += " N" + std::to_string(rand_id.num);
+					func_str += " N" + to_string(rand_id.num);
 				}
 			}
 		}
@@ -230,12 +237,12 @@ string TasksGenerator::generate_declaration() {
 			while (id_output == NFA_DFA) {
 				it = ids.begin();
 				advance(it, (rand() % ids.size()));
-				std::pair<string, vector<Id>> possible_ids = *it;
+				pair<string, vector<Id>> possible_ids = *it;
 				id_output = possible_ids.first;
 			}
 			vector<Id> possible_ids = it->second;
 			Id rand_id = possible_ids[rand() % possible_ids.size()];
-			str += "N" + std::to_string(rand_id.num);
+			str += "N" + to_string(rand_id.num);
 			prevOutput = id_output;
 		} else {
 			str += regex_generator.generate_framed_regex();

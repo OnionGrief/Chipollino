@@ -16,7 +16,17 @@
 
 class Language;
 class FiniteAutomaton;
-struct State;
+
+struct FAState {
+	int index;
+	std::string identifier;
+	bool is_terminal;
+	std::map<alphabet_symbol, std::set<int>> transitions;
+	FAState(int index, std::string identifier, bool is_terminal,
+			std::map<alphabet_symbol, std::set<int>> transitions);
+	FAState(int index, std::string identifier, bool is_terminal);
+	void set_transition(int, const alphabet_symbol&);
+};
 
 class Regex : public AlgExpression {
   private:
@@ -24,29 +34,33 @@ class Regex : public AlgExpression {
 	// возвращает указатель на new Regex
 	Regex* make() const override;
 
+	Regex* expr(const std::vector<Lexeme>&, int, int) override;
+	Regex* scan_minus(const std::vector<Lexeme>&, int, int);
+
+	// возвращает вектор листьев дерева regex
+	std::vector<Regex*> pre_order_travers();
+
 	// Множество префиксов длины len
-	void get_prefix(int len, set<string>& prefs) const; // NOLINT(runtime/references)
+	void get_prefix(int len, std::set<std::string>& prefs) const; // NOLINT(runtime/references)
 	// Производная по символу
 	bool derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
 	bool partial_derivative_with_respect_to_sym(
 		Regex* respected_sym, const Regex* reg_e,
-		vector<Regex>& result) const; // NOLINT(runtime/references)
+		std::vector<Regex>& result) const; // NOLINT(runtime/references)
 	// Производная по префиксу
-	bool derivative_with_respect_to_str(string str, const Regex* reg_e,
+	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
-	std::pair<vector<State>, int> get_thompson(int) const;
+	std::pair<std::vector<FAState>, int> get_thompson(int) const;
 
-	void normalize_this_regex(const vector<std::pair<Regex, Regex>>&); // переписывание regex по
-																	   // пользовательским правилам
-
-	Regex* expr(const vector<Lexeme>&, int, int) override;
-	Regex* scan_minus(const vector<Lexeme>&, int, int);
+	void normalize_this_regex(
+		const std::vector<std::pair<Regex, Regex>>&); // переписывание regex по
+													  // пользовательским правилам
 
   public:
 	Regex() = default;
-	Regex(const string&); // NOLINT(runtime/explicit)
-	Regex(const string&, const std::shared_ptr<Language>&);
+	Regex(const std::string&); // NOLINT(runtime/explicit)
+	Regex(const std::string&, const std::shared_ptr<Language>&);
 
 	Regex* make_copy() const override;
 	Regex(const Regex&) = default;
@@ -55,7 +69,8 @@ class Regex : public AlgExpression {
 	template <typename T> static Regex* cast(T* ptr, bool not_null_ptr = true);
 	template <typename T> static const Regex* cast(const T* ptr, bool not_null_ptr = true);
 	// dynamic_cast каждого элемента вектора к типу Regex*
-	template <typename T> static vector<Regex*> cast(vector<T*> ptr, bool not_null_ptr = true);
+	template <typename T>
+	static std::vector<Regex*> cast(std::vector<T*> ptr, bool not_null_ptr = true);
 
 	FiniteAutomaton to_thompson(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;
@@ -73,9 +88,9 @@ class Regex : public AlgExpression {
 	std::optional<Regex> symbol_derivative(const Regex& respected_sym) const;
 	// Частичная производная по символу
 	void partial_symbol_derivative(const Regex& respected_sym,
-								   vector<Regex>& result) const; // NOLINT(runtime/references)
+								   std::vector<Regex>& result) const; // NOLINT(runtime/references)
 	// Производная по префиксу
-	std::optional<Regex> prefix_derivative(string respected_str) const;
+	std::optional<Regex> prefix_derivative(std::string respected_str) const;
 	// Длина накачки
 	int pump_length(iLogTemplate* log = nullptr) const;
 
@@ -89,7 +104,7 @@ class Regex : public AlgExpression {
 	Regex get_one_unambiguous_regex(iLogTemplate* log = nullptr) const;
 
 	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const vector<std::pair<Regex, Regex>>&,
+	Regex normalize_regex(const std::vector<std::pair<Regex, Regex>>&,
 						  iLogTemplate* log = nullptr) const;
 };
 

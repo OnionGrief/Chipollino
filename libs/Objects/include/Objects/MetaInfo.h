@@ -24,7 +24,7 @@ using Meta = std::variant<EdgeMeta, NodeMeta>;
 
 class MetaInfo {
   private:
-	vector<Meta> metadata;
+	std::vector<Meta> metadata;
 
   public:
 	// Числовой идентификатор разметки ловушки
@@ -32,10 +32,10 @@ class MetaInfo {
 	// Добавление единственного элемента разметки
 	void upd(const Meta& item);
 	// Преобразование в формат, входной для модулей рефала (и печати во вспомогательный файл)
-	string to_output() const;
+	std::string to_output() const;
 	// Разметка всех переходов автомата из множества выделенных состояний from в множество to по
 	// символу by
-	void mark_transitions(const FiniteAutomaton&, const set<int>& from, set<int> to,
+	void mark_transitions(const FiniteAutomaton&, const std::set<int>& from, std::set<int> to,
 						  const alphabet_symbol& by, int group_id);
 	MetaInfo() = default;
 };

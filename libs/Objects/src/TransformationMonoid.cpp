@@ -5,6 +5,14 @@
 #include "Objects/Language.h"
 #include "Objects/TransformationMonoid.h"
 
+using std::cout;
+using std::map;
+using std::set;
+using std::string;
+using std::stringstream;
+using std::to_string;
+using std::vector;
+
 vector<alphabet_symbol> union_words(vector<alphabet_symbol> a, vector<alphabet_symbol> b) {
 	vector<alphabet_symbol> newword;
 	for (int i = 0; i < a.size(); i++) {
@@ -188,7 +196,7 @@ TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
 }
 
 string TransformationMonoid::to_txt() {
-	std::stringstream ss;
+	stringstream ss;
 	ss << "Equivalence classes:\n";
 	ss << get_equalence_classes_txt();
 	ss << "Rewriting rules:\n";
@@ -238,7 +246,7 @@ map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> TransformationMono
 }
 
 string TransformationMonoid::get_equalence_classes_txt() {
-	std::stringstream ss;
+	stringstream ss;
 	for (int i = 0; i < terms.size(); i++) {
 		ss << "Term	" << alphabet_symbol::vector_to_str(terms[i].name) << "	in	language	"
 		   << terms[i].isFinal << "\n";
@@ -263,7 +271,7 @@ map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 }
 
 string TransformationMonoid::get_rewriting_rules_txt(iLogTemplate* log) {
-	std::stringstream ss;
+	stringstream ss;
 	for (auto& item : rules) {
 		for (int i = 0; i < item.second.size(); i++) {
 			ss << alphabet_symbol::vector_to_str(item.second[i]) << "	->	"
@@ -397,7 +405,7 @@ int TransformationMonoid::class_card(iLogTemplate* log) {
 	if (log)
 		log->set_parameter("oldautomaton", automat);
 	if (log) {
-		log->set_parameter("result", std::to_string(terms.size()));
+		log->set_parameter("result", to_string(terms.size()));
 	}
 	return terms.size();
 }
@@ -408,7 +416,7 @@ int TransformationMonoid::class_length(iLogTemplate* log) {
 	if (log)
 		log->set_parameter("oldautomaton", automat);
 	if (log) {
-		log->set_parameter("result", std::to_string(terms[terms.size() - 1].name.size()));
+		log->set_parameter("result", to_string(terms[terms.size() - 1].name.size()));
 		// TODO: logs
 		log->set_parameter("One of the longest words",
 						   alphabet_symbol::vector_to_str(terms[terms.size() - 1].name));
@@ -551,7 +559,7 @@ string TransformationMonoid::to_txt_MyhillNerode() {
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
-	std::stringstream ss;
+	stringstream ss;
 	// iLogTemplate::Table t;
 	int maxlen = terms[terms.size() - 1].name.size();
 	ss << string(maxlen + 2, ' ');

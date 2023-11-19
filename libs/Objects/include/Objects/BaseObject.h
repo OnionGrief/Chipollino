@@ -6,11 +6,6 @@
 
 #include "AlphabetSymbol.h"
 
-using std::cout;
-using std::set;
-using std::string;
-using std::vector;
-
 class Language;
 
 class BaseObject {
@@ -20,6 +15,6 @@ class BaseObject {
   public:
 	BaseObject();
 	BaseObject(std::shared_ptr<Language>); // NOLINT(runtime/explicit)
-	BaseObject(set<alphabet_symbol>);	   // NOLINT(runtime/explicit)
-	virtual string to_txt() const = 0;
+	BaseObject(std::set<alphabet_symbol>); // NOLINT(runtime/explicit)
+	virtual std::string to_txt() const = 0;
 };

@@ -1,5 +1,9 @@
 #include "Interpreter/Interpreter.h"
 
+using std::ifstream;
+using std::string;
+using std::vector;
+
 bool Interpreter::Lexer::eof() {
 	return input.pos >= input.str.size();
 }
@@ -202,7 +206,7 @@ Interpreter::Lexem::Lexem(int num) : num(num), type(number) {}
 vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
 	auto logger = parent.init_log();
 	logger.log("Lexer: loading file " + path);
-	std::ifstream input_file(path);
+	ifstream input_file(path);
 	if (!input_file) {
 		logger.throw_error("Error: failed to open " + path);
 	}

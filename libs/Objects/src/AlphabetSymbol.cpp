@@ -1,5 +1,10 @@
 #include "Objects/AlphabetSymbol.h"
 
+using std::cout;
+using std::string;
+using std::to_string;
+using std::vector;
+
 alphabet_symbol::alphabet_symbol() {}
 alphabet_symbol::alphabet_symbol(const string& s) : symbol(s), value(s) {}
 alphabet_symbol::alphabet_symbol(const char* c) : symbol(c), value(c) {}
@@ -80,12 +85,12 @@ std::ostream& operator<<(std::ostream& os, const alphabet_symbol& as) {
 }
 
 void alphabet_symbol::annote(int num) {
-	annote_numbers.push_back(annote_marker + std::to_string(num));
+	annote_numbers.push_back(annote_marker + to_string(num));
 	update_value();
 }
 
 void alphabet_symbol::linearize(int num) {
-	linearize_numbers.push_back(linearize_marker + std::to_string(num));
+	linearize_numbers.push_back(linearize_marker + to_string(num));
 	update_value();
 }
 
@@ -109,4 +114,10 @@ bool alphabet_symbol::is_annotated() const {
 
 bool alphabet_symbol::is_linearized() const {
 	return !linearize_numbers.empty();
+}
+
+std::size_t AlphabetSymbolHasher::operator()(const alphabet_symbol& symbol) const {
+	std::hash<string> string_hash;
+	std::size_t hash = string_hash(symbol.value);
+	return hash;
 }

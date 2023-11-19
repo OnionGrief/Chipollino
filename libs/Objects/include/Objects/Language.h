@@ -10,27 +10,28 @@
 #include "Regex.h"
 #include "TransformationMonoid.h"
 
-// нужна, чтобы хранить weak_ptr на язык
-struct FA_structure {
-	int initial_state;
-	vector<State> states;
-	// если не хранить этот указатель,
-	// будут созданы разные shared_ptr
-	std::weak_ptr<Language> language;
-
-	FA_structure(int initial_state, vector<State> states, std::weak_ptr<Language> language);
-};
-
-struct Regex_structure {
-	string str;
-	std::weak_ptr<Language> language;
-
-	Regex_structure(string str, std::weak_ptr<Language> language);
-};
-
 class Language {
   private:
-	set<alphabet_symbol> alphabet;
+	// нужна, чтобы хранить weak_ptr на язык
+	struct FA_structure {
+		int initial_state;
+		std::vector<FiniteAutomaton::State> states;
+		// если не хранить этот указатель,
+		// будут созданы разные shared_ptr
+		std::weak_ptr<Language> language;
+
+		FA_structure(int initial_state, std::vector<FiniteAutomaton::State> states,
+					 std::weak_ptr<Language> language);
+	};
+
+	struct Regex_structure {
+		std::string str;
+		std::weak_ptr<Language> language;
+
+		Regex_structure(std::string str, std::weak_ptr<Language> language);
+	};
+
+	std::set<alphabet_symbol> alphabet;
 	// регулярка, описывающая язык
 	// optional<Regex> regular_expression;
 	std::optional<int> pump_length;
@@ -45,9 +46,9 @@ class Language {
 
   public:
 	Language();
-	Language(set<alphabet_symbol> alphabet); // NOLINT(runtime/explicit)
-	const set<alphabet_symbol>& get_alphabet();
-	void set_alphabet(set<alphabet_symbol>);
+	Language(std::set<alphabet_symbol> alphabet); // NOLINT(runtime/explicit)
+	const std::set<alphabet_symbol>& get_alphabet();
+	void set_alphabet(std::set<alphabet_symbol>);
 	int get_alphabet_size();
 	// регулярка, описывающая язык
 	bool is_regular_expression_cached() const;
@@ -59,7 +60,7 @@ class Language {
 	int get_pump_length();
 	// минимальный дка
 	bool is_min_dfa_cached() const;
-	void set_min_dfa(int initial_state, const vector<State>& states,
+	void set_min_dfa(int initial_state, const std::vector<FiniteAutomaton::State>& states,
 					 const std::shared_ptr<Language>& Language);
 	FiniteAutomaton get_min_dfa();
 	// синтаксический моноид
@@ -75,7 +76,7 @@ class Language {
 	void set_one_unambiguous_flag(bool);
 	bool get_one_unambiguous_flag();
 	bool is_one_unambiguous_regex_cached() const;
-	void set_one_unambiguous_regex(string, const std::shared_ptr<Language>&);
+	void set_one_unambiguous_regex(std::string, const std::shared_ptr<Language>&);
 	Regex get_one_unambiguous_regex();
 	//  и тд
 };

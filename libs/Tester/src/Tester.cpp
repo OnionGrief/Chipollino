@@ -1,5 +1,9 @@
 #include "Tester/Tester.h"
 
+using std::string;
+using std::to_string;
+using std::vector;
+
 void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTemplate* log) {
 	iLogTemplate::Table t;
 	iLogTemplate::Plot plot;
@@ -47,10 +51,10 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 			steps.push_back(belongs.first);
 			words.push_back(word.length());
 			if (!type) {
-				t.rows.push_back(std::to_string(i + 1));
-				t.data.push_back(std::to_string(belongs.first));
-				t.data.push_back(std::to_string(word.length()));
-				t.data.push_back(std::to_string(time));
+				t.rows.push_back(to_string(i + 1));
+				t.data.push_back(to_string(belongs.first));
+				t.data.push_back(to_string(word.length()));
+				t.data.push_back(to_string(time));
 				if (belongs.second)
 					t.data.push_back("true");
 				else
