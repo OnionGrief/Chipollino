@@ -11,10 +11,11 @@ int main() {
 	// alphabet_size)
 	RegexGenerator RG(100, 20, 4, 4);
 
-	ofstream out;
-	out.open("test.txt", ofstream::trunc);
+	std::ofstream out;
+	out.open("test_regexex.txt", std::ofstream::trunc);
 	for (int i = 0; i < 10; i++) {
-		if (out.is_open()) out << RG.generate_regex() << "\n";
+		if (out.is_open())
+			out << RG.generate_regex() << "\n";
 	}
 	out.close();
 	*/

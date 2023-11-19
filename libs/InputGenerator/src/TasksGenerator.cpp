@@ -222,9 +222,9 @@ string TasksGenerator::generate_declaration() {
 
 TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput, int funcNum) {
 	Function str;
-	if (for_static_Tpchkr)
+	if (for_static_Tpchkr) {
 		str = rand_func();
-	else if ((for_dinamic_Tpchkr && prevOutput == NFA) || prevOutput == DFA) {
+	} else if ((for_dinamic_Tpchkr && prevOutput == NFA) || prevOutput == DFA) {
 		vector<Function> possible_functions = funcInput[NFA_DFA];
 		str = possible_functions[rand() % possible_functions.size()];
 		if ((str.output == INT || str.output == VALUE) && funcNum != 0)

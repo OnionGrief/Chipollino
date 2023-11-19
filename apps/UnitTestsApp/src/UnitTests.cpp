@@ -56,6 +56,7 @@ TEST(ParseStringTest, Test_regex_lexer) {
 }
 
 TEST(TestCaseName, Test_random_regex_parsing) {
+	// RegexGenerator rg(2); // для регулярок с отрицанием
 	RegexGenerator rg(15, 10, 5, 3);
 	for (int i = 0; i < 30; i++) {
 		string str = rg.generate_regex();
