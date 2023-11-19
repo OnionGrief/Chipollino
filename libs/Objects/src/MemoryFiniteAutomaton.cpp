@@ -54,8 +54,9 @@ string MemoryFiniteAutomaton::Transition::get_actions_str() const {
 	}
 
 	size_t count = 0;
+	char memory_actions_separator = ';';
 	if (!opens.empty()) {
-		ss << ", o: ";
+		ss << memory_actions_separator << " o: ";
 		count = 0;
 		for (int num : opens) {
 			ss << num;
@@ -66,7 +67,7 @@ string MemoryFiniteAutomaton::Transition::get_actions_str() const {
 	}
 
 	if (!closes.empty()) {
-		ss << ", c: ";
+		ss << memory_actions_separator << " c: ";
 		count = 0;
 		for (int num : closes) {
 			ss << num;
