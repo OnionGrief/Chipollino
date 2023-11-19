@@ -24,7 +24,7 @@ curl -s --compressed "https://xtoter.github.io/apt_packages/KEY.gpg" | gpg --dea
 sudo curl -s --compressed -o /etc/apt/sources.list.d/my_list_file.list "https://xtoter.github.io/apt_packages/my_list_file.list"
 # Обновление списка пакетов
 apt update
-apt install -y make cmake dos2unix wget dot2tex build-essential dos2unix refal5
+apt install -y make cmake dos2unix wget dot2tex build-essential dos2unix refal5-old
 if [ "$with_tex" = true ];  then
   apt install -y texlive-latex-extra texlive-fonts-extra texlive-science texlive-lang-cyrillic
 
