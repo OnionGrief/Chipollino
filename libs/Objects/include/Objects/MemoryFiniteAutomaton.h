@@ -1,6 +1,8 @@
 #pragma once
+#include <memory>
+#include <string>
+
 #include "AbstractMachine.h"
-using namespace std;
 
 class Language;
 
@@ -10,7 +12,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	MemoryFiniteAutomaton(const MemoryFiniteAutomaton& other);
 
 	// dynamic_cast unique_ptr к типу MemoryFiniteAutomaton*
-	template <typename T> MemoryFiniteAutomaton* cast(unique_ptr<T>&& uptr);
+	template <typename T> MemoryFiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
 	string to_txt() const override;
 };

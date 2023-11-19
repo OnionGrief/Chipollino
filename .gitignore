@@ -26,5 +26,5 @@ log.*
 *.log
 test.txt
 
+*.raux
 *.rsl
-refal/*.txt

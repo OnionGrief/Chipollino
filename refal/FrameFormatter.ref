@@ -31,18 +31,19 @@ $ENTRY MakeFrames {
    = <Putout 2 e.Smth> <MakeFrames s.DW s.MPW Normal <Get 1>>;
   s.DW s.MPW Theory e.Smth
    = <Putout 2 e.Smth> <MakeFrames s.DW s.MPW Theory <Get 1>>;
-  s.DW s.MPW Normal '\\begin{frame}{'e.Name'}'e.Endl
+  s.DW s.MPW Normal '\\begin{frame}'e.Frag'{'e.Name'}'e.Endl
+  , <InSet (e.Frag)'{'> : False
   , <Balanced (('{}'))e.Name> : True
-   = <MakeFrames s.DW s.MPW Frame (e.Name)() <Trim <Get 1>>>;
-  s.DW s.MPW Frame (e.Name)(e.Content) e.1'\\end{frame}'
+   = <MakeFrames s.DW s.MPW Frame (e.Frag)(e.Name)() <Trim <Get 1>>>;
+  s.DW s.MPW Frame (e.Frag)(e.Name)(e.Content) e.1'\\end{frame}'
   , <Br 'First=+'> : e.Trash
-   = <Putout 2 '\\begin{frame}{'e.Name'}'><Putout 2 '\\footnotesize'><RenderFrame (e.Name)<GenAbsValues <ExtractLimitations 'pagedata'>> 
+   = <Putout 2 '\\begin{frame}'e.Frag'{'e.Name'}'><Putout 2 '\\footnotesize'><RenderFrame (e.Name)<GenAbsValues <ExtractLimitations 'pagedata'>> 
                                           <Sub <FrameData Height> <TitleHeight e.Name>>  
                           <ParseFrame s.DW s.MPW Normal () e.Content (e.1)>>
 			  <Putout 2 '\\end{frame}'>
      <Tracer><MakeFrames s.DW s.MPW Normal <Get 1>>;
-  s.DW s.MPW Frame (e.Name)(e.Content) e.Line
-   = <MakeFrames s.DW s.MPW Frame (e.Name) (e.Content (e.Line)) <Trim <Get 1>>>;
+  s.DW s.MPW Frame (e.Frag)(e.Name)(e.Content) e.Line
+   = <MakeFrames s.DW s.MPW Frame (e.Frag)(e.Name) (e.Content (e.Line)) <Trim <Get 1>>>;
   s.DW s.MPW Normal e.Line 0 = ;
   s.DW s.MPW Normal e.Line = <Putout 2 e.Line><MakeFrames s.DW s.MPW Normal <Get 1>>;
 } 
@@ -84,12 +85,12 @@ $ENTRY AllSeparators {
    (' '(NotBefore ))
    (';'(NotBefore ))
    ('='(NotBefore '!<>'))
-   ('}'(NotBefore ')*,'('\\}')))
+   ('}'(NotBefore ')*,}'('\\}')))
    ('*'(NotBefore '*),}'('\\}')));
  Strict = (','(NotBefore <Numbers>))
    ('='(NotBefore '!<>'))
    (';'(NotBefore ))
-   ('}'(NotBefore ')*,'('\\}')));
+   ('}'(NotBefore ')*,}'('\\}')));
 }
 
 /* Wanted Width + Letter Height + Wanted Size in letters + Lines accumulated */
@@ -230,23 +231,6 @@ RenderFrame {
      <GenContent Normal s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>
      <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
      <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
- (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object)(e.NextObject) e.Rest
- , e.Object : Diagram (e.AllContent) MiniPage s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
- , e.NextObject : Diagram (e.AllContent2) MiniPage s.FlagF s.WidP2 s.HP2 s.WidNorm2 s.HeightNorm2
-   , s.WidP s.WidP2 : s.WidthPercent s.WidthPercent2
-   , s.HP s.HP2 : s.HeightPercent0 s.HeightPercent20
-   , <MakeBestZoom s.WidthPercent s.HeightPercent0>
-     <MakeBestZoom s.WidthPercent2 s.HeightPercent20> : s.HeightPercent s.HeightPercent2
-   , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlagV1 s.NewPageFlagV1 s.RestPageV1
-   , <PageEsteem s.PageHeight s.HeightPercent2 s.DefHeight> : s.BeforeFlagV2 s.NewPageFlagV2 s.RestPageV2
-   , <ChooseMaxCase s.BeforeFlagV1 s.BeforeFlagV2 s.NewPageFlagV1 s.NewPageFlagV2 s.RestPageV1 s.RestPageV2>
-          : s.BeforeFlag s.NewPageFlag s.RestPage
-   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
-     <GenContent MiniPage s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (Diagram (e.AllContent))>
-     <Putout 2 '\\hfill'>
-     <GenContent MiniPage s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent2 s.PageHeight> (Diagram (e.AllContent2))>
-     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
-     <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (Formula e.ObjectData) (Formula e.ObjectDataNext) e.Rest
  , e.ObjectData : ((e.Comment)e.Content) e.MD
  , e.ObjectDataNext : (()e.ContentwithnoPreamble) e.MD2
@@ -257,6 +241,24 @@ RenderFrame {
        (Formula (()e.Content)e.MD) (Formula e.ObjectDataNext) e.Rest>
     : {s.LeftPageHeight e.RestObjects
      = <RenderFrame (e.Name) s.DefWidth s.DefHeight s.LeftPageHeight e.RestObjects>;}; };
+ (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object)(e.NextObject) e.Rest
+ , e.Object : s.Sort (e.AllContent) MiniPage s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
+ , e.NextObject : s.Sort2 (e.AllContent2) MiniPage s.FlagF s.WidP2 s.HP2 s.WidNorm2 s.HeightNorm2
+   , s.WidP s.WidP2 : s.WidthPercent s.WidthPercent2
+   , s.HP s.HP2 : s.HeightPercent0 s.HeightPercent20
+   , <InSet (s.Sort s.Sort2) Formula> : False
+   , <MakeBestZoom s.WidthPercent s.HeightPercent0>
+     <MakeBestZoom s.WidthPercent2 s.HeightPercent20> : s.HeightPercent s.HeightPercent2
+   , <PageEsteem s.PageHeight s.HeightPercent s.DefHeight> : s.BeforeFlagV1 s.NewPageFlagV1 s.RestPageV1
+   , <PageEsteem s.PageHeight s.HeightPercent2 s.DefHeight> : s.BeforeFlagV2 s.NewPageFlagV2 s.RestPageV2
+   , <ChooseMaxCase s.BeforeFlagV1 s.BeforeFlagV2 s.NewPageFlagV1 s.NewPageFlagV2 s.RestPageV1 s.RestPageV2>
+          : s.BeforeFlag s.NewPageFlag s.RestPage
+   = <InsertNewPageIfNeeded (e.Name)((This)) s.BeforeFlag>
+     <GenContent MiniPage s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent s.PageHeight> (s.Sort (e.AllContent))>
+     <Putout 2 '\\hfill'>
+     <GenContent MiniPage s.DefWidth <ChooseHeight s.BeforeFlag s.HeightPercent2 s.PageHeight> (s.Sort2 (e.AllContent2))>
+     <InsertNewPageIfNeeded (e.Name)(e.Rest) s.NewPageFlag>
+     <RenderFrame (e.Name) s.DefWidth s.DefHeight s.RestPage e.Rest>;
  (e.Name) s.DefWidth s.DefHeight s.PageHeight (e.Object) e.Rest
  , e.Object : s.Sort (e.AllContent) s.Any s.FlagF s.WidP s.HP s.WidNorm s.HeightNorm
    , s.WidNorm : s.WidthPercent
@@ -272,7 +274,7 @@ RenderFrame {
 ExtractWidth {
  (Formula (e.AllContent (Normal (e.C1) (e.C2) e.R) e.AC2) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
    = OVERFLOW (s.WidthNorm s.HeightNorm);
- (Formula ((t.NotEmptyPreamble e.Rest) e.AllContent) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
+ (s.Any ((t.NotEmptyPreamble e.Rest) e.AllContent) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
    = OVERFLOW (s.WidthNorm s.HeightNorm);
  (Formula (e.AllContent) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
  , <Compare s.WidthNorm <Sub <FrameData Width> 20>> 
@@ -295,7 +297,11 @@ AccumulateCols {
    , <Compare <Sub s.LeftWidth 20> s.WidthNorm> :
     { '+' = (s.WidthNorm s.HeightNorm <PrepareAdjacentFormula t.Formula>) 
             <AccumulateCols <Add s.Num 1> <Sub <Sub s.LeftWidth s.WidthNorm> 20> e.Rest>;
-      s.NotPlus = s.LeftWidth s.Num t.Formula e.Rest;
+      s.NotPlus
+      , s.Num :
+	{0 = (s.WidthNorm s.HeightNorm <PrepareAdjacentFormula t.Formula>) s.LeftWidth 1 e.Rest;
+	 s.Other = s.LeftWidth s.Num t.Formula e.Rest;
+	};
     };
  };
 }
@@ -325,7 +331,7 @@ GenManyMP {
 
 RenderAdjacentFormulas {
  (e.Name) s.DW s.DH s.LeftHeight  t.Form1 t.Form2 e.Rest
-  , <AccumulateCols 0 <Sub <FrameData Width> 20> t.Form1 t.Form2 e.Rest> :
+  , <Put 0 <AccumulateCols 0 <Sub <FrameData Width> 20> t.Form1 t.Form2 e.Rest>> :
   { (s.WidthNorm s.HeightNorm t.Formula) s.LeftFree 1 e.RF
    , t.Formula : (s.Sort (e.Content) e.MetaData)
    , <PageEsteem s.LeftHeight s.HeightNorm s.DH> : s.BeforeFlag s.NewPageFlag s.RestPage
@@ -459,6 +465,8 @@ Table ((Preamble)(MiniPage Content)(Normal Content)) MiniPage Normal WidthMP Hei
 ParseFrame {
  s.DefaultWidth s.MPWidth Diag ((e.Preamble)(e.PageData)e.Previous)('\\end{tikzpicture}'e.Rubbish) e.Rest
         = (Diagram ((e.Preamble) e.Previous ('\\end{tikzpicture}')) e.PageData) <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>; 
+ s.DefaultWidth s.MPWidth Normal (e.Preamble)(e.Data '%begin_plot'e.Rubbish)e.Rest
+  = <ParseFrame s.DefaultWidth s.MPWidth Plot ((e.Data)) e.Rest>;
  s.DefaultWidth s.MPWidth Normal ()('%begin detailed'e.Rubbish)e.Rest
   = <ParseFrame s.DefaultWidth s.MPWidth Theory ((e.Rubbish)) e.Rest>;
  s.DefaultWidth s.MPWidth Normal (e.Preamble)(e.Start'\\begin{array}'e.End)e.Rest
@@ -481,6 +489,11 @@ ParseFrame {
       = (Table ((e.Preamble)(MiniPage (e.FirstLine)e.MPForm (e.Smth'\\end{array}'e.Rubbish))
                             (Normal (e.FirstLine)e.NormForm (e.Smth'\\end{array}'e.Rubbish))) MiniPage Normal s.WidthMP s.HeightMP s.WidthNorm s.HeightNorm)
          <ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
+ s.DefaultWidth s.MPWidth Plot (e.Content)(e.Smth'%end_plot'e.Rubbish)e.Rest
+ , <ExSize normalsize> : (s.ExW)(s.ExH)
+ , <Mul <AuxLen List 0 e.Content> s.ExH> : s.ThHeight
+  = (Diagram (()e.Content (e.Smth)) MiniPage Normal s.MPWidth <Sub s.ThHeight s.ExH> s.DefaultWidth <Sub s.ThHeight s.ExH>)
+	<ParseFrame s.DefaultWidth s.MPWidth Normal () e.Rest>;
  s.DefaultWidth s.MPWidth Theory (e.Content)(e.Smth'%end detailed'e.Rubbish)e.Rest
  , <CountTextHeight s.DefaultWidth (e.Content (e.Smth))> : s.ThHeight
   = (Theory (e.Content (e.Smth)) Normal Normal s.DefaultWidth s.ThHeight s.DefaultWidth s.ThHeight)
@@ -687,7 +700,7 @@ InsertNewPageIfNeeded {
  (e.Name)(t.Term e.Rest) '+'
   , <Dg 'First'> : e.Trash
   , <Br 'First=-'> : e.Trash2
-      = <Putout 2 '\\end{frame}\n\\begin{frame}{}\n\\footnotesize'>;
+      = <Putout 2 '\\end{frame}\n\\begin{frame}[fragile]{}\n\\footnotesize'>;
  (e.Name)(e.Any) s.Rest = ; /* Either no objects are left or page fits the next object */
 }
 
@@ -738,7 +751,7 @@ ChooseContent {
    , <NonASCII (<ASCIIStandard>) e.1 > :
  {False
   = <InsertFillIfNeeded e.Preamble>
-    <PutByLines Raw e.Preamble><Putout 2 '\\noindent $\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$'>;
+    <PutByLines Raw e.Preamble><Putout 2 '\\noindent\\hspace*{-1.5ex} $\\begin{array}{l}'><PutByLines Math e.Content><Putout 2 '\\end{array}$'>;
   True
    = <InsertFillIfNeeded e.Preamble><PutByLines Raw e.Preamble><PutByLines Raw ('\\noindent')e.Content><Putout 2 '\\vfill'>; };
   (e.C)
