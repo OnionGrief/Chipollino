@@ -1,0 +1,2 @@
+A = Complement.Annote (Glushkov {a*}) !!
+B = States.Reverse A
