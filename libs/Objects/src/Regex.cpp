@@ -86,10 +86,10 @@ Regex* Regex::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start
 		p = scan_conc(lexemes, index_start, index_end);
 	}
 	if (!p) {
-		p = scan_minus(lexemes, index_start, index_end);
+		p = scan_star(lexemes, index_start, index_end);
 	}
 	if (!p) {
-		p = scan_star(lexemes, index_start, index_end);
+		p = scan_minus(lexemes, index_start, index_end);
 	}
 	if (!p) {
 		p = scan_par(lexemes, index_start, index_end);
