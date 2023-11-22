@@ -12,6 +12,7 @@
 #include <set>
 #include <stack>
 #include <tuple>
+#include <unordered_map>
 
 #include "Fraction/Fraction.h"
 #include "InfInt/InfInt.h"
@@ -2456,4 +2457,112 @@ vector<expression_arden> FiniteAutomaton::arden(const vector<expression_arden>& 
 	return out;
 }
 
-Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {}
+Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
+	// a system of linear algebraic equations
+	std::unordered_map<int, std::unordered_map<int, Regex>> SLAE{};
+	// индекс стартового состояния (должен быть среди состояний)
+	const int start_state_index = 0;
+	// индекс глобального конечного состояния (должен не быть среди состоянтй)
+	const int end_state_index = -1;
+	/*
+		@algorithm_sample
+		from/to	| 0 | 1 | -1(end)		from/to	| 0 | 1	  | -1(end)
+		0 		| a | b |		--->	0 		|	| a*b |	   --->
+		1		|	| a | e				1		|	| a	  | e
+
+		from/to	| 0 | 1   | -1(end)		from/to	| 0 | 1 | -1(end)
+		0 		|   | a*b | 	--->	0 		|	|	| a*b(a*|e))
+		1		|	| 	  | a*|e		1		|	|	|
+	*/
+
+	// заполнение уравнений системы актуальными значениями
+	for (const auto& state : states) {
+		SLAE.insert({state.index, std::unordered_map<int, Regex>{}});
+
+		// если завершающее состояние, добавляем eps-переход
+		if (state.is_terminal) {
+			SLAE[state.index].insert({end_state_index, Regex{}});
+		}
+
+		// итерируемся по всем путям из state
+		for (const auto& [symbol, states_to] : state.transitions) {
+			for (int state_index_to : states_to) {
+				if (SLAE[state.index].count(state_index_to)) {
+					SLAE[state.index][state_index_to].regex_alt(&SLAE[state.index][state_index_to],
+																&Regex(symbol));
+				} else {
+					SLAE[state.index].insert({state_index_to, Regex(symbol)});
+				}
+			}
+		}
+	}
+
+	// теорема Ардена о переходах в себя
+	auto arden_theorem = [&SLAE](int state_index) {
+		// случай отсутсвия в уранении переходов в себя
+		if (!SLAE[state_index].count(state_index)) {
+			return;
+		}
+
+		// подготавливаем звёздную регулярку
+		Regex state_self_regex{};
+		state_self_regex.regex_star(&SLAE[state_index][state_index]);
+
+		// добавление звёздного перехода к остальным переходам уранения
+		for (auto& [state_index_to, to_regex] : SLAE[state_index]) {
+			to_regex.regex_union(&state_self_regex, &to_regex);
+		}
+
+		// удаление рассмотренного перехода состояния в себя же
+		SLAE[state_index].erase(state_index);
+	};
+
+	// решение СЛАУ методом Гаусса с применением леммы Ардена
+	for (auto& [state_index_from, equation_from] : SLAE) {
+		// ссылка не константная, тк уравнения
+		// будут подвержены изменениям
+
+		// начальное состояние должно остаться посленим не рассмотренным
+		if (state_index_from == start_state_index) {
+			continue;
+		}
+
+		// применение теоремы Ардена
+		arden_theorem(state_index_from);
+
+		// подстановка рассматриваемого уравнения в его упоминания в прочих
+		// итерация по всем уравнениям с переходами в исходное для подстановки регулярки
+		for (auto& [state_index_to, equation_to] : SLAE) {
+			// пропуск итерации, если в рассматриваемом уравнения нет исходного
+			if (!equation_to.count(state_index_from)) {
+				continue;
+			}
+
+			// итерация по всем переходам из исходного уравнения
+			for (auto& [state_index_fit, regex_fit_from] : equation_from) {
+
+				// подставляем регулярку на место прошлой в рассматривамом уравнении
+				if (equation_to.count(state_index_fit)) {
+					regex_fit_from.regex_union(&equation_to[state_index_fit], &regex_fit_from);
+				} else {
+					equation_to.insert({state_index_fit, regex_fit_from});
+				}
+			}
+		}
+
+		// обнуляем рассмотренное выражение за избыточностью подстановки последующих в данное
+		//// удаление элемента из словаря во время итерации привело бы к ошибке
+		SLAE[state_index_from].clear();
+	}
+
+	// применяем теорему Ардена к начальному состоянию
+	arden_theorem(start_state_index);
+
+	// возвращаем путь из начало в конец
+	if (SLAE[start_state_index].count(end_state_index)) {
+		return SLAE[start_state_index][end_state_index];
+	}
+
+	// случай недостижимости ни одного из конечных состояний или их отсуствия
+	return Regex{};
+}
