@@ -48,10 +48,9 @@ class AlgExpression : public BaseObject {
 		negative,
 		// Terminal:
 		symb,
-		// [i]
-		memoryWriter,
-		// Reference
 		ref,
+		// поддерево "записывается" в ячейку памяти
+		memoryWriter,
 	};
 
 	std::set<Symbol> alphabet;

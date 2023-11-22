@@ -9,7 +9,9 @@ class MemoryFiniteAutomaton;
 
 class BackRefRegex : public AlgExpression {
   private:
+	// номер ячейки памяти (используется при Type: ref, memoryWriter)
 	int cell_number = 0;
+	// номера ячеек, в которых "находится" нода (лежит в поддеревьях memoryWriter с этими номерами)
 	std::unordered_set<int> in_cells;
 
 	void copy(const AlgExpression*) override; // NOLINT(build/include_what_you_use)
