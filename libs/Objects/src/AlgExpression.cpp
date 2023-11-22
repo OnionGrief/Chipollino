@@ -101,7 +101,7 @@ string AlgExpression::to_txt() const {
 		symb = value.symbol;
 		break;
 	case Type::eps:
-		symb = "";
+		symb = alphabet_symbol::Epsilon;
 		break;
 	case Type::alt:
 		symb = '|';
@@ -601,6 +601,8 @@ bool AlgExpression::contains_eps() const {
 	case Type::star:
 	case AlgExpression::eps:
 		return true;
+	case Type::negative:
+		return !term_l->contains_eps();
 	default:
 		return false;
 	}

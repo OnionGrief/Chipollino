@@ -35,7 +35,8 @@ class Regex : public AlgExpression {
 	// Производная по префиксу
 	bool derivative_with_respect_to_str(string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
-	std::pair<vector<State>, int> get_thompson(int) const;
+	std::pair<vector<State>, int> get_thompson(
+		int max_index, const set<alphabet_symbol>& root_alphabet_symbol) const;
 
 	void normalize_this_regex(const vector<std::pair<Regex, Regex>>&); // переписывание regex по
 																	   // пользовательским правилам

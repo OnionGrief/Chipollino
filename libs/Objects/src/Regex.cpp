@@ -121,27 +121,28 @@ Regex* Regex::scan_minus(const vector<AlgExpression::Lexeme>& lexemes, int index
 }
 
 // возвращает пару <вектор сотсояний, max_index>
-std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
-	string id_str;			  // идентификатор состояния
+std::pair<vector<State>, int> Regex::get_thompson(
+	int max_index, const set<alphabet_symbol>& root_alphabet_symbol) const {
+	string id_str;				  // идентификатор состояния
 	vector<State> fa_states = {}; // вектор состояний нового автомата
 	map<alphabet_symbol, set<int>> transitions_state; // словари автоматов
-	set<int> new_transitions;									   // новые транзишены
+	set<int> new_transitions;						  // новые транзишены
 	int offset; // сдвиг для старых индексов состояний в новом автомате
 	std::pair<vector<State>, int> fa_left; // для левого автомата относительно операции
 	std::pair<vector<State>, int> fa_right; // для правого автомата относительно операции
-	FiniteAutomaton fa_negative; // автомат для отрицания, строится обычный томпсон и берется дополнение
+	FiniteAutomaton
+		fa_negative; // автомат для отрицания, строится обычный томпсон и берется дополнение
 
 	switch (type) {
 	case Type::alt: // |
-		fa_left = Regex::cast(term_l)->get_thompson(max_index);
-		fa_right = Regex::cast(term_r)->get_thompson(fa_left.second);
+		fa_left = Regex::cast(term_l)->get_thompson(max_index, root_alphabet_symbol);
+		fa_right = Regex::cast(term_r)->get_thompson(fa_left.second, root_alphabet_symbol);
 		max_index = fa_right.second;
 
 		id_str = "q" + std::to_string(max_index + 1);
 		fa_states.push_back(State(0, {}, id_str, false, {}));
 		fa_states.back().set_transition(1, alphabet_symbol::epsilon());
 		fa_states.back().set_transition(int(fa_left.first.size()) + 1, alphabet_symbol::epsilon());
-
 
 		for (size_t i = 0; i < fa_left.first.size(); i++) {
 			State test = fa_left.first[i];
@@ -156,9 +157,14 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 			}
 
 			if (test.is_terminal) {
-				transitions_state[alphabet_symbol::epsilon()] = {int(fa_left.first.size() + fa_right.first.size()) + 1};
+				transitions_state[alphabet_symbol::epsilon()] = {
+					int(fa_left.first.size() + fa_right.first.size()) + 1};
 			}
-			fa_states.push_back(State(fa_left.first[i].index + 1, {}, fa_left.first[i].identifier, false, transitions_state));
+			fa_states.push_back(State(fa_left.first[i].index + 1,
+									  {},
+									  fa_left.first[i].identifier,
+									  false,
+									  transitions_state));
 		}
 		offset = fa_states.size();
 		for (size_t i = 0; i < fa_right.first.size(); i++) {
@@ -173,20 +179,25 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 				transitions_state[elem] = new_transitions;
 			}
 			if (test.is_terminal) {
-				transitions_state[alphabet_symbol::epsilon()] = {offset + int(fa_right.first.size())};
+				transitions_state[alphabet_symbol::epsilon()] = {offset +
+																 int(fa_right.first.size())};
 			}
 
-			fa_states.push_back(
-				State(fa_right.first[i].index + offset, {}, fa_right.first[i].identifier, false, transitions_state));
+			fa_states.push_back(State(fa_right.first[i].index + offset,
+									  {},
+									  fa_right.first[i].identifier,
+									  false,
+									  transitions_state));
 		}
 
 		id_str = "q" + std::to_string(max_index + 2);
-		fa_states.push_back(State(int(fa_left.first.size() + fa_right.first.size()) + 1, {}, id_str, true, {}));
+		fa_states.push_back(
+			State(int(fa_left.first.size() + fa_right.first.size()) + 1, {}, id_str, true, {}));
 
 		return {fa_states, max_index + 2};
 	case Type::conc: // .
-		fa_left = Regex::cast(term_l)->get_thompson(max_index);
-		fa_right = Regex::cast(term_r)->get_thompson(fa_left.second);
+		fa_left = Regex::cast(term_l)->get_thompson(max_index, root_alphabet_symbol);
+		fa_right = Regex::cast(term_r)->get_thompson(fa_left.second, root_alphabet_symbol);
 		max_index = fa_right.second;
 
 		for (size_t i = 0; i < fa_left.first.size(); i++) {
@@ -210,7 +221,8 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 					}
 				}
 			}
-			fa_states.push_back(State(fa_left.first[i].index, {}, fa_left.first[i].identifier, false, transitions_state));
+			fa_states.push_back(State(
+				fa_left.first[i].index, {}, fa_left.first[i].identifier, false, transitions_state));
 		}
 
 		offset = fa_states.size();
@@ -226,13 +238,16 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 				transitions_state[elem] = new_transitions;
 			}
 
-			fa_states.push_back(State(fa_right.first[i].index + offset - 1, {}, fa_right.first[i].identifier,
-							  test.is_terminal, transitions_state));
+			fa_states.push_back(State(fa_right.first[i].index + offset - 1,
+									  {},
+									  fa_right.first[i].identifier,
+									  test.is_terminal,
+									  transitions_state));
 		}
 
 		return {fa_states, max_index};
 	case Type::star: // *
-		fa_left = Regex::cast(term_l)->get_thompson(max_index);
+		fa_left = Regex::cast(term_l)->get_thompson(max_index, root_alphabet_symbol);
 		max_index = fa_left.second;
 
 		id_str = "q" + std::to_string(max_index + 1);
@@ -256,7 +271,11 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 			if (test.is_terminal) {
 				transitions_state[alphabet_symbol::epsilon()] = {1, int(fa_left.first.size()) + 1};
 			}
-			fa_states.push_back(State(fa_left.first[i].index + 1, {}, fa_left.first[i].identifier, false, transitions_state));
+			fa_states.push_back(State(fa_left.first[i].index + 1,
+									  {},
+									  fa_left.first[i].identifier,
+									  false,
+									  transitions_state));
 		}
 		offset = fa_states.size();
 
@@ -275,7 +294,12 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 		return {fa_states, max_index + 2};
 	case Type::negative:
 		// строим автомат для отрицания
-		fa_negative = FiniteAutomaton(0, Regex::cast(term_l)->get_thompson(-1).first, Regex::cast(term_l)->alphabet);
+		fa_negative =
+			FiniteAutomaton(0,
+							Regex::cast(term_l)->get_thompson(-1, root_alphabet_symbol).first,
+							root_alphabet_symbol);
+		// Regex::cast(term_l)->alphabet);
+
 		fa_negative = fa_negative.minimize();
 		// берем дополнение автомата
 		fa_negative = fa_negative.complement();
@@ -284,7 +308,8 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 			fa_negative.states[index].identifier = "q" + std::to_string(max_index);
 			if (fa_negative.states[index].is_terminal) {
 				fa_negative.states[index].is_terminal = false;
-				fa_negative.states[index].set_transition(fa_negative.states.size(), alphabet_symbol::epsilon());
+				fa_negative.states[index].set_transition(fa_negative.states.size(),
+														 alphabet_symbol::epsilon());
 			}
 			max_index++;
 		}
@@ -310,7 +335,7 @@ std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
 }
 
 FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
-	FiniteAutomaton fa(0, get_thompson(-1).first, language);
+	FiniteAutomaton fa(0, get_thompson(-1, alphabet).first, language);
 	if (log) {
 		log->set_parameter("oldregex", *this);
 		log->set_parameter("result", fa);
@@ -763,7 +788,7 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		return answer;
 	case Type::star:
 		cur_result.type = Type::conc;
-		bool answer = partial_derivative_with_respect_to_sym(
+		answer = partial_derivative_with_respect_to_sym(
 			respected_sym, Regex::cast(reg_e->term_l), subresult);
 		cur_result.term_r = reg_e->make_copy();
 		for (auto& i : subresult) {
@@ -773,6 +798,28 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 			cur_result.term_l = nullptr;
 		}
 		return answer;
+	case Type::negative:
+		cur_result.type = Type::negative;
+		answer = partial_derivative_with_respect_to_sym(
+			respected_sym, Regex::cast(reg_e->term_l), subresult);
+
+		if (!answer) {
+			cur_subresult.type = Type::symb;
+			cur_subresult.value.symbol = alphabet_symbol::EpmptySet;
+			cur_result.term_l = cur_subresult.make_copy();
+			result.push_back(cur_result);
+			delete cur_result.term_l;
+			cur_result.term_l = nullptr;
+		}
+
+		for (auto& i : subresult) {
+			cur_result.term_l = i.make_copy();
+			result.push_back(cur_result);
+			delete cur_result.term_l;
+			cur_result.term_l = nullptr;
+		}
+
+		return true;
 	}
 }
 

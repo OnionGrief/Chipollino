@@ -19,6 +19,8 @@ struct alphabet_symbol {
   public:
 	static const char linearize_marker = '.';
 	static const char annote_marker = ',';
+	inline static const string Epsilon = "_eps_";
+	inline static const string EpmptySet = "_empty_";
 
 	alphabet_symbol();
 	alphabet_symbol(const string& s); // NOLINT(runtime/explicit)

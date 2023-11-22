@@ -658,6 +658,7 @@ FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
 	for (int i = 0; i < new_dfa.size(); i++)
 		if (new_dfa.states[i].is_terminal)
 			final_states_counter++;
+			// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	if (!final_states_counter)
 		new_dfa = new_dfa.minimize();
 	if (log) {
