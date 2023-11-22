@@ -2492,8 +2492,9 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		for (const auto& [symbol, states_to] : state.transitions) {
 			for (int state_index_to : states_to) {
 				if (SLAE[state.index].count(state_index_to)) {
+					Regex symbol_regex{symbol};
 					SLAE[state.index][state_index_to].regex_alt(&SLAE[state.index][state_index_to],
-																&Regex(symbol));
+																&symbol_regex);
 				} else {
 					SLAE[state.index].insert({state_index_to, Regex(symbol)});
 				}
