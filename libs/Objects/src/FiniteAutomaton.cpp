@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <queue>
 #include <set>
 #include <stack>
@@ -2483,13 +2482,20 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 
 		// итерируемся по всем путям из state
 		for (const auto& [symbol, states_to] : state.transitions) {
+
+			// распознание eps-перехода
+			Regex symbol_regex{};
+			if (!symbol.is_epsilon()) {
+				symbol_regex = {symbol};
+			}
+
 			for (int state_index_to : states_to) {
 				if (SLAE[state.index].count(state_index_to)) {
-					Regex symbol_regex{symbol};
-					SLAE[state.index][state_index_to].regex_alt(&SLAE[state.index][state_index_to],
-																&symbol_regex);
+					Regex new_regex{};
+					new_regex.regex_alt(&SLAE[state.index][state_index_to], &symbol_regex);
+					SLAE[state.index][state_index_to] = new_regex;
 				} else {
-					SLAE[state.index].insert({state_index_to, Regex(symbol)});
+					SLAE[state.index].insert({state_index_to, symbol_regex});
 				}
 			}
 		}
@@ -2513,7 +2519,9 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 
 		// добавление звёздного перехода к остальным переходам уранения
 		for (auto& [state_index_to, to_regex] : SLAE[state_index]) {
-			to_regex.regex_union(&state_self_regex, &to_regex);
+			Regex new_regex{};
+			new_regex.regex_union(&state_self_regex, &to_regex);
+			to_regex = new_regex;
 		}
 
 		// удаление рассмотренного перехода состояния в себя же
@@ -2521,41 +2529,49 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	};
 
 	// решение СЛАУ методом Гаусса с применением леммы Ардена
-	for (auto& [state_index_from, equation_from] : SLAE) {
+	// итерация по строкам системы уравнений
+	for (auto& [state_index_row, equation_row] : SLAE) {
 		// ссылка не константная, тк уравнения
 		// будут подвержены изменениям
 
 		// начальное состояние должно остаться посленим не рассмотренным
-		if (state_index_from == start_state_index) {
+		if (state_index_row == start_state_index) {
 			continue;
 		}
 
 		// устранение переходов из рассматриваемого состояния в себя же
-		arden_theorem(state_index_from);
+		arden_theorem(state_index_row);
 
 		// подстановка рассматриваемого уравнения в его упоминания в прочих
 		// итерация по всем уравнениям с переходами в исходное для подстановки регулярки
-		for (auto& [state_index_to, equation_to] : SLAE) {
+		for (auto& [state_index_from, equation_from] : SLAE) {
 			// пропуск итерации, если в рассматриваемом уравнения нет исходного
-			if (!equation_to.count(state_index_from)) {
+			if (!equation_from.count(state_index_row)) {
 				continue;
 			}
 
 			// итерация по всем переходам из исходного уравнения
-			for (auto& [state_index_fit, regex_fit_from] : equation_from) {
+			for (auto& [state_index_col, regex_col] : equation_row) {
+				// регулярка перехода из рассматриваемого уравнения в исходное
+				Regex regex_from{};
+				regex_from.regex_union(&equation_from[state_index_row], &regex_col);
 
-				// подставляем регулярку на место прошлой в рассматривамом уравнении
-				if (equation_to.count(state_index_fit)) {
-					regex_fit_from.regex_union(&equation_to[state_index_fit], &regex_fit_from);
+				// объединяем полученную регулярку с имеющейся в рассматривамом уравнении
+				if (equation_from.count(state_index_col)) {
+					Regex new_regex{};
+					new_regex.regex_alt(&equation_from[state_index_col], &regex_from);
+					equation_from[state_index_col] = new_regex;
 				} else {
-					equation_to.insert({state_index_fit, regex_fit_from});
+					equation_from.insert({state_index_col, regex_from});
 				}
 			}
+
+			equation_from.erase(state_index_row);
 		}
 
 		// обнуляем рассмотренное выражение за избыточностью подстановки последующих в данное
 		//// удаление элемента из словаря во время итерации привело бы к ошибке
-		SLAE[state_index_from].clear();
+		SLAE[state_index_row].clear();
 	}
 
 	// применяем теорему Ардена к начальному состоянию
@@ -2566,7 +2582,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result", SLAE[start_state_index][end_state_index].to_txt());
 		}
-		return SLAE[start_state_index][end_state_index];
+		return {SLAE[start_state_index][end_state_index].to_txt()};
 	}
 
 	// случай недостижимости ни одного из конечных состояний или их отсуствия
