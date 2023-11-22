@@ -2497,6 +2497,11 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 
 	// теорема Ардена о переходах в себя
 	auto arden_theorem = [&SLAE](int state_index) {
+		// передан индекс несуществующего состояния
+		if (!SLAE.count(state_index)) {
+			return;
+		}
+
 		// случай отсутсвия в уранении переходов в себя
 		if (!SLAE[state_index].count(state_index)) {
 			return;
@@ -2525,7 +2530,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			continue;
 		}
 
-		// применение теоремы Ардена
+		// устранение переходов из рассматриваемого состояния в себя же
 		arden_theorem(state_index_from);
 
 		// подстановка рассматриваемого уравнения в его упоминания в прочих
@@ -2557,7 +2562,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	arden_theorem(start_state_index);
 
 	// возвращаем путь из начало в конец
-	if (SLAE[start_state_index].count(end_state_index)) {
+	if (SLAE.count(start_state_index) && SLAE[start_state_index].count(end_state_index)) {
 		if (log) {
 			log->set_parameter("result", SLAE[start_state_index][end_state_index].to_txt());
 		}
