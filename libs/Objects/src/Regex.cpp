@@ -992,7 +992,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 	}
 
 	states.push_back(*this);
-	check.insert(to_txt());
+	check.insert(to_txt(false));
 	for (size_t i = 0; i < states.size(); i++) {
 		Regex state = states[i];
 		for (auto j = alph_regex.begin(); j != alph_regex.end(); j++) {
@@ -1000,9 +1000,9 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			state.partial_symbol_derivative(*j, regs);
 			for (auto k = regs.begin(); k != regs.end(); k++) {
 				out.push_back({state, *k, *j});
-				if (check.find(k->to_txt()) == check.end()) {
+				if (check.find(k->to_txt(false)) == check.end()) {
 					states.push_back(*k);
-					check.insert(k->to_txt());
+					check.insert(k->to_txt(false));
 				}
 			}
 		}
@@ -1011,7 +1011,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 	vector<string> name_states;
 
 	for (auto& state : states) {
-		name_states.push_back(state.to_txt());
+		name_states.push_back(state.to_txt(false));
 	}
 
 	vector<State> automat_state;
@@ -1025,15 +1025,15 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << out[j][0].to_txt() << " ";
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
-			deriv_log += out[j][2].to_txt() + "(" + out[j][0].to_txt() + ")" + "\\ =\\ ";
+			deriv_log += out[j][2].to_txt(false) + "(" + out[j][0].to_txt(false) + ")" + "\\ =\\ ";
 			if (out[j][1].to_txt() == "") {
 				deriv_log += "eps\\\\";
 			} else {
 				deriv_log += out[j][1].to_txt() + "\\\\";
 			}
-			if (out[j][0].to_txt() == state) {
-				auto n = find(name_states.begin(), name_states.end(), out[j][1].to_txt());
-				alphabet_symbol s = out[j][2].to_txt();
+			if (out[j][0].to_txt(false) == state) {
+				auto n = find(name_states.begin(), name_states.end(), out[j][1].to_txt(false));
+				alphabet_symbol s = out[j][2].to_txt(false);
 				transit[s].insert(n - name_states.begin());
 			}
 		}

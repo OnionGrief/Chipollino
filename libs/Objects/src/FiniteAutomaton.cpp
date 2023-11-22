@@ -46,7 +46,7 @@ template <typename T> FiniteAutomaton* FiniteAutomaton::cast(std::unique_ptr<T>&
 	return fa;
 }
 
-string FiniteAutomaton::to_txt() const {
+string FiniteAutomaton::to_txt(bool eps_is_empty) const {
 	std::stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
 	for (int i = 0; i < states.size(); i++) {
@@ -357,8 +357,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 			(initial_state_identifier.empty() || states[elem].identifier.empty() ? "" : ", ") +
 			states[elem].identifier;
 	}
-	State new_initial_state = {0, q, initial_state_identifier, false,
-							   map<alphabet_symbol, set<int>>()};
+	State new_initial_state = {
+		0, q, initial_state_identifier, false, map<alphabet_symbol, set<int>>()};
 	if (q.size() > 1) {
 		for (auto elem : q) {
 			old_meta.upd(NodeMeta{states[elem].index, group_counter});
@@ -414,8 +414,8 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 								old_meta.upd(NodeMeta{states[elem].index, group_counter});
 							}
 
-							old_meta.mark_transitions(*this, q1, q1, alphabet_symbol::epsilon(),
-													 group_counter);
+							old_meta.mark_transitions(
+								*this, q1, q1, alphabet_symbol::epsilon(), group_counter);
 							new_meta.upd(NodeMeta{new_state.index, group_counter});
 							group_counter++;
 						}
@@ -658,7 +658,7 @@ FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
 	for (int i = 0; i < new_dfa.size(); i++)
 		if (new_dfa.states[i].is_terminal)
 			final_states_counter++;
-			// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	if (!final_states_counter)
 		new_dfa = new_dfa.minimize();
 	if (log) {
@@ -2286,7 +2286,8 @@ std::pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
 			}
 		}
 
-		// Если произошёл откат по строке, то эпсилон-переходы из рассмотренных состояний больше не считаются повторными
+		// Если произошёл откат по строке, то эпсилон-переходы из рассмотренных состояний больше не
+		// считаются повторными
 		if (!visited_eps.empty()) {
 			for (auto pos : visited_eps) {
 				if (std::get<0>(pos) <= parsed_len)
@@ -2295,7 +2296,8 @@ std::pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
 			visited_eps = aux_eps;
 			aux_eps.clear();
 		}
-		// Добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого состояния
+		// Добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
+		// состояния
 		auto reach_eps = state.transitions[alphabet_symbol::epsilon()];
 		for (int eps_tr : reach_eps) {
 			if (visited_eps.find({parsed_len, state.index, eps_tr}) == visited_eps.end()) {

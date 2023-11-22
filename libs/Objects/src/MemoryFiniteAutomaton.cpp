@@ -10,6 +10,6 @@ MemoryFiniteAutomaton* MemoryFiniteAutomaton::cast(std::unique_ptr<T>&& uptr) {
 	return mfa;
 }
 
-string MemoryFiniteAutomaton::to_txt() const {
+string MemoryFiniteAutomaton::to_txt(bool eps_is_empty) const {
 	return "";
 }

@@ -142,7 +142,8 @@ class AlgExpression : public BaseObject {
 	AlgExpression(const AlgExpression&);
 	AlgExpression& operator=(const AlgExpression& other);
 
-	string to_txt() const override;
+	// string to_txt() const override;
+	string to_txt(bool eps_is_empty = true) const override;
 	// вывод дерева для дебага
 	void print_tree() const;
 	void print_dot() const;

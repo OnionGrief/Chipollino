@@ -57,7 +57,7 @@ template <typename T> const BackRefRegex* BackRefRegex::cast(const T* ptr, bool 
 	return r;
 }
 
-string BackRefRegex::to_txt() const {
+string BackRefRegex::to_txt(bool eps_is_empty) const {
 	BackRefRegex *br_term_l, *br_term_r;
 	string str1, str2;
 	if (term_l) {

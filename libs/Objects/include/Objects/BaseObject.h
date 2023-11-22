@@ -21,5 +21,5 @@ class BaseObject {
 	BaseObject();
 	BaseObject(std::shared_ptr<Language>); // NOLINT(runtime/explicit)
 	BaseObject(set<alphabet_symbol>);	   // NOLINT(runtime/explicit)
-	virtual string to_txt() const = 0;
+	virtual string to_txt(bool eps_is_empty = true) const = 0;
 };

@@ -97,7 +97,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// dynamic_cast unique_ptr к типу FiniteAutomaton*
 	template <typename T> static FiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
-	string to_txt() const override;
+	string to_txt(bool eps_is_empty = true) const override;
 	// детерминизация ДКА
 	FiniteAutomaton determinize(iLogTemplate* log = nullptr, bool is_trim = true) const;
 	// удаление eps-переходов (построение eps-замыканий)
