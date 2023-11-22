@@ -86,10 +86,10 @@ Regex* Regex::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start
 		p = scan_conc(lexemes, index_start, index_end);
 	}
 	if (!p) {
-		p = scan_minus(lexemes, index_start, index_end);
+		p = scan_star(lexemes, index_start, index_end);
 	}
 	if (!p) {
-		p = scan_star(lexemes, index_start, index_end);
+		p = scan_minus(lexemes, index_start, index_end);
 	}
 	if (!p) {
 		p = scan_par(lexemes, index_start, index_end);
@@ -122,168 +122,192 @@ Regex* Regex::scan_minus(const vector<AlgExpression::Lexeme>& lexemes, int index
 
 // возвращает пару <вектор сотсояний, max_index>
 std::pair<vector<State>, int> Regex::get_thompson(int max_index) const {
-	string str;			  // идентификатор состояния
-	vector<State> s = {}; // вектор состояний нового автомата
-	map<alphabet_symbol, set<int>> m, p, map_l, map_r; // словари автоматов
-	set<int> trans;									   // новые транзишены
+	string id_str;				  // идентификатор состояния
+	vector<State> fa_states = {}; // вектор состояний нового автомата
+	// для формирования поля transitions состояний автомата (структуры State)
+	map<alphabet_symbol, set<int>> state_transitons;
 	int offset; // сдвиг для старых индексов состояний в новом автомате
-	std::pair<vector<State>, int> al; // для левого автомата относительно операции
-	std::pair<vector<State>, int> ar; // для правого автомата относительно операции
-	Language* alp; // Новый язык для автомата
+	// список состояний и макс индекс состояния для левого автомата относительно операции
+	std::pair<vector<State>, int> fa_left;
+	// список состояний и макс индекс состояния для правого автомата относительно операции
+	std::pair<vector<State>, int> fa_right;
+	// автомат для отрицания, строится обычный томпсон и берется дополнение
+	FiniteAutomaton fa_negative;
+
 	switch (type) {
 	case Type::alt: // |
-		al = Regex::cast(term_l)->get_thompson(max_index);
-		ar = Regex::cast(term_r)->get_thompson(al.second);
-		max_index = ar.second;
+		fa_left = Regex::cast(term_l)->get_thompson(max_index);
+		fa_right = Regex::cast(term_r)->get_thompson(fa_left.second);
+		max_index = fa_right.second;
 
-		str = "q" + std::to_string(max_index + 1);
-		m[alphabet_symbol::epsilon()] = {1, int(al.first.size()) + 1};
-		s.push_back(State(0, {}, str, false, m));
+		id_str = "q" + std::to_string(max_index + 1);
+		fa_states.push_back(State(0, {}, id_str, false, {}));
+		fa_states.back().set_transition(1, alphabet_symbol::epsilon());
+		fa_states.back().set_transition(int(fa_left.first.size()) + 1, alphabet_symbol::epsilon());
 
-		for (size_t i = 0; i < al.first.size(); i++) {
-			State test = al.first[i];
-			for (const auto& el : test.transitions) {
-				alphabet_symbol elem = el.first; // al->alphabet[i];
-				trans = {};
-				for (int transition_to : test.transitions[elem]) {
-					trans.insert(transition_to + 1);
+		for (const auto& state : fa_left.first) {
+			state_transitons = {};
+			for (const auto& [symb, states] : state.transitions) {
+				for (int transition_to : states) {
+					state_transitons[symb].insert(transition_to + 1);
 				}
-				map_l[elem] = trans;
 			}
 
-			if (test.is_terminal) {
-				map_l[alphabet_symbol::epsilon()] = {int(al.first.size() + ar.first.size()) + 1};
-			}
-			s.push_back(State(al.first[i].index + 1, {}, al.first[i].identifier, false, map_l));
-			map_l = {};
-		}
-		offset = s.size();
-		for (size_t i = 0; i < ar.first.size(); i++) {
-			State test = ar.first[i];
-			for (const auto& el : test.transitions) {
-				alphabet_symbol elem = el.first;
-				trans = {};
-				for (int transition_to : test.transitions[elem]) {
-					trans.insert(transition_to + offset);
-				}
-				map_r[elem] = trans;
-			}
-			if (test.is_terminal) {
-				map_r[alphabet_symbol::epsilon()] = {offset + int(ar.first.size())};
+			if (state.is_terminal) {
+				state_transitons[alphabet_symbol::epsilon()] = {
+					int(fa_left.first.size() + fa_right.first.size()) + 1};
 			}
 
-			s.push_back(
-				State(ar.first[i].index + offset, {}, ar.first[i].identifier, false, map_r));
-			map_r = {};
+			fa_states.emplace_back(
+				state.index + 1, set<int>(), state.identifier, false, state_transitons);
 		}
 
-		str = "q" + std::to_string(max_index + 2);
-		s.push_back(State(int(al.first.size() + ar.first.size()) + 1, {}, str, true, p));
+		offset = fa_states.size();
+		for (const auto& state : fa_right.first) {
+			state_transitons = {};
+			for (const auto& [symb, states] : state.transitions) {
+				for (int transition_to : states) {
+					state_transitons[symb].insert(transition_to + offset);
+				}
+			}
 
-		return {s, max_index + 2};
+			if (state.is_terminal) {
+				state_transitons[alphabet_symbol::epsilon()] = {offset +
+																int(fa_right.first.size())};
+			}
+
+			fa_states.emplace_back(
+				state.index + offset, set<int>(), state.identifier, false, state_transitons);
+		}
+
+		id_str = "q" + std::to_string(max_index + 2);
+		fa_states.emplace_back(int(fa_left.first.size() + fa_right.first.size()) + 1,
+							   set<int>(),
+							   id_str,
+							   true,
+							   std::map<alphabet_symbol, std::set<int>>{});
+
+		return {fa_states, max_index + 2};
 	case Type::conc: // .
-		al = Regex::cast(term_l)->get_thompson(max_index);
-		ar = Regex::cast(term_r)->get_thompson(al.second);
-		max_index = ar.second;
+		fa_left = Regex::cast(term_l)->get_thompson(max_index);
+		fa_right = Regex::cast(term_r)->get_thompson(fa_left.second);
+		max_index = fa_right.second;
 
-		for (size_t i = 0; i < al.first.size(); i++) {
-			State test = al.first[i];
-			for (const auto& el : test.transitions) {
-				alphabet_symbol elem = el.first; // al->alphabet[i];
-				trans = {};
-				for (int transition_to : test.transitions[elem]) {
-					trans.insert(transition_to);
+		for (const auto& state : fa_left.first) {
+			state_transitons = {};
+			for (const auto& [symb, states] : state.transitions) {
+				for (int transition_to : states) {
+					state_transitons[symb].insert(transition_to);
 				}
-				map_l[elem] = trans;
 			}
 
-			if (test.is_terminal) {
-				State test_r = ar.first[0];
-				for (const auto& el : test_r.transitions) {
-					alphabet_symbol elem = el.first; // al->alphabet[i];
-					for (int transition_to : test_r.transitions[elem]) {
-						// trans.push_back(test.transitions[elem][j] + 1);
-						map_l[elem].insert(transition_to + al.first.size() - 1);
+			if (state.is_terminal) {
+				for (const auto& [symb, states] : fa_right.first[0].transitions) {
+					for (int transition_to : states) {
+						state_transitons[symb].insert(transition_to + fa_left.first.size() - 1);
 					}
-					// map_l[elem] = trans;
 				}
 			}
-			s.push_back(State(al.first[i].index, {}, al.first[i].identifier, false, map_l));
-			map_l = {};
+
+			fa_states.emplace_back(
+				state.index, set<int>(), state.identifier, false, state_transitons);
 		}
-		offset = s.size();
-		for (size_t i = 1; i < ar.first.size(); i++) {
-			State test = ar.first[i];
-			for (const auto& el : test.transitions) {
-				alphabet_symbol elem = el.first; // al->alphabet[i];
-				trans = {};
-				// alfa.push_back(elem);
-				for (int transition_to : test.transitions[elem]) {
-					trans.insert(transition_to + offset - 1);
+
+		offset = fa_states.size();
+		for (size_t i = 1; i < fa_right.first.size(); i++) {
+			const State& state = fa_right.first[i];
+			state_transitons = {};
+			for (const auto& [symb, states] : state.transitions) {
+				for (int transition_to : states) {
+					state_transitons[symb].insert(transition_to + offset - 1);
 				}
-				map_r[elem] = trans;
 			}
 
-			s.push_back(State(ar.first[i].index + offset - 1,
-							  {},
-							  ar.first[i].identifier,
-							  test.is_terminal,
-							  map_r));
-			map_r = {};
+			fa_states.emplace_back(state.index + offset - 1,
+								   set<int>(),
+								   state.identifier,
+								   state.is_terminal,
+								   state_transitons);
 		}
 
-		return {s, max_index};
+		return {fa_states, max_index};
 	case Type::star: // *
-		al = Regex::cast(term_l)->get_thompson(max_index);
-		max_index = al.second;
+		fa_left = Regex::cast(term_l)->get_thompson(max_index);
+		max_index = fa_left.second;
 
-		str = "q" + std::to_string(max_index + 1);
-		m[alphabet_symbol::epsilon()] = {1, int(al.first.size()) + 1};
-		s.push_back(State(0, {}, str, false, m));
+		id_str = "q" + std::to_string(max_index + 1);
+		fa_states.emplace_back(0, set<int>(), id_str, false, map<alphabet_symbol, set<int>>());
+		fa_states.back().set_transition(1, alphabet_symbol::epsilon());
+		fa_states.back().set_transition(int(fa_left.first.size()) + 1, alphabet_symbol::epsilon());
 
-		for (size_t i = 0; i < al.first.size(); i++) {
-			State test;
-			test = al.first[i];
-			for (const auto& el : test.transitions) {
-				alphabet_symbol elem = el.first; // al->alphabet[i];
-				trans = {};
-				for (int transition_to : test.transitions[elem]) {
-					trans.insert(transition_to + 1);
+		for (const auto& state : fa_left.first) {
+			state_transitons = {};
+			for (const auto& [symb, states] : state.transitions) {
+				for (int transition_to : states) {
+					state_transitons[symb].insert(transition_to + 1);
 				}
-				map_l[elem] = trans;
 			}
 
-			if (test.is_terminal) {
-				map_l[alphabet_symbol::epsilon()] = {1, int(al.first.size()) + 1};
+			if (state.is_terminal) {
+				state_transitons[alphabet_symbol::epsilon()] = {1, int(fa_left.first.size()) + 1};
 			}
-			s.push_back(State(al.first[i].index + 1, {}, al.first[i].identifier, false, map_l));
-			map_l = {};
+
+			fa_states.emplace_back(
+				state.index + 1, set<int>(), state.identifier, false, state_transitons);
 		}
-		offset = s.size();
 
-		str = "q" + std::to_string(max_index + 2);
-		s.push_back(State(int(al.first.size()) + 1, {}, str, true, p));
+		id_str = "q" + std::to_string(max_index + 2);
+		fa_states.emplace_back(int(fa_left.first.size()) + 1,
+							   set<int>(),
+							   id_str,
+							   true,
+							   map<alphabet_symbol, set<int>>());
 
-		return {s, max_index + 2};
+		return {fa_states, max_index + 2};
 	case Type::eps:
-		str = "q" + std::to_string(max_index + 1);
+		id_str = "q" + std::to_string(max_index + 1);
+		fa_states.emplace_back(0, set<int>(), id_str, false, map<alphabet_symbol, set<int>>());
+		fa_states[0].set_transition(1, alphabet_symbol::epsilon());
 
-		m[alphabet_symbol::epsilon()] = {1};
-		s.push_back(State(0, {}, str, false, m));
-		str = "q" + std::to_string(max_index + 2);
-		s.push_back(State(1, {}, str, true, p));
+		id_str = "q" + std::to_string(max_index + 2);
+		fa_states.emplace_back(1, set<int>(), id_str, true, map<alphabet_symbol, set<int>>());
 
-		return {s, max_index + 2};
+		return {fa_states, max_index + 2};
+	case Type::negative:
+		// строим автомат для отрицания
+		fa_negative = FiniteAutomaton(
+			0, Regex::cast(term_l)->get_thompson(-1).first, Regex::cast(term_l)->alphabet);
+		fa_negative = fa_negative.minimize();
+		// берем дополнение автомата
+		fa_negative = fa_negative.complement();
+		// нумеруем состояния
+		for (auto& state : fa_negative.states) {
+			state.identifier = "q" + std::to_string(max_index);
+			if (state.is_terminal) {
+				state.is_terminal = false;
+				state.set_transition(fa_negative.states.size(), alphabet_symbol::epsilon());
+			}
+
+			max_index++;
+		}
+
+		id_str = "q" + std::to_string(max_index);
+		max_index++;
+		fa_negative.states.emplace_back(int(fa_negative.states.size()),
+										set<int>(),
+										id_str,
+										true,
+										map<alphabet_symbol, set<int>>());
+		// возвращаем состояния и макс индекс
+		return {fa_negative.states, max_index};
 	default:
+		id_str = "q" + std::to_string(max_index + 1);
+		fa_states.emplace_back(0, set<int>(), id_str, false, map<alphabet_symbol, set<int>>());
+		fa_states[0].set_transition(1, value.symbol);
+		id_str = "q" + std::to_string(max_index + 2);
+		fa_states.emplace_back(1, set<int>(), id_str, true, map<alphabet_symbol, set<int>>());
 
-		str = "q" + std::to_string(max_index + 1);
-		// m[char_to_alphabet_symbol(value.symbol)] = {1};
-		m[value.symbol] = {1};
-		s.push_back(State(0, {}, str, false, m));
-		str = "q" + std::to_string(max_index + 2);
-		s.push_back(State(1, {}, str, true, p));
-
-		return {s, max_index + 2};
+		return {fa_states, max_index + 2};
 	}
 	return {};
 }

@@ -114,6 +114,9 @@ string AlgExpression::to_txt() const {
 		break;
 	case Type::negative:
 		symb = '^';
+		if (!is_terminal_type(term_l->type)){
+			return symb + "(" + str1 + ")";
+		}
 		return symb + str1;
 	default:
 		break;
