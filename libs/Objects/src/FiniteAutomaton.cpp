@@ -1,10 +1,3 @@
-#include "Fraction/Fraction.h"
-#include "InfInt/InfInt.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Grammar.h"
-#include "Objects/Language.h"
-#include "Objects/TransformationMonoid.h"
-#include "Objects/iLogTemplate.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
