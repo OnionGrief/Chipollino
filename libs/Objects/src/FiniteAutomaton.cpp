@@ -2458,6 +2458,10 @@ vector<expression_arden> FiniteAutomaton::arden(const vector<expression_arden>& 
 }
 
 Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
+	if (log) {
+		log->set_parameter("oldautomaton", *this);
+	}
+
 	// a system of linear algebraic equations
 	std::unordered_map<int, std::unordered_map<int, Regex>> SLAE{};
 	// индекс стартового состояния (должен быть среди состояний)
@@ -2560,9 +2564,15 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 
 	// возвращаем путь из начало в конец
 	if (SLAE[start_state_index].count(end_state_index)) {
+		if (log) {
+			log->set_parameter("result", SLAE[start_state_index][end_state_index].to_txt());
+		}
 		return SLAE[start_state_index][end_state_index];
 	}
 
 	// случай недостижимости ни одного из конечных состояний или их отсуствия
+	if (log) {
+		log->set_parameter("result", "Unknown");
+	}
 	return Regex{};
 }
