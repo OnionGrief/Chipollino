@@ -2470,7 +2470,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	// a system of linear algebraic equations
 	std::unordered_map<int, std::unordered_map<int, Regex>> SLAE{};
 	// индекс стартового состояния (должен быть среди состояний)
-	const int start_state_index = 0;
+	const int start_state_index = AbstractMachine::initial_state;
 	// индекс глобального конечного состояния (должен не быть среди состоянтй)
 	const int end_state_index = -1;
 	/*
