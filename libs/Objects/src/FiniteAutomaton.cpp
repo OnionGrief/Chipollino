@@ -2594,8 +2594,8 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	if (SLAE.count(start_state_index) && SLAE[start_state_index].count(end_state_index)) {
 		auto& result_regex = SLAE[start_state_index][end_state_index];
 
-		// глубокая генерация алфавита c языком возвращаемой регулярке
-		result_regex.set_language(language->get_alphabet());
+		// явная подстановка нужного языка в финальную регулярку
+		result_regex.language = language;
 
 		if (log) {
 			log->set_parameter("result", result_regex.to_txt());
