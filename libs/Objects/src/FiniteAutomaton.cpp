@@ -2595,7 +2595,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result", SLAE[start_state_index][end_state_index].to_txt());
 		}
-		return {SLAE[start_state_index][end_state_index].to_txt()};
+		return SLAE[start_state_index][end_state_index];
 	}
 
 	// случай недостижимости ни одного из конечных состояний или их отсуствия
