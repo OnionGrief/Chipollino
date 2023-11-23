@@ -20,13 +20,13 @@ class Tester {
 	};
 
 	struct table {
-		string r2; // слова порождаются регуляркой r2 и шагом итерации
-		int step;			// шаг итерации
-		vector<word> words; // таблица
+		std::string r2; // слова порождаются регуляркой r2 и шагом итерации
+		int step;				 // шаг итерации
+		std::vector<word> words; // таблица
 	};
 
   private:
-	static bool parsing_by_regex(const string&, const string&);
+	static bool parsing_by_regex(const std::string&, const std::string&);
 
 	using ParseDevice = std::variant<FiniteAutomaton, Regex>;
 

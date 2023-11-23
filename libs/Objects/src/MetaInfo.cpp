@@ -3,29 +3,33 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MetaInfo.h"
 
+using std::set;
+using std::string;
+using std::to_string;
+
 // Преобразование числового идентификатора цвета в строковый
 string to_color_id(int group_id) {
 	switch (group_id) {
 	case MetaInfo::trap_color:
 		return ("Trap");
 	default:
-		return ("group" + std::to_string(group_id));
+		return ("group" + to_string(group_id));
 	}
 }
 
 // Преобразование метаданных для вершины графа в строку
 string colorize_node(int id, int group_id) {
-	return "@" + std::to_string(id) + "@::=" + to_color_id(group_id) + "\n";
+	return "@" + to_string(id) + "@::=" + to_color_id(group_id) + "\n";
 }
 
 // Преобразование метаданных для ребра графа в строку
-string colorize_edge(int from_ind, int to_id, const alphabet_symbol& by, int group_id) {
-	return "@" + std::to_string(from_ind) + "-" + std::to_string(to_id) + "@" + string(by) +
+string colorize_edge(int from_ind, int to_id, const Symbol& by, int group_id) {
+	return "@" + to_string(from_ind) + "-" + to_string(to_id) + "@" + string(by) +
 		   "@::=" + to_color_id(group_id) + "\n";
 }
 
 void MetaInfo::mark_transitions(const FiniteAutomaton& fa, const set<int>& from, set<int> to,
-								const alphabet_symbol& by, int group_id) {
+								const Symbol& by, int group_id) {
 	for (auto elem : from)
 		for (auto [rune, reach_set] : fa.states[elem].transitions) {
 			for (auto reach : reach_set)

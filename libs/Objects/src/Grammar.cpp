@@ -4,9 +4,17 @@
 #include "Objects/Language.h"
 #include "Objects/iLogTemplate.h"
 
+using std::map;
+using std::pair;
+using std::set;
+using std::string;
+using std::stringstream;
+using std::to_string;
+using std::vector;
+
 PrefixGrammarItem::PrefixGrammarItem() : state_index(-1) {}
 
-GrammarItem::GrammarItem() : type(terminal), state_index(-1), class_number(-1), name("") {}
+GrammarItem::GrammarItem() : type(terminal), state_index(-1), class_number(-1) {}
 
 GrammarItem::GrammarItem(Type type, string name, int state_index, int class_number)
 	: type(type), name(name), state_index(state_index), class_number(class_number) {}
@@ -16,15 +24,9 @@ GrammarItem::GrammarItem(Type type, string name, int state_index)
 
 GrammarItem::GrammarItem(Type type, string name) : type(type), name(name) {}
 
-bool GrammarItem::operator!=(const GrammarItem& other) {
+bool GrammarItem::operator!=(const GrammarItem& other) const {
 	return type != other.type || state_index != other.state_index ||
 		   class_number != other.class_number || name != other.name;
-}
-void GrammarItem::operator=(const GrammarItem& other) {
-	type = other.type;
-	state_index = other.state_index;
-	class_number = other.class_number;
-	name = other.name;
 }
 
 std::ostream& operator<<(std::ostream& os, const GrammarItem& item) {
@@ -56,14 +58,14 @@ void Grammar::check_classes(vector<vector<vector<GrammarItem*>>>& rules,
 	classes_check_map.clear();
 	for (int i = 0; i < nonterminals.size(); i++) {
 		set<string> temp_rules;
-		for (vector<GrammarItem*> rule : rules[i]) {
+		for (const vector<GrammarItem*>& rule : rules[i]) {
 			string newRule;
 
 			for (GrammarItem* t : rule) {
 				if (t->type == GrammarItem::terminal)
 					newRule += t->name;
 				else
-					newRule += std::to_string(t->class_number);
+					newRule += to_string(t->class_number);
 			}
 
 			temp_rules.insert(newRule);
@@ -95,7 +97,7 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 	for (const auto& elem : classes_check_map) {
 		GrammarItem* curNonterm = elem.second[0];
 		vector<vector<GrammarItem*>> temp_rules;
-		for (vector<GrammarItem*> rule : rules[curNonterm->state_index]) {
+		for (const vector<GrammarItem*>& rule : rules[curNonterm->state_index]) {
 			vector<GrammarItem*> tempRule;
 			for (GrammarItem* item : rule) {
 				if (item->type == GrammarItem::nonterminal) {
@@ -112,11 +114,10 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 	return bisimilar_rules;
 }
 
-vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(const vector<State>& states,
-															const set<alphabet_symbol>& alphabet,
-															vector<GrammarItem>& fa_items,
-															vector<GrammarItem*>& nonterminals,
-															vector<GrammarItem*>& terminals) {
+vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
+	const vector<FiniteAutomaton::State>& states, const set<Symbol>& alphabet,
+	vector<GrammarItem>& fa_items, vector<GrammarItem*>& nonterminals,
+	vector<GrammarItem*>& terminals) {
 	vector<vector<vector<GrammarItem*>>> rules(states.size());
 	fa_items.resize(states.size() + alphabet.size() + 2);
 	int item_ind = 0;
@@ -126,12 +127,12 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(const vector<State>&
 		nonterminals.push_back(&fa_items[item_ind]);
 		item_ind++;
 	}
-	map<alphabet_symbol, int> terminal_index;
+	map<Symbol, int> terminal_index;
 	fa_items[item_ind] = (GrammarItem(GrammarItem::terminal, "\0"));
 	terminals.push_back(&fa_items[item_ind]);
-	terminal_index[alphabet_symbol::epsilon()] = 0;
+	terminal_index[Symbol::epsilon()] = 0;
 	item_ind++;
-	for (alphabet_symbol alpha : alphabet) {
+	for (const Symbol& alpha : alphabet) {
 		fa_items[item_ind] = (GrammarItem(GrammarItem::terminal, alpha));
 		terminals.push_back(&fa_items[item_ind]);
 		terminal_index[alpha] = item_ind - nonterminals.size();
@@ -152,8 +153,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(const vector<State>&
 }
 
 vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
-	const vector<State>& states, const vector<GrammarItem*>& fa_nonterminals,
-	vector<std::pair<GrammarItem, map<alphabet_symbol, vector<GrammarItem>>>>& fa_items,
+	const vector<FiniteAutomaton::State>& states, const vector<GrammarItem*>& fa_nonterminals,
+	vector<pair<GrammarItem, map<Symbol, vector<GrammarItem>>>>& fa_items,
 	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
 	// fa_items вектор пар <терминал (состояние), map нетерминалов (переходов)>
 	fa_items.resize(states.size());
@@ -161,14 +162,14 @@ vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
 	for (int i = 0; i < states.size(); i++) {
 		// имя терминала - класс  эквивалентности состояния
 		fa_items[i].first =
-			GrammarItem(GrammarItem::terminal, std::to_string(fa_nonterminals[i]->class_number));
+			GrammarItem(GrammarItem::terminal, to_string(fa_nonterminals[i]->class_number));
 		terminals.push_back(&fa_items[i].first);
 		for (const auto& elem : states[i].transitions) {
 			vector<GrammarItem>& item_vec = fa_items[i].second[elem.first];
 			item_vec.resize(elem.second.size());
 			for (int j = 0; j < elem.second.size(); j++) {
 				item_vec[j] =
-					(GrammarItem(GrammarItem::nonterminal, "Tr" + std::to_string(ind), ind, 0));
+					(GrammarItem(GrammarItem::nonterminal, "Tr" + to_string(ind), ind, 0));
 				nonterminals.push_back(&item_vec[j]);
 				ind++;
 			}
@@ -215,11 +216,11 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 }
 
 // vector<vector<GrammarItem>>
-const int Grammar::fa_to_g(const FiniteAutomaton& fa, alphabet_symbol w, int index, int index_back,
-						   const vector<PrefixGrammarItem*>& grammar_items,
-						   const set<string>& monoid_rules, string word) {
-	const State& st = fa.states[index];
-	const State& st_back = fa.states[index_back];
+int Grammar::fa_to_g(const FiniteAutomaton& fa, Symbol w, int index, int index_back,
+					 const vector<PrefixGrammarItem*>& grammar_items,
+					 const set<string>& monoid_rules, string word) {
+	const FiniteAutomaton::State& st = fa.states[index];
+	const FiniteAutomaton::State& st_back = fa.states[index_back];
 	PrefixGrammarItem* g = grammar_items[index];
 	const set<string>& equivalence_class_back = grammar_items[index_back]->equivalence_class;
 
@@ -236,7 +237,7 @@ const int Grammar::fa_to_g(const FiniteAutomaton& fa, alphabet_symbol w, int ind
 	}
 
 	for (const auto& elem : st.transitions) {
-		alphabet_symbol alpha = elem.first;
+		Symbol alpha = elem.first;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : elem.second) {
 			if (alpha.is_epsilon()) {
@@ -258,21 +259,20 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 	if (log) {
 		log->set_parameter("oldautomaton", fa);
 	}
-	const vector<State>& states = fa.states;
+	const vector<FiniteAutomaton::State>& states = fa.states;
 
 	if (!fa.language->is_min_dfa_cached() && log) {
 		log->set_parameter("cachedMINDFA", "Минимальный автомат сохранен в кэше");
 	}
 
 	TransformationMonoid a(fa.minimize());
-	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
-		a.get_rewriting_rules();
+	map<vector<Symbol>, vector<vector<Symbol>>> monoid_rules = a.get_rewriting_rules();
 	set<string> m_r;
 	for (auto& item : monoid_rules) {
-		m_r.insert(alphabet_symbol::vector_to_str(item.first));
+		m_r.insert(Symbol::vector_to_str(item.first));
 	}
 
-	const State& st0 = states[fa.initial_state];
+	const FiniteAutomaton::State& st0 = states[fa.initial_state];
 	vector<PrefixGrammarItem*> grammar_items;
 	prefix_grammar.resize(states.size());
 	fill(prefix_grammar.begin(), prefix_grammar.end(), PrefixGrammarItem());
@@ -290,7 +290,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 	PrefixGrammarItem* g = grammar_items[fa.initial_state];
 	g->equivalence_class.insert("");
 	for (const auto& elem : st0.transitions) {
-		alphabet_symbol alpha = elem.first;
+		Symbol alpha = elem.first;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
@@ -302,7 +302,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 		}
 	}
 	for (const auto& elem : st0.transitions) {
-		alphabet_symbol alpha = elem.first;
+		Symbol alpha = elem.first;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state != ind) {
@@ -315,7 +315,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 	}
 
 	for (const auto& elem : st0.transitions) {
-		alphabet_symbol alpha = elem.first;
+		Symbol alpha = elem.first;
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
 				g->equivalence_class.insert(alpha);
@@ -343,7 +343,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 		}
 		return;
 	}
-	vector<State> states_not_trap = fa.remove_trap_states().states;
+	vector<FiniteAutomaton::State> states_not_trap = fa.remove_trap_states().states;
 
 	for (size_t i = 0; i < prefix_grammar.size(); i++) {
 		bool check = false;
@@ -365,13 +365,12 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 
 string Grammar::pg_to_txt() const {
 	set<string> out;
-	std::stringstream ss;
+	stringstream ss;
 	// vector<PrefixGrammarItem> prefix_grammar = prefix_grammar;
-	for (int i = 0; i < prefix_grammar.size(); i++) {
-		const PrefixGrammarItem& g = prefix_grammar[i];
-		for (const auto& w : g.equivalence_class) {
-			for (const auto& elem : g.rules) {
-				alphabet_symbol a = elem.first;
+	for (const auto& item : prefix_grammar) {
+		for (const auto& w : item.equivalence_class) {
+			for (const auto& elem : item.rules) {
+				Symbol a = elem.first;
 				// int index = elem.second;
 				for (const auto& w_back : elem.second) {
 					for (const auto& eq_back : prefix_grammar[w_back].equivalence_class) {
@@ -386,7 +385,7 @@ string Grammar::pg_to_txt() const {
 						if (a == "") {
 							a = "eps";
 						}
-						if (!g.is_started && prefix_grammar[w_back].is_started) {
+						if (!item.is_started && prefix_grammar[w_back].is_started) {
 							eq = "eps";
 						}
 						if (wt == "eps") {
@@ -411,9 +410,9 @@ string Grammar::pg_to_txt() const {
 	ss << "------------------------- Базисные слова -----------------------"
 	   << "\\\\";
 
-	for (int i = 0; i < prefix_grammar.size(); i++) {
-		if (prefix_grammar[i].is_terminal) {
-			const PrefixGrammarItem& g = prefix_grammar[i];
+	for (const auto& item : prefix_grammar) {
+		if (item.is_terminal) {
+			const PrefixGrammarItem& g = item;
 			for (const auto& w : g.equivalence_class) {
 				if (w == "") {
 					ss << "eps"
@@ -433,8 +432,8 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("grammar", pg_to_txt());
 	}
-	set<alphabet_symbol> symbols;
-	vector<State> states;
+	set<Symbol> symbols;
+	vector<FiniteAutomaton::State> states;
 	int initial_state;
 	for (int i = 0; i < prefix_grammar.size(); i++) {
 		const PrefixGrammarItem& gr = prefix_grammar[i];
@@ -447,21 +446,21 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 			is_terminal = true;
 		}
 
-		State s = {i, {i}, std::to_string(i), is_terminal, map<alphabet_symbol, set<int>>()};
+		FiniteAutomaton::State s = {i, {i}, to_string(i), is_terminal, map<Symbol, set<int>>()};
 		states.push_back(s);
 	}
 
 	for (size_t i = 0; i < states.size(); i++) {
-		State s = states[i];
+		FiniteAutomaton::State s = states[i];
 		const PrefixGrammarItem& gr = prefix_grammar[i];
 
 		for (const auto& elem : gr.rules) {
-			alphabet_symbol alpha = elem.first;
+			Symbol alpha = elem.first;
 			for (const auto& trans : elem.second) {
 				states[trans].transitions[alpha].insert(i);
 			}
 			if (alpha == "") {
-				alpha = alphabet_symbol::epsilon();
+				alpha = Symbol::epsilon();
 			} else {
 				symbols.insert(alpha);
 			}
@@ -474,10 +473,10 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 	return res;
 }
 
-const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index, int index_back,
-							  const vector<PrefixGrammarItem*>& grammar_items,
-							  const set<string>& monoid_rules, string word) {
-	const State& st = fa.states[index];
+int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index, int index_back,
+						const vector<PrefixGrammarItem*>& grammar_items,
+						const set<string>& monoid_rules, string word) {
+	const FiniteAutomaton::State& st = fa.states[index];
 	PrefixGrammarItem* g = grammar_items[index];
 
 	g->rules[w].insert(index_back);
@@ -486,7 +485,7 @@ const int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index, in
 	}
 	g->is_visit = true;
 	for (const auto& elem : st.transitions) {
-		alphabet_symbol alpha = elem.first;
+		Symbol alpha = elem.first;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : elem.second) {
 			if (alpha.is_epsilon()) {
@@ -507,17 +506,16 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTemplate* l
 	if (log) {
 		log->set_parameter("oldautomaton", fa);
 	}
-	const vector<State>& states = fa.states;
+	const vector<FiniteAutomaton::State>& states = fa.states;
 	TransformationMonoid a(fa);
-	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> monoid_rules =
-		a.get_rewriting_rules();
+	map<vector<Symbol>, vector<vector<Symbol>>> monoid_rules = a.get_rewriting_rules();
 	set<string> m_r;
 	for (auto& item : monoid_rules) {
-		m_r.insert(alphabet_symbol::vector_to_str(item.first));
+		m_r.insert(Symbol::vector_to_str(item.first));
 	}
 
 	map<string, vector<string>> terms = a.get_equalence_classes_map();
-	const State& st0 = states[fa.initial_state];
+	const FiniteAutomaton::State& st0 = states[fa.initial_state];
 	vector<PrefixGrammarItem*> grammar_items;
 	prefix_grammar.resize(states.size());
 	fill(prefix_grammar.begin(), prefix_grammar.end(), PrefixGrammarItem());
@@ -547,8 +545,8 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTemplate* l
 	//---------------------------
 	set<string> equal_classes;
 	int count = 0;
-	for (size_t i = 0; i < prefix_grammar.size(); i++) {
-		for (const auto& elem : prefix_grammar[i].equivalence_class) {
+	for (auto& item : prefix_grammar) {
+		for (const auto& elem : item.equivalence_class) {
 			equal_classes.insert(elem);
 			count++;
 		}
@@ -567,7 +565,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTemplate* l
 	PrefixGrammarItem* g = grammar_items[fa.initial_state];
 	g->equivalence_class.insert("");
 	for (const auto& elem : st0.transitions) {
-		alphabet_symbol alpha = elem.first;
+		Symbol alpha = elem.first;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
@@ -579,7 +577,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTemplate* l
 		}
 	}
 	for (const auto& elem : st0.transitions) {
-		alphabet_symbol alpha = elem.first;
+		Symbol alpha = elem.first;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state != ind) {

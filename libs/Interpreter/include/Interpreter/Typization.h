@@ -67,12 +67,12 @@ OBJECT_DEFINITION(NFA, FiniteAutomaton)
 OBJECT_DEFINITION(DFA, FiniteAutomaton)
 OBJECT_DEFINITION(Regex, Regex)
 OBJECT_DEFINITION(Int, int)
-OBJECT_DEFINITION(String, string)
+OBJECT_DEFINITION(String, std::string)
 OBJECT_DEFINITION(Boolean, bool)
 OBJECT_DEFINITION(OptionalBool, std::optional<bool>)
 OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
 OBJECT_DEFINITION(PrefixGrammar, Grammar)
-OBJECT_DEFINITION(Array, vector<GeneralObject>)
+OBJECT_DEFINITION(Array, std::vector<GeneralObject>)
 }; // namespace Typization
 
 /*

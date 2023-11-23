@@ -1,0 +1,118 @@
+#include "Objects/Symbol.h"
+
+using std::cout;
+using std::string;
+using std::to_string;
+using std::vector;
+
+Symbol::Symbol(const string& s) : symbol(s), value(s) {}
+Symbol::Symbol(const char* c) : symbol(c), value(c) {}
+Symbol::Symbol(char c) : symbol(string(1, c)), value(string(1, c)) {}
+
+void Symbol::update_value() {
+	value = symbol;
+	for (const auto& i : annote_numbers)
+		value += i;
+	for (const auto& i : linearize_numbers)
+		value += i;
+}
+
+Symbol& Symbol::operator=(const string& s) {
+	symbol = s;
+	value = symbol;
+	return *this;
+}
+
+Symbol& Symbol::operator=(const char* c) {
+	symbol = c;
+	value = symbol;
+	return *this;
+}
+
+Symbol& Symbol::operator=(char c) {
+	symbol = c;
+	value = symbol;
+	return *this;
+}
+
+Symbol& Symbol::operator=(const Symbol& other) {
+	symbol = other.symbol;
+	annote_numbers = other.annote_numbers;
+	linearize_numbers = other.linearize_numbers;
+	value = other.value;
+	return *this;
+}
+
+Symbol Symbol::epsilon() {
+	return "eps";
+}
+
+bool Symbol::is_epsilon() const {
+	return *this == Symbol::epsilon();
+}
+
+bool Symbol::operator==(const Symbol& other) const {
+	return symbol == other.symbol && annote_numbers == other.annote_numbers &&
+		   linearize_numbers == other.linearize_numbers;
+}
+
+bool Symbol::operator!=(const Symbol& other) const {
+	return !(*this == other);
+}
+
+bool Symbol::operator<(const Symbol& other) const {
+	return value < other.value;
+}
+
+Symbol::operator string() const {
+	return value;
+}
+
+string Symbol::vector_to_str(const vector<Symbol>& in) {
+	string out;
+	for (const auto& i : in)
+		out += i;
+	return out;
+}
+
+std::ostream& operator<<(std::ostream& os, const Symbol& as) {
+	return os << (string)as;
+}
+
+void Symbol::annote(int num) {
+	annote_numbers.push_back(annote_marker + to_string(num));
+	update_value();
+}
+
+void Symbol::linearize(int num) {
+	linearize_numbers.push_back(linearize_marker + to_string(num));
+	update_value();
+}
+
+void Symbol::deannote() {
+	if (!annote_numbers.empty()) {
+		annote_numbers.pop_back();
+		update_value();
+	}
+}
+
+void Symbol::delinearize() {
+	if (!linearize_numbers.empty()) {
+		linearize_numbers.pop_back();
+		update_value();
+	}
+}
+
+bool Symbol::is_annotated() const {
+	return !annote_numbers.empty();
+}
+
+bool Symbol::is_linearized() const {
+	return !linearize_numbers.empty();
+}
+
+std::size_t SymbolHasher::operator()(const Symbol& symbol) const {
+	std::hash<string> string_hash;
+	std::size_t hash = string_hash(symbol.value);
+	return hash;
+}
