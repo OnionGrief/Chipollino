@@ -9,33 +9,13 @@
 #include <vector>
 
 #include "AbstractMachine.h"
-#include "AlphabetSymbol.h"
+#include "Symbol.h"
 #include "iLogTemplate.h"
-
-using std::cout;
-using std::map;
-using std::set;
-using std::string;
-using std::vector;
 
 class Regex;
 class MetaInfo;
 class Language;
 class TransformationMonoid;
-
-struct State {
-	int index;
-	// используется для объединения состояний в процессе работы алгоритмов
-	// преобразования автоматов возможно для визуализации
-	set<int> label;
-	string identifier;
-	bool is_terminal;
-	map<alphabet_symbol, set<int>> transitions;
-	State();
-	State(int index, set<int> label, string identifier, bool is_terminal,
-		  map<alphabet_symbol, set<int>> transitions);
-	void set_transition(int, const alphabet_symbol&);
-};
 
 struct expression_arden {
 	int fa_state_number; // индекс состояния на которое ссылаемся
@@ -51,26 +31,42 @@ class FiniteAutomaton : public AbstractMachine {
 		polynomially_ambigious
 	};
 
+	struct State : AbstractMachine::State {
+		// используется для объединения состояний в процессе работы алгоритмов
+		// преобразования автоматов возможно для визуализации
+		std::set<int> label;
+		std::map<Symbol, std::set<int>> transitions;
+		State(int index, std::string identifier, bool is_terminal);
+		State(int index, std::string identifier, bool is_terminal,
+			  std::map<Symbol, std::set<int>> transitions);
+		State(int index, std::set<int> label, std::string identifier, bool is_terminal,
+			  std::map<Symbol, std::set<int>> transitions);
+		void set_transition(int, const Symbol&);
+	};
+
   private:
-	vector<State> states;
+	std::vector<State> states;
 
 	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 	// преобразованиях всегда удаляем в конце ловушки.
 	// Если isTrim = false, тогда после удаления ловушки в результате
 	// преобразований добавляем её обратно
-	bool is_trim = true;
+	//	bool is_trim = true;
 
-	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
-	std::pair<int, bool> parsing_nfa_for(const string&) const;
+	void dfs(int index, std::set<int>& reachable, // NOLINT(runtime/references)
+			 bool use_epsilons_only) const;
+
+	bool parsing_nfa(const std::string&, int) const; // парсинг слова в нка
+	std::pair<int, bool> parsing_nfa_for(const std::string&) const;
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
-	set<int> closure(const set<int>&, bool) const;
+	std::set<int> closure(const std::set<int>&, bool) const;
 	// удаление недостижимых из начального состояний
 	FiniteAutomaton remove_unreachable_states() const;
 	static bool equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
-	// принимает в качетве лимита максимальное количество цифр в
+	// принимает в качестве лимита максимальное количество цифр в
 	// числителе + знаменателе дроби, которая может встретиться при вычислениях
 	AmbiguityValue get_ambiguity_value(
 		int digits_number_limit,
@@ -79,25 +75,26 @@ class FiniteAutomaton : public AbstractMachine {
 	std::optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
-	std::optional<string> get_prefix(int state_beg, int state_end,
-									 map<int, bool>& was) const; // NOLINT(runtime/references)
+	std::optional<std::string> get_prefix(
+		int state_beg, int state_end, std::map<int, bool>& was) const; // NOLINT(runtime/references)
 
 	// функция проверки на семантическую детерминированность
 	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
 
-	static vector<expression_arden> arden(const vector<expression_arden>& in, int index);
-	static vector<expression_arden> arden_minimize(const vector<expression_arden>& in);
+	static std::vector<expression_arden> arden(const std::vector<expression_arden>& in, int index);
+	static std::vector<expression_arden> arden_minimize(const std::vector<expression_arden>& in);
 
   public:
-	FiniteAutomaton() = default;
-	FiniteAutomaton(int initial_state, vector<State> states, std::shared_ptr<Language> language);
-	FiniteAutomaton(int initial_state, vector<State> states, set<alphabet_symbol> alphabet);
+	FiniteAutomaton();
+	FiniteAutomaton(int initial_state, std::vector<State> states,
+					std::shared_ptr<Language> language);
+	FiniteAutomaton(int initial_state, std::vector<State> states, std::set<Symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
 	// dynamic_cast unique_ptr к типу FiniteAutomaton*
 	template <typename T> static FiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
-	string to_txt() const override;
+	std::string to_txt() const override;
 	// детерминизация ДКА
 	FiniteAutomaton determinize(iLogTemplate* log = nullptr, bool is_trim = true) const;
 	// удаление eps-переходов (построение eps-замыканий)
@@ -136,13 +133,13 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton delinearize(iLogTemplate* log = nullptr) const;
 	// объединение эквивалентных классов (принимает на вход вектор размера
 	// states.size()) i-й элемент хранит номер класса i-го состояния
-	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
+	FiniteAutomaton merge_equivalent_classes(std::vector<int>) const;
 	// объединение эквивалентных по бисимуляции состояний
 	FiniteAutomaton merge_bisimilar(iLogTemplate* log = nullptr) const;
 	// проверка автоматов на эквивалентность
 	static bool equivalent(const FiniteAutomaton&, const FiniteAutomaton&,
 						   iLogTemplate* log = nullptr);
-	// проверка автоматов на равентсво(буквальное)
+	// проверка автоматов на равенство(буквальное)
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&, iLogTemplate* log = nullptr);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&,
@@ -152,7 +149,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// проверка НКА на семантический детерминизм
 	bool semdet(iLogTemplate* log = nullptr) const;
 	// проверяет, распознаёт ли автомат слово
-	std::pair<int, bool> parsing_by_nfa(const string&) const;
+	std::pair<int, bool> parsing_by_nfa(const std::string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
 	// начальное состояние
@@ -180,4 +177,5 @@ class FiniteAutomaton : public AbstractMachine {
 	friend class MetaInfo;
 	friend class TransformationMonoid;
 	friend class Grammar;
+	friend class Language;
 };

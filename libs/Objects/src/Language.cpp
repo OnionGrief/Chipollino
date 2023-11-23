@@ -1,21 +1,26 @@
 #include "Objects/Language.h"
 
-FA_structure::FA_structure(int initial_state, vector<State> states,
-						   std::weak_ptr<Language> language)
+using std::set;
+using std::string;
+using std::to_string;
+using std::vector;
+
+Language::FA_structure::FA_structure(int initial_state, vector<FiniteAutomaton::State> states,
+									 std::weak_ptr<Language> language)
 	: initial_state(initial_state), states(states), language(language) {}
 
-Regex_structure::Regex_structure(string str, std::weak_ptr<Language> language)
+Language::Regex_structure::Regex_structure(string str, std::weak_ptr<Language> language)
 	: str(str), language(language) {}
 
 Language::Language() {}
 
-Language::Language(set<alphabet_symbol> alphabet) : alphabet(alphabet) {}
+Language::Language(set<Symbol> alphabet) : alphabet(alphabet) {}
 
-void Language::set_alphabet(set<alphabet_symbol> _alphabet) {
+void Language::set_alphabet(set<Symbol> _alphabet) {
 	alphabet = _alphabet;
 }
 
-const set<alphabet_symbol>& Language::get_alphabet() {
+const set<Symbol>& Language::get_alphabet() {
 	return alphabet;
 }
 
@@ -39,11 +44,11 @@ bool Language::is_min_dfa_cached() const {
 	return min_dfa.has_value();
 }
 
-void Language::set_min_dfa(int initial_state, const vector<State>& states,
+void Language::set_min_dfa(int initial_state, const vector<FiniteAutomaton::State>& states,
 						   const std::shared_ptr<Language>& language) {
-	vector<State> renamed_states = states;
+	vector<FiniteAutomaton::State> renamed_states = states;
 	for (int i = 0; i < renamed_states.size(); i++)
-		renamed_states[i].identifier = std::to_string(i);
+		renamed_states[i].identifier = to_string(i);
 	min_dfa.emplace(FA_structure(initial_state, renamed_states, language));
 }
 

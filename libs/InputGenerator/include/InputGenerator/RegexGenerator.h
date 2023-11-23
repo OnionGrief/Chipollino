@@ -9,8 +9,8 @@
 
 class RegexGenerator {
   private:
-	vector<char> alphabet; // TODO: убрать алфавит
-	size_t seed_it = 0;	   // итерация для рандома
+	std::vector<char> alphabet; // TODO: убрать алфавит
+	size_t seed_it = 0;			// итерация для рандома
 
 	int regex_length = 0;
 	int star_num = 0;
@@ -19,7 +19,7 @@ class RegexGenerator {
 	int star_nesting = 0; // вложенность
 	int cur_nesting = 0;
 	bool all_alts_are_eps = true;
-	string res_str = "";
+	std::string res_str = "";
 	void generate_regex_();
 	void generate_n_alt_regex();
 	void generate_conc_regex();
@@ -41,10 +41,10 @@ class RegexGenerator {
 	RegexGenerator(int regex_length, int star_num, int star_nesting, int alphabet_size);
 	/*сгенерировать регулярное выражение, параметрирозованное длиной, кол-вом
 	итераций Клини, звездной вложенностью и размером алфавита*/
-	string generate_regex();
+	std::string generate_regex();
 	/*сгенерировать регулярное выражение, обрамленное фигурными скобками
 	(для интерпретатора)*/
-	string generate_framed_regex();
+	std::string generate_framed_regex();
 	/*запись регулярки в файл*/
-	void write_to_file(string filename);
+	void write_to_file(std::string filename);
 };
