@@ -63,29 +63,29 @@ TEST(ParseStringTest, Test_regex_lexer) {
 }
 
 TEST(TestCaseThompsonNegative, Test_thompson_negative) {
-	vector<State> states;
+	vector<FiniteAutomaton::State> states;
 	for (int i = 0; i < 9; i++) {
-		states.emplace_back(i, set<int>{i}, std::to_string(i), false, map<alphabet_symbol, set<int>>());
+		states.emplace_back(i, set<int>{i}, std::to_string(i), false, map<Symbol, set<int>>());
 	}
 
-	states[0].set_transition(1, alphabet_symbol::epsilon());
-	states[0].set_transition(5, alphabet_symbol::epsilon());
+	states[0].set_transition(1, Symbol::epsilon());
+	states[0].set_transition(5, Symbol::epsilon());
 
-	states[1].set_transition(4, alphabet_symbol::epsilon());
+	states[1].set_transition(4, Symbol::epsilon());
 	states[1].set_transition(2, "a");
 
 	states[2].set_transition(3, "a");
 
 	states[3].set_transition(3, "a");
-	states[3].set_transition(4, alphabet_symbol::epsilon());
+	states[3].set_transition(4, Symbol::epsilon());
 
-	states[4].set_transition(7, alphabet_symbol::epsilon());
+	states[4].set_transition(7, Symbol::epsilon());
 
 	states[7].set_transition(8, "c");
 
 	states[5].set_transition(6, "b");
 
-	states[6].set_transition(7, alphabet_symbol::epsilon());
+	states[6].set_transition(7, Symbol::epsilon());
 
 	states[8].is_terminal = true;
 	FiniteAutomaton fa(0, states, {"a", "b", "c"});
