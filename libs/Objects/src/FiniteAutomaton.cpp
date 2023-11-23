@@ -2592,10 +2592,15 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 
 	// возвращаем путь из начало в конец
 	if (SLAE.count(start_state_index) && SLAE[start_state_index].count(end_state_index)) {
+		auto& result_regex = SLAE[start_state_index][end_state_index];
+
+		// глубокая генерация алфавита c языком возвращаемой регулярке
+		result_regex.make_language();
+
 		if (log) {
-			log->set_parameter("result", SLAE[start_state_index][end_state_index].to_txt());
+			log->set_parameter("result", result_regex.to_txt());
 		}
-		return SLAE[start_state_index][end_state_index];
+		return result_regex;
 	}
 
 	// случай недостижимости ни одного из конечных состояний или их отсуствия
