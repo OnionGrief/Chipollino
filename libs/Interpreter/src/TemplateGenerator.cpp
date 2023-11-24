@@ -3,7 +3,7 @@
 #include "Interpreter/Interpreter.h"
 
 using std::cout;
-using std::ifstream;
+using std::ofstream;
 using std::pair;
 using std::string;
 using std::to_string;
@@ -23,7 +23,7 @@ void Interpreter::generate_brief_templates() {
 			string func_id = get_func_id(function).value();
 			string filename = "./resources/template/";
 			filename += func_id + ".tex";
-			std::ofstream outfile(filename);
+			ofstream outfile(filename);
 			outfile << "\\section{" << function.name << "}\n";
 			outfile << "\\begin{frame}{" << function.name << "}\n";
 
@@ -180,7 +180,7 @@ void Interpreter::generate_brief_templates() {
 }
 
 void Interpreter::generate_test_for_all_functions() {
-	std::ofstream outfile("./resources/all_functions.txt");
+	ofstream outfile("./resources/all_functions.txt");
 	outfile << "Set log_theory true\n";
 	outfile << "R = {a*b*}\n";
 	outfile << "A = Determinize.Glushkov R\n";
