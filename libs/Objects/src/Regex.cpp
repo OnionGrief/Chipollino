@@ -156,10 +156,8 @@ pair<vector<FAState>, int> Regex::get_thompson(int max_index) const {
 	pair<vector<FAState>, int> fa_right;
 	// автомат для отрицания, строится обычный томпсон и берется дополнение
 	FiniteAutomaton fa_negative;
-
-	vector<FAState> negative_states;
-	vector<FAState> res;
-	vector<FiniteAutomaton::State> states1;
+	vector<FiniteAutomaton::State> fa_negative_states;
+	vector<FAState> negative_states_copy;
 
 	switch (type) {
 	case Type::alt: // |
@@ -286,11 +284,10 @@ pair<vector<FAState>, int> Regex::get_thompson(int max_index) const {
 		return {fa_states, max_index + 2};
 	case Type::negative:
 		// строим автомат для отрицания
-		res = Regex::cast(term_l)->get_thompson(-1).first;
-		for (const auto& i : res) {
-			states1.emplace_back(i.index, i.identifier, i.is_terminal, i.transitions);
+		for (const auto& i : Regex::cast(term_l)->get_thompson(-1).first) {
+			fa_negative_states.emplace_back(i.index, i.identifier, i.is_terminal, i.transitions);
 		}
-		fa_negative = FiniteAutomaton(0, states1, Regex::cast(term_l)->alphabet);
+		fa_negative = FiniteAutomaton(0, fa_negative_states, Regex::cast(term_l)->alphabet);
 		fa_negative = fa_negative.minimize();
 		// берем дополнение автомата
 		fa_negative = fa_negative.complement();
@@ -309,11 +306,11 @@ pair<vector<FAState>, int> Regex::get_thompson(int max_index) const {
 		max_index++;
 		fa_negative.states.emplace_back(int(fa_negative.states.size()), id_str, true);
 
-		for (const auto& i : res) {
-			negative_states.emplace_back(i.index, i.identifier, i.is_terminal, i.transitions);
+		for (const auto& i : fa_negative.states) {
+			negative_states_copy.emplace_back(i.index, i.identifier, i.is_terminal, i.transitions);
 		}
 		// возвращаем состояния и макс индекс
-		return {negative_states, max_index};
+		return {negative_states_copy, max_index};
 	default:
 		id_str = "q" + to_string(max_index + 1);
 		fa_states.emplace_back(0, id_str, false);

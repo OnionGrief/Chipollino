@@ -53,6 +53,7 @@ class AlgExpression : public BaseObject {
 		memoryWriter,
 	};
 
+	// множество уникальных символов алфавита в дереве
 	std::set<Symbol> alphabet;
 	Type type;
 	Lexeme value;

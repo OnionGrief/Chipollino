@@ -62,7 +62,7 @@ TEST(ParseStringTest, Test_regex_lexer) {
 	}
 }
 
-TEST(TestCaseThompsonNegative, Test_thompson_negative) {
+TEST(TestNegativeRegex, Test_thompson_negative) {
 	vector<FiniteAutomaton::State> states;
 	for (int i = 0; i < 9; i++) {
 		states.emplace_back(i, set<int>{i}, std::to_string(i), false, map<Symbol, set<int>>());
@@ -92,6 +92,8 @@ TEST(TestCaseThompsonNegative, Test_thompson_negative) {
 
 	ASSERT_TRUE(FiniteAutomaton::equal(fa, Regex("(^a|b)c").to_thompson()));
 }
+
+TEST(TestNegativeRegex, Test_antimirov_negative) {}
 
 TEST(TestCaseName, Test_random_regex_parsing) {
 	RegexGenerator rg(15, 10, 5, 3);

@@ -17,6 +17,7 @@
 class Language;
 class FiniteAutomaton;
 
+// представление FiniteAutomaton::State
 struct FAState {
 	int index;
 	std::string identifier;
