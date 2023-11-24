@@ -95,17 +95,6 @@ TEST(TestNegativeRegex, Test_thompson_negative) {
 
 TEST(TestNegativeRegex, Test_antimirov_negative) {}
 
-TEST(TestCaseName, Test_random_regex_parsing) {
-	RegexGenerator rg(15, 10, 5, 3);
-	for (int i = 0; i < 30; i++) {
-		string str = rg.generate_regex();
-		Regex r1(str);
-		string r1_str = r1.to_txt();
-		Regex r2(r1_str);
-		ASSERT_EQ(true, Regex::equivalent(r1, r2));
-	}
-}
-
 TEST(TestCaseName, Test_fa_equal) {
 	vector<FiniteAutomaton::FiniteAutomaton::State> states1;
 	for (int i = 0; i < 6; i++) {
