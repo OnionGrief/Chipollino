@@ -1,12 +1,20 @@
 #include <algorithm>
 #include <cmath>
+#include <regex>
 #include <variant>
 
 #include "Logger/LogTemplate.h"
 
-void LogTemplate::add_parameter(string parameter_name) {
+using std::cout;
+using std::ifstream;
+using std::ofstream;
+using std::string;
+using std::stringstream;
+using std::to_string;
+using std::vector;
 
-	std::ifstream infile(template_fullpath);
+void LogTemplate::add_parameter(string parameter_name) {
+	ifstream infile(template_fullpath);
 
 	if (!infile)
 		return; // infile.close();
@@ -49,7 +57,7 @@ void LogTemplate::add_parameter(string parameter_name) {
 		}
 
 		infile.close();
-		std::ofstream outfile(template_fullpath);
+		ofstream outfile(template_fullpath);
 		outfile << outstr;
 		outfile.close();
 	}
@@ -73,7 +81,7 @@ string LogTemplate::get_tex_template() {
 }
 
 string LogTemplate::render() const {
-	std::stringstream infile = expand_includes(template_fullpath);
+	stringstream infile = expand_includes(template_fullpath);
 
 	// Строка-аккумулятор
 	string outstr = "";
@@ -99,14 +107,16 @@ string LogTemplate::render() const {
 		if (show) {
 			for (const auto& [key, param] : parameters) {
 				int insert_place = s.find("%template_" + key);
-				if (insert_place == -1) {
+				// Если имя шаблона не заканчивает строку, то это может быть и другой шаблон
+				if ((insert_place != s.length() - 10 - key.length()) || (insert_place == -1)) {
 					continue;
 				}
 
 				if (std::holds_alternative<Regex>(param.value)) {
-					s.insert(insert_place,
-							 std::get<Regex>(param.value)
-								 .to_txt()); // Math mode is done in global renderer
+					// Math mode is done in global renderer
+					string r0 = std::get<Regex>(param.value).to_txt();
+					string r = std::regex_replace(r0, std::regex("\\^"), "\\textasciicircum ");
+					s.insert(insert_place, r);
 				} else if (std::holds_alternative<FiniteAutomaton>(param.value)) {
 					std::hash<string> hasher;
 					string c_graph;
@@ -123,7 +133,7 @@ string LogTemplate::render() const {
 				} else if (std::holds_alternative<string>(param.value)) {
 					s.insert(insert_place, std::get<string>(param.value));
 				} else if (std::holds_alternative<int>(param.value)) {
-					s.insert(insert_place, std::to_string(std::get<int>(param.value)));
+					s.insert(insert_place, to_string(std::get<int>(param.value)));
 				} else if (std::holds_alternative<Table>(param.value)) {
 					s.insert(insert_place, log_table(std::get<Table>(param.value)));
 				} else if (std::holds_alternative<Plot>(param.value)) {
@@ -173,16 +183,16 @@ string LogTemplate::log_plot(Plot p) {
 	visualization =
 		"\\begin{tikzpicture}\\scriptsize \%begin_plot\n " // NOLINT(build/printf_format)
 		"\\datavisualization[scientific axes=clean, visualize as line/.list={" +
-		styling + "},\n x axis={ticks={step=" +
-		std::to_string(step_size(max_x, styles.size(), p.data.size())) +
+		styling +
+		"},\n x axis={ticks={step=" + to_string(step_size(max_x, styles.size(), p.data.size())) +
 		"}, label=" + decorate_element("длина слова", italic, footnote, false) +
-		"}, y axis={ticks={step=" + std::to_string(step_size(max_y, styles.size(), p.data.size())) +
+		"}, y axis={ticks={step=" + to_string(step_size(max_y, styles.size(), p.data.size())) +
 		"}, label=" + decorate_element("шаги", italic, footnote, false) + "},\n" + legenda +
 		"style sheet = vary hue, style sheet = vary dashing]\n "
 		"data[headline={x, y, set}] {\n";
 	for (auto& i : p.data) {
-		visualization += std::to_string(i.x_coord) + ", " + std::to_string(i.y_coord) + ", " +
-						 i.plot_label + "\n";
+		visualization +=
+			to_string(i.x_coord) + ", " + to_string(i.y_coord) + ", " + i.plot_label + "\n";
 	}
 	visualization += "};\n \\end{tikzpicture} \%end_plot\n\n"; // NOLINT(build/printf_format)
 	return visualization;
@@ -222,10 +232,10 @@ string LogTemplate::log_table(Table t) {
 	return table;
 }
 
-std::stringstream LogTemplate::expand_includes(string filename) const {
-	std::stringstream outstream;
+stringstream LogTemplate::expand_includes(string filename) const {
+	stringstream outstream;
 
-	std::ifstream infile(filename);
+	ifstream infile(filename);
 	if (!infile) {
 		std::cerr << "ERROR: while rendering template. Unknown filename " + filename + "\n";
 		return outstream;

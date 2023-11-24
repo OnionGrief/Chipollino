@@ -1,5 +1,8 @@
 #include "InputGenerator/RegexGenerator.h"
 
+using std::ofstream;
+using std::string;
+
 RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {}
 
 RegexGenerator::RegexGenerator(int neg_chance_) : RegexGenerator::RegexGenerator() {
@@ -36,7 +39,7 @@ void RegexGenerator::change_seed() {
 }
 
 void RegexGenerator::write_to_file(string filename) {
-	std::ofstream out(filename, std::ios::app);
+	ofstream out(filename, std::ios::app);
 	if (out.is_open())
 		out << res_str << "\n";
 	out.close();

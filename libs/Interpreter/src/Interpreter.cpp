@@ -3,6 +3,13 @@
 #include "Interpreter/Interpreter.h"
 #include "Tester/Tester.h"
 
+using std::cout;
+using std::ifstream;
+using std::pair;
+using std::string;
+using std::to_string;
+using std::vector;
+
 bool operator==(const Interpreter::Function& l, const Interpreter::Function& r) {
 	return l.name == r.name && l.input == r.input && l.output == r.output;
 }
@@ -91,7 +98,7 @@ bool Interpreter::run_line(const string& line) {
 bool Interpreter::run_file(const string& path) {
 	auto logger = init_log();
 	logger.log("opening file " + path);
-	std::ifstream input_file(path);
+	ifstream input_file(path);
 	if (!input_file) {
 		logger.throw_error("failed to open " + path);
 		return false;
@@ -183,12 +190,10 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 	logger.log("running function \"" + function.name + "\"");
 
 	auto get_automaton = [](const GeneralObject& obj) -> const FiniteAutomaton& {
-		if (std::holds_alternative<ObjectNFA>(obj)) {
+		if (std::holds_alternative<ObjectNFA>(obj))
 			return std::get<ObjectNFA>(obj).value;
-		}
-		if (std::holds_alternative<ObjectDFA>(obj)) {
+		else
 			return std::get<ObjectDFA>(obj).value;
-		}
 	};
 
 	auto is_automaton = [](const GeneralObject& obj) -> const bool {
@@ -412,7 +417,7 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 	if (function.name == "Normalize") {
 		// Преобразуем array в массив пар
 		const auto& arr = std::get<ObjectArray>(arguments[1]).value;
-		vector<std::pair<Regex, Regex>> rules;
+		vector<pair<Regex, Regex>> rules;
 		for (const auto& object : arr) {
 			if (std::holds_alternative<ObjectArray>(object)) {
 				const auto& rule = std::get<ObjectArray>(object).value;
@@ -518,7 +523,7 @@ std::optional<string> Interpreter::get_func_id(Function function) {
 		std::optional<int> id = find_func(function.name, function.input);
 		if (!id.has_value())
 			return std::nullopt;
-		func_id += std::to_string(id.value() + 1);
+		func_id += to_string(id.value() + 1);
 	}
 	return func_id;
 }
@@ -725,7 +730,7 @@ bool Interpreter::run_predicate(const Predicate& pred) {
 	bool success = false;
 
 	if (res.has_value() && std::holds_alternative<ObjectBoolean>(*res)) {
-		logger.log("result: " + std::to_string(std::get<ObjectBoolean>(*res).value));
+		logger.log("result: " + to_string(std::get<ObjectBoolean>(*res).value));
 		success = true;
 	} else if (res.has_value() && std::holds_alternative<ObjectOptionalBool>(*res)) {
 		string result = "Unknown";
@@ -828,7 +833,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 
 	current_random_regex = std::nullopt;
 
-	string res = std::to_string(100 * results / tests_size);
+	string res = to_string(100 * results / tests_size);
 	logger.log("result: " + res + "%");
 	log_template.set_parameter("result", res + +"\\%");
 
@@ -858,7 +863,7 @@ bool Interpreter::run_set_flag(const SetFlag& flag) {
 		logger.throw_error("while setting flag: wrong name \"" + flag.name + "\"");
 		return false;
 	}
-	logger.log("set flag \"" + flag.name + "\" = " + std::to_string(flag.value));
+	logger.log("set flag \"" + flag.name + "\" = " + to_string(flag.value));
 	return true;
 }
 
@@ -898,7 +903,7 @@ string Interpreter::Expression::to_txt() const {
 		return pval->to_txt();
 	}
 	if (const auto* pval = std::get_if<int>(&value)) {
-		return std::to_string(*pval);
+		return to_string(*pval);
 	}
 	if (const auto* pval = std::get_if<Regex>(&value)) {
 		return "{" + pval->to_txt() + "}";

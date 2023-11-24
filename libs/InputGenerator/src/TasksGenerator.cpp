@@ -1,5 +1,13 @@
 #include "InputGenerator/TasksGenerator.h"
 
+using std::cout;
+using std::map;
+using std::ofstream;
+using std::pair;
+using std::string;
+using std::to_string;
+using std::vector;
+
 TasksGenerator::TasksGenerator() {
 	change_seed();
 	distribute_functions();
@@ -28,8 +36,8 @@ string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 }
 
 void TasksGenerator::write_to_file(string filename) {
-	std::ofstream out;
-	out.open(filename, std::ofstream::trunc);
+	ofstream out;
+	out.open(filename, ofstream::trunc);
 	if (out.is_open())
 		out << res_str;
 	out.close();
@@ -95,7 +103,7 @@ string TasksGenerator::generate_test() {
 	str += regex_generator.generate_framed_regex();
 
 	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
-	str += " " + std::to_string(rand_num);
+	str += " " + to_string(rand_num);
 
 	return str;
 }
@@ -106,7 +114,7 @@ string TasksGenerator::generate_arguments(Function first_func) {
 		if (for_static_Tpchkr) {
 			if (rand() % 2 && id_num > 1) {
 				int rand_id = rand() % (id_num - 1) + 1;
-				func_str += " N" + std::to_string(rand_id);
+				func_str += " N" + to_string(rand_id);
 			} else {
 				func_str += " " + regex_generator.generate_framed_regex();
 			}
@@ -124,7 +132,7 @@ string TasksGenerator::generate_arguments(Function first_func) {
 			} else if (input_type == INT && (!ids.count(INT) || rand() % 2)) {
 				// сгенерировать число
 				int rand_num = rand() % 5; // пусть будет до 5..
-				func_str += " " + std::to_string(rand_num);
+				func_str += " " + to_string(rand_num);
 			} else if (input_type == ARRAY) {
 				func_str += " [[{a} {b}]]";
 			} else if (ids.count(input_type)) {
@@ -140,13 +148,13 @@ string TasksGenerator::generate_arguments(Function first_func) {
 string TasksGenerator::get_random_id_by_type(string type) {
 	vector<Id> possible_ids = ids[type];
 	Id rand_id = possible_ids[rand() % possible_ids.size()];
-	return std::to_string(rand_id.num);
+	return to_string(rand_id.num);
 }
 
 string TasksGenerator::generate_declaration() {
 	change_seed();
 	id_num++;
-	string str = "N" + std::to_string(id_num) + " = ";
+	string str = "N" + to_string(id_num) + " = ";
 	int funcNum = max_num_of_func_in_seq > 0 ? rand() % (max_num_of_func_in_seq + 1) : 0;
 
 	string prevOutput;

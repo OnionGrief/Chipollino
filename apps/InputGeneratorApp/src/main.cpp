@@ -20,7 +20,7 @@ int main() {
 	out.close();
 	*/
 
-	cout << "Input generator\n";
+	std::cout << "Input generator\n";
 
 	// Инициализируем интерпретатор
 	Interpreter interpreter;

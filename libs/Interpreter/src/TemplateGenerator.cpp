@@ -2,6 +2,13 @@
 
 #include "Interpreter/Interpreter.h"
 
+using std::cout;
+using std::ifstream;
+using std::pair;
+using std::string;
+using std::to_string;
+using std::vector;
+
 bool types_equiv(const vector<ObjectType>& input, const ObjectType& output) {
 	if (!((output == input[0]) || (output == ObjectType::DFA && input[0] == ObjectType::NFA) ||
 		  (output == ObjectType::NFA && input[0] == ObjectType::DFA))) {

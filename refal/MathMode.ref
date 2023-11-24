@@ -14,11 +14,18 @@ $ENTRY Trim {
 /* Hacked derivatives. TODO: parameterize by indices activation */
 SpecialSymbolList {
  = (NOREGEX ('eps')('\\empt'))(NOREGEX ('DERIV')('\\delta_'))(OK ('FIRST')('\\First'))(OK ('FOLLOW')('\\Follow'))(OK ('LAST')('\\Last'))
-   (OK ('UNION')('\\cup'))(OK ('\\{')('\\{'))(OK ('\\}')('\\}'))(OK ('{')('\\{'))(OK ('}')('\\}'))(OK ('[')('{'))(OK (']')('}'))
-   (NOREGEX ('LANG')('\\Lang'))(OK ('>->>')('\\transit'));
+   (OK ('UNION')('\\cup'))(OK ('\\{')('\\{'))(OK ('\\}')('\\}'))(OK ('{')('\\{'))(OK ('}')('\\}'))(OK ('[')('['))(OK (']')(']'))
+   (NOREGEX ('LANG')('\\Lang'))(OK ('&')('\\memref'))(NOREGEX ('\\textasciicircum')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
+   (OK ('>->>')('\\transit'))(MEM ('MEMLOPEN')
+   ('\\langle o:\\,'))(MEM ('MEMR')('\\rangle'))(MEM ('MEMLCLOSE')('\\langle c:\\,'));
 }
 
 SeparateModes {
+ (e.S1 (MEM (e.Spec)(e.Image)) e.S2) Memory (e.Prefix) e.Spec e.Rest
+ , (e.S1 (MEM (e.Spec)(e.Image)) e.S2) : e.SymbList
+   = <SeparateModes (e.SymbList) Normal (e.Prefix e.Image) e.Rest>;
+ (e.SymbList) Memory (e.Prefix) s.Head e.Rest
+   = <SeparateModes (e.SymbList) Memory (e.Prefix s.Head) e.Rest>;
  (e.S1 (s.Sort (e.Spec)(e.Image)) e.S2) Normal (e.Prefix) e.Spec e.Rest
  , e.S1 (s.Sort (e.Spec)(e.Image)) e.S2 : e.SymbList
  , s.Sort : 
@@ -41,6 +48,7 @@ SeparateModes {
    = e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
   e.Nempt = '\\regexpstr{'<MathMode e.Nempt>' }' e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
  };
+ MEM = <SeparateModes (e.SymbList) Memory (e.Prefix e.Image) e.Rest>;
  OK = <SeparateModes (e.SymbList) Normal (e.Prefix e.Image) e.Rest>;
  };
  (e.Spec) Normal (e.Prefix) s.Sym e.Rest

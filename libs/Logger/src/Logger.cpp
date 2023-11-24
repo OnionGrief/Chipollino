@@ -2,6 +2,11 @@
 
 #include "Logger/Logger.h"
 
+using std::cout;
+using std::ifstream;
+using std::ofstream;
+using std::string;
+
 void Logger::add_log(const LogTemplate& log) {
 	if (enabled) {
 		logs.push_back(log);
@@ -9,8 +14,8 @@ void Logger::add_log(const LogTemplate& log) {
 }
 
 void Logger::render_to_file(const string& filename) {
-	std::ifstream infile("./resources/template/head.tex");
-	std::ofstream outfile(filename);
+	ifstream infile("./resources/template/head.tex");
+	ofstream outfile(filename);
 
 	string s;
 	for (; !infile.eof();) {
