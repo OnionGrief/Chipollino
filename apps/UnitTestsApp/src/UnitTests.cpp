@@ -1,5 +1,10 @@
 #include "UnitTestsApp/UnitTests.h"
 
+using std::map;
+using std::set;
+using std::string;
+using std::vector;
+
 TEST(ParseStringTest, Test_regex_lexer) {
 	struct Test {
 		string regex_str;
@@ -9,6 +14,7 @@ TEST(ParseStringTest, Test_regex_lexer) {
 	};
 
 	vector<Test> tests = {
+		// тесты на ссылки и захваты памяти
 		{"[]", true, true},
 		{"[]:", true, true},
 		{"[a]", true, true},
@@ -18,6 +24,7 @@ TEST(ParseStringTest, Test_regex_lexer) {
 		{"[a]:1", false, true, 3},
 		{"&", true, true},
 		{"&1", false, true, 1},
+		{"[b[a]:1]:1", true, true},
 		{"[b[a]:1&1]:2&2", false, true, 11},
 		// тесты на отрицание
 		{"^a", false, false, 2},
@@ -55,6 +62,37 @@ TEST(ParseStringTest, Test_regex_lexer) {
 	}
 }
 
+TEST(TestCaseThompsonNegative, Test_thompson_negative) {
+	vector<State> states;
+	for (int i = 0; i < 9; i++) {
+		states.emplace_back(i, set<int>{i}, std::to_string(i), false, map<alphabet_symbol, set<int>>());
+	}
+
+	states[0].set_transition(1, alphabet_symbol::epsilon());
+	states[0].set_transition(5, alphabet_symbol::epsilon());
+
+	states[1].set_transition(4, alphabet_symbol::epsilon());
+	states[1].set_transition(2, "a");
+
+	states[2].set_transition(3, "a");
+
+	states[3].set_transition(3, "a");
+	states[3].set_transition(4, alphabet_symbol::epsilon());
+
+	states[4].set_transition(7, alphabet_symbol::epsilon());
+
+	states[7].set_transition(8, "c");
+
+	states[5].set_transition(6, "b");
+
+	states[6].set_transition(7, alphabet_symbol::epsilon());
+
+	states[8].is_terminal = true;
+	FiniteAutomaton fa(0, states, {"a", "b", "c"});
+
+	ASSERT_TRUE(FiniteAutomaton::equal(fa, Regex("(^a|b)c").to_thompson()));
+}
+
 TEST(TestCaseName, Test_random_regex_parsing) {
 	RegexGenerator rg(15, 10, 5, 3);
 	for (int i = 0; i < 30; i++) {
@@ -67,10 +105,9 @@ TEST(TestCaseName, Test_random_regex_parsing) {
 }
 
 TEST(TestCaseName, Test_fa_equal) {
-	vector<State> states1;
+	vector<FiniteAutomaton::FiniteAutomaton::State> states1;
 	for (int i = 0; i < 6; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states1[0].set_transition(1, "b");
 	states1[0].set_transition(2, "b");
@@ -83,10 +120,9 @@ TEST(TestCaseName, Test_fa_equal) {
 	states1[4].is_terminal = true;
 	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
 
-	vector<State> states2;
+	vector<FiniteAutomaton::FiniteAutomaton::State> states2;
 	for (int i = 0; i < 6; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states2.push_back(s);
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states2[0].set_transition(1, "b");
 	states2[0].set_transition(2, "b");
@@ -99,10 +135,9 @@ TEST(TestCaseName, Test_fa_equal) {
 	states2[4].is_terminal = true;
 	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
 
-	vector<State> states3;
+	vector<FiniteAutomaton::State> states3;
 	for (int i = 0; i < 6; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states3.push_back(s);
+		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states3[5].set_transition(4, "b");
 	states3[5].set_transition(3, "b");
@@ -130,10 +165,9 @@ TEST(TestCaseName, Test_fa_equal) {
 }
 
 TEST(TestCaseName, Test_fa_equiv) {
-	vector<State> states1;
+	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states1[0].set_transition(0, "c");
 	states1[0].set_transition(1, "d");
@@ -144,10 +178,9 @@ TEST(TestCaseName, Test_fa_equiv) {
 	states1[0].is_terminal = true;
 	FiniteAutomaton fa1(0, states1, {"c", "d"});
 
-	vector<State> states2;
+	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 4; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states2.push_back(s);
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states2[0].set_transition(0, "c");
 	states2[0].set_transition(1, "d");
@@ -164,10 +197,9 @@ TEST(TestCaseName, Test_fa_equiv) {
 }
 
 TEST(TestCaseName, Test_bisimilar) {
-	vector<State> states1;
+	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states1[0].set_transition(1, "a");
 	states1[0].set_transition(1, "eps");
@@ -181,10 +213,9 @@ TEST(TestCaseName, Test_bisimilar) {
 	states1[2].is_terminal = true;
 	FiniteAutomaton fa1(1, states1, {"a", "b"});
 
-	vector<State> states2;
+	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 2; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states2.push_back(s);
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states2[0].set_transition(1, "a");
 	states2[0].set_transition(1, "eps");
@@ -201,10 +232,9 @@ TEST(TestCaseName, Test_merge_bisimilar) {
 	FiniteAutomaton fa = Regex("(a|b)*b").to_glushkov();
 	FiniteAutomaton fa1 = fa.merge_bisimilar();
 
-	vector<State> states2;
+	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 3; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states2.push_back(s);
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states2[0].set_transition(1, "a");
 	states2[0].set_transition(1, "eps");
@@ -218,10 +248,9 @@ TEST(TestCaseName, Test_merge_bisimilar) {
 	states2[2].is_terminal = true;
 	FiniteAutomaton fa2(1, states2, {"a", "b"});
 
-	vector<State> states3;
+	vector<FiniteAutomaton::State> states3;
 	for (int i = 0; i < 2; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states3.push_back(s);
+		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states3[0].set_transition(0, "b");
 	states3[0].set_transition(1, "a");
@@ -359,10 +388,9 @@ TEST(TestCaseName, Test_pump_length) {
 
 TEST(TestCaseName, Test_fa_to_pgrammar) {
 	// cout << "fa to grammar\n";
-	vector<State> states1;
+	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 5; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states1.push_back(s);
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 
 	states1[4].set_transition(1, "a");
@@ -468,10 +496,9 @@ TEST(TestCaseName, Test_TransformationMonoid) {
 	ASSERT_TRUE(tm1.is_minimal());
 	ASSERT_EQ(tm1.get_classes_number_MyhillNerode(), 3);
 
-	vector<State> states;
+	vector<FiniteAutomaton::State> states;
 	for (int i = 0; i < 5; i++) {
-		State s = {i, {i}, std::to_string(i), false, map<alphabet_symbol, set<int>>()};
-		states.push_back(s);
+		states.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
 	states[0].set_transition(1, "a");
 	states[1].set_transition(2, "c");

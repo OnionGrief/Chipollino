@@ -13,7 +13,7 @@
 
 class Tester {
   private:
-	static bool parsing_by_regex(const string&, const string&);
+	static bool parsing_by_regex(const std::string&, const std::string&);
 
 	using ParseDevice = std::variant<FiniteAutomaton, Regex>;
 
