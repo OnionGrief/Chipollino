@@ -31,6 +31,7 @@ class FiniteAutomaton : public AbstractMachine {
 		polynomially_ambigious
 	};
 
+	// !!! меняешь структуру здесь, поменяй в FAState в Regex.h !!!
 	struct State : AbstractMachine::State {
 		// используется для объединения состояний в процессе работы алгоритмов
 		// преобразования автоматов возможно для визуализации
