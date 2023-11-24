@@ -82,9 +82,6 @@ class FiniteAutomaton : public AbstractMachine {
 	// функция проверки на семантическую детерминированность
 	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
 
-	static std::vector<expression_arden> arden(const std::vector<expression_arden>& in, int index);
-	static std::vector<expression_arden> arden_minimize(const std::vector<expression_arden>& in);
-
   public:
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, std::vector<State> states,

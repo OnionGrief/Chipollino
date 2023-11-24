@@ -2394,74 +2394,6 @@ bool FiniteAutomaton::is_empty() const {
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
 
-vector<expression_arden> FiniteAutomaton::arden_minimize(const vector<expression_arden>& in) {
-	map<int, Regex*> out_map;
-	// Загоняем все в map, потом пишем в вектор (объединяем переходы из 1
-	// состояния)
-	for (auto i : in) {
-		if (!out_map.count(i.fa_state_number)) {
-			out_map[i.fa_state_number] = Regex::cast(i.regex_from_state->make_copy());
-		} else {
-			auto* temp = new Regex();
-			temp->regex_alt(i.regex_from_state, out_map[i.fa_state_number]);
-			delete out_map[i.fa_state_number];
-			out_map[i.fa_state_number] = temp;
-		}
-	}
-	vector<expression_arden> out;
-	for (const auto& cur_elem : out_map) {
-		expression_arden temp = {cur_elem.first, cur_elem.second};
-		out.push_back(temp);
-	}
-	return out;
-}
-
-vector<expression_arden> FiniteAutomaton::arden(const vector<expression_arden>& in, int index) {
-	vector<expression_arden> out;
-	// ищем переход из текущего состояния
-	int indexcur = -1;
-	for (int i = 0; (i < in.size() && indexcur == -1); i++) {
-		if (in[i].fa_state_number == index) {
-			indexcur = i;
-		}
-	}
-	// если таких переходов нет
-	if (indexcur == -1) {
-		for (auto i : in) {
-			Regex* r = Regex::cast(i.regex_from_state->make_copy());
-			expression_arden temp = {i.fa_state_number, r};
-			out.push_back(temp);
-		}
-		return out;
-	}
-	// если есть только такой переход
-	if (in.size() < 2) {
-		auto* r = new Regex();
-		r->regex_star(in[0].regex_from_state);
-		expression_arden temp = {-1, r};
-		out.push_back(temp);
-		return out;
-	}
-	// добавляем (текущий переход)* к всем остальным
-	for (int i = 0; i < in.size(); i++) {
-		if (i != indexcur) {
-			auto* r = new Regex();
-			r->regex_star(in[indexcur].regex_from_state);
-			Regex* k;
-			if (in[i].regex_from_state->to_txt().empty()) {
-				k = Regex::cast(r->make_copy());
-			} else {
-				k = new Regex();
-				k->regex_union(in[i].regex_from_state, r);
-			}
-			delete r;
-			expression_arden temp = {in[i].fa_state_number, k};
-			out.push_back(temp);
-		}
-	}
-	return out;
-}
-
 Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
@@ -2471,7 +2403,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	std::unordered_map<int, std::unordered_map<int, Regex>> SLAE{};
 	// индекс стартового состояния (должен быть среди состояний)
 	const int start_state_index = initial_state;
-	// индекс глобального конечного состояния (должен не быть среди состоянтй)
+	// индекс глобального конечного состояния (должен не быть среди состояний)
 	const int end_state_index = -1;
 	/*
 		@algorithm_sample
@@ -2504,9 +2436,8 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 
 			for (int state_index_to : states_to) {
 				if (SLAE[state.index].count(state_index_to)) {
-					Regex new_regex{};
-					new_regex.regex_alt(&SLAE[state.index][state_index_to], &symbol_regex);
-					SLAE[state.index][state_index_to] = new_regex;
+					SLAE[state.index][state_index_to] =
+						Regex(Regex::Type::alt, &SLAE[state.index][state_index_to], &symbol_regex);
 				} else {
 					SLAE[state.index].insert({state_index_to, symbol_regex});
 				}
@@ -2521,20 +2452,17 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			return;
 		}
 
-		// случай отсутсвия в уранении переходов в себя
+		// случай отсутствия в уравнении переходов в себя
 		if (!SLAE[state_index].count(state_index)) {
 			return;
 		}
 
 		// подготавливаем звёздную регулярку
-		Regex state_self_regex{};
-		state_self_regex.regex_star(&SLAE[state_index][state_index]);
+		Regex state_self_regex(Regex::Type::star, &SLAE[state_index][state_index]);
 
-		// добавление звёздного перехода к остальным переходам уранения
+		// добавление звёздного перехода к остальным переходам уравнения
 		for (auto& [state_index_to, to_regex] : SLAE[state_index]) {
-			Regex new_regex{};
-			new_regex.regex_union(&state_self_regex, &to_regex);
-			to_regex = new_regex;
+			to_regex = Regex(Regex::Type::conc, &state_self_regex, &to_regex);
 		}
 
 		// удаление рассмотренного перехода состояния в себя же
@@ -2547,7 +2475,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		// ссылка не константная, тк уравнения
 		// будут подвержены изменениям
 
-		// начальное состояние должно остаться посленим не рассмотренным
+		// начальное состояние должно остаться последним не рассмотренным
 		if (state_index_row == start_state_index) {
 			continue;
 		}
@@ -2556,7 +2484,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		arden_theorem(state_index_row);
 
 		// подстановка рассматриваемого уравнения в его упоминания в прочих
-		// итерация по всем уравнениям с переходами в исходное для подстановки регулярки
+		// итерациях по всем уравнениям с переходами в исходное для подстановки регулярки
 		for (auto& [state_index_from, equation_from] : SLAE) {
 			// пропуск итерации, если в рассматриваемом уравнения нет исходного
 			if (!equation_from.count(state_index_row)) {
@@ -2566,14 +2494,12 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			// итерация по всем переходам из исходного уравнения
 			for (auto& [state_index_col, regex_col] : equation_row) {
 				// регулярка перехода из рассматриваемого уравнения в исходное
-				Regex regex_from{};
-				regex_from.regex_union(&equation_from[state_index_row], &regex_col);
+				Regex regex_from = Regex(Regex::Type::conc, &equation_from[state_index_row], &regex_col);
 
-				// объединяем полученную регулярку с имеющейся в рассматривамом уравнении
+				// объединяем полученную регулярку с имеющейся в рассматриваемом уравнении
 				if (equation_from.count(state_index_col)) {
-					Regex new_regex{};
-					new_regex.regex_alt(&equation_from[state_index_col], &regex_from);
-					equation_from[state_index_col] = new_regex;
+					equation_from[state_index_col] =
+						Regex(Regex::Type::alt, &equation_from[state_index_col], &regex_from);
 				} else {
 					equation_from.insert({state_index_col, regex_from});
 				}
@@ -2594,8 +2520,8 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	if (SLAE.count(start_state_index) && SLAE[start_state_index].count(end_state_index)) {
 		auto& result_regex = SLAE[start_state_index][end_state_index];
 
-		// явная подстановка нужного языка в финальную регулярку
-		result_regex.language = language;
+		// подстановка нужного языка в финальную регулярку
+		result_regex.set_language(language);
 
 		if (log) {
 			log->set_parameter("result", result_regex.to_txt());
@@ -2603,7 +2529,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		return result_regex;
 	}
 
-	// случай недостижимости ни одного из конечных состояний или их отсуствия
+	// случай недостижимости ни одного из конечных состояний или их отсутствия
 	if (log) {
 		log->set_parameter("result", "Unknown");
 	}

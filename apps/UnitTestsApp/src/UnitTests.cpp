@@ -363,13 +363,13 @@ TEST(TestCaseName, Test_remove_trap) {
 	ASSERT_EQ(fa3.size(), fa3.remove_trap_states().size()); // Кейс, когда ловушек нет.
 }
 
-TEST(TestCaseName, Test_arden) {
+TEST(TestArden, Test_to_regex_equivalence) {
 	auto test_equivalence = [](const string& rgx_str) {
-		Regex reg(rgx_str);
-		ASSERT_TRUE(Regex::equivalent(reg, reg.to_thompson().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(reg, reg.to_glushkov().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(reg, reg.to_ilieyu().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(reg, reg.to_antimirov().to_regex()));
+		Regex r1(rgx_str), r2(rgx_str);
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_thompson().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_glushkov().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_ilieyu().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_antimirov().to_regex()));
 	};
 
 	test_equivalence("a");
