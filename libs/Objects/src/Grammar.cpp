@@ -365,12 +365,11 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 
 string Grammar::pg_to_txt() const {
 	set<string> out;
-	std::stringstream ss;
+	stringstream ss;
 	// vector<PrefixGrammarItem> prefix_grammar = prefix_grammar;
-	for (int i = 0; i < prefix_grammar.size(); i++) {
-		const PrefixGrammarItem& g = prefix_grammar[i];
-		for (const auto& w : g.equivalence_class) {
-			for (const auto& elem : g.rules) {
+	for (const auto& item : prefix_grammar) {
+		for (const auto& w : item.equivalence_class) {
+			for (const auto& elem : item.rules) {
 				Symbol a = elem.first;
 				// int index = elem.second;
 				for (const auto& w_back : elem.second) {
@@ -386,7 +385,7 @@ string Grammar::pg_to_txt() const {
 						if (a == "") {
 							a = "eps";
 						}
-						if (!g.is_started && prefix_grammar[w_back].is_started) {
+						if (!item.is_started && prefix_grammar[w_back].is_started) {
 							eq = "eps";
 						}
 						if (wt == "eps") {
@@ -411,9 +410,9 @@ string Grammar::pg_to_txt() const {
 	ss << "Базисные слова: "
 	   << "\\\\";
 
-	for (int i = 0; i < prefix_grammar.size(); i++) {
-		if (prefix_grammar[i].is_terminal) {
-			const PrefixGrammarItem& g = prefix_grammar[i];
+	for (const auto& item : prefix_grammar) {
+		if (item.is_terminal) {
+			const PrefixGrammarItem& g = item;
 			for (const auto& w : g.equivalence_class) {
 				if (w == "") {
 					ss << "eps"
