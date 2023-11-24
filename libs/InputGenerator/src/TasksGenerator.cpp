@@ -138,7 +138,7 @@ string TasksGenerator::generate_arguments(Function first_func) {
 			} else if (ids.count(input_type)) {
 				func_str += " N" + get_random_id_by_type(input_type);
 			} else {
-				cout << "generator error: there is no id with type" + input_type << endl;
+				cout << "generator error: there is no id with type" + input_type + "\n";
 			}
 		}
 	}
