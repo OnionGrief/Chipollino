@@ -50,5 +50,6 @@ class RegexGenerator {
 	std::string generate_framed_regex();
 	/*запись регулярки в файл*/
 	void write_to_file(std::string filename);
+	/*установить шанс появления отрицания - чем больше значение, тем реже шанс*/
 	void set_neg_chance(int new_neg_chance);
 };

@@ -63,16 +63,18 @@ class AlgExpression : public BaseObject {
 
 	// копирует объект (!!! не чистит память !!!)
 	virtual void copy(const AlgExpression*) = 0; // NOLINT(build/include_what_you_use)
-	// возвращает указатель на 'new' объект соответствующего типа
+	// возвращает указатель на 'new' объект своего типа
 	virtual AlgExpression* make() const = 0;
 
 	void clear();
 
 	// Создает новый язык с алфавитом
 	void set_language(const std::set<Symbol>& _alphabet);
-	// Рекурсивная генерация алфавита
-	void generate_alphabet(std::set<Symbol>& _alphabet); // NOLINT(runtime/references)
-	// Генерация языка из алфавита
+	// Устанавливает язык
+	void set_language(const std::shared_ptr<Language>& _language);
+	// Рекурсивная генерация алфавита во всех нодах
+	void generate_alphabet();
+	// Генерация алфавита и создание нового языка
 	void make_language();
 
 	// для print_tree
@@ -115,15 +117,12 @@ class AlgExpression : public BaseObject {
 	std::vector<AlgExpression*> get_last_nodes();
 	std::unordered_map<int, std::vector<int>> pairs() const;
 
-	void regex_union(AlgExpression* a, AlgExpression* b);
-	void regex_alt(AlgExpression* a, AlgExpression* b);
-	void regex_star(AlgExpression* a);
-	void regex_eps();
-
   public:
 	AlgExpression();
 	AlgExpression(std::shared_ptr<Language>, Type, const Lexeme&, const std::set<Symbol>&);
 	AlgExpression(std::set<Symbol>); // NOLINT(runtime/explicit)
+	AlgExpression(Type type, AlgExpression* = nullptr,
+				  AlgExpression* = nullptr); // NOLINT(runtime/explicit)
 
 	virtual ~AlgExpression();
 

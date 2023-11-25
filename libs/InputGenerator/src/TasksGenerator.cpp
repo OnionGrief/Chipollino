@@ -110,7 +110,7 @@ string TasksGenerator::generate_test() {
 
 string TasksGenerator::generate_arguments(Function first_func) {
 	string func_str = "";
-	for (int i = 0; i < first_func.input.size(); i++) {
+	for (auto input_type : first_func.input) {
 		if (for_static_Tpchkr) {
 			if (rand() % 2 && id_num > 1) {
 				int rand_id = rand() % (id_num - 1) + 1;
@@ -119,9 +119,6 @@ string TasksGenerator::generate_arguments(Function first_func) {
 				func_str += " " + regex_generator.generate_framed_regex();
 			}
 		} else {
-
-			string input_type = first_func.input[i];
-
 			if ((for_dinamic_Tpchkr && input_type == DFA) || input_type == NFA) {
 				input_type = NFA_DFA;
 			}
@@ -229,31 +226,28 @@ string TasksGenerator::generate_declaration() {
 }
 
 TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput, int funcNum) {
-	Function str;
+	Function func;
 	if (for_static_Tpchkr) {
-		str = rand_func();
-	} else if ((for_dinamic_Tpchkr && prevOutput == NFA) || prevOutput == DFA) {
-		vector<Function> possible_functions = funcInput[NFA_DFA];
-		str = possible_functions[rand() % possible_functions.size()];
-		if ((str.output == INT || str.output == VALUE) && funcNum != 0)
-			str = generate_next_func(prevOutput, funcNum);
+		func = rand_func();
 	} else {
+		if ((for_dinamic_Tpchkr && prevOutput == NFA) || prevOutput == DFA)
+			prevOutput = NFA_DFA;
 		vector<Function> possible_functions = funcInput[prevOutput];
-		str = possible_functions[rand() % possible_functions.size()];
-		if ((str.output == INT || str.output == VALUE) &&
-			funcNum != 0) // может возвращать int если последняя функция в посл-ти
-			str = generate_next_func(prevOutput, funcNum);
+		func = possible_functions[rand() % possible_functions.size()];
+		// может возвращать int, только если функция явл-ся последней в посл-ти
+		if ((func.output == INT || func.output == VALUE) && funcNum != 0)
+			func = generate_next_func(prevOutput, funcNum);
 	}
-	return str;
+	return func;
 }
 
 void TasksGenerator::distribute_functions() {
-	for (int i = 0; i < functions.size(); i++) {
-		if (functions[i].input.size() == 1) {
-			string input_type = functions[i].input[0];
-			funcInput[input_type].push_back(functions[i]);
+	for (Function func : functions) {
+		if (func.input.size() == 1) {
+			string input_type = func.input[0];
+			funcInput[input_type].push_back(func);
 			if (input_type == NFA || input_type == DFA)
-				funcInput[NFA_DFA].push_back(functions[i]);
+				funcInput[NFA_DFA].push_back(func);
 		}
 	}
 }

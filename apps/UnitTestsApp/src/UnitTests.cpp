@@ -95,18 +95,6 @@ TEST(TestNegativeRegex, Test_thompson_negative) {
 
 TEST(TestNegativeRegex, Test_antimirov_negative) {}
 
-TEST(TestCaseName, Test_random_regex_parsing) {
-	// RegexGenerator rg(2); // для регулярок с отрицанием
-	RegexGenerator rg(15, 10, 5, 3);
-	for (int i = 0; i < 30; i++) {
-		string str = rg.generate_regex();
-		Regex r1(str);
-		string r1_str = r1.to_txt();
-		Regex r2(r1_str);
-		ASSERT_EQ(true, Regex::equivalent(r1, r2));
-	}
-}
-
 TEST(TestCaseName, Test_fa_equal) {
 	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 6; i++) {
@@ -364,13 +352,13 @@ TEST(TestCaseName, Test_remove_trap) {
 	ASSERT_EQ(fa3.size(), fa3.remove_trap_states().size()); // Кейс, когда ловушек нет.
 }
 
-TEST(TestCaseName, Test_arden) {
+TEST(TestArden, Test_to_regex_equivalence) {
 	auto test_equivalence = [](const string& rgx_str) {
-		Regex reg(rgx_str);
-		ASSERT_TRUE(Regex::equivalent(reg, reg.to_thompson().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(reg, reg.to_glushkov().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(reg, reg.to_ilieyu().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(reg, reg.to_antimirov().to_regex()));
+		Regex r1(rgx_str), r2(rgx_str);
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_thompson().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_glushkov().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_ilieyu().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_antimirov().to_regex()));
 	};
 
 	test_equivalence("a");

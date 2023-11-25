@@ -30,6 +30,8 @@ class BackRefRegex : public AlgExpression {
   public:
 	BackRefRegex() = default;
 	BackRefRegex(const std::string&); // NOLINT(runtime/explicit)
+	BackRefRegex(Type type, AlgExpression* = nullptr,
+				 AlgExpression* = nullptr); // NOLINT(runtime/explicit)
 
 	BackRefRegex* make_copy() const override;
 	BackRefRegex(const BackRefRegex&);

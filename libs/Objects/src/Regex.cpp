@@ -31,6 +31,9 @@ Regex::Regex(const string& str, const std::shared_ptr<Language>& new_language) :
 	language = new_language;
 }
 
+Regex::Regex(Type type, AlgExpression* term_l, AlgExpression* term_r)
+	: AlgExpression(type, term_l, term_r) {}
+
 void Regex::copy(const AlgExpression* other) {
 	auto* tmp = cast(other);
 	alphabet = tmp->alphabet;
@@ -897,18 +900,16 @@ int Regex::pump_length(iLogTemplate* log) const {
 				continue;
 			for (int j = 0; j < it->size(); j++) {
 				for (int k = j + 1; k <= it->size(); k++) {
-					Regex pumping;
 					string pumped_prefix;
 					pumped_prefix += it->substr(0, j);
 					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
 					pumped_prefix += it->substr(k, it->size() - k + j);
 					Regex a(pumped_prefix);
 					Regex b;
-					pumping.regex_union(&a, &b);
+					Regex pumping(Type::conc, &a, &b);
 					if (!derivative_with_respect_to_str(*it, this, *Regex::cast(pumping.term_r)))
 						continue;
-					pumping.generate_alphabet(pumping.alphabet);
-					pumping.language = make_shared<Language>(pumping.alphabet);
+					pumping.make_language();
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
 						checked_prefixes[*it] = true;

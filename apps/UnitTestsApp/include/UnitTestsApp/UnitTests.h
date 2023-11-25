@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "AutomatonToImage/AutomatonToImage.h"
-#include "InputGenerator/RegexGenerator.h"
 #include "Interpreter/Interpreter.h"
 #include "Objects/AlgExpression.h"
 #include "Objects/FiniteAutomaton.h"
