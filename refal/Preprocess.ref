@@ -52,6 +52,10 @@ $ENTRY Go {
     = <Prout 'No file ' e.from'.dot found.'>; }; 
 }
 
+MemorySym {
+ = ('; c:')('; o:');
+}
+
 GetAllPostMetaData {
   Start e.x 0 = /* No Meta */ <Putout 8 'No metadata found in 'e.x>;
   Start /* EMPTY */ = <GetAllPostMetaData Start <Get 1>>;
@@ -85,15 +89,23 @@ GetNodeMetaData {
 
 GetEdgeMetaData {
   (e.Source)(e.Destination)(e.Label)e.MD
+  , <LocalizeMemories (<MemorySym>) e.Label> : e.NewLabel
   , e.MD : 
    {e.M1'group'e.id
     , <Dg 'MetaGroups'> :
    {e.MG1'('e.id')'e.MG2
-      = <Br 'MetaGroups='e.MG1'('e.id')'e.MG2><Br 'MetaData=('e.Source')('e.Destination')@'<TrueMathMode e.Label>'@::='e.id>;
-    e.Rest = <Br 'MetaGroups='e.Rest'('e.id'),'><Br 'MetaData=('e.Source')('e.Destination')@'<TrueMathMode e.Label>'@::='e.id>;
+      = <Br 'MetaGroups='e.MG1'('e.id')'e.MG2><Br 'MetaData=('e.Source')('e.Destination')@'<TrueMathMode e.NewLabel>'@::='e.id>;
+    e.Rest = <Br 'MetaGroups='e.Rest'('e.id'),'><Br 'MetaData=('e.Source')('e.Destination')@'<TrueMathMode e.NewLabel>'@::='e.id>;
    };
     e.Other = ; 
    };
+}
+
+LocalizeMemories {
+ ((e.Closer)(e.Opener)) e.Before e.Closer e.List1 e.Opener e.List2 = e.Before 'MEMLOPEN' e.List1 'MEMR MEMLCLOSE' e.List2 'MEMR';
+ (()(e.Opener)) e.Before e.Opener e.List e.Rest = e.Before 'MEMLOPEN' e.List 'MEMR';
+ ((e.Closer)()) e.Before e.Closer e.List e.Rest = e.Before 'MEMLCLOSE' e.List 'MEMR';
+ (()()) e.Rest = e.Rest;
 }
 
 PutLines {
@@ -340,6 +352,7 @@ SectionEdge {
  (e.x)e.y'/*'e.MetaData'*/' = <GetEdgeMetaData (e.x)(<Trim e.y>)()e.MetaData>;
  e.W = ;
 }
+
 
 ProcessEdge {
  e.x' -> 'e.y = (e.x' -> 'e.y)<SectionEdge (<Trim e.x>)e.y>;

@@ -107,7 +107,7 @@ TEST(TestCaseName, Test_random_regex_parsing) {
 }
 
 TEST(TestCaseName, Test_fa_equal) {
-	vector<FiniteAutomaton::FiniteAutomaton::State> states1;
+	vector<FiniteAutomaton::State> states1;
 	for (int i = 0; i < 6; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}
@@ -122,7 +122,7 @@ TEST(TestCaseName, Test_fa_equal) {
 	states1[4].is_terminal = true;
 	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
 
-	vector<FiniteAutomaton::FiniteAutomaton::State> states2;
+	vector<FiniteAutomaton::State> states2;
 	for (int i = 0; i < 6; i++) {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
 	}

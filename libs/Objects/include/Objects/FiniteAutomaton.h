@@ -56,8 +56,8 @@ class FiniteAutomaton : public AbstractMachine {
 
 	void dfs(int index, std::set<int>& reachable, // NOLINT(runtime/references)
 			 bool use_epsilons_only) const;
-
-	bool parsing_nfa(const std::string&, int) const; // парсинг слова в нка
+	// парсинг слова по нка (устаревший метод)
+	bool parsing_nfa(const std::string&, int) const;
 	std::pair<int, bool> parsing_nfa_for(const std::string&) const;
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
@@ -97,13 +97,13 @@ class FiniteAutomaton : public AbstractMachine {
 	// визуализация автомата
 	std::string to_txt() const override;
 	// детерминизация ДКА
-	FiniteAutomaton determinize(iLogTemplate* log = nullptr, bool is_trim = true) const;
+	FiniteAutomaton determinize(bool is_trim = false, iLogTemplate* log = nullptr) const;
 	// удаление eps-переходов (построение eps-замыканий)
 	FiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
 	// удаление eps-переходов (доп. вариант)
 	FiniteAutomaton remove_eps_additional(iLogTemplate* log = nullptr) const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize(iLogTemplate* log = nullptr, bool is_trim = true) const;
+	FiniteAutomaton minimize(bool is_trim = false, iLogTemplate* log = nullptr) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&, const FiniteAutomaton&,

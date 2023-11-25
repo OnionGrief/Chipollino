@@ -87,8 +87,6 @@ class LogTemplate : public iLogTemplate {
 
 	// Добавление шаблона настоящего параметра
 	void add_parameter(std::string parameter_name);
-	// math mode (устаревший метод)
-	static std::string math_mode(std::string str);
 	// счетчик картинок
 	inline static int image_number = 0;
 	// таблицы в общем виде

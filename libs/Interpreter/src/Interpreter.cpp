@@ -81,16 +81,17 @@ Interpreter::Interpreter() {
 bool Interpreter::run_line(const string& line) {
 	auto logger = init_log();
 	Lexer lexer(*this);
-	logger.log("running \"" + line + "\"");
 	auto lexems = lexer.parse_string(line);
+	if (lexems.size() == 0)
+		return true;
 	bool success = false;
+	logger.log("running \"" + line + "\"");
 	if (const auto op = scan_operation(lexems); op.has_value()) {
 		success = run_operation(*op);
 	} else {
 		logger.throw_error("failed to scan operation");
 		success = false;
 	}
-	logger.log("");
 	return success;
 }
 
@@ -189,12 +190,10 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 	logger.log("running function \"" + function.name + "\"");
 
 	auto get_automaton = [](const GeneralObject& obj) -> const FiniteAutomaton& {
-		if (std::holds_alternative<ObjectNFA>(obj)) {
+		if (std::holds_alternative<ObjectNFA>(obj))
 			return std::get<ObjectNFA>(obj).value;
-		}
-		if (std::holds_alternative<ObjectDFA>(obj)) {
+		else
 			return std::get<ObjectDFA>(obj).value;
-		}
 	};
 
 	auto is_automaton = [](const GeneralObject& obj) -> const bool {
@@ -361,18 +360,18 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 	std::optional<GeneralObject> res;
 
 	if (function.name == "Determinize") {
-		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template));
+		res = ObjectDFA(get_automaton(arguments[0]).determinize(true, &log_template));
 	}
 	if (function.name == "Determinize+") {
 		log_template.load_tex_template("Determinize");
-		res = ObjectDFA(get_automaton(arguments[0]).determinize(&log_template, false));
+		res = ObjectDFA(get_automaton(arguments[0]).determinize(false, &log_template));
 	}
 	if (function.name == "Minimize") {
-		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template));
+		res = ObjectDFA(get_automaton(arguments[0]).minimize(true, &log_template));
 	}
 	if (function.name == "Minimize+") {
 		log_template.load_tex_template("Minimize");
-		res = ObjectDFA(get_automaton(arguments[0]).minimize(&log_template, false));
+		res = ObjectDFA(get_automaton(arguments[0]).minimize(false, &log_template));
 	}
 	if (function.name == "Annote") {
 		res = ObjectDFA(get_automaton(arguments[0]).annote(&log_template));
@@ -1237,10 +1236,7 @@ std::optional<Interpreter::SetFlag> Interpreter::scan_flag(const vector<Lexem>& 
 	i++;
 	if (lexems[i].type == Lexem::name &&
 		(lexems[i].value == "true" || lexems[i].value == "false")) {
-		if (lexems[i].value == "true")
-			flag.value = true;
-		else
-			flag.value = false;
+		flag.value = (lexems[i].value == "true") ? true : false;
 	} else {
 		logger.throw_error("Scan \"Set\": wrong type at position 2, boolean expected");
 		return std::nullopt;
@@ -1278,9 +1274,8 @@ std::optional<Interpreter::Verification> Interpreter::scan_verification(const ve
 			logger.throw_error("Scan verification: wrong type at position 2, number expected");
 			return std::nullopt;
 		}
-	i++;
 
-	pos = i;
+	pos = i + 1;
 	return verification;
 }
 

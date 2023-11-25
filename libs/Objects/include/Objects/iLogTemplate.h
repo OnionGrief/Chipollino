@@ -17,7 +17,7 @@ class iLogTemplate {
 	};
 
 	struct Point {
-		std::string plot_id;
+		std::string plot_label;
 		long x_coord;
 		long y_coord;
 	};

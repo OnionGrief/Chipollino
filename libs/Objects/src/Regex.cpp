@@ -1101,14 +1101,11 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		return *this;
 	}
 	string regl;
-	FiniteAutomaton min_fa;
 	if (!fa.language->is_min_dfa_cached() && log) {
 		log->set_parameter("cachedMINDFA", "Минимальный автомат сохранен в кэше");
 	}
-	if (fa.size() == 1)
-		min_fa = fa.minimize();
-	else
-		min_fa = fa.minimize().remove_trap_states();
+
+	FiniteAutomaton min_fa = fa.minimize(true);
 
 	set<map<Symbol, set<int>>> final_states_transitions;
 	for (int i = 0; i < min_fa.size(); i++) {

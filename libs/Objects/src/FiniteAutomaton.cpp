@@ -69,7 +69,7 @@ string FiniteAutomaton::to_txt() const {
 	stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
 	for (int i = 0; i < states.size(); i++) {
-		ss << i << " [label = \"" << states[i].identifier << "\", shape = ";
+		ss << states[i].index << " [label = \"" << states[i].identifier << "\", shape = ";
 		ss << (states[i].is_terminal ? "doublecircle]\n\t" : "circle]\n\t");
 	}
 	if (states.size() > initial_state)
@@ -116,7 +116,7 @@ set<int> FiniteAutomaton::closure(const set<int>& indices, bool use_epsilons_onl
 	return reachable;
 }
 
-FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) const {
+FiniteAutomaton FiniteAutomaton::determinize(bool is_trim, iLogTemplate* log) const {
 	if (!is_trim)
 		if (log)
 			log->set_parameter("trap", " (с добавлением ловушки)");
@@ -215,24 +215,33 @@ FiniteAutomaton FiniteAutomaton::determinize(iLogTemplate* log, bool is_trim) co
 	}
 	if (log) {
 		log->set_parameter("oldautomaton", *this, old_meta);
-		log->set_parameter("result", dfa, new_meta);
+		if (is_trim) {
+			// удаление ловушки по желанию пользователя
+			log->set_parameter("trapdfa", dfa, new_meta);
+			log->set_parameter("to_removetrap", "Автомат перед удалением ловушки: ");
+			dfa = dfa.remove_trap_states();
+			log->set_parameter("result", dfa);
+		} else {
+			log->set_parameter("result", dfa, new_meta);
+		}
 	}
 	return dfa;
 }
 
-FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const {
-	if (!is_trim)
-		if (log)
-			log->set_parameter("trap", " (с добавлением ловушки)");
+FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const {
+	if (!is_trim && log)
+		log->set_parameter("trap", " (с добавлением ловушки)");
 	if (language->is_min_dfa_cached()) {
 		FiniteAutomaton language_min_dfa = language->get_min_dfa();
+		// удаление ловушки по желанию пользователя
+		if (is_trim)
+			language_min_dfa = language_min_dfa.remove_trap_states();
 		if (log) {
 			log->set_parameter("oldautomaton", *this);
 			log->set_parameter("cach", "(!) минимальный автомат получен из кэша");
 			log->set_parameter("result", language_min_dfa);
 		}
-		return language_min_dfa; // TODO Нужно решить, что делаем с
-								 // идентификаторами
+		return language_min_dfa;
 	}
 	// минимизация
 	FiniteAutomaton dfa = determinize();
@@ -333,12 +342,18 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 		}
 	}
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
+
 	// кэширование
 	language->set_min_dfa(
 		minimized_dfa.initial_state, minimized_dfa.states, minimized_dfa.language);
+
+	// удаление ловушки по желанию пользователя
+	if (is_trim)
+		minimized_dfa = minimized_dfa.remove_trap_states();
+
 	stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
-		ss << "\\{" << state.identifier << "\\}\;";
+		ss << "\\{" << state.identifier << "\\};";
 	}
 	MetaInfo old_meta, new_meta;
 	for (int i = 0; i < dfa.states.size(); i++) {
@@ -349,6 +364,7 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 				break;
 			}
 	}
+
 	if (log) {
 		if (!is_deterministic()) {
 			log->set_parameter("oldautomaton", *this);
@@ -357,7 +373,6 @@ FiniteAutomaton FiniteAutomaton::minimize(iLogTemplate* log, bool is_trim) const
 		} else {
 			log->set_parameter("oldautomaton", dfa, old_meta);
 		}
-		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("equivclasses", ss.str());
 		log->set_parameter("result", minimized_dfa, new_meta);
 	}
@@ -770,7 +785,9 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
-	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
+	// тест Regex("(a|b)*a").get_one_unambiguous_regex() ломается, если оставить этот вариант:
+	// FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
+	FiniteAutomaton new_dfa(*this);
 	int count = static_cast<int>(new_dfa.size());
 	// Поправка, чтобы можно было вычислить реальное число состояний прежнего автомата.
 	int traps = 0;
@@ -1001,7 +1018,6 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		log->set_parameter("oldautomaton", *this);
 	MetaInfo meta;
 	if (language->is_one_unambiguous_flag_cached()) {
-
 		if (log) {
 			log->set_parameter("result", language->get_one_unambiguous_flag() ? "True" : "False");
 
@@ -1009,14 +1025,12 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		}
 		return language->get_one_unambiguous_flag();
 	}
-	FiniteAutomaton min_fa;
 	if (language->is_min_dfa_cached() && log) {
 		log->set_parameter("cachedMINDFA", "Минимальный автомат сохранен в кэше");
 	}
-	if (states.size() == 1)
-		min_fa = minimize();
-	else
-		min_fa = minimize().remove_trap_states();
+
+	FiniteAutomaton min_fa = minimize(true);
+
 	set<map<Symbol, set<int>>> final_states_transitions;
 	for (int i = 0; i < min_fa.size(); i++) {
 		if (min_fa.states[i].is_terminal) {
@@ -1365,7 +1379,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 		ss << "\\{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
 			ss << elem.second[i]->name << ",\\ ";
-		ss << elem.second[elem.second.size() - 1]->name << "\\}\;";
+		ss << elem.second[elem.second.size() - 1]->name << "\\};";
 	}
 	if (log) {
 		log->set_parameter("oldautomaton", *this, old_meta);
@@ -1703,7 +1717,7 @@ Fraction calc_ambiguity(int i, int n, const vector<Fraction>& f1,
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 	int digits_number_limit, std::optional<int>& word_length) const {
 	FiniteAutomaton fa = remove_eps();
-	FiniteAutomaton min_fa = fa.minimize().remove_trap_states();
+	FiniteAutomaton min_fa = fa.minimize(true);
 	fa = fa.remove_trap_states();
 
 	int i = 2;
@@ -1858,31 +1872,27 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 FiniteAutomaton::AmbiguityValue FiniteAutomaton::ambiguity(iLogTemplate* log) const {
 	std::optional<int> word_length;
 	FiniteAutomaton::AmbiguityValue result = get_ambiguity_value(300, word_length);
-	if (log)
+	if (log) {
 		log->set_parameter("oldautomaton", *this);
-	if (word_length.has_value()) {
-		if (log)
-			log->set_parameter("Для максимальной длины слова", to_string(*word_length));
-	}
-	switch (result) {
-	case FiniteAutomaton::exponentially_ambiguous:
-		if (log)
+		if (word_length.has_value()) {
+			log->set_parameter("Для максимальной длины слова", std::to_string(*word_length));
+		}
+		switch (result) {
+		case FiniteAutomaton::exponentially_ambiguous:
 			log->set_parameter("result", "Exponentially ambiguous");
-		break;
-	case FiniteAutomaton::almost_unambigious:
-		if (log)
+			break;
+		case FiniteAutomaton::almost_unambigious:
 			log->set_parameter("result", "Almost unambigious");
-		break;
-	case FiniteAutomaton::unambigious:
-		if (log)
+			break;
+		case FiniteAutomaton::unambigious:
 			log->set_parameter("result", "Unambigious");
-		break;
-	case FiniteAutomaton::polynomially_ambigious:
-		if (log)
+			break;
+		case FiniteAutomaton::polynomially_ambigious:
 			log->set_parameter("result", "Polynomially ambiguous");
-		break;
-	default:
-		break;
+			break;
+		default:
+			break;
+		}
 	}
 	return result;
 }
@@ -2231,7 +2241,6 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 }
 
 bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
-	// cout << s.size() << endl;
 	State state = states[index_state];
 
 	if (s.empty() && state.is_terminal) {
@@ -2239,32 +2248,26 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 	}
 	set<int> tr_eps = state.transitions[Symbol::epsilon()];
 	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
-	int n;
-	// tr_eps = {};
+
 	if (s.empty() && !state.is_terminal) {
-		n = trans_eps.size();
-		for (size_t i = 0; i < trans_eps.size(); i++) {
-			// cout << trans_eps[i] << endl;
+		for (size_t i = 0; i < trans_eps.size(); i++)
 			if (parsing_nfa(s, trans_eps[i])) {
 				return true;
 			}
-		}
 		return false;
 	}
 
 	Symbol elem(s[0]);
 	set<int> tr = state.transitions[elem];
 	vector<int> trans{tr.begin(), tr.end()};
-	// tr = {};
-	n = trans.size();
-	for (size_t i = 0; i < n; i++) {
+
+	for (size_t i = 0; i < trans.size(); i++) {
 		if (parsing_nfa(s.substr(1), trans[i])) {
 			return true;
 		}
 	}
-	n = trans_eps.size();
-	for (size_t i = 0; i < n; i++) {
-		// cout << trans_eps[i] << endl;
+
+	for (size_t i = 0; i < trans_eps.size(); i++) {
 		if (parsing_nfa(s, trans_eps[i])) {
 			return true;
 		}
@@ -2272,29 +2275,29 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 	return false;
 }
 
-pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
+pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	// Пара (актуальный индекс элемента в строке, состояние)
-	std::stack<pair<int, State>> stac_state;
+	std::stack<pair<int, State>> stack_state;
 	// Тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
 	set<std::tuple<int, int, int>> visited_eps, aux_eps;
 	int counter = 0;
 	int parsed_len = 0;
 	State state = states[initial_state];
-	stac_state.push({parsed_len, state});
-	while (!stac_state.empty()) {
+	stack_state.push({parsed_len, state});
+	while (!stack_state.empty()) {
 		if (state.is_terminal && parsed_len == s.size()) {
 			break;
 		}
-		state = stac_state.top().second;
-		parsed_len = stac_state.top().first;
-		stac_state.pop();
+		state = stack_state.top().second;
+		parsed_len = stack_state.top().first;
+		stack_state.pop();
 		counter++;
 		Symbol elem(s[parsed_len]);
 		set<int> trans = state.transitions[elem];
 		// Переходы в новые состояния по очередному символу строки
 		if (parsed_len + 1 <= s.size()) {
 			for (auto new_state : trans) {
-				stac_state.push({parsed_len + 1, states[new_state]});
+				stack_state.push({parsed_len + 1, states[new_state]});
 			}
 		}
 
@@ -2313,7 +2316,7 @@ pair<int, bool> FiniteAutomaton::parsing_nfa_for(const string& s) const {
 		auto reach_eps = state.transitions[Symbol::epsilon()];
 		for (int eps_tr : reach_eps) {
 			if (visited_eps.find({parsed_len, state.index, eps_tr}) == visited_eps.end()) {
-				stac_state.push({parsed_len, states[eps_tr]});
+				stack_state.push({parsed_len, states[eps_tr]});
 				visited_eps.insert({parsed_len, state.index, eps_tr});
 			}
 		}
@@ -2345,11 +2348,6 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
-}
-
-pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
-	State state = states[0];
-	return parsing_nfa_for(s);
 }
 
 int FiniteAutomaton::get_initial() {
