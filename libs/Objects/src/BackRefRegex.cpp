@@ -26,6 +26,9 @@ BackRefRegex::BackRefRegex(const BackRefRegex& other) : AlgExpression(other) {
 	cell_number = other.cell_number;
 }
 
+BackRefRegex::BackRefRegex(Type type, AlgExpression* term_l, AlgExpression* term_r)
+	: AlgExpression(type, term_l, term_r) {}
+
 void BackRefRegex::copy(const AlgExpression* other) {
 	auto* tmp = cast(other);
 	alphabet = tmp->alphabet;

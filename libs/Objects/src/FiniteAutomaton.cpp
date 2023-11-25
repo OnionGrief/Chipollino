@@ -1,11 +1,11 @@
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <queue>
 #include <set>
 #include <sstream>
 #include <stack>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 
 #include "Fraction/Fraction.h"
@@ -2392,265 +2392,144 @@ bool FiniteAutomaton::is_empty() const {
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
 
-vector<expression_arden> FiniteAutomaton::arden_minimize(const vector<expression_arden>& in) {
-	map<int, Regex*> out_map;
-	// Загоняем все в map, потом пишем в вектор (объединяем переходы из 1
-	// состояния)
-	for (auto i : in) {
-		if (!out_map.count(i.fa_state_number)) {
-			out_map[i.fa_state_number] = Regex::cast(i.regex_from_state->make_copy());
-		} else {
-			auto* temp = new Regex();
-			temp->regex_alt(i.regex_from_state, out_map[i.fa_state_number]);
-			delete out_map[i.fa_state_number];
-			out_map[i.fa_state_number] = temp;
-		}
-	}
-	vector<expression_arden> out;
-	for (const auto& cur_elem : out_map) {
-		expression_arden temp = {cur_elem.first, cur_elem.second};
-		out.push_back(temp);
-	}
-	return out;
-}
-
-vector<expression_arden> FiniteAutomaton::arden(const vector<expression_arden>& in, int index) {
-	vector<expression_arden> out;
-	// ищем переход из текущего состояния
-	int indexcur = -1;
-	for (int i = 0; (i < in.size() && indexcur == -1); i++) {
-		if (in[i].fa_state_number == index) {
-			indexcur = i;
-		}
-	}
-	// если таких переходов нет
-	if (indexcur == -1) {
-		for (auto i : in) {
-			Regex* r = Regex::cast(i.regex_from_state->make_copy());
-			expression_arden temp = {i.fa_state_number, r};
-			out.push_back(temp);
-		}
-		return out;
-	}
-	// если есть только такой переход
-	if (in.size() < 2) {
-		auto* r = new Regex();
-		r->regex_star(in[0].regex_from_state);
-		expression_arden temp = {-1, r};
-		out.push_back(temp);
-		return out;
-	}
-	// добавляем (текущий переход)* к всем остальным
-	for (int i = 0; i < in.size(); i++) {
-		if (i != indexcur) {
-			auto* r = new Regex();
-			r->regex_star(in[indexcur].regex_from_state);
-			Regex* k;
-			if (in[i].regex_from_state->to_txt().empty()) {
-				k = Regex::cast(r->make_copy());
-			} else {
-				k = new Regex();
-				k->regex_union(in[i].regex_from_state, r);
-			}
-			delete r;
-			expression_arden temp = {in[i].fa_state_number, k};
-			out.push_back(temp);
-		}
-	}
-	return out;
-}
 Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
-
-	if (log)
-		log->set_parameter("oldautomaton", *this);
-
-	vector<int> end_state; // храним индексы принимающих состояний
-	vector<vector<expression_arden>> data;			 // все уравнения
-	set<Symbol> alphabet = language->get_alphabet(); // получаем
-													 // Алфавит
-
-	for (int i = 0; i < states.size(); i++) {
-		vector<expression_arden> temp;
-		data.push_back(temp);
-	}
-
-	auto* r = new Regex; // Заполняем вход в начальное состояние
-	r->regex_eps();
-	expression_arden initial_arden = {-1, r};
-	data[initial_state].push_back(initial_arden);
-
-	for (int i = 0; i < states.size(); i++) { // Для всех состояний автомата заполняем уравнения
-		if (states[i].is_terminal) {
-			end_state.push_back(i);
-		}
-		if (states[i].transitions.count("eps")) { // для переходов по eps
-			set<int> trans = states[i].transitions.at("eps");
-			for (const int& index : trans) {
-				auto* r = new Regex;
-				r->regex_eps();
-				expression_arden temp_expression = {i, r};
-				data[index].push_back(temp_expression);
-			}
-		}
-		for (const Symbol& as : alphabet) { // для переходов по символам алфавита
-			if (states[i].transitions.count(as)) {
-				set<int> trans = states[i].transitions.at(as);
-				for (const int& index : trans) {
-					string str = as;
-					auto* r = new Regex(str);
-					expression_arden temp_expression = {i, r};
-					data[index].push_back(temp_expression);
-				}
-			}
-		}
-	}
-	if (end_state.empty()) { // если нет принимающих состояний - то регулярки не будет
-		return Regex();
-	}
-	// // вывод всех уравнений
-	// for (int i = 0; i < data.size(); i++) {
-	// 	cout << i << " = ";
-	// 	for (int j = 0; j < data[i].size(); j++) {
-	// 		cout << data[i][j].fa_state_number << " "
-	// 			 << data[i][j].regex_from_state->to_txt() << " ";
-	// 	}
-	// 	cout << "\n";
-	// }
-
-	// переносим прошлые переходы и объединяем (работаем с уравнениями)
-
-	for (int i = 0; i < data.size(); i++) { // c конца начинаем переписывать уравнения
-		vector<expression_arden> temp_data;
-		for (int j = 0; j < data[i].size(); j++) {
-			if (data[i][j].fa_state_number < i && data[i][j].fa_state_number != -1) {
-				// если ссылаемся на какие-либо еще переходы
-				for (int k = 0; k < data[data[i][j].fa_state_number].size(); k++) {
-					Regex* r;
-					if (data[i][j].regex_from_state->to_txt().empty()) {
-						r = Regex::cast(data[data[i][j].fa_state_number][k]
-											.regex_from_state->make_copy()); // тут 0
-					} else if (data[data[i][j].fa_state_number][k]
-								   .regex_from_state->to_txt()
-								   .empty()) {
-						r = Regex::cast(data[i][j].regex_from_state->make_copy()); // тут б
-																				   //	continue;
-					} else {
-						r = new Regex;
-						r->regex_union(
-
-							data[data[i][j].fa_state_number][k].regex_from_state,
-							data[i][j].regex_from_state);
-					}
-					expression_arden temp_expression = {
-						data[data[i][j].fa_state_number][k].fa_state_number, r};
-					temp_data.push_back(temp_expression);
-				}
-			} else { // если не ссылаемся
-				expression_arden temp_expression = {data[i][j].fa_state_number,
-													new Regex(*data[i][j].regex_from_state)};
-				temp_data.push_back(temp_expression);
-			}
-		}
-		for (auto& v : data[i]) {
-			delete v.regex_from_state;
-		}
-		data[i].clear();
-		// объединяем одинаковые состояния
-		vector<expression_arden> tempdata1 = arden_minimize(temp_data);
-		// применяем арден
-		vector<expression_arden> tempdata2 = arden(tempdata1, i);
-		// объединяем одинаковые состояния
-		vector<expression_arden> tempdata3 = arden_minimize(tempdata2);
-		for (auto& v : temp_data) {
-			delete v.regex_from_state;
-		}
-		for (auto& v : tempdata1) {
-			delete v.regex_from_state;
-		}
-		for (auto& v : tempdata2) {
-			delete v.regex_from_state;
-		}
-		data[i] = tempdata3;
-	}
-	// работа с уравнениями (могли остаться ссылки на другие состояния,
-	// исправляем)
-	for (int i = data.size() - 1; i >= 0; i--) {
-		for (int j = 0; j < data[i].size(); j++) {
-			if (data[i][j].fa_state_number != -1) {
-				auto* ra = new Regex;
-				ra->regex_union(data[data[i][j].fa_state_number][0].regex_from_state,
-								data[i][j].regex_from_state);
-				data[i][j].fa_state_number = -1;
-				delete data[i][j].regex_from_state;
-				data[i][j].regex_from_state = ra;
-			}
-		}
-		// объединяем состояния
-		vector<expression_arden> tempdata3 = arden_minimize(data[i]);
-		for (auto& v : data[i]) {
-			delete v.regex_from_state;
-		}
-		data[i].clear();
-		data[i] = tempdata3;
-	}
-	// вывод итоговых regex
-	string full_logs;
-	for (int i = 0; i < data.size(); i++) {
-		if (i != 0)
-			full_logs += "\\\\";
-		full_logs += "state " + to_string(i) + ":"; // TODO: logs
-		for (auto& j : data[i]) {
-			// TODO: передача набора regex
-
-			full_logs += "\\ ";
-			if (j.regex_from_state->to_txt().empty()) {
-				full_logs += "eps";
-			} else {
-				full_logs += j.regex_from_state->to_txt(); // тут по идее должно быть
-														   // без to_txt но у нас не
-														   // принимается Regex*
-			}
-		}
-	}
-	if (log)
-		log->set_parameter("step-by-step construction", full_logs);
-	// если у нас 1 принимающее состояние
-	if (end_state.size() < 2) {
-		Regex* r1;
-		r1 = Regex::cast(data[end_state[0]][0].regex_from_state->make_copy());
-		for (auto& i : data) {
-			for (auto& j : i) {
-				delete j.regex_from_state;
-			}
-		}
-		// заполняем алфавит и lang (нужно для преобразований в автоматы)
-		r1->set_language(alphabet);
-		Regex temp = *r1;
-		delete r1;
-		if (log) {
-			log->set_parameter("result", temp);
-		}
-		return temp;
-	}
-	// если принимающих состояний несколько - объединяем через альтернативу
-	Regex* r1;
-	r1 = Regex::cast(data[end_state[0]][0].regex_from_state->make_copy());
-	for (int i = 1; i < end_state.size(); i++) {
-		auto* r2 = new Regex;
-		r2->regex_alt(r1, data[end_state[i]][0].regex_from_state);
-		delete r1;
-		r1 = r2;
-	}
-	for (auto& i : data) {
-		for (auto& j : i) {
-			delete j.regex_from_state;
-		}
-	}
-	r1->set_language(alphabet);
-	Regex temp1 = *r1;
-	delete r1;
 	if (log) {
-		log->set_parameter("result", temp1);
+		log->set_parameter("oldautomaton", *this);
 	}
-	return temp1;
+
+	// a system of linear algebraic equations
+	std::unordered_map<int, std::unordered_map<int, Regex>> SLAE{};
+	// индекс стартового состояния (должен быть среди состояний)
+	const int start_state_index = initial_state;
+	// индекс глобального конечного состояния (должен не быть среди состояний)
+	const int end_state_index = -1;
+	/*
+		@algorithm_sample
+		from/to	| 0 | 1 | -1(end)		from/to	| 0 | 1	  | -1(end)
+		0 		| a | b |		--->	0 		|	| a*b |	   --->
+		1		|	| a | e				1		|	| a	  | e
+
+		from/to	| 0 | 1   | -1(end)		from/to	| 0 | 1 | -1(end)
+		0 		|   | a*b | 	--->	0 		|	|	| a*b(a*|e))
+		1		|	| 	  | a*|e		1		|	|	|
+	*/
+
+	// заполнение уравнений системы актуальными значениями
+	for (const auto& state : states) {
+		SLAE.insert({state.index, std::unordered_map<int, Regex>{}});
+
+		// если завершающее состояние, добавляем eps-переход
+		if (state.is_terminal) {
+			SLAE[state.index].insert({end_state_index, Regex{}});
+		}
+
+		// итерируемся по всем путям из state
+		for (const auto& [symbol, states_to] : state.transitions) {
+
+			// распознание eps-перехода
+			Regex symbol_regex{};
+			if (!symbol.is_epsilon()) {
+				symbol_regex = {symbol};
+			}
+
+			for (int state_index_to : states_to) {
+				if (SLAE[state.index].count(state_index_to)) {
+					SLAE[state.index][state_index_to] =
+						Regex(Regex::Type::alt, &SLAE[state.index][state_index_to], &symbol_regex);
+				} else {
+					SLAE[state.index].insert({state_index_to, symbol_regex});
+				}
+			}
+		}
+	}
+
+	// теорема Ардена о переходах в себя
+	auto arden_theorem = [&SLAE](int state_index) {
+		// передан индекс несуществующего состояния
+		if (!SLAE.count(state_index)) {
+			return;
+		}
+
+		// случай отсутствия в уравнении переходов в себя
+		if (!SLAE[state_index].count(state_index)) {
+			return;
+		}
+
+		// подготавливаем звёздную регулярку
+		Regex state_self_regex(Regex::Type::star, &SLAE[state_index][state_index]);
+
+		// добавление звёздного перехода к остальным переходам уравнения
+		for (auto& [state_index_to, to_regex] : SLAE[state_index]) {
+			to_regex = Regex(Regex::Type::conc, &state_self_regex, &to_regex);
+		}
+
+		// удаление рассмотренного перехода состояния в себя же
+		SLAE[state_index].erase(state_index);
+	};
+
+	// решение СЛАУ методом Гаусса с применением леммы Ардена
+	// итерация по строкам системы уравнений
+	for (auto& [state_index_row, equation_row] : SLAE) {
+		// ссылка не константная, тк уравнения
+		// будут подвержены изменениям
+
+		// начальное состояние должно остаться последним не рассмотренным
+		if (state_index_row == start_state_index) {
+			continue;
+		}
+
+		// устранение переходов из рассматриваемого состояния в себя же
+		arden_theorem(state_index_row);
+
+		// подстановка рассматриваемого уравнения в его упоминания в прочих
+		// итерациях по всем уравнениям с переходами в исходное для подстановки регулярки
+		for (auto& [state_index_from, equation_from] : SLAE) {
+			// пропуск итерации, если в рассматриваемом уравнения нет исходного
+			if (!equation_from.count(state_index_row)) {
+				continue;
+			}
+
+			// итерация по всем переходам из исходного уравнения
+			for (auto& [state_index_col, regex_col] : equation_row) {
+				// регулярка перехода из рассматриваемого уравнения в исходное
+				Regex regex_from = Regex(Regex::Type::conc, &equation_from[state_index_row], &regex_col);
+
+				// объединяем полученную регулярку с имеющейся в рассматриваемом уравнении
+				if (equation_from.count(state_index_col)) {
+					equation_from[state_index_col] =
+						Regex(Regex::Type::alt, &equation_from[state_index_col], &regex_from);
+				} else {
+					equation_from.insert({state_index_col, regex_from});
+				}
+			}
+
+			equation_from.erase(state_index_row);
+		}
+
+		// обнуляем рассмотренное выражение за избыточностью подстановки последующих в данное
+		//// удаление элемента из словаря во время итерации привело бы к ошибке
+		SLAE[state_index_row].clear();
+	}
+
+	// применяем теорему Ардена к начальному состоянию
+	arden_theorem(start_state_index);
+
+	// возвращаем путь из начало в конец
+	if (SLAE.count(start_state_index) && SLAE[start_state_index].count(end_state_index)) {
+		auto& result_regex = SLAE[start_state_index][end_state_index];
+
+		// подстановка нужного языка в финальную регулярку
+		result_regex.set_language(language);
+
+		if (log) {
+			log->set_parameter("result", result_regex.to_txt());
+		}
+		return result_regex;
+	}
+
+	// случай недостижимости ни одного из конечных состояний или их отсутствия
+	if (log) {
+		log->set_parameter("result", "Unknown");
+	}
+	return Regex{};
 }

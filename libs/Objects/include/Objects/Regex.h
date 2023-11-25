@@ -62,6 +62,8 @@ class Regex : public AlgExpression {
 	Regex() = default;
 	Regex(const std::string&); // NOLINT(runtime/explicit)
 	Regex(const std::string&, const std::shared_ptr<Language>&);
+	Regex(Type type, AlgExpression* = nullptr,
+		  AlgExpression* = nullptr); // NOLINT(runtime/explicit)
 
 	Regex* make_copy() const override;
 	Regex(const Regex&) = default;
