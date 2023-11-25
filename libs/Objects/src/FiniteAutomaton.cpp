@@ -213,17 +213,13 @@ FiniteAutomaton FiniteAutomaton::determinize(bool is_trim, iLogTemplate* log) co
 			dfa.states[q.index].transitions[symb].insert(q1.index);
 		}
 	}
-	// удаление ловушки по желанию пользователя
-	FiniteAutomaton trap_dfa;
-	if (is_trim) { 
-		trap_dfa = dfa;
-		dfa = dfa.remove_trap_states();
-	}
 	if (log) {
 		log->set_parameter("oldautomaton", *this, old_meta);
 		if (is_trim) {
-			log->set_parameter("trapdfa", trap_dfa, new_meta);
+			// удаление ловушки по желанию пользователя
+			log->set_parameter("trapdfa", dfa, new_meta);
 			log->set_parameter("to_removetrap", "Автомат перед удалением ловушки: ");
+			dfa = dfa.remove_trap_states();
 			log->set_parameter("result", dfa);
 		} else {
 			log->set_parameter("result", dfa, new_meta);
