@@ -11,10 +11,11 @@ int main() {
 	// alphabet_size)
 	RegexGenerator RG(100, 20, 4, 4);
 
-	ofstream out;
-	out.open("test.txt", ofstream::trunc);
+	std::ofstream out;
+	out.open("test_regexex.txt", std::ofstream::trunc);
 	for (int i = 0; i < 10; i++) {
-		if (out.is_open()) out << RG.generate_regex() << "\n";
+		if (out.is_open())
+			out << RG.generate_regex() << "\n";
 	}
 	out.close();
 	*/
@@ -27,7 +28,7 @@ int main() {
 
 	// Используем сгенерированный тест
 	TasksGenerator TG;
-	TG.generate_task(10, 10, false, false);
+	TG.generate_task(3, 5, false, false);
 	TG.write_to_file("test.txt");
 
 	// Загружаем в интерпретатор файл с коммандами

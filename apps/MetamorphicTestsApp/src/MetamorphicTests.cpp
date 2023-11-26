@@ -8,6 +8,7 @@ using std::string;
 
 TEST(TestCaseName, Test_random_regex_parsing) {
 	RegexGenerator rg(15, 10, 5, 3);
+    //rg.set_neg_chance(2); // для отрицания
 	for (int i = 0; i < 30; i++) {
 		string str = rg.generate_regex();
 		Regex r1(str);

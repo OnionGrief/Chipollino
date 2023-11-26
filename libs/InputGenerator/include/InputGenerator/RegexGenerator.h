@@ -18,6 +18,7 @@ class RegexGenerator {
 	int cur_star_num = 0;
 	int star_nesting = 0; // вложенность
 	int cur_nesting = 0;
+	int neg_chance = 0;
 	bool all_alts_are_eps = true;
 	std::string res_str = "";
 	void generate_regex_();
@@ -33,6 +34,8 @@ class RegexGenerator {
 	8 - максимальная длина, 3 - максимальное кол-во звезд,
 	2 - максимальная звездная вложенность, 2 - число символов в алфавите*/
 	RegexGenerator();
+	// генерация регулярок с отрицанием
+	explicit RegexGenerator(int neg_chance);
 	/*генератор регулярных выражений, параметрирозованных длиной, кол-вом
 	итераций Клини и звездной вложенностью*/
 	RegexGenerator(int regex_length, int star_num, int star_nesting);
@@ -47,4 +50,6 @@ class RegexGenerator {
 	std::string generate_framed_regex();
 	/*запись регулярки в файл*/
 	void write_to_file(std::string filename);
+	/*установить шанс появления отрицания - чем больше значение, тем реже шанс*/
+	void set_neg_chance(int new_neg_chance);
 };

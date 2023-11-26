@@ -427,7 +427,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 	for (const auto& i : following_states) {
 		for (auto& to : i.second) {
-			str_pair = str_pair + "(" + string(symbols[i.first]->value.symbol) + "," +
+			str_pair += "(" + string(symbols[i.first]->value.symbol) + "," +
 					   string(symbols[to]->value.symbol) + ")" + "\\ ";
 		}
 	}

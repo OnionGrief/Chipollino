@@ -90,6 +90,8 @@ class TasksGenerator {
 
 	void distribute_functions();
 	Function generate_next_func(std::string, int);
+	std::string generate_arguments(Function first_func);
+	std::string get_random_id_by_type(std::string type);
 	Function rand_func();
 	Function rand_pred();
 	void change_seed();
