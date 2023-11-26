@@ -9,7 +9,7 @@
 #include <utility>
 
 #include "Fraction/Fraction.h"
-#include "InfInt/InfInt.h"
+#include "Fraction/InfInt.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"

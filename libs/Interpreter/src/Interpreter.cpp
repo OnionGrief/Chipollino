@@ -55,8 +55,8 @@ Interpreter::Interpreter() {
 		{"PGtoNFA", {{"PGtoNFA", {ObjectType::PrefixGrammar}, ObjectType::NFA}}},
 		// Предикаты
 		{"Bisimilar", {{"Bisimilar", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
-		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::OptionalBool}}},
 		// для dfa - bool, для nfa - std::optional<bool>
+		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::OptionalBool}}},
 		{"Deterministic", {{"Deterministic", {ObjectType::NFA}, ObjectType::Boolean}}},
 		{"Subset",
 		 {{"Subset", {ObjectType::Regex, ObjectType::Regex}, ObjectType::Boolean},
@@ -273,7 +273,7 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 			return ObjectBoolean(Regex::equal(std::get<ObjectRegex>(arguments[0]).value,
 											  std::get<ObjectRegex>(arguments[1]).value,
 											  &log_template));
-			// TODO для кратких шаблонов
+											  
 		} else if (function.input[0] == ObjectType::Int) {
 			int value1 = std::get<ObjectInt>(arguments[0]).value;
 			int value2 = std::get<ObjectInt>(arguments[1]).value;

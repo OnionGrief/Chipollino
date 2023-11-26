@@ -4,7 +4,6 @@ set(CMAKE_CXX_STANDARD 17)
 project(chipollino)
 
 # Add sub directories
-add_subdirectory(libs/InfInt)
 add_subdirectory(libs/Fraction)
 add_subdirectory(libs/AutomatonToImage)
 add_subdirectory(libs/Objects)

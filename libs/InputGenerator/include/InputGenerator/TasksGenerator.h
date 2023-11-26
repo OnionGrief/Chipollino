@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "InputGenerator/RegexGenerator.h"
-#include "Objects/BaseObject.h"
 #include "Objects/Regex.h"
 
 class TasksGenerator {

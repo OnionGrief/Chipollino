@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-#include "BaseObject.h"
 #include "FiniteAutomaton.h"
 #include "Symbol.h"
 #include "iLogTemplate.h"

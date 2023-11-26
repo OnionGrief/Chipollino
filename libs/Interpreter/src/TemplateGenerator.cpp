@@ -4,17 +4,15 @@
 
 using std::cout;
 using std::ofstream;
-using std::pair;
 using std::string;
 using std::to_string;
 using std::vector;
 
 bool types_equiv(const vector<ObjectType>& input, const ObjectType& output) {
-	if (!((output == input[0]) || (output == ObjectType::DFA && input[0] == ObjectType::NFA) ||
-		  (output == ObjectType::NFA && input[0] == ObjectType::DFA))) {
-		return false;
-	}
-	return true;
+	if ((output == input[0]) || (output == ObjectType::DFA && input[0] == ObjectType::NFA) ||
+		(output == ObjectType::NFA && input[0] == ObjectType::DFA))
+		return true;
+	return false;
 }
 
 void Interpreter::generate_brief_templates() {
@@ -31,7 +29,7 @@ void Interpreter::generate_brief_templates() {
 			if (function.input.size() > 1) {
 				equal_types = false;
 			}
-			//========= Шаблон для одиночных входных данных =========
+			// ========= Шаблон для одиночных входных данных =========
 
 			if (function.input.size() == 1) {
 				// Для автоматов
@@ -68,7 +66,7 @@ void Interpreter::generate_brief_templates() {
 
 				bool input_types_equal = types_equiv(function.input, function.input[1]);
 
-				for (int index = 0; index < (function.input.size()); index++) {
+				for (int index = 0; index < function.input.size(); index++) {
 
 					// Для автоматов
 					if ((function.input[index] == ObjectType::NFA ||
@@ -132,7 +130,7 @@ void Interpreter::generate_brief_templates() {
 				}
 			}
 
-			//========= Шаблон для выходных данных ===================
+			// ========= Шаблон для выходных данных ===================
 
 			// Для автоматов
 			if (function.output == ObjectType::NFA || function.output == ObjectType::DFA) {
@@ -147,7 +145,8 @@ void Interpreter::generate_brief_templates() {
 
 			// Для Regex, Int, Bool, optionalbool
 			if (function.output == ObjectType::AmbiguityValue ||
-				function.output == ObjectType::Int || function.output == ObjectType::Boolean ||
+				function.output == ObjectType::Int ||
+				function.output == ObjectType::Boolean ||
 				function.output == ObjectType::OptionalBool) {
 				outfile << "\tРезультат:\n";
 

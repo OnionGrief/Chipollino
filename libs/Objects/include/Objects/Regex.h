@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "AlgExpression.h"
-#include "BaseObject.h"
 #include "Symbol.h"
 #include "iLogTemplate.h"
 

@@ -18,7 +18,7 @@ void Logger::render_to_file(const string& filename) {
 	ofstream outfile(filename);
 
 	string s;
-	for (; !infile.eof();) {
+	while (!infile.eof()) {
 		getline(infile, s);
 		outfile << s << "\n";
 	}
@@ -26,10 +26,10 @@ void Logger::render_to_file(const string& filename) {
 
 	// может позже добавить логгер для логгера
 	cout << "\nCreating report...\n\n";
-	size_t logs_size = logs.size();
 
-	// That's just a demo
-	for (size_t i = 0; i < logs.size(); i++) {
+	size_t logs_size = logs.size();
+	// Генерация каждого лога
+	for (size_t i = 0; i < logs_size; i++) {
 		outfile << logs[i].render() << "\n";
 		cout << 100 * (i + 1) / logs_size << "% (template \"" << logs[i].get_tex_template()
 			 << "\" is completed)\n";
