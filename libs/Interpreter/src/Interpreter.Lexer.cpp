@@ -1,5 +1,9 @@
 #include "Interpreter/Interpreter.h"
 
+using std::ifstream;
+using std::string;
+using std::vector;
+
 bool Interpreter::Lexer::eof() {
 	return input.pos >= input.str.size();
 }
@@ -16,7 +20,7 @@ void Interpreter::Lexer::next_symbol() {
 }
 
 void Interpreter::Lexer::skip_spaces() {
-	while (current_symbol() == ' ' || current_symbol() == '\t') {
+	while (isspace(current_symbol())) {
 		next_symbol();
 	}
 }
@@ -37,9 +41,8 @@ bool Interpreter::Lexer::scan_word(string word) {
 string Interpreter::Lexer::scan_until_space() {
 	string acc = "";
 	skip_spaces();
-	while (!eof() && current_symbol() != ' ' && current_symbol() != '\n' &&
-		   current_symbol() != '\t' && current_symbol() != '.' && current_symbol() != '(' &&
-		   current_symbol() != ')') {
+	while (!eof() && !isspace(current_symbol()) && current_symbol() != '.' &&
+		   current_symbol() != '(' && current_symbol() != ')') {
 
 		acc += current_symbol();
 		next_symbol();
@@ -202,7 +205,7 @@ Interpreter::Lexem::Lexem(int num) : num(num), type(number) {}
 vector<vector<Interpreter::Lexem>> Interpreter::Lexer::load_file(string path) {
 	auto logger = parent.init_log();
 	logger.log("Lexer: loading file " + path);
-	std::ifstream input_file(path);
+	ifstream input_file(path);
 	if (!input_file) {
 		logger.throw_error("Error: failed to open " + path);
 	}

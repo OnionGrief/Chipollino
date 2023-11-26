@@ -4,7 +4,8 @@ project(Interpreter)
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
         src/Interpreter.cpp
-        src/Interpreter.Lexer.cpp)
+        src/Interpreter.Lexer.cpp
+        src/TemplateGenerator.cpp)
 
 # Add a library with the above sources
 add_library(${PROJECT_NAME} ${SOURCES})

@@ -22,7 +22,7 @@ jobs:
 
       - name: Build
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build
+        run: cmake --build ${{github.workspace}}/build --target=MetamorphicTestsApp
 
       - name: Test
         #working-directory: ${{github.workspace}}/build/apps/TestsApp

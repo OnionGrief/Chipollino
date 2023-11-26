@@ -16,12 +16,9 @@ cmake-build-debug/.cmake/api/v1/reply/
 
 cmake-build-debug/
 
-resources/output*.png
-resources/images/
 temp/
 report.*
 rendered_report.*
-log.*
 
 *.log
 test.txt

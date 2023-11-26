@@ -4,32 +4,16 @@
 
 #include "AutomatonToImage/AutomatonToImage.h"
 
+using std::ifstream;
+using std::string;
+using std::stringstream;
+
 AutomatonToImage::AutomatonToImage() {}
 
 AutomatonToImage::~AutomatonToImage() {}
 
-/*
-void AutomatonToImage::to_image(string automat, int name) {
-	char cmd[1024];
-
-	// для Linux:
-
-	/*sprintf(cmd,
-			"dot -Tpng ./resources/input.dot > "
-			"./resources/output%d.png && rm ./resources/input.dot",
-			name);
-
-	// для Windows:
-
-	sprintf(cmd,
-			"dot -Tpng ./resources/input.dot > "
-			"./resources/output%d.png && rm ./resources/input.dot",
-			name);
-	system(cmd);
-*/
-
 void remove_file(string dir, string file, bool guarded = false) {
-	std::stringstream command;
+	stringstream command;
 	command << "cd " << dir;
 #ifdef _WIN32
 	if (guarded)
@@ -45,12 +29,12 @@ void remove_file(string dir, string file, bool guarded = false) {
 	system(command.str().c_str());
 }
 
-string AutomatonToImage::to_image(string automat) {
+string AutomatonToImage::to_image(string automaton) {
 	remove_file("refal", "Meta_log.raux", true);
 	remove_file("refal", "Aux_input.raux", true);
 	FILE* fo;
 	fo = fopen("./refal/input.dot", "wt");
-	fprintf(fo, "%s", automat.c_str());
+	fprintf(fo, "%s", automaton.c_str());
 	fclose(fo);
 	system("cd refal && refgo Preprocess+MathMode+FrameFormatter input.dot > "
 		   "error_Preprocess.raux");
@@ -61,8 +45,8 @@ string AutomatonToImage::to_image(string automat) {
 	remove_file("refal", "Meta_input.raux", true);
 	remove_file("refal", "Aux_input.raux", true);
 	// автомат
-	std::ifstream infile_for_R("./refal/R_input.tex");
-	std::stringstream graph;
+	ifstream infile_for_R("./refal/R_input.tex");
+	stringstream graph;
 	string s;
 	if (!infile_for_R)
 		return "";
@@ -85,7 +69,7 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 
 	FILE* fo;
 	FILE* md;
-	std::ifstream infile_for_Final;
+	ifstream infile_for_Final;
 	fo = fopen("./refal/Col_input.tex", "wt");
 	fprintf(fo, "%s", automaton.c_str());
 	fclose(fo);
@@ -102,7 +86,7 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	}
 
 	// автомат
-	std::stringstream graph;
+	stringstream graph;
 	string s;
 	if (!infile_for_Final)
 		return "";
@@ -116,7 +100,7 @@ string AutomatonToImage::colorize(string automaton, string metadata) {
 	remove_file("refal", "Final_input.tex", true);
 	remove_file("refal", "Col_input.tex");
 	// таблица
-	std::ifstream infile_for_L("./refal/L_input.tex");
+	ifstream infile_for_L("./refal/L_input.tex");
 
 	if (!infile_for_L)
 		return graph.str();

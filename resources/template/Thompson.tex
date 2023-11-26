@@ -54,7 +54,7 @@
 \begin{frame}{Пример НКА}
     \vspace{-5pt}
     \begin{center}
-        \includegraphics[width=3in, keepaspectratio]{tompson1.png} % the NFA example diagram placeholder
+        \includegraphics[width=3in, keepaspectratio]{images/thompson1.png} % the NFA example diagram placeholder
     \end{center}
 \end{frame}% descriptive documentation
 %end detailed
@@ -86,30 +86,47 @@
     \only<1> {
         Пустое выражение $\empt$ преобразуется в
 
-        \includegraphics[width=2in, keepaspectratio]{tompson_rule1.png} % the Rule1 diagram placeholder
+        \begin{tikzpicture}[>={Stealth[scale=1.2]},line join=bevel,scale=0.48]
+            \tikzstyle{every node}+=[inner sep=0.3ex]
+            \node (dummy) at (27.0bp,28.698bp) [draw,draw=none] {$\;\;\;$};
+              \node (0) at (109.0bp,28.698bp) [draw,circle,fill=white, thick] {$\regexpstr{q}$};
+              \node (1) at (200.7bp,28.698bp) [draw,circle, fill=white, double, double distance=1.5pt, thick] {$\regexpstr{f}$};
+              \draw [->, thick] (dummy) ..controls (62.654bp,28.698bp) and (72.051bp,28.698bp)  .. (0);
+              \draw [->, thick] (0) ..controls (137.06bp,28.698bp) and (149.67bp,28.698bp)  .. (1);
+              \draw (149.5bp,36.198bp) node {$\empt$};
+        \end{tikzpicture}
+            
 
         Символ $a$ входного алфавита преобразуется в
 
-        \includegraphics[width=2in, keepaspectratio]{tompson_rule2.png} % the Rule2 diagram placeholder
+        \begin{tikzpicture}[>={Stealth[scale=1.2]},line join=bevel,scale=0.48]
+            \tikzstyle{every node}+=[inner sep=0.3ex]
+            \node (dummy) at (27.0bp,28.698bp) [draw,draw=none] {$\;\;\;$};
+              \node (0) at (109.0bp,28.698bp) [draw,circle,fill=white, thick] {$\regexpstr{q}$};
+              \node (1) at (200.7bp,28.698bp) [draw,circle, fill=white, double, double distance=1.5pt, thick] {$\regexpstr{f}$};
+              \draw [->, thick] (dummy) ..controls (62.654bp,28.698bp) and (72.051bp,28.698bp)  .. (0);
+              \draw [->, thick] (0) ..controls (137.06bp,28.698bp) and (149.67bp,28.698bp)  .. (1);
+              \draw (149.5bp,36.198bp) node {$\regexpstr{a}$};
+        \end{tikzpicture}
     }
     \only<2> {
         Выражение объединения $s\alter t$ преобразуется в
 
-        \includegraphics[width=4in, keepaspectratio]{tompson_rule3.png} % the Rule3 diagram placeholder
+        \includegraphics[width=4in, keepaspectratio]{images/thompson_rule1.png} % the Rule1 diagram placeholder
 
         Состояние $q$ переходит через $\empt$ либо в начальное состояние $N(s)$, либо $N(t)$. Их конечные состояния становятся промежуточными состояниями всего НКА и сливаются через два $\empt$-перехода в конечное состояние НКА.
     }
     \only<3> {
         Выражение конкатенации $st$ преобразуется в
 
-        \includegraphics[width=4in, keepaspectratio]{tompson_rule4.png} % the Rule4 diagram placeholder
+        \includegraphics[width=4in, keepaspectratio]{images/thompson_rule2.png} % the Rule2 diagram placeholder
 
         Начальное состояние $N(s)$ является начальным состоянием всего НКА. Конечное состояние $N(s)$ становится начальным состоянием $N(t)$. Конечное состояние $N(t)$ является конечным состоянием всего НКА.
     }
     \only<4> {
         Выражение Клини Стар $s\star$ преобразуется в
 
-        \includegraphics[width=4in, keepaspectratio]{tompson_rule5.png} % the Rule5 diagram placeholder
+        \includegraphics[width=4in, keepaspectratio]{images/thompson_rule3.png} % the Rule3 diagram placeholder
 
         $\empt$-переход соединяет начальное и конечное состояние НКА с промежуточным НКА $N(s)$. Другой $\empt$-переход от внутреннего конечного к внутреннему начальному состоянию $N(s)$ допускает повторение выражения $s$ в соответствии с оператором $\star$.
 

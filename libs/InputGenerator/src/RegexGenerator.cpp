@@ -1,6 +1,13 @@
 #include "InputGenerator/RegexGenerator.h"
 
+using std::ofstream;
+using std::string;
+
 RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {}
+
+RegexGenerator::RegexGenerator(int neg_chance_) : RegexGenerator::RegexGenerator() {
+	neg_chance = neg_chance_;
+}
 
 RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting, int alphabet_size)
 	: regex_length(regex_length), star_num(star_num), star_nesting(star_nesting) {
@@ -32,7 +39,7 @@ void RegexGenerator::change_seed() {
 }
 
 void RegexGenerator::write_to_file(string filename) {
-	std::ofstream out(filename, std::ios::app);
+	ofstream out(filename, std::ios::app);
 	if (out.is_open())
 		out << res_str << "\n";
 	out.close();
@@ -95,8 +102,7 @@ void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex>
 
 void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 											 // | <simple-regex><conc-regex>
-	int v = rand() % 2;
-	if (v == 0) {
+	if (rand() % 2 == 0) {
 		generate_simple_regex();
 	} else {
 		generate_simple_regex();
@@ -106,11 +112,14 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 	}
 }
 
-void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
-											   // <lbr><regex-without-eps><rbr><unary>?
-											   // | буква <unary>?
-	int v = rand() % 2;
-	if (v == 0) {
+// рандомное число в диапозоне [0; n]
+int rand_num(int n) {
+	return n > 0 ? rand() % n : -1;
+}
+
+void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? буква <star>? |
+											   //        <neg>? <lbr><regex><rbr> <star>?
+	if (rand() % 2 == 0) {
 		bool prev_eps_counter = all_alts_are_eps;
 		all_alts_are_eps = true; // новый контроллер эпсилонов
 
@@ -137,6 +146,10 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 		} else {
 			v2 = 1;
 		}
+
+		if (rand_num(neg_chance) == 0)
+			res_str += '^';
+
 		res_str += '(';
 		generate_regex_();
 		res_str += ')';
@@ -148,6 +161,10 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 		}
 	} else {
 		all_alts_are_eps = false;
+
+		if (rand_num(neg_chance) == 0)
+			res_str += '^';
+
 		res_str += rand_symb();
 
 		int v2;
@@ -172,14 +189,18 @@ char RegexGenerator::rand_symb() {
 	return alphabet[rand() % alphabet.size()];
 }
 
+void RegexGenerator::set_neg_chance(int new_neg_chance) {
+	neg_chance = new_neg_chance;
+}
 /*
 GRAMMAR:
 <regex> ::= <n-alt-regex> <alt> <regex> | <conc-regex> | пусто
 <n-alt-regex> ::=  <conc-regex> | пусто
 <conc-regex> ::= <simple-regex> | <simple-regex><conc-regex>
-<simple-regex> ::= <lbr><regex><rbr><unary>? | буква <unary>?
+<simple-regex> ::= <neg>? <lbr><regex><rbr> <star>? | <neg>? буква <star>?
 <alt> ::= '|'
 <lbr> ::= '('
 <rbr> ::= ')'
-<unary> ::= '*'
+<star> ::= '*'
+<neg> ::= '^'
 */

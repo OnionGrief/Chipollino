@@ -10,7 +10,7 @@ set(SOURCES
         src/Regex.cpp
         src/Language.cpp
         src/Grammar.cpp
-        src/AlphabetSymbol.cpp
+        src/Symbol.cpp
         src/AlgExpression.cpp
         src/AbstractMachine.cpp
         src/MemoryFiniteAutomaton.cpp

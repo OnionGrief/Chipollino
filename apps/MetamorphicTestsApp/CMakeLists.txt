@@ -33,5 +33,5 @@ target_link_libraries(${PROJECT_NAME}
         )
 
 enable_testing()
-add_test(NAME IntegrationTests
+add_test(NAME MetamorphicTests
         COMMAND ${PROJECT_NAME})

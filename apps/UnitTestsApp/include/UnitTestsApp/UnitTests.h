@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "AutomatonToImage/AutomatonToImage.h"
-#include "InputGenerator/RegexGenerator.h"
 #include "Interpreter/Interpreter.h"
 #include "Objects/AlgExpression.h"
 #include "Objects/FiniteAutomaton.h"
@@ -27,7 +26,7 @@ class UnitTests {
 
 	using Lexeme = AlgExpression::Lexeme;
 	using LexemeType = AlgExpression::Lexeme::Type;
-	static std::vector<Lexeme> parse_string(const string& str, bool allow_ref,
+	static std::vector<Lexeme> parse_string(const std::string& str, bool allow_ref,
 											bool allow_negation) {
 		return AlgExpression::parse_string(str, allow_ref, allow_negation);
 	}

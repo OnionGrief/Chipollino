@@ -13,21 +13,21 @@ class TasksGenerator {
 
   public:
 	struct Function {
-		string name;
-		vector<string> input;
-		string output;
+		std::string name;
+		std::vector<std::string> input;
+		std::string output;
 	};
 
 	struct Id {
 		int num;
-		string type;
+		std::string type;
 	};
 
   private:
 	RegexGenerator regex_generator;
 	size_t seed_it = 0; // итерация для рандома
 
-	string res_str = "";
+	std::string res_str = "";
 	int max_num_of_func_in_seq = 5; // максимальное кол-во функций в посл-ти
 	int id_num = 0; // кол-во объявленных идентификаторов
 	bool for_static_Tpchkr = false,
@@ -35,13 +35,13 @@ class TasksGenerator {
 									 // подряд, для динамического - dfa = nfa, если оба false, то
 									 // генерируем гарантированно правильные последовательности
 									 // команд
-	map<string, vector<Function>> funcInput; // разделение функций (с единственным аргументом) по
-											 // принимаемым значениям
-	map<string, vector<Id>> ids; // поиск идентификатора по его типу
+	std::map<std::string, std::vector<Function>> funcInput; // разделение функций (с единственным
+															// аргументом) по принимаемым значениям
+	std::map<std::string, std::vector<Id>> ids; // поиск идентификатора по его типу
 
-	string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int", VALUE = "Value",
-		   BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA", ARRAY = "Array", PG = "PG";
-	vector<Function> functions = {
+	std::string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int", VALUE = "Value",
+				BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA", ARRAY = "Array", PG = "PG";
+	std::vector<Function> functions = {
 		{"Thompson", {REGEX}, NFA},
 		{"IlieYu", {REGEX}, NFA},
 		{"Antimirov", {REGEX}, NFA},
@@ -75,7 +75,7 @@ class TasksGenerator {
 		{"Difference", {NFA, NFA}, NFA},
 	};
 
-	vector<Function> predicates = {
+	std::vector<Function> predicates = {
 		{"Subset", {REGEX, REGEX}, BOOLEAN},
 		{"Subset", {NFA, NFA}, BOOLEAN},
 		{"Equiv", {NFA, NFA}, BOOLEAN},
@@ -89,7 +89,9 @@ class TasksGenerator {
 	};
 
 	void distribute_functions();
-	Function generate_next_func(string, int);
+	Function generate_next_func(std::string, int);
+	std::string generate_arguments(Function first_func);
+	std::string get_random_id_by_type(std::string type);
 	Function rand_func();
 	Function rand_pred();
 	void change_seed();
@@ -101,20 +103,20 @@ class TasksGenerator {
 	Объявление: [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
 	Специальная форма test
 	Предикат [предикат] [объект]+ */
-	string generate_task(int opNum, int max_num_of_func_in_seq_, bool for_static_Tpchkr_,
-						 bool for_dinamic_Tpchkr_);
+	std::string generate_task(int opNum, int max_num_of_func_in_seq_, bool for_static_Tpchkr_,
+							  bool for_dinamic_Tpchkr_);
 	/* генерирует объявление:
 	[идентификатор] = ([функция].)*[функция]? [объект]+ (!!)? */
-	string generate_declaration();
+	std::string generate_declaration();
 	/* генерирует предикат */
-	string generate_predicate();
+	std::string generate_predicate();
 	/* генерирует метод:
 	test (НКА | рег. выр-е, рег. выр-е без альтернатив, шаг итерации) */
-	string generate_test();
+	std::string generate_test();
 	/* генерирует рандомную операцию: объявление, предикат или test*/
-	string generate_op();
+	std::string generate_op();
 	/*запись теста в файл*/
-	void write_to_file(string filename);
+	void write_to_file(std::string filename);
 };
 
 // TODO: убедиться, что интерпретатор + тайпчекер правильно обрабатывают

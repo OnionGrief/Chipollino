@@ -2,6 +2,13 @@
 
 #include "Interpreter/Interpreter.h"
 
+using std::cout;
+using std::ofstream;
+using std::pair;
+using std::string;
+using std::to_string;
+using std::vector;
+
 bool types_equiv(const vector<ObjectType>& input, const ObjectType& output) {
 	if (!((output == input[0]) || (output == ObjectType::DFA && input[0] == ObjectType::NFA) ||
 		  (output == ObjectType::NFA && input[0] == ObjectType::DFA))) {
@@ -57,7 +64,7 @@ void Interpreter::generate_brief_templates() {
 				}
 			} else {
 
-				//========= Шаблон для парных входных данных ===========
+				// ========= Шаблон для парных входных данных ===========
 
 				bool input_types_equal = types_equiv(function.input, function.input[1]);
 
@@ -174,7 +181,8 @@ void Interpreter::generate_brief_templates() {
 
 void Interpreter::generate_test_for_all_functions() {
 	ofstream outfile("./resources/all_functions.txt");
-	outfile << "R = {a}\n";
+	outfile << "Set log_theory true\n";
+	outfile << "R = {a*b*}\n";
 	outfile << "A = Determinize.Glushkov R\n";
 	outfile << "V = Ambiguity A\n";
 	outfile << "B = Deterministic A\n";
