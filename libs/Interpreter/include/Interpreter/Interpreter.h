@@ -9,8 +9,8 @@
 #include <variant>
 #include <vector>
 
+#include "FuncLib/Typization.h"
 #include "InputGenerator/RegexGenerator.h"
-#include "Interpreter/Typization.h"
 #include "Logger/Logger.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"

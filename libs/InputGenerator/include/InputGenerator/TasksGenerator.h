@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "FuncLib/Typization.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "Objects/Regex.h"
 
