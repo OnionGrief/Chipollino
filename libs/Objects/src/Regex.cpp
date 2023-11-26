@@ -1047,7 +1047,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			} else {
 				deriv_log += out[j][1].to_txt() + "\\\\";
 			}
-			if (out[j][0].to_txt() == state) {
+			if (out[j][0].to_txt(false) == state) {
 				auto n = find(name_states.begin(), name_states.end(), out[j][1].to_txt(false));
 				Symbol s = out[j][2].to_txt(false);
 				transit[s].insert(n - name_states.begin());
