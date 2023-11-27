@@ -39,7 +39,7 @@ class TasksGenerator {
 															// аргументом) по принимаемым значениям
 	std::map<std::string, std::vector<Id>> ids; // поиск идентификатора по его типу
 
-	std::string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int", VALUE = "Value",
+	inline static const std::string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int", VALUE = "Value",
 				BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA", ARRAY = "Array", PG = "PG";
 	std::vector<Function> functions = {
 		{"Thompson", {REGEX}, NFA},

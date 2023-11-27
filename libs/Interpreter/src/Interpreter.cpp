@@ -10,70 +10,15 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-bool operator==(const Interpreter::Function& l, const Interpreter::Function& r) {
+bool operator==(const Function& l, const Function& r) {
 	return l.name == r.name && l.input == r.input && l.output == r.output;
 }
 
 Interpreter::Interpreter() {
-	names_to_functions = {
-		{"Thompson", {{"Thompson", {ObjectType::Regex}, ObjectType::NFA}}},
-		{"IlieYu", {{"IlieYu", {ObjectType::Regex}, ObjectType::NFA}}},
-		{"Antimirov", {{"Antimirov", {ObjectType::Regex}, ObjectType::NFA}}},
-		{"Arden", {{"Arden", {ObjectType::NFA}, ObjectType::Regex}}},
-		{"Glushkov", {{"Glushkov", {ObjectType::Regex}, ObjectType::NFA}}},
-		{"Determinize", {{"Determinize", {ObjectType::NFA}, ObjectType::DFA}}},
-		{"Determinize+", {{"Determinize+", {ObjectType::NFA}, ObjectType::DFA}}},
-		{"RemEps", {{"RemEps", {ObjectType::NFA}, ObjectType::NFA}}},
-		{"Linearize", {{"Linearize", {ObjectType::Regex}, ObjectType::Regex}}},
-		{"Minimize", {{"Minimize", {ObjectType::NFA}, ObjectType::DFA}}},
-		{"Minimize+", {{"Minimize+", {ObjectType::NFA}, ObjectType::DFA}}},
-		{"Reverse", {{"Reverse", {ObjectType::NFA}, ObjectType::NFA}}},
-		{"Annote", {{"Annote", {ObjectType::NFA}, ObjectType::DFA}}},
-		{"DeLinearize",
-		 {{"DeLinearize", {ObjectType::Regex}, ObjectType::Regex},
-		  {"DeLinearize", {ObjectType::NFA}, ObjectType::NFA}}},
-		{"Complement", {{"Complement", {ObjectType::DFA}, ObjectType::DFA}}},
-		{"RemoveTrap", {{"RemoveTrap", {ObjectType::DFA}, ObjectType::DFA}}},
-		{"DeAnnote",
-		 {{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
-		  {"DeAnnote", {ObjectType::NFA}, ObjectType::NFA}}},
-		{"MergeBisim", {{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA}}},
-		{"Disambiguate", {{"Disambiguate", {ObjectType::Regex}, ObjectType::Regex}}},
-		{"Intersect", {{"Intersect", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
-		{"Union", {{"Union", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
-		{"Difference", {{"Difference", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA}}},
-		// Многосортные функции
-		{"PumpLength", {{"PumpLength", {ObjectType::Regex}, ObjectType::Int}}},
-		{"ClassLength", {{"ClassLength", {ObjectType::NFA}, ObjectType::Int}}},
-		{"Normalize", {{"Normalize", {ObjectType::Regex, ObjectType::Array}, ObjectType::Regex}}},
-		{"States", {{"States", {ObjectType::NFA}, ObjectType::Int}}},
-		{"ClassCard", {{"ClassCard", {ObjectType::NFA}, ObjectType::Int}}},
-		{"Ambiguity", {{"Ambiguity", {ObjectType::NFA}, ObjectType::AmbiguityValue}}},
-		{"MyhillNerode", {{"MyhillNerode", {ObjectType::NFA}, ObjectType::Int}}},
-		{"GlaisterShallit", {{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int}}},
-		{"PrefixGrammar", {{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGrammar}}},
-		{"PGtoNFA", {{"PGtoNFA", {ObjectType::PrefixGrammar}, ObjectType::NFA}}},
-		// Предикаты
-		{"Bisimilar", {{"Bisimilar", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
-		// для dfa - bool, для nfa - std::optional<bool>
-		{"Minimal", {{"Minimal", {ObjectType::NFA}, ObjectType::OptionalBool}}},
-		{"Deterministic", {{"Deterministic", {ObjectType::NFA}, ObjectType::Boolean}}},
-		{"Subset",
-		 {{"Subset", {ObjectType::Regex, ObjectType::Regex}, ObjectType::Boolean},
-		  {"Subset", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
-		{"Equiv",
-		 {{"Equiv", {ObjectType::Regex, ObjectType::Regex}, ObjectType::Boolean},
-		  {"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean}}},
-		{"Equal",
-		 {{"Equal", {ObjectType::Regex, ObjectType::Regex}, ObjectType::Boolean},
-		  {"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean},
-		  {"Equal", {ObjectType::Int, ObjectType::Int}, ObjectType::Boolean},
-		  {"Equal", {ObjectType::AmbiguityValue, ObjectType::AmbiguityValue}, ObjectType::Boolean},
-		  {"Equal", {ObjectType::Boolean, ObjectType::Boolean}, ObjectType::Boolean}}},
-		{"OneUnambiguity",
-		 {{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
-		  {"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean}}},
-		{"SemDet", {{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}}}};
+	for (Function f : FuncLib::functions) {
+		names_to_functions[f.name].push_back(f);
+	}
+	
 	// generate_brief_templates();
 	// generate_test_for_all_functions();
 }
@@ -528,7 +473,7 @@ std::optional<string> Interpreter::get_func_id(Function function) {
 	return func_id;
 }
 
-std::optional<vector<Interpreter::Function>> Interpreter::build_function_sequence(
+std::optional<vector<Function>> Interpreter::build_function_sequence(
 	vector<string> function_names, vector<ObjectType> first_type) {
 
 	auto logger = init_log();

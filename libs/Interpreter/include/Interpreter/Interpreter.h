@@ -9,6 +9,7 @@
 #include <variant>
 #include <vector>
 
+#include "FuncLib/Functions.h"
 #include "FuncLib/Typization.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "Logger/Logger.h"
@@ -86,20 +87,6 @@ class Interpreter {
 	//== Элементы грамматики интерпретатора ===================================
 	using Id = std::string;
 	struct Expression;
-
-	// Функция, состоит из имени и сигнатуры
-	// Предикат - тоже функция, но на выходе boolean
-	struct Function {
-		// Имя функции
-		std::string name;
-		// Типы входных аргументов
-		std::vector<ObjectType> input;
-		// Тип выходного аргумента
-		ObjectType output;
-		Function() {}
-		Function(std::string name, std::vector<ObjectType> input, ObjectType output)
-			: name(name), input(input), output(output) {}
-	};
 
 	friend bool operator==(const Function& l, const Function& r);
 
