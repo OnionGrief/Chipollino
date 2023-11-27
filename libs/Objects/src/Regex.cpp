@@ -996,29 +996,33 @@ bool Regex::subset(const Regex& r, iLogTemplate* log) const {
 }
 
 FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
-	map<set<string>, set<string>> trans;
-	vector<Regex> states;
+	// список состояний в итоговом автомате
+	// собирается в процессе работы алгоритма
+	vector<Regex> fa_states;
+	// список букв, по которым будут браться частные производные
 	vector<Regex> alph_regex;
-	vector<vector<Regex>> out;
+	// спсиок {regex, производная от r, сивол по которому дифференцировали}
+	vector<vector<Regex>> partial_derivatives_by_regex;
+	// мнжество всех частных производных в строковом формате,
+	// чтобы не добавлять в fa_states повторяющиеся regex 
 	set<string> check;
 	for (const Symbol& as : language->get_alphabet()) {
-		string symbol = as;
-		Regex r(symbol);
-		alph_regex.push_back(r);
+		alph_regex.emplace_back(as);
 	}
 
-	states.push_back(*this);
+	fa_states.push_back(*this);
 	check.insert(to_txt(false));
-	for (size_t i = 0; i < states.size(); i++) {
-		Regex state = states[i];
-		for (auto j = alph_regex.begin(); j != alph_regex.end(); j++) {
-			vector<Regex> regs;
-			state.partial_symbol_derivative(*j, regs);
-			for (auto k = regs.begin(); k != regs.end(); k++) {
-				out.push_back({state, *k, *j});
-				if (check.find(k->to_txt(false)) == check.end()) {
-					states.push_back(*k);
-					check.insert(k->to_txt(false));
+	for (size_t i = 0; i < fa_states.size(); i++) {
+		for (const auto& s : alph_regex) {
+			// список частных производных от fa_states[i] по символу s
+			vector<Regex> regs_der;
+			fa_states[i].partial_symbol_derivative(s, regs_der);
+			for (const auto& reg_der : regs_der) {
+				partial_derivatives_by_regex.push_back({fa_states[i], reg_der, s});
+				size_t old_checks = check.size();
+				check.insert(reg_der.to_txt(false));
+				if (old_checks != check.size()){
+					fa_states.push_back(reg_der);
 				}
 			}
 		}
@@ -1026,7 +1030,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 	vector<string> name_states;
 
-	for (auto& state : states) {
+	for (auto& state : fa_states) {
 		name_states.push_back(state.to_txt(false));
 	}
 
@@ -1036,33 +1040,36 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 	for (size_t i = 0; i < name_states.size(); i++) {
 		string state = name_states[i];
-		map<Symbol, set<int>> transit;
-		for (size_t j = 0; j < out.size(); j++) {
+		map<Symbol, set<int>> transitions;
+		for (size_t j = 0; j < partial_derivatives_by_regex.size(); j++) {
 			// cout << out[j][0].to_txt() << " ";
 			// cout << out[j][1].to_txt() << " ";
 			// cout << out[j][2].to_txt() << endl;
-			deriv_log += out[j][2].to_txt(false) + "(" + out[j][0].to_txt(false) + ")" + "\\ =\\ ";
-			if (out[j][1].to_txt() == "") {
+			deriv_log += partial_derivatives_by_regex[j][2].to_txt(false) + "(" + partial_derivatives_by_regex[j][0].to_txt(false) + ")" + "\\ =\\ ";
+			if (partial_derivatives_by_regex[j][1].to_txt() == "") {
 				deriv_log += "eps\\\\";
 			} else {
-				deriv_log += out[j][1].to_txt() + "\\\\";
+				deriv_log += partial_derivatives_by_regex[j][1].to_txt() + "\\\\";
 			}
-			if (out[j][0].to_txt(false) == state) {
-				auto n = find(name_states.begin(), name_states.end(), out[j][1].to_txt(false));
-				Symbol s = out[j][2].to_txt(false);
-				transit[s].insert(n - name_states.begin());
+
+			if (partial_derivatives_by_regex[j][0].to_txt(false) == state) {
+				// поиск индекс состояния в которое переходим по символу из state
+				auto elem_iter = find(name_states.begin(), name_states.end(), partial_derivatives_by_regex[j][1].to_txt(false));
+				// записываем расстояние между begin и итератором, который указывает на состояние
+				transitions[partial_derivatives_by_regex[j][2].to_txt(false)].insert(std::distance(name_states.begin(), elem_iter));
 			}
 		}
 
-		if (state.empty() || states[i].contains_eps()) {
+		if (state.empty() || fa_states[i].contains_eps()) {
 			if (state.empty()) {
 				state = Symbol::epsilon();
 			}
-			automat_state.push_back({int(i), {}, state, true, transit});
+			automat_state.emplace_back(int(i), set<int>{}, state, true, transitions);
 		} else {
-			automat_state.push_back({int(i), {}, state, false, transit});
+			automat_state.emplace_back(int(i), set<int>{}, state, false, transitions);
 		}
 	}
+
 	string str_state;
 	for (auto& i : automat_state) {
 		str_state += i.identifier + "\\\\ ";

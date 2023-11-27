@@ -26,3 +26,13 @@ TEST(TestArden, Test_arden_on_random_regex) {
 		ASSERT_TRUE(Regex::equivalent(r1, r2.to_ilieyu().to_regex()));
 	}
 }
+
+TEST(TestNFA, Test_equivalent_nfa_negative) {
+	RegexGenerator rg(15, 10, 5, 3);
+    rg.set_neg_chance(2); // для отрицания
+	for (int i = 0; i < 30; i++) {
+		string str = rg.generate_regex();
+		Regex r(str);
+		ASSERT_TRUE(FiniteAutomaton::equivalent(r.to_thompson(), r.to_antimirov()));
+	}
+}
