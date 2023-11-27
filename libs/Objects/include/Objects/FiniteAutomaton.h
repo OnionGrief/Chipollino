@@ -160,6 +160,8 @@ class FiniteAutomaton : public AbstractMachine {
 	size_t size(iLogTemplate* log = nullptr) const;
 	// проверка на пустоту
 	bool is_empty() const;
+	// проверка автомата на финальность
+	bool is_finite() const;
 	// метод Arden
 	Regex to_regex(iLogTemplate* log = nullptr) const;
 	// возвращает число диагональных классов по методу Глейстера-Шаллита

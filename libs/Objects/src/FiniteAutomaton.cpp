@@ -2392,6 +2392,8 @@ bool FiniteAutomaton::is_empty() const {
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
 
+bool FiniteAutomaton::is_finite() const {}
+
 Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
@@ -2492,7 +2494,8 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			// итерация по всем переходам из исходного уравнения
 			for (auto& [state_index_col, regex_col] : equation_row) {
 				// регулярка перехода из рассматриваемого уравнения в исходное
-				Regex regex_from = Regex(Regex::Type::conc, &equation_from[state_index_row], &regex_col);
+				Regex regex_from =
+					Regex(Regex::Type::conc, &equation_from[state_index_row], &regex_col);
 
 				// объединяем полученную регулярку с имеющейся в рассматриваемом уравнении
 				if (equation_from.count(state_index_col)) {
