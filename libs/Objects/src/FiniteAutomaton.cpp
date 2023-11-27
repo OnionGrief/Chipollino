@@ -2457,6 +2457,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		log->set_parameter("oldautomaton", *this);
 	}
 
+	// проверка автомата на достижимость финальных состояний
 	if (!is_finite()) {
 		if (log) {
 			log->set_parameter("result", "Automare unfinite");
