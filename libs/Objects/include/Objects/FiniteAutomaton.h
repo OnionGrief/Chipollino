@@ -151,7 +151,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
 	// начальное состояние
-	int get_initial();
+	int get_initial() const;
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
