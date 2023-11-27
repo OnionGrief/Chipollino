@@ -2394,7 +2394,6 @@ bool FiniteAutomaton::is_empty() const {
 */
 
 bool FiniteAutomaton::is_finite() const {
-
 	// переходы между состояниями
 	std::unordered_multimap<int, int> transitions{};
 	// множество завершающих состояний
@@ -2456,6 +2455,13 @@ bool FiniteAutomaton::is_finite() const {
 Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
+	}
+
+	if (!is_finite()) {
+		if (log) {
+			log->set_parameter("result", "Automare unfinite");
+		}
+		throw std::logic_error("Automare unfinite");
 	}
 
 	// a system of linear algebraic equations
@@ -2588,10 +2594,4 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		}
 		return result_regex;
 	}
-
-	// случай недостижимости ни одного из конечных состояний или их отсутствия
-	if (log) {
-		log->set_parameter("result", "Unknown");
-	}
-	return Regex{};
 }
