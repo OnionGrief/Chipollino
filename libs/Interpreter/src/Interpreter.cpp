@@ -500,7 +500,7 @@ std::optional<vector<Function>> Interpreter::build_function_sequence(
 
 	string argument_type = "";
 	for (int i = 0; i < first_type.size(); i++)
-		argument_type += (i == 0 ? "" : ", ") + types_to_string[first_type[i]];
+		argument_type += (i == 0 ? "" : ", ") + types_to_string.at(first_type[i]);
 
 	// устанавливаем тип для 1ой ф/и в посл-ти
 	if (auto num = find_func(function_names[0], first_type); num.has_value()) {
@@ -556,7 +556,7 @@ std::optional<vector<Function>> Interpreter::build_function_sequence(
 			}*/
 		} else {
 			logger.throw_error("mismatch by type of function \"" + func + "\": passed {" +
-							   types_to_string[prev_type] + "}");
+							   types_to_string.at(prev_type) + "}");
 			return std::nullopt;
 		}
 	}
@@ -570,7 +570,7 @@ std::optional<vector<Function>> Interpreter::build_function_sequence(
 		if (needed_funcs[i] >= 0) {
 			Function f = names_to_functions[function_names[i]][needed_funcs[i]];
 			finalfuncs.value().push_back(f);
-			output_type = types_to_string[f.output];
+			output_type = types_to_string.at(f.output);
 			logger.log(f.name + " (type: {" + argument_type + "} -> " + output_type +
 					   ")"); // можно убрать
 			argument_type = output_type;

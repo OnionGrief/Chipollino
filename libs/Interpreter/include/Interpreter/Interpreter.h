@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -18,6 +19,7 @@
 #include "Objects/TransformationMonoid.h"
 
 using namespace Typization; // NOLINT(build/namespaces)
+using namespace FuncLib; // NOLINT(build/namespaces)
 
 class Interpreter {
   public:
@@ -159,13 +161,13 @@ class Interpreter {
 
 	// Флаги:
 
-	std::map<std::string, Flag> flags_names = {
+	std::unordered_map<std::string, Flag> flags_names = {
 		{"auto_remove_trap_states", Flag::auto_remove_trap_states},
 		{"weak_type_comparison", Flag::weak_type_comparison},
 		{"log_theory", Flag::log_theory},
 	};
 
-	std::map<Flag, bool> flags = {
+	std::unordered_map<Flag, bool> flags = {
 		/* глобальный флаг автоматов (отвечает за удаление ловушек)
 		Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 		преобразованиях всегда удаляем в конце ловушки.
@@ -202,23 +204,8 @@ class Interpreter {
 											  int& pos,	   // NOLINT(runtime/references)
 											  size_t end); // NOLINT(runtime/references)
 
-	// перевод ObjectType в std::string (для логирования и дебага)
-	std::map<ObjectType, std::string> types_to_string = {
-		{ObjectType::NFA, "NFA"},
-		{ObjectType::DFA, "DFA"},
-		{ObjectType::Regex, "Regex"},
-		{ObjectType::RandomRegex, "RandomRegex"},
-		{ObjectType::Int, "Int"},
-		{ObjectType::String, "std::string"},
-		{ObjectType::Boolean, "Boolean"},
-		{ObjectType::OptionalBool, "OptionalBool"},
-		{ObjectType::AmbiguityValue, "AmbiguityValue"},
-		{ObjectType::PrefixGrammar, "PrefixGrammar"},
-		{ObjectType::Array, "Array"},
-	}; // не додумалась как по другому(не ручками) (((
-
 	// Типизация идентификаторов. Нужна для корректного составления опреаций
-	std::map<std::string, ObjectType> id_types;
+	std::unordered_map<std::string, ObjectType> id_types;
 	// Считывание операции из набора лексем
 	std::optional<Declaration> scan_declaration(const std::vector<Lexem>&,
 												int& pos); // NOLINT(runtime/references)

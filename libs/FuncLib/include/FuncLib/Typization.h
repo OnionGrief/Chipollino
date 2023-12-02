@@ -1,9 +1,9 @@
 #pragma once
 #include <deque>
-#include <map>
 #include <optional>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -73,11 +73,23 @@ OBJECT_DEFINITION(OptionalBool, std::optional<bool>)
 OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
 OBJECT_DEFINITION(PrefixGrammar, Grammar)
 OBJECT_DEFINITION(Array, std::vector<GeneralObject>)
-}; // namespace Typization
 
-/*
-Считаем дедлайном 6 часов утра 24 октября. Успехов!
-*/
+// перевод ObjectType в std::string (для логирования и дебага)
+inline static const std::unordered_map<ObjectType, std::string> types_to_string = {
+	{ObjectType::NFA, "NFA"},
+	{ObjectType::DFA, "DFA"},
+	{ObjectType::Regex, "Regex"},
+	{ObjectType::RandomRegex, "RandomRegex"},
+	{ObjectType::Int, "Int"},
+	{ObjectType::String, "std::string"},
+	{ObjectType::Boolean, "Boolean"},
+	{ObjectType::OptionalBool, "OptionalBool"},
+	{ObjectType::AmbiguityValue, "AmbiguityValue"},
+	{ObjectType::PrefixGrammar, "PrefixGrammar"},
+	{ObjectType::Array, "Array"},
+}; // не додумалась как по другому(не ручками) (((
+
+}; // namespace Typization
 
 /*
 Заика в бар заходит, подходит к стойке

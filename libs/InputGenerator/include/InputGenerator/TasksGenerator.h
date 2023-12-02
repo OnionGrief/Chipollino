@@ -5,25 +5,20 @@
 #include <string>
 #include <vector>
 
+#include "FuncLib/Functions.h"
 #include "FuncLib/Typization.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "Objects/Regex.h"
 
+using namespace Typization; // NOLINT(build/namespaces)
+using namespace FuncLib;	// NOLINT(build/namespaces)
+
 class TasksGenerator {
-
-  public:
-	struct Function {
-		std::string name;
-		std::vector<std::string> input;
-		std::string output;
-	};
-
+  private:
 	struct Id {
 		int num;
-		std::string type;
+		ObjectType type;
 	};
-
-  private:
 	RegexGenerator regex_generator;
 	size_t seed_it = 0; // итерация для рандома
 
@@ -35,12 +30,15 @@ class TasksGenerator {
 									 // подряд, для динамического - dfa = nfa, если оба false, то
 									 // генерируем гарантированно правильные последовательности
 									 // команд
-	std::map<std::string, std::vector<Function>> funcInput; // разделение функций (с единственным
-															// аргументом) по принимаемым значениям
-	std::map<std::string, std::vector<Id>> ids; // поиск идентификатора по его типу
+	std::map<ObjectType, std::vector<Function>> funcInput; // разделение функций (с единственным
+														   // аргументом) по принимаемым значениям
+	std::map<ObjectType, std::vector<Id>> ids_by_type; // поиск идентификатора по его типу
 
-	inline static const std::string REGEX = "Regex", NFA = "NFA", DFA = "DFA", INT = "Int", VALUE = "Value",
-				BOOLEAN = "Boolean", NFA_DFA = "NFA-DFA", ARRAY = "Array", PG = "PG";
+	inline static const ObjectType REGEX = ObjectType::Regex, NFA = ObjectType::NFA,
+								   DFA = ObjectType::DFA, INT = ObjectType::Int,
+								   VALUE = ObjectType::AmbiguityValue,
+								   BOOLEAN = ObjectType::Boolean, NFA_DFA = ObjectType::NFA,
+								   ARRAY = ObjectType::Array, PG = ObjectType::PrefixGrammar;
 	std::vector<Function> functions = {
 		{"Thompson", {REGEX}, NFA},
 		{"IlieYu", {REGEX}, NFA},
@@ -89,9 +87,9 @@ class TasksGenerator {
 	};
 
 	void distribute_functions();
-	Function generate_next_func(std::string, int);
+	Function generate_next_func(ObjectType prevOutput, int funcNum);
 	std::string generate_arguments(Function first_func);
-	std::string get_random_id_by_type(std::string type);
+	std::string get_random_id_by_type(ObjectType type);
 	Function rand_func();
 	Function rand_pred();
 	void change_seed();

@@ -119,11 +119,11 @@ void Interpreter::generate_brief_templates() {
 						function.input[index] == ObjectType::Boolean ||
 						function.input[index] == ObjectType::OptionalBool) {
 						if (input_types_equal) {
-							outfile << "\t" << types_to_string[function.input[index]] << index + 1
+							outfile << "\t" << types_to_string.at(function.input[index]) << index + 1
 									<< ":\n\n";
 							outfile << "\t%template_value" << index + 1 << "\n\n";
 						} else {
-							outfile << "\t" << types_to_string[function.input[index]] << "\n\n";
+							outfile << "\t" << types_to_string.at(function.input[index]) << "\n\n";
 							outfile << "\t%template_value\n\n";
 						}
 					}
