@@ -53,7 +53,7 @@ class Grammar {
 	int fa_to_g_TM(const FiniteAutomaton&, std::string, int, int,
 				   const std::vector<PrefixGrammarItem*>&, const std::set<std::string>&,
 				   std::string); // вспомогательная функции для
-									   //  получения префиксной грамматики через ТМ
+								 //  получения префиксной грамматики через ТМ
 
   public:
 	// обновляет значение class_number для каждого нетерминала

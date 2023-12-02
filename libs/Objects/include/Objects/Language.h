@@ -46,7 +46,7 @@ class Language {
 
   public:
 	Language();
-	Language(std::set<Symbol> alphabet); // NOLINT(runtime/explicit)
+	explicit Language(std::set<Symbol> alphabet);
 	const std::set<Symbol>& get_alphabet();
 	void set_alphabet(std::set<Symbol>);
 	int get_alphabet_size();

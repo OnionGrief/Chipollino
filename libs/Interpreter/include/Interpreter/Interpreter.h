@@ -19,7 +19,7 @@
 #include "Objects/TransformationMonoid.h"
 
 using namespace Typization; // NOLINT(build/namespaces)
-using namespace FuncLib; // NOLINT(build/namespaces)
+using namespace FuncLib;	// NOLINT(build/namespaces)
 
 class Interpreter {
   public:
@@ -67,7 +67,7 @@ class Interpreter {
 	// Внутренний логгер. Контролирует уровень вложенности с учётом скопа
 	class InterpreterLogger {
 	  public:
-		InterpreterLogger(Interpreter& parent) : parent(parent) { // NOLINT(runtime/explicit)
+		explicit InterpreterLogger(Interpreter& parent) : parent(parent) {
 			parent.log_nesting++;
 		}
 		~InterpreterLogger() {
@@ -287,12 +287,12 @@ class Interpreter {
 		int num = 0;
 
 		Lexem(Type type = error, std::string value = ""); // NOLINT(runtime/explicit)
-		Lexem(int num);									  // NOLINT(runtime/explicit)
+		explicit Lexem(int num);
 	};
 
 	class Lexer {
 	  public:
-		Lexer(Interpreter& parent) : parent(parent) {} // NOLINT(runtime/explicit)
+		explicit Lexer(Interpreter& parent) : parent(parent) {}
 		// Возвращает лексемы, разбитые по строчкам
 		std::vector<std::vector<Lexem>> load_file(std::string path);
 		// Бьёт строку на лексемы (без перевода строки)

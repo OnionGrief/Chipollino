@@ -36,7 +36,7 @@ template <ObjectType T, class V> struct ObjectHolder {
 		return T;
 	}
 
-	explicit ObjectHolder() {} // NOLINT(runtime/explicit)
+	ObjectHolder() {}
 	explicit ObjectHolder(V value) : value(value) {}
 };
 

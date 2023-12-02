@@ -120,7 +120,7 @@ class AlgExpression : public BaseObject {
   public:
 	AlgExpression();
 	AlgExpression(std::shared_ptr<Language>, Type, const Lexeme&, const std::set<Symbol>&);
-	AlgExpression(std::set<Symbol>); // NOLINT(runtime/explicit)
+	explicit AlgExpression(std::set<Symbol>);
 	AlgExpression(Type type, AlgExpression* = nullptr,
 				  AlgExpression* = nullptr); // NOLINT(runtime/explicit)
 
