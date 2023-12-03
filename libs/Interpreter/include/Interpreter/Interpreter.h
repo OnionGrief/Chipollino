@@ -99,7 +99,7 @@ class Interpreter {
 		// Параметры композиции функций (1 или более)
 		std::vector<Expression> parameters;
 		// Надо ли отображать результат
-		bool show_result = 0;
+		bool show_result = false;
 		// Преобразование в текст
 		std::string to_txt() const;
 	};
@@ -219,7 +219,8 @@ class Interpreter {
 
 	// Применение цепочки функций к набору аргументов
 	std::optional<GeneralObject> apply_function_sequence(const std::vector<Function>& functions,
-														 std::vector<GeneralObject> arguments);
+														 std::vector<GeneralObject> arguments,
+														 bool is_logged);
 
 	// Применение функции к набору аргументов
 	std::optional<GeneralObject> apply_function(

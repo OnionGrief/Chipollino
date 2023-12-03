@@ -111,7 +111,8 @@ Interpreter::InterpreterLogger Interpreter::init_log() {
 }
 
 std::optional<GeneralObject> Interpreter::apply_function_sequence(const vector<Function>& functions,
-																  vector<GeneralObject> arguments) {
+																  vector<GeneralObject> arguments,
+																  bool is_logged) {
 
 	for (const auto& func : functions) {
 		LogTemplate log_template;
@@ -121,7 +122,9 @@ std::optional<GeneralObject> Interpreter::apply_function_sequence(const vector<F
 		} else {
 			return std::nullopt;
 		}
-		tex_logger.add_log(log_template);
+		
+		if (is_logged)
+			tex_logger.add_log(log_template);
 	}
 
 	return arguments[0];
@@ -643,7 +646,7 @@ std::optional<GeneralObject> Interpreter::eval_function_sequence(const FunctionS
 		}
 	}
 
-	const auto& expr = apply_function_sequence(seq.functions, args);
+	const auto& expr = apply_function_sequence(seq.functions, args, seq.show_result);
 	logger.log("function sequence evaluated");
 	return expr;
 }
@@ -1205,7 +1208,8 @@ std::optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	if (auto declaration = scan_declaration(lexems, pos); declaration.has_value()) {
 		return declaration;
 	}
-	if (auto expr = scan_expression(lexems, pos, lexems.size()); expr.has_value() && pos == lexems.size()) {
+	if (auto expr = scan_expression(lexems, pos, lexems.size());
+		expr.has_value() && pos == lexems.size()) {
 		return expr;
 	}
 	return std::nullopt;
