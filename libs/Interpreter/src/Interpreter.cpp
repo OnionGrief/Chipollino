@@ -18,7 +18,7 @@ Interpreter::Interpreter() {
 	for (Function f : FuncLib::functions) {
 		names_to_functions[f.name].push_back(f);
 	}
-	
+
 	// generate_brief_templates();
 	// generate_test_for_all_functions();
 }
@@ -218,7 +218,7 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 			return ObjectBoolean(Regex::equal(std::get<ObjectRegex>(arguments[0]).value,
 											  std::get<ObjectRegex>(arguments[1]).value,
 											  &log_template));
-											  
+
 		} else if (function.input[0] == ObjectType::Int) {
 			int value1 = std::get<ObjectInt>(arguments[0]).value;
 			int value2 = std::get<ObjectInt>(arguments[1]).value;
@@ -662,35 +662,16 @@ bool Interpreter::run_declaration(const Declaration& decl) {
 	return true;
 }
 
-bool Interpreter::run_predicate(const Predicate& pred) {
+bool Interpreter::run_expression(const Expression& expr) {
 	auto logger = init_log();
 	logger.log("");
-	logger.log("Running predicate...");
+	logger.log("Running expression...");
 
-	FunctionSequence seq;
-	seq.functions = {pred.predicate};
-	seq.parameters = pred.arguments;
-
-	auto res = eval_function_sequence(seq);
-	bool success = false;
-
-	if (res.has_value() && std::holds_alternative<ObjectBoolean>(*res)) {
-		logger.log("result: " + to_string(std::get<ObjectBoolean>(*res).value));
-		success = true;
-	} else if (res.has_value() && std::holds_alternative<ObjectOptionalBool>(*res)) {
-		string result = "Unknown";
-		if (std::get<ObjectOptionalBool>(*res).value)
-			result = "1"; // true
-		else if (std::get<ObjectOptionalBool>(*res).value.has_value())
-			result = "0"; // false
-		logger.log("result: " + result);
-		success = true;
-	} else {
-		logger.throw_error("while running predicate: invalid expression");
-		success = false;
+	if (const auto& res = eval_expression(expr); !res.has_value()) {
+		logger.throw_error("while running expression: invalid expression");
+		return false;
 	}
-
-	return success;
+	return true;
 }
 
 bool Interpreter::run_test(const Test& test) {
@@ -816,8 +797,8 @@ bool Interpreter::run_operation(const GeneralOperation& op) {
 	bool success = false;
 	if (std::holds_alternative<Declaration>(op)) {
 		success = run_declaration(std::get<Declaration>(op));
-	} else if (std::holds_alternative<Predicate>(op)) {
-		success = run_predicate(std::get<Predicate>(op));
+	} else if (std::holds_alternative<Expression>(op)) {
+		success = run_expression(std::get<Expression>(op));
 	} else if (std::holds_alternative<Test>(op)) {
 		success = run_test(std::get<Test>(op));
 	} else if (std::holds_alternative<SetFlag>(op)) {
@@ -1045,20 +1026,21 @@ std::optional<Interpreter::Expression> Interpreter::scan_expression(const vector
 		pos++;
 		return expr;
 	}
-	// FunctionSequence
 	int i = pos;
-	if (const auto& seq = scan_function_sequence(lexems, i, end); seq.has_value()) {
-		expr.type = (*seq).functions.back().output;
-		expr.value = *seq;
-		pos = i;
-		return expr;
-	}
-	i = pos;
 	// Array
 	if (const auto& arr = scan_array(lexems, i, end); arr.has_value()) {
 		expr.type = ObjectType::Array;
 		expr.value = *arr;
 		pos = i;
+		return expr;
+	}
+	// FunctionSequence
+	i = pos;
+	if (const auto& seq = scan_function_sequence(lexems, i, end); seq.has_value()) {
+		expr.type = (*seq).functions.back().output;
+		expr.value = *seq;
+		pos = i;
+		cout << "scan_expression NOT OK\n";
 		return expr;
 	}
 	return std::nullopt;
@@ -1142,26 +1124,6 @@ std::optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lex
 	return test;
 }
 
-std::optional<Interpreter::Predicate> Interpreter::scan_predicate(const vector<Lexem>& lexems,
-																  int& pos) {
-
-	int i = pos;
-	Predicate pred;
-
-	if (auto seq = scan_function_sequence(lexems, pos, lexems.size());
-		seq.has_value() && (*seq).functions.size() == 1 &&
-		((*seq).functions[0].output == ObjectType::Boolean ||
-		 (*seq).functions[0].output == ObjectType::OptionalBool)) {
-
-		pred.predicate = (*seq).functions[0];
-		pred.arguments = (*seq).parameters;
-		pos = i + 1;
-		return pred;
-	}
-
-	return std::nullopt;
-}
-
 std::optional<Interpreter::SetFlag> Interpreter::scan_flag(const vector<Lexem>& lexems, int& pos) {
 
 	auto logger = init_log();
@@ -1243,8 +1205,8 @@ std::optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
 	if (auto declaration = scan_declaration(lexems, pos); declaration.has_value()) {
 		return declaration;
 	}
-	if (auto predicate = scan_predicate(lexems, pos); predicate.has_value()) {
-		return predicate;
+	if (auto expr = scan_expression(lexems, pos, lexems.size()); expr.has_value() && pos == lexems.size()) {
+		return expr;
 	}
 	return std::nullopt;
 }

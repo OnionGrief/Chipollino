@@ -145,14 +145,6 @@ class Interpreter {
 		// Regex random_regex;
 	};
 
-	// Предикат [предикат] [объект]+
-	struct Predicate {
-		// Функция (предикат)
-		Function predicate;
-		// Параметры (могут быть идентификаторами)
-		std::vector<Expression> arguments;
-	};
-
 	// SetFlag [flagname] [value]
 	struct SetFlag {
 		std::string name;
@@ -181,7 +173,7 @@ class Interpreter {
 	};
 
 	// Общий вид опрерации
-	using GeneralOperation = std::variant<Declaration, Test, Predicate, SetFlag, Verification>;
+	using GeneralOperation = std::variant<Declaration, Test, Expression, SetFlag, Verification>;
 
 	//== Парсинг ==============================================================
 
@@ -214,8 +206,8 @@ class Interpreter {
 	std::optional<Verification> scan_verification(
 		const std::vector<Lexem>&, // NOLINT(runtime/references)
 		int& pos);				   // NOLINT(runtime/references)
-	std::optional<Predicate> scan_predicate(const std::vector<Lexem>&,
-											int& pos); // NOLINT(runtime/references)
+	std::optional<Expression> scan_expression(const std::vector<Lexem>&,
+											  int& pos); // NOLINT(runtime/references)
 	std::optional<SetFlag> scan_flag(const std::vector<Lexem>&,
 									 int& pos); // NOLINT(runtime/references)
 	std::optional<GeneralOperation> scan_operation(const std::vector<Lexem>&);
@@ -242,7 +234,7 @@ class Interpreter {
 
 	// Исполнение операций
 	bool run_declaration(const Declaration&);
-	bool run_predicate(const Predicate&);
+	bool run_expression(const Expression&);
 	bool run_test(const Test&);
 	bool run_verification(const Verification&);
 	bool run_set_flag(const SetFlag&);
@@ -281,7 +273,7 @@ class Interpreter {
 		};
 
 		Type type = error;
-		// Если type = id | function | predicate
+		// Если type = id | function | expr
 		std::string value = "";
 		// Eсли type = number
 		int num = 0;
