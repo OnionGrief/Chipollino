@@ -117,12 +117,11 @@ std::optional<GeneralObject> Interpreter::apply_function_sequence(const vector<F
 	for (const auto& func : functions) {
 		LogTemplate log_template;
 		const auto& f = apply_function(func, arguments, log_template);
-		if (f.has_value()) {
+		if (f.has_value())
 			arguments = {*f};
-		} else {
+		else
 			return std::nullopt;
-		}
-		
+
 		if (is_logged)
 			tex_logger.add_log(log_template);
 	}
@@ -154,7 +153,7 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 	if (auto str = get_func_id(function); str.has_value()) {
 		func_id = str.value();
 	} else {
-		std::cerr << "Unable to std::get function id by name " + function.name + "\n";
+		std::cerr << "Unable to get function id by name " + function.name + "\n";
 		std::cerr << *((int*)0);
 		return GeneralObject();
 	}
@@ -1043,7 +1042,6 @@ std::optional<Interpreter::Expression> Interpreter::scan_expression(const vector
 		expr.type = (*seq).functions.back().output;
 		expr.value = *seq;
 		pos = i;
-		cout << "scan_expression NOT OK\n";
 		return expr;
 	}
 	return std::nullopt;
@@ -1073,7 +1071,8 @@ std::optional<Interpreter::Declaration> Interpreter::scan_declaration(const vect
 	i++;
 
 	// Expression
-	if (const auto& expr = scan_expression(lexems, i, lexems.size()); expr.has_value()) {
+	if (const auto& expr = scan_expression(lexems, i, lexems.size());
+		expr.has_value() && i == lexems.size()) {
 		decl.expr = *expr;
 	} else {
 		return std::nullopt;
