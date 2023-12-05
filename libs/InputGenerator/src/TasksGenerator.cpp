@@ -61,7 +61,7 @@ string TasksGenerator::generate_op() {
 	return str;
 }
 
-bool TasksGenerator::arguments_are_exists(vector<ObjectType> args) {
+bool TasksGenerator::arguments_exist(vector<ObjectType> args) {
 	for (ObjectType arg_type : args) {
 		// аргумент можно подобрать, если его тип есть в памяти, либо его можно сгенерировать
 		if (!(ids_by_type.count(arg_type) || is_belong(generated_types, arg_type)))
@@ -97,19 +97,11 @@ string TasksGenerator::generate_expression() {
 		do {
 			first_func = rand_func();
 		} while (
-			/*// ф/я подходит, если отключена проверка на соответствие типов
-			!for_static_tpchkr &&*/
-		// ф/я не подходит, если она не последняя в последовательности и на выходе не
-		// принимаемый другими функциями тип данных
-		((!funcInput.count(first_func.output) && funcNum > 1) ||
-		// ф/я не подходит, если невозможно подобрать для нее аргументы
-		!arguments_are_exists(first_func.input) /*&&
-			  // ф/я подходит, если на вход требуется DFA, включен дин. тайпчек,
-			  // и в памяти есть FA
-			  !(input_type == DFA && ids_by_type.count(NFA_DFA) && for_dynamic_tpchkr) &&
-			  // ф/я подходит, если на вход требуется NFA, и
-			  // в памяти есть FA
-			  !(input_type == NFA && ids_by_type.count(NFA_DFA))*/));
+			// ф/я не подходит, если она не последняя в последовательности и на выходе не
+			// принимаемый другими функциями тип данных
+			((!funcInput.count(first_func.output) && funcNum > 1) ||
+			 // ф/я не подходит, если невозможно подобрать для нее аргументы
+			 !arguments_exist(first_func.input)));
 
 		str += first_func.name;
 		str += generate_arguments(first_func);
@@ -122,6 +114,8 @@ string TasksGenerator::generate_expression() {
 			cur_type = func.output;
 			str = func.name + '.' + str;
 		}
+
+		str += " !!";
 	}
 	return str;
 }
@@ -130,16 +124,14 @@ string TasksGenerator::generate_test() {
 	change_seed();
 	string str = "Test ";
 
-	if (rand() % 2 && ids_by_type.count(NFA_DFA))
-		str += "N" + get_random_id_by_type(NFA_DFA);
+	if (rand() % 2 && ids_by_type.count(NFA))
+		str += "N" + get_random_id_by_type(NFA);
 	else if (rand() % 2 && ids_by_type.count(REGEX))
 		str += "N" + get_random_id_by_type(REGEX);
 	else
 		str += regex_generator.generate_framed_regex();
 
-	str += " ";
-
-	str += regex_generator.generate_framed_regex();
+	str += " " + regex_generator.generate_framed_regex();
 
 	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
 	str += " " + to_string(rand_num);
@@ -150,33 +142,21 @@ string TasksGenerator::generate_test() {
 string TasksGenerator::generate_arguments(Function first_func) {
 	string args_str = "";
 	for (auto input_type : first_func.input) {
-		if (for_static_tpchkr) {
-			if (rand() % 2 && id_num > 1) {
-				int rand_id = rand() % (id_num - 1) + 1;
-				args_str += " N" + to_string(rand_id);
-			} else {
-				args_str += " " + regex_generator.generate_framed_regex();
-			}
+		// сгенерировать идентификатор
+		if (ids_by_type.count(input_type) &&
+			!(is_belong(generated_types, input_type) && rand() % 2)) {
+			args_str += " N" + get_random_id_by_type(input_type);
+			/* генерируемые типы: */
+		} else if (input_type == REGEX) {
+			args_str += " " + regex_generator.generate_framed_regex();
+		} else if (input_type == INT) {
+			int rand_num = rand() % 5; // пусть будет до 5..
+			args_str += " " + to_string(rand_num);
+		} else if (input_type == ARRAY) {
+			args_str += " [[{a} {b}]]";
 		} else {
-			if ((for_dynamic_tpchkr && input_type == DFA) || input_type == NFA) {
-				input_type = NFA_DFA;
-			}
-
-			if (input_type == REGEX && (!ids_by_type.count(REGEX) || rand() % 2)) {
-				// сгенерировать регулярку
-				args_str += " " + regex_generator.generate_framed_regex();
-			} else if (input_type == INT && (!ids_by_type.count(INT) || rand() % 2)) {
-				// сгенерировать число
-				int rand_num = rand() % 5; // пусть будет до 5..
-				args_str += " " + to_string(rand_num);
-			} else if (input_type == ARRAY) {
-				args_str += " [[{a} {b}]]";
-			} else if (ids_by_type.count(input_type)) {
-				args_str += " N" + get_random_id_by_type(input_type);
-			} else {
-				cout << "generator error: there is no id with type" +
-							types_to_string.at(input_type) + "\n";
-			}
+			cout << "generator error: there is no id with type " + types_to_string.at(input_type) +
+						"\n";
 		}
 	}
 	return args_str;
@@ -191,12 +171,12 @@ string TasksGenerator::get_random_id_by_type(ObjectType type) {
 string TasksGenerator::generate_declaration() {
 	change_seed();
 	id_num++;
-	string str = "N" + to_string(id_num) + " = " + generate_expression() + " !!";
+	string str = "N" + to_string(id_num) + " = " + generate_expression();
 
 	// запоминаем идентификатор N#
-	ids_by_type[cur_type].push_back({id_num, cur_type});
-	if (cur_type == DFA || cur_type == NFA)
-		ids_by_type[NFA_DFA].push_back({id_num, cur_type});
+	// (DFA может быть подан в качестве NFA)
+	for (ObjectType type : get_types(cur_type, types_parents))
+		ids_by_type[type].push_back({id_num, cur_type});
 
 	return str;
 }
@@ -206,11 +186,9 @@ Function TasksGenerator::generate_next_func(ObjectType prevOutput, int funcNum) 
 	if (for_static_tpchkr) {
 		func = rand_func();
 	} else {
-		if ((for_dynamic_tpchkr && prevOutput == NFA) || prevOutput == DFA)
-			prevOutput = NFA_DFA;
 		vector<Function> possible_functions = funcInput[prevOutput];
 		func = possible_functions[rand() % possible_functions.size()];
-		// может возвращать int, только если функция явл-ся последней в посл-ти
+		// на выходе дб принимаемый тип данных, если ф/я явл-ся не последней в посл-ти
 		if (!funcInput.count(func.output) && funcNum != 0)
 			func = generate_next_func(prevOutput, funcNum);
 	}
@@ -221,7 +199,9 @@ void TasksGenerator::distribute_functions() {
 	for (Function func : functions) {
 		if (func.input.size() == 1) {
 			ObjectType input_type = func.input[0];
-			funcInput[input_type].push_back(func);
+			/* ф/я может принимать свой входной тип и его подтипы*/
+			for (ObjectType type : get_types(input_type, types_children))
+				funcInput[type].push_back(func);
 		}
 	}
 }

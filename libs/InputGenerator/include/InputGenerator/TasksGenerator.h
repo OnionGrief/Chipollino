@@ -43,11 +43,15 @@ class TasksGenerator {
 	std::map<ObjectType, std::vector<Id>> ids_by_type; // поиск идентификатора по его типу
 	// разделение функций (с единственным аргументом) по принимаемым значениям
 	std::map<ObjectType, std::vector<Function>> funcInput;
-
 	void distribute_functions();
-	bool arguments_are_exists(std::vector<ObjectType> args);
+
+	// проверка на существование подходящих аргументов
+	bool arguments_exist(std::vector<ObjectType> args);
+	// генерация функции по входному типу данных
 	Function generate_next_func(ObjectType prevOutput, int funcNum);
+	// генерация аргументов функции
 	std::string generate_arguments(Function first_func);
+	// выбор идентификатора по типу данных
 	std::string get_random_id_by_type(ObjectType type);
 	Function rand_func();
 	void change_seed();

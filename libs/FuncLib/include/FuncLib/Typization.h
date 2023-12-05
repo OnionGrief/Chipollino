@@ -89,6 +89,21 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 	{ObjectType::Array, "Array"},
 }; // не додумалась как по другому(не ручками) (((
 
+// вложенные типы данных: # TODO: дерево типов
+inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_parents = {
+	{ObjectType::DFA, {ObjectType::NFA}}};
+inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_children = {
+	{ObjectType::NFA, {ObjectType::DFA}}};
+
+static std::vector<ObjectType> get_types(
+	ObjectType type, std::unordered_map<ObjectType, std::vector<ObjectType>> other) {
+	std::vector<ObjectType> res = {type};
+	if (other.count(type))
+		for (ObjectType t : other.at(type))
+			res.push_back(t);
+	return res;
+}
+
 }; // namespace Typization
 
 /*
