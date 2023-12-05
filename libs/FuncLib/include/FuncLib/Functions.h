@@ -1,6 +1,6 @@
 #pragma once
+#include <fstream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "Typization.h"
@@ -19,6 +19,7 @@ struct Function {
 	ObjectType output;
 };
 
+// список всех доступных функций интерпретатора
 inline static const std::vector<Function> functions = {
 	{"Thompson", {ObjectType::Regex}, ObjectType::NFA},
 	{"IlieYu", {ObjectType::Regex}, ObjectType::NFA},
@@ -72,6 +73,30 @@ inline static const std::vector<Function> functions = {
 	{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 	{"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean},
 	{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}};
+
+// вспомогательная функция для Ани и ее курсача
+static void create_json() {
+	std::ofstream outfile("funcs.json");
+	outfile << "{\n\"functions\":[\n";
+	for (int j = 0; j < functions.size(); j++) {
+		Function func = functions[j];
+		outfile << "{\n";
+		outfile << "\"name\": \"" << func.name << "\",\n";
+		outfile << "\"prog_name\": \"\",\n";
+		outfile << "\"return_type\": \"" << types_to_string.at(func.output) << "\",\n";
+		outfile << "\"arguments\": [";
+		for (int i = 0; i < func.input.size(); i++) {
+			if (i != 0)
+				outfile << ", ";
+			outfile << "\"" << types_to_string.at(func.input[i]) << "\"";
+		}
+		outfile << "]\n}";
+		if (j != functions.size() - 1)
+			outfile << ",";
+		outfile << "\n";
+	}
+	outfile << "]}\n";
+}
 }; // namespace FuncLib
 
 /*

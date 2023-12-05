@@ -77,4 +77,7 @@ class TasksGenerator {
 	std::string generate_op();
 	/*запись теста в файл*/
 	void write_to_file(std::string filename);
+
+	// генерация теста для всех функций
+	void generate_test_for_all_functions();
 };

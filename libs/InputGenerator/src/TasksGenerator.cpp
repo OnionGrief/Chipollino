@@ -206,6 +206,38 @@ Function TasksGenerator::rand_func() {
 	return functions[rand() % functions.size()];
 }
 
+void TasksGenerator::generate_test_for_all_functions() {
+	ofstream outfile("./resources/all_functions.txt");
+	outfile << "Set log_theory true\n";
+	outfile << "R = {a*b*}\n";
+	outfile << "A = Determinize.Glushkov R\n";
+	outfile << "V = Ambiguity A\n";
+	outfile << "B = Deterministic A\n";
+	outfile << "P = PrefixGrammar A\n";
+	for (const auto& function : functions) {
+		string func_id = function.name;
+		outfile << "N = " << func_id;
+		for (const auto& arg : function.input) {
+			if (arg == ObjectType::NFA || arg == ObjectType::DFA) {
+				outfile << " A";
+			} else if (arg == ObjectType::AmbiguityValue) {
+				outfile << " V";
+			} else if (arg == ObjectType::Boolean || arg == ObjectType::OptionalBool) {
+				outfile << " B";
+			} else if (arg == ObjectType::PrefixGrammar) {
+				outfile << " P";
+			} else if (arg == ObjectType::Regex) {
+				outfile << " R";
+			} else if (arg == ObjectType::Array) {
+				outfile << " [[{a} {b}]]";
+			} else if (arg == ObjectType::Int) {
+				outfile << " 1";
+			}
+		}
+		outfile << "\n";
+	}
+}
+
 /*
 – По радио сообщили о переходе на зимнее время, сказав, что «этой ночью, ровно в
 03:00 нужно перевести стрелку часов на один час назад, на 02:00».
