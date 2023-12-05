@@ -42,10 +42,6 @@ void TasksGenerator::write_to_file(string filename) {
 	out.close();
 }
 
-bool is_belong(vector<ObjectType> vec, ObjectType value) {
-	return std::find(vec.begin(), vec.end(), value) != vec.end();
-}
-
 string TasksGenerator::generate_op() {
 	string str = "";
 	int op = rand() % 5; // на объявление - вероятность 3 / 5;

@@ -37,14 +37,12 @@ void Logger::render_to_file(const string& filename) {
 	outfile << "\\end{document}\n";
 	outfile.close();
 
+	cout << "\nConverting to PDF 1...\n";
+	system("pdflatex ./resources/report.tex > pdflatex.log");
+
 	cout << "\nFrameFormatter + MathMode...\n";
 
 	system("cd refal && refgo RunFormatter+FrameFormatter+MathMode 2>error_FrameFormatter.raux");
-
-	cout << "\nConverting to PDF 1...\n";
-
-	// sprintf(cmd, "cd resources && pdflatex report.tex > pdflatex.log");
-	system("pdflatex ./resources/report.tex > pdflatex.log");
 
 	cout << "\nConverting to PDF 2...\n";
 	system("pdflatex ./resources/rendered_report.tex > pdflatex2.log");

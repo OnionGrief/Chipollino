@@ -104,6 +104,10 @@ static std::vector<ObjectType> get_types(
 	return res;
 }
 
+static bool is_belong(std::vector<ObjectType> vec, ObjectType value) {
+	return std::find(vec.begin(), vec.end(), value) != vec.end();
+}
+
 }; // namespace Typization
 
 /*
