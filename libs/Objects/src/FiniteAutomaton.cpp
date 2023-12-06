@@ -2394,29 +2394,6 @@ bool FiniteAutomaton::is_empty() const {
 */
 
 bool FiniteAutomaton::is_finite() const {
-	// переходы между состояниями
-	std::unordered_multimap<int, int> transitions{};
-	// множество завершающих состояний
-	std::unordered_set<int> terminal_states{};
-
-	// записываем необходимые данные в нужном формате
-	for (const auto& state : states) {
-		// если состояние завершающее - добавляем в соответствующее множество
-		if (state.is_terminal) {
-			terminal_states.insert(state.index);
-		}
-		// добавляем переходы из рассматриваемого состояния
-		for (const auto& [_, next_states] : state.transitions) {
-			for (const auto& next_state : next_states) {
-				transitions.insert({state.index, next_state});
-			}
-		}
-	}
-
-	// если заверающих состояний нет, возвращаем fasle
-	if (terminal_states.size() == 0) {
-		return false;
-	}
 
 	// множество посещённых состояния во время bfs
 	std::unordered_set<int> visited_states{};
@@ -2429,21 +2406,20 @@ bool FiniteAutomaton::is_finite() const {
 		state_queue.pop();
 
 		// если рассмотренное состояние - завершающее возвращаем true
-		if (terminal_states.count(actual_state)) {
+		if (states[actual_state].is_terminal) {
 			return true;
 		}
 
 		// помечаем состояние, как посещённое
 		visited_states.insert(actual_state);
-		// выделяем переходы из рассматриваемого состояния
-		const auto& next_states_range = transitions.equal_range(actual_state);
 
 		// итерируемся по переходам из состояния
-		for (auto state_it = next_states_range.first; state_it != next_states_range.second;
-			 ++state_it) {
-			// если состояния не посещена, добавляем её в очередь
-			if (visited_states.count(state_it->second) == 0) {
-				state_queue.push(state_it->second);
+		for (const auto& [_, next_states] : states[actual_state].transitions) {
+			for (int next_state : next_states) {
+				// если состояние не посещено, добавляем его в очередь
+				if (visited_states.count(next_state) == 0) {
+					state_queue.push(next_state);
+				}
 			}
 		}
 	}
