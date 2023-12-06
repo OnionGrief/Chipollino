@@ -6,6 +6,7 @@
 #include <stack>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "Fraction/Fraction.h"
@@ -2350,7 +2351,7 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	return result;
 }
 
-int FiniteAutomaton::get_initial() {
+int FiniteAutomaton::get_initial() const {
 	return initial_state;
 }
 
@@ -2392,9 +2393,52 @@ bool FiniteAutomaton::is_empty() const {
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
 
+bool FiniteAutomaton::is_finite() const {
+
+	// множество посещённых состояния во время bfs
+	std::unordered_set<int> visited_states{};
+	// очередь состояний
+	std::queue<int> state_queue{{get_initial()}};
+
+	// bfs обход состояний автомата
+	while (state_queue.size() != 0) {
+		int actual_state = state_queue.front();
+		state_queue.pop();
+
+		// если рассмотренное состояние - завершающее возвращаем true
+		if (states[actual_state].is_terminal) {
+			return true;
+		}
+
+		// помечаем состояние, как посещённое
+		visited_states.insert(actual_state);
+
+		// итерируемся по переходам из состояния
+		for (const auto& [_, next_states] : states[actual_state].transitions) {
+			for (int next_state : next_states) {
+				// если состояние не посещено, добавляем его в очередь
+				if (visited_states.count(next_state) == 0) {
+					state_queue.push(next_state);
+				}
+			}
+		}
+	}
+
+	// автомат не конечный
+	return false;
+}
+
 Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
+	}
+
+	// проверка автомата на достижимость финальных состояний
+	if (!is_finite()) {
+		if (log) {
+			log->set_parameter("result", "Error: Automate must be finite");
+		}
+		throw std::logic_error("Automare unfinite");
 	}
 
 	// a system of linear algebraic equations
@@ -2492,7 +2536,8 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			// итерация по всем переходам из исходного уравнения
 			for (auto& [state_index_col, regex_col] : equation_row) {
 				// регулярка перехода из рассматриваемого уравнения в исходное
-				Regex regex_from = Regex(Regex::Type::conc, &equation_from[state_index_row], &regex_col);
+				Regex regex_from =
+					Regex(Regex::Type::conc, &equation_from[state_index_row], &regex_col);
 
 				// объединяем полученную регулярку с имеющейся в рассматриваемом уравнении
 				if (equation_from.count(state_index_col)) {
@@ -2526,10 +2571,4 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		}
 		return result_regex;
 	}
-
-	// случай недостижимости ни одного из конечных состояний или их отсутствия
-	if (log) {
-		log->set_parameter("result", "Unknown");
-	}
-	return Regex{};
 }
