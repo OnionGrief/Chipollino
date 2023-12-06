@@ -2436,7 +2436,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	// проверка автомата на достижимость финальных состояний
 	if (!is_finite()) {
 		if (log) {
-			log->set_parameter("result", "Automare unfinite");
+			log->set_parameter("result", "Error: Automate must be finite");
 		}
 		throw std::logic_error("Automare unfinite");
 	}
