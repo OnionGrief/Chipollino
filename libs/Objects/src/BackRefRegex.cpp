@@ -220,132 +220,139 @@ BackRefRegex* BackRefRegex::scan_square_br(const vector<AlgExpression::Lexeme>& 
 	return p;
 }
 
-vector<BackRefRegex*> BackRefRegex::pre_order_travers(unordered_set<int> cell_numbers) {
-	vector<BackRefRegex*> res;
-	if (type == AlgExpression::symb || type == AlgExpression::ref) {
-		in_cells = cell_numbers;
-		res.push_back(this);
-		return res;
-	}
-
-	if (type == AlgExpression::memoryWriter)
-		cell_numbers.insert(cell_number);
-
-	if (term_l) {
-		vector<BackRefRegex*> l = cast(term_l)->pre_order_travers(cell_numbers);
-		res.insert(res.end(), l.begin(), l.end());
-	}
-
-	if (term_r) {
-		vector<BackRefRegex*> r = cast(term_r)->pre_order_travers(cell_numbers);
-		res.insert(res.end(), r.begin(), r.end());
-	}
-
-	return res;
-}
-
-pair<unordered_set<int>, unordered_set<int>> set_difference(const std::unordered_set<int>& set1,
-															const std::unordered_set<int>& set2) {
-
-	std::unordered_set<int> difference_set1;
-	std::unordered_set<int> difference_set2;
-
-	for (const auto& i : set1) {
-		if (set2.find(i) == set2.end()) {
-			difference_set1.insert(i);
-		}
-	}
-
-	for (const auto& i : set2) {
-		if (set1.find(i) == set1.end()) {
-			difference_set2.insert(i);
-		}
-	}
-
-	return {difference_set1, difference_set2};
-}
-
 MemoryFiniteAutomaton BackRefRegex::to_mfa(iLogTemplate* log) const {
-	BackRefRegex temp_copy(*this);
-	vector<BackRefRegex*> symbols = temp_copy.pre_order_travers({});
-	for (size_t i = 0; i < symbols.size(); i++) {
-		symbols[i]->value.number = i;
-		symbols[i]->value.symbol.linearize(i);
-	}
-	// Множество начальных состояний
-	vector<BackRefRegex*> first = cast(temp_copy.get_first_nodes());
-	// Множество конечных состояний
-	vector<BackRefRegex*> last = cast(temp_copy.get_last_nodes());
-	// множество состояний, которым предшествует key-int
-	unordered_map<int, vector<int>> following_states = temp_copy.pairs();
-	int eps_in = this->contains_eps();
-	vector<MemoryFiniteAutomaton::State> states; // Список состояний в автомате
-
-	string str_first;
-	string str_end;
-	string str_pair;
-	for (auto& i : first) {
-		str_first += string(i->value.symbol) + "\\ ";
-	}
-
-	set<string> end_set;
-	for (auto& i : last) {
-		end_set.insert(string(i->value.symbol));
-	}
-	for (const auto& elem : end_set) {
-		str_end = str_end + elem + "\\ ";
-	}
-	if (eps_in) {
-		str_end = "eps" + str_end;
-	}
-
-	for (const auto& i : following_states) {
-		for (auto& to : i.second) {
-			str_pair = str_pair + "(" + string(symbols[i.first]->value.symbol) + "," +
-					   string(symbols[to]->value.symbol) + ")" + "\\ ";
-		}
-	}
-
-	vector<string> linearized_symbols;
-	for (auto& i : symbols) {
-		linearized_symbols.push_back(i->value.symbol);
-		i->value.symbol.delinearize();
-	}
-
-	MemoryFiniteAutomaton::Transitions start_state_transitions;
-	for (auto& i : first) {
-		start_state_transitions[i->value.symbol].emplace_back(i->value.number + 1, i->in_cells);
-	}
-
-	if (eps_in) {
-		states.emplace_back(0, "S", true, start_state_transitions);
-	} else {
-		states.emplace_back(0, "S", false, start_state_transitions);
-	}
-
-	unordered_set<int> last_lexemes;
-	for (auto& i : last) {
-		last_lexemes.insert(i->value.number);
-	}
-
-	for (size_t i = 0; i < symbols.size(); i++) {
-		Lexeme lexeme = symbols[i]->value;
-		MemoryFiniteAutomaton::Transitions transitions;
-
-		for (int j : following_states[lexeme.number]) {
-			transitions[symbols[j]->value.symbol].emplace_back(
-				j + 1, set_difference(symbols[j]->in_cells, symbols[i]->in_cells));
-		}
-		string id_str = linearized_symbols[i];
-
-		// В last_lexemes номера конечных лексем => last_lexemes.count проверяет есть ли
-		// номер лексемы в списке конечных лексем (является ли состояние конечным)
-		states.emplace_back(i + 1, id_str, last_lexemes.count(lexeme.number), transitions);
-	}
-
-	MemoryFiniteAutomaton mfa(0, states, language);
 	if (log) {
 	}
 
-	return mfa;
+	return {};
 }
+
+// vector<BackRefRegex*> BackRefRegex::pre_order_travers(unordered_set<int> cell_numbers) {
+//	vector<BackRefRegex*> res;
+//	if (type == AlgExpression::symb || type == AlgExpression::ref) {
+//		in_cells = cell_numbers;
+//		res.push_back(this);
+//		return res;
+//	}
+//
+//	if (type == AlgExpression::memoryWriter)
+//		cell_numbers.insert(cell_number);
+//
+//	if (term_l) {
+//		vector<BackRefRegex*> l = cast(term_l)->pre_order_travers(cell_numbers);
+//		res.insert(res.end(), l.begin(), l.end());
+//	}
+//
+//	if (term_r) {
+//		vector<BackRefRegex*> r = cast(term_r)->pre_order_travers(cell_numbers);
+//		res.insert(res.end(), r.begin(), r.end());
+//	}
+//
+//	return res;
+// }
+//
+// pair<unordered_set<int>, unordered_set<int>> set_difference(const std::unordered_set<int>& set1,
+//															const std::unordered_set<int>& set2) {
+//
+//	std::unordered_set<int> difference_set1;
+//	std::unordered_set<int> difference_set2;
+//
+//	for (const auto& i : set1) {
+//		if (set2.find(i) == set2.end()) {
+//			difference_set1.insert(i);
+//		}
+//	}
+//
+//	for (const auto& i : set2) {
+//		if (set1.find(i) == set1.end()) {
+//			difference_set2.insert(i);
+//		}
+//	}
+//
+//	return {difference_set1, difference_set2};
+// }
+//
+// MemoryFiniteAutomaton BackRefRegex::to_mfa(iLogTemplate* log) const {
+//	BackRefRegex temp_copy(*this);
+//	vector<BackRefRegex*> symbols = temp_copy.pre_order_travers({});
+//	for (size_t i = 0; i < symbols.size(); i++) {
+//		symbols[i]->value.number = i;
+//		symbols[i]->value.symbol.linearize(i);
+//	}
+//	// Множество начальных состояний
+//	vector<BackRefRegex*> first = cast(temp_copy.get_first_nodes());
+//	// Множество конечных состояний
+//	vector<BackRefRegex*> last = cast(temp_copy.get_last_nodes());
+//	// множество состояний, которым предшествует key-int
+//	unordered_map<int, vector<int>> following_states = temp_copy.pairs();
+//	int eps_in = this->contains_eps();
+//	vector<MFAState> states; // Список состояний в автомате
+//
+//	string str_first;
+//	string str_end;
+//	string str_pair;
+//	for (auto& i : first) {
+//		str_first += string(i->value.symbol) + "\\ ";
+//	}
+//
+//	set<string> end_set;
+//	for (auto& i : last) {
+//		end_set.insert(string(i->value.symbol));
+//	}
+//	for (const auto& elem : end_set) {
+//		str_end = str_end + elem + "\\ ";
+//	}
+//	if (eps_in) {
+//		str_end = "eps" + str_end;
+//	}
+//
+//	for (const auto& i : following_states) {
+//		for (auto& to : i.second) {
+//			str_pair = str_pair + "(" + string(symbols[i.first]->value.symbol) + "," +
+//					   string(symbols[to]->value.symbol) + ")" + "\\ ";
+//		}
+//	}
+//
+//	vector<string> linearized_symbols;
+//	for (auto& i : symbols) {
+//		linearized_symbols.push_back(i->value.symbol);
+//		i->value.symbol.delinearize();
+//	}
+//
+//	MemoryFiniteAutomaton::Transitions start_state_transitions;
+//	for (auto& i : first) {
+//		start_state_transitions[i->value.symbol].emplace_back(i->value.number + 1, i->in_cells);
+//	}
+//
+//	if (eps_in) {
+//		states.emplace_back(0, "S", true, start_state_transitions);
+//	} else {
+//		states.emplace_back(0, "S", false, start_state_transitions);
+//	}
+//
+//	unordered_set<int> last_lexemes;
+//	for (auto& i : last) {
+//		last_lexemes.insert(i->value.number);
+//	}
+//
+//	for (size_t i = 0; i < symbols.size(); i++) {
+//		Lexeme lexeme = symbols[i]->value;
+//		MemoryFiniteAutomaton::Transitions transitions;
+//
+//		for (int j : following_states[lexeme.number]) {
+//			transitions[symbols[j]->value.symbol].emplace_back(
+//				j + 1, set_difference(symbols[j]->in_cells, symbols[i]->in_cells));
+//		}
+//		string id_str = linearized_symbols[i];
+//
+//		// В last_lexemes номера конечных лексем => last_lexemes.count проверяет есть ли
+//		// номер лексемы в списке конечных лексем (является ли состояние конечным)
+//		states.emplace_back(i + 1, id_str, last_lexemes.count(lexeme.number), transitions);
+//	}
+//
+//	MemoryFiniteAutomaton mfa(0, states, language);
+//	if (log) {
+//	}
+//
+//	return mfa;
+// }

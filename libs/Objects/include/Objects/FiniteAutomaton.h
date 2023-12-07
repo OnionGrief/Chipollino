@@ -17,9 +17,22 @@ class MetaInfo;
 class Language;
 class TransformationMonoid;
 
-struct expression_arden {
-	int fa_state_number; // индекс состояния на которое ссылаемся
-	Regex* regex_from_state; // Regex по которому переходят из состояния
+class FAState : public State {
+  public:
+	using Transitions = std::map<Symbol, std::set<int>>;
+
+	Transitions transitions;
+	// используется для объединения состояний в процессе работы алгоритмов
+	// преобразования автоматов возможно для визуализации
+	std::set<int> label;
+
+	FAState(int index, std::string identifier, bool is_terminal);
+	FAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
+	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal,
+			Transitions transitions);
+	void set_transition(int, const Symbol&);
+
+	std::string to_txt() const override;
 };
 
 class FiniteAutomaton : public AbstractMachine {
@@ -31,22 +44,8 @@ class FiniteAutomaton : public AbstractMachine {
 		polynomially_ambigious
 	};
 
-	// !!! меняешь структуру здесь, поменяй в FAState в Regex.h !!!
-	struct State : AbstractMachine::State {
-		// используется для объединения состояний в процессе работы алгоритмов
-		// преобразования автоматов возможно для визуализации
-		std::set<int> label;
-		std::map<Symbol, std::set<int>> transitions;
-		State(int index, std::string identifier, bool is_terminal);
-		State(int index, std::string identifier, bool is_terminal,
-			  std::map<Symbol, std::set<int>> transitions);
-		State(int index, std::set<int> label, std::string identifier, bool is_terminal,
-			  std::map<Symbol, std::set<int>> transitions);
-		void set_transition(int, const Symbol&);
-	};
-
   private:
-	std::vector<State> states;
+	std::vector<FAState> states;
 
 	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 	// преобразованиях всегда удаляем в конце ловушки.
@@ -84,9 +83,9 @@ class FiniteAutomaton : public AbstractMachine {
 
   public:
 	FiniteAutomaton();
-	FiniteAutomaton(int initial_state, std::vector<State> states,
+	FiniteAutomaton(int initial_state, std::vector<FAState> states,
 					std::shared_ptr<Language> language);
-	FiniteAutomaton(int initial_state, std::vector<State> states, std::set<Symbol> alphabet);
+	FiniteAutomaton(int initial_state, std::vector<FAState> states, std::set<Symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
 	// dynamic_cast unique_ptr к типу FiniteAutomaton*

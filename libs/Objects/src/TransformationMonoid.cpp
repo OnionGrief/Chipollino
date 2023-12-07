@@ -309,7 +309,7 @@ vector<TransformationMonoid::Term> TransformationMonoid::get_equalence_classes_v
 vector<TransformationMonoid::Term> TransformationMonoid::get_equalence_classes_wv(const Term& w) {
 	vector<Term> out;
 	for (auto& term : terms) {
-		// vector<Transition> transitions;
+		// vector<MFATransition> transitions;
 
 		set<TransformationMonoid::Transition> transitions;
 		for (auto& j : term.transitions) {
@@ -349,7 +349,7 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::get_equalence_cla
 	vector<TermDouble> out;
 	for (auto& i1 : terms) {
 		for (auto& i2 : terms) {
-			// vector<Transition> transitions;
+			// vector<MFATransition> transitions;
 			set<TransformationMonoid::Transition> transitions;
 			for (auto& j1 : i1.transitions) {
 				for (auto& j2 : i2.transitions) {

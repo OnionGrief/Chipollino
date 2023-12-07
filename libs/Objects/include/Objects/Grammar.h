@@ -76,14 +76,14 @@ class Grammar {
 	// преобразование конечного автомата в грамматику
 	// в векторе терминалов по 0му индексу лежит epsilon
 	static std::vector<std::vector<std::vector<GrammarItem*>>> fa_to_grammar(
-		const std::vector<FiniteAutomaton::State>& states, const std::set<Symbol>& alphabet,
+		const std::vector<FAState>& states, const std::set<Symbol>& alphabet,
 		std::vector<GrammarItem>& fa_items,		 // NOLINT(runtime/references)
 		std::vector<GrammarItem*>& nonterminals, // NOLINT(runtime/references)
 		std::vector<GrammarItem*>& terminals);	 // NOLINT(runtime/references)
 	// преобразование переходов автомата в грамматику (переход -> состояние
 	// переход)
 	static std::vector<std::vector<std::vector<GrammarItem*>>> tansitions_to_grammar(
-		const std::vector<FiniteAutomaton::State>& states,
+		const std::vector<FAState>& states,
 		const std::vector<GrammarItem*>& fa_nonterminals,
 		std::vector<std::pair<GrammarItem, std::map<Symbol, std::vector<GrammarItem>>>>&
 			fa_items,							 // NOLINT(runtime/references)

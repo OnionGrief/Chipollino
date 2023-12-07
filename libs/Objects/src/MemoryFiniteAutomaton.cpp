@@ -10,43 +10,46 @@ using std::unordered_map;
 using std::unordered_set;
 using std::vector;
 
-MemoryFiniteAutomaton::State::State(int index, string identifier, bool is_terminal,
-									Transitions transitions)
-	: AbstractMachine::State::State(index, std::move(identifier), is_terminal),
-	  transitions(std::move(transitions)) {}
+MFAState::MFAState(int index, string identifier, bool is_terminal, Transitions transitions)
+	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
+}
 
-void MemoryFiniteAutomaton::State::set_transition(const Transition& to, const Symbol& symbol) {
+void MFAState::set_transition(const MFATransition& to, const Symbol& symbol) {
 	transitions[symbol].push_back(to);
 }
 
-MemoryFiniteAutomaton::Transition::Transition(int to) : to(to) {}
-
-MemoryFiniteAutomaton::Transition::Transition(int to, const unordered_set<int>& opens) : to(to) {
-	for (auto num : opens)
-		memory_actions[num] = Transition::open;
+string MFAState::to_txt() const {
+	return {};
 }
 
-MemoryFiniteAutomaton::Transition::Transition(
+MFATransition::MFATransition(int to) : to(to) {}
+
+MFATransition::MFATransition(int to, const unordered_set<int>& opens) : to(to) {
+	for (auto num : opens)
+		memory_actions[num] = MFATransition::open;
+}
+
+MFATransition::MFATransition(
 	int to, pair<const unordered_set<int>&, const unordered_set<int>&> opens_closes)
-	: Transition(to, opens_closes.first) {
+	: MFATransition(to, opens_closes.first) {
 	for (auto num : opens_closes.second) {
 		if (memory_actions.count(num))
 			std::cerr << "!!! Конфликт действий с ячейкой памяти !!!";
-		memory_actions[num] = Transition::close;
+		memory_actions[num] = MFATransition::close;
 	}
 }
 
-string MemoryFiniteAutomaton::Transition::get_actions_str() const {
+string MFATransition::get_actions_str() const {
 	stringstream ss;
 	unordered_set<int> opens;
 	unordered_set<int> closes;
 
 	for (const auto& [num, action] : memory_actions) {
 		switch (action) {
-		case MemoryFiniteAutomaton::Transition::open:
+		case MFATransition::open:
 			opens.insert(num);
 			break;
-		case MemoryFiniteAutomaton::Transition::close:
+		case MFATransition::close:
 			closes.insert(num);
 			break;
 		}
@@ -81,7 +84,7 @@ string MemoryFiniteAutomaton::Transition::get_actions_str() const {
 
 MemoryFiniteAutomaton::MemoryFiniteAutomaton() : AbstractMachine() {}
 
-MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, vector<State> states,
+MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, vector<MFAState> states,
 											 std::shared_ptr<Language> language)
 	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {}
 

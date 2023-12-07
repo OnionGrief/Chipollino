@@ -15,12 +15,12 @@ class Language {
 	// нужна, чтобы хранить weak_ptr на язык
 	struct FA_structure {
 		int initial_state;
-		std::vector<FiniteAutomaton::State> states;
+		std::vector<FAState> states;
 		// если не хранить этот указатель,
 		// будут созданы разные shared_ptr
 		std::weak_ptr<Language> language;
 
-		FA_structure(int initial_state, std::vector<FiniteAutomaton::State> states,
+		FA_structure(int initial_state, std::vector<FAState> states,
 					 std::weak_ptr<Language> language);
 	};
 
@@ -60,7 +60,7 @@ class Language {
 	int get_pump_length();
 	// минимальный дка
 	bool is_min_dfa_cached() const;
-	void set_min_dfa(int initial_state, const std::vector<FiniteAutomaton::State>& states,
+	void set_min_dfa(int initial_state, const std::vector<FAState>& states,
 					 const std::shared_ptr<Language>& Language);
 	FiniteAutomaton get_min_dfa();
 	// синтаксический моноид

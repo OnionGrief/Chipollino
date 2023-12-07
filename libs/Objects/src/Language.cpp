@@ -5,7 +5,7 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-Language::FA_structure::FA_structure(int initial_state, vector<FiniteAutomaton::State> states,
+Language::FA_structure::FA_structure(int initial_state, vector<FAState> states,
 									 std::weak_ptr<Language> language)
 	: initial_state(initial_state), states(states), language(language) {}
 
@@ -44,9 +44,9 @@ bool Language::is_min_dfa_cached() const {
 	return min_dfa.has_value();
 }
 
-void Language::set_min_dfa(int initial_state, const vector<FiniteAutomaton::State>& states,
+void Language::set_min_dfa(int initial_state, const vector<FAState>& states,
 						   const std::shared_ptr<Language>& language) {
-	vector<FiniteAutomaton::State> renamed_states = states;
+	vector<FAState> renamed_states = states;
 	for (int i = 0; i < renamed_states.size(); i++)
 		renamed_states[i].identifier = to_string(i);
 	min_dfa.emplace(FA_structure(initial_state, renamed_states, language));

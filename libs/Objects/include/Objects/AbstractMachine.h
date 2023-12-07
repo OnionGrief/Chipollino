@@ -6,16 +6,19 @@
 #include "BaseObject.h"
 #include "iLogTemplate.h"
 
+class State {
+  public:
+	int index;
+	std::string identifier;
+	bool is_terminal;
+	State();
+	State(int index, std::string identifier, bool is_terminal);
+
+	virtual std::string to_txt() const = 0;
+};
+
 class AbstractMachine : public BaseObject {
   protected:
-	struct State {
-		int index;
-		std::string identifier;
-		bool is_terminal;
-		State();
-		State(int index, std::string identifier, bool is_terminal);
-	};
-
 	int initial_state = 0;
 
   public:

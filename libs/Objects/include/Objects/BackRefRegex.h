@@ -25,7 +25,9 @@ class BackRefRegex : public AlgExpression {
 	BackRefRegex* scan_square_br(const std::vector<Lexeme>&, int, int);
 
 	// возвращает вектор листьев дерева regex
-	std::vector<BackRefRegex*> pre_order_travers(std::unordered_set<int>);
+	// std::vector<BackRefRegex*> pre_order_travers(std::unordered_set<int>);
+
+	MemoryFiniteAutomaton _to_mfa(iLogTemplate* log = nullptr) const;
 
   public:
 	BackRefRegex() = default;

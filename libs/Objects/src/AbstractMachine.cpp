@@ -5,9 +5,9 @@
 using std::set;
 using std::string;
 
-AbstractMachine::State::State() : index(0), is_terminal(false) {}
+State::State() : index(0), is_terminal(false) {}
 
-AbstractMachine::State::State(int index, string identifier, bool is_terminal)
+State::State(int index, string identifier, bool is_terminal)
 	: index(index), identifier(std::move(identifier)), is_terminal(is_terminal) {}
 
 AbstractMachine::AbstractMachine(int initial_state, std::shared_ptr<Language> language)

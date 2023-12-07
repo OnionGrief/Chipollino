@@ -28,30 +28,33 @@ using std::stringstream;
 using std::to_string;
 using std::vector;
 
-FiniteAutomaton::State::State(int index, string identifier, bool is_terminal)
-	: AbstractMachine::State::State(index, std::move(identifier), is_terminal) {}
+FAState::FAState(int index, string identifier, bool is_terminal)
+	: State::State(index, std::move(identifier), is_terminal) {}
 
-FiniteAutomaton::State::State(int index, string identifier, bool is_terminal,
-							  map<Symbol, set<int>> transitions)
-	: AbstractMachine::State::State(index, std::move(identifier), is_terminal),
+FAState::FAState(int index, string identifier, bool is_terminal, Transitions transitions)
+	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
+}
+
+FAState::FAState(int index, set<int> label, string identifier, bool is_terminal,
+				 Transitions transitions)
+	: State::State(index, std::move(identifier), is_terminal), label(std::move(label)),
 	  transitions(std::move(transitions)) {}
 
-FiniteAutomaton::State::State(int index, set<int> label, string identifier, bool is_terminal,
-							  map<Symbol, set<int>> transitions)
-	: AbstractMachine::State::State(index, std::move(identifier), is_terminal),
-	  label(std::move(label)), transitions(std::move(transitions)) {}
-
-void FiniteAutomaton::State::set_transition(int to, const Symbol& symbol) {
+void FAState::set_transition(int to, const Symbol& symbol) {
 	transitions[symbol].insert(to);
+}
+
+string FAState::to_txt() const {
+	return {};
 }
 
 FiniteAutomaton::FiniteAutomaton() : AbstractMachine() {}
 
-FiniteAutomaton::FiniteAutomaton(int initial_state, vector<State> states,
+FiniteAutomaton::FiniteAutomaton(int initial_state, vector<FAState> states,
 								 std::shared_ptr<Language> language)
 	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {}
 
-FiniteAutomaton::FiniteAutomaton(int initial_state, vector<State> states, set<Symbol> alphabet)
+FiniteAutomaton::FiniteAutomaton(int initial_state, vector<FAState> states, set<Symbol> alphabet)
 	: AbstractMachine(initial_state, std::move(alphabet)), states(std::move(states)) {}
 
 FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
@@ -131,7 +134,7 @@ FiniteAutomaton FiniteAutomaton::determinize(bool is_trim, iLogTemplate* log) co
 		new_identifier += (new_identifier.empty() || states[elem].identifier.empty() ? "" : ", ") +
 						  states[elem].identifier;
 	}
-	State new_initial_state = {0, label, new_identifier, false, map<Symbol, set<int>>()};
+	FAState new_initial_state = {0, label, new_identifier, false, FAState::Transitions()};
 	dfa.states.push_back(new_initial_state);
 
 	if (q0.size() > 1) {
@@ -153,7 +156,7 @@ FiniteAutomaton FiniteAutomaton::determinize(bool is_trim, iLogTemplate* log) co
 		int index = s2.top();
 		s1.pop();
 		s2.pop();
-		State q = dfa.states[index];
+		FAState q = dfa.states[index];
 
 		for (int i : z) {
 			if (states[i].is_terminal) {
@@ -181,7 +184,7 @@ FiniteAutomaton FiniteAutomaton::determinize(bool is_trim, iLogTemplate* log) co
 					states[elem].identifier;
 			}
 
-			State q1 = {-1, z1, new_identifier, false, map<Symbol, set<int>>()};
+			FAState q1 = {-1, z1, new_identifier, false, FAState::Transitions()};
 			bool accessory_flag = false;
 
 			for (const auto& state : dfa.states) {
@@ -357,8 +360,8 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 		ss << "\\{" << state.identifier << "\\};";
 	}
 	MetaInfo old_meta, new_meta;
-	for (int i = 0; i < dfa.states.size(); i++) {
-		for (int j = 0; j < dfa.states.size(); j++)
+	for (int i = 0; i < dfa.size(); i++) {
+		for (int j = 0; j < dfa.size(); j++)
 			if (classes[i] == classes[j] && (i != j)) {
 				old_meta.upd(NodeMeta{dfa.states[i].index, classes[i]});
 				new_meta.upd(NodeMeta{classes[i], classes[i]});
@@ -383,7 +386,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 	FiniteAutomaton new_nfa(initial_state, states, language);
 
-	vector<State> new_states;
+	vector<FAState> new_states;
 	map<set<int>, int> visited_states;
 	MetaInfo old_meta, new_meta;
 	int group_counter = 0;
@@ -394,7 +397,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 			(initial_state_identifier.empty() || states[elem].identifier.empty() ? "" : ", ") +
 			states[elem].identifier;
 	}
-	State new_initial_state = {0, q, initial_state_identifier, false, map<Symbol, set<int>>()};
+	FAState new_initial_state = {0, q, initial_state_identifier, false, FAState::Transitions()};
 	if (q.size() > 1) {
 		for (auto elem : q) {
 			old_meta.upd(NodeMeta{states[elem].index, group_counter});
@@ -440,11 +443,11 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 									 : ", ") +
 								states[elem].identifier;
 						}
-						State new_state = {states_counter,
-										   x1,
-										   new_state_identifier,
-										   false,
-										   map<Symbol, set<int>>()};
+						FAState new_state = {states_counter,
+											 x1,
+											 new_state_identifier,
+											 false,
+											 FAState::Transitions()};
 						if (q1.size() > 1) {
 							for (auto elem : q1) {
 								old_meta.upd(NodeMeta{states[elem].index, group_counter});
@@ -485,7 +488,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps_additional(iLogTemplate* log) const 
 	FiniteAutomaton new_nfa(initial_state, states, language);
 
 	for (auto& state : new_nfa.states)
-		state.transitions = map<Symbol, set<int>>();
+		state.transitions = FAState::Transitions();
 
 	for (int i = 0; i < states.size(); i++) {
 		set<int> q = closure({states[i].index}, true);
@@ -545,7 +548,7 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 									  {state1.index, state2.index},
 									  new_identifier,
 									  state1.is_terminal && state2.is_terminal,
-									  map<Symbol, set<int>>()});
+									  FAState::Transitions()});
 			state_pair.emplace_back(state1.index, state2.index);
 			counter++;
 		}
@@ -567,7 +570,7 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 					 inserter(new_alphabet, new_alphabet.begin()));
 	new_dfa.language->set_alphabet(new_alphabet);
 	for (int i = 0; i < new_dfa.size(); i++) {
-		map<Symbol, set<int>> new_transitions;
+		FAState::Transitions new_transitions;
 		for (const Symbol& symb : merged_alphabets) {
 			if (new_dfa.states[i].transitions.find(symb) != new_dfa.states[i].transitions.end()) {
 				new_transitions[symb] = new_dfa.states[i].transitions[symb];
@@ -606,7 +609,7 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1, const Finite
 									  {state1.index, state2.index},
 									  new_identifier,
 									  state1.is_terminal || state2.is_terminal,
-									  map<Symbol, set<int>>()});
+									  FAState::Transitions()});
 			state_pair.emplace_back(state1.index, state2.index);
 			counter++;
 		}
@@ -651,7 +654,7 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1, const Fi
 									  {state1.index, state2.index},
 									  new_identifier,
 									  state1.is_terminal && !state2.is_terminal,
-									  map<Symbol, set<int>>()});
+									  FAState::Transitions()});
 			state_pair.emplace_back(state1.index, state2.index);
 			counter++;
 		}
@@ -667,7 +670,7 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1, const Fi
 	}
 	new_dfa.language->set_alphabet(fa1.language->get_alphabet());
 	for (int i = 0; i < new_dfa.size(); i++) {
-		map<Symbol, set<int>> new_transitions;
+		FAState::Transitions new_transitions;
 		for (const Symbol& symb : merged_alphabets) {
 			if (new_dfa.states[i].transitions.find(symb) != new_dfa.states[i].transitions.end()) {
 				new_transitions[symb] = new_dfa.states[i].transitions[symb];
@@ -714,7 +717,7 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 	if (final_states_counter > 1) {
 		final_states_flag = 1;
 		enfa.states.push_back(
-			{enfa.initial_state, {enfa.initial_state}, "RevS", false, map<Symbol, set<int>>()});
+			{enfa.initial_state, {enfa.initial_state}, "RevS", false, FAState::Transitions()});
 	}
 	if (final_states_counter) {
 		for (int i = 0; i < enfa.size() - final_states_flag; i++) {
@@ -728,7 +731,7 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 			}
 		}
 		enfa.states[initial_state].is_terminal = true;
-		vector<map<Symbol, set<int>>> new_transition_matrix(enfa.size() - final_states_flag);
+		vector<FAState::Transitions> new_transition_matrix(enfa.size() - final_states_flag);
 		for (int i = 0; i < enfa.size() - final_states_flag; i++) {
 			for (const auto& transition : enfa.states[i].transitions) {
 				for (int elem : transition.second) {
@@ -760,7 +763,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 			if (new_dfa.states[i].transitions[symb].empty()) {
 				if (flag) {
 					new_dfa.states[i].set_transition(new_dfa.size(), symb);
-					new_dfa.states.push_back({count, {count}, "", false, map<Symbol, set<int>>()});
+					new_dfa.states.push_back({count, {count}, "", false, FAState::Transitions()});
 					new_meta.upd(
 						EdgeMeta{new_dfa.states[i].index, count, symb, MetaInfo::trap_color});
 				} else {
@@ -810,7 +813,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 		}
 		if (is_trap_state) {
 			old_meta.upd(NodeMeta{states[i + traps].index, MetaInfo::trap_color});
-			vector<State> new_states;
+			vector<FAState> new_states;
 			for (int j = 0; j < new_dfa.size(); j++) {
 				if (j < i) {
 					new_states.push_back(new_dfa.states[j]);
@@ -827,7 +830,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 				new_dfa.initial_state -= 1;
 			new_dfa.states = new_states;
 			for (int j = 0; j < new_dfa.size(); j++) {
-				map<Symbol, set<int>> new_transitions;
+				FAState::Transitions new_transitions;
 				for (auto& transition : new_dfa.states[j].transitions) {
 					set<int> new_transition;
 					for (int transition_to : transition.second) {
@@ -872,7 +875,7 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 			is_unreachable_state = true;
 		}
 		if (is_unreachable_state) {
-			vector<State> new_states;
+			vector<FAState> new_states;
 			for (int j = 0; j < new_dfa.size(); j++) {
 				if (j < i) {
 					new_states.push_back(new_dfa.states[j]);
@@ -889,7 +892,7 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 				new_dfa.initial_state -= 1;
 			new_dfa.states = new_states;
 			for (int j = 0; j < new_dfa.size(); j++) {
-				map<Symbol, set<int>> new_transitions;
+				FAState::Transitions new_transitions;
 				for (auto& transition : new_dfa.states[j].transitions) {
 					set<int> new_transition;
 					for (int transition_to : transition.second) {
@@ -919,7 +922,7 @@ FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 	MetaInfo meta;
 	int group_id = 1;
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
-	vector<map<Symbol, set<int>>> new_transitions(new_fa.size());
+	vector<FAState::Transitions> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
 			if (elem.second.size() > 1) {
@@ -955,7 +958,7 @@ FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 	set<Symbol> new_alphabet;
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
-	vector<map<Symbol, set<int>>> new_transitions(new_fa.size());
+	vector<FAState::Transitions> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
 			Symbol new_symb = elem.first;
@@ -986,7 +989,7 @@ FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 	set<Symbol> new_alphabet;
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
-	vector<map<Symbol, set<int>>> new_transitions(new_fa.size());
+	vector<FAState::Transitions> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
 		for (const auto& elem : new_fa.states[i].transitions) {
 			Symbol new_symb = elem.first;
@@ -1032,7 +1035,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 
 	FiniteAutomaton min_fa = minimize(true);
 
-	set<map<Symbol, set<int>>> final_states_transitions;
+	set<FAState::Transitions> final_states_transitions;
 	for (int i = 0; i < min_fa.size(); i++) {
 		if (min_fa.states[i].is_terminal) {
 			final_states_transitions.insert(min_fa.states[i].transitions);
@@ -1139,7 +1142,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 
 	for (int i = 0; i < min_fa.size(); i++) {
 		if (min_fa.states[i].is_terminal) {
-			map<Symbol, set<int>> new_transitions;
+			FAState::Transitions new_transitions;
 			for (const auto& transition : min_fa.states[i].transitions) {
 				if (min_fa_consistent.find(transition.first) == min_fa_consistent.end()) {
 					new_transitions[transition.first] = transition.second;
@@ -1196,7 +1199,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	for (auto min_fa_cut_orbit_gates : min_fa_cut_gates) {
 		auto it1 = min_fa_cut_orbit_gates.begin();
 		for (int i = 0; i < min_fa_cut_orbit_gates.size(); i++) {
-			map<Symbol, set<int>> q1_transitions_outside_orbit;
+			FAState::Transitions q1_transitions_outside_orbit;
 			for (const Symbol& symb : min_fa_cut.language->get_alphabet()) {
 				set<int> q1_symb_transitions_outside_orbit;
 				for (int transition : min_fa_cut.states[*it1].transitions[symb]) {
@@ -1219,7 +1222,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 				if (min_fa_cut.states[i].is_terminal != min_fa_cut.states[j].is_terminal) {
 					is_min_fa_cut_has_an_orbit_property = false;
 				}
-				map<Symbol, set<int>> q2_transitions_outside_orbit;
+				FAState::Transitions q2_transitions_outside_orbit;
 				for (const Symbol& symb : min_fa_cut.language->get_alphabet()) {
 					set<int> q2_symb_transitions_outside_orbit;
 					for (int transition : min_fa_cut.states[*it2].transitions[symb]) {
@@ -1276,7 +1279,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 			}
 			set<Symbol> orbit_automaton_alphabet;
 			for (int j = 0; j < orbit_automaton.size(); j++) {
-				map<Symbol, set<int>> orbit_automaton_state_transitions;
+				FAState::Transitions orbit_automaton_state_transitions;
 				for (const auto& symb_transitions : orbit_automaton.states[j].transitions) {
 					set<int> orbit_automaton_symb_transitions;
 					int k = 0;
@@ -1321,7 +1324,7 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(vector<int> classes) c
 	for (int i = 0; i < classes.size(); i++)
 		class_to_index[classes[i]].push_back(i);
 	// индексы состояний в новом автомате соответствуют номеру класса эквивалентности
-	vector<State> new_states;
+	vector<FAState> new_states;
 	for (int i = 0; i < class_to_index.size(); i++) {
 		string new_identifier;
 		for (int index : class_to_index[i]) {
@@ -1329,7 +1332,7 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(vector<int> classes) c
 				(new_identifier.empty() || states[index].identifier.empty() ? "" : ", ") +
 				states[index].identifier;
 		}
-		new_states.emplace_back(i, set<int>({i}), new_identifier, false, map<Symbol, set<int>>());
+		new_states.emplace_back(i, set<int>({i}), new_identifier, false, FAState::Transitions());
 	}
 
 	for (int i = 0; i < states.size(); i++) {
@@ -2101,7 +2104,7 @@ std::optional<bool> FiniteAutomaton::get_nfa_minimality_value() const {
 	int language_pump_length = language->get_pump_length();
 
 	int transition_states_counter = 0;
-	for (const State& state : states)
+	for (const FAState& state : states)
 		if (!state.transitions.empty())
 			transition_states_counter++;
 	if (language_pump_length == transition_states_counter + 1)
@@ -2242,7 +2245,7 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 }
 
 bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
-	State state = states[index_state];
+	FAState state = states[index_state];
 
 	if (s.empty() && state.is_terminal) {
 		return true;
@@ -2278,12 +2281,12 @@ bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 
 pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	// Пара (актуальный индекс элемента в строке, состояние)
-	std::stack<pair<int, State>> stack_state;
+	std::stack<pair<int, FAState>> stack_state;
 	// Тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
 	set<std::tuple<int, int, int>> visited_eps, aux_eps;
 	int counter = 0;
 	int parsed_len = 0;
-	State state = states[initial_state];
+	FAState state = states[initial_state];
 	stack_state.push({parsed_len, state});
 	while (!stack_state.empty()) {
 		if (state.is_terminal && parsed_len == s.size()) {
@@ -2436,9 +2439,9 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	// проверка автомата на достижимость финальных состояний
 	if (!is_finite()) {
 		if (log) {
-			log->set_parameter("result", "Error: Automate must be finite");
+			log->set_parameter("result", "Error: Automaton must be finite");
 		}
-		throw std::logic_error("Automare unfinite");
+		throw std::logic_error("Automaton is unfinite");
 	}
 
 	// a system of linear algebraic equations

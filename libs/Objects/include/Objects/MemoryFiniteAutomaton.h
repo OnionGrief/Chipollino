@@ -10,41 +10,43 @@
 
 class Language;
 
-class MemoryFiniteAutomaton : public AbstractMachine {
+struct MFATransition {
+	enum MemoryAction {
+		// idle, ◇
+		open,  // o
+		close, // c
+	};
+
+	int to;
+	std::unordered_map<int, MemoryAction> memory_actions;
+
+	explicit MFATransition(int to);
+	MFATransition(int to, const std::unordered_set<int>& opens);
+	MFATransition(
+		int to,
+		std::pair<const std::unordered_set<int>&, const std::unordered_set<int>&> opens_closes);
+
+	std::string get_actions_str() const;
+};
+
+class MFAState : public State {
   public:
-	struct Transition {
-		enum MemoryAction {
-			// idle, ◇
-			open,  // o
-			close, // c
-		};
+	using Transitions = std::unordered_map<Symbol, std::vector<MFATransition>, SymbolHasher>;
 
-		int to;
-		std::unordered_map<int, MemoryAction> memory_actions;
+	Transitions transitions;
+	explicit MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
+	void set_transition(const MFATransition&, const Symbol&);
 
-		explicit Transition(int to);
-		Transition(int to, const std::unordered_set<int>& opens);
-		Transition(
-			int to,
-			std::pair<const std::unordered_set<int>&, const std::unordered_set<int>&> opens_closes);
+	std::string to_txt() const override;
+};
 
-		std::string get_actions_str() const;
-	};
-
-	using Transitions = std::unordered_map<Symbol, std::vector<Transition>, SymbolHasher>;
-
-	struct State : AbstractMachine::State {
-		Transitions transitions;
-		State(int index, std::string identifier, bool is_terminal, Transitions transitions);
-		void set_transition(const Transition&, const Symbol&);
-	};
-
+class MemoryFiniteAutomaton : public AbstractMachine {
   private:
-	std::vector<State> states;
+	std::vector<MFAState> states;
 
   public:
 	MemoryFiniteAutomaton();
-	MemoryFiniteAutomaton(int initial_state, std::vector<State> states,
+	MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
 						  std::shared_ptr<Language> language);
 	//	MemoryFiniteAutomaton(const MemoryFiniteAutomaton& other);
 

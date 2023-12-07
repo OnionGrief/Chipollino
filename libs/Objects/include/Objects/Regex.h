@@ -16,18 +16,7 @@
 
 class Language;
 class FiniteAutomaton;
-
-// представление FiniteAutomaton::State
-struct FAState {
-	int index;
-	std::string identifier;
-	bool is_terminal;
-	std::map<Symbol, std::set<int>> transitions;
-	FAState(int index, std::string identifier, bool is_terminal,
-			std::map<Symbol, std::set<int>> transitions);
-	FAState(int index, std::string identifier, bool is_terminal);
-	void set_transition(int, const Symbol&);
-};
+class FAState;
 
 class Regex : public AlgExpression {
   private:
@@ -52,7 +41,7 @@ class Regex : public AlgExpression {
 	// Производная по префиксу
 	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
-	std::pair<std::vector<FAState>, int> get_thompson(int) const;
+	std::pair<std::vector<FAState>, int> _to_thompson(int) const;
 
 	void normalize_this_regex(
 		const std::vector<std::pair<Regex, Regex>>&); // переписывание regex по
