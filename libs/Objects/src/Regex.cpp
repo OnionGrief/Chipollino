@@ -1161,7 +1161,10 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		}
 		set<int> reachable_by_consistent_symb;
 		for (int i = 0; i < min_fa.size(); i++) {
-			for (int consistent_symb_transition : min_fa.states[i].transitions[consistent_symb]) {
+			if (!min_fa.states[i].transitions.count(consistent_symb))
+				continue;
+			for (int consistent_symb_transition :
+				 min_fa.states[i].transitions.at(consistent_symb)) {
 				reachable_by_consistent_symb.insert(consistent_symb_transition);
 			}
 		}

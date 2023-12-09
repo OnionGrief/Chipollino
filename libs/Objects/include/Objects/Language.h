@@ -13,10 +13,15 @@
 class Language {
   private:
 	struct Regex_model {
+	  private:
 		std::string str;
 		std::weak_ptr<Language> language;
 
+	  public:
 		Regex_model(std::string str, std::weak_ptr<Language> language);
+
+		const std::string& get_str() const;
+		std::shared_ptr<Language> get_language() const;
 	};
 
 	std::set<Symbol> alphabet;
@@ -48,8 +53,7 @@ class Language {
 	int get_pump_length();
 	// минимальный дка
 	bool is_min_dfa_cached() const;
-	void set_min_dfa(int initial_state, const std::vector<FAState>& states,
-					 const std::shared_ptr<Language>& Language);
+	void set_min_dfa(const FiniteAutomaton&);
 	FiniteAutomaton get_min_dfa();
 	// синтаксический моноид
 	bool is_syntactic_monoid_cached() const;

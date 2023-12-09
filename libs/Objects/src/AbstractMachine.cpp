@@ -15,3 +15,7 @@ AbstractMachine::AbstractMachine(int initial_state, std::shared_ptr<Language> la
 
 AbstractMachine::AbstractMachine(int initial_state, set<Symbol> alphabet)
 	: BaseObject(std::move(alphabet)), initial_state(initial_state) {}
+
+int AbstractMachine::get_initial() const {
+	return initial_state;
+}

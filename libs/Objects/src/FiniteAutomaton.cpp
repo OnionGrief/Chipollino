@@ -101,6 +101,10 @@ string FiniteAutomaton::to_txt() const {
 	return ss.str();
 }
 
+vector<FAState> FiniteAutomaton::get_states() const {
+	return states;
+}
+
 // обход автомата в глубину
 void FiniteAutomaton::dfs(int index,
 						  set<int>& reachable, // NOLINT(runtime/references)
@@ -277,12 +281,12 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 			for (int j = 0; j < counter; j++) {
 				if (!table[i * dfa.size() + j]) {
 					for (const Symbol& symb : language->get_alphabet()) {
-						vector<int> to = {*dfa.states[i].transitions[symb].begin(),
-										  *dfa.states[j].transitions[symb].begin()};
-						if (*dfa.states[i].transitions[symb].begin() <
-							*dfa.states[j].transitions[symb].begin()) {
-							to = {*dfa.states[j].transitions[symb].begin(),
-								  *dfa.states[i].transitions[symb].begin()};
+						vector<int> to = {*dfa.states[i].transitions.at(symb).begin(),
+										  *dfa.states[j].transitions.at(symb).begin()};
+						if (*dfa.states[i].transitions.at(symb).begin() <
+							*dfa.states[j].transitions.at(symb).begin()) {
+							to = {*dfa.states[j].transitions.at(symb).begin(),
+								  *dfa.states[i].transitions.at(symb).begin()};
 						}
 						if (table[to[0] * dfa.size() + to[1]]) {
 							table[i * dfa.size() + j] = true;
@@ -357,8 +361,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
 
 	// кэширование
-	language->set_min_dfa(
-		minimized_dfa.initial_state, minimized_dfa.states, minimized_dfa.language);
+	language->set_min_dfa(minimized_dfa);
 
 	// удаление ловушки по желанию пользователя
 	if (is_trim)
@@ -582,7 +585,7 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 		FAState::Transitions new_transitions;
 		for (const Symbol& symb : merged_alphabets) {
 			if (new_dfa.states[i].transitions.find(symb) != new_dfa.states[i].transitions.end()) {
-				new_transitions[symb] = new_dfa.states[i].transitions[symb];
+				new_transitions[symb] = new_dfa.states[i].transitions.at(symb);
 			}
 		}
 		new_dfa.states[i].transitions = new_transitions;
@@ -682,7 +685,7 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1, const Fi
 		FAState::Transitions new_transitions;
 		for (const Symbol& symb : merged_alphabets) {
 			if (new_dfa.states[i].transitions.find(symb) != new_dfa.states[i].transitions.end()) {
-				new_transitions[symb] = new_dfa.states[i].transitions[symb];
+				new_transitions[symb] = new_dfa.states[i].transitions.at(symb);
 			}
 		}
 		new_dfa.states[i].transitions = new_transitions;
@@ -769,7 +772,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 	int count = static_cast<int>(new_dfa.size());
 	for (int i = 0; i < count; i++) {
 		for (const Symbol& symb : language->get_alphabet()) {
-			if (new_dfa.states[i].transitions[symb].empty()) {
+			if (!new_dfa.states[i].transitions.count(symb)) {
 				if (flag) {
 					new_dfa.states[i].set_transition(new_dfa.size(), symb);
 					new_dfa.states.push_back({count, {count}, "", false, FAState::Transitions()});
@@ -1065,9 +1068,11 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		for (int elem : reachable_by_symb) {
 			is_symb_min_fa_consistent = true;
 			for (auto final_state_transitions : final_states_transitions) {
-				if (find(final_state_transitions[symb].begin(),
-						 final_state_transitions[symb].end(),
-						 elem) == final_state_transitions[symb].end()) {
+				if (!final_state_transitions.count(symb))
+					continue;
+				if (find(final_state_transitions.at(symb).begin(),
+						 final_state_transitions.at(symb).end(),
+						 elem) == final_state_transitions.at(symb).end()) {
 					is_symb_min_fa_consistent = false;
 					break;
 				}
@@ -1207,8 +1212,10 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		for (int i = 0; i < min_fa_cut_orbit_gates.size(); i++) {
 			FAState::Transitions q1_transitions_outside_orbit;
 			for (const Symbol& symb : min_fa_cut.language->get_alphabet()) {
+				if (!min_fa_cut.states[*it1].transitions.count(symb))
+					continue;
 				set<int> q1_symb_transitions_outside_orbit;
-				for (int transition : min_fa_cut.states[*it1].transitions[symb]) {
+				for (int transition : min_fa_cut.states[*it1].transitions.at(symb)) {
 					bool is_transition_outside_orbit = true;
 					for (int elem : min_fa_cut_orbits_of_states[*it1]) {
 						if (transition == elem) {
@@ -1230,8 +1237,10 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 				}
 				FAState::Transitions q2_transitions_outside_orbit;
 				for (const Symbol& symb : min_fa_cut.language->get_alphabet()) {
+					if (!min_fa_cut.states[*it2].transitions.count(symb))
+						continue;
 					set<int> q2_symb_transitions_outside_orbit;
-					for (int transition : min_fa_cut.states[*it2].transitions[symb]) {
+					for (int transition : min_fa_cut.states[*it2].transitions.at(symb)) {
 						bool is_transition_outside_orbit = true;
 						for (int elem : min_fa_cut_orbits_of_states[*it2]) {
 							if (transition == elem) {
@@ -2250,40 +2259,40 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 	return result;
 }
 
-bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
-	FAState state = states[index_state];
-
-	if (s.empty() && state.is_terminal) {
-		return true;
-	}
-	set<int> tr_eps = state.transitions[Symbol::epsilon()];
-	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
-
-	if (s.empty() && !state.is_terminal) {
-		for (size_t i = 0; i < trans_eps.size(); i++)
-			if (parsing_nfa(s, trans_eps[i])) {
-				return true;
-			}
-		return false;
-	}
-
-	Symbol elem(s[0]);
-	set<int> tr = state.transitions[elem];
-	vector<int> trans{tr.begin(), tr.end()};
-
-	for (size_t i = 0; i < trans.size(); i++) {
-		if (parsing_nfa(s.substr(1), trans[i])) {
-			return true;
-		}
-	}
-
-	for (size_t i = 0; i < trans_eps.size(); i++) {
-		if (parsing_nfa(s, trans_eps[i])) {
-			return true;
-		}
-	}
-	return false;
-}
+// bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
+//	FAState state = states[index_state];
+//
+//	if (s.empty() && state.is_terminal) {
+//		return true;
+//	}
+//	set<int> tr_eps = state.transitions[Symbol::epsilon()];
+//	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
+//
+//	if (s.empty() && !state.is_terminal) {
+//		for (size_t i = 0; i < trans_eps.size(); i++)
+//			if (parsing_nfa(s, trans_eps[i])) {
+//				return true;
+//			}
+//		return false;
+//	}
+//
+//	Symbol elem(s[0]);
+//	set<int> tr = state.transitions[elem];
+//	vector<int> trans{tr.begin(), tr.end()};
+//
+//	for (size_t i = 0; i < trans.size(); i++) {
+//		if (parsing_nfa(s.substr(1), trans[i])) {
+//			return true;
+//		}
+//	}
+//
+//	for (size_t i = 0; i < trans_eps.size(); i++) {
+//		if (parsing_nfa(s, trans_eps[i])) {
+//			return true;
+//		}
+//	}
+//	return false;
+// }
 
 pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 	// Пара (актуальный индекс элемента в строке, состояние)
@@ -2303,7 +2312,9 @@ pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 		stack_state.pop();
 		counter++;
 		Symbol elem(s[parsed_len]);
-		set<int> trans = state.transitions[elem];
+		set<int> trans;
+		if (state.transitions.count(elem))
+			trans = state.transitions.at(elem);
 		// Переходы в новые состояния по очередному символу строки
 		if (parsed_len + 1 <= s.size()) {
 			for (auto new_state : trans) {
@@ -2323,7 +2334,9 @@ pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 		}
 		// Добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
 		// состояния
-		auto reach_eps = state.transitions[Symbol::epsilon()];
+		set<int> reach_eps;
+		if (state.transitions.count(Symbol::epsilon()))
+			trans = state.transitions.at(Symbol::epsilon());
 		for (int eps_tr : reach_eps) {
 			if (visited_eps.find({parsed_len, state.index, eps_tr}) == visited_eps.end()) {
 				stack_state.push({parsed_len, states[eps_tr]});
@@ -2358,10 +2371,6 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
-}
-
-int FiniteAutomaton::get_initial() const {
-	return initial_state;
 }
 
 size_t FiniteAutomaton::size(iLogTemplate* log) const {

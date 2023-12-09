@@ -19,15 +19,21 @@ class Language;
 class FiniteAutomaton;
 
 // нужна, чтобы хранить weak_ptr на язык
-struct FA_model {
+class FA_model {
+  private:
 	int initial_state;
 	std::vector<FAState> states;
 	// если не хранить этот указатель,
 	// будут созданы разные shared_ptr
 	std::weak_ptr<Language> language;
 
+  public:
 	FA_model() = default;
 	FA_model(int initial_state, std::vector<FAState> states, std::weak_ptr<Language> language);
+
+	int get_initial_state() const;
+	const std::vector<FAState>& get_states() const;
+	std::shared_ptr<Language> get_language() const;
 
 	FiniteAutomaton make_fa();
 };
@@ -94,10 +100,10 @@ class TransformationMonoid {
 	int get_classes_number_MyhillNerode(iLogTemplate* log = nullptr);
 	// вывод таблицы М-Н
 	std::string to_txt_MyhillNerode();
-	// переписываем имя терма в  минимальное
-	std::vector<Symbol> rewriting(
-		const std::vector<Symbol>&,
-		const std::map<std::vector<Symbol>, std::vector<std::vector<Symbol>>>&);
+	//	переписываем имя терма в  минимальное
+	//	std::vector<Symbol> rewriting(
+	//		const std::vector<Symbol>&,
+	//		const std::map<std::vector<Symbol>, std::vector<std::vector<Symbol>>>&);
 	// возвращает таблицу М-Н
 	std::vector<std::vector<bool>> get_equivalence_classes_table(
 		std::vector<std::string>& table_rows,	  // NOLINT(runtime/references)

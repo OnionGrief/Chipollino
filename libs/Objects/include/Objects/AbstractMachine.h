@@ -26,4 +26,7 @@ class AbstractMachine : public BaseObject {
 	AbstractMachine() = default;
 	AbstractMachine(int initial_state, std::shared_ptr<Language>);
 	AbstractMachine(int initial_state, std::set<Symbol>);
+	
+	// начальное состояние
+	int get_initial() const;
 };

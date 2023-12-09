@@ -9,6 +9,14 @@ using std::vector;
 Language::Regex_model::Regex_model(string str, std::weak_ptr<Language> language)
 	: str(str), language(language) {}
 
+const std::string& Language::Regex_model::get_str() const {
+	return str;
+}
+
+std::shared_ptr<Language> Language::Regex_model::get_language() const {
+	return language.lock();
+}
+
 Language::Language() {}
 
 Language::Language(set<Symbol> alphabet) : alphabet(alphabet) {}
@@ -41,12 +49,11 @@ bool Language::is_min_dfa_cached() const {
 	return min_dfa.has_value();
 }
 
-void Language::set_min_dfa(int initial_state, const vector<FAState>& states,
-						   const std::shared_ptr<Language>& language) {
-	vector<FAState> renamed_states = states;
+void Language::set_min_dfa(const FiniteAutomaton& fa) {
+	vector<FAState> renamed_states = fa.get_states();
 	for (int i = 0; i < renamed_states.size(); i++)
 		renamed_states[i].identifier = to_string(i);
-	min_dfa.emplace(FA_model(initial_state, renamed_states, language));
+	min_dfa.emplace(FA_model(fa.get_initial(), renamed_states, fa.get_language()));
 }
 
 FiniteAutomaton Language::get_min_dfa() {
@@ -98,5 +105,5 @@ void Language::set_one_unambiguous_regex(string str, const std::shared_ptr<Langu
 }
 
 Regex Language::get_one_unambiguous_regex() {
-	return Regex(one_unambiguous_regex->str, one_unambiguous_regex->language.lock());
+	return Regex(one_unambiguous_regex->get_str(), one_unambiguous_regex->get_language());
 }
