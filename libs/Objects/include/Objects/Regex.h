@@ -41,6 +41,9 @@ class Regex : public AlgExpression {
 	// Производная по префиксу
 	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
+
+	// возвращает пару <вектор состояний, max_index>
+	// 0-е состояние начальное
 	std::pair<std::vector<FAState>, int> _to_thompson(int) const;
 
 	void normalize_this_regex(

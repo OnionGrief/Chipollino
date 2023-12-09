@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <queue>
 #include <set>
@@ -52,10 +53,18 @@ FiniteAutomaton::FiniteAutomaton() : AbstractMachine() {}
 
 FiniteAutomaton::FiniteAutomaton(int initial_state, vector<FAState> states,
 								 std::shared_ptr<Language> language)
-	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {}
+	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {
+	for (int i = 0; i < this->states.size(); i++) {
+		assert(this->states[i].index == i);
+	}
+}
 
 FiniteAutomaton::FiniteAutomaton(int initial_state, vector<FAState> states, set<Symbol> alphabet)
-	: AbstractMachine(initial_state, std::move(alphabet)), states(std::move(states)) {}
+	: AbstractMachine(initial_state, std::move(alphabet)), states(std::move(states)) {
+	for (int i = 0; i < this->states.size(); i++) {
+		assert(this->states[i].index == i);
+	}
+}
 
 FiniteAutomaton::FiniteAutomaton(const FiniteAutomaton& other)
 	: AbstractMachine(other.initial_state, other.language), states(other.states) {}

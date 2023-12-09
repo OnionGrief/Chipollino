@@ -17,24 +17,30 @@ struct MFATransition {
 		close, // c
 	};
 
+	using MemoryActions = std::unordered_map<int, MemoryAction>;
+
 	int to;
-	std::unordered_map<int, MemoryAction> memory_actions;
+	MemoryActions memory_actions;
 
 	explicit MFATransition(int to);
-	MFATransition(int to, const std::unordered_set<int>& opens);
-	MFATransition(
-		int to,
-		std::pair<const std::unordered_set<int>&, const std::unordered_set<int>&> opens_closes);
+	MFATransition(int, MemoryActions);
 
 	std::string get_actions_str() const;
+	bool operator==(const MFATransition& other) const;
+
+	struct Hasher {
+		std::size_t operator()(const MFATransition& t) const;
+	};
 };
 
 class MFAState : public State {
   public:
-	using Transitions = std::unordered_map<Symbol, std::vector<MFATransition>, SymbolHasher>;
+	using Transitions =
+		std::unordered_map<Symbol, std::unordered_set<MFATransition, MFATransition::Hasher>,
+						   Symbol::Hasher>;
 
 	Transitions transitions;
-	explicit MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
+	explicit MFAState(bool is_terminal);
 	void set_transition(const MFATransition&, const Symbol&);
 
 	std::string to_txt() const override;
@@ -42,7 +48,7 @@ class MFAState : public State {
 
 class MemoryFiniteAutomaton : public AbstractMachine {
   private:
-	std::vector<MFAState> states;
+	const std::vector<MFAState> states;
 
   public:
 	MemoryFiniteAutomaton();

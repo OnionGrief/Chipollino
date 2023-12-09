@@ -1,3 +1,4 @@
+#include <cassert>
 #include <sstream>
 #include <utility>
 
@@ -10,33 +11,31 @@ using std::unordered_map;
 using std::unordered_set;
 using std::vector;
 
-MFAState::MFAState(int index, string identifier, bool is_terminal, Transitions transitions)
-	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
+MFATransition::MFATransition(int to) : to(to) {}
+
+MFATransition::MFATransition(int to, MemoryActions memory_actions)
+	: to(to), memory_actions(std::move(memory_actions)) {}
+
+bool MFATransition::operator==(const MFATransition& other) const {
+	return (to == other.to) && (memory_actions == other.memory_actions);
 }
 
+std::size_t MFATransition::Hasher::operator()(const MFATransition& t) const {
+	std::size_t result = std::hash<int>{}(t.to);
+	for (const auto& pair : t.memory_actions) {
+		result ^= std::hash<int>{}(pair.first) + std::hash<int>{}(static_cast<int>(pair.second));
+	}
+	return result;
+}
+
+MFAState::MFAState(bool is_terminal) : State::State(0, {}, is_terminal) {}
+
 void MFAState::set_transition(const MFATransition& to, const Symbol& symbol) {
-	transitions[symbol].push_back(to);
+	transitions[symbol].insert(to);
 }
 
 string MFAState::to_txt() const {
 	return {};
-}
-
-MFATransition::MFATransition(int to) : to(to) {}
-
-MFATransition::MFATransition(int to, const unordered_set<int>& opens) : to(to) {
-	for (auto num : opens)
-		memory_actions[num] = MFATransition::open;
-}
-
-MFATransition::MFATransition(
-	int to, pair<const unordered_set<int>&, const unordered_set<int>&> opens_closes)
-	: MFATransition(to, opens_closes.first) {
-	for (auto num : opens_closes.second) {
-		if (memory_actions.count(num))
-			std::cerr << "!!! Конфликт действий с ячейкой памяти !!!";
-		memory_actions[num] = MFATransition::close;
-	}
 }
 
 string MFATransition::get_actions_str() const {
@@ -86,7 +85,11 @@ MemoryFiniteAutomaton::MemoryFiniteAutomaton() : AbstractMachine() {}
 
 MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, vector<MFAState> states,
 											 std::shared_ptr<Language> language)
-	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {}
+	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {
+	for (int i = 0; i < this->states.size(); i++) {
+		assert(this->states[i].index == i);
+	}
+}
 
 template <typename T>
 MemoryFiniteAutomaton* MemoryFiniteAutomaton::cast(std::unique_ptr<T>&& uptr) {
