@@ -12,37 +12,25 @@
 
 class Language {
   private:
-	// нужна, чтобы хранить weak_ptr на язык
-	struct FA_structure {
-		int initial_state;
-		std::vector<FAState> states;
-		// если не хранить этот указатель,
-		// будут созданы разные shared_ptr
-		std::weak_ptr<Language> language;
-
-		FA_structure(int initial_state, std::vector<FAState> states,
-					 std::weak_ptr<Language> language);
-	};
-
-	struct Regex_structure {
+	struct Regex_model {
 		std::string str;
 		std::weak_ptr<Language> language;
 
-		Regex_structure(std::string str, std::weak_ptr<Language> language);
+		Regex_model(std::string str, std::weak_ptr<Language> language);
 	};
 
 	std::set<Symbol> alphabet;
 	// регулярка, описывающая язык
 	// optional<Regex> regular_expression;
 	std::optional<int> pump_length;
-	std::optional<FA_structure> min_dfa;
+	std::optional<FA_model> min_dfa;
 	std::optional<TransformationMonoid> syntactic_monoid;
 	// нижняя граница размера НКА для языка
 	std::optional<int> nfa_minimum_size;
 	// классы эквивалентности минимального дка TODO
 	// аппроксимации минимальных НКА и регулярок TODO
 	std::optional<bool> is_one_unambiguous;
-	std::optional<Regex_structure> one_unambiguous_regex;
+	std::optional<Regex_model> one_unambiguous_regex;
 
   public:
 	Language();

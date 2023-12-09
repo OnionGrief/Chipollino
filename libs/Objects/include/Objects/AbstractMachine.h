@@ -17,6 +17,7 @@ class State {
 	virtual std::string to_txt() const = 0;
 };
 
+// TODO если меняешь структуру, поменяй FA_model в TransformationMonoid.h
 class AbstractMachine : public BaseObject {
   protected:
 	int initial_state = 0;

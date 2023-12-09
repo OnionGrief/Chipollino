@@ -798,7 +798,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
-	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
+	FiniteAutomaton new_dfa(initial_state, states, language);
 	int count = static_cast<int>(new_dfa.size());
 	// Поправка, чтобы можно было вычислить реальное число состояний прежнего автомата.
 	int traps = 0;

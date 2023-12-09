@@ -13,6 +13,68 @@ using std::stringstream;
 using std::to_string;
 using std::vector;
 
+FA_model::FA_model(int initial_state, vector<FAState> states, std::weak_ptr<Language> language)
+	: initial_state(initial_state), states(states), language(language) {}
+
+FiniteAutomaton FA_model::make_fa() {
+	return FiniteAutomaton(initial_state, states, language.lock());
+}
+
+TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
+	int states_counter_old = 0;
+	int states_counter_new = 0;
+	states_counter_old = in.size(); // для проверки ловушки на минимальность
+
+	FiniteAutomaton temp_fa = in.remove_trap_states(); // удаляем ловушки
+	states_counter_new = temp_fa.size();
+	if (states_counter_old - states_counter_new > 1) {
+		trap_not_minimal = true;
+		states_counter_old = states_counter_new;
+	}
+
+	temp_fa.remove_unreachable_states(); // удаляем недостижимые ловушки
+	states_counter_new = temp_fa.size();
+	if (states_counter_old - states_counter_new > 1) {
+		trap_not_minimal = true;
+	}
+
+	automaton = FA_model(temp_fa.initial_state, temp_fa.states, temp_fa.language);
+
+	// cout << automaton.to_txt();
+	vector<TransformationMonoid::Transition>
+		init_transitions; // получаем состояния по eps переходу (из себя в себя)
+	for (int i = 0; i < automaton.states.size(); i++) {
+		TransformationMonoid::Transition temp;
+		temp.first = i;
+		temp.second = i;
+		init_transitions.push_back(temp);
+	}
+	get_new_transition(init_transitions, {}, automaton.language.lock()->get_alphabet());
+	while (!queueTerm.empty()) { // пока есть кандидаты
+		TransformationMonoid::Term cur = queueTerm.front();
+		queueTerm.pop();
+		if (!searchrewrite(cur.name)) { // если не переписывается
+			auto rewrite_in = std::find(terms.begin(), terms.end(), cur);
+
+			if (rewrite_in != terms.end()) { // в правила переписывания
+				rules[rewrite_in->name].push_back(cur.name);
+			} else { // новый терм
+				for (const auto& transition : cur.transitions) {
+					if (automaton.states[transition.second].is_terminal &&
+						transition.first == automaton.initial_state) {
+						cur.isFinal = true;
+						break;
+					}
+				}
+
+				terms.push_back(cur);
+				get_new_transition(
+					cur.transitions, cur.name, automaton.language.lock()->get_alphabet());
+			}
+		}
+	}
+}
+
 vector<Symbol> union_words(vector<Symbol> a, vector<Symbol> b) {
 	vector<Symbol> newword;
 	for (const auto& i : a) {
@@ -121,7 +183,8 @@ void TransformationMonoid::get_new_transition(const vector<TransformationMonoid:
 	for (const Symbol& as : alphabet) { // для каждого символа
 		set<TransformationMonoid::Transition> out;
 		for (const TransformationMonoid::Transition& temp : in) {
-			set<int> tostate = automat.states[temp.second].transitions[as]; // получаем все переходы
+			set<int> tostate =
+				automaton.states[temp.second].transitions[as]; // получаем все переходы
 			for (int outstate : tostate) { // для каждого перехода
 				TransformationMonoid::Transition curtransition;
 				curtransition.first = temp.first;
@@ -141,56 +204,6 @@ void TransformationMonoid::get_new_transition(const vector<TransformationMonoid:
 	}
 }
 
-TransformationMonoid::TransformationMonoid(const FiniteAutomaton& in) {
-	int states_counter_old = 0;
-	int states_counter_new = 0;
-	states_counter_old = in.size(); // для проверки ловушки на минимальность
-
-	automat = in.remove_trap_states(); // удаляем ловушки
-	states_counter_new = automat.size();
-	if (states_counter_old - states_counter_new > 1) {
-		trap_not_minimal = true;
-		states_counter_old = states_counter_new;
-	}
-
-	automat.remove_unreachable_states(); // удаляем недостижимые ловушки
-	states_counter_new = automat.size();
-	if (states_counter_old - states_counter_new > 1) {
-		trap_not_minimal = true;
-	}
-	// cout << automat.to_txt();
-	vector<TransformationMonoid::Transition>
-		initperehods; // получаем состояния по eps переходу (из себя в себя)
-	for (int i = 0; i < automat.size(); i++) {
-		TransformationMonoid::Transition temp;
-		temp.first = i;
-		temp.second = i;
-		initperehods.push_back(temp);
-	}
-	get_new_transition(initperehods, {}, automat.language->get_alphabet());
-	while (!queueTerm.empty()) { // пока есть кандидаты
-		TransformationMonoid::Term cur = queueTerm.front();
-		queueTerm.pop();
-		if (!searchrewrite(cur.name)) { // если не переписывается
-			vector<TransformationMonoid::Term>::iterator rewritein =
-				std::find(terms.begin(), terms.end(), cur);
-			if (rewritein != terms.end()) { // в правила переписывания
-				// cout << "\trewrite ";
-				rules[(*rewritein).name].push_back(cur.name);
-
-			} else { // новый терм
-				for (int i = 0; i < cur.transitions.size(); i++) {
-					if (automat.states[cur.transitions[i].second].is_terminal &&
-						cur.transitions[i].first == automat.initial_state) {
-						cur.isFinal = true;
-					}
-				}
-				terms.push_back(cur);
-				get_new_transition(cur.transitions, cur.name, automat.language->get_alphabet());
-			}
-		}
-	}
-}
 
 string TransformationMonoid::to_txt() {
 	stringstream ss;
@@ -225,7 +238,7 @@ string TransformationMonoid::to_txt() {
 		if (sync == -1) {
 			ss << "word not synchronizing\n";
 		} else {
-			ss << "word synchronizing " << automat.states[sync].identifier << "\n";
+			ss << "word synchronizing " << automaton.states[sync].identifier << "\n";
 		}
 	}
 	ss << "isminimal " << is_minimal() << "\n";
@@ -247,8 +260,8 @@ string TransformationMonoid::get_equalence_classes_txt() {
 		ss << "Term	" << Symbol::vector_to_str(term.name) << "	in	language	" << term.isFinal
 		   << "\n";
 		for (int j = 0; j < term.transitions.size(); j++) {
-			ss << automat.states[term.transitions[j].first].identifier << "	->	"
-			   << automat.states[term.transitions[j].second].identifier << "\n";
+			ss << automaton.states[term.transitions[j].first].identifier << "	->	"
+			   << automaton.states[term.transitions[j].second].identifier << "\n";
 		}
 	}
 	return ss.str();
@@ -259,8 +272,8 @@ map<string, vector<string>> TransformationMonoid::get_equalence_classes_map() {
 	for (auto& i : terms) {
 		string term = Symbol::vector_to_str(i.name);
 		for (int j = 0; j < i.transitions.size(); j++) {
-			ss[term].push_back(automat.states[i.transitions[j].first].identifier);
-			ss[term].push_back(automat.states[i.transitions[j].second].identifier);
+			ss[term].push_back(automaton.states[i.transitions[j].first].identifier);
+			ss[term].push_back(automaton.states[i.transitions[j].second].identifier);
 		}
 	}
 	return ss;
@@ -296,8 +309,8 @@ vector<TransformationMonoid::Term> TransformationMonoid::get_equalence_classes_v
 		}
 		if (!transitions.empty()) {
 			for (TransformationMonoid::Transition tr : transitions) {
-				if (automat.states[(tr).second].is_terminal &&
-					(tr).first == automat.initial_state) {
+				if (automaton.states[(tr).second].is_terminal &&
+					(tr).first == automaton.initial_state) {
 					out.push_back(term);
 				}
 			}
@@ -322,8 +335,8 @@ vector<TransformationMonoid::Term> TransformationMonoid::get_equalence_classes_w
 		}
 		if (!transitions.empty()) {
 			for (const TransformationMonoid::Transition& tr : transitions) {
-				if (automat.states[(tr).second].is_terminal &&
-					(tr).first == automat.initial_state) {
+				if (automaton.states[(tr).second].is_terminal &&
+					(tr).first == automaton.initial_state) {
 					out.push_back(term);
 				}
 			}
@@ -365,8 +378,8 @@ vector<TransformationMonoid::TermDouble> TransformationMonoid::get_equalence_cla
 			}
 			if (!transitions.empty()) {
 				for (const TransformationMonoid::Transition& tr : transitions) {
-					if (automat.states[(tr).second].is_terminal &&
-						(tr).first == automat.initial_state) {
+					if (automaton.states[(tr).second].is_terminal &&
+						(tr).first == automaton.initial_state) {
 						TermDouble new_transition_double;
 						new_transition_double.first = i1;
 						new_transition_double.second = i2;
@@ -395,7 +408,7 @@ int TransformationMonoid::is_synchronized(const Term& w) {
 // Вернет число классов эквивалентности
 int TransformationMonoid::class_card(iLogTemplate* log) {
 	if (log)
-		log->set_parameter("oldautomaton", automat);
+		log->set_parameter("oldautomaton", automaton.make_fa());
 	if (log) {
 		log->set_parameter("result", to_string(terms.size()));
 	}
@@ -404,9 +417,8 @@ int TransformationMonoid::class_card(iLogTemplate* log) {
 
 // Вернет самое длинное слово в классе
 int TransformationMonoid::class_length(iLogTemplate* log) {
-
 	if (log)
-		log->set_parameter("oldautomaton", automat);
+		log->set_parameter("oldautomaton", automaton.make_fa());
 	if (log) {
 		log->set_parameter("result", to_string(terms[terms.size() - 1].name.size()));
 		// TODO: logs
@@ -417,9 +429,8 @@ int TransformationMonoid::class_length(iLogTemplate* log) {
 }
 
 int TransformationMonoid::get_classes_number_MyhillNerode(iLogTemplate* log) {
-
 	if (log)
-		log->set_parameter("oldautomaton", automat);
+		log->set_parameter("oldautomaton", automaton.make_fa());
 	if (equivalence_classes_table_bool.size() == 0) {
 		is_minimal();
 	}
@@ -477,7 +488,7 @@ bool TransformationMonoid::is_minimal(iLogTemplate* log) {
 		}
 
 		// заполняем с eps
-		if (automat.states[automat.initial_state].is_terminal) {
+		if (automaton.states[automaton.initial_state].is_terminal) {
 			equivalence_classes_table_temp[0][0] = true;
 		}
 		int i = 1;
@@ -540,7 +551,8 @@ bool TransformationMonoid::is_minimal(iLogTemplate* log) {
 		}
 	}
 	// не уверен что правильно
-	bool is_minimal_bool = (log2(automat.size()) + 1) <= equivalence_classes_table_bool.size();
+	bool is_minimal_bool =
+		(log2(automaton.states.size()) + 1) <= equivalence_classes_table_bool.size();
 	if (log) {
 		log->set_parameter("result", is_minimal_bool ? "true" : "false");
 	}

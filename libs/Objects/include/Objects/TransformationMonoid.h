@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <queue>
 #include <set>
 #include <sstream>
@@ -16,6 +17,20 @@
 
 class Language;
 class FiniteAutomaton;
+
+// нужна, чтобы хранить weak_ptr на язык
+struct FA_model {
+	int initial_state;
+	std::vector<FAState> states;
+	// если не хранить этот указатель,
+	// будут созданы разные shared_ptr
+	std::weak_ptr<Language> language;
+
+	FA_model() = default;
+	FA_model(int initial_state, std::vector<FAState> states, std::weak_ptr<Language> language);
+
+	FiniteAutomaton make_fa();
+};
 
 class TransformationMonoid {
   public:
@@ -90,7 +105,7 @@ class TransformationMonoid {
 
   private:
 	// Автомат
-	FiniteAutomaton automat;
+	FA_model automaton;
 	// Классы эквивалентности
 	std::vector<Term> terms;
 	// Правила переписывания

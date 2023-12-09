@@ -275,67 +275,6 @@ TEST(TestCaseName, Test_regex_equal) {
 	ASSERT_TRUE(!Regex::equal(r1, r3));
 }
 
-TEST(TestCaseName, Test_ambiguity) {
-	enum AutomatonType {
-		thompson,
-		glushkov,
-		ilieyu
-	};
-	using Test = std::tuple<int, string, AutomatonType, FiniteAutomaton::AmbiguityValue>;
-	vector<Test> tests = {
-		//{0, "(a*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
-		{1, "a*a*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		{2, "abc", thompson, FiniteAutomaton::unambigious},
-		//{3, "b|a", thompson, FiniteAutomaton::almost_unambigious},
-		{4, "(aa|aa)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
-		{5, "(aab|aab)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
-		{6, "a*a*((a)*)*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		//{7, "a*a*((a)*)*", thompson,
-		// FiniteAutomaton::exponentially_ambiguous},
-		//{8, "a*(b*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
-		//{9, "a*((ab)*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
-		{10, "(aa|aa)(aa|bb)*|a(ba)*", glushkov, FiniteAutomaton::almost_unambigious},
-		{11, "(aaa)*(a|)(a|)", ilieyu, FiniteAutomaton::almost_unambigious},
-		{12, "(a|)(ab|aaa|baa)*(a|)", glushkov, FiniteAutomaton::almost_unambigious},
-		{13, "(a|b|c)*(d|d)*(a|b|c|d)*", glushkov, FiniteAutomaton::almost_unambigious},
-		{14, "(ac*|ad*)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
-		{15, "(a|b|c)*(a|b|c|d)(a|b|c)*|(a|b)*ca*", glushkov, FiniteAutomaton::almost_unambigious},
-		{16, "(a|b|c)*(a|b|c|d)(a|b|c)*|(ac*|ad*)*", glushkov, FiniteAutomaton::almost_unambigious},
-		{17,
-		 "(ab)*ab(ab)*|(ac)*(ac)*|(d|c)*", // (abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*
-		 glushkov,
-		 FiniteAutomaton::almost_unambigious},
-		{18, "(abab)*abab(abab)*|(aac)*(aac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		{19,
-		 "(ab)*ab(ab)*", // (abab)*abab(abab)*
-		 glushkov,
-		 FiniteAutomaton::polynomially_ambigious},
-		{20, "(ab)*ab(ab)*|(ac)*(ac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		// {21, "(a|b)*(f*)*q", thompson,
-		//  FiniteAutomaton::exponentially_ambiguous},
-		{22,
-		 "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*",
-		 glushkov,
-		 FiniteAutomaton::exponentially_ambiguous},
-	};
-
-	for_each(tests.begin(), tests.end(), [](const Test& test) {
-		auto [test_number, reg_string, type, expected_res] = test;
-		// cout << test_number << endl;
-		switch (type) {
-		case thompson:
-			ASSERT_TRUE(Regex(reg_string).to_thompson().ambiguity() == expected_res);
-			break;
-		case glushkov:
-			ASSERT_TRUE(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
-			break;
-		case ilieyu:
-			ASSERT_TRUE(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
-			break;
-		}
-	});
-}
-
 TEST(TestCaseName, Test_remove_trap) {
 	Regex r1("ca*a(b|c)*");
 	Regex r2("caa*b*");
@@ -532,4 +471,65 @@ TEST(TestCaseName, Test_GlaisterShallit) {
 	check_classes_number("a(b|c)(a|b)(b|c)", 5);
 	check_classes_number("abc|bca", 6);
 	check_classes_number("abc|bbc", 4);
+}
+
+TEST(TestCaseName, Test_ambiguity) {
+	enum AutomatonType {
+		thompson,
+		glushkov,
+		ilieyu
+	};
+	using Test = std::tuple<int, string, AutomatonType, FiniteAutomaton::AmbiguityValue>;
+	vector<Test> tests = {
+		//{0, "(a*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
+		{1, "a*a*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		{2, "abc", thompson, FiniteAutomaton::unambigious},
+		//{3, "b|a", thompson, FiniteAutomaton::almost_unambigious},
+		{4, "(aa|aa)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{5, "(aab|aab)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{6, "a*a*((a)*)*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		//{7, "a*a*((a)*)*", thompson,
+		// FiniteAutomaton::exponentially_ambiguous},
+		//{8, "a*(b*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
+		//{9, "a*((ab)*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
+		{10, "(aa|aa)(aa|bb)*|a(ba)*", glushkov, FiniteAutomaton::almost_unambigious},
+		{11, "(aaa)*(a|)(a|)", ilieyu, FiniteAutomaton::almost_unambigious},
+		{12, "(a|)(ab|aaa|baa)*(a|)", glushkov, FiniteAutomaton::almost_unambigious},
+		{13, "(a|b|c)*(d|d)*(a|b|c|d)*", glushkov, FiniteAutomaton::almost_unambigious},
+		{14, "(ac*|ad*)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{15, "(a|b|c)*(a|b|c|d)(a|b|c)*|(a|b)*ca*", glushkov, FiniteAutomaton::almost_unambigious},
+		{16, "(a|b|c)*(a|b|c|d)(a|b|c)*|(ac*|ad*)*", glushkov, FiniteAutomaton::almost_unambigious},
+		{17,
+		 "(ab)*ab(ab)*|(ac)*(ac)*|(d|c)*", // (abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*
+		 glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{18, "(abab)*abab(abab)*|(aac)*(aac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		{19,
+		 "(ab)*ab(ab)*", // (abab)*abab(abab)*
+		 glushkov,
+		 FiniteAutomaton::polynomially_ambigious},
+		{20, "(ab)*ab(ab)*|(ac)*(ac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		// {21, "(a|b)*(f*)*q", thompson,
+		//  FiniteAutomaton::exponentially_ambiguous},
+		{22,
+		 "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*",
+		 glushkov,
+		 FiniteAutomaton::exponentially_ambiguous},
+	};
+
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [test_number, reg_string, type, expected_res] = test;
+		// cout << test_number << endl;
+		switch (type) {
+		case thompson:
+			ASSERT_TRUE(Regex(reg_string).to_thompson().ambiguity() == expected_res);
+			break;
+		case glushkov:
+			ASSERT_TRUE(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
+			break;
+		case ilieyu:
+			ASSERT_TRUE(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
+			break;
+		}
+	});
 }

@@ -1,15 +1,12 @@
 #include "Objects/Language.h"
+#include "Objects/TransformationMonoid.h"
 
 using std::set;
 using std::string;
 using std::to_string;
 using std::vector;
 
-Language::FA_structure::FA_structure(int initial_state, vector<FAState> states,
-									 std::weak_ptr<Language> language)
-	: initial_state(initial_state), states(states), language(language) {}
-
-Language::Regex_structure::Regex_structure(string str, std::weak_ptr<Language> language)
+Language::Regex_model::Regex_model(string str, std::weak_ptr<Language> language)
 	: str(str), language(language) {}
 
 Language::Language() {}
@@ -49,11 +46,11 @@ void Language::set_min_dfa(int initial_state, const vector<FAState>& states,
 	vector<FAState> renamed_states = states;
 	for (int i = 0; i < renamed_states.size(); i++)
 		renamed_states[i].identifier = to_string(i);
-	min_dfa.emplace(FA_structure(initial_state, renamed_states, language));
+	min_dfa.emplace(FA_model(initial_state, renamed_states, language));
 }
 
 FiniteAutomaton Language::get_min_dfa() {
-	return FiniteAutomaton(min_dfa->initial_state, min_dfa->states, min_dfa->language.lock());
+	return min_dfa->make_fa();
 }
 
 bool Language::is_syntactic_monoid_cached() const {
@@ -97,7 +94,7 @@ bool Language::is_one_unambiguous_regex_cached() const {
 }
 
 void Language::set_one_unambiguous_regex(string str, const std::shared_ptr<Language>& language) {
-	one_unambiguous_regex.emplace(Regex_structure(str, language));
+	one_unambiguous_regex.emplace(Regex_model(str, language));
 }
 
 Regex Language::get_one_unambiguous_regex() {

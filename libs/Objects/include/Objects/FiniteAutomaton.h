@@ -35,6 +35,7 @@ class FAState : public State {
 	std::string to_txt() const override;
 };
 
+// TODO если меняешь структуру, поменяй FA_model в TransformationMonoid.h
 class FiniteAutomaton : public AbstractMachine {
   public:
 	enum AmbiguityValue {
