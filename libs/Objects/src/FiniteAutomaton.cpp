@@ -763,7 +763,7 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
-	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
+	FiniteAutomaton new_dfa(initial_state, states, language);
 	bool flag = true;
 	MetaInfo new_meta;
 	int count = static_cast<int>(new_dfa.size());
@@ -798,9 +798,7 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
-	// тест Regex("(a|b)*a").get_one_unambiguous_regex() ломается, если оставить этот вариант:
-	// FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
-	FiniteAutomaton new_dfa(*this);
+	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	int count = static_cast<int>(new_dfa.size());
 	// Поправка, чтобы можно было вычислить реальное число состояний прежнего автомата.
 	int traps = 0;
@@ -862,8 +860,7 @@ FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {
 	}
 	/* Если весь автомат состоит из ловушек, то останется лишь одна из них. */
 	if (new_dfa.is_empty()) {
-		new_dfa = *this;
-		new_dfa = new_dfa.minimize();
+		new_dfa = minimize();
 	}
 	if (log) {
 		log->set_parameter("oldautomaton", *this, old_meta);
