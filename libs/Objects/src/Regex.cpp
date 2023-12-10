@@ -1075,9 +1075,12 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		}
 		return fa.language->get_one_unambiguous_regex();
 	}
-	if (!fa.language->is_one_unambiguous_flag_cached())
-		fa.is_one_unambiguous();
-	if (!fa.language->get_one_unambiguous_flag()) {
+	bool is_one_unambiguous;
+	if (fa.language->is_one_unambiguous_flag_cached())
+		is_one_unambiguous = fa.language->get_one_unambiguous_flag();
+	else
+		is_one_unambiguous = fa.is_one_unambiguous();
+	if (!is_one_unambiguous) {
 		if (log) {
 			log->set_parameter("result", "Язык не является 1-однозначным");
 		}
@@ -1236,7 +1239,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	if (counter)
 		regl += ")*";
 	language->set_one_unambiguous_regex(regl, fa.language);
-	Regex res = language->get_one_unambiguous_regex();
+	Regex res = Regex(regl, fa.language);
 	if (log) {
 		log->set_parameter("result", res);
 	}

@@ -473,6 +473,38 @@ TEST(TestCaseName, Test_GlaisterShallit) {
 	check_classes_number("abc|bbc", 4);
 }
 
+TEST(TestLanguage, Test_caching) {
+	Language::enable_retrieving_from_cache();
+
+	// pump_length
+	Regex r("abaa");
+	r.pump_length();
+	ASSERT_TRUE(r.get_language()->is_pump_length_cached());
+	ASSERT_EQ(r.get_language()->get_pump_length(), 5);
+	// min_dfa
+	FiniteAutomaton fa = r.to_glushkov();
+	fa.minimize();
+	ASSERT_TRUE(r.get_language()->is_min_dfa_cached());
+	ASSERT_EQ(fa.get_language(), fa.get_language()->get_min_dfa().get_language());
+	// syntactic_monoid
+	fa.get_syntactic_monoid();
+	ASSERT_TRUE(r.get_language()->is_syntactic_monoid_cached());
+	// nfa_minimum_size
+	fa.get_classes_number_GlaisterShallit();
+	ASSERT_TRUE(r.get_language()->is_nfa_minimum_size_cached());
+	ASSERT_EQ(r.get_language()->get_nfa_minimum_size(), 5);
+	// is_one_unambiguous
+	fa.is_one_unambiguous();
+	ASSERT_TRUE(r.get_language()->is_one_unambiguous_flag_cached());
+	ASSERT_EQ(r.get_language()->get_one_unambiguous_flag(), true);
+	// one_unambiguous_regex
+	r.get_one_unambiguous_regex();
+	ASSERT_TRUE(r.get_language()->is_one_unambiguous_regex_cached());
+	ASSERT_EQ(r.get_language(), r.get_language()->get_one_unambiguous_regex().get_language());
+
+	Language::disable_retrieving_from_cache();
+}
+
 TEST(TestCaseName, Test_ambiguity) {
 	enum AutomatonType {
 		thompson,

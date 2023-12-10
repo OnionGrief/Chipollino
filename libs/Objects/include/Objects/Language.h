@@ -24,6 +24,8 @@ class Language {
 		std::shared_ptr<Language> get_language() const;
 	};
 
+	inline static bool allow_retrieving_from_cache = true;
+
 	std::set<Symbol> alphabet;
 	// регулярка, описывающая язык
 	// optional<Regex> regular_expression;
@@ -40,6 +42,10 @@ class Language {
   public:
 	Language();
 	Language(std::set<Symbol> alphabet); // NOLINT(runtime/explicit)
+
+	static void enable_retrieving_from_cache();
+	static void disable_retrieving_from_cache();
+
 	const std::set<Symbol>& get_alphabet();
 	void set_alphabet(std::set<Symbol>);
 	int get_alphabet_size();
