@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <queue>
 #include <set>
@@ -54,15 +53,19 @@ FiniteAutomaton::FiniteAutomaton() : AbstractMachine() {}
 FiniteAutomaton::FiniteAutomaton(int initial_state, vector<FAState> states,
 								 std::shared_ptr<Language> language)
 	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {
-	for (int i = 0; i < this->states.size(); i++) {
-		assert(this->states[i].index == i);
+	for (size_t i = 0; i < this->states.size(); i++) {
+		if (this->states[i].index != i)
+			throw std::logic_error(
+				"State.index must correspond to its ordinal number in the states vector");
 	}
 }
 
 FiniteAutomaton::FiniteAutomaton(int initial_state, vector<FAState> states, set<Symbol> alphabet)
 	: AbstractMachine(initial_state, std::move(alphabet)), states(std::move(states)) {
-	for (int i = 0; i < this->states.size(); i++) {
-		assert(this->states[i].index == i);
+	for (size_t i = 0; i < this->states.size(); i++) {
+		if (this->states[i].index != i)
+			throw std::logic_error(
+				"State.index must correspond to its ordinal number in the states vector");
 	}
 }
 
@@ -1922,15 +1925,6 @@ TransformationMonoid FiniteAutomaton::get_syntactic_monoid() const {
 	return syntactic_monoid;
 }
 
-void set_result(int& res, int size,						  // NOLINT(runtime/references)
-				vector<pair<int, int>>& result_yx,		  // NOLINT(runtime/references)
-				vector<pair<int, int>>& temp_result_yx) { // NOLINT(runtime/references)
-	if (size > res) {
-		res = size;
-		result_yx = temp_result_yx;
-	}
-}
-
 void find_maximum_identity_matrix(vector<int>& rows,		   // NOLINT(runtime/references)
 								  vector<vector<bool>>& table, // NOLINT(runtime/references)
 								  int& res,					   // NOLINT(runtime/references)
@@ -1938,6 +1932,16 @@ void find_maximum_identity_matrix(vector<int>& rows,		   // NOLINT(runtime/refer
 								  vector<pair<int, int>>& result_yx, // NOLINT(runtime/references)
 								  vector<pair<int, int>> temp_result_yx, vector<bool> used_x,
 								  vector<bool> used_y, int unused_x, int unused_y) {
+	auto set_result = [](int& res, // NOLINT(runtime/references)
+						 int size,
+						 vector<pair<int, int>>& result_yx,		   // NOLINT(runtime/references)
+						 vector<pair<int, int>>& temp_result_yx) { // NOLINT(runtime/references)
+		if (size > res) {
+			res = size;
+			result_yx = temp_result_yx;
+		}
+	};
+
 	if (rows.empty()) {
 		set_result(res, size, result_yx, temp_result_yx);
 		return;
@@ -2406,6 +2410,8 @@ bool FiniteAutomaton::is_empty() const {
 */
 
 bool FiniteAutomaton::is_finite() const {
+	if (states.empty())
+		return false;
 
 	// множество посещённых состояния во время bfs
 	std::unordered_set<int> visited_states{};
@@ -2413,7 +2419,7 @@ bool FiniteAutomaton::is_finite() const {
 	std::queue<int> state_queue{{get_initial()}};
 
 	// bfs обход состояний автомата
-	while (state_queue.size() != 0) {
+	while (!state_queue.empty()) {
 		int actual_state = state_queue.front();
 		state_queue.pop();
 
@@ -2450,7 +2456,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		if (log) {
 			log->set_parameter("result", "Error: Automaton must be finite");
 		}
-		throw std::logic_error("Automaton is unfinite");
+		throw std::logic_error("to_regex: automaton must be finite");
 	}
 
 	// a system of linear algebraic equations
