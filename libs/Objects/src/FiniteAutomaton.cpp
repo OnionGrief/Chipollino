@@ -2336,7 +2336,7 @@ pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 		// состояния
 		set<int> reach_eps;
 		if (state.transitions.count(Symbol::epsilon()))
-			trans = state.transitions.at(Symbol::epsilon());
+			reach_eps = state.transitions.at(Symbol::epsilon());
 		for (int eps_tr : reach_eps) {
 			if (visited_eps.find({parsed_len, state.index, eps_tr}) == visited_eps.end()) {
 				stack_state.push({parsed_len, states[eps_tr]});
