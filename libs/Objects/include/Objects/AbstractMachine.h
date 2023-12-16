@@ -18,6 +18,7 @@ class State {
 	bool operator==(const State& other) const;
 };
 
+// TODO если меняешь структуру, поменяй FA_model в TransformationMonoid.h
 class AbstractMachine : public BaseObject {
   protected:
 	int initial_state = 0;
@@ -26,4 +27,7 @@ class AbstractMachine : public BaseObject {
 	AbstractMachine() = default;
 	AbstractMachine(int initial_state, std::shared_ptr<Language>);
 	AbstractMachine(int initial_state, std::set<Symbol>);
+	
+	// начальное состояние
+	int get_initial() const;
 };

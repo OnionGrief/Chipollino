@@ -1075,9 +1075,12 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		}
 		return fa.language->get_one_unambiguous_regex();
 	}
-	if (!fa.language->is_one_unambiguous_flag_cached())
-		fa.is_one_unambiguous();
-	if (!fa.language->get_one_unambiguous_flag()) {
+	bool is_one_unambiguous;
+	if (fa.language->is_one_unambiguous_flag_cached())
+		is_one_unambiguous = fa.language->get_one_unambiguous_flag();
+	else
+		is_one_unambiguous = fa.is_one_unambiguous();
+	if (!is_one_unambiguous) {
 		if (log) {
 			log->set_parameter("result", "Язык не является 1-однозначным");
 		}
@@ -1161,7 +1164,10 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		}
 		set<int> reachable_by_consistent_symb;
 		for (int i = 0; i < min_fa.size(); i++) {
-			for (int consistent_symb_transition : min_fa.states[i].transitions[consistent_symb]) {
+			if (!min_fa.states[i].transitions.count(consistent_symb))
+				continue;
+			for (int consistent_symb_transition :
+				 min_fa.states[i].transitions.at(consistent_symb)) {
 				reachable_by_consistent_symb.insert(consistent_symb_transition);
 			}
 		}
@@ -1233,7 +1239,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	if (counter)
 		regl += ")*";
 	language->set_one_unambiguous_regex(regl, fa.language);
-	Regex res = language->get_one_unambiguous_regex();
+	Regex res = Regex(regl, fa.language);
 	if (log) {
 		log->set_parameter("result", res);
 	}
