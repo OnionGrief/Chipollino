@@ -20,6 +20,18 @@ bool MFATransition::operator==(const MFATransition& other) const {
 	return (to == other.to) && (memory_actions == other.memory_actions);
 }
 
+MFATransition::MFATransition(int to, const unordered_set<int>& opens,
+							 const unordered_set<int>& closes)
+	: to(to) {
+	for (auto num : opens)
+		memory_actions[num] = MFATransition::open;
+	for (auto num : closes) {
+		if (memory_actions.count(num))
+			std::cerr << "!!! Конфликт действий с ячейкой памяти !!!";
+		memory_actions[num] = MFATransition::close;
+	}
+}
+
 std::size_t MFATransition::Hasher::operator()(const MFATransition& t) const {
 	std::size_t result = std::hash<int>{}(t.to);
 	for (const auto& pair : t.memory_actions) {
@@ -30,12 +42,21 @@ std::size_t MFATransition::Hasher::operator()(const MFATransition& t) const {
 
 MFAState::MFAState(bool is_terminal) : State::State(0, {}, is_terminal) {}
 
+MFAState::MFAState(int index, std::string identifier, bool is_terminal,
+				   MFAState::Transitions transitions)
+	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
+}
+
 void MFAState::set_transition(const MFATransition& to, const Symbol& symbol) {
 	transitions[symbol].insert(to);
 }
 
 string MFAState::to_txt() const {
 	return {};
+}
+
+bool MFAState::operator==(const MFAState& other) const {
+	return State::operator==(other) && transitions == other.transitions;
 }
 
 string MFATransition::get_actions_str() const {
@@ -122,4 +143,12 @@ string MemoryFiniteAutomaton::to_txt() const {
 
 	ss << "}\n";
 	return ss.str();
+}
+
+size_t MemoryFiniteAutomaton::size(iLogTemplate* log) const {
+	return states.size();
+}
+
+std::vector<MFAState> MemoryFiniteAutomaton::get_states() const {
+	return states;
 }

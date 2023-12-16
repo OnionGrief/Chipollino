@@ -1,4 +1,15 @@
 #include "UnitTestsApp/UnitTests.h"
+#include "AutomatonToImage/AutomatonToImage.h"
+#include "Interpreter/Interpreter.h"
+#include "Objects/AlgExpression.h"
+#include "Objects/BackRefRegex.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Grammar.h"
+#include "Objects/Language.h"
+#include "Objects/MemoryFiniteAutomaton.h"
+#include "Objects/Regex.h"
+#include "Objects/TransformationMonoid.h"
+#include "Tester/Tester.h"
 
 using std::map;
 using std::set;
@@ -317,7 +328,6 @@ TEST(TestCaseName, Test_pump_length) {
 }
 
 TEST(TestCaseName, Test_fa_to_pgrammar) {
-	// cout << "fa to grammar\n";
 	vector<FAState> states1;
 	for (int i = 0; i < 5; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
@@ -471,6 +481,36 @@ TEST(TestCaseName, Test_GlaisterShallit) {
 	check_classes_number("a(b|c)(a|b)(b|c)", 5);
 	check_classes_number("abc|bca", 6);
 	check_classes_number("abc|bbc", 4);
+}
+
+TEST(TestMFA, Test_to_mfa) {
+	vector<MFAState> states = BackRefRegex("[a|b]:1*").to_mfa().get_states();
+	ASSERT_EQ(states.size(), 4);
+	ASSERT_EQ(states[0],
+			  MFAState(0,
+					   "0",
+					   true,
+					   {{"a", {MFATransition(1, {1}, {})}}, {"b", {MFATransition(2, {1}, {})}}}));
+	ASSERT_EQ(states[1],
+			  MFAState(1, "1", false, {{Symbol::epsilon(), {MFATransition(3, {}, {1})}}}));
+	ASSERT_EQ(states[2],
+			  MFAState(2, "2", false, {{Symbol::epsilon(), {MFATransition(3, {}, {1})}}}));
+	ASSERT_EQ(states[3],
+			  MFAState(3,
+					   "3",
+					   true,
+					   {{"a", {MFATransition(1, {1}, {})}}, {"b", {MFATransition(2, {1}, {})}}}));
+
+	states = BackRefRegex("([&2]:1[&1a]:2)*").to_mfa().get_states();
+	ASSERT_EQ(states.size(), 6);
+	ASSERT_EQ(states[0], MFAState(0, "0", true, {{"&2", {MFATransition(1, {1}, {})}}}));
+	ASSERT_EQ(states[1],
+			  MFAState(1, "1", false, {{Symbol::epsilon(), {MFATransition(2, {}, {1})}}}));
+	ASSERT_EQ(states[2], MFAState(2, "2", false, {{"&1", {MFATransition(3, {2}, {})}}}));
+	ASSERT_EQ(states[3], MFAState(3, "3", false, {{"a", {MFATransition(4, {}, {})}}}));
+	ASSERT_EQ(states[4],
+			  MFAState(4, "4", false, {{Symbol::epsilon(), {MFATransition(5, {}, {2})}}}));
+	ASSERT_EQ(states[5], MFAState(5, "5", true, {{"&2", {MFATransition(1, {1}, {})}}}));
 }
 
 TEST(TestLanguage, Test_caching) {

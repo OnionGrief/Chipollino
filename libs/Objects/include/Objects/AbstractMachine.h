@@ -15,6 +15,7 @@ class State {
 	State(int index, std::string identifier, bool is_terminal);
 
 	virtual std::string to_txt() const = 0;
+	bool operator==(const State& other) const;
 };
 
 // TODO если меняешь структуру, поменяй FA_model в TransformationMonoid.h

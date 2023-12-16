@@ -30,9 +30,9 @@ class FAState : public State {
 	FAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
 	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal,
 			Transitions transitions);
-	void set_transition(int, const Symbol&);
 
 	std::string to_txt() const override;
+	void set_transition(int, const Symbol&);
 };
 
 // TODO если меняешь структуру, поменяй FA_model в TransformationMonoid.h
@@ -155,7 +155,7 @@ class FiniteAutomaton : public AbstractMachine {
 	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
-	// возвращает количество состояний (пердикат States)
+	// возвращает количество состояний (метод States)
 	size_t size(iLogTemplate* log = nullptr) const;
 	// проверка на пустоту
 	bool is_empty() const;

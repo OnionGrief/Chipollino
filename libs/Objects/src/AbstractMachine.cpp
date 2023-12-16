@@ -10,6 +10,11 @@ State::State() : index(0), is_terminal(false) {}
 State::State(int index, string identifier, bool is_terminal)
 	: index(index), identifier(std::move(identifier)), is_terminal(is_terminal) {}
 
+bool State::operator==(const State& other) const {
+	return index == other.index && identifier == other.identifier &&
+		   is_terminal == other.is_terminal;
+}
+
 AbstractMachine::AbstractMachine(int initial_state, std::shared_ptr<Language> language)
 	: BaseObject(std::move(language)), initial_state(initial_state) {}
 
