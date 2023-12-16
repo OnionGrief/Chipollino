@@ -11,8 +11,18 @@ Symbol::Symbol(const string& s) : symbol(s), value(s) {}
 Symbol::Symbol(const char* c) : symbol(c), value(c) {}
 Symbol::Symbol(char c) : symbol(string(1, c)), value(string(1, c)) {}
 
+Symbol Symbol::Ref(int number) {
+	Symbol s;
+	s.is_reference = true;
+	s.symbol = to_string(number);
+	s.value = '&' + s.symbol;
+	return s;
+}
+
 void Symbol::update_value() {
 	std::stringstream ss;
+	if (is_reference)
+		ss << '&';
 	ss << symbol;
 
 	for (const auto& i : annote_numbers)
@@ -39,14 +49,6 @@ Symbol& Symbol::operator=(const char* c) {
 Symbol& Symbol::operator=(char c) {
 	symbol = c;
 	value = symbol;
-	return *this;
-}
-
-Symbol& Symbol::operator=(const Symbol& other) {
-	symbol = other.symbol;
-	annote_numbers = other.annote_numbers;
-	linearize_numbers = other.linearize_numbers;
-	value = other.value;
 	return *this;
 }
 
@@ -116,6 +118,10 @@ bool Symbol::is_annotated() const {
 
 bool Symbol::is_linearized() const {
 	return !linearize_numbers.empty();
+}
+
+bool Symbol::is_ref() const {
+	return is_reference;
 }
 
 int Symbol::last_linearization_number() {

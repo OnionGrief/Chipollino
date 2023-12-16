@@ -90,6 +90,7 @@ class FiniteAutomaton : public AbstractMachine {
 	std::string to_txt() const override;
 
 	std::vector<FAState> get_states() const;
+	size_t size(iLogTemplate* log = nullptr) const override;
 
 	// детерминизация ДКА
 	FiniteAutomaton determinize(bool is_trim = false, iLogTemplate* log = nullptr) const;
@@ -144,7 +145,7 @@ class FiniteAutomaton : public AbstractMachine {
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&,
 						  iLogTemplate* log = nullptr);
 	// проверка автомата на детерминированность
-	bool is_deterministic(iLogTemplate* log = nullptr) const;
+	bool is_deterministic(iLogTemplate* log = nullptr) const override;
 	// проверка НКА на семантический детерминизм
 	bool semdet(iLogTemplate* log = nullptr) const;
 	// проверяет, распознаёт ли автомат слово
@@ -155,8 +156,6 @@ class FiniteAutomaton : public AbstractMachine {
 	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
-	// возвращает количество состояний (метод States)
-	size_t size(iLogTemplate* log = nullptr) const;
 	// проверка на пустоту
 	bool is_empty() const;
 	// проверка автомата на финальность

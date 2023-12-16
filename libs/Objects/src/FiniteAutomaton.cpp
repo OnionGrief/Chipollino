@@ -18,6 +18,7 @@
 #include "Objects/TransformationMonoid.h"
 #include "Objects/iLogTemplate.h"
 
+using std::cerr;
 using std::cout;
 using std::make_shared;
 using std::map;
@@ -1688,6 +1689,7 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1, const FiniteAutomat
 								 iLogTemplate* log) {
 	bool result = true;
 	if (fa1.language == fa2.language) {
+		cerr << "FiniteAutomaton::equivalent: finite automatons are in the same language\n";
 		if (log)
 			log->set_parameter("samelanguage",
 							   "(!) автоматы изначально принадлежат одному языку"); // TODO:
@@ -2360,12 +2362,12 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	}
 	bool result = true;
 	for (const auto& state : states) {
-		for (const auto& elem : state.transitions) {
-			if (elem.first == Symbol::epsilon()) {
+		for (const auto& [symbol, states_to] : state.transitions) {
+			if (symbol.is_epsilon()) {
 				result = false;
 				break;
 			}
-			if (elem.second.size() > 1) {
+			if (states_to.size() > 1) {
 				result = false;
 				break;
 			}

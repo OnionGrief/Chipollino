@@ -326,7 +326,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 
 			lexeme.type = Lexeme::Type::ref;
 			// не будет входить в алфавит, нужно только для обозначения перехода в MFA
-			lexeme.symbol = '&' + to_string(lexeme.number);
+			lexeme.symbol = Symbol::Ref(lexeme.number);
 			regex_is_eps = false;
 			brackets_are_empty = false;
 			break;

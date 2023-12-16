@@ -926,6 +926,7 @@ bool Regex::equal(const Regex& r1, const Regex& r2, iLogTemplate* log) {
 bool Regex::equivalent(const Regex& r1, const Regex& r2, iLogTemplate* log) {
 	bool result = true;
 	if (r1.language == r2.language) {
+		cerr << "Regex::equivalent: regular expressions are in the same language\n";
 		if (log)
 			log->set_parameter("samelanguage",
 							   "(!) регулярные выражения изначально принадлежат одному языку");

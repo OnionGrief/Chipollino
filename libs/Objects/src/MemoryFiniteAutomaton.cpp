@@ -2,7 +2,9 @@
 #include <sstream>
 #include <utility>
 
+#include "Objects/Language.h"
 #include "Objects/MemoryFiniteAutomaton.h"
+#include "Objects/iLogTemplate.h"
 
 using std::pair;
 using std::string;
@@ -151,4 +153,27 @@ size_t MemoryFiniteAutomaton::size(iLogTemplate* log) const {
 
 std::vector<MFAState> MemoryFiniteAutomaton::get_states() const {
 	return states;
+}
+
+bool MemoryFiniteAutomaton::is_deterministic(iLogTemplate* log) const {
+	if (log) {
+		//		log->set_parameter("oldautomaton", *this);
+	}
+	bool result = true;
+	for (const auto& state : states) {
+		for (const auto& [symbol, states_to] : state.transitions) {
+			if ((symbol.is_epsilon() || symbol.is_ref()) && state.transitions.size() > 1) {
+				result = false;
+				break;
+			}
+			if (states_to.size() > 1) {
+				result = false;
+				break;
+			}
+		}
+	}
+	if (log) {
+		log->set_parameter("result", result ? "True" : "False");
+	}
+	return result;
 }

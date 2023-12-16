@@ -64,7 +64,9 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	// визуализация автомата
 	std::string to_txt() const override;
 
-	// возвращает количество состояний (метод States)
-	size_t size(iLogTemplate* log = nullptr) const;
 	std::vector<MFAState> get_states() const;
+	size_t size(iLogTemplate* log = nullptr) const override;
+
+	// проверка автомата на детерминированность
+	bool is_deterministic(iLogTemplate* log = nullptr) const override;
 };

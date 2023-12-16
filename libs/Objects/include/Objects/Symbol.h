@@ -10,8 +10,10 @@ class Symbol {
 	std::vector<int> annote_numbers;
 	std::vector<int> linearize_numbers;
 	std::string symbol;
+	bool is_reference = false;
 	// symbol + разметка
 	std::string value;
+
 	void update_value();
 
   public:
@@ -25,11 +27,13 @@ class Symbol {
 
 	Symbol(const Symbol& other) = default;
 
+	static Symbol Ref(int number);
+
 	Symbol& operator=(const std::string& s);
 	Symbol& operator=(const char* c);
 	Symbol& operator=(char c);
-	Symbol& operator=(const Symbol& other);
-	// многие функции все еще работают с символами алфавита как со строками
+	Symbol& operator=(const Symbol& other) = default;
+	// многие функции все еще работают с символами алфавита, как со строками
 	// для них добавлено преобразование типов
 	operator std::string() const;
 
@@ -48,6 +52,7 @@ class Symbol {
 	void delinearize();
 	bool is_annotated() const;
 	bool is_linearized() const;
+	bool is_ref() const;
 
 	int last_linearization_number();
 
