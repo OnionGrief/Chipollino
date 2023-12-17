@@ -446,7 +446,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 			is_terminal = true;
 		}
 
-		FAState s = {i, {i}, to_string(i), is_terminal, FAState::Transitions()};
+		FAState s(i, set<int>({i}), to_string(i), is_terminal);
 		states.push_back(s);
 	}
 

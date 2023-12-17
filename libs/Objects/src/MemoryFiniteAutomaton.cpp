@@ -44,6 +44,9 @@ std::size_t MFATransition::Hasher::operator()(const MFATransition& t) const {
 
 MFAState::MFAState(bool is_terminal) : State::State(0, {}, is_terminal) {}
 
+MFAState::MFAState(int index, std::string identifier, bool is_terminal)
+	: State::State(index, std::move(identifier), is_terminal) {}
+
 MFAState::MFAState(int index, std::string identifier, bool is_terminal,
 				   MFAState::Transitions transitions)
 	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
@@ -110,7 +113,19 @@ MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, vector<MFAState>
 											 std::shared_ptr<Language> language)
 	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {
 	for (int i = 0; i < this->states.size(); i++) {
-		assert(this->states[i].index == i);
+		if (this->states[i].index != i)
+			throw std::logic_error(
+				"State.index must correspond to its ordinal number in the states vector");
+	}
+}
+
+MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
+											 std::set<Symbol> alphabet)
+	: AbstractMachine(initial_state, std::move(alphabet)), states(std::move(states)) {
+	for (int i = 0; i < this->states.size(); i++) {
+		if (this->states[i].index != i)
+			throw std::logic_error(
+				"State.index must correspond to its ordinal number in the states vector");
 	}
 }
 
@@ -176,4 +191,74 @@ bool MemoryFiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
+}
+
+MemoryFiniteAutomaton MemoryFiniteAutomaton::add_trap_state(iLogTemplate* log) const {
+	if (!is_deterministic())
+		throw std::logic_error("add_trap_state: mfa must be deterministic");
+
+	vector<MFAState> new_states = states;
+	bool add_trap = false;
+	MetaInfo new_meta;
+	int count = static_cast<int>(size());
+	for (auto& state : new_states) {
+		for (const Symbol& symb : language->get_alphabet()) {
+			if (state.transitions.size() == 1 && (state.transitions.begin()->first.is_epsilon() ||
+												  state.transitions.begin()->first.is_ref()))
+				continue;
+			if (!state.transitions.count(symb)) {
+				state.set_transition(MFATransition(count), symb);
+				new_meta.upd(EdgeMeta{state.index, count, symb, MetaInfo::trap_color});
+				add_trap = true;
+			}
+		}
+	}
+
+	if (add_trap) {
+		new_states.emplace_back(count, "", false);
+		for (const Symbol& symb : language->get_alphabet()) {
+			new_states[count].set_transition(MFATransition(count), symb);
+			new_meta.upd(EdgeMeta{count, count, symb, MetaInfo::trap_color});
+		}
+	}
+
+	MemoryFiniteAutomaton new_mfa(initial_state, new_states, language);
+	if (log) {
+		//		log->set_parameter("oldautomaton", *this);
+		//		log->set_parameter("result", new_mfa, new_meta);
+	}
+	return new_mfa;
+}
+
+MemoryFiniteAutomaton MemoryFiniteAutomaton::get_just_one_total_trap(
+	const std::shared_ptr<Language>& language) {
+	vector<MFAState> states;
+	states.emplace_back(0, "", false);
+	for (const Symbol& symb : language->get_alphabet()) {
+		states[0].set_transition(MFATransition(0), symb);
+	}
+
+	return {0, states, language};
+}
+
+MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const {
+	if (!is_deterministic())
+		throw std::logic_error("add_trap_state: automaton must be deterministic");
+
+	MemoryFiniteAutomaton new_mfa(initial_state, states, language->get_alphabet());
+	new_mfa = new_mfa.add_trap_state();
+	int final_states_counter = 0;
+	for (int i = 0; i < new_mfa.size(); i++) {
+		new_mfa.states[i].is_terminal = !new_mfa.states[i].is_terminal;
+		if (new_mfa.states[i].is_terminal)
+			final_states_counter++;
+	}
+	if (!final_states_counter)
+		new_mfa = MemoryFiniteAutomaton::get_just_one_total_trap(new_mfa.language);
+
+	if (log) {
+		//		log->set_parameter("oldautomaton", *this);
+		//		log->set_parameter("result", new_mfa);
+	}
+	return new_mfa;
 }

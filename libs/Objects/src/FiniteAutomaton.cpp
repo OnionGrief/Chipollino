@@ -36,6 +36,9 @@ FAState::FAState(int index, string identifier, bool is_terminal, Transitions tra
 	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
 }
 
+FAState::FAState(int index, set<int> label, string identifier, bool is_terminal)
+	: State::State(index, std::move(identifier), is_terminal), label(std::move(label)) {}
+
 FAState::FAState(int index, set<int> label, string identifier, bool is_terminal,
 				 Transitions transitions)
 	: State::State(index, std::move(identifier), is_terminal), label(std::move(label)),
@@ -703,26 +706,64 @@ FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1, const Fi
 	return new_dfa;
 }
 
+FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
+	if (!is_deterministic())
+		throw std::logic_error("add_trap_state: fa must be deterministic");
+
+	vector<FAState> new_states = states;
+	bool add_trap = false;
+	MetaInfo new_meta;
+	int count = static_cast<int>(size());
+	for (auto& state : new_states) {
+		for (const Symbol& symb : language->get_alphabet()) {
+			if (!state.transitions.count(symb)) {
+				state.set_transition(count, symb);
+				new_meta.upd(EdgeMeta{state.index, count, symb, MetaInfo::trap_color});
+				add_trap = true;
+			}
+		}
+	}
+
+	if (add_trap) {
+		new_states.emplace_back(count, set<int>({count}), "", false);
+		for (const Symbol& symb : language->get_alphabet()) {
+			new_states[count].set_transition(count, symb);
+			new_meta.upd(EdgeMeta{count, count, symb, MetaInfo::trap_color});
+		}
+	}
+
+	FiniteAutomaton new_dfa(initial_state, new_states, language);
+	if (log) {
+		log->set_parameter("oldautomaton", *this);
+		log->set_parameter("result", new_dfa, new_meta);
+	}
+	return new_dfa;
+}
+
 FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
-	FiniteAutomaton new_dfa = FiniteAutomaton(initial_state, states, language->get_alphabet());
+	if (!is_deterministic())
+		throw std::logic_error("add_trap_state: automaton must be deterministic");
+
+	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	new_dfa = new_dfa.add_trap_state();
+	int final_states_counter = 0;
 	for (int i = 0; i < new_dfa.size(); i++) {
 		new_dfa.states[i].is_terminal = !new_dfa.states[i].is_terminal;
-	}
-	int final_states_counter = 0;
-	for (int i = 0; i < new_dfa.size(); i++)
 		if (new_dfa.states[i].is_terminal)
 			final_states_counter++;
+	}
 	if (!final_states_counter)
 		new_dfa = new_dfa.minimize();
+
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
 		log->set_parameter("result", new_dfa);
 	}
 	return new_dfa;
 }
+
 FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
-	FiniteAutomaton enfa = FiniteAutomaton(states.size(), states, language->get_alphabet());
+	FiniteAutomaton enfa(size(), states, language->get_alphabet());
 	int final_states_counter = 0;
 	for (int i = 0; i < enfa.size(); i++) {
 		if (enfa.states[i].is_terminal) {
@@ -767,41 +808,6 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 		log->set_parameter("result", enfa);
 	}
 	return enfa;
-}
-
-FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
-	FiniteAutomaton new_dfa(initial_state, states, language);
-	bool flag = true;
-	MetaInfo new_meta;
-	int count = static_cast<int>(new_dfa.size());
-	for (int i = 0; i < count; i++) {
-		for (const Symbol& symb : language->get_alphabet()) {
-			if (!new_dfa.states[i].transitions.count(symb)) {
-				if (flag) {
-					new_dfa.states[i].set_transition(new_dfa.size(), symb);
-					new_dfa.states.push_back({count, {count}, "", false, FAState::Transitions()});
-					new_meta.upd(
-						EdgeMeta{new_dfa.states[i].index, count, symb, MetaInfo::trap_color});
-				} else {
-					new_dfa.states[i].set_transition(count, symb);
-					new_meta.upd(
-						EdgeMeta{new_dfa.states[i].index, count, symb, MetaInfo::trap_color});
-				}
-				flag = false;
-			}
-		}
-	}
-	if (!flag) {
-		for (const Symbol& symb : language->get_alphabet()) {
-			new_dfa.states[count].transitions[symb].insert(count);
-			new_meta.upd(EdgeMeta{count, count, symb, MetaInfo::trap_color});
-		}
-	}
-	if (log) {
-		log->set_parameter("oldautomaton", *this);
-		log->set_parameter("result", new_dfa, new_meta);
-	}
-	return new_dfa;
 }
 
 FiniteAutomaton FiniteAutomaton::remove_trap_states(iLogTemplate* log) const {

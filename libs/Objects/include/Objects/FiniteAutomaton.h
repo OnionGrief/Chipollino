@@ -28,6 +28,7 @@ class FAState : public State {
 
 	FAState(int index, std::string identifier, bool is_terminal);
 	FAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
+	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal);
 	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal,
 			Transitions transitions);
 
@@ -119,8 +120,8 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton complement(iLogTemplate* log = nullptr) const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
 	FiniteAutomaton reverse(iLogTemplate* log = nullptr) const; // меняет язык
-	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
-	// себя)
+	// добавление ловушки в ДКА
+	// (нетерминальное состояние с переходами только в себя)
 	FiniteAutomaton add_trap_state(iLogTemplate* log = nullptr) const;
 	// удаление ловушек
 	FiniteAutomaton remove_trap_states(iLogTemplate* log = nullptr) const;

@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -42,6 +43,7 @@ class MFAState : public State {
 
 	Transitions transitions;
 	explicit MFAState(bool is_terminal);
+	MFAState(int index, std::string identifier, bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
 
 	std::string to_txt() const override;
@@ -53,11 +55,14 @@ class MemoryFiniteAutomaton : public AbstractMachine {
   private:
 	std::vector<MFAState> states;
 
+	static MemoryFiniteAutomaton get_just_one_total_trap(const std::shared_ptr<Language>& language);
+
   public:
 	MemoryFiniteAutomaton();
 	MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
 						  std::shared_ptr<Language> language);
-	//	MemoryFiniteAutomaton(const MemoryFiniteAutomaton& other);
+	MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
+						  std::set<Symbol> alphabet);
 
 	// dynamic_cast unique_ptr к типу MemoryFiniteAutomaton*
 	template <typename T> MemoryFiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
@@ -67,6 +72,10 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::vector<MFAState> get_states() const;
 	size_t size(iLogTemplate* log = nullptr) const override;
 
-	// проверка автомата на детерминированность
 	bool is_deterministic(iLogTemplate* log = nullptr) const override;
+	// добавление ловушки
+	// (нетерминальное состояние с переходами только в себя)
+	MemoryFiniteAutomaton add_trap_state(iLogTemplate* log = nullptr) const;
+	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
+	MemoryFiniteAutomaton complement(iLogTemplate* log = nullptr) const; // меняет язык
 };
