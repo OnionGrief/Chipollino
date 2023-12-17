@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "AlgExpression.h"
@@ -14,6 +16,10 @@ class BackRefRegex : public AlgExpression {
 	int cell_number = 0;
 	// номера ячеек, в которых "находится" нода (лежит в поддеревьях memoryWriter с этими номерами)
 	std::unordered_set<int> in_cells;
+	// номера ячеек, содержимое которых может начинаться на эту ноду
+	std::unordered_set<int> first_in_cells;
+	// номера ячеек, содержимое которых может заканчиваться на эту ноду
+	std::unordered_set<int> last_in_cells;
 
 	void copy(const AlgExpression*) override; // NOLINT(build/include_what_you_use)
 	// возвращает указатель на new BackRefRegex
@@ -28,6 +34,19 @@ class BackRefRegex : public AlgExpression {
 	// возвращает вектор состояний без индексов и идентификаторов
 	// 0-e состояние начальное
 	std::vector<MFAState> _to_mfa() const;
+
+	// возвращает вектор листьев дерева
+	// устанавливает для них first_in_cells и last_in_cells
+	std::vector<BackRefRegex*> preorder_traversal(std::unordered_set<int> _in_cells,
+												  std::unordered_set<int> _first_in_cells,
+												  std::unordered_set<int> _last_in_cells);
+
+	// возвращает номера ячеек памяти, над которыми производится итерация
+	void get_cells_under_iteration(std::unordered_set<int>&) const;
+	// для каждой ноды возвращает множество номеров нод, которым она может предшествовать
+	// для каждого перехода определяет, над какими ячейками он является итерацией
+	std::unordered_map<int, std::vector<std::pair<int, std::unordered_set<int>>>> get_follow()
+		const;
 
   public:
 	BackRefRegex() = default;
@@ -47,4 +66,5 @@ class BackRefRegex : public AlgExpression {
 	std::string to_txt() const override;
 
 	MemoryFiniteAutomaton to_mfa(iLogTemplate* log = nullptr) const;
+	MemoryFiniteAutomaton to_mfa_additional(iLogTemplate* log = nullptr) const;
 };

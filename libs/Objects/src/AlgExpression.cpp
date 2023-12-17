@@ -75,6 +75,10 @@ AlgExpression& AlgExpression::operator=(const AlgExpression& other) {
 	return *this;
 }
 
+Symbol AlgExpression::get_symbol() {
+	return symbol;
+}
+
 void AlgExpression::set_language(const set<Symbol>& _alphabet) {
 	alphabet = _alphabet;
 	language = make_shared<Language>(alphabet);
@@ -603,22 +607,6 @@ AlgExpression* AlgExpression::scan_par(const vector<AlgExpression::Lexeme>& lexe
 	return p;
 }
 
-bool AlgExpression::contains_eps() const {
-	switch (type) {
-	case Type::alt:
-		return term_l->contains_eps() || term_r->contains_eps();
-	case conc:
-		return term_l->contains_eps() && term_r->contains_eps();
-	case Type::star:
-	case Type::eps:
-		return true;
-	case Type::memoryWriter:
-		return term_l->contains_eps();
-	default:
-		return false;
-	}
-}
-
 bool AlgExpression::equality_checker(const AlgExpression* expr1, const AlgExpression* expr2) {
 	if (expr1 == nullptr && expr2 == nullptr)
 		return true;
@@ -668,9 +656,24 @@ string AlgExpression::get_iterated_word(int n) const {
 	return str;
 }
 
+bool AlgExpression::contains_eps() const {
+	switch (type) {
+	case Type::alt:
+		return term_l->contains_eps() || term_r->contains_eps();
+	case Type::conc:
+		return term_l->contains_eps() && term_r->contains_eps();
+	case Type::star:
+	case Type::eps:
+		return true;
+	case Type::memoryWriter:
+		return term_l->contains_eps();
+	default:
+		return false;
+	}
+}
+
 vector<AlgExpression*> AlgExpression::get_first_nodes() {
-	vector<AlgExpression*> l;
-	vector<AlgExpression*> r;
+	vector<AlgExpression*> l, r;
 	switch (type) {
 	case Type::alt:
 		l = term_l->get_first_nodes();
@@ -695,8 +698,7 @@ vector<AlgExpression*> AlgExpression::get_first_nodes() {
 }
 
 vector<AlgExpression*> AlgExpression::get_last_nodes() {
-	vector<AlgExpression*> l;
-	vector<AlgExpression*> r;
+	vector<AlgExpression*> l, r;
 	switch (type) {
 	case Type::alt:
 		l = term_l->get_last_nodes();
@@ -704,12 +706,12 @@ vector<AlgExpression*> AlgExpression::get_last_nodes() {
 		l.insert(l.end(), r.begin(), r.end());
 		return l;
 	case Type::conc:
-		l = term_r->get_last_nodes();
+		r = term_r->get_last_nodes();
 		if (term_r->contains_eps()) {
-			r = term_l->get_last_nodes();
-			l.insert(l.end(), r.begin(), r.end());
+			l = term_l->get_last_nodes();
+			r.insert(r.end(), l.begin(), l.end());
 		}
-		return l;
+		return r;
 	case Type::star:
 	case Type::memoryWriter:
 		return term_l->get_last_nodes();
@@ -718,55 +720,4 @@ vector<AlgExpression*> AlgExpression::get_last_nodes() {
 	default:
 		return {this};
 	}
-}
-
-unordered_map<int, vector<int>> AlgExpression::pairs() const {
-	unordered_map<int, vector<int>> l;
-	unordered_map<int, vector<int>> r;
-	vector<AlgExpression*> last;
-	vector<AlgExpression*> first;
-	switch (type) {
-	case Type::alt:
-		l = term_l->pairs();
-		r = term_r->pairs();
-		for (const auto& i : r) {
-			l[i.first].insert(l[i.first].end(), i.second.begin(), i.second.end());
-		}
-
-		return l;
-	case Type::conc:
-		l = term_l->pairs();
-		r = term_r->pairs();
-		for (const auto& i : r) {
-			l[i.first].insert(l[i.first].end(), i.second.begin(), i.second.end());
-		}
-
-		last = term_l->get_last_nodes();
-		first = term_r->get_first_nodes();
-		for (auto& i : last) {
-			for (auto& j : first) {
-				l[i->symbol.last_linearization_number()].push_back(
-					j->symbol.last_linearization_number());
-			}
-		}
-
-		return l;
-	case Type::star:
-		l = term_l->pairs();
-		last = term_l->get_last_nodes();
-		first = term_l->get_first_nodes();
-		for (auto& i : last) {
-			for (auto& j : first) {
-				l[i->symbol.last_linearization_number()].push_back(
-					j->symbol.last_linearization_number());
-			}
-		}
-
-		return l;
-	case Type::memoryWriter:
-		return term_l->pairs();
-	default:
-		break;
-	}
-	return {};
 }

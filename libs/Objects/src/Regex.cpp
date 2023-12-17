@@ -324,7 +324,7 @@ FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
 
 Regex Regex::linearize(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = Regex::cast(temp_copy.pre_order_travers());
+	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
 	set<Symbol> new_alphabet;
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->symbol.linearize(i);
@@ -340,7 +340,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 
 Regex Regex::delinearize(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = cast(temp_copy.pre_order_travers());
+	vector<Regex*> list = cast(temp_copy.preorder_traversal());
 	set<Symbol> new_alphabet;
 	for (auto& i : list) {
 		i->symbol.delinearize();
@@ -354,7 +354,7 @@ Regex Regex::delinearize(iLogTemplate* log) const {
 	return temp_copy;
 }
 
-vector<Regex*> Regex::pre_order_travers() {
+vector<Regex*> Regex::preorder_traversal() {
 	vector<Regex*> res;
 	if (AlgExpression::symb == type) {
 		res.push_back(this);
@@ -362,61 +362,105 @@ vector<Regex*> Regex::pre_order_travers() {
 	}
 
 	if (term_l) {
-		vector<Regex*> l = cast(term_l)->pre_order_travers();
+		vector<Regex*> l = cast(term_l)->preorder_traversal();
 		res.insert(res.end(), l.begin(), l.end());
 	}
 
 	if (term_r) {
-		vector<Regex*> r = cast(term_r)->pre_order_travers();
+		vector<Regex*> r = cast(term_r)->preorder_traversal();
 		res.insert(res.end(), r.begin(), r.end());
 	}
 
 	return res;
 }
 
+unordered_map<int, vector<int>> Regex::get_follow() const {
+	unordered_map<int, vector<int>> l, r;
+	vector<AlgExpression*> first, last;
+	switch (type) {
+	case Type::alt:
+		l = cast(term_l)->get_follow();
+		r = cast(term_r)->get_follow();
+		for (const auto& i : r) {
+			l[i.first].insert(l[i.first].end(), i.second.begin(), i.second.end());
+		}
+
+		return l;
+	case Type::conc:
+		l = cast(term_l)->get_follow();
+		r = cast(term_r)->get_follow();
+		for (const auto& i : r) {
+			l[i.first].insert(l[i.first].end(), i.second.begin(), i.second.end());
+		}
+
+		last = cast(term_l)->get_last_nodes();
+		first = cast(term_r)->get_first_nodes();
+		for (auto& i : last) {
+			for (auto& j : first) {
+				l[i->get_symbol().last_linearization_number()].push_back(
+					j->get_symbol().last_linearization_number());
+			}
+		}
+
+		return l;
+	case Type::star:
+		l = cast(term_l)->get_follow();
+		last = cast(term_l)->get_last_nodes();
+		first = cast(term_l)->get_first_nodes();
+		for (auto& i : last) {
+			for (auto& j : first) {
+				l[i->get_symbol().last_linearization_number()].push_back(
+					j->get_symbol().last_linearization_number());
+			}
+		}
+
+		return l;
+	default:
+		return {};
+	}
+}
+
 FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> terms = temp_copy.pre_order_travers();
+	vector<Regex*> terms = temp_copy.preorder_traversal();
 	for (size_t i = 0; i < terms.size(); i++) {
-		terms[i]->symbol.linearize(i);
+		terms[i]->symbol.linearize(static_cast<int>(i));
 	}
 
-	vector<Regex*> first = cast(temp_copy.get_first_nodes()); // Множество начальных состояний
-	vector<Regex*> last = cast(temp_copy.get_last_nodes()); // Множество конечных состояний
-	unordered_map<int, vector<int>> following_states =
-		temp_copy.pairs(); // множество состояний, которым предшествует key-int
+	vector<AlgExpression*> first = temp_copy.get_first_nodes(); // Множество начальных состояний
+	vector<AlgExpression*> last = temp_copy.get_last_nodes(); // Множество конечных состояний
+	// множество состояний, которым предшествует символ (ключ - линеаризованный номер)
+	unordered_map<int, vector<int>> following_states = temp_copy.get_follow();
 	int eps_in = this->contains_eps();
-	vector<FAState> states; // Список состояний в автомате
+	vector<FAState> states; // состояния автомата
 
-	string str_first;
-	string str_end;
-	string str_pair;
+	string str_first, str_last, str_follow;
 	for (auto& i : first) {
-		str_first += string(i->symbol) + "\\ ";
+		str_first += string(i->get_symbol()) + "\\ ";
 	}
 
 	set<string> end_set;
 	for (auto& i : last) {
-		end_set.insert(string(i->symbol));
+		end_set.insert(string(i->get_symbol()));
 	}
 	for (const auto& elem : end_set) {
-		str_end = str_end + elem + "\\ ";
+		str_last += elem + "\\ ";
 	}
 	if (eps_in) {
-		str_end = "eps" + str_end;
+		str_last += Symbol::epsilon();
 	}
 
 	for (const auto& i : following_states) {
 		for (auto& to : i.second) {
-			str_pair += "(" + string(terms[i.first]->symbol) + "," + string(terms[to]->symbol) +
-						")" + "\\ ";
+			str_follow += "(" + string(terms[i.first]->symbol) + "," + string(terms[to]->symbol) +
+						  ")" + "\\ ";
 		}
 	}
 
 	// cout << temp_copy.to_str_log() << endl;
 	// cout << "First " << str_first << endl;
-	// cout << "End " << str_end << endl;
-	// cout << "Pairs " << str_pair << endl;
+	// cout << "End " << str_last << endl;
+	// cout << "Pairs " << str_follow << endl;
 
 	vector<Symbol> delinearized_symbols;
 	for (int i = 0; i < terms.size(); i++) {
@@ -426,8 +470,8 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 	FAState::Transitions start_state_transitions;
 	for (auto& i : first) {
-		start_state_transitions[delinearized_symbols[i->symbol.last_linearization_number()]].insert(
-			i->symbol.last_linearization_number() + 1);
+		start_state_transitions[delinearized_symbols[i->get_symbol().last_linearization_number()]]
+			.insert(i->get_symbol().last_linearization_number() + 1);
 	}
 
 	if (eps_in) {
@@ -438,15 +482,15 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 	std::unordered_set<int> last_lexemes;
 	for (auto& i : last) {
-		last_lexemes.insert(i->symbol.last_linearization_number());
+		last_lexemes.insert(i->get_symbol().last_linearization_number());
 	}
 
 	for (size_t i = 0; i < terms.size(); i++) {
 		Symbol& symb = terms[i]->symbol;
 		FAState::Transitions transitions;
 
-		for (int j : following_states[symb.last_linearization_number()]) {
-			transitions[delinearized_symbols[j]].insert(j + 1);
+		for (int to : following_states[symb.last_linearization_number()]) {
+			transitions[delinearized_symbols[to]].insert(to + 1);
 		}
 
 		// В last_lexemes номера конечных лексем => last_lexemes.count проверяет есть ли
@@ -460,8 +504,8 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		log->set_parameter("oldregex", temp_copy);
 		log->set_parameter("linearised regex", temp_copy.linearize());
 		log->set_parameter("first", str_first);
-		log->set_parameter("last", str_end);
-		log->set_parameter("pairs", str_pair);
+		log->set_parameter("last", str_last);
+		log->set_parameter("get_follow", str_follow);
 		log->set_parameter("result", fa);
 	}
 	return fa;
@@ -1038,7 +1082,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 Regex Regex::deannote(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = Regex::cast(temp_copy.pre_order_travers());
+	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
 	set<Symbol> lang_deann;
 	for (auto& i : list) {
 		i->symbol.deannote();

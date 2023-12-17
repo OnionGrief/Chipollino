@@ -7,6 +7,7 @@
 #include "Objects/iLogTemplate.h"
 
 using std::pair;
+using std::set;
 using std::string;
 using std::stringstream;
 using std::unordered_map;
@@ -18,13 +19,9 @@ MFATransition::MFATransition(int to) : to(to) {}
 MFATransition::MFATransition(int to, MemoryActions memory_actions)
 	: to(to), memory_actions(std::move(memory_actions)) {}
 
-bool MFATransition::operator==(const MFATransition& other) const {
-	return (to == other.to) && (memory_actions == other.memory_actions);
-}
-
 MFATransition::MFATransition(int to, const unordered_set<int>& opens,
 							 const unordered_set<int>& closes)
-	: to(to) {
+	: MFATransition(to) {
 	for (auto num : opens)
 		memory_actions[num] = MFATransition::open;
 	for (auto num : closes) {
@@ -32,6 +29,27 @@ MFATransition::MFATransition(int to, const unordered_set<int>& opens,
 			std::cerr << "!!! Конфликт действий с ячейкой памяти !!!";
 		memory_actions[num] = MFATransition::close;
 	}
+}
+
+MFATransition::MFATransition(int to, const unordered_set<int>& destination_first,
+							 const unordered_set<int>& iteration_over_cells,
+							 const unordered_set<int>& source_last,
+							 const unordered_set<int>& destination_in_cells)
+	: MFATransition(to) {
+	for (auto num : destination_first) {
+		if (destination_in_cells.count(num) && !iteration_over_cells.count(num))
+			continue;
+		memory_actions[num] = MFATransition::open;
+	}
+	for (auto num : source_last) {
+		if (destination_in_cells.count(num))
+			continue;
+		memory_actions[num] = MFATransition::close;
+	}
+}
+
+bool MFATransition::operator==(const MFATransition& other) const {
+	return (to == other.to) && (memory_actions == other.memory_actions);
 }
 
 std::size_t MFATransition::Hasher::operator()(const MFATransition& t) const {
@@ -120,7 +138,7 @@ MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, vector<MFAState>
 }
 
 MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
-											 std::set<Symbol> alphabet)
+											 set<Symbol> alphabet)
 	: AbstractMachine(initial_state, std::move(alphabet)), states(std::move(states)) {
 	for (int i = 0; i < this->states.size(); i++) {
 		if (this->states[i].index != i)
