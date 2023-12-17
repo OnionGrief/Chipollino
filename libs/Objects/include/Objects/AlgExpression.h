@@ -121,9 +121,8 @@ class AlgExpression : public BaseObject {
   public:
 	AlgExpression();
 	AlgExpression(std::shared_ptr<Language>, Type, const Symbol&, const std::set<Symbol>&);
-	AlgExpression(std::set<Symbol>); // NOLINT(runtime/explicit)
-	AlgExpression(Type type, AlgExpression* = nullptr,
-				  AlgExpression* = nullptr); // NOLINT(runtime/explicit)
+	explicit AlgExpression(std::set<Symbol>);
+	explicit AlgExpression(Type type, AlgExpression* = nullptr, AlgExpression* = nullptr);
 
 	virtual ~AlgExpression();
 

@@ -16,7 +16,7 @@ using std::set;
 using std::string;
 using std::vector;
 
-TEST(ParseStringTest, Test_regex_lexer) {
+TEST(TestParseString, FromString) {
 	struct Test {
 		string regex_str;
 		bool want_err;
@@ -73,7 +73,7 @@ TEST(ParseStringTest, Test_regex_lexer) {
 	}
 }
 
-TEST(TestNegativeRegex, Test_thompson_negative) {
+TEST(TestNegativeRegex, Thompson) {
 	vector<FAState> states;
 	for (int i = 0; i < 9; i++) {
 		states.emplace_back(i, set<int>{i}, std::to_string(i), false, FAState::Transitions());
@@ -104,9 +104,9 @@ TEST(TestNegativeRegex, Test_thompson_negative) {
 	ASSERT_TRUE(FiniteAutomaton::equal(fa, Regex("(^a|b)c").to_thompson()));
 }
 
-TEST(TestNegativeRegex, Test_antimirov_negative) {}
+TEST(TestNegativeRegex, Antimirov) {}
 
-TEST(TestCaseName, Test_fa_equal) {
+TEST(TestEqual, FA_Equal) {
 	vector<FAState> states1;
 	for (int i = 0; i < 6; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
@@ -166,7 +166,7 @@ TEST(TestCaseName, Test_fa_equal) {
 		Regex("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|bbb*(aaa*bbb*)*").to_glushkov()));
 }
 
-TEST(TestCaseName, Test_fa_equiv) {
+TEST(TestEquivalent, FA_Equivalent) {
 	vector<FAState> states1;
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
@@ -198,7 +198,7 @@ TEST(TestCaseName, Test_fa_equiv) {
 	ASSERT_TRUE(FiniteAutomaton::equivalent(fa1, fa2));
 }
 
-TEST(TestCaseName, Test_bisimilar) {
+TEST(TestBisimilar, FA_Bisimilar) {
 	vector<FAState> states1;
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
@@ -230,7 +230,7 @@ TEST(TestCaseName, Test_bisimilar) {
 	ASSERT_TRUE(FiniteAutomaton::bisimilar(fa1, fa2));
 }
 
-TEST(TestCaseName, Test_merge_bisimilar) {
+TEST(TestBisimilar, FA_MergeBisimilar) {
 	FiniteAutomaton fa = Regex("(a|b)*b").to_glushkov();
 	FiniteAutomaton fa1 = fa.merge_bisimilar();
 
@@ -266,7 +266,7 @@ TEST(TestCaseName, Test_merge_bisimilar) {
 	ASSERT_TRUE(FiniteAutomaton::equal(fa2.merge_bisimilar(), fa3));
 }
 
-TEST(TestCaseName, Test_regex_subset) {
+TEST(TestSubset, Regex_Subset) {
 	Regex r1("a*baa");
 	Regex r2("abaa");
 
@@ -275,7 +275,7 @@ TEST(TestCaseName, Test_regex_subset) {
 	ASSERT_TRUE(!Regex("ab*").subset(Regex("a*b*")));
 }
 
-TEST(TestCaseName, Test_regex_equal) {
+TEST(TestEqual, Regex_Equal) {
 	Regex r1("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*");
 	Regex r2("aaa*(bbb*aaa*)*|a(bbb*aaa*)*bb*");
 	Regex r3("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)");
@@ -286,7 +286,7 @@ TEST(TestCaseName, Test_regex_equal) {
 	ASSERT_TRUE(!Regex::equal(r1, r3));
 }
 
-TEST(TestCaseName, Test_remove_trap) {
+TEST(TestRemoveTrap, FASizeEquality) {
 	Regex r1("ca*a(b|c)*");
 	Regex r2("caa*b*");
 	Regex r3("(a|b)*a(a|b)");
@@ -302,7 +302,7 @@ TEST(TestCaseName, Test_remove_trap) {
 	ASSERT_EQ(fa3.size(), fa3.remove_trap_states().size()); // Кейс, когда ловушек нет.
 }
 
-TEST(TestArden, Test_to_regex_equivalence) {
+TEST(TestEquivalent, Regex_Equivalence) {
 	auto test_equivalence = [](const string& rgx_str) {
 		Regex r1(rgx_str), r2(rgx_str);
 		ASSERT_TRUE(Regex::equivalent(r1, r2.to_thompson().to_regex()));
@@ -323,11 +323,11 @@ TEST(TestArden, Test_to_regex_equivalence) {
 	test_equivalence("(((((a*)((a*)|bb)(((|||((b)))))))))");
 }
 
-TEST(TestCaseName, Test_pump_length) {
+TEST(TestPumpLength, PumpLengthValues) {
 	ASSERT_EQ(Regex("abaa").pump_length(), 5);
 }
 
-TEST(TestCaseName, Test_fa_to_pgrammar) {
+TEST(TestPrefixGrammar, PrefixGrammarBuilding) {
 	vector<FAState> states1;
 	for (int i = 0; i < 5; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
@@ -345,7 +345,7 @@ TEST(TestCaseName, Test_fa_to_pgrammar) {
 	states1[4].is_terminal = true;
 	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
 
-	Grammar g;
+	PrefixGrammar g;
 
 	// cout << "1\n";
 	g.fa_to_prefix_grammar(dfa1);
@@ -357,7 +357,7 @@ TEST(TestCaseName, Test_fa_to_pgrammar) {
 	ASSERT_TRUE(FiniteAutomaton::equivalent(dfa1, g.prefix_grammar_to_automaton()));
 }
 
-TEST(TestCaseName, Test_is_one_unambiguous) {
+TEST(TestIsOneUnambigous, IsOneUnambigousWorks) {
 	Regex r1("(a|b)*a");
 	Regex r2("(a|b)*(ac|bd)");
 	Regex r3("(a|b)*a(a|b)");
@@ -376,7 +376,7 @@ TEST(TestCaseName, Test_is_one_unambiguous) {
 	ASSERT_TRUE(!r5.to_glushkov().is_one_unambiguous());
 }
 
-TEST(TestCaseName, Test_get_one_unambiguous_regex) {
+TEST(TestGetOneUnambigous, GetOneUnambigousWorks) {
 	auto check_one_unambiguous = [](const string& rgx_str, bool expected_res) {
 		ASSERT_TRUE(Regex(rgx_str).get_one_unambiguous_regex().is_one_unambiguous() ==
 					expected_res);
@@ -393,7 +393,7 @@ TEST(TestCaseName, Test_get_one_unambiguous_regex) {
 	check_one_unambiguous("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|", false);
 }
 
-TEST(TestCaseName, test_interpreter) {
+TEST(TestInrepetor, RunLineTest) {
 	Interpreter interpreter;
 	interpreter.set_log_mode(Interpreter::LogMode::nothing);
 	ASSERT_TRUE(!interpreter.run_line("A =	 Annote (Glushkova {a})"));
@@ -428,7 +428,7 @@ TEST(TestCaseName, test_interpreter) {
 	ASSERT_TRUE(!interpreter.run_line("A = Normalize {abc} [[{a} []]]"));
 }
 
-TEST(TestCaseName, Test_TransformationMonoid) {
+TEST(TestTransformationMonoid, IsMinimal) {
 	FiniteAutomaton fa1 = Regex("a*b*c*").to_thompson().minimize();
 	TransformationMonoid tm1(fa1);
 	ASSERT_EQ(tm1.class_card(), 7);
@@ -468,7 +468,7 @@ TEST(TestCaseName, Test_TransformationMonoid) {
 	ASSERT_TRUE(tm5.is_minimal());
 }
 
-TEST(TestCaseName, Test_GlaisterShallit) {
+TEST(TestGlaisterShallit, GetClassesNumber) {
 	auto check_classes_number = [](const string& rgx_str, int num) {
 		ASSERT_TRUE(Regex(rgx_str).to_glushkov().get_classes_number_GlaisterShallit() == num);
 	};
@@ -545,7 +545,7 @@ TEST(TestLanguage, Test_caching) {
 	Language::disable_retrieving_from_cache();
 }
 
-TEST(TestCaseName, Test_ambiguity) {
+TEST(TestAmbiguity, AmbiguityValues) {
 	enum AutomatonType {
 		thompson,
 		glushkov,

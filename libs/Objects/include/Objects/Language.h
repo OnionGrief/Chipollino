@@ -41,7 +41,7 @@ class Language {
 
   public:
 	Language();
-	Language(std::set<Symbol> alphabet); // NOLINT(runtime/explicit)
+	explicit Language(std::set<Symbol> alphabet);
 
 	static void enable_retrieving_from_cache();
 	static void disable_retrieving_from_cache();
