@@ -6,6 +6,7 @@
 #include <stack>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "Fraction/Fraction.h"
@@ -1349,15 +1350,15 @@ FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(vector<int> classes) c
 }
 
 FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
-	vector<GrammarItem> fa_items;
-	vector<GrammarItem*> nonterminals;
-	vector<GrammarItem*> terminals;
+	vector<RLGrammar::Item> fa_items;
+	vector<RLGrammar::Item*> nonterminals;
+	vector<RLGrammar::Item*> terminals;
 	MetaInfo old_meta, new_meta;
-	vector<vector<vector<GrammarItem*>>> rules =
-		Grammar::fa_to_grammar(states, language->get_alphabet(), fa_items, nonterminals, terminals);
-	vector<GrammarItem*> bisimilar_nonterminals;
-	map<int, vector<GrammarItem*>> class_to_nonterminals;
-	vector<vector<vector<GrammarItem*>>> bisimilar_rules = Grammar::get_bisimilar_grammar(
+	vector<vector<vector<RLGrammar::Item*>>> rules = RLGrammar::fa_to_grammar(
+		states, language->get_alphabet(), fa_items, nonterminals, terminals);
+	vector<RLGrammar::Item*> bisimilar_nonterminals;
+	map<int, vector<RLGrammar::Item*>> class_to_nonterminals;
+	vector<vector<vector<RLGrammar::Item*>>> bisimilar_rules = RLGrammar::get_bisimilar_grammar(
 		rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
 
 	// log
@@ -1391,16 +1392,16 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 
 bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 	// грамматики из автоматов
-	vector<GrammarItem> fa1_items;
-	vector<GrammarItem*> fa1_nonterminals;
-	vector<GrammarItem*> fa1_terminals;
-	vector<vector<vector<GrammarItem*>>> fa1_rules = Grammar::fa_to_grammar(
+	vector<RLGrammar::Item> fa1_items;
+	vector<RLGrammar::Item*> fa1_nonterminals;
+	vector<RLGrammar::Item*> fa1_terminals;
+	vector<vector<vector<RLGrammar::Item*>>> fa1_rules = RLGrammar::fa_to_grammar(
 		fa1.states, fa1.language->get_alphabet(), fa1_items, fa1_nonterminals, fa1_terminals);
 
-	vector<GrammarItem> fa2_items;
-	vector<GrammarItem*> fa2_nonterminals;
-	vector<GrammarItem*> fa2_terminals;
-	vector<vector<vector<GrammarItem*>>> fa2_rules = Grammar::fa_to_grammar(
+	vector<RLGrammar::Item> fa2_items;
+	vector<RLGrammar::Item*> fa2_nonterminals;
+	vector<RLGrammar::Item*> fa2_terminals;
+	vector<vector<vector<RLGrammar::Item*>>> fa2_rules = RLGrammar::fa_to_grammar(
 		fa2.states, fa2.language->get_alphabet(), fa2_items, fa2_nonterminals, fa2_terminals);
 
 	if (fa1_terminals.size() != fa2_terminals.size())
@@ -1409,38 +1410,38 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1, const Fin
 		if (*fa1_terminals[i] != *fa2_terminals[i])
 			return false;
 	// сначала получаем бисимилярные грамматики из данных автоматов
-	vector<GrammarItem*> fa1_bisimilar_nonterminals;
-	map<int, vector<GrammarItem*>> fa1_class_to_nonterminals;
-	vector<vector<vector<GrammarItem*>>> fa1_bisimilar_rules = Grammar::get_bisimilar_grammar(
+	vector<RLGrammar::Item*> fa1_bisimilar_nonterminals;
+	map<int, vector<RLGrammar::Item*>> fa1_class_to_nonterminals;
+	vector<vector<vector<RLGrammar::Item*>>> fa1_bisimilar_rules = RLGrammar::get_bisimilar_grammar(
 		fa1_rules, fa1_nonterminals, fa1_bisimilar_nonterminals, fa1_class_to_nonterminals);
 
-	vector<GrammarItem*> fa2_bisimilar_nonterminals;
-	map<int, vector<GrammarItem*>> fa2_class_to_nonterminals;
-	vector<vector<vector<GrammarItem*>>> fa2_bisimilar_rules = Grammar::get_bisimilar_grammar(
+	vector<RLGrammar::Item*> fa2_bisimilar_nonterminals;
+	map<int, vector<RLGrammar::Item*>> fa2_class_to_nonterminals;
+	vector<vector<vector<RLGrammar::Item*>>> fa2_bisimilar_rules = RLGrammar::get_bisimilar_grammar(
 		fa2_rules, fa2_nonterminals, fa2_bisimilar_nonterminals, fa2_class_to_nonterminals);
 	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size())
 		return false;
 	// из объединения полученных ранее получаем итоговую
-	vector<GrammarItem*> nonterminals(fa1_bisimilar_nonterminals);
+	vector<RLGrammar::Item*> nonterminals(fa1_bisimilar_nonterminals);
 	nonterminals.insert(
 		nonterminals.end(), fa2_bisimilar_nonterminals.begin(), fa2_bisimilar_nonterminals.end());
-	vector<vector<vector<GrammarItem*>>> rules(fa1_bisimilar_rules);
+	vector<vector<vector<RLGrammar::Item*>>> rules(fa1_bisimilar_rules);
 	rules.insert(rules.end(), fa2_bisimilar_rules.begin(), fa2_bisimilar_rules.end());
 
 	vector<int> fa1_classes; // сохраняю классы
-	for (GrammarItem* nont : fa1_nonterminals) {
+	for (RLGrammar::Item* nont : fa1_nonterminals) {
 		fa1_classes.push_back(nont->class_number);
 		nont->class_number = -1; // сбрасываю номера классов
 	}
 	vector<int> fa2_classes; // сохраняю классы
-	for (GrammarItem* nont : fa2_nonterminals) {
+	for (RLGrammar::Item* nont : fa2_nonterminals) {
 		fa2_classes.push_back(nont->class_number);
 		nont->class_number = -1; // сбрасываю номера классов
 	}
 
-	vector<GrammarItem*> bisimilar_nonterminals;
-	map<int, vector<GrammarItem*>> class_to_nonterminals;
-	vector<vector<vector<GrammarItem*>>> bisimilar_rules = Grammar::get_bisimilar_grammar(
+	vector<RLGrammar::Item*> bisimilar_nonterminals;
+	map<int, vector<RLGrammar::Item*>> class_to_nonterminals;
+	vector<vector<vector<RLGrammar::Item*>>> bisimilar_rules = RLGrammar::get_bisimilar_grammar(
 		rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
 
 	map<int, vector<string>> class_to_nonterminals_names;
@@ -1493,16 +1494,16 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 	if (fa1.size() != fa2.size())
 		return false;
 	// грамматики из состояний автоматов
-	vector<GrammarItem> fa1_items;
-	vector<GrammarItem*> fa1_nonterminals;
-	vector<GrammarItem*> fa1_terminals;
-	vector<vector<vector<GrammarItem*>>> fa1_rules = Grammar::fa_to_grammar(
+	vector<RLGrammar::Item> fa1_items;
+	vector<RLGrammar::Item*> fa1_nonterminals;
+	vector<RLGrammar::Item*> fa1_terminals;
+	vector<vector<vector<RLGrammar::Item*>>> fa1_rules = RLGrammar::fa_to_grammar(
 		fa1.states, fa1.language->get_alphabet(), fa1_items, fa1_nonterminals, fa1_terminals);
 
-	vector<GrammarItem> fa2_items;
-	vector<GrammarItem*> fa2_nonterminals;
-	vector<GrammarItem*> fa2_terminals;
-	vector<vector<vector<GrammarItem*>>> fa2_rules = Grammar::fa_to_grammar(
+	vector<RLGrammar::Item> fa2_items;
+	vector<RLGrammar::Item*> fa2_nonterminals;
+	vector<RLGrammar::Item*> fa2_terminals;
+	vector<vector<vector<RLGrammar::Item*>>> fa2_rules = RLGrammar::fa_to_grammar(
 		fa2.states, fa2.language->get_alphabet(), fa2_items, fa2_nonterminals, fa2_terminals);
 	// проверка на равенство алфавитов
 	if (fa1_terminals.size() != fa2_terminals.size())
@@ -1511,15 +1512,15 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 		if (*fa1_terminals[i] != *fa2_terminals[i])
 			return false;
 	// биективная бисимуляция состояний
-	vector<GrammarItem*> nonterminals(fa1_nonterminals);
+	vector<RLGrammar::Item*> nonterminals(fa1_nonterminals);
 	nonterminals.insert(nonterminals.end(), fa2_nonterminals.begin(), fa2_nonterminals.end());
-	vector<vector<vector<GrammarItem*>>> rules(fa1_rules);
+	vector<vector<vector<RLGrammar::Item*>>> rules(fa1_rules);
 	rules.insert(rules.end(), fa2_rules.begin(), fa2_rules.end());
-	for (GrammarItem* nont : nonterminals)
+	for (RLGrammar::Item* nont : nonterminals)
 		nont->class_number = 0; // сбрасываю номера классов
-	vector<GrammarItem*> bisimilar_nonterminals;
-	map<int, vector<GrammarItem*>> class_to_nonterminals;
-	vector<vector<vector<GrammarItem*>>> bisimilar_rules = Grammar::get_bisimilar_grammar(
+	vector<RLGrammar::Item*> bisimilar_nonterminals;
+	map<int, vector<RLGrammar::Item*>> class_to_nonterminals;
+	vector<vector<vector<RLGrammar::Item*>>> bisimilar_rules = RLGrammar::get_bisimilar_grammar(
 		rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
@@ -1527,45 +1528,41 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 		return false;
 	// проверяю бисимилярность состояний
 	vector<int> classes(bisimilar_nonterminals.size(), 0);
-	for (GrammarItem* nont : fa1_nonterminals)
+	for (RLGrammar::Item* nont : fa1_nonterminals)
 		classes[nont->class_number]++;
-	for (GrammarItem* nont : fa2_nonterminals)
+	for (RLGrammar::Item* nont : fa2_nonterminals)
 		classes[nont->class_number]--;
 	for (auto t : classes)
 		if (t != 0)
 			return false;
 
-	vector<int> bisimilar_classes;
-	for (GrammarItem* nont : nonterminals)
-		bisimilar_classes.push_back(nont->class_number);
-	// биективная бисимуляция обратных грамматик
-	vector<vector<vector<GrammarItem*>>> fa1_reverse_rules =
-		Grammar::get_reverse_grammar(fa1_rules, fa1_nonterminals, fa1_terminals, fa1.initial_state);
-	vector<vector<vector<GrammarItem*>>> fa2_reverse_rules =
-		Grammar::get_reverse_grammar(fa2_rules, fa2_nonterminals, fa2_terminals, fa2.initial_state);
+	vector<int> bisimilar_classes(nonterminals.size());
+	for (int i = 0; i < nonterminals.size(); i++)
+		bisimilar_classes[i] = nonterminals[i]->class_number;
 
-	vector<vector<vector<GrammarItem*>>> reverse_rules(fa1_reverse_rules);
+	// биективная бисимуляция обратных грамматик
+	vector<vector<vector<RLGrammar::Item*>>> fa1_reverse_rules = RLGrammar::get_reverse_grammar(
+		fa1_rules, fa1_nonterminals, fa1_terminals, fa1.initial_state);
+	vector<vector<vector<RLGrammar::Item*>>> fa2_reverse_rules = RLGrammar::get_reverse_grammar(
+		fa2_rules, fa2_nonterminals, fa2_terminals, fa2.initial_state);
+
+	vector<vector<vector<RLGrammar::Item*>>> reverse_rules(fa1_reverse_rules);
 	reverse_rules.insert(reverse_rules.end(), fa2_reverse_rules.begin(), fa2_reverse_rules.end());
-	for (GrammarItem* nont : nonterminals)
+	for (RLGrammar::Item* nont : nonterminals)
 		nont->class_number = -1; // сбрасываю номера классов
 
-	vector<GrammarItem*> reverse_bisimilar_nonterminals;
-	vector<vector<vector<GrammarItem*>>> reverse_bisimilar_rules = Grammar::get_bisimilar_grammar(
-		reverse_rules, nonterminals, reverse_bisimilar_nonterminals, class_to_nonterminals);
+	vector<RLGrammar::Item*> reverse_bisimilar_nonterminals;
+	vector<vector<vector<RLGrammar::Item*>>> reverse_bisimilar_rules =
+		RLGrammar::get_bisimilar_grammar(
+			reverse_rules, nonterminals, reverse_bisimilar_nonterminals, class_to_nonterminals);
 	// сопоставление состояний 1 к 1
 	vector<int> reverse_bisimilar_classes;
-	for (GrammarItem* nont : nonterminals) {
+	for (RLGrammar::Item* nont : nonterminals) {
 		reverse_bisimilar_classes.push_back(nont->class_number);
 		nont->class_number = -1;
 	}
 
-	/*for (auto t : bisimilar_classes)
-		cout << t << " ";
-	cout << endl;
-	for (auto t : reverse_bisimilar_classes)
-		cout << t << " ";
-	cout << endl;*/
-
+	// устанавливаем классы нетерминалов-состояний (1 к 1), чтобы после сопоставить переходы
 	int new_class = 0;
 	for (int i = 0; i < bisimilar_classes.size(); i++) {
 		if (nonterminals[i]->class_number != -1)
@@ -1582,61 +1579,46 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 		new_class++;
 	}
 
-	/*for (auto t : nonterminals)
-		cout << t->class_number << " ";
-	cout << endl;*/
-
 	// грамматики из переходов
-	vector<pair<GrammarItem, map<Symbol, vector<GrammarItem>>>> transitions1_items;
-	vector<GrammarItem*> transitions1_nonterminals;
-	vector<GrammarItem*> transitions1_terminals;
-	vector<vector<vector<GrammarItem*>>> transitions1_rules =
-		Grammar::tansitions_to_grammar(fa1.states,
-									   fa1_nonterminals,
-									   transitions1_items,
-									   transitions1_nonterminals,
-									   transitions1_terminals);
+	vector<pair<RLGrammar::Item, map<Symbol, vector<RLGrammar::Item>>>> transitions1_items;
+	vector<RLGrammar::Item*> transitions1_nonterminals;
+	vector<RLGrammar::Item*> transitions1_terminals;
+	vector<vector<vector<RLGrammar::Item*>>> transitions1_rules =
+		RLGrammar::tansitions_to_grammar(fa1.states,
+										 fa1_nonterminals,
+										 transitions1_items,
+										 transitions1_nonterminals,
+										 transitions1_terminals);
 
-	/*for (int i = 0; i < transitions1_rules.size(); i++) {
-		cout << *transitions1_nonterminals[i] << ": ";
-		for (int j = 0; j < transitions1_rules[i].size(); j++) {
-			for (int k = 0; k < transitions1_rules[i][j].size(); k++) {
-				cout << *transitions1_rules[i][j][k];
-			}
-			cout << " ";
-		}
-		cout << endl;
-	}*/
-
-	vector<pair<GrammarItem, map<Symbol, vector<GrammarItem>>>> transitions2_items;
-	vector<GrammarItem*> transitions2_nonterminals;
-	vector<GrammarItem*> transitions2_terminals;
-	vector<vector<vector<GrammarItem*>>> transitions2_rules =
-		Grammar::tansitions_to_grammar(fa2.states,
-									   fa2_nonterminals,
-									   transitions2_items,
-									   transitions2_nonterminals,
-									   transitions2_terminals);
+	vector<pair<RLGrammar::Item, map<Symbol, vector<RLGrammar::Item>>>> transitions2_items;
+	vector<RLGrammar::Item*> transitions2_nonterminals;
+	vector<RLGrammar::Item*> transitions2_terminals;
+	vector<vector<vector<RLGrammar::Item*>>> transitions2_rules =
+		RLGrammar::tansitions_to_grammar(fa2.states,
+										 fa2_nonterminals,
+										 transitions2_items,
+										 transitions2_nonterminals,
+										 transitions2_terminals);
 
 	// проверка равенства количества переходов
 	if (transitions1_nonterminals.size() != transitions2_nonterminals.size())
 		return false;
 	// биективная бисимуляция переходов
-	vector<GrammarItem*> transitions_nonterminals(transitions1_nonterminals);
+	vector<RLGrammar::Item*> transitions_nonterminals(transitions1_nonterminals);
 	transitions_nonterminals.insert(transitions_nonterminals.end(),
 									transitions2_nonterminals.begin(),
 									transitions2_nonterminals.end());
-	vector<vector<vector<GrammarItem*>>> transitions_rules(transitions1_rules);
+	vector<vector<vector<RLGrammar::Item*>>> transitions_rules(transitions1_rules);
 	transitions_rules.insert(
 		transitions_rules.end(), transitions2_rules.begin(), transitions2_rules.end());
-	for (GrammarItem* nont : transitions_nonterminals)
+	for (RLGrammar::Item* nont : transitions_nonterminals)
 		nont->class_number = 0; // сбрасываю номера классов
-	vector<GrammarItem*> transitions_bisimilar_nonterminals;
-	vector<vector<vector<GrammarItem*>>> transitions_bisimilar_rules =
-		Grammar::get_bisimilar_grammar(transitions_rules,
-									   transitions_nonterminals,
-									   transitions_bisimilar_nonterminals,
-									   class_to_nonterminals);
+	vector<RLGrammar::Item*> transitions_bisimilar_nonterminals;
+	vector<vector<vector<RLGrammar::Item*>>> transitions_bisimilar_rules =
+		RLGrammar::get_bisimilar_grammar(transitions_rules,
+										 transitions_nonterminals,
+										 transitions_bisimilar_nonterminals,
+										 class_to_nonterminals);
 	// проверяю бисимилярность переходов
 	classes.clear();
 	classes.resize(transitions_bisimilar_nonterminals.size(), 0);
@@ -2350,7 +2332,7 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 	return result;
 }
 
-int FiniteAutomaton::get_initial() {
+int FiniteAutomaton::get_initial() const {
 	return initial_state;
 }
 
@@ -2392,9 +2374,52 @@ bool FiniteAutomaton::is_empty() const {
 — Ах! Рефакторинг, рефакторинг! - и умирает.
 */
 
+bool FiniteAutomaton::is_finite() const {
+
+	// множество посещённых состояния во время bfs
+	std::unordered_set<int> visited_states{};
+	// очередь состояний
+	std::queue<int> state_queue{{get_initial()}};
+
+	// bfs обход состояний автомата
+	while (state_queue.size() != 0) {
+		int actual_state = state_queue.front();
+		state_queue.pop();
+
+		// если рассмотренное состояние - завершающее возвращаем true
+		if (states[actual_state].is_terminal) {
+			return true;
+		}
+
+		// помечаем состояние, как посещённое
+		visited_states.insert(actual_state);
+
+		// итерируемся по переходам из состояния
+		for (const auto& [_, next_states] : states[actual_state].transitions) {
+			for (int next_state : next_states) {
+				// если состояние не посещено, добавляем его в очередь
+				if (visited_states.count(next_state) == 0) {
+					state_queue.push(next_state);
+				}
+			}
+		}
+	}
+
+	// автомат не конечный
+	return false;
+}
+
 Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	if (log) {
 		log->set_parameter("oldautomaton", *this);
+	}
+
+	// проверка автомата на достижимость финальных состояний
+	if (!is_finite()) {
+		if (log) {
+			log->set_parameter("result", "Error: Automate must be finite");
+		}
+		throw std::logic_error("Automare unfinite");
 	}
 
 	// a system of linear algebraic equations
@@ -2429,7 +2454,7 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			// распознание eps-перехода
 			Regex symbol_regex{};
 			if (!symbol.is_epsilon()) {
-				symbol_regex = {symbol};
+				symbol_regex = Regex(symbol);
 			}
 
 			for (int state_index_to : states_to) {
@@ -2492,7 +2517,8 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 			// итерация по всем переходам из исходного уравнения
 			for (auto& [state_index_col, regex_col] : equation_row) {
 				// регулярка перехода из рассматриваемого уравнения в исходное
-				Regex regex_from = Regex(Regex::Type::conc, &equation_from[state_index_row], &regex_col);
+				Regex regex_from =
+					Regex(Regex::Type::conc, &equation_from[state_index_row], &regex_col);
 
 				// объединяем полученную регулярку с имеющейся в рассматриваемом уравнении
 				if (equation_from.count(state_index_col)) {
@@ -2526,10 +2552,4 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		}
 		return result_regex;
 	}
-
-	// случай недостижимости ни одного из конечных состояний или их отсутствия
-	if (log) {
-		log->set_parameter("result", "Unknown");
-	}
-	return Regex{};
 }

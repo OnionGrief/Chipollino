@@ -48,7 +48,7 @@ class TransformationMonoid {
 		Term second;
 	};
 	TransformationMonoid() = default;
-	TransformationMonoid(const FiniteAutomaton& in); // NOLINT(runtime/explicit)
+	explicit TransformationMonoid(const FiniteAutomaton& in);
 	// получаем все классы эквивалентности
 	std::vector<Term> get_equalence_classes();
 	// получаем термы, что vw - в языке

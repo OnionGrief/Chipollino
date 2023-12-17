@@ -256,7 +256,7 @@ void Example::normalize_regex() {
 	Regex r(regl);
 
 	cout << "\nNormalize\nBefore: " << r.to_txt() << "\n";
-	r.normalize_regex({{{"a"}, {"b"}}});
+	r.normalize_regex({{Regex("a"), Regex("b")}});
 	cout << "After: " << r.to_txt() << "\n";
 }
 void Example::to_image() {
@@ -542,7 +542,7 @@ void Example::fa_to_pgrammar() {
 	states1[4].is_terminal = true;
 	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
 
-	Grammar g;
+	PrefixGrammar g;
 	FiniteAutomaton test = a1.annote();
 	cout << dfa1.to_txt();
 

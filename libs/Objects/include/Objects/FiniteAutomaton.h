@@ -151,7 +151,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
 	// начальное состояние
-	int get_initial();
+	int get_initial() const;
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
@@ -160,6 +160,8 @@ class FiniteAutomaton : public AbstractMachine {
 	size_t size(iLogTemplate* log = nullptr) const;
 	// проверка на пустоту
 	bool is_empty() const;
+	// проверка автомата на финальность
+	bool is_finite() const;
 	// метод Arden
 	Regex to_regex(iLogTemplate* log = nullptr) const;
 	// возвращает число диагональных классов по методу Глейстера-Шаллита
@@ -174,6 +176,7 @@ class FiniteAutomaton : public AbstractMachine {
 	friend class Regex;
 	friend class MetaInfo;
 	friend class TransformationMonoid;
-	friend class Grammar;
+	friend class RLGrammar;
+	friend class PrefixGrammar;
 	friend class Language;
 };

@@ -44,7 +44,7 @@ Symbol& Symbol::operator=(const Symbol& other) {
 }
 
 Symbol Symbol::epsilon() {
-	return "eps";
+	return "_eps_";
 }
 
 bool Symbol::is_epsilon() const {

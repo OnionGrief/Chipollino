@@ -14,7 +14,7 @@ class BaseObject {
 
   public:
 	BaseObject();
-	BaseObject(std::shared_ptr<Language>); // NOLINT(runtime/explicit)
-	BaseObject(std::set<Symbol>);		   // NOLINT(runtime/explicit)
+	explicit BaseObject(std::shared_ptr<Language>);
+	explicit BaseObject(std::set<Symbol>);
 	virtual std::string to_txt() const = 0;
 };
