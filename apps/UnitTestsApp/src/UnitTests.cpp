@@ -1,4 +1,15 @@
 #include "UnitTestsApp/UnitTests.h"
+#include "AutomatonToImage/AutomatonToImage.h"
+#include "Interpreter/Interpreter.h"
+#include "Objects/AlgExpression.h"
+#include "Objects/BackRefRegex.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Grammar.h"
+#include "Objects/Language.h"
+#include "Objects/MemoryFiniteAutomaton.h"
+#include "Objects/Regex.h"
+#include "Objects/TransformationMonoid.h"
+#include "Tester/Tester.h"
 
 using std::map;
 using std::set;
@@ -63,9 +74,9 @@ TEST(TestParseString, FromString) {
 }
 
 TEST(TestNegativeRegex, Thompson) {
-	vector<FiniteAutomaton::State> states;
+	vector<FAState> states;
 	for (int i = 0; i < 9; i++) {
-		states.emplace_back(i, set<int>{i}, std::to_string(i), false, map<Symbol, set<int>>());
+		states.emplace_back(i, set<int>{i}, std::to_string(i), false, FAState::Transitions());
 	}
 
 	states[0].set_transition(1, Symbol::epsilon());
@@ -96,9 +107,9 @@ TEST(TestNegativeRegex, Thompson) {
 TEST(TestNegativeRegex, Antimirov) {}
 
 TEST(TestEqual, FA_Equal) {
-	vector<FiniteAutomaton::State> states1;
+	vector<FAState> states1;
 	for (int i = 0; i < 6; i++) {
-		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states1[0].set_transition(1, "b");
 	states1[0].set_transition(2, "b");
@@ -111,9 +122,9 @@ TEST(TestEqual, FA_Equal) {
 	states1[4].is_terminal = true;
 	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
 
-	vector<FiniteAutomaton::State> states2;
+	vector<FAState> states2;
 	for (int i = 0; i < 6; i++) {
-		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states2[0].set_transition(1, "b");
 	states2[0].set_transition(2, "b");
@@ -126,9 +137,9 @@ TEST(TestEqual, FA_Equal) {
 	states2[4].is_terminal = true;
 	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
 
-	vector<FiniteAutomaton::State> states3;
+	vector<FAState> states3;
 	for (int i = 0; i < 6; i++) {
-		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states3[5].set_transition(4, "b");
 	states3[5].set_transition(3, "b");
@@ -156,9 +167,9 @@ TEST(TestEqual, FA_Equal) {
 }
 
 TEST(TestEquivalent, FA_Equivalent) {
-	vector<FiniteAutomaton::State> states1;
+	vector<FAState> states1;
 	for (int i = 0; i < 3; i++) {
-		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states1[0].set_transition(0, "c");
 	states1[0].set_transition(1, "d");
@@ -169,9 +180,9 @@ TEST(TestEquivalent, FA_Equivalent) {
 	states1[0].is_terminal = true;
 	FiniteAutomaton fa1(0, states1, {"c", "d"});
 
-	vector<FiniteAutomaton::State> states2;
+	vector<FAState> states2;
 	for (int i = 0; i < 4; i++) {
-		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states2[0].set_transition(0, "c");
 	states2[0].set_transition(1, "d");
@@ -188,9 +199,9 @@ TEST(TestEquivalent, FA_Equivalent) {
 }
 
 TEST(TestBisimilar, FA_Bisimilar) {
-	vector<FiniteAutomaton::State> states1;
+	vector<FAState> states1;
 	for (int i = 0; i < 3; i++) {
-		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states1[0].set_transition(1, "a");
 	states1[0].set_transition(1, "eps");
@@ -204,9 +215,9 @@ TEST(TestBisimilar, FA_Bisimilar) {
 	states1[2].is_terminal = true;
 	FiniteAutomaton fa1(1, states1, {"a", "b"});
 
-	vector<FiniteAutomaton::State> states2;
+	vector<FAState> states2;
 	for (int i = 0; i < 2; i++) {
-		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states2[0].set_transition(1, "a");
 	states2[0].set_transition(1, "eps");
@@ -223,9 +234,9 @@ TEST(TestBisimilar, FA_MergeBisimilar) {
 	FiniteAutomaton fa = Regex("(a|b)*b").to_glushkov();
 	FiniteAutomaton fa1 = fa.merge_bisimilar();
 
-	vector<FiniteAutomaton::State> states2;
+	vector<FAState> states2;
 	for (int i = 0; i < 3; i++) {
-		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states2[0].set_transition(1, "a");
 	states2[0].set_transition(1, "eps");
@@ -239,9 +250,9 @@ TEST(TestBisimilar, FA_MergeBisimilar) {
 	states2[2].is_terminal = true;
 	FiniteAutomaton fa2(1, states2, {"a", "b"});
 
-	vector<FiniteAutomaton::State> states3;
+	vector<FAState> states3;
 	for (int i = 0; i < 2; i++) {
-		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states3[0].set_transition(0, "b");
 	states3[0].set_transition(1, "a");
@@ -273,67 +284,6 @@ TEST(TestEqual, Regex_Equal) {
 	ASSERT_TRUE(!Regex::equal(r1.linearize(), r1));
 	ASSERT_TRUE(Regex::equal(r1.linearize(), r1.linearize()));
 	ASSERT_TRUE(!Regex::equal(r1, r3));
-}
-
-TEST(TestAmbiguity, AmbiguityValues) {
-	enum AutomatonType {
-		thompson,
-		glushkov,
-		ilieyu
-	};
-	using Test = std::tuple<int, string, AutomatonType, FiniteAutomaton::AmbiguityValue>;
-	vector<Test> tests = {
-		//{0, "(a*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
-		{1, "a*a*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		{2, "abc", thompson, FiniteAutomaton::unambigious},
-		//{3, "b|a", thompson, FiniteAutomaton::almost_unambigious},
-		{4, "(aa|aa)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
-		{5, "(aab|aab)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
-		{6, "a*a*((a)*)*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		//{7, "a*a*((a)*)*", thompson,
-		// FiniteAutomaton::exponentially_ambiguous},
-		//{8, "a*(b*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
-		//{9, "a*((ab)*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
-		{10, "(aa|aa)(aa|bb)*|a(ba)*", glushkov, FiniteAutomaton::almost_unambigious},
-		{11, "(aaa)*(a|)(a|)", ilieyu, FiniteAutomaton::almost_unambigious},
-		{12, "(a|)(ab|aaa|baa)*(a|)", glushkov, FiniteAutomaton::almost_unambigious},
-		{13, "(a|b|c)*(d|d)*(a|b|c|d)*", glushkov, FiniteAutomaton::almost_unambigious},
-		{14, "(ac*|ad*)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
-		{15, "(a|b|c)*(a|b|c|d)(a|b|c)*|(a|b)*ca*", glushkov, FiniteAutomaton::almost_unambigious},
-		{16, "(a|b|c)*(a|b|c|d)(a|b|c)*|(ac*|ad*)*", glushkov, FiniteAutomaton::almost_unambigious},
-		{17,
-		 "(ab)*ab(ab)*|(ac)*(ac)*|(d|c)*", // (abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*
-		 glushkov,
-		 FiniteAutomaton::almost_unambigious},
-		{18, "(abab)*abab(abab)*|(aac)*(aac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		{19,
-		 "(ab)*ab(ab)*", // (abab)*abab(abab)*
-		 glushkov,
-		 FiniteAutomaton::polynomially_ambigious},
-		{20, "(ab)*ab(ab)*|(ac)*(ac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
-		// {21, "(a|b)*(f*)*q", thompson,
-		//  FiniteAutomaton::exponentially_ambiguous},
-		{22,
-		 "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*",
-		 glushkov,
-		 FiniteAutomaton::exponentially_ambiguous},
-	};
-
-	for_each(tests.begin(), tests.end(), [](const Test& test) {
-		auto [test_number, reg_string, type, expected_res] = test;
-		// cout << test_number << endl;
-		switch (type) {
-		case thompson:
-			ASSERT_TRUE(Regex(reg_string).to_thompson().ambiguity() == expected_res);
-			break;
-		case glushkov:
-			ASSERT_TRUE(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
-			break;
-		case ilieyu:
-			ASSERT_TRUE(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
-			break;
-		}
-	});
 }
 
 TEST(TestRemoveTrap, FASizeEquality) {
@@ -378,10 +328,9 @@ TEST(TestPumpLength, PumpLengthValues) {
 }
 
 TEST(TestPrefixGrammar, PrefixGrammarBuilding) {
-	// cout << "fa to grammar\n";
-	vector<FiniteAutomaton::State> states1;
+	vector<FAState> states1;
 	for (int i = 0; i < 5; i++) {
-		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
 	states1[4].set_transition(1, "a");
@@ -487,9 +436,9 @@ TEST(TestTransformationMonoid, IsMinimal) {
 	ASSERT_TRUE(tm1.is_minimal());
 	ASSERT_EQ(tm1.get_classes_number_MyhillNerode(), 3);
 
-	vector<FiniteAutomaton::State> states;
+	vector<FAState> states;
 	for (int i = 0; i < 5; i++) {
-		states.emplace_back(i, set<int>({i}), std::to_string(i), false, map<Symbol, set<int>>());
+		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 	states[0].set_transition(1, "a");
 	states[1].set_transition(2, "c");
@@ -532,4 +481,127 @@ TEST(TestGlaisterShallit, GetClassesNumber) {
 	check_classes_number("a(b|c)(a|b)(b|c)", 5);
 	check_classes_number("abc|bca", 6);
 	check_classes_number("abc|bbc", 4);
+}
+
+TEST(TestMFA, Test_to_mfa) {
+	vector<MFAState> states = BackRefRegex("[a|b]:1*").to_mfa().get_states();
+	ASSERT_EQ(states.size(), 4);
+	ASSERT_EQ(states[0],
+			  MFAState(0,
+					   "0",
+					   true,
+					   {{"a", {MFATransition(1, {1}, {})}}, {"b", {MFATransition(2, {1}, {})}}}));
+	ASSERT_EQ(states[1],
+			  MFAState(1, "1", false, {{Symbol::epsilon(), {MFATransition(3, {}, {1})}}}));
+	ASSERT_EQ(states[2],
+			  MFAState(2, "2", false, {{Symbol::epsilon(), {MFATransition(3, {}, {1})}}}));
+	ASSERT_EQ(states[3],
+			  MFAState(3,
+					   "3",
+					   true,
+					   {{"a", {MFATransition(1, {1}, {})}}, {"b", {MFATransition(2, {1}, {})}}}));
+
+	states = BackRefRegex("([&2]:1[&1a]:2)*").to_mfa().get_states();
+	ASSERT_EQ(states.size(), 6);
+	ASSERT_EQ(states[0], MFAState(0, "0", true, {{"&2", {MFATransition(1, {1}, {})}}}));
+	ASSERT_EQ(states[1],
+			  MFAState(1, "1", false, {{Symbol::epsilon(), {MFATransition(2, {}, {1})}}}));
+	ASSERT_EQ(states[2], MFAState(2, "2", false, {{"&1", {MFATransition(3, {2}, {})}}}));
+	ASSERT_EQ(states[3], MFAState(3, "3", false, {{"a", {MFATransition(4, {}, {})}}}));
+	ASSERT_EQ(states[4],
+			  MFAState(4, "4", false, {{Symbol::epsilon(), {MFATransition(5, {}, {2})}}}));
+	ASSERT_EQ(states[5], MFAState(5, "5", true, {{"&2", {MFATransition(1, {1}, {})}}}));
+}
+
+TEST(TestLanguage, Test_caching) {
+	Language::enable_retrieving_from_cache();
+
+	// pump_length
+	Regex r("abaa");
+	r.pump_length();
+	ASSERT_TRUE(r.get_language()->is_pump_length_cached());
+	ASSERT_EQ(r.get_language()->get_pump_length(), 5);
+	// min_dfa
+	FiniteAutomaton fa = r.to_glushkov();
+	fa.minimize();
+	ASSERT_TRUE(r.get_language()->is_min_dfa_cached());
+	ASSERT_EQ(fa.get_language(), fa.get_language()->get_min_dfa().get_language());
+	// syntactic_monoid
+	fa.get_syntactic_monoid();
+	ASSERT_TRUE(r.get_language()->is_syntactic_monoid_cached());
+	// nfa_minimum_size
+	fa.get_classes_number_GlaisterShallit();
+	ASSERT_TRUE(r.get_language()->is_nfa_minimum_size_cached());
+	ASSERT_EQ(r.get_language()->get_nfa_minimum_size(), 5);
+	// is_one_unambiguous
+	fa.is_one_unambiguous();
+	ASSERT_TRUE(r.get_language()->is_one_unambiguous_flag_cached());
+	ASSERT_EQ(r.get_language()->get_one_unambiguous_flag(), true);
+	// one_unambiguous_regex
+	r.get_one_unambiguous_regex();
+	ASSERT_TRUE(r.get_language()->is_one_unambiguous_regex_cached());
+	ASSERT_EQ(r.get_language(), r.get_language()->get_one_unambiguous_regex().get_language());
+
+	Language::disable_retrieving_from_cache();
+}
+
+TEST(TestAmbiguity, AmbiguityValues) {
+	enum AutomatonType {
+		thompson,
+		glushkov,
+		ilieyu
+	};
+	using Test = std::tuple<int, string, AutomatonType, FiniteAutomaton::AmbiguityValue>;
+	vector<Test> tests = {
+		//{0, "(a*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
+		{1, "a*a*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		{2, "abc", thompson, FiniteAutomaton::unambigious},
+		//{3, "b|a", thompson, FiniteAutomaton::almost_unambigious},
+		{4, "(aa|aa)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{5, "(aab|aab)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{6, "a*a*((a)*)*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		//{7, "a*a*((a)*)*", thompson,
+		// FiniteAutomaton::exponentially_ambiguous},
+		//{8, "a*(b*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
+		//{9, "a*((ab)*)*", thompson, FiniteAutomaton::exponentially_ambiguous},
+		{10, "(aa|aa)(aa|bb)*|a(ba)*", glushkov, FiniteAutomaton::almost_unambigious},
+		{11, "(aaa)*(a|)(a|)", ilieyu, FiniteAutomaton::almost_unambigious},
+		{12, "(a|)(ab|aaa|baa)*(a|)", glushkov, FiniteAutomaton::almost_unambigious},
+		{13, "(a|b|c)*(d|d)*(a|b|c|d)*", glushkov, FiniteAutomaton::almost_unambigious},
+		{14, "(ac*|ad*)*", glushkov, FiniteAutomaton::exponentially_ambiguous},
+		{15, "(a|b|c)*(a|b|c|d)(a|b|c)*|(a|b)*ca*", glushkov, FiniteAutomaton::almost_unambigious},
+		{16, "(a|b|c)*(a|b|c|d)(a|b|c)*|(ac*|ad*)*", glushkov, FiniteAutomaton::almost_unambigious},
+		{17,
+		 "(ab)*ab(ab)*|(ac)*(ac)*|(d|c)*", // (abab)*abab(abab)*|(aac)*(aac)*|(b|d|c)*
+		 glushkov,
+		 FiniteAutomaton::almost_unambigious},
+		{18, "(abab)*abab(abab)*|(aac)*(aac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		{19,
+		 "(ab)*ab(ab)*", // (abab)*abab(abab)*
+		 glushkov,
+		 FiniteAutomaton::polynomially_ambigious},
+		{20, "(ab)*ab(ab)*|(ac)*(ac)*", glushkov, FiniteAutomaton::polynomially_ambigious},
+		// {21, "(a|b)*(f*)*q", thompson,
+		//  FiniteAutomaton::exponentially_ambiguous},
+		{22,
+		 "((bb*c|c)c*b|bb*b|b)(b|(c|bb*c)c*b|bb*b)*",
+		 glushkov,
+		 FiniteAutomaton::exponentially_ambiguous},
+	};
+
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [test_number, reg_string, type, expected_res] = test;
+		// cout << test_number << endl;
+		switch (type) {
+		case thompson:
+			ASSERT_TRUE(Regex(reg_string).to_thompson().ambiguity() == expected_res);
+			break;
+		case glushkov:
+			ASSERT_TRUE(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
+			break;
+		case ilieyu:
+			ASSERT_TRUE(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
+			break;
+		}
+	});
 }

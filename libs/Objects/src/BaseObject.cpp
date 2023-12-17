@@ -9,3 +9,7 @@ BaseObject::BaseObject() {}
 BaseObject::BaseObject(std::shared_ptr<Language> language) : language(language) {}
 
 BaseObject::BaseObject(set<Symbol> alphabet) : language(make_shared<Language>(alphabet)) {}
+
+std::shared_ptr<Language> BaseObject::get_language() const {
+	return language;
+}

@@ -47,14 +47,14 @@ class RLGrammar {
 	// преобразование конечного автомата в грамматику
 	// в векторе терминалов по 0му индексу лежит epsilon
 	static std::vector<std::vector<std::vector<Item*>>> fa_to_grammar(
-		const std::vector<FiniteAutomaton::State>& states, const std::set<Symbol>& alphabet,
+		const std::vector<FAState>& states, const std::set<Symbol>& alphabet,
 		std::vector<Item>& fa_items,	  // NOLINT(runtime/references)
 		std::vector<Item*>& nonterminals, // NOLINT(runtime/references)
 		std::vector<Item*>& terminals);	  // NOLINT(runtime/references)
 	// преобразование переходов автомата в грамматику (переход -> состояние
 	// переход)
 	static std::vector<std::vector<std::vector<Item*>>> tansitions_to_grammar(
-		const std::vector<FiniteAutomaton::State>& states,
+		const std::vector<FAState>& states,
 		const std::vector<Item*>& fa_nonterminals,
 		std::vector<std::pair<Item, std::map<Symbol, std::vector<Item>>>>&
 			fa_items,							 // NOLINT(runtime/references)

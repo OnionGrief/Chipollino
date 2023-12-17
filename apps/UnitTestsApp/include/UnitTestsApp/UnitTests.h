@@ -1,18 +1,9 @@
 #pragma once
 
-#include <functional>
 #include <string>
 #include <vector>
 
-#include "AutomatonToImage/AutomatonToImage.h"
-#include "Interpreter/Interpreter.h"
 #include "Objects/AlgExpression.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Grammar.h"
-#include "Objects/Language.h"
-#include "Objects/Regex.h"
-#include "Objects/TransformationMonoid.h"
-#include "Tester/Tester.h"
 #include "gtest/gtest.h"
 
 class UnitTests {
