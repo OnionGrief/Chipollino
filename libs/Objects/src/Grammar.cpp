@@ -114,9 +114,9 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_bisimilar_grammar(
 	return bisimilar_rules;
 }
 
-vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
-	const vector<FiniteAutomaton::State>& states, const set<Symbol>& alphabet,
-	vector<GrammarItem>& fa_items, vector<GrammarItem*>& nonterminals,
+vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(const vector<FAState>& states,
+															const set<Symbol>& alphabet,
+															vector<GrammarItem>& fa_items, vector<GrammarItem*>& nonterminals,
 	vector<GrammarItem*>& terminals) {
 	vector<vector<vector<GrammarItem*>>> rules(states.size());
 	fa_items.resize(states.size() + alphabet.size() + 2);
@@ -153,7 +153,7 @@ vector<vector<vector<GrammarItem*>>> Grammar::fa_to_grammar(
 }
 
 vector<vector<vector<GrammarItem*>>> Grammar::tansitions_to_grammar(
-	const vector<FiniteAutomaton::State>& states, const vector<GrammarItem*>& fa_nonterminals,
+	const vector<FAState>& states, const vector<GrammarItem*>& fa_nonterminals,
 	vector<pair<GrammarItem, map<Symbol, vector<GrammarItem>>>>& fa_items,
 	vector<GrammarItem*>& nonterminals, vector<GrammarItem*>& terminals) {
 	// fa_items вектор пар <терминал (состояние), map нетерминалов (переходов)>
@@ -219,8 +219,8 @@ vector<vector<vector<GrammarItem*>>> Grammar::get_reverse_grammar(
 int Grammar::fa_to_g(const FiniteAutomaton& fa, Symbol w, int index, int index_back,
 					 const vector<PrefixGrammarItem*>& grammar_items,
 					 const set<string>& monoid_rules, string word) {
-	const FiniteAutomaton::State& st = fa.states[index];
-	const FiniteAutomaton::State& st_back = fa.states[index_back];
+	const FAState& st = fa.states[index];
+	const FAState& st_back = fa.states[index_back];
 	PrefixGrammarItem* g = grammar_items[index];
 	const set<string>& equivalence_class_back = grammar_items[index_back]->equivalence_class;
 
@@ -259,7 +259,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 	if (log) {
 		log->set_parameter("oldautomaton", fa);
 	}
-	const vector<FiniteAutomaton::State>& states = fa.states;
+	const vector<FAState>& states = fa.states;
 
 	if (!fa.language->is_min_dfa_cached() && log) {
 		log->set_parameter("cachedMINDFA", "Минимальный автомат сохранен в кэше");
@@ -272,7 +272,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 		m_r.insert(Symbol::vector_to_str(item.first));
 	}
 
-	const FiniteAutomaton::State& st0 = states[fa.initial_state];
+	const FAState& st0 = states[fa.initial_state];
 	vector<PrefixGrammarItem*> grammar_items;
 	prefix_grammar.resize(states.size());
 	fill(prefix_grammar.begin(), prefix_grammar.end(), PrefixGrammarItem());
@@ -343,7 +343,7 @@ void Grammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate* log)
 		}
 		return;
 	}
-	vector<FiniteAutomaton::State> states_not_trap = fa.remove_trap_states().states;
+	vector<FAState> states_not_trap = fa.remove_trap_states().states;
 
 	for (size_t i = 0; i < prefix_grammar.size(); i++) {
 		bool check = false;
@@ -433,7 +433,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 		log->set_parameter("grammar", pg_to_txt());
 	}
 	set<Symbol> symbols;
-	vector<FiniteAutomaton::State> states;
+	vector<FAState> states;
 	int initial_state;
 	for (int i = 0; i < prefix_grammar.size(); i++) {
 		const PrefixGrammarItem& gr = prefix_grammar[i];
@@ -446,12 +446,12 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 			is_terminal = true;
 		}
 
-		FiniteAutomaton::State s = {i, {i}, to_string(i), is_terminal, map<Symbol, set<int>>()};
+		FAState s = {i, {i}, to_string(i), is_terminal, FAState::Transitions()};
 		states.push_back(s);
 	}
 
 	for (size_t i = 0; i < states.size(); i++) {
-		FiniteAutomaton::State s = states[i];
+		FAState s = states[i];
 		const PrefixGrammarItem& gr = prefix_grammar[i];
 
 		for (const auto& elem : gr.rules) {
@@ -476,7 +476,7 @@ FiniteAutomaton Grammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 int Grammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index, int index_back,
 						const vector<PrefixGrammarItem*>& grammar_items,
 						const set<string>& monoid_rules, string word) {
-	const FiniteAutomaton::State& st = fa.states[index];
+	const FAState& st = fa.states[index];
 	PrefixGrammarItem* g = grammar_items[index];
 
 	g->rules[w].insert(index_back);
@@ -506,7 +506,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTemplate* l
 	if (log) {
 		log->set_parameter("oldautomaton", fa);
 	}
-	const vector<FiniteAutomaton::State>& states = fa.states;
+	const vector<FAState>& states = fa.states;
 	TransformationMonoid a(fa);
 	map<vector<Symbol>, vector<vector<Symbol>>> monoid_rules = a.get_rewriting_rules();
 	set<string> m_r;
@@ -515,7 +515,7 @@ void Grammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTemplate* l
 	}
 
 	map<string, vector<string>> terms = a.get_equalence_classes_map();
-	const FiniteAutomaton::State& st0 = states[fa.initial_state];
+	const FAState& st0 = states[fa.initial_state];
 	vector<PrefixGrammarItem*> grammar_items;
 	prefix_grammar.resize(states.size());
 	fill(prefix_grammar.begin(), prefix_grammar.end(), PrefixGrammarItem());

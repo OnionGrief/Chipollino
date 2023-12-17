@@ -17,11 +17,25 @@ class MetaInfo;
 class Language;
 class TransformationMonoid;
 
-struct expression_arden {
-	int fa_state_number; // индекс состояния на которое ссылаемся
-	Regex* regex_from_state; // Regex по которому переходят из состояния
+class FAState : public State {
+  public:
+	using Transitions = std::map<Symbol, std::set<int>>;
+
+	Transitions transitions;
+	// используется для объединения состояний в процессе работы алгоритмов
+	// преобразования автоматов возможно для визуализации
+	std::set<int> label;
+
+	FAState(int index, std::string identifier, bool is_terminal);
+	FAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
+	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal,
+			Transitions transitions);
+
+	std::string to_txt() const override;
+	void set_transition(int, const Symbol&);
 };
 
+// TODO если меняешь структуру, поменяй FA_model в TransformationMonoid.h
 class FiniteAutomaton : public AbstractMachine {
   public:
 	enum AmbiguityValue {
@@ -31,22 +45,8 @@ class FiniteAutomaton : public AbstractMachine {
 		polynomially_ambigious
 	};
 
-	// !!! меняешь структуру здесь, поменяй в FAState в Regex.h !!!
-	struct State : AbstractMachine::State {
-		// используется для объединения состояний в процессе работы алгоритмов
-		// преобразования автоматов возможно для визуализации
-		std::set<int> label;
-		std::map<Symbol, std::set<int>> transitions;
-		State(int index, std::string identifier, bool is_terminal);
-		State(int index, std::string identifier, bool is_terminal,
-			  std::map<Symbol, std::set<int>> transitions);
-		State(int index, std::set<int> label, std::string identifier, bool is_terminal,
-			  std::map<Symbol, std::set<int>> transitions);
-		void set_transition(int, const Symbol&);
-	};
-
   private:
-	std::vector<State> states;
+	std::vector<FAState> states;
 
 	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 	// преобразованиях всегда удаляем в конце ловушки.
@@ -56,15 +56,10 @@ class FiniteAutomaton : public AbstractMachine {
 
 	void dfs(int index, std::set<int>& reachable, // NOLINT(runtime/references)
 			 bool use_epsilons_only) const;
-	// парсинг слова по нка (устаревший метод)
-	bool parsing_nfa(const std::string&, int) const;
-	std::pair<int, bool> parsing_nfa_for(const std::string&) const;
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	std::set<int> closure(const std::set<int>&, bool) const;
-	// удаление недостижимых из начального состояний
-	FiniteAutomaton remove_unreachable_states() const;
 	static bool equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	static bool bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// принимает в качестве лимита максимальное количество цифр в
@@ -84,17 +79,23 @@ class FiniteAutomaton : public AbstractMachine {
 
   public:
 	FiniteAutomaton();
-	FiniteAutomaton(int initial_state, std::vector<State> states,
+	FiniteAutomaton(int initial_state, std::vector<FAState> states,
 					std::shared_ptr<Language> language);
-	FiniteAutomaton(int initial_state, std::vector<State> states, std::set<Symbol> alphabet);
+	FiniteAutomaton(int initial_state, std::vector<FAState> states, std::set<Symbol> alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
 	// dynamic_cast unique_ptr к типу FiniteAutomaton*
 	template <typename T> static FiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
 	std::string to_txt() const override;
+
+	std::vector<FAState> get_states() const;
+
 	// детерминизация ДКА
 	FiniteAutomaton determinize(bool is_trim = false, iLogTemplate* log = nullptr) const;
+	// удаление недостижимых из начального состояний
+	// TODO: на самом деле должен быть приватным, но почему-то понадобился ТМ
+	FiniteAutomaton remove_unreachable_states() const;
 	// удаление eps-переходов (построение eps-замыканий)
 	FiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
 	// удаление eps-переходов (доп. вариант)
@@ -150,13 +151,11 @@ class FiniteAutomaton : public AbstractMachine {
 	std::pair<int, bool> parsing_by_nfa(const std::string&) const;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
-	// начальное состояние
-	int get_initial() const;
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
-	// возвращает количество состояний (пердикат States)
+	// возвращает количество состояний (метод States)
 	size_t size(iLogTemplate* log = nullptr) const;
 	// проверка на пустоту
 	bool is_empty() const;
@@ -175,7 +174,5 @@ class FiniteAutomaton : public AbstractMachine {
 
 	friend class Regex;
 	friend class MetaInfo;
-	friend class TransformationMonoid;
 	friend class Grammar;
-	friend class Language;
 };

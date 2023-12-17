@@ -12,41 +12,40 @@
 
 class Language {
   private:
-	// нужна, чтобы хранить weak_ptr на язык
-	struct FA_structure {
-		int initial_state;
-		std::vector<FiniteAutomaton::State> states;
-		// если не хранить этот указатель,
-		// будут созданы разные shared_ptr
-		std::weak_ptr<Language> language;
-
-		FA_structure(int initial_state, std::vector<FiniteAutomaton::State> states,
-					 std::weak_ptr<Language> language);
-	};
-
-	struct Regex_structure {
+	struct Regex_model {
+	  private:
 		std::string str;
 		std::weak_ptr<Language> language;
 
-		Regex_structure(std::string str, std::weak_ptr<Language> language);
+	  public:
+		Regex_model(std::string str, std::weak_ptr<Language> language);
+
+		const std::string& get_str() const;
+		std::shared_ptr<Language> get_language() const;
 	};
+
+	inline static bool allow_retrieving_from_cache = true;
 
 	std::set<Symbol> alphabet;
 	// регулярка, описывающая язык
 	// optional<Regex> regular_expression;
 	std::optional<int> pump_length;
-	std::optional<FA_structure> min_dfa;
+	std::optional<FA_model> min_dfa;
 	std::optional<TransformationMonoid> syntactic_monoid;
 	// нижняя граница размера НКА для языка
 	std::optional<int> nfa_minimum_size;
 	// классы эквивалентности минимального дка TODO
 	// аппроксимации минимальных НКА и регулярок TODO
 	std::optional<bool> is_one_unambiguous;
-	std::optional<Regex_structure> one_unambiguous_regex;
+	std::optional<Regex_model> one_unambiguous_regex;
 
   public:
 	Language();
 	Language(std::set<Symbol> alphabet); // NOLINT(runtime/explicit)
+
+	static void enable_retrieving_from_cache();
+	static void disable_retrieving_from_cache();
+
 	const std::set<Symbol>& get_alphabet();
 	void set_alphabet(std::set<Symbol>);
 	int get_alphabet_size();
@@ -60,8 +59,7 @@ class Language {
 	int get_pump_length();
 	// минимальный дка
 	bool is_min_dfa_cached() const;
-	void set_min_dfa(int initial_state, const std::vector<FiniteAutomaton::State>& states,
-					 const std::shared_ptr<Language>& Language);
+	void set_min_dfa(const FiniteAutomaton&);
 	FiniteAutomaton get_min_dfa();
 	// синтаксический моноид
 	bool is_syntactic_monoid_cached() const;

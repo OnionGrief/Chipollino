@@ -6,6 +6,7 @@
 #include "AlgExpression.h"
 
 class MemoryFiniteAutomaton;
+class MFAState;
 
 class BackRefRegex : public AlgExpression {
   private:
@@ -24,8 +25,9 @@ class BackRefRegex : public AlgExpression {
 	BackRefRegex* scan_ref(const std::vector<Lexeme>&, int, int);
 	BackRefRegex* scan_square_br(const std::vector<Lexeme>&, int, int);
 
-	// возвращает вектор листьев дерева regex
-	std::vector<BackRefRegex*> pre_order_travers(std::unordered_set<int>);
+	// возвращает вектор состояний без индексов и идентификаторов
+	// 0-e состояние начальное
+	std::vector<MFAState> _to_mfa() const;
 
   public:
 	BackRefRegex() = default;

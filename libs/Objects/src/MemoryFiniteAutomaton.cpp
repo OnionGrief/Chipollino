@@ -1,3 +1,4 @@
+#include <cassert>
 #include <sstream>
 #include <utility>
 
@@ -10,43 +11,65 @@ using std::unordered_map;
 using std::unordered_set;
 using std::vector;
 
-MemoryFiniteAutomaton::State::State(int index, string identifier, bool is_terminal,
-									Transitions transitions)
-	: AbstractMachine::State::State(index, std::move(identifier), is_terminal),
-	  transitions(std::move(transitions)) {}
+MFATransition::MFATransition(int to) : to(to) {}
 
-void MemoryFiniteAutomaton::State::set_transition(const Transition& to, const Symbol& symbol) {
-	transitions[symbol].push_back(to);
+MFATransition::MFATransition(int to, MemoryActions memory_actions)
+	: to(to), memory_actions(std::move(memory_actions)) {}
+
+bool MFATransition::operator==(const MFATransition& other) const {
+	return (to == other.to) && (memory_actions == other.memory_actions);
 }
 
-MemoryFiniteAutomaton::Transition::Transition(int to) : to(to) {}
-
-MemoryFiniteAutomaton::Transition::Transition(int to, const unordered_set<int>& opens) : to(to) {
+MFATransition::MFATransition(int to, const unordered_set<int>& opens,
+							 const unordered_set<int>& closes)
+	: to(to) {
 	for (auto num : opens)
-		memory_actions[num] = Transition::open;
-}
-
-MemoryFiniteAutomaton::Transition::Transition(
-	int to, pair<const unordered_set<int>&, const unordered_set<int>&> opens_closes)
-	: Transition(to, opens_closes.first) {
-	for (auto num : opens_closes.second) {
+		memory_actions[num] = MFATransition::open;
+	for (auto num : closes) {
 		if (memory_actions.count(num))
 			std::cerr << "!!! Конфликт действий с ячейкой памяти !!!";
-		memory_actions[num] = Transition::close;
+		memory_actions[num] = MFATransition::close;
 	}
 }
 
-string MemoryFiniteAutomaton::Transition::get_actions_str() const {
+std::size_t MFATransition::Hasher::operator()(const MFATransition& t) const {
+	std::size_t result = std::hash<int>{}(t.to);
+	for (const auto& pair : t.memory_actions) {
+		result ^= std::hash<int>{}(pair.first) + std::hash<int>{}(static_cast<int>(pair.second));
+	}
+	return result;
+}
+
+MFAState::MFAState(bool is_terminal) : State::State(0, {}, is_terminal) {}
+
+MFAState::MFAState(int index, std::string identifier, bool is_terminal,
+				   MFAState::Transitions transitions)
+	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
+}
+
+void MFAState::set_transition(const MFATransition& to, const Symbol& symbol) {
+	transitions[symbol].insert(to);
+}
+
+string MFAState::to_txt() const {
+	return {};
+}
+
+bool MFAState::operator==(const MFAState& other) const {
+	return State::operator==(other) && transitions == other.transitions;
+}
+
+string MFATransition::get_actions_str() const {
 	stringstream ss;
 	unordered_set<int> opens;
 	unordered_set<int> closes;
 
 	for (const auto& [num, action] : memory_actions) {
 		switch (action) {
-		case MemoryFiniteAutomaton::Transition::open:
+		case MFATransition::open:
 			opens.insert(num);
 			break;
-		case MemoryFiniteAutomaton::Transition::close:
+		case MFATransition::close:
 			closes.insert(num);
 			break;
 		}
@@ -81,9 +104,13 @@ string MemoryFiniteAutomaton::Transition::get_actions_str() const {
 
 MemoryFiniteAutomaton::MemoryFiniteAutomaton() : AbstractMachine() {}
 
-MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, vector<State> states,
+MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, vector<MFAState> states,
 											 std::shared_ptr<Language> language)
-	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {}
+	: AbstractMachine(initial_state, std::move(language)), states(std::move(states)) {
+	for (int i = 0; i < this->states.size(); i++) {
+		assert(this->states[i].index == i);
+	}
+}
 
 template <typename T>
 MemoryFiniteAutomaton* MemoryFiniteAutomaton::cast(std::unique_ptr<T>&& uptr) {
@@ -116,4 +143,12 @@ string MemoryFiniteAutomaton::to_txt() const {
 
 	ss << "}\n";
 	return ss.str();
+}
+
+size_t MemoryFiniteAutomaton::size(iLogTemplate* log) const {
+	return states.size();
+}
+
+std::vector<MFAState> MemoryFiniteAutomaton::get_states() const {
+	return states;
 }
