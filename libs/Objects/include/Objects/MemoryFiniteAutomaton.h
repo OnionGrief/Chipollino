@@ -27,7 +27,8 @@ struct MFATransition {
 	MFATransition(int, MemoryActions);
 	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&);
 	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&,
-				  const std::unordered_set<int>&, const std::unordered_set<int>&);
+				  const std::unordered_set<int>&, const std::unordered_set<int>&,
+				  const std::unordered_set<int>&);
 
 	std::string get_actions_str() const;
 	bool operator==(const MFATransition& other) const;

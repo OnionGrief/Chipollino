@@ -513,11 +513,11 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 		str_first += string(i->get_symbol()) + "\\ ";
 	}
 
-	set<string> end_set;
+	set<string> last_set;
 	for (auto& i : last) {
-		end_set.insert(string(i->get_symbol()));
+		last_set.insert(string(i->get_symbol()));
 	}
-	for (const auto& elem : end_set) {
+	for (const auto& elem : last_set) {
 		str_last += elem + "\\ ";
 	}
 	if (eps_in) {
@@ -549,9 +549,9 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 		states.emplace_back(0, "S", false, start_state_transitions);
 	}
 
-	unordered_set<int> last_lexemes;
+	unordered_set<int> last_terms;
 	for (auto& i : last) {
-		last_lexemes.insert(i->symbol.last_linearization_number());
+		last_terms.insert(i->symbol.last_linearization_number());
 	}
 
 	for (size_t i = 0; i < terms.size(); i++) {
@@ -562,15 +562,16 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 			 following_states[symb.last_linearization_number()]) {
 			transitions[delinearized_symbols[to]].insert(MFATransition(to + 1,
 																	   terms[to]->first_in_cells,
+																	   terms[i]->in_cells,
 																	   iteration_over_cells,
 																	   terms[i]->last_in_cells,
 																	   terms[to]->in_cells));
 		}
 
-		// В last_lexemes номера конечных лексем => last_lexemes.count проверяет есть ли
+		// В last_terms номера конечных лексем => last_terms.count проверяет есть ли
 		// номер лексемы в списке конечных лексем (является ли состояние конечным)
 		states.emplace_back(
-			i + 1, symb, last_lexemes.count(symb.last_linearization_number()), transitions);
+			i + 1, symb, last_terms.count(symb.last_linearization_number()), transitions);
 	}
 
 	MemoryFiniteAutomaton mfa(0, states, language);

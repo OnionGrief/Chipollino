@@ -136,7 +136,7 @@ Regex* Regex::scan_minus(const vector<AlgExpression::Lexeme>& lexemes, int index
 }
 
 pair<vector<FAState>, int> Regex::_to_thompson(int max_index) const {
-	string id_str;					// идентификатор состояния
+	string id_str;			   // идентификатор состояния
 	vector<FAState> fa_states; // вектор состояний нового автомата
 	// для формирования поля transitions состояния автомата (структуры State)
 	FAState::Transitions state_transitions;
@@ -439,11 +439,11 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		str_first += string(i->get_symbol()) + "\\ ";
 	}
 
-	set<string> end_set;
+	set<string> last_set;
 	for (auto& i : last) {
-		end_set.insert(string(i->get_symbol()));
+		last_set.insert(string(i->get_symbol()));
 	}
-	for (const auto& elem : end_set) {
+	for (const auto& elem : last_set) {
 		str_last += elem + "\\ ";
 	}
 	if (eps_in) {
@@ -480,9 +480,9 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		states.emplace_back(0, "S", false, start_state_transitions);
 	}
 
-	std::unordered_set<int> last_lexemes;
+	std::unordered_set<int> last_terms;
 	for (auto& i : last) {
-		last_lexemes.insert(i->get_symbol().last_linearization_number());
+		last_terms.insert(i->get_symbol().last_linearization_number());
 	}
 
 	for (size_t i = 0; i < terms.size(); i++) {
@@ -493,10 +493,10 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 			transitions[delinearized_symbols[to]].insert(to + 1);
 		}
 
-		// В last_lexemes номера конечных лексем => last_lexemes.count проверяет есть ли
+		// В last_terms номера конечных лексем => last_terms.count проверяет есть ли
 		// номер лексемы в списке конечных лексем (является ли состояние конечным)
 		states.emplace_back(
-			i + 1, symb, last_lexemes.count(symb.last_linearization_number()), transitions);
+			i + 1, symb, last_terms.count(symb.last_linearization_number()), transitions);
 	}
 
 	FiniteAutomaton fa(0, states, language);

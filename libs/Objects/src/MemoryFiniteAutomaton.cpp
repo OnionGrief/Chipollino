@@ -32,12 +32,13 @@ MFATransition::MFATransition(int to, const unordered_set<int>& opens,
 }
 
 MFATransition::MFATransition(int to, const unordered_set<int>& destination_first,
+							 const unordered_set<int>& source_in_cells,
 							 const unordered_set<int>& iteration_over_cells,
 							 const unordered_set<int>& source_last,
 							 const unordered_set<int>& destination_in_cells)
 	: MFATransition(to) {
 	for (auto num : destination_first) {
-		if (destination_in_cells.count(num) && !iteration_over_cells.count(num))
+		if (source_in_cells.count(num) && !iteration_over_cells.count(num))
 			continue;
 		memory_actions[num] = MFATransition::open;
 	}
