@@ -340,7 +340,7 @@ std::optional<GeneralObject> Interpreter::apply_function(const Function& functio
 			get_automaton(arguments[0]).get_classes_number_GlaisterShallit(&log_template));
 	}
 	if (function.name == "PrefixGrammar") {
-		Grammar g;
+		PrefixGrammar g;
 		g.fa_to_prefix_grammar_TM(get_automaton(arguments[0]), &log_template);
 		return ObjectPrefixGrammar(g);
 	}

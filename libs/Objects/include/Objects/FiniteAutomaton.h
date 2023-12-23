@@ -174,5 +174,6 @@ class FiniteAutomaton : public AbstractMachine {
 
 	friend class Regex;
 	friend class MetaInfo;
-	friend class Grammar;
+	friend class RLGrammar;
+	friend class PrefixGrammar;
 };

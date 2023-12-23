@@ -53,7 +53,7 @@ Symbol& Symbol::operator=(char c) {
 }
 
 Symbol Symbol::epsilon() {
-	return "eps";
+	return "_eps_";
 }
 
 bool Symbol::is_epsilon() const {
