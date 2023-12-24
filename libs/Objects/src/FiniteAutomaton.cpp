@@ -24,9 +24,11 @@ using std::make_shared;
 using std::map;
 using std::pair;
 using std::set;
+using std::stack;
 using std::string;
 using std::stringstream;
 using std::to_string;
+using std::tuple;
 using std::vector;
 
 FAState::FAState(int index, string identifier, bool is_terminal)
@@ -2288,58 +2290,66 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 // }
 
 pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
+	struct ParingState {
+		int pos;
+		const FAState* state;
+
+		ParingState(int pos, const FAState* state) : pos(pos), state(state){};
+	};
 	// Пара (актуальный индекс элемента в строке, состояние)
-	std::stack<pair<int, FAState>> stack_state;
+	stack<ParingState> stack_state;
 	// Тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
-	set<std::tuple<int, int, int>> visited_eps, aux_eps;
+	set<tuple<int, int, int>> visited_eps;
 	int counter = 0;
 	int parsed_len = 0;
-	FAState state = states[initial_state];
-	stack_state.push({parsed_len, state});
+	const FAState* state = &states[initial_state];
+	stack_state.emplace(parsed_len, state);
 	while (!stack_state.empty()) {
-		if (state.is_terminal && parsed_len == s.size()) {
+		if (state->is_terminal && parsed_len == s.size()) {
 			break;
 		}
-		state = stack_state.top().second;
-		parsed_len = stack_state.top().first;
+		state = stack_state.top().state;
+		parsed_len = stack_state.top().pos;
 		stack_state.pop();
 		counter++;
-		Symbol elem(s[parsed_len]);
+		Symbol symb(s[parsed_len]);
 		set<int> trans;
-		if (state.transitions.count(elem))
-			trans = state.transitions.at(elem);
+		if (state->transitions.count(symb))
+			trans = state->transitions.at(symb);
 		// Переходы в новые состояния по очередному символу строки
 		if (parsed_len + 1 <= s.size()) {
-			for (auto new_state : trans) {
-				stack_state.push({parsed_len + 1, states[new_state]});
+			for (int to : trans) {
+				stack_state.emplace(parsed_len + 1, &states[to]);
 			}
 		}
 
 		// Если произошёл откат по строке, то эпсилон-переходы из рассмотренных состояний больше не
 		// считаются повторными
 		if (!visited_eps.empty()) {
+			set<tuple<int, int, int>> temp_eps;
 			for (auto pos : visited_eps) {
 				if (std::get<0>(pos) <= parsed_len)
-					aux_eps.insert(pos);
+					temp_eps.insert(pos);
 			}
-			visited_eps = aux_eps;
-			aux_eps.clear();
+			visited_eps = temp_eps;
 		}
 		// Добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
 		// состояния
 		set<int> reach_eps;
-		if (state.transitions.count(Symbol::epsilon()))
-			reach_eps = state.transitions.at(Symbol::epsilon());
-		for (int eps_tr : reach_eps) {
-			if (visited_eps.find({parsed_len, state.index, eps_tr}) == visited_eps.end()) {
-				stack_state.push({parsed_len, states[eps_tr]});
-				visited_eps.insert({parsed_len, state.index, eps_tr});
+		if (state->transitions.count(Symbol::epsilon()))
+			reach_eps = state->transitions.at(Symbol::epsilon());
+		for (int eps_to : reach_eps) {
+			if (!visited_eps.count({parsed_len, state->index, eps_to})) {
+				stack_state.emplace(parsed_len, &states[eps_to]);
+				visited_eps.insert({parsed_len, state->index, eps_to});
 			}
 		}
 	}
-	if (s.size() == parsed_len && state.is_terminal) {
+
+	if (s.size() == parsed_len && state->is_terminal) {
 		return {counter, true};
 	}
+
 	return {counter, false};
 }
 

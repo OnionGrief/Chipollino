@@ -54,11 +54,35 @@ class MFAState : public State {
 	bool operator==(const MFAState& other) const;
 };
 
+struct ParingState {
+	int pos;
+	const MFAState* state;
+	std::unordered_set<int> opened_cells;
+	std::unordered_map<int, std::pair<int, int>> memory; // значение - начало и конец подстроки
+
+	ParingState(int pos, const MFAState* state, std::unordered_set<int>& opened_cells,
+				std::unordered_map<int, std::pair<int, int>>& memory);
+};
+
+class Matcher {
+  protected:
+	const std::string* s;
+
+  public:
+	Matcher(const std::string&);
+
+	virtual void match(
+		const ParingState&, MFAState::Transitions&,		 // NOLINT(runtime/references)
+		std::vector<std::tuple<Symbol, int, int>>&) = 0; // NOLINT(runtime/references)
+};
+
 class MemoryFiniteAutomaton : public AbstractMachine {
   private:
 	std::vector<MFAState> states;
 
 	static MemoryFiniteAutomaton get_just_one_total_trap(const std::shared_ptr<Language>& language);
+
+	std::pair<int, bool> _parse_by_mfa(const std::string&, Matcher*) const;
 
   public:
 	MemoryFiniteAutomaton();
@@ -81,4 +105,6 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	MemoryFiniteAutomaton add_trap_state(iLogTemplate* log = nullptr) const;
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	MemoryFiniteAutomaton complement(iLogTemplate* log = nullptr) const; // меняет язык
+	// проверяет, распознаёт ли автомат слово
+	std::pair<int, bool> parse_by_mfa(const std::string&) const;
 };

@@ -13,7 +13,7 @@ Symbol::Symbol(char c) : symbol(string(1, c)), value(string(1, c)) {}
 
 Symbol Symbol::Ref(int number) {
 	Symbol s;
-	s.is_reference = true;
+	s.reference = number;
 	s.symbol = to_string(number);
 	s.value = '&' + s.symbol;
 	return s;
@@ -21,7 +21,7 @@ Symbol Symbol::Ref(int number) {
 
 void Symbol::update_value() {
 	std::stringstream ss;
-	if (is_reference)
+	if (reference.has_value())
 		ss << '&';
 	ss << symbol;
 
@@ -63,6 +63,10 @@ bool Symbol::is_epsilon() const {
 bool Symbol::operator==(const Symbol& other) const {
 	return symbol == other.symbol && annote_numbers == other.annote_numbers &&
 		   linearize_numbers == other.linearize_numbers;
+}
+
+bool Symbol::operator==(char c) const {
+	return symbol.size() == 1 && symbol[0] == c;
 }
 
 bool Symbol::operator!=(const Symbol& other) const {
@@ -121,7 +125,11 @@ bool Symbol::is_linearized() const {
 }
 
 bool Symbol::is_ref() const {
-	return is_reference;
+	return reference.has_value();
+}
+
+int Symbol::get_ref() const {
+	return reference.value();
 }
 
 int Symbol::last_linearization_number() {

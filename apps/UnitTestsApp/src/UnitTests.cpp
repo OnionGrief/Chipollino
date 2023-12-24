@@ -603,19 +603,19 @@ TEST(TestAmbiguity, AmbiguityValues) {
 		 FiniteAutomaton::exponentially_ambiguous},
 	};
 
-	//	for_each(tests.begin(), tests.end(), [](const Test& test) {
-	//		auto [test_number, reg_string, type, expected_res] = test;
-	//		// cout << test_number << endl;
-	//		switch (type) {
-	//		case thompson:
-	//			ASSERT_TRUE(Regex(reg_string).to_thompson().ambiguity() == expected_res);
-	//			break;
-	//		case glushkov:
-	//			ASSERT_TRUE(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
-	//			break;
-	//		case ilieyu:
-	//			ASSERT_TRUE(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
-	//			break;
-	//		}
-	//	});
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [test_number, reg_string, type, expected_res] = test;
+		// cout << test_number << endl;
+		switch (type) {
+		case thompson:
+			ASSERT_TRUE(Regex(reg_string).to_thompson().ambiguity() == expected_res);
+			break;
+		case glushkov:
+			ASSERT_TRUE(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
+			break;
+		case ilieyu:
+			ASSERT_TRUE(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
+			break;
+		}
+	});
 }

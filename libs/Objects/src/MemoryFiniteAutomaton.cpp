@@ -1,5 +1,6 @@
-#include <cassert>
+#include <algorithm>
 #include <sstream>
+#include <stack>
 #include <utility>
 
 #include "Objects/Language.h"
@@ -8,8 +9,10 @@
 
 using std::pair;
 using std::set;
+using std::stack;
 using std::string;
 using std::stringstream;
+using std::tuple;
 using std::unordered_map;
 using std::unordered_set;
 using std::vector;
@@ -280,4 +283,186 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const
 		//		log->set_parameter("result", new_mfa);
 	}
 	return new_mfa;
+}
+
+ParingState::ParingState(int pos, const MFAState* state, std::unordered_set<int>& opened_cells,
+						 std::unordered_map<int, std::pair<int, int>>& memory)
+	: pos(pos), state(state), opened_cells(opened_cells), memory(memory){};
+
+Matcher::Matcher(const string& s) : s(&s) {}
+
+// пара {переходы по символам-буквам/непустым символам-ссылкам, переходы по эпсилон/пустым ссылкам}
+pair<MFAState::Transitions, MFAState::Transitions> get_transitions(const string& s,
+																   const ParingState& parsing_state,
+																   Matcher* matcher) {
+	MFAState::Transitions transitions, eps_transitions;
+	// тройки {символ-ссылка, начало подстроки, конец подстроки}
+	vector<tuple<Symbol, int, int>> refs_to_match;
+	for (const auto& [symb, states_to] : parsing_state.state->transitions) {
+		if (symb.is_ref()) {
+			if (!parsing_state.memory.count(symb.get_ref())) {
+				// пустая ссылка добавляется к eps-переходам
+				eps_transitions[symb] = states_to;
+				continue;
+			}
+			const pair<int, int>& substr = parsing_state.memory.at(symb.get_ref());
+			if (substr.second - substr.first <= s.size() - parsing_state.pos) {
+				refs_to_match.push_back({symb, substr.first, substr.second});
+			}
+		} else if (symb == s[parsing_state.pos])
+			transitions[symb] = states_to;
+		else if (symb.is_epsilon())
+			eps_transitions[symb] = states_to;
+	}
+
+	if (!refs_to_match.empty())
+		matcher->match(parsing_state, transitions, refs_to_match);
+
+	return {transitions, eps_transitions};
+}
+
+// для символа-буквы - 1, для символа-ссылки - длина содержимого памяти
+int get_symbol_len(const unordered_map<int, pair<int, int>>& memory, const Symbol& symbol) {
+	if (symbol.is_ref()) {
+		pair<int, int> substr = memory.at(symbol.get_ref());
+		return substr.second - substr.first;
+	} else if (!symbol.is_epsilon()) {
+		return 1;
+	}
+	return 0;
+}
+
+pair<unordered_set<int>, unordered_map<int, pair<int, int>>> update_memory(
+	unordered_set<int> opened_cells, unordered_map<int, pair<int, int>> memory,
+	const Symbol& symbol, const MFATransition::MemoryActions& memory_actions, int pos) {
+	for (const auto [num, action] : memory_actions) {
+		if (action == MFATransition::MemoryAction::open) {
+			if (opened_cells.count(num))
+				std::cerr << "Cell is already opened";
+			opened_cells.insert(num);
+			memory[num].first = pos;
+			memory[num].second = pos;
+		} else {
+			if (!opened_cells.count(num))
+				std::cerr << "Cell is already closed";
+			opened_cells.erase(num);
+		}
+	}
+
+	for (auto num : opened_cells) {
+		memory[num].second += get_symbol_len(memory, symbol);
+	}
+
+	return {opened_cells, memory};
+}
+
+std::pair<int, bool> MemoryFiniteAutomaton::_parse_by_mfa(const std::string& s,
+														  Matcher* matcher) const {
+	// пара (актуальный индекс элемента в строке, состояние)
+	stack<ParingState> stack_state;
+	// тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
+	set<tuple<int, int, int>> visited_eps;
+	int counter = 0;
+	int parsed_len = 0;
+	const MFAState* state = &states[initial_state];
+	stack_state.emplace(
+		parsed_len, state, unordered_set<int>({}), unordered_map<int, pair<int, int>>({}));
+	while (!stack_state.empty()) {
+		if (state->is_terminal && parsed_len == s.size()) {
+			break;
+		}
+		ParingState parsing_state = stack_state.top();
+		state = parsing_state.state;
+		parsed_len = parsing_state.pos;
+		stack_state.pop();
+		counter++;
+		// состояния достижимые по символам-буквам/символам-ссылкам
+		// и состояния достижимые по эпсилон-переходам/пустым ссылкам
+		auto [reach, reach_eps] = get_transitions(s, parsing_state, matcher);
+
+		// переходы в новые состояния по букве/непустой ссылке
+		if (parsed_len + 1 <= s.size()) {
+			for (const auto& [symbol, states_to] : reach) {
+				for (const auto& to : states_to) {
+					auto [new_opened_cells, new_memory] = update_memory(parsing_state.opened_cells,
+																		parsing_state.memory,
+																		symbol,
+																		to.memory_actions,
+																		parsed_len);
+					stack_state.emplace(parsed_len + get_symbol_len(new_memory, symbol),
+										&states[to.to],
+										new_opened_cells,
+										new_memory);
+				}
+			}
+		}
+
+		// если произошёл откат по строке, то эпсилон-переходы из рассмотренных состояний больше не
+		// считаются повторными
+		if (!visited_eps.empty()) {
+			set<tuple<int, int, int>> temp_eps;
+			for (auto pos : visited_eps) {
+				if (std::get<0>(pos) <= parsed_len)
+					temp_eps.insert(pos);
+			}
+			visited_eps = temp_eps;
+		}
+
+		// добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
+		// состояния
+		for (const auto& [symb, states_to] : reach_eps) {
+			for (const auto& eps_tr : states_to) {
+				if (!visited_eps.count({parsed_len, state->index, eps_tr.to})) {
+					auto [new_opened_cells, new_memory] = update_memory(parsing_state.opened_cells,
+																		parsing_state.memory,
+																		Symbol::epsilon(),
+																		eps_tr.memory_actions,
+																		parsed_len);
+					stack_state.emplace(
+						parsed_len, &states[eps_tr.to], new_opened_cells, new_memory);
+					visited_eps.insert({parsed_len, state->index, eps_tr.to});
+				}
+			}
+		}
+	}
+
+	if (s.size() == parsed_len && state->is_terminal) {
+		return {counter, true};
+	}
+
+	return {counter, false};
+}
+
+class BasicMatcher : public Matcher {
+  public:
+	BasicMatcher(const string&);
+
+	void match(const ParingState&, MFAState::Transitions&, // NOLINT(runtime/references)
+			   vector<tuple<Symbol, int, int>>&) override; // NOLINT(runtime/references)
+};
+
+BasicMatcher::BasicMatcher(const string& s) : Matcher(s) {}
+
+void BasicMatcher::match(const ParingState& parsing_state, MFAState::Transitions& transitions,
+						 vector<tuple<Symbol, int, int>>& refs_to_match) {
+	for (int i = parsing_state.pos; i <= s->size(); i++) {
+		if (refs_to_match.empty())
+			break;
+		for (auto it = refs_to_match.begin(); it != refs_to_match.end();) {
+			Symbol& symbol = std::get<0>(*it);
+			int index = std::get<1>(*it) + i - parsing_state.pos;
+			if (index == std::get<2>(*it)) {
+				transitions[symbol] = parsing_state.state->transitions.at(symbol);
+				it = refs_to_match.erase(it);
+			} else if ((*s)[index] != (*s)[i])
+				it = refs_to_match.erase(it);
+			else
+				++it;
+		}
+	}
+}
+
+std::pair<int, bool> MemoryFiniteAutomaton::parse_by_mfa(const string& s) const {
+	BasicMatcher matcher(s);
+	return _parse_by_mfa(s, &matcher);
 }

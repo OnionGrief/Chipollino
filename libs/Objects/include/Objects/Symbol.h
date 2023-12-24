@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -10,7 +11,7 @@ class Symbol {
 	std::vector<int> annote_numbers;
 	std::vector<int> linearize_numbers;
 	std::string symbol;
-	bool is_reference = false;
+	std::optional<int> reference;
 	// symbol + разметка
 	std::string value;
 
@@ -38,6 +39,7 @@ class Symbol {
 	operator std::string() const;
 
 	bool operator==(const Symbol& other) const;
+	bool operator==(char c) const;
 	bool operator!=(const Symbol& other) const;
 	bool operator<(const Symbol& other) const;
 	// возвращает символ эпсилон
@@ -53,6 +55,7 @@ class Symbol {
 	bool is_annotated() const;
 	bool is_linearized() const;
 	bool is_ref() const;
+	int get_ref() const;
 
 	int last_linearization_number();
 
