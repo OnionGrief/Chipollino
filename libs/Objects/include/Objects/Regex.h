@@ -52,6 +52,12 @@ class Regex : public AlgExpression {
 	// Производная по префиксу
 	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
+	// производная для случая с отрицанием
+	bool brzozowski_derivative(Regex* respected_sym, const Regex* reg_e,
+		std::vector<Regex>& result) const;
+	// применение ACI правил
+	Regex* to_aci(std::vector<Regex>& res) const;
+
 	std::pair<std::vector<FAState>, int> get_thompson(
 		int nax_index, const std::set<Symbol>& root_alphabet_symbol) const;
 

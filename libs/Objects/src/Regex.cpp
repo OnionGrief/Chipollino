@@ -57,6 +57,9 @@ Regex* Regex::make() const {
 }
 
 template <typename T> Regex* Regex::cast(T* ptr, bool not_null_ptr) {
+	if (ptr == nullptr) {
+		return nullptr;
+	}
 	auto* r = dynamic_cast<Regex*>(ptr);
 	if (!r && not_null_ptr) {
 		throw std::runtime_error("Failed to cast to Regex");
@@ -740,8 +743,88 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 	}
 }
 
-bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
-												   vector<Regex>& result) const {
+bool comp(Regex i, Regex j) {
+	return i.to_txt(false) < j.to_txt(false);
+}
+
+Regex* Regex::to_aci(std::vector<Regex>& res) const
+{
+	// отсортировали вектор регулярок
+	std::sort(res.begin(), res.end(), comp);
+
+	// rule w | w = w
+	for (size_t i = 0; i < res.size(); i++)
+	{
+		for (size_t j = i + 1; j < res.size(); j++)
+		{
+			if (i == j)
+				continue;
+			
+			if (res[i].to_txt() == res[j].to_txt()) {
+				res.erase(res.begin() + j);
+			}
+		}
+		
+	}
+
+	// rule w1 | w2 = w2 | w1 не имеет смысла тк наборы отсортированы
+
+	// rule (w1 | w2) | w3 = w1 | (w2 | w3) ??
+
+	if (!res.size())
+		return nullptr;
+
+	if(res.size() == 1)
+		return res[0].make_copy();
+
+	Regex cur_result;
+	cur_result.type = Type::alt;
+	cur_result.term_l = res[0].make_copy();
+	auto r = Regex::cast(cur_result.term_r);
+	for (size_t i = 1; i < res.size(); i++)
+	{
+		if (i == res.size() - 1) {
+			r = res[i].make_copy();
+		} else {
+			r->type = Type::alt;
+			r->term_l = res[i].make_copy();
+			r =  Regex::cast(r->term_r);
+		}
+	}
+	
+	Regex ress;
+	ress.type = Type::negative;
+	ress.term_l = cur_result.make_copy();
+	std::cout << " ACI: " << ress.to_txt(false) << std::endl;
+	return &ress;
+
+	std::string regex = "^(";
+	int count;
+	for (size_t i = 0; i < res.size(); i++)
+	{	
+		if (res[i].to_txt() != "") {
+			count++;
+		}
+
+		if (i == res.size() - 1) {
+			regex += res[i].to_txt() + ")";
+			continue;
+		}
+
+		regex += res[i].to_txt() + "|";
+	}
+
+	if (count == 0)
+		return nullptr;
+
+	std::cout << res[0].to_txt(false) << " ACI: " << regex << std::endl;	
+	Regex rr(regex);
+	return &rr;
+}
+
+bool Regex::brzozowski_derivative(Regex* respected_sym, const Regex* reg_e,
+		vector<Regex>& result) const
+{
 	Regex cur_result;
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
 		cout << "Invalid input: unexpected regex instead of symbol\n";
@@ -770,6 +853,110 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		result.push_back(cur_result);
 		return answer;
 	case Type::alt:
+		answer1 = brzozowski_derivative(
+			respected_sym, Regex::cast(reg_e->term_l), subresult);
+		answer2 = brzozowski_derivative(
+			respected_sym, Regex::cast(reg_e->term_r), subresult1);
+		for (const auto& i : subresult) {
+			result.push_back(i);
+		}
+		for (const auto& i : subresult1) {
+			result.push_back(i);
+		}
+		answer = answer1 | answer2;
+		return answer;
+	case Type::conc:
+		cur_subresult.type = Type::conc;
+		answer1 = brzozowski_derivative(
+			respected_sym, Regex::cast(reg_e->term_l), subresult);
+		cur_subresult.term_r = reg_e->term_r->make_copy();
+		for (auto& i : subresult) {
+			cur_subresult.term_l = i.make_copy();
+			result.push_back(cur_subresult);
+			delete cur_subresult.term_l;
+			cur_subresult.term_l = nullptr;
+		}
+		if (Regex::cast(reg_e->term_l)->contains_eps()) {
+			answer2 = brzozowski_derivative(
+				respected_sym, Regex::cast(reg_e->term_r), subresult1);
+			for (const auto& i : subresult1) {
+				result.push_back(i);
+			}
+			answer = answer1 | answer2;
+		} else {
+			answer = answer1;
+		}
+		return answer;
+	case Type::star:
+		cur_result.type = Type::conc;
+		answer = brzozowski_derivative(
+			respected_sym, Regex::cast(reg_e->term_l), subresult);
+		cur_result.term_r = reg_e->make_copy();
+		for (auto& i : subresult) {
+			cur_result.term_l = i.make_copy();
+			result.push_back(cur_result);
+			delete cur_result.term_l;
+			cur_result.term_l = nullptr;
+		}
+		return answer;
+	case Type::negative:
+		cur_result.type = Type::negative;
+		answer = brzozowski_derivative(
+			respected_sym, Regex::cast(reg_e->term_l), subresult);
+
+		if (!answer) {
+			cur_subresult.type = Type::symb;
+			cur_subresult.value.symbol = Symbol::EpmptySet;
+			cur_result.term_l = cur_subresult.make_copy();
+			result.push_back(cur_result);
+			delete cur_result.term_l;
+			cur_result.term_l = nullptr;
+		} else {
+			auto r = to_aci(subresult);
+			if (r == nullptr)
+				return !answer;
+			cur_result.term_l = r->make_copy();
+			result.push_back(cur_result);
+			delete cur_result.term_l;
+			cur_result.term_l = nullptr;
+		}
+
+		
+
+		return !answer;
+	}
+}
+
+bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
+												   vector<Regex>& result) const {
+	Regex cur_result;
+	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
+		cout << "Invalid input: unexpected regex instead of symbol\n";
+		return false;
+	}
+	if (respected_sym->type == Type::eps) {
+		cur_result.type = reg_e->type;
+		if (reg_e->term_l != nullptr)
+			cur_result.term_l = reg_e->term_l->make_copy();
+		if (reg_e->term_l)
+			cur_result.term_r = reg_e->term_l->make_copy();
+		result.push_back({cur_result});
+		return true;
+	}
+	Regex cur_subresult, cur_subresult1;
+	vector<Regex> subresult, subresult1;
+	bool answer = true, answer1, answer2;
+	switch (reg_e->type) {
+	case Type::eps:
+		return false;
+	case Type::symb:
+		if (respected_sym->value.symbol != reg_e->value.symbol) {
+			return false;
+		}
+		cur_result.type = Type::eps;
+		result.push_back({cur_result});
+		return answer;
+	case Type::alt:
 		answer1 = partial_derivative_with_respect_to_sym(
 			respected_sym, Regex::cast(reg_e->term_l), subresult);
 		answer2 = partial_derivative_with_respect_to_sym(
@@ -789,7 +976,7 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		cur_subresult.term_r = reg_e->term_r->make_copy();
 		for (auto& i : subresult) {
 			cur_subresult.term_l = i.make_copy();
-			result.push_back(cur_subresult);
+			result.push_back({cur_subresult});
 			delete cur_subresult.term_l;
 			cur_subresult.term_l = nullptr;
 		}
@@ -811,14 +998,14 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		cur_result.term_r = reg_e->make_copy();
 		for (auto& i : subresult) {
 			cur_result.term_l = i.make_copy();
-			result.push_back(cur_result);
+			result.push_back({cur_result});
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
 		}
 		return answer;
 	case Type::negative:
 		cur_result.type = Type::negative;
-		answer = partial_derivative_with_respect_to_sym(
+		answer = brzozowski_derivative(
 			respected_sym, Regex::cast(reg_e->term_l), subresult);
 
 		if (!answer) {
@@ -828,16 +1015,17 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 			result.push_back(cur_result);
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
-		}
-
-		for (auto& i : subresult) {
-			cur_result.term_l = i.make_copy();
+		} else {
+			auto r = to_aci(subresult);
+			if (r == nullptr)
+				return !answer;
+			cur_result.term_l = r->make_copy();
 			result.push_back(cur_result);
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
 		}
 
-		return true;
+		return !answer;
 	}
 }
 

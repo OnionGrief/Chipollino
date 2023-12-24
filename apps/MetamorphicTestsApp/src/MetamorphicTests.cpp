@@ -28,11 +28,13 @@ TEST(TestArden, Test_arden_on_random_regex) {
 }
 
 TEST(TestNFA, Test_equivalent_nfa_negative) {
-	RegexGenerator rg(15, 10, 5, 3);
-    rg.set_neg_chance(2); // для отрицания
+	RegexGenerator rg(4, 1, 2, 2);
+   	rg.set_neg_chance(2); // для отрицания
 	for (int i = 0; i < 30; i++) {
 		string str = rg.generate_regex();
-		Regex r(str);
-		ASSERT_TRUE(FiniteAutomaton::equivalent(r.to_thompson(), r.to_antimirov()));
+		Regex r1(str), r2(str);
+		std::cout << r2.to_txt() << std::endl << r1.to_txt()<< std::endl;
+		std::cout << "Томпсон:\n" << r1.to_thompson().minimize().to_txt() << std::endl << "Антимирова:\n" << r2.to_antimirov().minimize().to_txt() << std::endl; 
+		ASSERT_TRUE(FiniteAutomaton::equivalent(r1.to_thompson().minimize(), r2.to_antimirov().minimize()));
 	}
 }

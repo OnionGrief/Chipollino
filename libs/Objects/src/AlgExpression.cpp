@@ -127,7 +127,10 @@ string AlgExpression::to_txt(bool eps_is_empty) const {
 			str2 = "(" + str2 + ")";
 		}
 		break;
-	case Type::symb:
+	case Type::symb: 
+		// if (value.symbol != Symbol::EpmptySet || !eps_is_empty) {
+		// 	symb = value.symbol;
+		// }
 		symb = value.symbol;
 		break;
 	case Type::eps:
