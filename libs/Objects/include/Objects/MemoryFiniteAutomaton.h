@@ -2,6 +2,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -60,8 +61,8 @@ struct ParingState {
 	std::unordered_set<int> opened_cells;
 	std::unordered_map<int, std::pair<int, int>> memory; // значение - начало и конец подстроки
 
-	ParingState(int pos, const MFAState* state, std::unordered_set<int>& opened_cells,
-				std::unordered_map<int, std::pair<int, int>>& memory);
+	ParingState(int pos, const MFAState* state, const std::unordered_set<int>& opened_cells,
+				const std::unordered_map<int, std::pair<int, int>>& memory);
 };
 
 class Matcher {
@@ -69,7 +70,7 @@ class Matcher {
 	const std::string* s;
 
   public:
-	Matcher(const std::string&);
+	explicit Matcher(const std::string&);
 
 	virtual void match(
 		const ParingState&, MFAState::Transitions&,		 // NOLINT(runtime/references)
@@ -107,4 +108,5 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	MemoryFiniteAutomaton complement(iLogTemplate* log = nullptr) const; // меняет язык
 	// проверяет, распознаёт ли автомат слово
 	std::pair<int, bool> parse_by_mfa(const std::string&) const;
+	std::pair<int, bool> parse_by_mfa_additional(const std::string&) const;
 };

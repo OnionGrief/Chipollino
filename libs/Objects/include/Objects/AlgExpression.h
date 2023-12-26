@@ -46,11 +46,10 @@ class AlgExpression : public BaseObject {
 		// Unary:
 		star,
 		negative,
+		memoryWriter, // поддерево "записывается" в ячейку памяти
 		// Terminal:
 		symb,
 		ref,
-		// поддерево "записывается" в ячейку памяти
-		memoryWriter,
 	};
 
 	// множество уникальных символов алфавита в дереве

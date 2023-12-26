@@ -559,6 +559,40 @@ TEST(TestIsDeterministic, MFA_IsDeterministic) {
 	ASSERT_TRUE(BackRefRegex("[a]:1").to_mfa().is_deterministic());
 }
 
+TEST(TestParsing, MFAParsing) {
+	using Test = std::tuple<string, string, bool>;
+	vector<Test> tests = {
+		{"[a*]:1&1", "aaa", false},
+		{"[a*]:1&1", "aaaa", true},
+		{"[a*]:1&1[b|c]:2*&2", "abcb", false},
+		{"[a*]:1&1[b|c]:2*&2", "bcb", false},
+		{"[a*]:1&1[b|c]:2*&2", "bcc", true},
+		{"[a*]:1&1[b|c]:2*&2", "aaaabcc", true},
+		{"[a*]:1&1[b|c]:1*&1", "bcc", true},
+		{"[a*]:1&1[b|c]:1*&1", "aaaabcc", true},
+		{"[[a*]:1b&1]:2&2", "aabaaaba", false},
+		{"[[a*]:1b&1]:2&2", "aabaaaabaa", true},
+		{"[[a*]:1b&1]:2&2", "aabaaaabaa", true},
+		{"([&2]:1[&1a]:2)*", "aaaaaaaa", false},
+		{"([&2]:1[&1a]:2)*", "aaaaaaaaa", true},
+	};
+
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [rgx_str, str, expected_res] = test;
+
+		std::stringstream message;
+		message << "Regex: " << rgx_str << ", Str: " << str << ", Res: " << expected_res;
+		SCOPED_TRACE(message.str());
+
+		MemoryFiniteAutomaton mfa(BackRefRegex(rgx_str).to_mfa()),
+			mfa_add(BackRefRegex(rgx_str).to_mfa_additional());
+		ASSERT_EQ(mfa.parse_by_mfa(str).second, expected_res);
+		ASSERT_EQ(mfa.parse_by_mfa_additional(str).second, expected_res);
+		ASSERT_EQ(mfa_add.parse_by_mfa(str).second, expected_res);
+		ASSERT_EQ(mfa_add.parse_by_mfa_additional(str).second, expected_res);
+	});
+}
+
 TEST(TestAmbiguity, AmbiguityValues) {
 	enum AutomatonType {
 		thompson,

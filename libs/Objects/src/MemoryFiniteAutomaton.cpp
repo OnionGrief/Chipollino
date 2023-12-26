@@ -264,9 +264,6 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::get_just_one_total_trap(
 }
 
 MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const {
-	if (!is_deterministic())
-		throw std::logic_error("add_trap_state: automaton must be deterministic");
-
 	MemoryFiniteAutomaton new_mfa(initial_state, states, language->get_alphabet());
 	new_mfa = new_mfa.add_trap_state();
 	int final_states_counter = 0;
@@ -285,9 +282,10 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const
 	return new_mfa;
 }
 
-ParingState::ParingState(int pos, const MFAState* state, std::unordered_set<int>& opened_cells,
-						 std::unordered_map<int, std::pair<int, int>>& memory)
-	: pos(pos), state(state), opened_cells(opened_cells), memory(memory){};
+ParingState::ParingState(int pos, const MFAState* state,
+						 const std::unordered_set<int>& opened_cells,
+						 const std::unordered_map<int, std::pair<int, int>>& memory)
+	: pos(pos), state(state), opened_cells(opened_cells), memory(memory) {}
 
 Matcher::Matcher(const string& s) : s(&s) {}
 
@@ -305,14 +303,20 @@ pair<MFAState::Transitions, MFAState::Transitions> get_transitions(const string&
 				eps_transitions[symb] = states_to;
 				continue;
 			}
-			const pair<int, int>& substr = parsing_state.memory.at(symb.get_ref());
-			if (substr.second - substr.first <= s.size() - parsing_state.pos) {
-				refs_to_match.push_back({symb, substr.first, substr.second});
+			const auto& [l, r] = parsing_state.memory.at(symb.get_ref());
+			if (l == r) {
+				// пустая ссылка добавляется к eps-переходам
+				eps_transitions[symb] = states_to;
+				continue;
 			}
-		} else if (symb == s[parsing_state.pos])
+			if (r - l <= s.size() - parsing_state.pos) {
+				refs_to_match.emplace_back(symb, l, r);
+			}
+		} else if (symb == s[parsing_state.pos]) {
 			transitions[symb] = states_to;
-		else if (symb.is_epsilon())
+		} else if (symb.is_epsilon()) {
 			eps_transitions[symb] = states_to;
+		}
 	}
 
 	if (!refs_to_match.empty())
@@ -337,14 +341,12 @@ pair<unordered_set<int>, unordered_map<int, pair<int, int>>> update_memory(
 	const Symbol& symbol, const MFATransition::MemoryActions& memory_actions, int pos) {
 	for (const auto [num, action] : memory_actions) {
 		if (action == MFATransition::MemoryAction::open) {
-			if (opened_cells.count(num))
-				std::cerr << "Cell is already opened";
 			opened_cells.insert(num);
 			memory[num].first = pos;
 			memory[num].second = pos;
 		} else {
 			if (!opened_cells.count(num))
-				std::cerr << "Cell is already closed";
+				std::cerr << "Cell is already closed\n";
 			opened_cells.erase(num);
 		}
 	}
@@ -358,23 +360,22 @@ pair<unordered_set<int>, unordered_map<int, pair<int, int>>> update_memory(
 
 std::pair<int, bool> MemoryFiniteAutomaton::_parse_by_mfa(const std::string& s,
 														  Matcher* matcher) const {
-	// пара (актуальный индекс элемента в строке, состояние)
-	stack<ParingState> stack_state;
+	stack<ParingState> parsing_states_stack;
 	// тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
 	set<tuple<int, int, int>> visited_eps;
 	int counter = 0;
 	int parsed_len = 0;
 	const MFAState* state = &states[initial_state];
-	stack_state.emplace(
+	parsing_states_stack.emplace(
 		parsed_len, state, unordered_set<int>({}), unordered_map<int, pair<int, int>>({}));
-	while (!stack_state.empty()) {
+	while (!parsing_states_stack.empty()) {
 		if (state->is_terminal && parsed_len == s.size()) {
 			break;
 		}
-		ParingState parsing_state = stack_state.top();
+		ParingState parsing_state = parsing_states_stack.top();
 		state = parsing_state.state;
 		parsed_len = parsing_state.pos;
-		stack_state.pop();
+		parsing_states_stack.pop();
 		counter++;
 		// состояния достижимые по символам-буквам/символам-ссылкам
 		// и состояния достижимые по эпсилон-переходам/пустым ссылкам
@@ -389,10 +390,10 @@ std::pair<int, bool> MemoryFiniteAutomaton::_parse_by_mfa(const std::string& s,
 																		symbol,
 																		to.memory_actions,
 																		parsed_len);
-					stack_state.emplace(parsed_len + get_symbol_len(new_memory, symbol),
-										&states[to.to],
-										new_opened_cells,
-										new_memory);
+					parsing_states_stack.emplace(parsed_len + get_symbol_len(new_memory, symbol),
+												 &states[to.to],
+												 new_opened_cells,
+												 new_memory);
 				}
 			}
 		}
@@ -418,7 +419,7 @@ std::pair<int, bool> MemoryFiniteAutomaton::_parse_by_mfa(const std::string& s,
 																		Symbol::epsilon(),
 																		eps_tr.memory_actions,
 																		parsed_len);
-					stack_state.emplace(
+					parsing_states_stack.emplace(
 						parsed_len, &states[eps_tr.to], new_opened_cells, new_memory);
 					visited_eps.insert({parsed_len, state->index, eps_tr.to});
 				}
@@ -435,7 +436,7 @@ std::pair<int, bool> MemoryFiniteAutomaton::_parse_by_mfa(const std::string& s,
 
 class BasicMatcher : public Matcher {
   public:
-	BasicMatcher(const string&);
+	explicit BasicMatcher(const string&);
 
 	void match(const ParingState&, MFAState::Transitions&, // NOLINT(runtime/references)
 			   vector<tuple<Symbol, int, int>>&) override; // NOLINT(runtime/references)
@@ -449,20 +450,167 @@ void BasicMatcher::match(const ParingState& parsing_state, MFAState::Transitions
 		if (refs_to_match.empty())
 			break;
 		for (auto it = refs_to_match.begin(); it != refs_to_match.end();) {
-			Symbol& symbol = std::get<0>(*it);
-			int index = std::get<1>(*it) + i - parsing_state.pos;
-			if (index == std::get<2>(*it)) {
+			const auto& [symbol, l, r] = *it;
+			if (l == parsing_state.pos)
+				std::cerr << "Trying to match ref to current position\n";
+			int index = l + i - parsing_state.pos;
+			if (index == r) {
 				transitions[symbol] = parsing_state.state->transitions.at(symbol);
 				it = refs_to_match.erase(it);
-			} else if ((*s)[index] != (*s)[i])
+			} else if ((*s)[index] != (*s)[i]) {
 				it = refs_to_match.erase(it);
-			else
+			} else {
 				++it;
+			}
 		}
 	}
 }
 
 std::pair<int, bool> MemoryFiniteAutomaton::parse_by_mfa(const string& s) const {
 	BasicMatcher matcher(s);
+	return _parse_by_mfa(s, &matcher);
+}
+
+class FastMatcher : public Matcher {
+  private:
+	vector<vector<int>> sparse_table;
+	vector<int> inv_sa;
+
+	int query_sparse_table(int l, int r);
+
+  public:
+	explicit FastMatcher(const string&);
+
+	void match(const ParingState&, MFAState::Transitions&, // NOLINT(runtime/references)
+			   vector<tuple<Symbol, int, int>>&) override; // NOLINT(runtime/references)
+};
+
+void counting_sort(vector<int>& p, const vector<int>& c) { // NOLINT(runtime/references)
+	int n = p.size();
+	vector<int> count(n, 0);
+	vector<int> p_new(n, 0);
+
+	for (int i = 0; i < n; i++) {
+		count[c[p[i]]]++;
+	}
+
+	for (int i = 1; i < n; i++) {
+		count[i] += count[i - 1];
+	}
+
+	for (int i = n - 1; i >= 0; i--) {
+		p_new[--count[c[p[i]]]] = p[i];
+	}
+
+	p = p_new;
+}
+
+FastMatcher::FastMatcher(const string& s) : Matcher(s), inv_sa(s.size() + 1) {
+	// построение суффиксного массива
+	string temp_s = s + "$";
+	int n = temp_s.size();
+	vector<int> p(n, 0);
+	vector<int> c(n, 0);
+
+	// сортируем символы и строим начальные массивы p и c
+	vector<pair<char, int>> a(n);
+	for (int i = 0; i < n; i++) {
+		a[i] = {temp_s[i], i};
+	}
+	sort(a.begin(), a.end());
+
+	for (int i = 0; i < n; i++) {
+		p[i] = a[i].second;
+	}
+	c[p[0]] = 0;
+	for (int i = 1; i < n; i++) {
+		if (a[i].first == a[i - 1].first) {
+			c[p[i]] = c[p[i - 1]];
+		} else {
+			c[p[i]] = c[p[i - 1]] + 1;
+		}
+	}
+
+	int k = 0;
+	while ((1 << k) < n) {
+		for (int i = 0; i < n; i++) {
+			p[i] = (p[i] - (1 << k) + n) % n;
+		}
+		counting_sort(p, c);
+
+		vector<int> c_new(n, 0);
+		c_new[p[0]] = 0;
+		for (int i = 1; i < n; i++) {
+			pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << k)) % n]};
+			pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << k)) % n]};
+			if (prev == cur) {
+				c_new[p[i]] = c_new[p[i - 1]];
+			} else {
+				c_new[p[i]] = c_new[p[i - 1]] + 1;
+			}
+		}
+		c = c_new;
+
+		k++;
+	}
+
+	// построение LCP
+	vector<int> lcp(n);
+
+	for (int i = 0; i < n; i++) {
+		inv_sa[p[i]] = i;
+	}
+
+	int len = 0;
+	for (int i = 0; i < n; i++) {
+		if (inv_sa[i] == n - 1) {
+			len = 0;
+			continue;
+		}
+
+		int j = p[inv_sa[i] + 1];
+		while (i + len < n && j + len < n && temp_s[i + len] == temp_s[j + len]) {
+			len++;
+		}
+
+		lcp[inv_sa[i]] = len;
+		if (len > 0)
+			len--;
+	}
+
+	// построение sparse table
+	int logN = log2(n) + 1;
+	sparse_table.resize(n, vector<int>(logN));
+
+	for (int i = 0; i < n; i++) {
+		sparse_table[i][0] = lcp[i];
+	}
+
+	for (int j = 1; j < logN; j++) {
+		for (int i = 0; i + (1 << j) <= n; i++) {
+			sparse_table[i][j] =
+				std::min(sparse_table[i][j - 1], sparse_table[i + (1 << (j - 1))][j - 1]);
+		}
+	}
+}
+
+int FastMatcher::query_sparse_table(int l, int r) {
+	int k = log2(r - l + 1);
+	return std::min(sparse_table[l][k], sparse_table[r - (1 << k) + 1][k]);
+}
+
+void FastMatcher::match(const ParingState& parsing_state, MFAState::Transitions& transitions,
+						vector<tuple<Symbol, int, int>>& refs_to_match) {
+	for (const auto& [symbol, l, r] : refs_to_match) {
+		if (l == parsing_state.pos)
+			std::cerr << "Trying to match ref to current position\n";
+		if (query_sparse_table(std::min(inv_sa[l], inv_sa[parsing_state.pos]),
+							   std::max(inv_sa[l], inv_sa[parsing_state.pos]) - 1) >= r - l)
+			transitions[symbol] = parsing_state.state->transitions.at(symbol);
+	}
+}
+
+std::pair<int, bool> MemoryFiniteAutomaton::parse_by_mfa_additional(const string& s) const {
+	FastMatcher matcher(s);
 	return _parse_by_mfa(s, &matcher);
 }

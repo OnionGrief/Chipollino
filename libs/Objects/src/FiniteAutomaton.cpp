@@ -743,9 +743,6 @@ FiniteAutomaton FiniteAutomaton::add_trap_state(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
-	if (!is_deterministic())
-		throw std::logic_error("add_trap_state: automaton must be deterministic");
-
 	FiniteAutomaton new_dfa(initial_state, states, language->get_alphabet());
 	new_dfa = new_dfa.add_trap_state();
 	int final_states_counter = 0;
@@ -2294,7 +2291,7 @@ pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 		int pos;
 		const FAState* state;
 
-		ParingState(int pos, const FAState* state) : pos(pos), state(state){};
+		ParingState(int pos, const FAState* state) : pos(pos), state(state) {}
 	};
 	// Пара (актуальный индекс элемента в строке, состояние)
 	stack<ParingState> stack_state;

@@ -436,6 +436,7 @@ void BackRefRegex::get_cells_under_iteration(unordered_set<int>& iteration_over_
 		return;
 	case Type::memoryWriter:
 		iteration_over_cells.insert(cell_number);
+		cast(term_l)->get_cells_under_iteration(iteration_over_cells);
 		return;
 	default:
 		return;
