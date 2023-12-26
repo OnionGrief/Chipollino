@@ -47,7 +47,7 @@ void Regex::copy(const AlgExpression* other) {
 }
 
 Regex* Regex::make_copy() const {
-	auto* c = new Regex;
+	auto c = new Regex;
 	c->copy(this);
 	return c;
 }
@@ -57,10 +57,7 @@ Regex* Regex::make() const {
 }
 
 template <typename T> Regex* Regex::cast(T* ptr, bool not_null_ptr) {
-	if (ptr == nullptr) {
-		return nullptr;
-	}
-	auto* r = dynamic_cast<Regex*>(ptr);
+	auto r = dynamic_cast<Regex*>(ptr);
 	if (!r && not_null_ptr) {
 		throw std::runtime_error("Failed to cast to Regex");
 	}
@@ -69,7 +66,7 @@ template <typename T> Regex* Regex::cast(T* ptr, bool not_null_ptr) {
 }
 
 template <typename T> const Regex* Regex::cast(const T* ptr, bool not_null_ptr) {
-	auto* r = dynamic_cast<const Regex*>(ptr);
+	auto r = dynamic_cast<const Regex*>(ptr);
 	if (!r && not_null_ptr) {
 		throw std::runtime_error("Failed to cast to Regex");
 	}
@@ -298,17 +295,41 @@ pair<vector<FAState>, int> Regex::get_thompson(int max_index,
 		fa_negative = FiniteAutomaton(0, fa_negative_states, root_alphabet_symbol);
 		fa_negative = fa_negative.minimize();
 		// берем дополнение автомата
+		// std::cout << fa_negative.to_txt() << std::endl;
 		fa_negative = fa_negative.complement();
+
+		// int initial_state = fa_negative.get_initial();
+		for (int i = 0; i < fa_negative.states.size(); i++) {
+			fa_negative.states[i].index++;
+			for (auto elem: fa_negative.states[i].transitions) {
+				auto& s = fa_negative.states[i].transitions.at(elem.first);
+				std::set<int> new_trans;
+				for(const auto& index: s) {
+					new_trans.insert(index + 1);
+				}
+				fa_negative.states[i].transitions[elem.first] = new_trans;
+			}
+		}
+
+		fa_negative.states.emplace(fa_negative.states.begin(), 0, "q", false);
+		fa_negative.states[0].set_transition(fa_negative.get_initial() + 1, Symbol::epsilon());
+		fa_negative.initial_state = 0;
+		// std::cout << fa_negative.to_txt() << std::endl;
+
 		// нумеруем состояния
+		
 		for (auto& state : fa_negative.states) {
 			state.identifier = "q" + to_string(max_index);
 			if (state.is_terminal) {
 				state.is_terminal = false;
 				state.set_transition(fa_negative.states.size(), Symbol::epsilon());
+				// fa_negative.states[fa_negative.states.size()].is_terminal = true; // ?????
 			}
 
 			max_index++;
 		}
+		// fa_negative_states.emplace_back(max_index, "q", true);
+		// max_index++;
 
 		id_str = "q" + to_string(max_index);
 		max_index++;
@@ -751,7 +772,6 @@ Regex* Regex::to_aci(std::vector<Regex>& res) const
 {
 	// отсортировали вектор регулярок
 	std::sort(res.begin(), res.end(), comp);
-
 	// rule w | w = w
 	for (size_t i = 0; i < res.size(); i++)
 	{
@@ -764,62 +784,52 @@ Regex* Regex::to_aci(std::vector<Regex>& res) const
 				res.erase(res.begin() + j);
 			}
 		}
-		
 	}
 
+	// for (auto elem: res) {
+	// 	std::cout << elem.to_txt(false) << " ";
+	// }
+	// std::cout << std::endl;
 	// rule w1 | w2 = w2 | w1 не имеет смысла тк наборы отсортированы
 
 	// rule (w1 | w2) | w3 = w1 | (w2 | w3) ??
-
+	Regex ress;
+	ress.type = Type::negative;
 	if (!res.size())
 		return nullptr;
 
-	if(res.size() == 1)
-		return res[0].make_copy();
+	if(res.size() == 1) {
+		ress.term_l = res[0].make_copy();
+		return ress.make_copy();
+	}
 
-	Regex cur_result;
-	cur_result.type = Type::alt;
-	cur_result.term_l = res[0].make_copy();
-	auto r = Regex::cast(cur_result.term_r);
+	Regex* cur_result;
+	cur_result = new Regex;
+	cur_result->type = Type::alt;
+	cur_result->term_l = res[0].make_copy();
+	cur_result->term_r = new Regex;
+	auto r = Regex::cast(cur_result->term_r, false);
 	for (size_t i = 1; i < res.size(); i++)
 	{
-		if (i == res.size() - 1) {
-			r = res[i].make_copy();
+		if (2 == res.size()) {
+			cur_result->term_r = res[i].make_copy();
 		} else {
 			r->type = Type::alt;
 			r->term_l = res[i].make_copy();
-			r =  Regex::cast(r->term_r);
+			r->term_r = new Regex;
+			
+			if (i == res.size() - 2) {
+				r->term_r = res[res.size() - 1].make_copy();
+				break;
+			} else {
+				r = Regex::cast(r->term_r, false);
+			}
 		}
 	}
 	
-	Regex ress;
-	ress.type = Type::negative;
-	ress.term_l = cur_result.make_copy();
-	std::cout << " ACI: " << ress.to_txt(false) << std::endl;
-	return &ress;
-
-	std::string regex = "^(";
-	int count;
-	for (size_t i = 0; i < res.size(); i++)
-	{	
-		if (res[i].to_txt() != "") {
-			count++;
-		}
-
-		if (i == res.size() - 1) {
-			regex += res[i].to_txt() + ")";
-			continue;
-		}
-
-		regex += res[i].to_txt() + "|";
-	}
-
-	if (count == 0)
-		return nullptr;
-
-	std::cout << res[0].to_txt(false) << " ACI: " << regex << std::endl;	
-	Regex rr(regex);
-	return &rr;
+	
+	ress.term_l = cur_result->make_copy();
+	return ress.make_copy();
 }
 
 bool Regex::brzozowski_derivative(Regex* respected_sym, const Regex* reg_e,
@@ -881,7 +891,7 @@ bool Regex::brzozowski_derivative(Regex* respected_sym, const Regex* reg_e,
 				respected_sym, Regex::cast(reg_e->term_r), subresult1);
 			for (const auto& i : subresult1) {
 				result.push_back(i);
-			}
+			}	
 			answer = answer1 | answer2;
 		} else {
 			answer = answer1;
@@ -911,19 +921,21 @@ bool Regex::brzozowski_derivative(Regex* respected_sym, const Regex* reg_e,
 			result.push_back(cur_result);
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
+			return !answer;
 		} else {
 			auto r = to_aci(subresult);
 			if (r == nullptr)
-				return !answer;
-			cur_result.term_l = r->make_copy();
-			result.push_back(cur_result);
-			delete cur_result.term_l;
-			cur_result.term_l = nullptr;
+				return answer;
+			// cur_result.term_l = r->make_copy();
+			// result.push_back(cur_result);
+			result.push_back(*r);
+			// delete cur_result.term_l;
+			// cur_result.term_l = nullptr;
 		}
 
 		
 
-		return !answer;
+		return answer;
 	}
 }
 
@@ -976,7 +988,7 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		cur_subresult.term_r = reg_e->term_r->make_copy();
 		for (auto& i : subresult) {
 			cur_subresult.term_l = i.make_copy();
-			result.push_back({cur_subresult});
+			result.push_back(cur_subresult);
 			delete cur_subresult.term_l;
 			cur_subresult.term_l = nullptr;
 		}
@@ -998,7 +1010,7 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 		cur_result.term_r = reg_e->make_copy();
 		for (auto& i : subresult) {
 			cur_result.term_l = i.make_copy();
-			result.push_back({cur_result});
+			result.push_back(cur_result);
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
 		}
@@ -1015,17 +1027,19 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 			result.push_back(cur_result);
 			delete cur_result.term_l;
 			cur_result.term_l = nullptr;
+			return !answer;
 		} else {
 			auto r = to_aci(subresult);
 			if (r == nullptr)
-				return !answer;
-			cur_result.term_l = r->make_copy();
-			result.push_back(cur_result);
-			delete cur_result.term_l;
-			cur_result.term_l = nullptr;
+				return answer;
+			// cur_result.term_l = r->make_copy();
+			// result.push_back(cur_result);
+			result.push_back(*r);
+			// delete cur_result.term_l;
+			// cur_result.term_l = nullptr;
 		}
 
-		return !answer;
+		return answer;
 	}
 }
 
@@ -1249,6 +1263,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 		}
 
 		if (state.empty() || fa_states[i].contains_eps()) {
+			 
 			if (state.empty()) {
 				state = Symbol::epsilon();
 			}

@@ -121,6 +121,7 @@ class AlgExpression : public BaseObject {
 	AlgExpression();
 	AlgExpression(std::shared_ptr<Language>, Type, const Lexeme&, const std::set<Symbol>&);
 	AlgExpression(std::set<Symbol>); // NOLINT(runtime/explicit)
+	// переданные term_l и term_l копируются с помощью make_copy
 	AlgExpression(Type type, AlgExpression* = nullptr,
 				  AlgExpression* = nullptr); // NOLINT(runtime/explicit)
 
