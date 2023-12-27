@@ -33,8 +33,6 @@ TEST(TestNFA, Test_equivalent_nfa_negative) {
 	for (int i = 0; i < 30; i++) {
 		string str = rg.generate_regex();
 		Regex r1(str), r2(str);
-		std::cout << r2.to_txt() << std::endl << r1.to_txt()<< std::endl;
-		std::cout << "Томпсон:\n" << r1.to_thompson().minimize().to_txt() << std::endl << "Антимирова:\n" << r2.to_antimirov().minimize().to_txt() << std::endl; 
 		ASSERT_TRUE(FiniteAutomaton::equivalent(r1.to_thompson().minimize(), r2.to_antimirov().minimize()));
 	}
 }
