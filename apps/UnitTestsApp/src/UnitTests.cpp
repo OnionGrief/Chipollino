@@ -64,37 +64,37 @@ TEST(ParseStringTest, Test_regex_lexer) {
 
 TEST(TestNegativeRegex, Test_thompson_negative) {
 	vector<FiniteAutomaton::State> states;
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 9; i++) {
 		states.emplace_back(i, set<int>{i}, std::to_string(i), false, map<Symbol, set<int>>());
 	}
 
 	states[0].set_transition(1, Symbol::epsilon());
-	states[0].set_transition(6, Symbol::epsilon());
+	states[0].set_transition(5, Symbol::epsilon());
 
-	states[1].set_transition(2, Symbol::epsilon());
+	states[1].set_transition(4, Symbol::epsilon());
+	states[1].set_transition(2, "a");
+	states[1].set_transition(3, "b");
+	states[1].set_transition(3, "c");
+	states[1].set_transition(4, Symbol::epsilon());
 
 	states[2].set_transition(3, "a");
-	states[2].set_transition(4, "b");
-	states[2].set_transition(4, "c");
-	states[2].set_transition(5, Symbol::epsilon());	
+	states[2].set_transition(3, "b");
+	states[2].set_transition(3, "c");
 
-	states[3].set_transition(4, "a");
-	states[3].set_transition(4, "b");
-	states[3].set_transition(4, "c");
+	states[3].set_transition(3, "a");
+	states[3].set_transition(3, "b");
+	states[3].set_transition(3, "c");
+	states[3].set_transition(4, Symbol::epsilon());
 
-	states[4].set_transition(4, "a");
-	states[4].set_transition(4, "b");
-	states[4].set_transition(4, "c");
-	states[4].set_transition(5, Symbol::epsilon());
+	states[4].set_transition(7, Symbol::epsilon());
 
-	states[7].set_transition(8, Symbol::epsilon());
+	states[7].set_transition(8, "c");
 
-	states[5].set_transition(8, Symbol::epsilon());
+	states[5].set_transition(6, "b");
 
-	states[6].set_transition(7, "b");
+	states[6].set_transition(7, Symbol::epsilon());
 
-	states[8].set_transition(9, "c");
-	states[9].is_terminal = true;
+	states[8].is_terminal = true;
 	FiniteAutomaton fa(0, states, {"a", "b", "c"});
 
 	ASSERT_TRUE(FiniteAutomaton::equal(fa, Regex("(^a|b)c").to_thompson()));

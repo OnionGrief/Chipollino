@@ -54,7 +54,7 @@ class Regex : public AlgExpression {
 	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
 	// применение ACI правил
-	Regex* to_aci(std::vector<Regex>& res) const; // NOLINT(runtime/explicit)
+	Regex* to_aci(std::vector<Regex>& res) const; // NOLINT(runtime/references)
 	Regex* add_alt(std::vector<Regex> res, Regex* root) const;
 
 	std::vector<FAState> get_thompson(const std::set<Symbol>& root_alphabet_symbol) const;

@@ -2538,19 +2538,26 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 
 void FiniteAutomaton::set_initial_state_zero()
 {
+	int init = get_initial();
 	for (int i = 0; i < states.size(); i++) {
-			states[i].index++;
-			for (auto elem: states[i].transitions) {
-				auto& s = states[i].transitions.at(elem.first);
-				std::set<int> new_trans;
-				for(const auto& index: s) {
-					new_trans.insert(index + 1);
+		for (auto elem: states[i].transitions) {
+			auto& s = states[i].transitions.at(elem.first);
+			std::set<int> new_trans;
+			for(const auto& index: s) {
+				if (index == init) {
+					new_trans.insert(0);
+					continue;
 				}
-				states[i].transitions[elem.first] = new_trans;
+				if (index == 0) {
+					new_trans.insert(init);
+					continue;
+				}
+				new_trans.insert(index);
 			}
+			states[i].transitions[elem.first] = new_trans;
 		}
+	}
 
-	states.emplace(states.begin(), 0, "q", false);
-	states[0].set_transition(get_initial() + 1, Symbol::epsilon());
+	std::swap(states[0], states[init]);
 	initial_state = 0;
 }

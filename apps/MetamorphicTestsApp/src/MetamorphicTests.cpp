@@ -33,6 +33,6 @@ TEST(TestNFA, Test_equivalent_nfa_negative) {
 	for (int i = 0; i < 30; i++) {
 		string str = rg.generate_regex();
 		Regex r1(str), r2(str);
-		ASSERT_TRUE(FiniteAutomaton::equivalent(r1.to_thompson().minimize(), r2.to_antimirov().minimize()));
+		ASSERT_TRUE(FiniteAutomaton::equivalent(r1.to_thompson(), r2.to_antimirov()));
 	}
 }
