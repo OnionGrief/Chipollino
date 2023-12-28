@@ -2535,3 +2535,22 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	}
 	return Regex{};
 }
+
+void FiniteAutomaton::set_initial_state_zero()
+{
+	for (int i = 0; i < states.size(); i++) {
+			states[i].index++;
+			for (auto elem: states[i].transitions) {
+				auto& s = states[i].transitions.at(elem.first);
+				std::set<int> new_trans;
+				for(const auto& index: s) {
+					new_trans.insert(index + 1);
+				}
+				states[i].transitions[elem.first] = new_trans;
+			}
+		}
+
+	states.emplace(states.begin(), 0, "q", false);
+	states[0].set_transition(get_initial() + 1, Symbol::epsilon());
+	initial_state = 0;
+}

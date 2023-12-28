@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <unordered_set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -52,14 +53,11 @@ class Regex : public AlgExpression {
 	// Производная по префиксу
 	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
-	// производная для случая с отрицанием
-	bool brzozowski_derivative(Regex* respected_sym, const Regex* reg_e,
-		std::vector<Regex>& result) const;
 	// применение ACI правил
-	Regex* to_aci(std::vector<Regex>& res) const;
+	Regex* to_aci(std::vector<Regex>& res) const; // NOLINT(runtime/explicit)
+	Regex* add_alt(std::vector<Regex> res, Regex* root) const;
 
-	std::pair<std::vector<FAState>, int> get_thompson(
-		int nax_index, const std::set<Symbol>& root_alphabet_symbol) const;
+	std::vector<FAState> get_thompson(const std::set<Symbol>& root_alphabet_symbol) const;
 
 	void normalize_this_regex(
 		const std::vector<std::pair<Regex, Regex>>&); // переписывание regex по
@@ -72,7 +70,7 @@ class Regex : public AlgExpression {
 	Regex(Type type, AlgExpression* = nullptr,
 		  AlgExpression* = nullptr); // NOLINT(runtime/explicit)
 
-	Regex* make_copy() const override;
+		Regex* make_copy() const override;
 	Regex(const Regex&) = default;
 
 	// dynamic_cast к типу Regex*

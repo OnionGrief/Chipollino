@@ -82,6 +82,11 @@ class FiniteAutomaton : public AbstractMachine {
 	// функция проверки на семантическую детерминированность
 	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
 
+	// добавляет начальное состояние в начало вектора состояний 
+	// и строит eps переход из него в начальное состояние автомата
+	// используется в томпсоне
+	void set_initial_state_zero();
+
   public:
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, std::vector<State> states,
