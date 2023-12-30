@@ -7,8 +7,8 @@
 // Может быть символом-буквой (и входить в алфавит) или ссылкой (&i)
 class Symbol {
   private:
-	std::vector<std::string> annote_numbers;
-	std::vector<std::string> linearize_numbers;
+	std::vector<int> annote_numbers;
+	std::vector<int> linearize_numbers;
 	std::string symbol;
 	// symbol + разметка
 	std::string value;
@@ -51,11 +51,11 @@ class Symbol {
 	bool is_annotated() const;
 	bool is_linearized() const;
 
-	friend struct SymbolHasher;
+	int last_linearization_number();
+
+	struct Hasher {
+		std::size_t operator()(const Symbol& s) const;
+	};
 };
 
 std::ostream& operator<<(std::ostream& os, const Symbol& item);
-
-struct SymbolHasher {
-	std::size_t operator()(const Symbol& symbol) const;
-};

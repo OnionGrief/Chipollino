@@ -29,7 +29,7 @@ class AlgExpression : public BaseObject {
 		};
 
 		Type type = error;
-		Symbol symbol;
+		Symbol symbol; // символ алфавита регулярки или ссылка(&i)
 		int number = 0; // Для указания номера (при линеаризации) в to_glushkov и to_mfa
 						// либо для указания номера ячейки памяти (Type: squareBrL, squareBrL, ref),
 						// чтобы использовать в scan_ref и scan_square_br
@@ -56,7 +56,8 @@ class AlgExpression : public BaseObject {
 	// множество уникальных символов алфавита в дереве
 	std::set<Symbol> alphabet;
 	Type type;
-	Lexeme value;
+	// символ алфавита регулярки или ссылка(&i)
+	Symbol symbol;
 
 	AlgExpression* term_l = nullptr;
 	AlgExpression* term_r = nullptr;
@@ -119,7 +120,7 @@ class AlgExpression : public BaseObject {
 
   public:
 	AlgExpression();
-	AlgExpression(std::shared_ptr<Language>, Type, const Lexeme&, const std::set<Symbol>&);
+	AlgExpression(std::shared_ptr<Language>, Type, const Symbol&, const std::set<Symbol>&);
 	AlgExpression(std::set<Symbol>); // NOLINT(runtime/explicit)
 	// переданные term_l и term_l копируются с помощью make_copy
 	AlgExpression(Type type, AlgExpression* = nullptr,

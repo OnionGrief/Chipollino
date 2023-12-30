@@ -10,41 +10,52 @@
 
 class Language;
 
-class MemoryFiniteAutomaton : public AbstractMachine {
+struct MFATransition {
+	enum MemoryAction {
+		// idle, ◇
+		open,  // o
+		close, // c
+	};
+
+	using MemoryActions = std::unordered_map<int, MemoryAction>;
+
+	int to;
+	MemoryActions memory_actions;
+
+	explicit MFATransition(int to);
+	MFATransition(int, MemoryActions);
+	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&);
+
+	std::string get_actions_str() const;
+	bool operator==(const MFATransition& other) const;
+
+	struct Hasher {
+		std::size_t operator()(const MFATransition& t) const;
+	};
+};
+
+class MFAState : public State {
   public:
-	struct Transition {
-		enum MemoryAction {
-			// idle, ◇
-			open,  // o
-			close, // c
-		};
+	using Transitions =
+		std::unordered_map<Symbol, std::unordered_set<MFATransition, MFATransition::Hasher>,
+						   Symbol::Hasher>;
 
-		int to;
-		std::unordered_map<int, MemoryAction> memory_actions;
+	Transitions transitions;
+	explicit MFAState(bool is_terminal);
+	MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
 
-		explicit Transition(int to);
-		Transition(int to, const std::unordered_set<int>& opens);
-		Transition(
-			int to,
-			std::pair<const std::unordered_set<int>&, const std::unordered_set<int>&> opens_closes);
+	std::string to_txt() const override;
+	void set_transition(const MFATransition&, const Symbol&);
+	bool operator==(const MFAState& other) const;
+};
 
-		std::string get_actions_str() const;
-	};
-
-	using Transitions = std::unordered_map<Symbol, std::vector<Transition>, SymbolHasher>;
-
-	struct State : AbstractMachine::State {
-		Transitions transitions;
-		State(int index, std::string identifier, bool is_terminal, Transitions transitions);
-		void set_transition(const Transition&, const Symbol&);
-	};
-
+class MemoryFiniteAutomaton : public AbstractMachine {
   private:
-	std::vector<State> states;
+	std::vector<MFAState> states;
 
   public:
 	MemoryFiniteAutomaton();
-	MemoryFiniteAutomaton(int initial_state, std::vector<State> states,
+	MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
 						  std::shared_ptr<Language> language);
 	//	MemoryFiniteAutomaton(const MemoryFiniteAutomaton& other);
 
@@ -52,4 +63,8 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	template <typename T> MemoryFiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
 	std::string to_txt(bool eps_is_empty = true) const override;
+
+	// возвращает количество состояний (метод States)
+	size_t size(iLogTemplate* log = nullptr) const;
+	std::vector<MFAState> get_states() const;
 };
