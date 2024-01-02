@@ -712,23 +712,14 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 
 Regex* Regex::add_alt(std::vector<Regex> res, Regex* root) const {
 	if (res.size() == 1) {
-		root = new Regex;
-		root = res[0].make_copy();
-		return nullptr;
+		return res[0].make_copy();
 	}
-	// root = new Regex;
+
+	root = new Regex;
 	root->type = Type::alt;
 	root->term_l = res[0].make_copy();
 	res.erase(res.begin());
-	root->term_r = new Regex;
-	if (res.size() == 1)
-		// root->term_r = new Regex;
-		root->term_r = res[0].make_copy();
-		return nullptr;
-	
-	if (res.size())
-		add_alt(res, Regex::cast(root->term_r, false));
-
+	root->term_r = add_alt(res, Regex::cast(root->term_r, false));
 	return root;
 }
 
@@ -760,38 +751,7 @@ Regex* Regex::to_aci(std::vector<Regex>& res) const
 	if (!res.size())
 		return nullptr;
 
-	if(res.size() == 1) {
-		ress.term_l = res[0].make_copy();
-		return ress.make_copy();
-	}
-
-	Regex* cur_result;
-	cur_result = new Regex;
-	cur_result->type = Type::alt;
-	cur_result->term_l = res[0].make_copy();
-	cur_result->term_r = new Regex;
-	auto r = Regex::cast(cur_result->term_r, false);
-	for (size_t i = 1; i < res.size(); i++)
-	{
-		if (2 == res.size()) {
-			cur_result->term_r = res[i].make_copy();
-		} else {
-			r->type = Type::alt;
-			r->term_l = res[i].make_copy();
-			r->term_r = new Regex;
-			
-			if (i == res.size() - 2) {
-				r->term_r = res[res.size() - 1].make_copy();
-				break;
-			} else {
-				r = Regex::cast(r->term_r, false);
-			}
-		}
-	}
-
-	// cur_result = add_alt(res, cur_result);
-	
-	ress.term_l = cur_result;
+	ress.term_l = add_alt(res, cast(ress.term_l, false));
 	return ress.make_copy();
 }
 
