@@ -849,6 +849,7 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 			if (r == nullptr)
 				return answer;
 			result.push_back(*r);
+			delete r;
 		}
 
 		return answer;
