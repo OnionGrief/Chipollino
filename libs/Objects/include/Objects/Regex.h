@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <unordered_set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -41,10 +42,12 @@ class Regex : public AlgExpression {
 	// Производная по префиксу
 	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
+	// применение ACI правил
+	static Regex* to_aci(std::vector<Regex>& res); // NOLINT(runtime/references)
+	static Regex* add_alt(std::vector<Regex> res, Regex* root);
 
-	// возвращает пару <вектор состояний, max_index>
-	// 0-е состояние начальное
-	std::pair<std::vector<FAState>, int> _to_thompson(int) const;
+	// возвращает вектор состояний нового автомата, построенного из регулярного выражения
+	std::vector<FAState> _to_thompson(const std::set<Symbol>& root_alphabet_symbol) const;
 
 	void normalize_this_regex(
 		const std::vector<std::pair<Regex, Regex>>&); // переписывание regex по

@@ -31,6 +31,13 @@ using std::vector;
 FAState::FAState(int index, string identifier, bool is_terminal)
 	: State::State(index, std::move(identifier), is_terminal) {}
 
+FAState::FAState(int index, bool is_terminal)
+	: State::State(index, is_terminal) {}
+
+FAState::FAState(int index, bool is_terminal, Transitions transitions)
+	: State::State(index, is_terminal), transitions(std::move(transitions)) {
+}
+
 FAState::FAState(int index, string identifier, bool is_terminal, Transitions transitions)
 	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
 }
@@ -82,7 +89,7 @@ template <typename T> FiniteAutomaton* FiniteAutomaton::cast(std::unique_ptr<T>&
 }
 
 string FiniteAutomaton::to_txt() const {
-	stringstream ss;
+	std::stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
 	for (int i = 0; i < states.size(); i++) {
 		ss << states[i].index << " [label = \"" << states[i].identifier << "\", shape = ";
@@ -712,6 +719,7 @@ FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
 	for (int i = 0; i < new_dfa.size(); i++)
 		if (new_dfa.states[i].is_terminal)
 			final_states_counter++;
+
 	if (!final_states_counter)
 		new_dfa = new_dfa.minimize();
 	if (log) {
@@ -2576,4 +2584,30 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		}
 		return result_regex;
 	}
+}
+
+void FiniteAutomaton::set_initial_state_zero() {
+	int init = get_initial();
+	for (auto& state : states) {
+		for (const auto& [symbol, states_to] : state.transitions) {
+			std::set<int> new_trans;
+			for(const auto& index: states_to) {
+				if (index == init) {
+					new_trans.insert(0);
+					continue;
+				}
+				if (index == 0) {
+					new_trans.insert(init);
+					continue;
+				}
+				new_trans.insert(index);
+			}
+			state.transitions[symbol] = new_trans;
+		}
+	}
+
+	std::swap(states[0], states[init]);
+	states[0].index = 0;
+	states[init].index = init;
+	initial_state = 0;
 }
