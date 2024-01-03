@@ -61,7 +61,7 @@ class Regex : public AlgExpression {
 	Regex(const std::string&, const std::shared_ptr<Language>&);
 	explicit Regex(Type type, AlgExpression* = nullptr, AlgExpression* = nullptr);
 
-		Regex* make_copy() const override;
+	Regex* make_copy() const override;
 	Regex(const Regex&) = default;
 
 	// dynamic_cast к типу Regex*
