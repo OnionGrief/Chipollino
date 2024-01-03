@@ -121,11 +121,11 @@ class AlgExpression : public BaseObject {
   public:
 	AlgExpression();
 	AlgExpression(std::shared_ptr<Language>, Type, const Symbol&, const std::set<Symbol>&);
-	AlgExpression(std::set<Symbol>); // NOLINT(runtime/explicit)
+	explicit AlgExpression(std::set<Symbol>);
 	// переданные term_l и term_l копируются с помощью make_copy
-	AlgExpression(Type type, AlgExpression* = nullptr,
-				  AlgExpression* = nullptr); // NOLINT(runtime/explicit)
-
+	explicit AlgExpression(Type type, AlgExpression* = nullptr,
+				  AlgExpression* = nullptr);
+				  
 	virtual ~AlgExpression();
 
 	// возвращает указатель на копию себя

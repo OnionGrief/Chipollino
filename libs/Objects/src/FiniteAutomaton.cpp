@@ -31,6 +31,13 @@ using std::vector;
 FAState::FAState(int index, string identifier, bool is_terminal)
 	: State::State(index, std::move(identifier), is_terminal) {}
 
+FAState::FAState(int index, bool is_terminal)
+	: State::State(index, is_terminal) {}
+
+FAState::FAState(int index, bool is_terminal, Transitions transitions)
+	: State::State(index, is_terminal), transitions(std::move(transitions)) {
+}
+
 FAState::FAState(int index, string identifier, bool is_terminal, Transitions transitions)
 	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
 }
@@ -2583,10 +2590,9 @@ void FiniteAutomaton::set_initial_state_zero()
 {
 	int init = get_initial();
 	for (int i = 0; i < states.size(); i++) {
-		for (auto elem: states[i].transitions) {
-			auto& s = states[i].transitions.at(elem.first);
+		for (const auto& [symbol, states_to]: states[i].transitions) {
 			std::set<int> new_trans;
-			for(const auto& index: s) {
+			for(const auto& index: states_to) {
 				if (index == init) {
 					new_trans.insert(0);
 					continue;
@@ -2597,7 +2603,7 @@ void FiniteAutomaton::set_initial_state_zero()
 				}
 				new_trans.insert(index);
 			}
-			states[i].transitions[elem.first] = new_trans;
+			states[i].transitions[symbol] = new_trans;
 		}
 	}
 

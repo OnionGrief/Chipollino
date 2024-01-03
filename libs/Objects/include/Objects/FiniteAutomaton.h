@@ -26,7 +26,9 @@ class FAState : public State {
 	// преобразования автоматов возможно для визуализации
 	std::set<int> label;
 
+	FAState(int index, bool is_terminal);
 	FAState(int index, std::string identifier, bool is_terminal);
+	FAState(int index, bool is_terminal, Transitions transitions);
 	FAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
 	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal,
 			Transitions transitions);
@@ -77,8 +79,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// функция проверки на семантическую детерминированность
 	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
 
-	// добавляет начальное состояние в начало вектора состояний 
-	// и строит eps переход из него в начальное состояние автомата
+	// меняет местами состояние под индексом 0 с начальным
 	// используется в томпсоне
 	void set_initial_state_zero();
 

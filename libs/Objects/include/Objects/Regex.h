@@ -43,9 +43,10 @@ class Regex : public AlgExpression {
 	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
 	// применение ACI правил
-	Regex* to_aci(std::vector<Regex>& res) const; // NOLINT(runtime/references)
-	Regex* add_alt(std::vector<Regex> res, Regex* root) const;
+	static Regex* to_aci(std::vector<Regex>& res); // NOLINT(runtime/references)
+	static Regex* add_alt(std::vector<Regex> res, Regex* root);
 
+	// возвращает вектор сотсояний нового автомата, построенного из регулярного выражения
 	std::vector<FAState> _to_thompson(const std::set<Symbol>& root_alphabet_symbol) const;
 
 	void normalize_this_regex(
