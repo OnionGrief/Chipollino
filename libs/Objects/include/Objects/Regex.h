@@ -45,6 +45,8 @@ class Regex : public AlgExpression {
 	// применение ACI правил
 	static Regex* to_aci(std::vector<Regex>& res); // NOLINT(runtime/references)
 	static Regex* add_alt(std::vector<Regex> res, Regex* root);
+	// печатание регулярного выражения с _eps_ и _empty_
+	std::string _antimirov_to_txt() const;
 
 	// возвращает вектор сотсояний нового автомата, построенного из регулярного выражения
 	std::vector<FAState> _to_thompson(const std::set<Symbol>& root_alphabet_symbol) const;

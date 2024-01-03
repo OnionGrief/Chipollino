@@ -43,7 +43,7 @@ class BackRefRegex : public AlgExpression {
 	template <typename T>
 	static std::vector<BackRefRegex*> cast(std::vector<T*> ptr, bool not_null_ptr = true);
 
-	std::string to_txt(bool eps_is_empty = true) const override;
+	std::string to_txt() const override;
 
 	MemoryFiniteAutomaton to_mfa(iLogTemplate* log = nullptr) const;
 };

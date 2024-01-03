@@ -88,7 +88,7 @@ template <typename T> FiniteAutomaton* FiniteAutomaton::cast(std::unique_ptr<T>&
 	return fa;
 }
 
-string FiniteAutomaton::to_txt(bool eps_is_empty) const {
+string FiniteAutomaton::to_txt() const {
 	std::stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
 	for (int i = 0; i < states.size(); i++) {

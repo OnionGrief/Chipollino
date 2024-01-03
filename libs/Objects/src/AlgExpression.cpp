@@ -109,13 +109,13 @@ bool AlgExpression::is_terminal_type(Type t) {
 	return t == Type::symb || t == Type::memoryWriter || t == Type::ref;
 }
 
-string AlgExpression::to_txt(bool eps_is_empty) const {
+string AlgExpression::to_txt() const {
 	string str1, str2;
 	if (term_l) {
-		str1 = term_l->to_txt(eps_is_empty);
+		str1 = term_l->to_txt();
 	}
 	if (term_r) {
-		str2 = term_r->to_txt(eps_is_empty);
+		str2 = term_r->to_txt();
 	}
 	string symb;
 	switch (type) {
@@ -131,9 +131,7 @@ string AlgExpression::to_txt(bool eps_is_empty) const {
 		symb = symbol;
 		break;
 	case Type::eps:
-		if (!eps_is_empty) {
-			symb = Symbol::Epsilon;
-		}
+		symb = "";
 		break;
 	case Type::alt:
 		symb = '|';

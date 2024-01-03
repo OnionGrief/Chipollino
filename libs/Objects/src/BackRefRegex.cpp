@@ -84,7 +84,7 @@ template <typename T> vector<BackRefRegex*> BackRefRegex::cast(vector<T*> ptrs, 
 	return regexPointers;
 }
 
-string BackRefRegex::to_txt(bool eps_is_empty) const {
+string BackRefRegex::to_txt() const {
 	BackRefRegex *br_term_l, *br_term_r;
 	string str1, str2;
 	if (term_l) {

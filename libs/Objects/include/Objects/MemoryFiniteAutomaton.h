@@ -62,7 +62,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	// dynamic_cast unique_ptr к типу MemoryFiniteAutomaton*
 	template <typename T> MemoryFiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
-	std::string to_txt(bool eps_is_empty = true) const override;
+	std::string to_txt() const override;
 
 	// возвращает количество состояний (метод States)
 	size_t size(iLogTemplate* log = nullptr) const;

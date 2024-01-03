@@ -122,7 +122,7 @@ MemoryFiniteAutomaton* MemoryFiniteAutomaton::cast(std::unique_ptr<T>&& uptr) {
 	return mfa;
 }
 
-string MemoryFiniteAutomaton::to_txt(bool eps_is_empty) const {
+string MemoryFiniteAutomaton::to_txt() const {
 	stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
 	for (int i = 0; i < states.size(); i++) {

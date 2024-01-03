@@ -93,7 +93,7 @@ class FiniteAutomaton : public AbstractMachine {
 	// dynamic_cast unique_ptr к типу FiniteAutomaton*
 	template <typename T> static FiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
-	std::string to_txt(bool eps_is_empty = true) const override;
+	std::string to_txt() const override;
 
 	std::vector<FAState> get_states() const;
 	// детерминизация ДКА
