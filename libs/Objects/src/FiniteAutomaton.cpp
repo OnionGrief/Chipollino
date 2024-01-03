@@ -719,7 +719,7 @@ FiniteAutomaton FiniteAutomaton::complement(iLogTemplate* log) const {
 	for (int i = 0; i < new_dfa.size(); i++)
 		if (new_dfa.states[i].is_terminal)
 			final_states_counter++;
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 	if (!final_states_counter)
 		new_dfa = new_dfa.minimize();
 	if (log) {
@@ -2586,11 +2586,10 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 	}
 }
 
-void FiniteAutomaton::set_initial_state_zero()
-{
+void FiniteAutomaton::set_initial_state_zero() {
 	int init = get_initial();
-	for (int i = 0; i < states.size(); i++) {
-		for (const auto& [symbol, states_to]: states[i].transitions) {
+	for (auto& state : states) {
+		for (const auto& [symbol, states_to] : state.transitions) {
 			std::set<int> new_trans;
 			for(const auto& index: states_to) {
 				if (index == init) {
@@ -2603,7 +2602,7 @@ void FiniteAutomaton::set_initial_state_zero()
 				}
 				new_trans.insert(index);
 			}
-			states[i].transitions[symbol] = new_trans;
+			state.transitions[symbol] = new_trans;
 		}
 	}
 

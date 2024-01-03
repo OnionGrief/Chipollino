@@ -110,12 +110,16 @@ bool AlgExpression::is_terminal_type(Type t) {
 }
 
 string AlgExpression::to_txt() const {
+	return _to_txt(true);
+}
+
+string AlgExpression::_to_txt(bool eps_is_empty) const {
 	string str1, str2;
 	if (term_l) {
-		str1 = term_l->to_txt();
+		str1 = term_l->_to_txt(eps_is_empty);
 	}
 	if (term_r) {
-		str2 = term_r->to_txt();
+		str2 = term_r->_to_txt(eps_is_empty);
 	}
 	string symb;
 	switch (type) {
@@ -131,7 +135,9 @@ string AlgExpression::to_txt() const {
 		symb = symbol;
 		break;
 	case Type::eps:
-		symb = "";
+		if (!eps_is_empty) {
+			symb = Symbol::Epsilon;
+		}
 		break;
 	case Type::alt:
 		symb = '|';
