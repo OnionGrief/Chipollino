@@ -111,7 +111,34 @@ TEST(TestNegativeRegex, Thompson) {
 	ASSERT_TRUE(FiniteAutomaton::equal(fa, Regex("(^a|b)c").to_thompson()));
 }
 
-TEST(TestNegativeRegex, Antimirov) {}
+TEST(TestNegativeRegex, Antimirov) {
+	vector<FAState> states;
+	for (int i = 0; i < 5; i++) {
+		states.emplace_back(i, set<int>{i}, std::to_string(i), false, FAState::Transitions());
+	}
+
+	states[0].set_transition(1, "a");
+	states[0].set_transition(2, "b");
+	states[0].set_transition(3, "b");
+	states[0].set_transition(2, "c");
+	states[0].set_transition(4, "c");
+
+	states[1].set_transition(2, "a");
+	states[1].set_transition(2, "b");
+	states[1].set_transition(2, "c");
+
+	states[2].set_transition(2, "a");
+	states[2].set_transition(2, "b");
+	states[2].set_transition(2, "c");
+	states[2].set_transition(4, "c");
+
+	states[3].set_transition(4, "c");
+
+	states[4].is_terminal = true;
+	FiniteAutomaton fa(0, states, {"a", "b", "c"});
+
+	ASSERT_TRUE(FiniteAutomaton::equal(fa, Regex("(^a|b)c").to_antimirov()));
+}
 
 TEST(TestEqual, FA_Equal) {
 	vector<FAState> states1;
