@@ -25,8 +25,8 @@ void LogTemplate::add_parameter(string parameter_name) {
 	while (!infile.eof()) {
 		getline(infile, s);
 
-		int insert_place = s.find("%template_" + parameter_name);
-		int endframe_place = s.find("\\end{frame}");
+		size_t insert_place = s.find("%template_" + parameter_name);
+		size_t endframe_place = s.find("\\end{frame}");
 		if (endframe_place != -1) {
 			str_endframe_place = i;
 		}
@@ -120,7 +120,8 @@ string LogTemplate::render() const {
 				} else if (std::holds_alternative<FiniteAutomaton>(param.value)) {
 					std::hash<string> hasher;
 					string c_graph;
-					string automaton = std::get<FiniteAutomaton>(param.value).to_txt();
+					string automaton0 = std::get<FiniteAutomaton>(param.value).to_txt();
+					string automaton = std::regex_replace(automaton0, std::regex("\\^"), "\\textasciicircum ");
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
@@ -131,7 +132,9 @@ string LogTemplate::render() const {
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
 					s.insert(insert_place, c_graph);
 				} else if (std::holds_alternative<string>(param.value)) {
-					s.insert(insert_place, std::get<string>(param.value));
+					string s0 = std::get<string>(param.value);
+					string str = std::regex_replace(s0, std::regex("\\^"), "\\textasciicircum ");
+					s.insert(insert_place, str);
 				} else if (std::holds_alternative<int>(param.value)) {
 					s.insert(insert_place, to_string(std::get<int>(param.value)));
 				} else if (std::holds_alternative<Table>(param.value)) {

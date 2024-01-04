@@ -203,7 +203,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Subset") {
 		if (function.input[0] == ObjectType::NFA) {
 			return ObjectBoolean(
-				(get_automaton(arguments[0]).subset(get_automaton(arguments[1]), &log_template)));
+				get_automaton(arguments[0]).subset(get_automaton(arguments[1]), &log_template));
 		} else {
 			return ObjectBoolean(
 				get<ObjectRegex>(arguments[0])

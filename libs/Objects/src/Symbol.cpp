@@ -51,7 +51,7 @@ Symbol& Symbol::operator=(const Symbol& other) {
 }
 
 Symbol Symbol::epsilon() {
-	return "_eps_";
+	return Symbol::Epsilon;
 }
 
 bool Symbol::is_epsilon() const {
