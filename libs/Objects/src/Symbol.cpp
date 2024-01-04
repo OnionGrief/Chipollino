@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "Objects/Symbol.h"
 
 using std::cout;
@@ -10,11 +12,16 @@ Symbol::Symbol(const char* c) : symbol(c), value(c) {}
 Symbol::Symbol(char c) : symbol(string(1, c)), value(string(1, c)) {}
 
 void Symbol::update_value() {
-	value = symbol;
+	std::stringstream ss;
+	ss << symbol;
+
 	for (const auto& i : annote_numbers)
-		value += i;
+		ss << annote_marker << i;
+
 	for (const auto& i : linearize_numbers)
-		value += i;
+		ss << linearize_marker << i;
+
+	value = ss.str();
 }
 
 Symbol& Symbol::operator=(const string& s) {
@@ -44,7 +51,7 @@ Symbol& Symbol::operator=(const Symbol& other) {
 }
 
 Symbol Symbol::epsilon() {
-	return "eps";
+	return "_eps_";
 }
 
 bool Symbol::is_epsilon() const {
@@ -80,12 +87,12 @@ std::ostream& operator<<(std::ostream& os, const Symbol& as) {
 }
 
 void Symbol::annote(int num) {
-	annote_numbers.push_back(annote_marker + to_string(num));
+	annote_numbers.push_back(num);
 	update_value();
 }
 
 void Symbol::linearize(int num) {
-	linearize_numbers.push_back(linearize_marker + to_string(num));
+	linearize_numbers.push_back(num);
 	update_value();
 }
 
@@ -111,8 +118,15 @@ bool Symbol::is_linearized() const {
 	return !linearize_numbers.empty();
 }
 
-std::size_t SymbolHasher::operator()(const Symbol& symbol) const {
+int Symbol::last_linearization_number() {
+	if (!linearize_numbers.empty())
+		return linearize_numbers.back();
+	else
+		return 0;
+}
+
+std::size_t Symbol::Hasher::operator()(const Symbol& s) const {
 	std::hash<string> string_hash;
-	std::size_t hash = string_hash(symbol.value);
+	std::size_t hash = string_hash(s.value);
 	return hash;
 }

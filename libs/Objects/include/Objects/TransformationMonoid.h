@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <queue>
 #include <set>
 #include <sstream>
@@ -15,6 +16,26 @@
 
 class Language;
 class FiniteAutomaton;
+
+// нужна, чтобы хранить weak_ptr на язык
+class FA_model {
+  private:
+	int initial_state;
+	std::vector<FAState> states;
+	// если не хранить этот указатель,
+	// будут созданы разные shared_ptr
+	std::weak_ptr<Language> language;
+
+  public:
+	FA_model() = default;
+	FA_model(int initial_state, std::vector<FAState> states, std::weak_ptr<Language> language);
+
+	int get_initial_state() const;
+	const std::vector<FAState>& get_states() const;
+	std::shared_ptr<Language> get_language() const;
+
+	FiniteAutomaton make_fa();
+};
 
 class TransformationMonoid {
   public:
@@ -78,10 +99,10 @@ class TransformationMonoid {
 	int get_classes_number_MyhillNerode(iLogTemplate* log = nullptr);
 	// вывод таблицы М-Н
 	std::string to_txt_MyhillNerode();
-	// переписываем имя терма в  минимальное
-	std::vector<Symbol> rewriting(
-		const std::vector<Symbol>&,
-		const std::map<std::vector<Symbol>, std::vector<std::vector<Symbol>>>&);
+	//	переписываем имя терма в  минимальное
+	//	std::vector<Symbol> rewriting(
+	//		const std::vector<Symbol>&,
+	//		const std::map<std::vector<Symbol>, std::vector<std::vector<Symbol>>>&);
 	// возвращает таблицу М-Н
 	std::vector<std::vector<bool>> get_equivalence_classes_table(
 		std::vector<std::string>& table_rows,	  // NOLINT(runtime/references)
@@ -89,7 +110,7 @@ class TransformationMonoid {
 
   private:
 	// Автомат
-	FiniteAutomaton automat;
+	FA_model automaton;
 	// Классы эквивалентности
 	std::vector<Term> terms;
 	// Правила переписывания

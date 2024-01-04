@@ -71,7 +71,7 @@ OBJECT_DEFINITION(String, std::string)
 OBJECT_DEFINITION(Boolean, bool)
 OBJECT_DEFINITION(OptionalBool, std::optional<bool>)
 OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
-OBJECT_DEFINITION(PrefixGrammar, Grammar)
+OBJECT_DEFINITION(PrefixGrammar, PrefixGrammar)
 OBJECT_DEFINITION(Array, std::vector<GeneralObject>)
 
 // перевод ObjectType в std::string (для логирования и дебага)

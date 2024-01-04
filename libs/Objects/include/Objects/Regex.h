@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <unordered_set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -15,18 +16,7 @@
 
 class Language;
 class FiniteAutomaton;
-
-// представление FiniteAutomaton::State
-struct FAState {
-	int index;
-	std::string identifier;
-	bool is_terminal;
-	std::map<Symbol, std::set<int>> transitions;
-	FAState(int index, std::string identifier, bool is_terminal,
-			std::map<Symbol, std::set<int>> transitions);
-	FAState(int index, std::string identifier, bool is_terminal);
-	void set_transition(int, const Symbol&);
-};
+class FAState;
 
 class Regex : public AlgExpression {
   private:
@@ -51,7 +41,12 @@ class Regex : public AlgExpression {
 	// Производная по префиксу
 	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
-	std::pair<std::vector<FAState>, int> get_thompson(int) const;
+	// применение ACI правил
+	static Regex* to_aci(std::vector<Regex>& res); // NOLINT(runtime/references)
+	static Regex* add_alt(std::vector<Regex> res, Regex* root);
+
+	// возвращает вектор состояний нового автомата, построенного из регулярного выражения
+	std::vector<FAState> _to_thompson(const std::set<Symbol>& root_alphabet_symbol) const;
 
 	void normalize_this_regex(
 		const std::vector<std::pair<Regex, Regex>>&); // переписывание regex по
@@ -59,10 +54,9 @@ class Regex : public AlgExpression {
 
   public:
 	Regex() = default;
-	Regex(const std::string&); // NOLINT(runtime/explicit)
+	explicit Regex(const std::string&);
 	Regex(const std::string&, const std::shared_ptr<Language>&);
-	Regex(Type type, AlgExpression* = nullptr,
-		  AlgExpression* = nullptr); // NOLINT(runtime/explicit)
+	explicit Regex(Type type, AlgExpression* = nullptr, AlgExpression* = nullptr);
 
 	Regex* make_copy() const override;
 	Regex(const Regex&) = default;
