@@ -52,12 +52,8 @@ Symbol& Symbol::operator=(char c) {
 	return *this;
 }
 
-Symbol Symbol::epsilon() {
-	return "_eps_";
-}
-
 bool Symbol::is_epsilon() const {
-	return *this == Symbol::epsilon();
+	return *this == Symbol::Epsilon;
 }
 
 bool Symbol::operator==(const Symbol& other) const {

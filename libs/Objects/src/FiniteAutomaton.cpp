@@ -125,7 +125,7 @@ void FiniteAutomaton::dfs(int index,
 						  bool use_epsilons_only) const {
 	if (reachable.find(index) == reachable.end()) {
 		reachable.insert(index);
-		const auto& by_eps = states[index].transitions.find(Symbol::epsilon());
+		const auto& by_eps = states[index].transitions.find(Symbol::Epsilon);
 		if (by_eps != states[index].transitions.end()) {
 			for (int transition_to : by_eps->second)
 				dfs(transition_to, reachable, use_epsilons_only);
@@ -168,7 +168,7 @@ FiniteAutomaton FiniteAutomaton::determinize(bool is_trim, iLogTemplate* log) co
 		for (auto elem : q0) {
 			old_meta.upd(NodeMeta{states[elem].index, group_counter});
 		}
-		old_meta.mark_transitions(*this, q0, q0, Symbol::epsilon(), group_counter);
+		old_meta.mark_transitions(*this, q0, q0, Symbol::Epsilon, group_counter);
 		new_meta.upd(NodeMeta{new_initial_state.index, group_counter});
 		group_counter++;
 	}
@@ -434,7 +434,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 			old_meta.upd(NodeMeta{states[elem].index, group_counter});
 		}
 		old_meta.mark_transitions(
-			*this, initial_closure, initial_closure, Symbol::epsilon(), group_counter);
+			*this, initial_closure, initial_closure, Symbol::Epsilon, group_counter);
 		new_meta.upd(NodeMeta{0, group_counter});
 		group_counter++;
 	}
@@ -472,7 +472,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 							}
 
 							old_meta.mark_transitions(
-								*this, cur_closure, cur_closure, Symbol::epsilon(), group_counter);
+								*this, cur_closure, cur_closure, Symbol::Epsilon, group_counter);
 							new_meta.upd(NodeMeta{new_state.index, group_counter});
 							group_counter++;
 						}
@@ -779,7 +779,7 @@ FiniteAutomaton FiniteAutomaton::reverse(iLogTemplate* log) const {
 			if (enfa.states[i].is_terminal) {
 				enfa.states[i].is_terminal = false;
 				if (final_states_counter > 1) {
-					enfa.states[enfa.initial_state].transitions[Symbol::epsilon()].insert(i);
+					enfa.states[enfa.initial_state].transitions[Symbol::Epsilon].insert(i);
 				} else {
 					enfa.initial_state = i;
 				}
@@ -2256,7 +2256,7 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 //	if (s.empty() && state.is_terminal) {
 //		return true;
 //	}
-//	set<int> tr_eps = state.transitions[Symbol::epsilon()];
+//	set<int> tr_eps = state.transitions[Symbol::Epsilon];
 //	vector<int> trans_eps{tr_eps.begin(), tr_eps.end()};
 //
 //	if (s.empty() && !state.is_terminal) {
@@ -2332,8 +2332,8 @@ pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
 		// Добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
 		// состояния
 		set<int> reach_eps;
-		if (state->transitions.count(Symbol::epsilon()))
-			reach_eps = state->transitions.at(Symbol::epsilon());
+		if (state->transitions.count(Symbol::Epsilon))
+			reach_eps = state->transitions.at(Symbol::Epsilon);
 		for (int eps_to : reach_eps) {
 			if (!visited_eps.count({parsed_len, state->index, eps_to})) {
 				stack_state.emplace(parsed_len, &states[eps_to]);

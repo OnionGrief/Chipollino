@@ -121,9 +121,9 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::fa_to_grammar(const vector<F
 		item_ind++;
 	}
 	map<Symbol, int> terminal_indexes;
-	fa_items[item_ind] = Item(Item::terminal, Symbol::epsilon());
+	fa_items[item_ind] = Item(Item::terminal, Symbol::Epsilon);
 	terminals.push_back(&fa_items[item_ind]);
-	terminal_indexes[Symbol::epsilon()] = 0;
+	terminal_indexes[Symbol::Epsilon] = 0;
 	item_ind++;
 	for (const Symbol& symbol : alphabet) {
 		fa_items[item_ind] = Item(Item::terminal, symbol);
@@ -454,7 +454,7 @@ FiniteAutomaton PrefixGrammar::prefix_grammar_to_automaton(iLogTemplate* log) co
 				states[trans].transitions[alpha].insert(i);
 			}
 			if (alpha == "") {
-				alpha = Symbol::epsilon();
+				alpha = Symbol::Epsilon;
 			} else {
 				symbols.insert(alpha);
 			}

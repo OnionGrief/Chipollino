@@ -441,6 +441,9 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 		case Lexeme::Type::squareBrR:
 			opened_memory_cells.erase(l.number);
 			break;
+		case Lexeme::Type::ref:
+			if (opened_memory_cells.count(l.number))
+				return {Lexeme::Type::error};
 		default:
 			break;
 		}
@@ -596,7 +599,7 @@ AlgExpression* AlgExpression::scan_eps(const vector<AlgExpression::Lexeme>& lexe
 	}
 
 	p = make();
-	p->symbol = Symbol::epsilon();
+	p->symbol = Symbol::Epsilon;
 	p->type = AlgExpression::eps;
 	return p;
 }

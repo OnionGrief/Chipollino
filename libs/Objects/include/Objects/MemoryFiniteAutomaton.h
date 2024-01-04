@@ -90,9 +90,9 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 
 	// поиск множества состояний НКА,
 	// достижимых из множества состояний по eps-переходам
-	std::tuple<std::unordered_set<int>, MFATransition::MemoryActions> get_eps_closure(
-		const std::unordered_set<int>& indices) const;
-	void dfs_by_eps(int, std::unordered_set<int>&,		  // NOLINT(runtime/references)
+	std::tuple<std::set<int>, MFATransition::MemoryActions> get_eps_closure(
+		const std::set<int>& indices) const;
+	void dfs_by_eps(int, std::set<int>&,				  // NOLINT(runtime/references)
 					MFATransition::MemoryActions&) const; // NOLINT(runtime/references)
 
   public:

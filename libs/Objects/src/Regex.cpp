@@ -151,7 +151,7 @@ vector<FAState> Regex::_to_thompson(const set<Symbol>& root_alphabet) const {
 	switch (type) {
 	case Type::eps:
 		fa_states.emplace_back(0, false);
-		fa_states[0].set_transition(1, Symbol::epsilon());
+		fa_states[0].set_transition(1, Symbol::Epsilon);
 		fa_states.emplace_back(1, true);
 		return fa_states;
 	case Type::symb:
@@ -164,8 +164,8 @@ vector<FAState> Regex::_to_thompson(const set<Symbol>& root_alphabet) const {
 		fa_right = Regex::cast(term_r)->_to_thompson(root_alphabet);
 
 		fa_states.emplace_back(0, false);
-		fa_states.back().set_transition(1, Symbol::epsilon());
-		fa_states.back().set_transition(int(fa_left.size()) + 1, Symbol::epsilon());
+		fa_states.back().set_transition(1, Symbol::Epsilon);
+		fa_states.back().set_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
 
 		for (const auto& state : fa_left) {
 			state_transitions = {};
@@ -176,7 +176,7 @@ vector<FAState> Regex::_to_thompson(const set<Symbol>& root_alphabet) const {
 			}
 
 			if (state.is_terminal) {
-				state_transitions[Symbol::epsilon()] = {int(fa_left.size() + fa_right.size()) + 1};
+				state_transitions[Symbol::Epsilon] = {int(fa_left.size() + fa_right.size()) + 1};
 			}
 
 			fa_states.emplace_back(state.index + 1, false, state_transitions);
@@ -192,7 +192,7 @@ vector<FAState> Regex::_to_thompson(const set<Symbol>& root_alphabet) const {
 			}
 
 			if (state.is_terminal) {
-				state_transitions[Symbol::epsilon()] = {offset + int(fa_right.size())};
+				state_transitions[Symbol::Epsilon] = {offset + int(fa_right.size())};
 			}
 
 			fa_states.emplace_back(state.index + offset, false, state_transitions);
@@ -241,8 +241,8 @@ vector<FAState> Regex::_to_thompson(const set<Symbol>& root_alphabet) const {
 		fa_left = Regex::cast(term_l)->_to_thompson(root_alphabet);
 
 		fa_states.emplace_back(0, false);
-		fa_states.back().set_transition(1, Symbol::epsilon());
-		fa_states.back().set_transition(int(fa_left.size()) + 1, Symbol::epsilon());
+		fa_states.back().set_transition(1, Symbol::Epsilon);
+		fa_states.back().set_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
 
 		for (const auto& state : fa_left) {
 			state_transitions = {};
@@ -253,7 +253,7 @@ vector<FAState> Regex::_to_thompson(const set<Symbol>& root_alphabet) const {
 			}
 
 			if (state.is_terminal) {
-				state_transitions[Symbol::epsilon()] = {1, int(fa_left.size()) + 1};
+				state_transitions[Symbol::Epsilon] = {1, int(fa_left.size()) + 1};
 			}
 
 			fa_states.emplace_back(state.index + 1, false, state_transitions);
@@ -278,7 +278,7 @@ vector<FAState> Regex::_to_thompson(const set<Symbol>& root_alphabet) const {
 		for (auto& state : fa_negative.states) {
 			if (state.is_terminal) {
 				state.is_terminal = false;
-				state.set_transition(fa_negative.size(), Symbol::epsilon());
+				state.set_transition(fa_negative.size(), Symbol::Epsilon);
 			}
 		}
 
@@ -432,7 +432,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		str_last += elem + "\\ ";
 	}
 	if (eps_in) {
-		str_last += Symbol::epsilon();
+		str_last += Symbol::Epsilon;
 	}
 
 	for (const auto& i : following_states) {
@@ -865,7 +865,7 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 
 		if (!answer) {
 			cur_subresult.type = Type::symb;
-			cur_subresult.symbol = Symbol::EpmptySet;
+			cur_subresult.symbol = Symbol::EmptySet;
 			cur_result.term_l = cur_subresult.make_copy();
 			result.push_back(cur_result);
 			delete cur_result.term_l;
@@ -1106,7 +1106,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 		if (state.empty() || fa_states[i].contains_eps()) {
 
 			if (state.empty()) {
-				state = Symbol::epsilon();
+				state = Symbol::Epsilon;
 			}
 			automat_state.emplace_back(int(i), state, true, transit);
 		} else {

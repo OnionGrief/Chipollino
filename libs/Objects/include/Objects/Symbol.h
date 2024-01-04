@@ -21,7 +21,7 @@ class Symbol {
 	static const char linearize_marker = '.';
 	static const char annote_marker = ',';
 	inline static const std::string Epsilon = "_eps_";
-	inline static const std::string EpmptySet = "_empty_";
+	inline static const std::string EmptySet = "_empty_";
 
 	Symbol() = default;
 	Symbol(const std::string& s); // NOLINT(runtime/explicit)
@@ -44,8 +44,7 @@ class Symbol {
 	bool operator==(char c) const;
 	bool operator!=(const Symbol& other) const;
 	bool operator<(const Symbol& other) const;
-	// возвращает символ эпсилон
-	static Symbol epsilon();
+	
 	bool is_epsilon() const;
 	// преобразовывает вектор символов в одну строку
 	static std::string vector_to_str(const std::vector<Symbol>&);

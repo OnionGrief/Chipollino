@@ -266,11 +266,11 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::get_just_one_total_trap(
 }
 
 void MemoryFiniteAutomaton::dfs_by_eps(
-	int index, unordered_set<int>& reachable,
+	int index, set<int>& reachable,
 	MFATransition::MemoryActions& memory_actions_composition) const {
 	if (!reachable.count(index)) {
 		reachable.insert(index);
-		const auto& by_eps = states[index].transitions.find(Symbol::epsilon());
+		const auto& by_eps = states[index].transitions.find(Symbol::Epsilon);
 		if (by_eps != states[index].transitions.end()) {
 			if (by_eps->second.size() > 1)
 				throw std::logic_error(
@@ -284,9 +284,9 @@ void MemoryFiniteAutomaton::dfs_by_eps(
 	}
 }
 
-tuple<unordered_set<int>, MFATransition::MemoryActions> MemoryFiniteAutomaton::get_eps_closure(
-	const unordered_set<int>& indices) const {
-	unordered_set<int> reachable;
+tuple<set<int>, MFATransition::MemoryActions> MemoryFiniteAutomaton::get_eps_closure(
+	const set<int>& indices) const {
+	set<int> reachable;
 	MFATransition::MemoryActions memory_actions_composition;
 	for (int index : indices)
 		dfs_by_eps(index, reachable, memory_actions_composition);
@@ -294,7 +294,7 @@ tuple<unordered_set<int>, MFATransition::MemoryActions> MemoryFiniteAutomaton::g
 }
 
 MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const {
-	auto get_identifier = [](unordered_set<int>& s) { // NOLINT(runtime/references)
+	auto get_identifier = [](set<int>& s) { // NOLINT(runtime/references)
 		stringstream ss;
 		bool is_first = true;
 		for (const auto& element : s) {
@@ -308,7 +308,7 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const
 	};
 
 	struct Hasher {
-		std::size_t operator()(const std::unordered_set<int>& s) const {
+		std::size_t operator()(const std::set<int>& s) const {
 			std::size_t seed = s.size();
 			for (const int& i : s) {
 				seed ^= std::hash<int>()(i) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -324,13 +324,13 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const
 				unique_symbols.insert(symbol);
 
 	vector<MFAState> new_states;
-	unordered_map<unordered_set<int>, int, Hasher> state_number_by_closure;
+	unordered_map<set<int>, int, Hasher> state_number_by_closure;
 	auto [initial_closure, initial_memory_actions] = get_eps_closure({initial_state});
 	state_number_by_closure[initial_closure] = 0;
 	new_states.emplace_back(0, get_identifier(initial_closure), false);
 
-	stack<pair<unordered_set<int>, MFATransition::MemoryActions>> s;
-	s.push({initial_closure, initial_memory_actions});
+	stack<pair<set<int>, MFATransition::MemoryActions>> s;
+	s.emplace(initial_closure, initial_memory_actions);
 	int states_counter = 1;
 	while (!s.empty()) {
 		auto [from_closure, prev_memory_actions] = s.top();
@@ -355,7 +355,7 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const
 						MFAState new_state(states_counter, get_identifier(cur_closure), false);
 						new_states.push_back(new_state);
 						state_number_by_closure[cur_closure] = states_counter;
-						s.push({cur_closure, closure_memory_actions});
+						s.emplace(cur_closure, closure_memory_actions);
 						states_counter++;
 					}
 					for (auto [num, action] : prev_memory_actions)
@@ -532,7 +532,7 @@ std::pair<int, bool> MemoryFiniteAutomaton::_parse_by_mfa(const std::string& s,
 				if (!visited_eps.count({parsed_len, state->index, eps_tr.to})) {
 					auto [new_opened_cells, new_memory] = update_memory(parsing_state.opened_cells,
 																		parsing_state.memory,
-																		Symbol::epsilon(),
+																		Symbol::Epsilon,
 																		eps_tr.memory_actions,
 																		parsed_len);
 					parsing_states_stack.emplace(

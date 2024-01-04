@@ -265,7 +265,7 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 				new_state.set_transition(
 					MFATransition(left_states.size(),
 								  {{cell_number, MFATransition::MemoryAction::close}}),
-					Symbol::epsilon());
+					Symbol::Epsilon);
 		}
 
 		// добавляем финальное состояние
@@ -522,7 +522,7 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 		str_last += elem + "\\ ";
 	}
 	if (eps_in) {
-		str_last += Symbol::epsilon();
+		str_last += Symbol::Epsilon;
 	}
 
 	for (const auto& i : following_states) {
