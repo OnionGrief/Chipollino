@@ -81,7 +81,7 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 	{ObjectType::Regex, "Regex"},
 	{ObjectType::RandomRegex, "RandomRegex"},
 	{ObjectType::Int, "Int"},
-	{ObjectType::String, "std::string"},
+	{ObjectType::String, "String"},
 	{ObjectType::Boolean, "Boolean"},
 	{ObjectType::OptionalBool, "OptionalBool"},
 	{ObjectType::AmbiguityValue, "AmbiguityValue"},
@@ -95,8 +95,9 @@ inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> type
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_children = {
 	{ObjectType::NFA, {ObjectType::DFA}}};
 
+// используется, чтобы получить всех возможных детей / родителей типа
 static std::vector<ObjectType> get_types(
-	ObjectType type, std::unordered_map<ObjectType, std::vector<ObjectType>> other) {
+	ObjectType type, const std::unordered_map<ObjectType, std::vector<ObjectType>>& other) {
 	std::vector<ObjectType> res = {type};
 	if (other.count(type))
 		for (ObjectType t : other.at(type))
@@ -104,8 +105,16 @@ static std::vector<ObjectType> get_types(
 	return res;
 }
 
-static bool is_belong(std::vector<ObjectType> vec, ObjectType value) {
+// проверка на прринадлежность элемента вектору
+static bool is_belong(const std::vector<ObjectType>& vec, ObjectType value) {
 	return std::find(vec.begin(), vec.end(), value) != vec.end();
+}
+
+// преообразование типа (мб можно покреативнее)
+static GeneralObject convert_type(const GeneralObject& obj, ObjectType type) {
+	if (std::holds_alternative<ObjectDFA>(obj) && type == ObjectType::NFA)
+		return ObjectNFA(std::get<ObjectDFA>(obj).value);
+	return obj;
 }
 
 }; // namespace Typization

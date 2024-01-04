@@ -4,16 +4,16 @@
 #include "Tester/Tester.h"
 
 using std::cout;
+using std::get;
+using std::get_if;
+using std::holds_alternative;
 using std::ifstream;
+using std::nullopt;
+using std::optional;
 using std::pair;
 using std::string;
 using std::to_string;
 using std::vector;
-using std::holds_alternative;
-using std::optional;
-using std::get;
-using std::get_if;
-using std::nullopt;
 
 bool operator==(const Function& l, const Function& r) {
 	return l.name == r.name && l.input == r.input && l.output == r.output;
@@ -116,8 +116,8 @@ Interpreter::InterpreterLogger Interpreter::init_log() {
 }
 
 optional<GeneralObject> Interpreter::apply_function_sequence(const vector<Function>& functions,
-																  vector<GeneralObject> arguments,
-																  bool is_logged) {
+															 vector<GeneralObject> arguments,
+															 bool is_logged) {
 
 	for (const auto& func : functions) {
 		LogTemplate log_template;
@@ -135,11 +135,16 @@ optional<GeneralObject> Interpreter::apply_function_sequence(const vector<Functi
 }
 
 optional<GeneralObject> Interpreter::apply_function(const Function& function,
-														 const vector<GeneralObject>& arguments,
-														 LogTemplate& log_template) {
+													const vector<GeneralObject>& arguments0,
+													LogTemplate& log_template) {
 
 	auto logger = init_log();
 	logger.log("running function \"" + function.name + "\"");
+
+	// преобразование типов
+	vector<GeneralObject> arguments;
+	for (int i = 0; i < arguments0.size(); i++)
+		arguments.push_back(convert_type(arguments0[i], function.input[i]));
 
 	auto get_automaton = [](const GeneralObject& obj) -> const FiniteAutomaton& {
 		if (holds_alternative<ObjectNFA>(obj))
@@ -242,10 +247,8 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 			log_template.set_parameter("result", res);
 			return ObjectBoolean(res);
 		} else {
-			FiniteAutomaton::AmbiguityValue value1 =
-				get<ObjectAmbiguityValue>(arguments[0]).value;
-			FiniteAutomaton::AmbiguityValue value2 =
-				get<ObjectAmbiguityValue>(arguments[1]).value;
+			FiniteAutomaton::AmbiguityValue value1 = get<ObjectAmbiguityValue>(arguments[0]).value;
+			FiniteAutomaton::AmbiguityValue value2 = get<ObjectAmbiguityValue>(arguments[1]).value;
 			bool res = (value1 == value2);
 			log_template.set_parameter("value1", value1);
 			log_template.set_parameter("value2", value2);
@@ -273,7 +276,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectInt(trmon.class_length(&log_template));
 	}
 	if (function.name == "States") {
-		return ObjectInt(get_automaton(arguments[0]).size(&log_template));
+		return ObjectInt(static_cast<int>(get_automaton(arguments[0]).size(&log_template)));
 	}
 	if (function.name == "ClassCard") {
 		trmon = TransformationMonoid(get_automaton(arguments[0]));
@@ -300,6 +303,8 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 							 .value.prefix_grammar_to_automaton(&log_template));
 	}
 
+	// # place for another diff types funcs
+
 	/*
 	* Идёт Глушков по лесу, видит -- регулярка.
 	Построил автомат и застрелился.
@@ -318,7 +323,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		res = ObjectDFA(get_automaton(arguments[0]).determinize(false, &log_template));
 	}
 	if (function.name == "Minimize") {
-		res = ObjectDFA(get_automaton(arguments[0]).minimize(true, &log_template));
+		res = ObjectDFA(get<ObjectNFA>(arguments[0]).value.minimize(true, &log_template));
 	}
 	if (function.name == "Minimize+") {
 		log_template.load_tex_template("Minimize");
@@ -374,8 +379,8 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 				const auto& rule = get<ObjectArray>(object).value;
 				if (rule.size() == 2 && holds_alternative<ObjectRegex>(rule[0]) &&
 					holds_alternative<ObjectRegex>(rule[1])) {
-					rules.push_back({get<ObjectRegex>(rule[0]).value,
-									 get<ObjectRegex>(rule[1]).value});
+					rules.push_back(
+						{get<ObjectRegex>(rule[0]).value, get<ObjectRegex>(rule[1]).value});
 				} else {
 					logger.throw_error("Normalize: invalid inner array");
 					return nullopt;
@@ -385,13 +390,14 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 				return nullopt;
 			}
 		}
-		res = ObjectRegex(
-			get<ObjectRegex>(arguments[0]).value.normalize_regex(rules, &log_template));
+		res =
+			ObjectRegex(get<ObjectRegex>(arguments[0]).value.normalize_regex(rules, &log_template));
 	}
 	if (function.name == "Disambiguate") {
 		res = ObjectRegex(
 			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex(&log_template));
 	}
+	// # place for another same types funcs
 	if (function.name == "Intersect") {
 		res = ObjectNFA(FiniteAutomaton::intersection(
 			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
@@ -408,10 +414,8 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (res.has_value()) {
 		GeneralObject resval = res.value();
 
-		if (holds_alternative<ObjectRegex>(resval) &&
-			holds_alternative<ObjectRegex>(predres)) {
-			if (Regex::equal(get<ObjectRegex>(resval).value,
-							 get<ObjectRegex>(predres).value))
+		if (holds_alternative<ObjectRegex>(resval) && holds_alternative<ObjectRegex>(predres)) {
+			if (Regex::equal(get<ObjectRegex>(resval).value, get<ObjectRegex>(predres).value))
 				logger.log("function \"" + function.name + "\" has left regex unchanged");
 		}
 
@@ -420,7 +424,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 				logger.log("function \"" + function.name + "\" has left automaton unchanged");
 			}
 
-		return res.value();
+		return res;
 	}
 
 	logger.log("there is no handler for function \"" + function.name + "\"");
@@ -472,8 +476,8 @@ optional<string> Interpreter::get_func_id(Function function) {
 	return func_id;
 }
 
-optional<vector<Function>> Interpreter::build_function_sequence(
-	vector<string> function_names, vector<ObjectType> first_type) {
+optional<vector<Function>> Interpreter::build_function_sequence(vector<string> function_names,
+																vector<ObjectType> first_type) {
 
 	auto logger = init_log();
 
@@ -689,8 +693,7 @@ bool Interpreter::run_test(const Test& test) {
 
 		if (holds_alternative<ObjectRegex>(*language)) {
 			log_template.load_tex_template("Test1");
-			Tester::test(
-				get<ObjectRegex>(*language).value, reg, test.iterations, &log_template);
+			Tester::test(get<ObjectRegex>(*language).value, reg, test.iterations, &log_template);
 		} else if (holds_alternative<ObjectNFA>(*language)) {
 			log_template.load_tex_template("Test2");
 			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations, &log_template);
@@ -861,8 +864,7 @@ int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {
 	return (int)pos - 1;
 }
 
-optional<Interpreter::Id> Interpreter::scan_id(const vector<Lexem>& lexems, int& pos,
-													size_t end) {
+optional<Interpreter::Id> Interpreter::scan_id(const vector<Lexem>& lexems, int& pos, size_t end) {
 	if (end > pos && lexems[pos].type == Lexem::name) {
 		pos += 1;
 		return lexems[pos].value;
@@ -945,7 +947,7 @@ optional<Interpreter::FunctionSequence> Interpreter::scan_function_sequence(
 }
 
 optional<Interpreter::Array> Interpreter::scan_array(const vector<Lexem>& lexems, int& pos,
-														  size_t end) {
+													 size_t end) {
 	auto logger = init_log();
 
 	int i = pos;
@@ -981,7 +983,7 @@ optional<Interpreter::Array> Interpreter::scan_array(const vector<Lexem>& lexems
 }
 
 optional<Interpreter::Expression> Interpreter::scan_expression(const vector<Lexem>& lexems,
-																	int& pos, size_t end) {
+															   int& pos, size_t end) {
 	// ( Expr )
 	if (end > pos && lexems[pos].type == Lexem::parL) {
 		end = find_closing_par(lexems, pos);
@@ -1045,7 +1047,7 @@ optional<Interpreter::Expression> Interpreter::scan_expression(const vector<Lexe
 }
 
 optional<Interpreter::Declaration> Interpreter::scan_declaration(const vector<Lexem>& lexems,
-																	  int& pos) {
+																 int& pos) {
 
 	if (lexems.size() < pos + 3) {
 		return nullopt;
@@ -1152,7 +1154,7 @@ optional<Interpreter::SetFlag> Interpreter::scan_flag(const vector<Lexem>& lexem
 }
 
 optional<Interpreter::Verification> Interpreter::scan_verification(const vector<Lexem>& lexems,
-																		int& pos) {
+																   int& pos) {
 
 	auto logger = init_log();
 	int i = pos;
@@ -1185,8 +1187,7 @@ optional<Interpreter::Verification> Interpreter::scan_verification(const vector<
 	return verification;
 }
 
-optional<Interpreter::GeneralOperation> Interpreter::scan_operation(
-	const vector<Lexem>& lexems) {
+optional<Interpreter::GeneralOperation> Interpreter::scan_operation(const vector<Lexem>& lexems) {
 
 	auto logger = init_log();
 	logger.log("scanning");

@@ -72,30 +72,26 @@ inline static const std::vector<Function> functions = {
 	{"Equal", {ObjectType::Boolean, ObjectType::Boolean}, ObjectType::Boolean},
 	{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 	{"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean},
-	{"SemDet", {ObjectType::NFA}, ObjectType::Boolean}};
+	{"SemDet", {ObjectType::NFA}, ObjectType::Boolean},
+};
 
 // вспомогательная функция для Ани и ее курсача
-static void create_json() {
-	std::ofstream outfile("funcs.json");
-	outfile << "{\n\"functions\":[\n";
+static void create_yaml() {
+	std::ofstream outfile("funcs.yaml");
+	outfile << "functions:\n";
 	for (int j = 0; j < functions.size(); j++) {
 		Function func = functions[j];
-		outfile << "{\n";
-		outfile << "\"name\": \"" << func.name << "\",\n";
-		outfile << "\"prog_name\": \"\",\n";
-		outfile << "\"return_type\": \"" << types_to_string.at(func.output) << "\",\n";
-		outfile << "\"arguments\": [";
+		outfile << " - name: " << func.name << "\n";
+		outfile << "   prog_name: \n";
+		outfile << "   return_type: " << types_to_string.at(func.output) << "\n";
+		outfile << "   arguments: [";
 		for (int i = 0; i < func.input.size(); i++) {
 			if (i != 0)
 				outfile << ", ";
-			outfile << "\"" << types_to_string.at(func.input[i]) << "\"";
+			outfile << "" << types_to_string.at(func.input[i]) << "";
 		}
-		outfile << "]\n}";
-		if (j != functions.size() - 1)
-			outfile << ",";
-		outfile << "\n";
+		outfile << "]\n\n";
 	}
-	outfile << "]}\n";
 }
 }; // namespace FuncLib
 
