@@ -405,98 +405,92 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 }
 
 FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
-	FiniteAutomaton new_nfa(initial_state, states, language);
+	auto get_identifier = [](set<int>& s) { // NOLINT(runtime/references)
+		stringstream ss;
+		bool is_first = true;
+		for (const auto& element : s) {
+			if (!is_first) {
+				ss << ", ";
+			}
+			ss << element;
+			is_first = false;
+		}
+		return ss.str();
+	};
 
 	vector<FAState> new_states;
 	map<set<int>, int> visited_states;
 	MetaInfo old_meta, new_meta;
 	int group_counter = 0;
-	set<int> q = closure({initial_state}, true);
-	string initial_state_identifier;
-	for (auto elem : q) {
-		initial_state_identifier +=
-			(initial_state_identifier.empty() || states[elem].identifier.empty() ? "" : ", ") +
-			states[elem].identifier;
-	}
-	FAState new_initial_state = {0, q, initial_state_identifier, false, FAState::Transitions()};
-	if (q.size() > 1) {
-		for (auto elem : q) {
+	set<int> initial_closure = closure({initial_state}, true);
+
+	if (initial_closure.size() > 1) {
+		for (auto elem : initial_closure) {
 			old_meta.upd(NodeMeta{states[elem].index, group_counter});
 		}
-		old_meta.mark_transitions(*this, q, q, Symbol::epsilon(), group_counter);
-		new_meta.upd(NodeMeta{new_initial_state.index, group_counter});
+		old_meta.mark_transitions(
+			*this, initial_closure, initial_closure, Symbol::epsilon(), group_counter);
+		new_meta.upd(NodeMeta{0, group_counter});
 		group_counter++;
 	}
-	visited_states[q] = 0;
-	new_states.push_back(new_initial_state);
+
+	visited_states[initial_closure] = 0;
+	new_states.emplace_back(0, initial_closure, get_identifier(initial_closure), false);
 
 	std::stack<set<int>> s;
-	s.push(q);
-	set<int> x;
+	s.push(initial_closure);
 	int states_counter = 1;
 	while (!s.empty()) {
-		q = s.top();
+		set<int> from_closure = s.top();
 		s.pop();
 		for (const Symbol& symb : language->get_alphabet()) {
-			x.clear();
-			for (int k : q) {
+			set<int> transitions_to;
+			for (int k : from_closure) {
 				auto transitions_by_symbol = states[k].transitions.find(symb);
 				if (transitions_by_symbol != states[k].transitions.end()) {
 					for (int transition_by_symbol : transitions_by_symbol->second)
-						x.insert(transition_by_symbol);
+						transitions_to.insert(transition_by_symbol);
 				}
 			}
-			set<int> q1;
-			set<int> x1;
-			for (int k : x) {
-				x1.clear();
-				q1 = closure({k}, true);
-				for (int m : q1) {
-					x1.insert(m);
-				}
-				if (!x1.empty()) {
-					if (visited_states.find(x1) == visited_states.end()) {
-						string new_state_identifier;
-						for (auto elem : x1) {
-							new_state_identifier +=
-								(new_state_identifier.empty() || states[elem].identifier.empty()
-									 ? ""
-									 : ", ") +
-								states[elem].identifier;
-						}
-						FAState new_state = {states_counter,
-											 x1,
-											 new_state_identifier,
-											 false,
-											 FAState::Transitions()};
-						if (q1.size() > 1) {
-							for (auto elem : q1) {
+			for (int k : transitions_to) {
+				set<int> cur_closure = closure({k}, true);
+				if (!cur_closure.empty()) {
+					if (visited_states.find(cur_closure) == visited_states.end()) {
+						FAState new_state(states_counter,
+										  cur_closure,
+										  get_identifier(cur_closure),
+										  false,
+										  FAState::Transitions());
+						if (cur_closure.size() > 1) {
+							for (auto elem : cur_closure) {
 								old_meta.upd(NodeMeta{states[elem].index, group_counter});
 							}
 
 							old_meta.mark_transitions(
-								*this, q1, q1, Symbol::epsilon(), group_counter);
+								*this, cur_closure, cur_closure, Symbol::epsilon(), group_counter);
 							new_meta.upd(NodeMeta{new_state.index, group_counter});
 							group_counter++;
 						}
 						new_states.push_back(new_state);
-						visited_states[x1] = states_counter;
-						s.push(x1);
+						visited_states[cur_closure] = states_counter;
+						s.push(cur_closure);
 						states_counter++;
 					}
-					new_states[visited_states[q]].transitions[symb].insert(visited_states[x1]);
+					new_states[visited_states[from_closure]].set_transition(
+						visited_states[cur_closure], symb);
 				}
 			}
 		}
 	}
+
 	for (auto& state : new_states) {
 		for (auto elem : state.label) {
 			if (states[elem].is_terminal)
 				state.is_terminal = true;
 		}
 	}
-	new_nfa.initial_state = 0;
-	new_nfa.states = new_states;
+
+	FiniteAutomaton new_nfa(0, new_states, language);
 	new_nfa = new_nfa.remove_unreachable_states();
 	if (log) {
 		log->set_parameter("oldautomaton", *this, old_meta);

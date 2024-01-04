@@ -64,6 +64,8 @@ class BackRefRegex : public AlgExpression {
 
 	std::string to_txt() const override;
 
+	// рекурсивное построение MFA
 	MemoryFiniteAutomaton to_mfa(iLogTemplate* log = nullptr) const;
+	// построение MFA по аналогии с алгоритмом Глушкова (экспериментальный метод)
 	MemoryFiniteAutomaton to_mfa_additional(iLogTemplate* log = nullptr) const;
 };

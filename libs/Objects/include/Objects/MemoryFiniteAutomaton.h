@@ -55,6 +55,7 @@ class MFAState : public State {
 	bool operator==(const MFAState& other) const;
 };
 
+// состояние идентифицирующее шаг парсинга по MFA
 struct ParingState {
 	int pos;
 	const MFAState* state;
@@ -65,8 +66,10 @@ struct ParingState {
 				const std::unordered_map<int, std::pair<int, int>>& memory);
 };
 
+// предоставляет метод для сопоставления набора содержимого ячеек памяти с позицией в строке
 class Matcher {
   protected:
+	// строка, в которой производится сопоставление
 	const std::string* s;
 
   public:
@@ -84,6 +87,13 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	static MemoryFiniteAutomaton get_just_one_total_trap(const std::shared_ptr<Language>& language);
 
 	std::pair<int, bool> _parse_by_mfa(const std::string&, Matcher*) const;
+
+	// поиск множества состояний НКА,
+	// достижимых из множества состояний по eps-переходам
+	std::tuple<std::unordered_set<int>, MFATransition::MemoryActions> get_eps_closure(
+		const std::unordered_set<int>& indices) const;
+	void dfs_by_eps(int, std::unordered_set<int>&,		  // NOLINT(runtime/references)
+					MFATransition::MemoryActions&) const; // NOLINT(runtime/references)
 
   public:
 	MemoryFiniteAutomaton();
@@ -106,7 +116,10 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	MemoryFiniteAutomaton add_trap_state(iLogTemplate* log = nullptr) const;
 	// дополнение ДКА (на выходе - автомат, распознающий язык L' = Σ* - L)
 	MemoryFiniteAutomaton complement(iLogTemplate* log = nullptr) const; // меняет язык
-	// проверяет, распознаёт ли автомат слово
+	// удаление eps-переходов (построение eps-замыканий)
+	MemoryFiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
+	// проверяет, распознаёт ли автомат слово (использует BasicMatcher)
 	std::pair<int, bool> parse_by_mfa(const std::string&) const;
+	// проверяет, распознаёт ли автомат слово (использует FastMatcher)
 	std::pair<int, bool> parse_by_mfa_additional(const std::string&) const;
 };

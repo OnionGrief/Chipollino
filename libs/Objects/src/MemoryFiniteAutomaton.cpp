@@ -7,6 +7,8 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/iLogTemplate.h"
 
+using std::map;
+using std::optional;
 using std::pair;
 using std::set;
 using std::stack;
@@ -263,9 +265,123 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::get_just_one_total_trap(
 	return {0, states, language};
 }
 
+void MemoryFiniteAutomaton::dfs_by_eps(
+	int index, unordered_set<int>& reachable,
+	MFATransition::MemoryActions& memory_actions_composition) const {
+	if (!reachable.count(index)) {
+		reachable.insert(index);
+		const auto& by_eps = states[index].transitions.find(Symbol::epsilon());
+		if (by_eps != states[index].transitions.end()) {
+			if (by_eps->second.size() > 1)
+				throw std::logic_error(
+					"dfs_by_eps: trying to make a composition of parallel eps-transitions");
+			for (const auto& transition : by_eps->second) {
+				for (auto [num, action] : transition.memory_actions)
+					memory_actions_composition[num] = action;
+				dfs_by_eps(transition.to, reachable, memory_actions_composition);
+			}
+		}
+	}
+}
+
+tuple<unordered_set<int>, MFATransition::MemoryActions> MemoryFiniteAutomaton::get_eps_closure(
+	const unordered_set<int>& indices) const {
+	unordered_set<int> reachable;
+	MFATransition::MemoryActions memory_actions_composition;
+	for (int index : indices)
+		dfs_by_eps(index, reachable, memory_actions_composition);
+	return {reachable, memory_actions_composition};
+}
+
+MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const {
+	auto get_identifier = [](unordered_set<int>& s) { // NOLINT(runtime/references)
+		stringstream ss;
+		bool is_first = true;
+		for (const auto& element : s) {
+			if (!is_first) {
+				ss << ", ";
+			}
+			ss << element;
+			is_first = false;
+		}
+		return ss.str();
+	};
+
+	struct Hasher {
+		std::size_t operator()(const std::unordered_set<int>& s) const {
+			std::size_t seed = s.size();
+			for (const int& i : s) {
+				seed ^= std::hash<int>()(i) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+			}
+			return seed;
+		}
+	};
+
+	unordered_set<Symbol, Symbol::Hasher> unique_symbols;
+	for (const auto& state : states)
+		for (const auto& [symbol, states_to] : state.transitions)
+			if (!symbol.is_epsilon())
+				unique_symbols.insert(symbol);
+
+	vector<MFAState> new_states;
+	unordered_map<unordered_set<int>, int, Hasher> state_number_by_closure;
+	auto [initial_closure, initial_memory_actions] = get_eps_closure({initial_state});
+	state_number_by_closure[initial_closure] = 0;
+	new_states.emplace_back(0, get_identifier(initial_closure), false);
+
+	stack<pair<unordered_set<int>, MFATransition::MemoryActions>> s;
+	s.push({initial_closure, initial_memory_actions});
+	int states_counter = 1;
+	while (!s.empty()) {
+		auto [from_closure, prev_memory_actions] = s.top();
+		s.pop();
+		for (const auto& symb : unique_symbols) {
+			optional<MFATransition> transition;
+			for (int i : from_closure) {
+				auto transitions_by_symbol = states[i].transitions.find(symb);
+				if (transitions_by_symbol != states[i].transitions.end()) {
+					if (transitions_by_symbol->second.size() > 1 || transition.has_value())
+						throw std::logic_error("remove_eps: trying to make a composition of "
+											   "parallel transitions by symb");
+					if (transitions_by_symbol->second.size() == 1) {
+						transition = *transitions_by_symbol->second.begin();
+					}
+				}
+			}
+			if (transition.has_value()) {
+				auto [cur_closure, closure_memory_actions] = get_eps_closure({transition->to});
+				if (!cur_closure.empty()) {
+					if (!state_number_by_closure.count(cur_closure)) {
+						MFAState new_state(states_counter, get_identifier(cur_closure), false);
+						new_states.push_back(new_state);
+						state_number_by_closure[cur_closure] = states_counter;
+						s.push({cur_closure, closure_memory_actions});
+						states_counter++;
+					}
+					for (auto [num, action] : prev_memory_actions)
+						transition->memory_actions[num] = action;
+					new_states[state_number_by_closure[from_closure]].set_transition(
+						MFATransition(state_number_by_closure[cur_closure],
+									  transition->memory_actions),
+						symb);
+				}
+			}
+		}
+	}
+
+	for (const auto& [formed_by_states, num] : state_number_by_closure) {
+		for (int i : formed_by_states) {
+			if (states[i].is_terminal)
+				new_states[num].is_terminal = true;
+		}
+	}
+
+	return {0, new_states, language};
+}
+
 MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const {
 	MemoryFiniteAutomaton new_mfa(initial_state, states, language->get_alphabet());
-	new_mfa = new_mfa.add_trap_state();
+	new_mfa = new_mfa.remove_eps().add_trap_state();
 	int final_states_counter = 0;
 	for (int i = 0; i < new_mfa.size(); i++) {
 		new_mfa.states[i].is_terminal = !new_mfa.states[i].is_terminal;
@@ -438,6 +554,7 @@ class BasicMatcher : public Matcher {
   public:
 	explicit BasicMatcher(const string&);
 
+	// сопоставление за линию для каждой ячейки
 	void match(const ParingState&, MFAState::Transitions&, // NOLINT(runtime/references)
 			   vector<tuple<Symbol, int, int>>&) override; // NOLINT(runtime/references)
 };
@@ -481,6 +598,7 @@ class FastMatcher : public Matcher {
   public:
 	explicit FastMatcher(const string&);
 
+	// сопоставление за константу для каждой ячейки
 	void match(const ParingState&, MFAState::Transitions&, // NOLINT(runtime/references)
 			   vector<tuple<Symbol, int, int>>&) override; // NOLINT(runtime/references)
 };
