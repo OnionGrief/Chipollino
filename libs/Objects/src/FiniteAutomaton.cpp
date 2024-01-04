@@ -34,6 +34,11 @@ using std::vector;
 FAState::FAState(int index, string identifier, bool is_terminal)
 	: State::State(index, std::move(identifier), is_terminal) {}
 
+FAState::FAState(int index, bool is_terminal) : State::State(index, is_terminal) {}
+
+FAState::FAState(int index, bool is_terminal, Transitions transitions)
+	: State::State(index, is_terminal), transitions(std::move(transitions)) {}
+
 FAState::FAState(int index, string identifier, bool is_terminal, Transitions transitions)
 	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
 }
@@ -2585,4 +2590,30 @@ Regex FiniteAutomaton::to_regex(iLogTemplate* log) const {
 		}
 		return result_regex;
 	}
+}
+
+void FiniteAutomaton::set_initial_state_to_zero() {
+	int init = get_initial();
+	for (auto& state : states) {
+		for (const auto& [symbol, states_to] : state.transitions) {
+			std::set<int> new_trans;
+			for (const auto& index : states_to) {
+				if (index == init) {
+					new_trans.insert(0);
+					continue;
+				}
+				if (index == 0) {
+					new_trans.insert(init);
+					continue;
+				}
+				new_trans.insert(index);
+			}
+			state.transitions[symbol] = new_trans;
+		}
+	}
+
+	std::swap(states[0], states[init]);
+	states[0].index = 0;
+	states[init].index = init;
+	initial_state = 0;
 }

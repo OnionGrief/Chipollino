@@ -73,6 +73,8 @@ class AlgExpression : public BaseObject {
 	// Генерация алфавита и создание нового языка
 	void make_language();
 
+	std::string _to_txt(bool eps_is_empty) const;
+
 	// для print_tree
 	void print_subtree(AlgExpression* expr, int level) const;
 	// для print_dot
@@ -116,8 +118,10 @@ class AlgExpression : public BaseObject {
 	AlgExpression();
 	AlgExpression(std::shared_ptr<Language>, Type, const Symbol&, const std::set<Symbol>&);
 	explicit AlgExpression(std::set<Symbol>);
-	explicit AlgExpression(Type type, AlgExpression* = nullptr, AlgExpression* = nullptr);
-
+	// переданные term_l и term_l копируются с помощью make_copy
+	explicit AlgExpression(Type type, AlgExpression* = nullptr,
+				  AlgExpression* = nullptr);
+				  
 	virtual ~AlgExpression();
 
 	// возвращает указатель на копию себя

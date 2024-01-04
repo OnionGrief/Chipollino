@@ -85,10 +85,17 @@ TEST(TestNegativeRegex, Thompson) {
 
 	states[1].set_transition(4, Symbol::epsilon());
 	states[1].set_transition(2, "a");
+	states[1].set_transition(3, "b");
+	states[1].set_transition(3, "c");
+	states[1].set_transition(4, Symbol::epsilon());
 
 	states[2].set_transition(3, "a");
+	states[2].set_transition(3, "b");
+	states[2].set_transition(3, "c");
 
 	states[3].set_transition(3, "a");
+	states[3].set_transition(3, "b");
+	states[3].set_transition(3, "c");
 	states[3].set_transition(4, Symbol::epsilon());
 
 	states[4].set_transition(7, Symbol::epsilon());
@@ -105,7 +112,34 @@ TEST(TestNegativeRegex, Thompson) {
 	ASSERT_TRUE(FiniteAutomaton::equal(fa, Regex("(^a|b)c").to_thompson()));
 }
 
-TEST(TestNegativeRegex, Antimirov) {}
+TEST(TestNegativeRegex, Antimirov) {
+	vector<FAState> states;
+	for (int i = 0; i < 5; i++) {
+		states.emplace_back(i, set<int>{i}, std::to_string(i), false, FAState::Transitions());
+	}
+
+	states[0].set_transition(1, "a");
+	states[0].set_transition(2, "b");
+	states[0].set_transition(3, "b");
+	states[0].set_transition(2, "c");
+	states[0].set_transition(4, "c");
+
+	states[1].set_transition(2, "a");
+	states[1].set_transition(2, "b");
+	states[1].set_transition(2, "c");
+
+	states[2].set_transition(2, "a");
+	states[2].set_transition(2, "b");
+	states[2].set_transition(2, "c");
+	states[2].set_transition(4, "c");
+
+	states[3].set_transition(4, "c");
+
+	states[4].is_terminal = true;
+	FiniteAutomaton fa(0, states, {"a", "b", "c"});
+
+	ASSERT_TRUE(FiniteAutomaton::equal(fa, Regex("(^a|b)c").to_antimirov()));
+}
 
 TEST(TestEqual, FA_Equal) {
 	vector<FAState> states1;
@@ -669,19 +703,19 @@ TEST(TestAmbiguity, AmbiguityValues) {
 		 FiniteAutomaton::exponentially_ambiguous},
 	};
 
-	//	for_each(tests.begin(), tests.end(), [](const Test& test) {
-	//		auto [test_number, reg_string, type, expected_res] = test;
-	//		// cout << test_number << endl;
-	//		switch (type) {
-	//		case thompson:
-	//			ASSERT_TRUE(Regex(reg_string).to_thompson().ambiguity() == expected_res);
-	//			break;
-	//		case glushkov:
-	//			ASSERT_TRUE(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
-	//			break;
-	//		case ilieyu:
-	//			ASSERT_TRUE(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
-	//			break;
-	//		}
-	//	});
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [test_number, reg_string, type, expected_res] = test;
+		// cout << test_number << endl;
+		switch (type) {
+		case thompson:
+			ASSERT_TRUE(Regex(reg_string).to_thompson().ambiguity() == expected_res);
+			break;
+		case glushkov:
+			ASSERT_TRUE(Regex(reg_string).to_glushkov().ambiguity() == expected_res);
+			break;
+		case ilieyu:
+			ASSERT_TRUE(Regex(reg_string).to_ilieyu().ambiguity() == expected_res);
+			break;
+		}
+	});
 }

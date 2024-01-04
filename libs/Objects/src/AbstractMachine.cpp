@@ -7,6 +7,9 @@ using std::string;
 
 State::State() : index(0), is_terminal(false) {}
 
+State::State(int index, bool is_terminal)
+	: index(index), identifier(""), is_terminal(is_terminal) {}
+
 State::State(int index, string identifier, bool is_terminal)
 	: index(index), identifier(std::move(identifier)), is_terminal(is_terminal) {}
 

@@ -13,6 +13,7 @@ class State {
 	bool is_terminal;
 	State();
 	State(int index, std::string identifier, bool is_terminal);
+	State(int index, bool is_terminal);
 
 	virtual std::string to_txt() const = 0;
 	bool operator==(const State& other) const;

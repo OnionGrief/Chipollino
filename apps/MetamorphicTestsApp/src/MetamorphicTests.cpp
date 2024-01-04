@@ -41,3 +41,13 @@ TEST(TestEqual, ThompsonGlushkov) {
 		ASSERT_TRUE(FiniteAutomaton::equal(r.to_thompson().remove_eps(), r.to_glushkov()));
 	}
 }
+
+TEST(TestNFA, Test_equivalent_nfa_negative) {
+	RegexGenerator rg(5, 2, 2, 2);
+	rg.set_neg_chance(2); // для отрицания
+	for (int i = 0; i < 30; i++) {
+		string str = rg.generate_regex();
+		Regex r1(str), r2(str);
+		ASSERT_TRUE(FiniteAutomaton::equivalent(r1.to_thompson(), r2.to_antimirov()));
+	}
+}
