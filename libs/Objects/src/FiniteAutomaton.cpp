@@ -29,6 +29,7 @@ using std::string;
 using std::stringstream;
 using std::to_string;
 using std::tuple;
+using std::unordered_set;
 using std::vector;
 
 FAState::FAState(int index, string identifier, bool is_terminal)
@@ -449,7 +450,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps(iLogTemplate* log) const {
 		set<int> from_closure = s.top();
 		s.pop();
 		for (const Symbol& symb : language->get_alphabet()) {
-			set<int> transitions_to;
+			unordered_set<int> transitions_to;
 			for (int k : from_closure) {
 				auto transitions_by_symbol = states[k].transitions.find(symb);
 				if (transitions_by_symbol != states[k].transitions.end()) {
