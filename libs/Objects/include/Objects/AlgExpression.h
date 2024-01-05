@@ -46,11 +46,10 @@ class AlgExpression : public BaseObject {
 		// Unary:
 		star,
 		negative,
+		memoryWriter, // поддерево "записывается" в ячейку памяти
 		// Terminal:
 		symb,
 		ref,
-		// поддерево "записывается" в ячейку памяти
-		memoryWriter,
 	};
 
 	// множество уникальных символов алфавита в дереве
@@ -69,10 +68,6 @@ class AlgExpression : public BaseObject {
 
 	void clear();
 
-	// Создает новый язык с алфавитом
-	void set_language(const std::set<Symbol>& _alphabet);
-	// Устанавливает язык
-	void set_language(const std::shared_ptr<Language>& _language);
 	// Рекурсивная генерация алфавита во всех нодах
 	void generate_alphabet();
 	// Генерация алфавита и создание нового языка
@@ -118,7 +113,6 @@ class AlgExpression : public BaseObject {
 	std::vector<AlgExpression*> get_first_nodes();
 	// возвращает множество нод, на которые может заканчиваться слово языка объекта
 	std::vector<AlgExpression*> get_last_nodes();
-	std::unordered_map<int, std::vector<int>> pairs() const;
 
   public:
 	AlgExpression();
@@ -134,6 +128,12 @@ class AlgExpression : public BaseObject {
 	virtual AlgExpression* make_copy() const = 0;
 	AlgExpression(const AlgExpression&);
 	AlgExpression& operator=(const AlgExpression& other);
+
+	Symbol get_symbol();
+	// Устанавливает новый язык с алфавитом
+	void set_language(const std::set<Symbol>& _alphabet);
+	// Устанавливает язык
+	void set_language(const std::shared_ptr<Language>& _language);
 
 	std::string to_txt() const override;
 	// вывод дерева для дебага

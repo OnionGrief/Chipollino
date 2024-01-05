@@ -14,6 +14,7 @@
 using std::map;
 using std::set;
 using std::string;
+using std::unordered_set;
 using std::vector;
 
 TEST(TestParseString, FromString) {
@@ -79,14 +80,14 @@ TEST(TestNegativeRegex, Thompson) {
 		states.emplace_back(i, set<int>{i}, std::to_string(i), false, FAState::Transitions());
 	}
 
-	states[0].set_transition(1, Symbol::epsilon());
-	states[0].set_transition(5, Symbol::epsilon());
+	states[0].set_transition(1, Symbol::Epsilon);
+	states[0].set_transition(5, Symbol::Epsilon);
 
-	states[1].set_transition(4, Symbol::epsilon());
+	states[1].set_transition(4, Symbol::Epsilon);
 	states[1].set_transition(2, "a");
 	states[1].set_transition(3, "b");
 	states[1].set_transition(3, "c");
-	states[1].set_transition(4, Symbol::epsilon());
+	states[1].set_transition(4, Symbol::Epsilon);
 
 	states[2].set_transition(3, "a");
 	states[2].set_transition(3, "b");
@@ -95,15 +96,15 @@ TEST(TestNegativeRegex, Thompson) {
 	states[3].set_transition(3, "a");
 	states[3].set_transition(3, "b");
 	states[3].set_transition(3, "c");
-	states[3].set_transition(4, Symbol::epsilon());
+	states[3].set_transition(4, Symbol::Epsilon);
 
-	states[4].set_transition(7, Symbol::epsilon());
+	states[4].set_transition(7, Symbol::Epsilon);
 
 	states[7].set_transition(8, "c");
 
 	states[5].set_transition(6, "b");
 
-	states[6].set_transition(7, Symbol::epsilon());
+	states[6].set_transition(7, Symbol::Epsilon);
 
 	states[8].is_terminal = true;
 	FiniteAutomaton fa(0, states, {"a", "b", "c"});
@@ -517,66 +518,149 @@ TEST(TestGlaisterShallit, GetClassesNumber) {
 	check_classes_number("abc|bbc", 4);
 }
 
-TEST(TestMFA, Test_to_mfa) {
+TEST(TestToMFA, ToMfa) {
 	vector<MFAState> states = BackRefRegex("[a|b]:1*").to_mfa().get_states();
 	ASSERT_EQ(states.size(), 4);
 	ASSERT_EQ(states[0],
 			  MFAState(0,
 					   "0",
 					   true,
-					   {{"a", {MFATransition(1, {1}, {})}}, {"b", {MFATransition(2, {1}, {})}}}));
-	ASSERT_EQ(states[1],
-			  MFAState(1, "1", false, {{Symbol::epsilon(), {MFATransition(3, {}, {1})}}}));
-	ASSERT_EQ(states[2],
-			  MFAState(2, "2", false, {{Symbol::epsilon(), {MFATransition(3, {}, {1})}}}));
+					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
+						{"b", {MFATransition(2, {1}, unordered_set<int>())}}}));
+	ASSERT_EQ(
+		states[1],
+		MFAState(
+			1, "1", false, {{Symbol::Epsilon, {MFATransition(3, unordered_set<int>(), {1})}}}));
+	ASSERT_EQ(
+		states[2],
+		MFAState(
+			2, "2", false, {{Symbol::Epsilon, {MFATransition(3, unordered_set<int>(), {1})}}}));
 	ASSERT_EQ(states[3],
 			  MFAState(3,
 					   "3",
 					   true,
-					   {{"a", {MFATransition(1, {1}, {})}}, {"b", {MFATransition(2, {1}, {})}}}));
+					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
+						{"b", {MFATransition(2, {1}, unordered_set<int>())}}}));
 
 	states = BackRefRegex("([&2]:1[&1a]:2)*").to_mfa().get_states();
 	ASSERT_EQ(states.size(), 6);
-	ASSERT_EQ(states[0], MFAState(0, "0", true, {{"&2", {MFATransition(1, {1}, {})}}}));
-	ASSERT_EQ(states[1],
-			  MFAState(1, "1", false, {{Symbol::epsilon(), {MFATransition(2, {}, {1})}}}));
-	ASSERT_EQ(states[2], MFAState(2, "2", false, {{"&1", {MFATransition(3, {2}, {})}}}));
-	ASSERT_EQ(states[3], MFAState(3, "3", false, {{"a", {MFATransition(4, {}, {})}}}));
-	ASSERT_EQ(states[4],
-			  MFAState(4, "4", false, {{Symbol::epsilon(), {MFATransition(5, {}, {2})}}}));
-	ASSERT_EQ(states[5], MFAState(5, "5", true, {{"&2", {MFATransition(1, {1}, {})}}}));
+	ASSERT_EQ(
+		states[0],
+		MFAState(0, "0", true, {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}}}));
+	ASSERT_EQ(
+		states[1],
+		MFAState(
+			1, "1", false, {{Symbol::Epsilon, {MFATransition(2, unordered_set<int>(), {1})}}}));
+	ASSERT_EQ(
+		states[2],
+		MFAState(2, "2", false, {{Symbol::Ref(1), {MFATransition(3, {2}, unordered_set<int>())}}}));
+	ASSERT_EQ(states[3],
+			  MFAState(3,
+					   "3",
+					   false,
+					   {{"a", {MFATransition(4, unordered_set<int>(), unordered_set<int>())}}}));
+	ASSERT_EQ(
+		states[4],
+		MFAState(
+			4, "4", false, {{Symbol::Epsilon, {MFATransition(5, unordered_set<int>(), {2})}}}));
+	ASSERT_EQ(
+		states[5],
+		MFAState(5, "5", true, {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}}}));
 }
 
-TEST(TestLanguage, Test_caching) {
+TEST(TestLanguage, Caching) {
 	Language::enable_retrieving_from_cache();
 
-	// pump_length
 	Regex r("abaa");
+	std::shared_ptr<Language> lang(r.get_language());
+	// pump_length
 	r.pump_length();
-	ASSERT_TRUE(r.get_language()->is_pump_length_cached());
-	ASSERT_EQ(r.get_language()->get_pump_length(), 5);
+	ASSERT_TRUE(lang->is_pump_length_cached());
+	ASSERT_EQ(lang->get_pump_length(), 5);
 	// min_dfa
 	FiniteAutomaton fa = r.to_glushkov();
 	fa.minimize();
-	ASSERT_TRUE(r.get_language()->is_min_dfa_cached());
-	ASSERT_EQ(fa.get_language(), fa.get_language()->get_min_dfa().get_language());
+	ASSERT_TRUE(lang->is_min_dfa_cached());
+	ASSERT_EQ(lang, lang->get_min_dfa().get_language());
 	// syntactic_monoid
 	fa.get_syntactic_monoid();
-	ASSERT_TRUE(r.get_language()->is_syntactic_monoid_cached());
+	ASSERT_TRUE(lang->is_syntactic_monoid_cached());
 	// nfa_minimum_size
 	fa.get_classes_number_GlaisterShallit();
-	ASSERT_TRUE(r.get_language()->is_nfa_minimum_size_cached());
-	ASSERT_EQ(r.get_language()->get_nfa_minimum_size(), 5);
+	ASSERT_TRUE(lang->is_nfa_minimum_size_cached());
+	ASSERT_EQ(lang->get_nfa_minimum_size(), 5);
 	// is_one_unambiguous
 	fa.is_one_unambiguous();
-	ASSERT_TRUE(r.get_language()->is_one_unambiguous_flag_cached());
-	ASSERT_EQ(r.get_language()->get_one_unambiguous_flag(), true);
+	ASSERT_TRUE(lang->is_one_unambiguous_flag_cached());
+	ASSERT_EQ(lang->get_one_unambiguous_flag(), true);
 	// one_unambiguous_regex
 	r.get_one_unambiguous_regex();
-	ASSERT_TRUE(r.get_language()->is_one_unambiguous_regex_cached());
-	ASSERT_EQ(r.get_language(), r.get_language()->get_one_unambiguous_regex().get_language());
+	ASSERT_TRUE(lang->is_one_unambiguous_regex_cached());
+	ASSERT_EQ(lang, lang->get_one_unambiguous_regex().get_language());
 
 	Language::disable_retrieving_from_cache();
+}
+
+TEST(TestIsDeterministic, FA_IsDeterministic) {
+	ASSERT_TRUE(Regex("ab|c").to_glushkov().is_deterministic());
+	ASSERT_FALSE(Regex("ab|ac").to_glushkov().is_deterministic());
+	ASSERT_FALSE(Regex("a*").to_thompson().is_deterministic());
+}
+
+TEST(TestIsDeterministic, MFA_IsDeterministic) {
+	ASSERT_TRUE(BackRefRegex("ab|c").to_mfa().is_deterministic());
+	ASSERT_FALSE(BackRefRegex("ab|ac").to_mfa().is_deterministic());
+	ASSERT_FALSE(BackRefRegex("ab|c|&1").to_mfa().is_deterministic());
+	ASSERT_TRUE(BackRefRegex("[a]:1").to_mfa().is_deterministic());
+}
+
+TEST(TestRemoveEps, MFA_RemoveEps) {
+	MemoryFiniteAutomaton mfa = BackRefRegex("[[a]:1]:2&1").to_mfa();
+	mfa = mfa.remove_eps();
+	vector<MFAState> states = mfa.get_states();
+	ASSERT_EQ(states.size(), 3);
+	ASSERT_EQ(states[0],
+			  MFAState(0, "0", false, {{"a", {MFATransition(1, {1, 2}, unordered_set<int>())}}}));
+	ASSERT_EQ(states[1],
+			  MFAState(1,
+					   "1, 2, 3",
+					   false,
+					   {{Symbol::Ref(1), {MFATransition(2, unordered_set<int>(), {1, 2})}}}));
+	ASSERT_EQ(states[2], MFAState(2, "4", true, {}));
+}
+
+TEST(TestParsing, MFAParsing) {
+	using Test = std::tuple<string, string, bool>;
+	vector<Test> tests = {
+		{"[a*]:1&1", "aaa", false},
+		{"[a*]:1&1", "aaaa", true},
+		{"[a*]:1&1[b|c]:2*&2", "abcb", false},
+		{"[a*]:1&1[b|c]:2*&2", "bcb", false},
+		{"[a*]:1&1[b|c]:2*&2", "bcc", true},
+		{"[a*]:1&1[b|c]:2*&2", "aaaabcc", true},
+		{"[a*]:1&1[b|c]:1*&1", "bcc", true},
+		{"[a*]:1&1[b|c]:1*&1", "aaaabcc", true},
+		{"[[a*]:1b&1]:2&2", "aabaaaba", false},
+		{"[[a*]:1b&1]:2&2", "aabaaaabaa", true},
+		{"[[a*]:1b&1]:2&2", "aabaaaabaa", true},
+		{"([&2]:1[&1a]:2)*", "aaaaaaaa", false},
+		{"([&2]:1[&1a]:2)*", "aaaaaaaaa", true},
+	};
+
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [rgx_str, str, expected_res] = test;
+
+		std::stringstream message;
+		message << "Regex: " << rgx_str << ", Str: " << str << ", Res: " << expected_res;
+		SCOPED_TRACE(message.str());
+
+		MemoryFiniteAutomaton mfa(BackRefRegex(rgx_str).to_mfa()),
+			mfa_add(BackRefRegex(rgx_str).to_mfa_additional());
+		ASSERT_EQ(mfa.parse_by_mfa(str).second, expected_res);
+		ASSERT_EQ(mfa.parse_by_mfa_additional(str).second, expected_res);
+		ASSERT_EQ(mfa_add.parse_by_mfa(str).second, expected_res);
+		ASSERT_EQ(mfa_add.parse_by_mfa_additional(str).second, expected_res);
+	});
 }
 
 TEST(TestAmbiguity, AmbiguityValues) {

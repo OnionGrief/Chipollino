@@ -31,4 +31,9 @@ class AbstractMachine : public BaseObject {
 	
 	// начальное состояние
 	int get_initial() const;
+	// возвращает количество состояний (метод States)
+	virtual size_t size(iLogTemplate* log = nullptr) const = 0;
+
+	// проверка автомата на детерминированность
+	virtual bool is_deterministic(iLogTemplate* log = nullptr) const = 0;
 };

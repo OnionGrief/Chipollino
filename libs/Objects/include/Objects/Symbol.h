@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -10,15 +11,17 @@ class Symbol {
 	std::vector<int> annote_numbers;
 	std::vector<int> linearize_numbers;
 	std::string symbol;
+	std::optional<int> reference;
 	// symbol + разметка
 	std::string value;
+
 	void update_value();
 
   public:
 	static const char linearize_marker = '.';
 	static const char annote_marker = ',';
 	inline static const std::string Epsilon = "_eps_";
-	inline static const std::string EpmptySet = "_empty_";
+	inline static const std::string EmptySet = "_empty_";
 
 	Symbol() = default;
 	Symbol(const std::string& s); // NOLINT(runtime/explicit)
@@ -27,19 +30,21 @@ class Symbol {
 
 	Symbol(const Symbol& other) = default;
 
+	static Symbol Ref(int number);
+
 	Symbol& operator=(const std::string& s);
 	Symbol& operator=(const char* c);
 	Symbol& operator=(char c);
-	Symbol& operator=(const Symbol& other);
-	// многие функции все еще работают с символами алфавита как со строками
+	Symbol& operator=(const Symbol& other) = default;
+	// многие функции все еще работают с символами алфавита, как со строками
 	// для них добавлено преобразование типов
 	operator std::string() const;
 
 	bool operator==(const Symbol& other) const;
+	bool operator==(char c) const;
 	bool operator!=(const Symbol& other) const;
 	bool operator<(const Symbol& other) const;
-	// возвращает символ эпсилон
-	static Symbol epsilon();
+	
 	bool is_epsilon() const;
 	// преобразовывает вектор символов в одну строку
 	static std::string vector_to_str(const std::vector<Symbol>&);
@@ -50,6 +55,8 @@ class Symbol {
 	void delinearize();
 	bool is_annotated() const;
 	bool is_linearized() const;
+	bool is_ref() const;
+	int get_ref() const;
 
 	int last_linearization_number();
 
