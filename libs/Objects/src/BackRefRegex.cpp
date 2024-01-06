@@ -22,12 +22,20 @@ BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
 	}
 }
 
+BackRefRegex::BackRefRegex(Type type, AlgExpression* term_l, AlgExpression* term_r)
+	: AlgExpression(type, term_l, term_r) {}
+
 BackRefRegex::BackRefRegex(const BackRefRegex& other) : AlgExpression(other) {
 	cell_number = other.cell_number;
 }
 
-BackRefRegex::BackRefRegex(Type type, AlgExpression* term_l, AlgExpression* term_r)
-	: AlgExpression(type, term_l, term_r) {}
+BackRefRegex& BackRefRegex::operator=(const BackRefRegex& other) {
+	if (this != &other) {
+		clear();
+		copy(&other);
+	}
+	return *this;
+}
 
 void BackRefRegex::copy(const AlgExpression* other) {
 	auto* tmp = cast(other);
@@ -36,6 +44,7 @@ void BackRefRegex::copy(const AlgExpression* other) {
 	symbol = tmp->symbol;
 	language = tmp->language;
 	cell_number = tmp->cell_number;
+	lin_number = tmp->lin_number;
 	if (tmp->term_l != nullptr)
 		term_l = tmp->term_l->make_copy();
 	if (tmp->term_r != nullptr)
@@ -385,9 +394,9 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa(iLogTemplate* log) const {
 	return mfa;
 }
 
-vector<BackRefRegex*> BackRefRegex::preorder_traversal(std::unordered_set<int> _in_cells,
-													   std::unordered_set<int> _first_in_cells,
-													   std::unordered_set<int> _last_in_cells) {
+vector<BackRefRegex*> BackRefRegex::preorder_traversal(unordered_set<int> _in_cells,
+													   unordered_set<int> _first_in_cells,
+													   unordered_set<int> _last_in_cells) {
 	vector<BackRefRegex*> l, r;
 	bool l_contains_eps, r_contains_eps;
 
@@ -406,11 +415,8 @@ vector<BackRefRegex*> BackRefRegex::preorder_traversal(std::unordered_set<int> _
 			_in_cells, l_contains_eps ? _first_in_cells : unordered_set<int>(), _last_in_cells);
 		l.insert(l.end(), r.begin(), r.end());
 		return l;
-	case eps:
-		return {};
 	case star:
-		l = cast(term_l)->preorder_traversal(_in_cells, _first_in_cells, _last_in_cells);
-		return l;
+		return cast(term_l)->preorder_traversal(_in_cells, _first_in_cells, _last_in_cells);
 	case memoryWriter:
 		_in_cells.insert(cell_number);
 		_first_in_cells.insert(cell_number);
@@ -422,6 +428,8 @@ vector<BackRefRegex*> BackRefRegex::preorder_traversal(std::unordered_set<int> _
 		first_in_cells = _first_in_cells;
 		last_in_cells = _last_in_cells;
 		return {this};
+	default:
+		return {};
 	}
 }
 
@@ -579,4 +587,68 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 	if (log) {
 	}
 	return mfa;
+}
+
+void BackRefRegex::unfold_iterations(int& number) {
+	switch (type) {
+	case alt:
+	case conc:
+		cast(term_l)->unfold_iterations(number);
+		cast(term_r)->unfold_iterations(number);
+		return;
+	case star:
+		cast(term_l)->unfold_iterations(number);
+		type = Type::conc;
+		term_r = term_l->make_copy();
+		return;
+	case memoryWriter:
+		lin_number = number++;
+		cast(term_l)->unfold_iterations(number);
+		return;
+	default:
+		break;
+	}
+}
+
+bool BackRefRegex::_is_acreg(unordered_set<int> _in_cells, unordered_set<int> in_lin_cells,
+							 unordered_map<int, unordered_set<int>>& refs_in_cells) const {
+	unordered_map<int, unordered_set<int>>::iterator cell_refs;
+	switch (type) {
+	case alt:
+	case conc:
+		if (cast(term_l)->_is_acreg(_in_cells, in_lin_cells, refs_in_cells))
+			return true;
+		return cast(term_r)->_is_acreg(_in_cells, in_lin_cells, refs_in_cells);
+	case memoryWriter:
+		_in_cells.insert(cell_number);
+		in_lin_cells.insert(lin_number);
+		refs_in_cells[cell_number] = {lin_number};
+		return cast(term_l)->_is_acreg(_in_cells, in_lin_cells, refs_in_cells);
+	case ref:
+		cell_refs = refs_in_cells.find(cell_number);
+		if (cell_refs != refs_in_cells.end()) {
+			for (auto in_lin : in_lin_cells)
+				if (cell_refs->second.count(in_lin))
+					return true;
+			for (auto in_cell : _in_cells)
+				refs_in_cells[in_cell].insert(cell_refs->second.begin(), cell_refs->second.end());
+		}
+		break;
+	case symb:
+	case eps:
+		break;
+	default:
+		return true;
+	}
+	return false;
+}
+
+bool BackRefRegex::is_acreg(iLogTemplate* log) const {
+	BackRefRegex temp(*this);
+
+	int counter = 0;
+	temp.unfold_iterations(counter);
+
+	unordered_map<int, unordered_set<int>> refs_in_cells;
+	return temp._is_acreg({}, {}, refs_in_cells);
 }

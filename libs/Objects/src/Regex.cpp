@@ -34,6 +34,14 @@ Regex::Regex(const string& str, const std::shared_ptr<Language>& new_language) :
 Regex::Regex(Type type, AlgExpression* term_l, AlgExpression* term_r)
 	: AlgExpression(type, term_l, term_r) {}
 
+Regex& Regex::operator=(const Regex& other) {
+	if (this != &other) {
+		clear();
+		copy(&other);
+	}
+	return *this;
+}
+
 void Regex::copy(const AlgExpression* other) {
 	auto* tmp = cast(other);
 	alphabet = tmp->alphabet;

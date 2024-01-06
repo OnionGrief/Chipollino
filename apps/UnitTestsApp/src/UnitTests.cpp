@@ -629,6 +629,11 @@ TEST(TestRemoveEps, MFA_RemoveEps) {
 	ASSERT_EQ(states[2], MFAState(2, "4", true, {}));
 }
 
+TEST(TestIsAcreg, BRegex_IsAcreg) {
+	ASSERT_FALSE(BackRefRegex("([&2b]:1&1[a*]:1[b*&1]:2)*").is_acreg());
+	ASSERT_TRUE(BackRefRegex("([a*]:1[&2b]:1&1[b*&1]:2)*").is_acreg());
+}
+
 TEST(TestParsing, MFAParsing) {
 	using Test = std::tuple<string, string, bool>;
 	vector<Test> tests = {

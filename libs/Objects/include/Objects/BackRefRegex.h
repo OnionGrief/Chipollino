@@ -14,6 +14,8 @@ class BackRefRegex : public AlgExpression {
   private:
 	// номер ячейки памяти (используется при Type: ref, memoryWriter)
 	int cell_number = 0;
+	// номер линеаризации (используется при Type: memoryWriter)
+	int lin_number = 0;
 	// номера ячеек, в которых "находится" нода (лежит в поддеревьях memoryWriter с этими номерами)
 	std::unordered_set<int> in_cells;
 	// номера ячеек, содержимое которых может начинаться на эту ноду
@@ -48,6 +50,13 @@ class BackRefRegex : public AlgExpression {
 	std::unordered_map<int, std::vector<std::pair<int, std::unordered_set<int>>>> get_follow()
 		const;
 
+	// преобразует star в conc (раскрывает каждую итерацию один раз) и линеаризует memoryWriter
+	void unfold_iterations(int& number); // NOLINT(runtime/references)
+	// рекурсивно проверяет, является ли регулярное выражение ацикличным
+	bool _is_acreg(
+		std::unordered_set<int>, std::unordered_set<int>,
+		std::unordered_map<int, std::unordered_set<int>>&) const; // NOLINT(runtime/references)
+
   public:
 	BackRefRegex() = default;
 	explicit BackRefRegex(const std::string&);
@@ -55,6 +64,7 @@ class BackRefRegex : public AlgExpression {
 
 	BackRefRegex* make_copy() const override;
 	BackRefRegex(const BackRefRegex&);
+	BackRefRegex& operator=(const BackRefRegex& other);
 
 	// dynamic_cast к типу BackRefRegex*
 	template <typename T> static BackRefRegex* cast(T* ptr, bool not_null_ptr = true);
@@ -68,4 +78,7 @@ class BackRefRegex : public AlgExpression {
 	MemoryFiniteAutomaton to_mfa(iLogTemplate* log = nullptr) const;
 	// построение MFA по аналогии с алгоритмом Глушкова (экспериментальный метод)
 	MemoryFiniteAutomaton to_mfa_additional(iLogTemplate* log = nullptr) const;
+
+	// проверяет, является ли регулярное выражение ацикличным
+	bool is_acreg(iLogTemplate* log = nullptr) const;
 };

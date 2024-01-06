@@ -127,7 +127,6 @@ class AlgExpression : public BaseObject {
 	// возвращает указатель на копию себя
 	virtual AlgExpression* make_copy() const = 0;
 	AlgExpression(const AlgExpression&);
-	AlgExpression& operator=(const AlgExpression& other);
 
 	Symbol get_symbol();
 	// Устанавливает новый язык с алфавитом

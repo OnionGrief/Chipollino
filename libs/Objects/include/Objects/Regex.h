@@ -64,6 +64,7 @@ class Regex : public AlgExpression {
 
 	Regex* make_copy() const override;
 	Regex(const Regex&) = default;
+	Regex& operator=(const Regex& other);
 
 	// dynamic_cast к типу Regex*
 	template <typename T> static Regex* cast(T* ptr, bool not_null_ptr = true);

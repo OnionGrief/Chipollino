@@ -67,14 +67,6 @@ AlgExpression::AlgExpression(const AlgExpression& other) : AlgExpression() {
 		term_r = other.term_r->make_copy();
 }
 
-AlgExpression& AlgExpression::operator=(const AlgExpression& other) {
-	if (this != &other) {
-		clear();
-		copy(&other);
-	}
-	return *this;
-}
-
 Symbol AlgExpression::get_symbol() {
 	return symbol;
 }
