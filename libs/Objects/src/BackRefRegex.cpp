@@ -612,12 +612,21 @@ void BackRefRegex::unfold_iterations(int& number) {
 
 bool BackRefRegex::_is_acreg(unordered_set<int> _in_cells, unordered_set<int> in_lin_cells,
 							 unordered_map<int, unordered_set<int>>& refs_in_cells) const {
-	unordered_map<int, unordered_set<int>>::iterator cell_refs;
+	unordered_map<int, unordered_set<int>>::iterator refs_in_cell;
+	unordered_map<int, unordered_set<int>> refs_in_cells_copy;
 	switch (type) {
 	case alt:
+		refs_in_cells_copy = refs_in_cells;
+		if (!cast(term_l)->_is_acreg(_in_cells, in_lin_cells, refs_in_cells))
+			return false;
+		if (!cast(term_r)->_is_acreg(_in_cells, in_lin_cells, refs_in_cells_copy))
+			return false;
+		for (const auto& [num, refs] : refs_in_cells_copy)
+			refs_in_cells[num].insert(refs.begin(), refs.end());
+		return true;
 	case conc:
-		if (cast(term_l)->_is_acreg(_in_cells, in_lin_cells, refs_in_cells))
-			return true;
+		if (!cast(term_l)->_is_acreg(_in_cells, in_lin_cells, refs_in_cells))
+			return false;
 		return cast(term_r)->_is_acreg(_in_cells, in_lin_cells, refs_in_cells);
 	case memoryWriter:
 		_in_cells.insert(cell_number);
@@ -625,22 +634,23 @@ bool BackRefRegex::_is_acreg(unordered_set<int> _in_cells, unordered_set<int> in
 		refs_in_cells[cell_number] = {lin_number};
 		return cast(term_l)->_is_acreg(_in_cells, in_lin_cells, refs_in_cells);
 	case ref:
-		cell_refs = refs_in_cells.find(cell_number);
-		if (cell_refs != refs_in_cells.end()) {
-			for (auto in_lin : in_lin_cells)
-				if (cell_refs->second.count(in_lin))
-					return true;
-			for (auto in_cell : _in_cells)
-				refs_in_cells[in_cell].insert(cell_refs->second.begin(), cell_refs->second.end());
+		refs_in_cell = refs_in_cells.find(cell_number);
+		if (refs_in_cell != refs_in_cells.end()) {
+			for (auto cell_lin_num : in_lin_cells)
+				if (refs_in_cell->second.count(cell_lin_num))
+					return false;
+			for (auto cell_num : _in_cells)
+				refs_in_cells[cell_num].insert(refs_in_cell->second.begin(),
+											   refs_in_cell->second.end());
 		}
 		break;
 	case symb:
 	case eps:
 		break;
 	default:
-		return true;
+		return false;
 	}
-	return false;
+	return true;
 }
 
 bool BackRefRegex::is_acreg(iLogTemplate* log) const {

@@ -630,8 +630,9 @@ TEST(TestRemoveEps, MFA_RemoveEps) {
 }
 
 TEST(TestIsAcreg, BRegex_IsAcreg) {
-	ASSERT_FALSE(BackRefRegex("([&2b]:1&1[a*]:1[b*&1]:2)*").is_acreg());
-	ASSERT_TRUE(BackRefRegex("([a*]:1[&2b]:1&1[b*&1]:2)*").is_acreg());
+	ASSERT_TRUE(BackRefRegex("([&2b]:1&1[a*]:1[b*&1]:2)*").is_acreg());
+	ASSERT_FALSE(BackRefRegex("([a*]:1[&2b]:1&1[b*&1]:2)*").is_acreg());
+	ASSERT_FALSE(BackRefRegex("([&2]:1([&1]:2|[a]:2))*").is_acreg());
 }
 
 TEST(TestParsing, MFAParsing) {
