@@ -101,6 +101,8 @@ class AlgExpression : public BaseObject {
 	AlgExpression* scan_par(const std::vector<Lexeme>&, int, int);
 	static void update_balance(const AlgExpression::Lexeme&, int&);
 
+	virtual bool equals(const AlgExpression* other) const = 0;
+
 	// Проверяет, входит ли eps в дерево regex (принадлежит ли языку)
 	bool contains_eps() const;
 
@@ -109,9 +111,9 @@ class AlgExpression : public BaseObject {
 	// Слово, в котором все итерации Клини раскрыты n раз
 	std::string get_iterated_word(int n) const;
 
-	// возвращает множество нод, с которых может начинаться слово языка объекта
+	// возвращает множество нод, с которых может начинаться слово языка выражения
 	std::vector<AlgExpression*> get_first_nodes();
-	// возвращает множество нод, на которые может заканчиваться слово языка объекта
+	// возвращает множество нод, на которые может заканчиваться слово языка выражения
 	std::vector<AlgExpression*> get_last_nodes();
 
   public:

@@ -239,7 +239,7 @@ void AlgExpression::print_dot() const {
 	r_v = type_to_str();
 
 	string root_dot_node = "node" + to_string(id++);
-	dot += root_dot_node + " [label=\"" + string(r_v) + "\"];\n";
+	dot += root_dot_node + " [label=\"" + to_txt() + "\\n" + string(r_v) + "\"];\n";
 
 	dot += print_subdot(term_l, root_dot_node, id);
 	dot += print_subdot(term_r, root_dot_node, id);
@@ -613,16 +613,8 @@ bool AlgExpression::equality_checker(const AlgExpression* expr1, const AlgExpres
 		return true;
 	if (expr1 == nullptr || expr2 == nullptr)
 		return false;
-	if (expr1->type != expr2->type)
+	if (expr1->type != expr2->type || expr1->symbol != expr2->symbol || !expr1->equals(expr2))
 		return false;
-
-	if (expr1->type == Type::symb) {
-		Symbol r1_symb, r2_symb;
-		r1_symb = expr1->symbol;
-		r2_symb = expr2->symbol;
-		if (r1_symb != r2_symb)
-			return false;
-	}
 
 	if (equality_checker(expr1->term_l, expr2->term_l) &&
 		equality_checker(expr1->term_r, expr2->term_r))

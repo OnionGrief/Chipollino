@@ -1001,6 +1001,10 @@ int Regex::pump_length(iLogTemplate* log) const {
 	}
 }
 
+bool Regex::equals(const AlgExpression* other) const {
+	return true;
+}
+
 bool Regex::equal(const Regex& r1, const Regex& r2, iLogTemplate* log) {
 	bool result = equality_checker(&r1, &r2);
 	if (log) {

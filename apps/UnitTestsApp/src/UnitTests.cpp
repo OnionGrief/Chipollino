@@ -568,6 +568,56 @@ TEST(TestToMFA, ToMfa) {
 		MFAState(5, "5", true, {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}}}));
 }
 
+TEST(TestToMFA, ToMfaAdditional) {
+	vector<MFAState> states = BackRefRegex("[a|b]:1*c").to_mfa_additional().get_states();
+	ASSERT_EQ(states.size(), 4);
+	ASSERT_EQ(states[0],
+			  MFAState(0,
+					   "S",
+					   false,
+					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
+						{"b", {MFATransition(2, {1}, unordered_set<int>())}},
+						{"c", {MFATransition(3, unordered_set<int>(), unordered_set<int>())}}}));
+	ASSERT_EQ(states[1],
+			  MFAState(1,
+					   "a.0",
+					   false,
+					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
+						{"b", {MFATransition(2, {1}, unordered_set<int>())}},
+						{"c", {MFATransition(3, unordered_set<int>(), {1})}}}));
+	ASSERT_EQ(states[2],
+			  MFAState(2,
+					   "b.1",
+					   false,
+					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
+						{"b", {MFATransition(2, {1}, unordered_set<int>())}},
+						{"c", {MFATransition(3, unordered_set<int>(), {1})}}}));
+	ASSERT_EQ(states[3], MFAState(3, "c.2", true, {}));
+
+	states = BackRefRegex("([&2]:1[&1a]:2)*c").to_mfa_additional().get_states();
+	ASSERT_EQ(states.size(), 5);
+	ASSERT_EQ(states[0],
+			  MFAState(0,
+					   "S",
+					   false,
+					   {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}},
+						{"c", {MFATransition(4, unordered_set<int>(), unordered_set<int>())}}}));
+	ASSERT_EQ(states[1],
+			  MFAState(1, "&2.0", false, {{Symbol::Ref(1), {MFATransition(2, {2}, {1})}}}));
+	ASSERT_EQ(states[2],
+			  MFAState(2,
+					   "&1.1",
+					   false,
+					   {{"a", {MFATransition(3, unordered_set<int>(), unordered_set<int>())}}}));
+	ASSERT_EQ(states[3],
+			  MFAState(3,
+					   "a.2",
+					   false,
+					   {{Symbol::Ref(2), {MFATransition(1, {1}, {2})}},
+						{"c", {MFATransition(4, unordered_set<int>(), {2})}}}));
+	ASSERT_EQ(states[4], MFAState(4, "c.3", true, {}));
+}
+
 TEST(TestLanguage, Caching) {
 	Language::enable_retrieving_from_cache();
 
@@ -667,6 +717,13 @@ TEST(TestParsing, MFAParsing) {
 		ASSERT_EQ(mfa_add.parse_by_mfa(str).second, expected_res);
 		ASSERT_EQ(mfa_add.parse_by_mfa_additional(str).second, expected_res);
 	});
+}
+
+TEST(TestReverse, BRegex_Reverse) {
+	ASSERT_TRUE(BackRefRegex::equal(BackRefRegex("([a*b]:1&1|b&1)").reverse(),
+									BackRefRegex("[ba*]:1&1|&1b")));
+	ASSERT_EQ(BackRefRegex("(cb)*(c[ca*b]:1&1b(c&1b)*)*").reverse().to_txt(),
+			  "((b[ba*c]:1c)*b&1&1c)*(bc)*");
 }
 
 TEST(TestAmbiguity, AmbiguityValues) {

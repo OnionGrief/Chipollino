@@ -29,6 +29,8 @@ class Regex : public AlgExpression {
 	Regex* expr(const std::vector<Lexeme>&, int, int) override;
 	Regex* scan_minus(const std::vector<Lexeme>&, int, int);
 
+	bool equals(const AlgExpression* other) const override;
+
 	// Множество префиксов длины len
 	void get_prefix(int len, std::set<std::string>& prefs) const; // NOLINT(runtime/references)
 	// Производная по символу
@@ -78,7 +80,7 @@ class Regex : public AlgExpression {
 	FiniteAutomaton to_ilieyu(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_antimirov(iLogTemplate* log = nullptr) const;
 
-	// проверка регулярок на равенство(буквальное)
+	// проверка регулярок на равенство (пока работает только для стандартного построения)
 	static bool equal(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на эквивалентность
 	static bool equivalent(const Regex&, const Regex&, iLogTemplate* log = nullptr);
