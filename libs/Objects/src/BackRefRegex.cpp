@@ -1,5 +1,7 @@
 #include "Objects/BackRefRegex.h"
+#include "Objects/Language.h"
 #include "Objects/MemoryFiniteAutomaton.h"
+#include "Objects/Regex.h"
 
 using std::cerr;
 using std::pair;
@@ -23,12 +25,24 @@ BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
 	}
 }
 
-BackRefRegex::BackRefRegex(Type type, AlgExpression* term_l, AlgExpression* term_r)
-	: AlgExpression(type, term_l, term_r) {}
-
 BackRefRegex::BackRefRegex(const BackRefRegex& other) : AlgExpression(other) {
 	cell_number = other.cell_number;
 	lin_number = other.lin_number;
+}
+
+BackRefRegex::BackRefRegex(const Regex* regex, const Alphabet& _alphabet) : BackRefRegex(regex) {
+	alphabet = _alphabet;
+	language = std::make_shared<Language>(_alphabet);
+}
+
+BackRefRegex::BackRefRegex(const Regex* regex)
+	: AlgExpression(regex->get_type(), regex->get_symbol()) {
+	const Regex* regex_term_l = Regex::cast(regex->get_term_l(), false);
+	const Regex* regex_term_r = Regex::cast(regex->get_term_r(), false);
+	if (regex_term_l)
+		term_l = new BackRefRegex(regex_term_l);
+	if (regex_term_r)
+		term_r = new BackRefRegex(regex_term_r);
 }
 
 BackRefRegex& BackRefRegex::operator=(const BackRefRegex& other) {

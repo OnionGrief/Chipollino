@@ -53,7 +53,7 @@ class AlgExpression : public BaseObject {
 	};
 
 	// множество уникальных символов алфавита в дереве
-	std::set<Symbol> alphabet;
+	Alphabet alphabet;
 	Type type;
 	// символ алфавита регулярки или ссылка(&i)
 	Symbol symbol;
@@ -118,21 +118,25 @@ class AlgExpression : public BaseObject {
 
   public:
 	AlgExpression();
-	AlgExpression(std::shared_ptr<Language>, Type, const Symbol&, const std::set<Symbol>&);
-	explicit AlgExpression(std::set<Symbol>);
+	AlgExpression(std::shared_ptr<Language>, Type, const Symbol&, Alphabet);
+	AlgExpression(Type, const Symbol&);
+	explicit AlgExpression(Alphabet);
 	// переданные term_l и term_l копируются с помощью make_copy
 	explicit AlgExpression(Type type, AlgExpression* = nullptr,
 				  AlgExpression* = nullptr);
-				  
+
 	virtual ~AlgExpression();
 
 	// возвращает указатель на копию себя
 	virtual AlgExpression* make_copy() const = 0;
 	AlgExpression(const AlgExpression&);
 
-	Symbol get_symbol();
+	Symbol get_symbol() const;
+	Type get_type() const;
+	AlgExpression* get_term_l() const;
+	AlgExpression* get_term_r() const;
 	// Устанавливает новый язык с алфавитом
-	void set_language(const std::set<Symbol>& _alphabet);
+	void set_language(const Alphabet& _alphabet);
 	// Устанавливает язык
 	void set_language(const std::shared_ptr<Language>& _language);
 

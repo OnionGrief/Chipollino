@@ -712,10 +712,10 @@ TEST(TestParsing, MFAParsing) {
 
 		MemoryFiniteAutomaton mfa(BackRefRegex(rgx_str).to_mfa()),
 			mfa_add(BackRefRegex(rgx_str).to_mfa_additional());
-		ASSERT_EQ(mfa.parse_by_mfa(str).second, expected_res);
-		ASSERT_EQ(mfa.parse_by_mfa_additional(str).second, expected_res);
-		ASSERT_EQ(mfa_add.parse_by_mfa(str).second, expected_res);
-		ASSERT_EQ(mfa_add.parse_by_mfa_additional(str).second, expected_res);
+		ASSERT_EQ(mfa.parse(str).second, expected_res);
+		ASSERT_EQ(mfa.parse_additional(str).second, expected_res);
+		ASSERT_EQ(mfa_add.parse(str).second, expected_res);
+		ASSERT_EQ(mfa_add.parse_additional(str).second, expected_res);
 	});
 }
 

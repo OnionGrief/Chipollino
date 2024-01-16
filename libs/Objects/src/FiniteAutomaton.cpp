@@ -14,6 +14,7 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
+#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/MetaInfo.h"
 #include "Objects/TransformationMonoid.h"
 #include "Objects/iLogTemplate.h"
@@ -72,7 +73,7 @@ FiniteAutomaton::FiniteAutomaton(int initial_state, vector<FAState> states,
 	}
 }
 
-FiniteAutomaton::FiniteAutomaton(int initial_state, vector<FAState> states, set<Symbol> alphabet)
+FiniteAutomaton::FiniteAutomaton(int initial_state, vector<FAState> states, Alphabet alphabet)
 	: AbstractMachine(initial_state, std::move(alphabet)), states(std::move(states)) {
 	for (size_t i = 0; i < this->states.size(); i++) {
 		if (this->states[i].index != i)
@@ -549,7 +550,7 @@ FiniteAutomaton FiniteAutomaton::remove_eps_additional(iLogTemplate* log) const 
 
 FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 											  const FiniteAutomaton& fa2, iLogTemplate* log) {
-	set<Symbol> merged_alphabets = fa1.language->get_alphabet();
+	Alphabet merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
 	}
@@ -583,7 +584,7 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 				*new_dfa2.states[state_pair[i].second].transitions.at(symb).begin());
 		}
 	}
-	set<Symbol> new_alphabet;
+	Alphabet new_alphabet;
 	set_intersection(fa1.language->get_alphabet().begin(),
 					 fa1.language->get_alphabet().end(),
 					 fa2.language->get_alphabet().begin(),
@@ -610,7 +611,7 @@ FiniteAutomaton FiniteAutomaton::intersection(const FiniteAutomaton& fa1,
 
 FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2,
 										iLogTemplate* log) {
-	set<Symbol> merged_alphabets = fa1.language->get_alphabet();
+	Alphabet merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
 	}
@@ -655,7 +656,7 @@ FiniteAutomaton FiniteAutomaton::uunion(const FiniteAutomaton& fa1, const Finite
 
 FiniteAutomaton FiniteAutomaton::difference(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2,
 											iLogTemplate* log) {
-	set<Symbol> merged_alphabets = fa1.language->get_alphabet();
+	Alphabet merged_alphabets = fa1.language->get_alphabet();
 	for (const auto& symb : fa2.language->get_alphabet()) {
 		merged_alphabets.insert(symb);
 	}
@@ -936,7 +937,7 @@ FiniteAutomaton FiniteAutomaton::remove_unreachable_states() const {
 }
 
 FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
-	set<Symbol> new_alphabet;
+	Alphabet new_alphabet;
 	MetaInfo meta;
 	int group_id = 1;
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
@@ -974,7 +975,7 @@ FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
-	set<Symbol> new_alphabet;
+	Alphabet new_alphabet;
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
 	vector<FAState::Transitions> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
@@ -1005,7 +1006,7 @@ FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 }
 
 FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
-	set<Symbol> new_alphabet;
+	Alphabet new_alphabet;
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
 	vector<FAState::Transitions> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
@@ -1301,7 +1302,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 					orbit_automaton.states[orbit_automaton.size() - 1].is_terminal = true;
 				}
 			}
-			set<Symbol> orbit_automaton_alphabet;
+			Alphabet orbit_automaton_alphabet;
 			for (int j = 0; j < orbit_automaton.size(); j++) {
 				FAState::Transitions orbit_automaton_state_transitions;
 				for (const auto& symb_transitions : orbit_automaton.states[j].transitions) {
@@ -2286,7 +2287,7 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 //	return false;
 // }
 
-pair<int, bool> FiniteAutomaton::parsing_by_nfa(const string& s) const {
+pair<int, bool> FiniteAutomaton::parse(const string& s) const {
 	struct ParingState {
 		int pos;
 		const FAState* state;
@@ -2617,4 +2618,12 @@ void FiniteAutomaton::set_initial_state_to_zero() {
 	states[0].index = 0;
 	states[init].index = init;
 	initial_state = 0;
+}
+
+MemoryFiniteAutomaton FiniteAutomaton::to_mfa() {
+	vector<MFAState> mfa_states;
+	mfa_states.reserve(states.size());
+	for (const auto& state : states)
+		mfa_states.emplace_back(state);
+	return {initial_state, mfa_states, language->get_alphabet()};
 }

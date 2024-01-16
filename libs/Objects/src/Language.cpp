@@ -20,7 +20,7 @@ std::shared_ptr<Language> Language::Regex_model::get_language() const {
 
 Language::Language() {}
 
-Language::Language(set<Symbol> alphabet) : alphabet(alphabet) {}
+Language::Language(Alphabet alphabet) : alphabet(std::move(alphabet)) {}
 
 void Language::enable_retrieving_from_cache() {
 	allow_retrieving_from_cache = true;
@@ -30,11 +30,11 @@ void Language::disable_retrieving_from_cache() {
 	allow_retrieving_from_cache = false;
 }
 
-void Language::set_alphabet(set<Symbol> _alphabet) {
-	alphabet = _alphabet;
+void Language::set_alphabet(Alphabet _alphabet) {
+	alphabet = std::move(_alphabet);
 }
 
-const set<Symbol>& Language::get_alphabet() {
+const Alphabet& Language::get_alphabet() {
 	return alphabet;
 }
 

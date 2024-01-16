@@ -19,6 +19,7 @@
 class Language;
 class FiniteAutomaton;
 class FAState;
+class BackRefRegex;
 
 class Regex : public AlgExpression {
   private:
@@ -47,7 +48,7 @@ class Regex : public AlgExpression {
 	static Regex* add_alt(std::vector<Regex> res, Regex* root);
 
 	// возвращает вектор состояний нового автомата, построенного из регулярного выражения
-	std::vector<FAState> _to_thompson(const std::set<Symbol>& root_alphabet_symbol) const;
+	std::vector<FAState> _to_thompson(const Alphabet&) const;
 
 	// возвращает вектор листьев дерева
 	std::vector<Regex*> preorder_traversal();
@@ -79,36 +80,32 @@ class Regex : public AlgExpression {
 	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_ilieyu(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_antimirov(iLogTemplate* log = nullptr) const;
-
 	// проверка регулярок на равенство (пока работает только для стандартного построения)
 	static bool equal(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на эквивалентность
 	static bool equivalent(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const Regex&, iLogTemplate* log = nullptr) const;
-
-	// Производная по символу
+	// производная по символу
 	std::optional<Regex> symbol_derivative(const Regex& respected_sym) const;
-	// Частичная производная по символу
+	// частичная производная по символу
 	void partial_symbol_derivative(const Regex& respected_sym,
 								   std::vector<Regex>& result) const; // NOLINT(runtime/references)
-	// Производная по префиксу
+	// производная по префиксу
 	std::optional<Regex> prefix_derivative(std::string respected_str) const;
-	// Длина накачки
+	// поиск длины накачки
 	int pump_length(iLogTemplate* log = nullptr) const;
-
 	Regex linearize(iLogTemplate* log = nullptr) const;
 	Regex delinearize(iLogTemplate* log = nullptr) const;
 	Regex deannote(iLogTemplate* log = nullptr) const;
-
 	// проверка регулярки на 1-однозначность
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
 	// извлечение 1-однозначной регулярки методом орбит Брюггеман-Вуда
 	Regex get_one_unambiguous_regex(iLogTemplate* log = nullptr) const;
-
-	// Переписывание regex по пользовательским правилам
+	// переписывание regex по пользовательским правилам
 	Regex normalize_regex(const std::vector<std::pair<Regex, Regex>>&,
 						  iLogTemplate* log = nullptr) const;
+	BackRefRegex to_bregex();
 };
 
 /*

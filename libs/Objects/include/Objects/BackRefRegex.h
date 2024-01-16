@@ -9,6 +9,7 @@
 
 class MemoryFiniteAutomaton;
 class MFAState;
+class Regex;
 
 class BackRefRegex : public AlgExpression {
   private:
@@ -69,7 +70,8 @@ class BackRefRegex : public AlgExpression {
   public:
 	BackRefRegex() = default;
 	explicit BackRefRegex(const std::string&);
-	explicit BackRefRegex(Type type, AlgExpression* = nullptr, AlgExpression* = nullptr);
+	BackRefRegex(const Regex* regex, const Alphabet& _alphabet);
+	explicit BackRefRegex(const Regex* regex);
 
 	BackRefRegex* make_copy() const override;
 	BackRefRegex(const BackRefRegex&);

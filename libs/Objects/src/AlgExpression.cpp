@@ -20,11 +20,16 @@ AlgExpression::AlgExpression() {
 	type = AlgExpression::eps;
 }
 
-AlgExpression::AlgExpression(std::shared_ptr<Language> language, Type type, const Symbol& symbol,
-							 const set<Symbol>& alphabet)
-	: BaseObject(std::move(language)), type(type), symbol(symbol), alphabet(alphabet) {}
+AlgExpression::Lexeme::Lexeme(Type type, const Symbol& symbol, int number)
+	: type(type), symbol(symbol), number(number) {}
 
-AlgExpression::AlgExpression(set<Symbol> alphabet) : BaseObject(std::move(alphabet)) {}
+AlgExpression::AlgExpression(std::shared_ptr<Language> language, Type type, const Symbol& symbol,
+							 Alphabet alphabet)
+	: BaseObject(std::move(language)), type(type), symbol(symbol), alphabet(std::move(alphabet)) {}
+
+AlgExpression::AlgExpression(Type type, const Symbol& symbol) : type(type), symbol(symbol) {}
+
+AlgExpression::AlgExpression(Alphabet alphabet) : BaseObject(std::move(alphabet)) {}
 
 AlgExpression::AlgExpression(Type type, AlgExpression* _term_l, AlgExpression* _term_r)
 	: type(type) {
@@ -38,15 +43,12 @@ AlgExpression::AlgExpression(Type type, AlgExpression* _term_l, AlgExpression* _
 	}
 }
 
-AlgExpression::Lexeme::Lexeme(Type type, const Symbol& symbol, int number)
-	: type(type), symbol(symbol), number(number) {}
-
 void AlgExpression::clear() {
-	if (term_l != nullptr) {
+	if (term_l) {
 		delete term_l;
 		term_l = nullptr;
 	}
-	if (term_r != nullptr) {
+	if (term_r) {
 		delete term_r;
 		term_r = nullptr;
 	}
@@ -61,17 +63,29 @@ AlgExpression::AlgExpression(const AlgExpression& other) : AlgExpression() {
 	type = other.type;
 	symbol = other.symbol;
 	language = other.language;
-	if (other.term_l != nullptr)
+	if (other.term_l)
 		term_l = other.term_l->make_copy();
-	if (other.term_r != nullptr)
+	if (other.term_r)
 		term_r = other.term_r->make_copy();
 }
 
-Symbol AlgExpression::get_symbol() {
+Symbol AlgExpression::get_symbol() const {
 	return symbol;
 }
 
-void AlgExpression::set_language(const set<Symbol>& _alphabet) {
+AlgExpression::Type AlgExpression::get_type() const {
+	return type;
+}
+
+AlgExpression* AlgExpression::get_term_l() const {
+	return term_l;
+}
+
+AlgExpression* AlgExpression::get_term_r() const {
+	return term_r;
+}
+
+void AlgExpression::set_language(const Alphabet& _alphabet) {
 	alphabet = _alphabet;
 	language = make_shared<Language>(alphabet);
 }
@@ -86,11 +100,11 @@ void AlgExpression::generate_alphabet() {
 		return;
 	}
 	alphabet.clear();
-	if (term_l != nullptr) {
+	if (term_l) {
 		term_l->generate_alphabet();
 		alphabet = term_l->alphabet;
 	}
-	if (term_r != nullptr) {
+	if (term_r) {
 		term_r->generate_alphabet();
 		alphabet.insert(term_r->alphabet.begin(), term_r->alphabet.end());
 	}
