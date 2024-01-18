@@ -7,6 +7,7 @@
 #include <set>
 #include <unordered_set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -27,9 +28,6 @@ class Regex : public AlgExpression {
 	Regex* expr(const std::vector<Lexeme>&, int, int) override;
 	Regex* scan_minus(const std::vector<Lexeme>&, int, int);
 
-	// возвращает вектор листьев дерева regex
-	std::vector<Regex*> pre_order_travers();
-
 	// Множество префиксов длины len
 	void get_prefix(int len, std::set<std::string>& prefs) const; // NOLINT(runtime/references)
 	// Производная по символу
@@ -47,6 +45,11 @@ class Regex : public AlgExpression {
 
 	// возвращает вектор состояний нового автомата, построенного из регулярного выражения
 	std::vector<FAState> _to_thompson(const std::set<Symbol>& root_alphabet_symbol) const;
+
+	// возвращает вектор листьев дерева
+	std::vector<Regex*> preorder_traversal();
+	// для каждой ноды возвращает множество номеров нод, которым она может предшествовать
+	std::unordered_map<int, std::vector<int>> get_follow() const;
 
 	void normalize_this_regex(
 		const std::vector<std::pair<Regex, Regex>>&); // переписывание regex по

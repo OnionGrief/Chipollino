@@ -43,8 +43,8 @@ TEST(TestEqual, ThompsonGlushkov) {
 }
 
 TEST(TestNFA, Test_equivalent_nfa_negative) {
-	RegexGenerator rg(4, 1, 2, 2);
-   	rg.set_neg_chance(2); // для отрицания
+	RegexGenerator rg(5, 2, 2, 2);
+	rg.set_neg_chance(2); // для отрицания
 	for (int i = 0; i < 30; i++) {
 		string str = rg.generate_regex();
 		Regex r1(str), r2(str);

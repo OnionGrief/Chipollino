@@ -30,6 +30,7 @@ class FAState : public State {
 	FAState(int index, std::string identifier, bool is_terminal);
 	FAState(int index, bool is_terminal, Transitions transitions);
 	FAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
+	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal);
 	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal,
 			Transitions transitions);
 
@@ -81,7 +82,7 @@ class FiniteAutomaton : public AbstractMachine {
 
 	// меняет местами состояние под индексом 0 с начальным
 	// используется в томпсоне
-	void set_initial_state_zero();
+	void set_initial_state_to_zero();
 
   public:
 	FiniteAutomaton();
@@ -96,6 +97,8 @@ class FiniteAutomaton : public AbstractMachine {
 	std::string to_txt() const override;
 
 	std::vector<FAState> get_states() const;
+	size_t size(iLogTemplate* log = nullptr) const override;
+
 	// детерминизация ДКА
 	FiniteAutomaton determinize(bool is_trim = false, iLogTemplate* log = nullptr) const;
 	// удаление недостижимых из начального состояний
@@ -123,8 +126,8 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton complement(iLogTemplate* log = nullptr) const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
 	FiniteAutomaton reverse(iLogTemplate* log = nullptr) const; // меняет язык
-	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
-	// себя)
+	// добавление ловушки в ДКА
+	// (нетерминальное состояние с переходами только в себя)
 	FiniteAutomaton add_trap_state(iLogTemplate* log = nullptr) const;
 	// удаление ловушек
 	FiniteAutomaton remove_trap_states(iLogTemplate* log = nullptr) const;
@@ -149,7 +152,7 @@ class FiniteAutomaton : public AbstractMachine {
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&,
 						  iLogTemplate* log = nullptr);
 	// проверка автомата на детерминированность
-	bool is_deterministic(iLogTemplate* log = nullptr) const;
+	bool is_deterministic(iLogTemplate* log = nullptr) const override;
 	// проверка НКА на семантический детерминизм
 	bool semdet(iLogTemplate* log = nullptr) const;
 	// проверяет, распознаёт ли автомат слово
@@ -160,8 +163,6 @@ class FiniteAutomaton : public AbstractMachine {
 	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
-	// возвращает количество состояний (метод States)
-	size_t size(iLogTemplate* log = nullptr) const;
 	// проверка на пустоту
 	bool is_empty() const;
 	// проверка автомата на финальность
