@@ -486,8 +486,8 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 	FiniteAutomaton fa(0, states, language);
 	if (log) {
-		log->set_parameter("oldregex", temp_copy);
-		log->set_parameter("linearised regex", temp_copy.linearize());
+		log->set_parameter("oldregex", *this);
+		log->set_parameter("linearised regex", temp_copy);
 		log->set_parameter("first", str_first);
 		log->set_parameter("last", str_last);
 		log->set_parameter("get_follow", str_follow);
