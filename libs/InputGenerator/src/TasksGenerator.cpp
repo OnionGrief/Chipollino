@@ -218,20 +218,22 @@ void TasksGenerator::generate_test_for_all_functions() {
 		string func_id = function.name;
 		outfile << "N = " << func_id;
 		for (const auto& arg : function.input) {
-			if (arg == ObjectType::NFA || arg == ObjectType::DFA) {
+			if (arg == NFA || arg == DFA) {
 				outfile << " A";
-			} else if (arg == ObjectType::AmbiguityValue) {
+			} else if (arg == VALUE) {
 				outfile << " V";
-			} else if (arg == ObjectType::Boolean || arg == ObjectType::OptionalBool) {
+			} else if (arg == BOOLEAN || arg == ObjectType::OptionalBool) {
 				outfile << " B";
-			} else if (arg == ObjectType::PrefixGrammar) {
+			} else if (arg == PG) {
 				outfile << " P";
-			} else if (arg == ObjectType::Regex) {
+			} else if (arg == REGEX) {
 				outfile << " R";
-			} else if (arg == ObjectType::Array) {
+			} else if (arg == ARRAY) {
 				outfile << " [[{a} {b}]]";
-			} else if (arg == ObjectType::Int) {
+			} else if (arg == INT) {
 				outfile << " 1";
+			} else {
+				cout << "generator error: can't generate arg " + types_to_string.at(arg) + '\n';
 			}
 		}
 		outfile << "\n";

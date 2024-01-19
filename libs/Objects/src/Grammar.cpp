@@ -111,7 +111,9 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::get_bisimilar_grammar(
 
 vector<vector<vector<RLGrammar::Item*>>> RLGrammar::fa_to_grammar(const vector<FAState>& states,
 																  const set<Symbol>& alphabet,
-																  vector<Item>& fa_items, vector<Item*>& nonterminals, vector<Item*>& terminals) {
+																  vector<Item>& fa_items,
+																  vector<Item*>& nonterminals,
+																  vector<Item*>& terminals) {
 	vector<vector<vector<Item*>>> rules(states.size());
 	fa_items.resize(states.size() + alphabet.size() + 2);
 	int item_ind = 0;

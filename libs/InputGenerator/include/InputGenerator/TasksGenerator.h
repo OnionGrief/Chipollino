@@ -36,8 +36,8 @@ class TasksGenerator {
 	inline static const ObjectType REGEX = ObjectType::Regex, NFA = ObjectType::NFA,
 								   DFA = ObjectType::DFA, INT = ObjectType::Int,
 								   VALUE = ObjectType::AmbiguityValue,
-								   BOOLEAN = ObjectType::Boolean, NFA_DFA = ObjectType::NFA,
-								   ARRAY = ObjectType::Array, PG = ObjectType::PrefixGrammar;
+								   BOOLEAN = ObjectType::Boolean, ARRAY = ObjectType::Array,
+								   PG = ObjectType::PrefixGrammar;
 
 	std::vector<ObjectType> generated_types = {REGEX, INT, ARRAY};
 	std::map<ObjectType, std::vector<Id>> ids_by_type; // поиск идентификатора по его типу

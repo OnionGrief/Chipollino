@@ -130,7 +130,7 @@ string LogTemplate::render() const {
 						cache_automatons[hash] = c_graph;
 					}
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
-					s.insert(insert_place, c_graph);
+					s.insert(insert_place, "\n" + c_graph);
 				} else if (std::holds_alternative<string>(param.value)) {
 					string s0 = std::get<string>(param.value);
 					string str = std::regex_replace(s0, std::regex("\\^"), "\\textasciicircum ");

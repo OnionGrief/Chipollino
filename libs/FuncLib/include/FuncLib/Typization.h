@@ -26,7 +26,7 @@ enum class ObjectType {
 	OptionalBool,	// optional<bool>
 	AmbiguityValue, // yes/no/ы/ь
 	PrefixGrammar,	// префиксная грамматика
-	Array			// массив
+	Array,			// массив
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -74,7 +74,7 @@ OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
 OBJECT_DEFINITION(PrefixGrammar, PrefixGrammar)
 OBJECT_DEFINITION(Array, std::vector<GeneralObject>)
 
-// перевод ObjectType в std::string (для логирования и дебага)
+// перевод ObjectType в string (для логирования и дебага)
 inline static const std::unordered_map<ObjectType, std::string> types_to_string = {
 	{ObjectType::NFA, "NFA"},
 	{ObjectType::DFA, "DFA"},
@@ -87,9 +87,9 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 	{ObjectType::AmbiguityValue, "AmbiguityValue"},
 	{ObjectType::PrefixGrammar, "PrefixGrammar"},
 	{ObjectType::Array, "Array"},
-}; // не додумалась как по другому(не ручками) (((
+};
 
-// вложенные типы данных: # TODO: дерево типов
+// вложенные типы данных:
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_parents = {
 	{ObjectType::DFA, {ObjectType::NFA}}};
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_children = {
