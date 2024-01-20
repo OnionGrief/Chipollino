@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "AlgExpression.h"
+#include "iLogTemplate.h"
 
 class MemoryFiniteAutomaton;
 class MFAState;

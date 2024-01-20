@@ -6,7 +6,9 @@
 #include <vector>
 
 #include "AutomatonToImage/AutomatonToImage.h"
+#include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
+#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 

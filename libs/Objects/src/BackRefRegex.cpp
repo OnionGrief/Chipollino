@@ -381,6 +381,8 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa(iLogTemplate* log) const {
 	}
 	MemoryFiniteAutomaton mfa(0, states, language);
 	if (log) {
+		log->set_parameter("oldregex", *this);
+		log->set_parameter("result", mfa);
 	}
 	return mfa;
 }
