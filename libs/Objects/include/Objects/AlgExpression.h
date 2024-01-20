@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "BaseObject.h"
-#include "iLogTemplate.h"
 
 class AlgExpression : public BaseObject {
   protected:

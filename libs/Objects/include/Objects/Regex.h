@@ -1,21 +1,14 @@
 #pragma once
-#include <fstream>
-#include <iostream>
-#include <map>
 #include <memory>
-#include <optional>
 #include <set>
-#include <unordered_set>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "AlgExpression.h"
-#include "Symbol.h"
 #include "iLogTemplate.h"
 
-class Language;
 class FiniteAutomaton;
 class FAState;
 

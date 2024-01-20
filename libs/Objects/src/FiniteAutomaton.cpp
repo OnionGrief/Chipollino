@@ -11,11 +11,9 @@
 
 #include "Fraction/Fraction.h"
 #include "Fraction/InfInt.h"
-#include "Objects/FiniteAutomaton.h"
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
 #include "Objects/MetaInfo.h"
-#include "Objects/TransformationMonoid.h"
 #include "Objects/iLogTemplate.h"
 
 using std::cerr;

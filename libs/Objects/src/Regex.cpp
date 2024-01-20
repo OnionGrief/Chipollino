@@ -1,7 +1,6 @@
 #include <unordered_set>
 
 #include "Objects/Language.h"
-#include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 
 using std::cerr;

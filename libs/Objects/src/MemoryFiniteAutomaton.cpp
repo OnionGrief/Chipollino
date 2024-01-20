@@ -4,7 +4,6 @@
 #include <utility>
 
 #include "Objects/Language.h"
-#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/iLogTemplate.h"
 
 using std::map;

@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "AbstractMachine.h"
-#include "Symbol.h"
 #include "iLogTemplate.h"
 
 class Regex;

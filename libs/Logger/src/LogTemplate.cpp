@@ -1,7 +1,12 @@
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <iostream>
 #include <regex>
+#include <string>
+#include <utility>
 #include <variant>
+#include <vector>
 
 #include "Logger/LogTemplate.h"
 
@@ -151,7 +156,7 @@ string LogTemplate::render() const {
 				} else if (std::holds_alternative<Plot>(param.value)) {
 					s.insert(insert_place, log_plot(std::get<Plot>(param.value)));
 				} else {
-					cout << "LOGGER ERROR: can not render object"
+					cout << "LOGGER ERROR: can not render object";
 				}
 			}
 			outstr += s;
