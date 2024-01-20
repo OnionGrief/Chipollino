@@ -7,8 +7,10 @@
 #include <variant>
 #include <vector>
 
+#include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Grammar.h"
+#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
 
 // Типизация входныx данных
@@ -27,6 +29,8 @@ enum class ObjectType {
 	AmbiguityValue, // yes/no/ы/ь
 	PrefixGrammar,	// префиксная грамматика
 	Array,			// массив
+	BRefRegex,
+	MFA,
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -51,11 +55,13 @@ struct ObjectOptionalBool;
 struct ObjectAmbiguityValue;
 struct ObjectPrefixGrammar;
 struct ObjectArray;
+struct ObjectBRefRegex;
+struct ObjectMFA;
 
 // Универсальный объект
-using GeneralObject =
-	std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString, ObjectBoolean,
-				 ObjectOptionalBool, ObjectAmbiguityValue, ObjectPrefixGrammar, ObjectArray>;
+using GeneralObject = std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString,
+								   ObjectBoolean, ObjectOptionalBool, ObjectAmbiguityValue,
+								   ObjectPrefixGrammar, ObjectArray, ObjectBRefRegex, ObjectMFA>;
 
 #define OBJECT_DEFINITION(type, value)                                                             \
 	struct Object##type : public ObjectHolder<ObjectType::type, value> {                           \
@@ -73,12 +79,16 @@ OBJECT_DEFINITION(OptionalBool, std::optional<bool>)
 OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
 OBJECT_DEFINITION(PrefixGrammar, PrefixGrammar)
 OBJECT_DEFINITION(Array, std::vector<GeneralObject>)
+OBJECT_DEFINITION(BRefRegex, BackRefRegex)
+OBJECT_DEFINITION(MFA, MemoryFiniteAutomaton)
 
 // перевод ObjectType в string (для логирования и дебага)
 inline static const std::unordered_map<ObjectType, std::string> types_to_string = {
 	{ObjectType::NFA, "NFA"},
 	{ObjectType::DFA, "DFA"},
+	{ObjectType::MFA, "MFA"},
 	{ObjectType::Regex, "Regex"},
+	{ObjectType::BRefRegex, "BRefRegex"},
 	{ObjectType::RandomRegex, "RandomRegex"},
 	{ObjectType::Int, "Int"},
 	{ObjectType::String, "String"},

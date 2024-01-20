@@ -303,6 +303,9 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 							 .value.prefix_grammar_to_automaton(&log_template));
 	}
 
+	if (function.name == "ToMFA") {
+		return ObjectMFA(get<ObjectBRefRegex>(arguments[0]).value.to_mfa(&log_template));
+	}
 	// # place for another diff types funcs
 
 	/*
@@ -602,6 +605,9 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	if (holds_alternative<Regex>(expr.value)) {
 		return ObjectRegex(get<Regex>(expr.value));
 	}
+	if (holds_alternative<BackRefRegex>(expr.value)) {
+		return ObjectBRefRegex(get<BackRefRegex>(expr.value));
+	}
 	if (holds_alternative<Array>(expr.value)) {
 		vector<GeneralObject> arr;
 		for (const auto& e : get<Array>(expr.value)) {
@@ -836,6 +842,9 @@ string Interpreter::Expression::to_txt() const {
 	if (const auto* pval = get_if<Regex>(&value)) {
 		return "{" + pval->to_txt() + "}";
 	}
+	if (const auto* pval = get_if<BackRefRegex>(&value)) {
+		return "{" + pval->to_txt() + "}";
+	}
 	if (const auto* pval = get_if<string>(&value)) {
 		return *pval;
 	}
@@ -1002,8 +1011,15 @@ optional<Interpreter::Expression> Interpreter::scan_expression(const vector<Lexe
 	}
 	// Regex
 	if (end > pos && lexems[pos].type == Lexem::regex) {
-		expr.type = ObjectType::Regex;
-		expr.value = Regex(lexems[pos].value);
+		string str = lexems[pos].value;
+		// выбор между backref и regex
+		if (str.find("&") != string::npos || str.find(":") != string::npos) {
+			expr.type = ObjectType::BRefRegex;
+			expr.value = BackRefRegex(str);
+		} else {
+			expr.type = ObjectType::Regex;
+			expr.value = Regex(str);
+		}
 		pos++;
 		return expr;
 	}

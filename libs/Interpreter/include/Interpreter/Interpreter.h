@@ -14,7 +14,10 @@
 #include "FuncLib/Typization.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "Logger/Logger.h"
+#include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
+#include "Objects/Grammar.h"
+#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
 
@@ -106,7 +109,7 @@ class Interpreter {
 	// Общий вид выражения
 	struct Expression {
 		ObjectType type;
-		std::variant<int, FunctionSequence, Regex, std::string, Array> value;
+		std::variant<int, FunctionSequence, Regex, BackRefRegex, std::string, Array> value;
 		// Преобразование в текст
 		std::string to_txt() const;
 	};

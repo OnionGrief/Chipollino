@@ -64,6 +64,8 @@ TG.generate_task(3, 5, false, false);
   (Может принимать одно из 4-х значений: *Unambigious, Almost unambigious, Polynomially ambiguous, Exponentially
   ambiguous*)
 * Array - правила переписывания
+* BRefRegex
+* MFA
 
 ### Синтаксические конструкции
 

@@ -26,6 +26,7 @@ inline static const std::vector<Function> functions = {
 	{"Antimirov", {ObjectType::Regex}, ObjectType::NFA},
 	{"Arden", {ObjectType::NFA}, ObjectType::Regex},
 	{"Glushkov", {ObjectType::Regex}, ObjectType::NFA},
+	{"ToMFA", {ObjectType::BRefRegex}, ObjectType::MFA},
 	{"Determinize", {ObjectType::NFA}, ObjectType::DFA},
 	{"Determinize+", {ObjectType::NFA}, ObjectType::DFA},
 	{"RemEps", {ObjectType::NFA}, ObjectType::NFA},
