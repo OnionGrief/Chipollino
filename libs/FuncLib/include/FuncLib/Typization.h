@@ -101,9 +101,15 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 
 // вложенные типы данных:
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_parents = {
-	{ObjectType::DFA, {ObjectType::NFA}}};
+	{ObjectType::NFA, {ObjectType::MFA}},
+	{ObjectType::DFA, {ObjectType::MFA, ObjectType::NFA}},
+	{ObjectType::Regex, {ObjectType::BRefRegex}},
+};
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_children = {
-	{ObjectType::NFA, {ObjectType::DFA}}};
+	{ObjectType::NFA, {ObjectType::DFA}},
+	{ObjectType::MFA, {ObjectType::NFA, ObjectType::DFA}},
+	{ObjectType::BRefRegex, {ObjectType::Regex}},
+};
 
 // используется, чтобы получить всех возможных детей / родителей типа
 static std::vector<ObjectType> get_types(
@@ -124,6 +130,12 @@ static bool is_belong(const std::vector<ObjectType>& vec, ObjectType value) {
 static GeneralObject convert_type(const GeneralObject& obj, ObjectType type) {
 	if (std::holds_alternative<ObjectDFA>(obj) && type == ObjectType::NFA)
 		return ObjectNFA(std::get<ObjectDFA>(obj).value);
+	if (std::holds_alternative<ObjectNFA>(obj) && type == ObjectType::MFA)
+		return ObjectMFA(std::get<ObjectNFA>(obj).value.to_mfa());
+	if (std::holds_alternative<ObjectDFA>(obj) && type == ObjectType::MFA)
+		return ObjectMFA(std::get<ObjectDFA>(obj).value.to_mfa());
+	if (std::holds_alternative<ObjectRegex>(obj) && type == ObjectType::BRefRegex)
+		return ObjectBRefRegex(BackRefRegex(&std::get<ObjectRegex>(obj).value));
 	return obj;
 }
 

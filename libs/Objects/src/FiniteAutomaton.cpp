@@ -2618,7 +2618,7 @@ void FiniteAutomaton::set_initial_state_to_zero() {
 	initial_state = 0;
 }
 
-MemoryFiniteAutomaton FiniteAutomaton::to_mfa() {
+MemoryFiniteAutomaton FiniteAutomaton::to_mfa() const {
 	vector<MFAState> mfa_states;
 	mfa_states.reserve(states.size());
 	for (const auto& state : states)

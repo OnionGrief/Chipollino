@@ -175,7 +175,7 @@ class FiniteAutomaton : public AbstractMachine {
 	std::optional<bool> is_nfa_minimal(iLogTemplate* log = nullptr) const;
 	// проверка на минимальность для дка
 	bool is_dfa_minimal(iLogTemplate* log = nullptr) const;
-	MemoryFiniteAutomaton to_mfa();
+	MemoryFiniteAutomaton to_mfa() const;
 
 	friend class Regex;
 	friend class MetaInfo;

@@ -184,7 +184,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectNFA(get<ObjectRegex>(arguments[0]).value.to_thompson(&log_template));
 	}
 	if (function.name == "Arden") {
-		return ObjectRegex((get_automaton(arguments[0]).to_regex(&log_template)));
+		return ObjectRegex((get<ObjectNFA>(arguments[0]).value.to_regex(&log_template)));
 	}
 	if (function.name == "Bisimilar") {
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
