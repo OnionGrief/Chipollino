@@ -110,7 +110,7 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::get_bisimilar_grammar(
 }
 
 vector<vector<vector<RLGrammar::Item*>>> RLGrammar::fa_to_grammar(const vector<FAState>& states,
-																  const set<Symbol>& alphabet,
+																  const Alphabet& alphabet,
 																  vector<Item>& fa_items,
 																  vector<Item*>& nonterminals,
 																  vector<Item*>& terminals) {
@@ -428,7 +428,7 @@ FiniteAutomaton PrefixGrammar::prefix_grammar_to_automaton(iLogTemplate* log) co
 	if (log) {
 		log->set_parameter("grammar", pg_to_txt());
 	}
-	set<Symbol> symbols;
+	Alphabet symbols;
 	vector<FAState> states;
 	int initial_state;
 	for (int i = 0; i < prefix_grammar.size(); i++) {

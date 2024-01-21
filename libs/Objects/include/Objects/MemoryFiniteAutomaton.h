@@ -12,6 +12,7 @@
 #include "iLogTemplate.h"
 
 class Language;
+class FAState;
 
 struct MFATransition {
 	enum MemoryAction {
@@ -50,6 +51,7 @@ class MFAState : public State {
 	explicit MFAState(bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
+	explicit MFAState(FAState state);
 
 	std::string to_txt() const override;
 	void set_transition(const MFATransition&, const Symbol&);
@@ -87,7 +89,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 
 	static MemoryFiniteAutomaton get_just_one_total_trap(const std::shared_ptr<Language>& language);
 
-	std::pair<int, bool> _parse_by_mfa(const std::string&, Matcher*) const;
+	std::pair<int, bool> _parse(const std::string&, Matcher*) const;
 
 	// поиск множества состояний НКА,
 	// достижимых из множества состояний по eps-переходам
@@ -100,8 +102,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	MemoryFiniteAutomaton();
 	MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
 						  std::shared_ptr<Language> language);
-	MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
-						  std::set<Symbol> alphabet);
+	MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states, Alphabet alphabet);
 
 	// dynamic_cast unique_ptr к типу MemoryFiniteAutomaton*
 	template <typename T> MemoryFiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
@@ -120,7 +121,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	// удаление eps-переходов (построение eps-замыканий)
 	MemoryFiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
 	// проверяет, распознаёт ли автомат слово (использует BasicMatcher)
-	std::pair<int, bool> parse_by_mfa(const std::string&) const;
+	std::pair<int, bool> parse(const std::string&) const override;
 	// проверяет, распознаёт ли автомат слово (использует FastMatcher)
-	std::pair<int, bool> parse_by_mfa_additional(const std::string&) const;
+	std::pair<int, bool> parse_additional(const std::string&) const;
 };

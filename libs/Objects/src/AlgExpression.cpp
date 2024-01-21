@@ -20,11 +20,16 @@ AlgExpression::AlgExpression() {
 	type = AlgExpression::eps;
 }
 
-AlgExpression::AlgExpression(std::shared_ptr<Language> language, Type type, const Symbol& symbol,
-							 const set<Symbol>& alphabet)
-	: BaseObject(std::move(language)), type(type), symbol(symbol), alphabet(alphabet) {}
+AlgExpression::Lexeme::Lexeme(Type type, const Symbol& symbol, int number)
+	: type(type), symbol(symbol), number(number) {}
 
-AlgExpression::AlgExpression(set<Symbol> alphabet) : BaseObject(std::move(alphabet)) {}
+AlgExpression::AlgExpression(std::shared_ptr<Language> language, Type type, const Symbol& symbol,
+							 Alphabet alphabet)
+	: BaseObject(std::move(language)), type(type), symbol(symbol), alphabet(std::move(alphabet)) {}
+
+AlgExpression::AlgExpression(Type type, const Symbol& symbol) : type(type), symbol(symbol) {}
+
+AlgExpression::AlgExpression(Alphabet alphabet) : BaseObject(std::move(alphabet)) {}
 
 AlgExpression::AlgExpression(Type type, AlgExpression* _term_l, AlgExpression* _term_r)
 	: type(type) {
@@ -38,15 +43,12 @@ AlgExpression::AlgExpression(Type type, AlgExpression* _term_l, AlgExpression* _
 	}
 }
 
-AlgExpression::Lexeme::Lexeme(Type type, const Symbol& symbol, int number)
-	: type(type), symbol(symbol), number(number) {}
-
 void AlgExpression::clear() {
-	if (term_l != nullptr) {
+	if (term_l) {
 		delete term_l;
 		term_l = nullptr;
 	}
-	if (term_r != nullptr) {
+	if (term_r) {
 		delete term_r;
 		term_r = nullptr;
 	}
@@ -61,25 +63,29 @@ AlgExpression::AlgExpression(const AlgExpression& other) : AlgExpression() {
 	type = other.type;
 	symbol = other.symbol;
 	language = other.language;
-	if (other.term_l != nullptr)
+	if (other.term_l)
 		term_l = other.term_l->make_copy();
-	if (other.term_r != nullptr)
+	if (other.term_r)
 		term_r = other.term_r->make_copy();
 }
 
-AlgExpression& AlgExpression::operator=(const AlgExpression& other) {
-	if (this != &other) {
-		clear();
-		copy(&other);
-	}
-	return *this;
-}
-
-Symbol AlgExpression::get_symbol() {
+Symbol AlgExpression::get_symbol() const {
 	return symbol;
 }
 
-void AlgExpression::set_language(const set<Symbol>& _alphabet) {
+AlgExpression::Type AlgExpression::get_type() const {
+	return type;
+}
+
+AlgExpression* AlgExpression::get_term_l() const {
+	return term_l;
+}
+
+AlgExpression* AlgExpression::get_term_r() const {
+	return term_r;
+}
+
+void AlgExpression::set_language(const Alphabet& _alphabet) {
 	alphabet = _alphabet;
 	language = make_shared<Language>(alphabet);
 }
@@ -94,11 +100,11 @@ void AlgExpression::generate_alphabet() {
 		return;
 	}
 	alphabet.clear();
-	if (term_l != nullptr) {
+	if (term_l) {
 		term_l->generate_alphabet();
 		alphabet = term_l->alphabet;
 	}
-	if (term_r != nullptr) {
+	if (term_r) {
 		term_r->generate_alphabet();
 		alphabet.insert(term_r->alphabet.begin(), term_r->alphabet.end());
 	}
@@ -247,7 +253,7 @@ void AlgExpression::print_dot() const {
 	r_v = type_to_str();
 
 	string root_dot_node = "node" + to_string(id++);
-	dot += root_dot_node + " [label=\"" + string(r_v) + "\"];\n";
+	dot += root_dot_node + " [label=\"" + to_txt() + "\\n" + string(r_v) + "\"];\n";
 
 	dot += print_subdot(term_l, root_dot_node, id);
 	dot += print_subdot(term_r, root_dot_node, id);
@@ -621,16 +627,8 @@ bool AlgExpression::equality_checker(const AlgExpression* expr1, const AlgExpres
 		return true;
 	if (expr1 == nullptr || expr2 == nullptr)
 		return false;
-	if (expr1->type != expr2->type)
+	if (expr1->type != expr2->type || expr1->symbol != expr2->symbol || !expr1->equals(expr2))
 		return false;
-
-	if (expr1->type == Type::symb) {
-		Symbol r1_symb, r2_symb;
-		r1_symb = expr1->symbol;
-		r2_symb = expr2->symbol;
-		if (r1_symb != r2_symb)
-			return false;
-	}
 
 	if (equality_checker(expr1->term_l, expr2->term_l) &&
 		equality_checker(expr1->term_r, expr2->term_r))

@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -66,3 +67,5 @@ class Symbol {
 };
 
 std::ostream& operator<<(std::ostream& os, const Symbol& item);
+
+using Alphabet = std::set<Symbol>;

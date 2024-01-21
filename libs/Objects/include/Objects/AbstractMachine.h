@@ -2,6 +2,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "BaseObject.h"
 #include "iLogTemplate.h"
@@ -27,13 +28,15 @@ class AbstractMachine : public BaseObject {
   public:
 	AbstractMachine() = default;
 	AbstractMachine(int initial_state, std::shared_ptr<Language>);
-	AbstractMachine(int initial_state, std::set<Symbol>);
-	
+	AbstractMachine(int initial_state, Alphabet);
+
 	// начальное состояние
 	int get_initial() const;
 	// возвращает количество состояний (метод States)
 	virtual size_t size(iLogTemplate* log = nullptr) const = 0;
 
 	// проверка автомата на детерминированность
-	virtual bool is_deterministic(iLogTemplate* log = nullptr) const = 0;
+	virtual bool is_deterministic(iLogTemplate* log) const = 0;
+	// проверяет, распознаёт ли автомат слово
+	virtual std::pair<int, bool> parse(const std::string&) const = 0;
 };

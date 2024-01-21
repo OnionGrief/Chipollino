@@ -28,7 +28,7 @@ class Language {
 
 	inline static bool allow_retrieving_from_cache = true;
 
-	std::set<Symbol> alphabet;
+	Alphabet alphabet;
 	// регулярка, описывающая язык
 	// optional<Regex> regular_expression;
 	std::optional<int> pump_length;
@@ -43,13 +43,13 @@ class Language {
 
   public:
 	Language();
-	explicit Language(std::set<Symbol> alphabet);
+	explicit Language(Alphabet alphabet);
 
 	static void enable_retrieving_from_cache();
 	static void disable_retrieving_from_cache();
 
-	const std::set<Symbol>& get_alphabet();
-	void set_alphabet(std::set<Symbol>);
+	const Alphabet& get_alphabet();
+	void set_alphabet(Alphabet);
 	int get_alphabet_size();
 	// регулярка, описывающая язык
 	bool is_regular_expression_cached() const;

@@ -3,6 +3,7 @@
 #include <stack>
 #include <utility>
 
+#include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/iLogTemplate.h"
 
@@ -75,6 +76,12 @@ MFAState::MFAState(int index, std::string identifier, bool is_terminal,
 	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
 }
 
+MFAState::MFAState(FAState state) : State::State(state.index, state.identifier, state.is_terminal) {
+	for (const auto& [symbol, states_to] : state.transitions)
+		for (auto to : states_to)
+			transitions[symbol].insert(MFATransition(to));
+}
+
 void MFAState::set_transition(const MFATransition& to, const Symbol& symbol) {
 	transitions[symbol].insert(to);
 }
@@ -143,7 +150,7 @@ MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, vector<MFAState>
 }
 
 MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
-											 set<Symbol> alphabet)
+											 Alphabet alphabet)
 	: AbstractMachine(initial_state, std::move(alphabet)), states(std::move(states)) {
 	for (int i = 0; i < this->states.size(); i++) {
 		if (this->states[i].index != i)
@@ -473,8 +480,7 @@ pair<unordered_set<int>, unordered_map<int, pair<int, int>>> update_memory(
 	return {opened_cells, memory};
 }
 
-std::pair<int, bool> MemoryFiniteAutomaton::_parse_by_mfa(const std::string& s,
-														  Matcher* matcher) const {
+std::pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher) const {
 	stack<ParingState> parsing_states_stack;
 	// тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
 	set<tuple<int, int, int>> visited_eps;
@@ -582,9 +588,9 @@ void BasicMatcher::match(const ParingState& parsing_state, MFAState::Transitions
 	}
 }
 
-std::pair<int, bool> MemoryFiniteAutomaton::parse_by_mfa(const string& s) const {
+std::pair<int, bool> MemoryFiniteAutomaton::parse(const string& s) const {
 	BasicMatcher matcher(s);
-	return _parse_by_mfa(s, &matcher);
+	return _parse(s, &matcher);
 }
 
 class FastMatcher : public Matcher {
@@ -727,7 +733,7 @@ void FastMatcher::match(const ParingState& parsing_state, MFAState::Transitions&
 	}
 }
 
-std::pair<int, bool> MemoryFiniteAutomaton::parse_by_mfa_additional(const string& s) const {
+std::pair<int, bool> MemoryFiniteAutomaton::parse_additional(const string& s) const {
 	FastMatcher matcher(s);
-	return _parse_by_mfa(s, &matcher);
+	return _parse(s, &matcher);
 }
