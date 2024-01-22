@@ -350,11 +350,6 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 			res = ObjectNFA(get_automaton(arguments[0]).delinearize(&log_template));
 		}
 	}
-	if (function.name == "Complement") {
-		// FiniteAutomaton fa = get_automaton(arguments[0]);
-		// if (fa.is_deterministic())
-		res = ObjectDFA(get_automaton(arguments[0]).complement(&log_template));
-	}
 	if (function.name == "RemoveTrap") {
 		res = ObjectDFA(get_automaton(arguments[0]).remove_trap_states(&log_template));
 	}
@@ -731,13 +726,20 @@ bool Interpreter::run_test(const Test& test) {
 
 		if (holds_alternative<ObjectRegex>(*language)) {
 			log_template.load_tex_template("Test1");
-			Tester::test(get<ObjectRegex>(*language).value, reg, test.iterations, &log_template);
+			Tester::test(&get<ObjectRegex>(*language).value, reg, test.iterations, &log_template);
 		} else if (holds_alternative<ObjectNFA>(*language)) {
 			log_template.load_tex_template("Test2");
-			Tester::test(get<ObjectNFA>(*language).value, reg, test.iterations, &log_template);
+			Tester::test(&get<ObjectNFA>(*language).value, reg, test.iterations, &log_template);
 		} else if (holds_alternative<ObjectDFA>(*language)) {
 			log_template.load_tex_template("Test2");
-			Tester::test(get<ObjectDFA>(*language).value, reg, test.iterations, &log_template);
+			Tester::test(&get<ObjectDFA>(*language).value, reg, test.iterations, &log_template);
+		} else if (holds_alternative<ObjectBRefRegex>(*language)) {
+			log_template.load_tex_template("Test3");
+			Tester::test(
+				&get<ObjectBRefRegex>(*language).value, reg, test.iterations, &log_template);
+		} else if (holds_alternative<ObjectMFA>(*language)) {
+			log_template.load_tex_template("Test4");
+			Tester::test(&get<ObjectMFA>(*language).value, reg, test.iterations, &log_template);
 		} else {
 			logger.throw_error("while running test: invalid language expression");
 			success = false;
@@ -1145,7 +1147,8 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems, 
 	// Language
 	if (const auto& expr = scan_expression(lexems, i, lexems.size());
 		expr.has_value() && ((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
-							 (*expr).type == ObjectType::NFA)) {
+		 (*expr).type == ObjectType::NFA || (*expr).type == ObjectType::BRefRegex ||
+		 (*expr).type == ObjectType::MFA)) {
 		test.language = *expr;
 	} else {
 		logger.throw_error("Scan test: wrong type at position 1, nfa or regex expected");

@@ -30,6 +30,8 @@ class AbstractMachine : public BaseObject {
 	AbstractMachine(int initial_state, std::shared_ptr<Language>);
 	AbstractMachine(int initial_state, Alphabet);
 
+	virtual ~AbstractMachine() = default;
+
 	// начальное состояние
 	int get_initial() const;
 	// возвращает количество состояний (метод States)

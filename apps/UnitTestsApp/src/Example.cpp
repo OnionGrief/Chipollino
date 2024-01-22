@@ -320,8 +320,8 @@ void Example::tester() {
 	// cout << dfa1.to_txt();
 	Regex r1("((ab)*a)*");
 	Regex r2("ab(ab|a)*ababa");
-	Tester::test(dfa1, r1, 1);
-	Tester::test(r2, r1, 1);
+	Tester::test(&dfa1, r1, 1);
+	Tester::test(&r2, r1, 1);
 }
 
 void Example::step_interection() {
@@ -475,9 +475,9 @@ void Example::logger_test() {
 	FiniteAutomaton dfa1 = r.to_thompson();
 	Regex r1("((ab)*a)*");
 	Regex r2("ab(ab|a)*ababa");
-	Tester::test(dfa1, r1, 1, &log_template);
+	Tester::test(&dfa1, r1, 1, &log_template);
 	tex_logger.add_log(log_template);
-	Tester::test(r2, r1, 1, &log_template);
+	Tester::test(&r2, r1, 1, &log_template);
 	tex_logger.add_log(log_template);
 	tex_logger.render_to_file("./resources/report.tex");
 }

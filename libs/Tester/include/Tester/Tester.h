@@ -1,10 +1,5 @@
 #pragma once
-#include <chrono>
-#include <iostream>
-#include <regex>
 #include <string>
-#include <variant>
-#include <vector>
 
 #include "Objects/BackRefRegex.h"
 #include "Objects/BaseObject.h"
@@ -17,7 +12,8 @@ class Tester {
   private:
 	static bool parsing_by_regex(const std::string&, const std::string&);
 
-	using ParseDevice = std::variant<FiniteAutomaton, Regex>;
+	using ParseDevice = std::variant<const FiniteAutomaton*, const Regex*,
+									 const MemoryFiniteAutomaton*, const BackRefRegex*>;
 
   public:
 	/* проверяет на принадлежность языку (1 аргумент)
