@@ -346,36 +346,13 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		res = ObjectDFA(get_automaton(arguments[0]).minimize(false, &log_template));
 	}
 	if (function.name == "Annote") {
-		res = ObjectDFA(get_automaton(arguments[0]).annote(&log_template));
+		res = ObjectDFA(get<ObjectNFA>(arguments[0]).value.annote(&log_template));
 	}
 	if (function.name == "Linearize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.linearize(&log_template));
 	}
-	if (function.name == "DeLinearize") {
-		if (function.output == ObjectType::Regex) {
-			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize(&log_template));
-		} else {
-			res = ObjectNFA(get_automaton(arguments[0]).delinearize(&log_template));
-		}
-	}
-	if (function.name == "Complement") {
-		// FiniteAutomaton fa = get_automaton(arguments[0]);
-		// if (fa.is_deterministic())
-		res = ObjectDFA(get_automaton(arguments[0]).complement(&log_template));
-	}
 	if (function.name == "RemoveTrap") {
 		res = ObjectDFA(get_automaton(arguments[0]).remove_trap_states(&log_template));
-	}
-	if (function.name == "DeAnnote") {
-		if (function.output == ObjectType::NFA) {
-			// Пример: (пока в объявлении функции не добавила флаг)
-			// res =
-			// ObjectNFA(get_automaton(arguments[0]).deannote(&log_template,
-			// Flag::auto_remove_trap_states));
-			res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
-		} else {
-			res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote(&log_template));
-		}
 	}
 	if (function.name == "MergeBisim") {
 		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar(&log_template));
@@ -408,37 +385,43 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex(&log_template));
 	}
 	if (function.name == "RemEps" && function.input[0] == ObjectType::NFA) {
-		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.remove_eps(&log_template));
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.remove_eps(&log_template));
 	}
 	if (function.name == "RemEps" && function.input[0] == ObjectType::MFA) {
-		return ObjectMFA(get<ObjectMFA>(arguments[0]).value.remove_eps(&log_template));
+		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.remove_eps(&log_template));
 	}
 	if (function.name == "Reverse" && function.input[0] == ObjectType::NFA) {
-		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.reverse(&log_template));
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.reverse(&log_template));
 	}
 	if (function.name == "Reverse" && function.input[0] == ObjectType::BRefRegex) {
-		return ObjectBRefRegex(get<ObjectBRefRegex>(arguments[0]).value.reverse(&log_template));
+		res = ObjectBRefRegex(get<ObjectBRefRegex>(arguments[0]).value.reverse(&log_template));
 	}
 	if (function.name == "DeLinearize" && function.input[0] == ObjectType::Regex) {
-		return ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize(&log_template));
+		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize(&log_template));
 	}
 	if (function.name == "DeLinearize" && function.input[0] == ObjectType::NFA) {
-		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.delinearize(&log_template));
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.delinearize(&log_template));
 	}
 	if (function.name == "AddTrap") {
-		return ObjectMFA(get<ObjectMFA>(arguments[0]).value.add_trap_state(&log_template));
+		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.add_trap_state(&log_template));
 	}
 	if (function.name == "Complement" && function.input[0] == ObjectType::DFA) {
-		return ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement(&log_template));
+		// FiniteAutomaton fa = get_automaton(arguments[0]);
+		// if (fa.is_deterministic())
+		res = ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement(&log_template));
 	}
 	if (function.name == "Complement" && function.input[0] == ObjectType::MFA) {
-		return ObjectMFA(get<ObjectMFA>(arguments[0]).value.complement(&log_template));
+		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.complement(&log_template));
 	}
 	if (function.name == "DeAnnote" && function.input[0] == ObjectType::Regex) {
-		return ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote(&log_template));
+		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote(&log_template));
 	}
 	if (function.name == "DeAnnote" && function.input[0] == ObjectType::NFA) {
-		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote(&log_template));
+		// Пример: (пока в объявлении функции не добавила флаг)
+		// res =
+		// ObjectNFA(get_automaton(arguments[0]).deannote(&log_template,
+		// Flag::auto_remove_trap_states));
+		res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 	}
 	// # place for another same types funcs
 	if (function.name == "Intersect") {
@@ -642,6 +625,16 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
+	if (holds_alternative<Id>(expr.value)) {
+		Id id = get<Id>(expr.value);
+		if (objects.count(id)) {
+			return objects[id];
+		} else {
+			auto logger = init_log();
+			logger.throw_error("evaluating expression: unknown id \"" + id + "\"");
+		}
+		return nullopt;
+	}
 	if (holds_alternative<string>(expr.value)) {
 		return ObjectString(get<string>(expr.value));
 	}
@@ -661,16 +654,6 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 			}
 		}
 		return ObjectArray(arr);
-	}
-	if (holds_alternative<Id>(expr.value)) {
-		Id id = get<Id>(expr.value);
-		if (objects.count(id)) {
-			return objects[id];
-		} else {
-			auto logger = init_log();
-			logger.throw_error("evaluating expression: unknown id \"" + id + "\"");
-		}
-		return nullopt;
 	}
 	if (holds_alternative<FunctionSequence>(expr.value)) {
 		return eval_function_sequence(get<FunctionSequence>(expr.value));
