@@ -127,7 +127,7 @@ optional<GeneralObject> Interpreter::apply_function_sequence(const vector<Functi
 		else
 			return nullopt;
 
-		if (is_logged)
+		if (is_logged && func.name != "getNFA" && func.name != "getMFA")
 			tex_logger.add_log(log_template);
 	}
 
@@ -641,6 +641,9 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	}
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
+	}
+	if (holds_alternative<string>(expr.value)) {
+		return ObjectString(get<string>(expr.value));
 	}
 	if (holds_alternative<Regex>(expr.value)) {
 		return ObjectRegex(get<Regex>(expr.value));

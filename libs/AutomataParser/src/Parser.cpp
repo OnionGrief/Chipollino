@@ -1,6 +1,6 @@
 #include <AutomataParser/Parser.h>
 
-std::vector<lexy_ascii_child> Parser::find_children(lexy_ascii_tree& tree, std::set<std::string> names, std::set<std::string> exclude = {}) {
+std::vector<lexy_ascii_child> Parser::find_children(lexy_ascii_tree& tree, std::set<std::string> names, std::set<std::string> exclude) {
     std::vector<lexy_ascii_child> result;
     int skip = 0;
     for (auto [event, node] : tree.traverse())
