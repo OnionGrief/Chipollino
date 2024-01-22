@@ -26,23 +26,23 @@ class Parser {
     };
 
     // Поиск рекурсивный поиск вершин с названиями из names, игнорируя спуск в вершины из exclude
-    static std::vector<lexy_ascii_child> find_children(lexy_ascii_tree& tree,
+    static std::vector<lexy_ascii_child> find_children(lexy_ascii_tree& tree, // NOLINT(runtime/references)
      std::set<std::string> names, std::set<std::string> exclude = {});
 
     // Поиск имён всех состояний 
-    static void parse_states(lexy_ascii_tree& tree, std::set<std::string>& names,
-     std::map<std::string, std::string>& labels);
+    static void parse_states(lexy_ascii_tree& tree, std::set<std::string>& names, // NOLINT(runtime/references)
+     std::map<std::string, std::string>& labels); // NOLINT(runtime/references)
 
     // Парсинг описаний вершин
-    static void parse_descriptions(lexy_ascii_tree& tree, std::map<std::string, std::string>& labels,
-     std::map<std::string, bool>& is_terminal, std::string& initial);
+    static void parse_descriptions(lexy_ascii_tree& tree, std::map<std::string, std::string>& labels, // NOLINT(runtime/references)
+     std::map<std::string, bool>& is_terminal, std::string& initial); // NOLINT(runtime/references)
     
     // Парсинг переходов для FA
-    static void parse_transitions(lexy_ascii_tree& tree, std::vector<std::string>& beg,
-     std::vector<std::string>& end, std::vector<std::string>& symb);
+    static void parse_transitions(lexy_ascii_tree& tree, std::vector<std::string>& beg, // NOLINT(runtime/references)
+     std::vector<std::string>& end, std::vector<std::string>& symb); // NOLINT(runtime/references)
 
     // Парсинг переходов для MFA
-    static std::vector<MFATransition_info> parse_MFA_transitions(lexy_ascii_tree& tree);
+    static std::vector<MFATransition_info> parse_MFA_transitions(lexy_ascii_tree& tree); // NOLINT(runtime/references)
 
 
   public:

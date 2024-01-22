@@ -6,10 +6,7 @@
 #include <lexy/action/parse_as_tree.hpp>
 #include <lexy/visualize.hpp>
 #include <lexy/input/file.hpp>
-#include <lexy_ext/compiler_explorer.hpp>
 #include <lexy_ext/report_error.hpp>
-
-#define LEXY_HAS_UNICODE_DATABASE 1
 #define lexy_ascii_tree lexy::parse_tree_for<lexy::buffer<lexy::ascii_encoding>, void, void>
 
 
