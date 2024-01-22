@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "Objects/BaseObject.h"
-
 class RegexGenerator {
   private:
 	std::vector<char> alphabet; // TODO: убрать алфавит

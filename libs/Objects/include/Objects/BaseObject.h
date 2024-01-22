@@ -15,7 +15,7 @@ class BaseObject {
   public:
 	BaseObject();
 	explicit BaseObject(std::shared_ptr<Language>);
-	explicit BaseObject(std::set<Symbol>);
+	explicit BaseObject(const Alphabet&);
 	virtual std::string to_txt() const = 0;
 
 	std::shared_ptr<Language> get_language() const;

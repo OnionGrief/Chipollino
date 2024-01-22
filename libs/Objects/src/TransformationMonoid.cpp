@@ -1,9 +1,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
-#include "Objects/TransformationMonoid.h"
 
 using std::cout;
 using std::map;

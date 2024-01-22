@@ -37,7 +37,7 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 			string word = regex.get_iterated_word(i * step);
 			using clock = std::chrono::high_resolution_clock;
 			const auto start = clock::now();
-			auto [count, is_belongs] = machines[type].parsing_by_nfa(word);
+			auto [count, is_belongs] = machines[type].parse(word);
 			const auto end = clock::now();
 			const long long elapsed =
 				std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();

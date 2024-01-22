@@ -1,7 +1,12 @@
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <iostream>
 #include <regex>
+#include <string>
+#include <utility>
 #include <variant>
+#include <vector>
 
 #include "Logger/LogTemplate.h"
 
@@ -25,8 +30,8 @@ void LogTemplate::add_parameter(string parameter_name) {
 	while (!infile.eof()) {
 		getline(infile, s);
 
-		int insert_place = s.find("%template_" + parameter_name);
-		int endframe_place = s.find("\\end{frame}");
+		size_t insert_place = s.find("%template_" + parameter_name);
+		size_t endframe_place = s.find("\\end{frame}");
 		if (endframe_place != -1) {
 			str_endframe_place = i;
 		}
@@ -47,12 +52,11 @@ void LogTemplate::add_parameter(string parameter_name) {
 		int i = 0;
 		while (!infile.eof()) {
 			getline(infile, s);
-			if (str_endframe_place == i) {
+			if (str_endframe_place == i)
 				outstr += "\t" + parameter_name + ":\n\n\t%template_" + parameter_name + "\n\n" +
 						  s + "\n";
-			} else {
+			else
 				outstr += s + "\n";
-			}
 			i++;
 		}
 
@@ -117,10 +121,21 @@ string LogTemplate::render() const {
 					string r0 = std::get<Regex>(param.value).to_txt();
 					string r = std::regex_replace(r0, std::regex("\\^"), "\\textasciicircum ");
 					s.insert(insert_place, r);
-				} else if (std::holds_alternative<FiniteAutomaton>(param.value)) {
+				} else if (std::holds_alternative<BackRefRegex>(param.value)) {
+					string r0 = std::get<BackRefRegex>(param.value).to_txt();
+					string r = std::regex_replace(r0, std::regex("\\^"), "\\textasciicircum ");
+					s.insert(insert_place, r);
+				} else if (std::holds_alternative<FiniteAutomaton>(param.value) ||
+						   std::holds_alternative<MemoryFiniteAutomaton>(param.value)) {
 					std::hash<string> hasher;
 					string c_graph;
-					string automaton = std::get<FiniteAutomaton>(param.value).to_txt();
+					string automaton0;
+					if (std::holds_alternative<FiniteAutomaton>(param.value))
+						automaton0 = std::get<FiniteAutomaton>(param.value).to_txt();
+					else
+						automaton0 = std::get<MemoryFiniteAutomaton>(param.value).to_txt();
+					string automaton =
+						std::regex_replace(automaton0, std::regex("\\^"), "\\textasciicircum ");
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
@@ -129,15 +144,19 @@ string LogTemplate::render() const {
 						cache_automatons[hash] = c_graph;
 					}
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
-					s.insert(insert_place, c_graph);
+					s.insert(insert_place, "\n" + c_graph);
 				} else if (std::holds_alternative<string>(param.value)) {
-					s.insert(insert_place, std::get<string>(param.value));
+					string s0 = std::get<string>(param.value);
+					string str = std::regex_replace(s0, std::regex("\\^"), "\\textasciicircum ");
+					s.insert(insert_place, str);
 				} else if (std::holds_alternative<int>(param.value)) {
 					s.insert(insert_place, to_string(std::get<int>(param.value)));
 				} else if (std::holds_alternative<Table>(param.value)) {
 					s.insert(insert_place, log_table(std::get<Table>(param.value)));
 				} else if (std::holds_alternative<Plot>(param.value)) {
 					s.insert(insert_place, log_plot(std::get<Plot>(param.value)));
+				} else {
+					cout << "LOGGER ERROR: can not render object";
 				}
 			}
 			outstr += s;
