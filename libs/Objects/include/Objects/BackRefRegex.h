@@ -95,5 +95,5 @@ class BackRefRegex : public AlgExpression {
 	// проверяет, является ли регулярное выражение ацикличным
 	bool is_acreg(iLogTemplate* log = nullptr) const;
 	// обращение выражения (для СНФ)
-	BackRefRegex reverse(iLogTemplate* log = nullptr);
+	BackRefRegex reverse(iLogTemplate* log = nullptr) const;
 };

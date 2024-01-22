@@ -728,7 +728,13 @@ bool BackRefRegex::is_acreg(iLogTemplate* log) const {
 	temp.unfold_iterations(counter);
 
 	unordered_map<int, unordered_set<int>> refs_in_cells;
-	return temp._is_acreg({}, {}, refs_in_cells);
+	bool res = temp._is_acreg({}, {}, refs_in_cells);
+
+	if (log) {
+		log->set_parameter("brefregex", *this);
+		log->set_parameter("result", res ? "True" : "False");
+	}
+	return res;
 }
 
 void BackRefRegex::_reverse(unordered_map<int, BackRefRegex*>& memory_writers) {
@@ -790,7 +796,7 @@ void BackRefRegex::swap_memory_operations(unordered_set<BackRefRegex*>& already_
 	}
 }
 
-BackRefRegex BackRefRegex::reverse(iLogTemplate* log) {
+BackRefRegex BackRefRegex::reverse(iLogTemplate* log) const {
 	BackRefRegex temp(*this);
 
 	unordered_map<int, BackRefRegex*> memory_writers;
@@ -798,5 +804,9 @@ BackRefRegex BackRefRegex::reverse(iLogTemplate* log) {
 	unordered_set<BackRefRegex*> already_swapped;
 	temp.swap_memory_operations(already_swapped);
 
+	if (log) {
+		log->set_parameter("oldbrefregex", *this);
+		log->set_parameter("result", temp);
+	}
 	return temp;
 }
