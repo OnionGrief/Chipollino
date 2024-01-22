@@ -47,7 +47,7 @@ class Parser {
 
   public:
     // Разбор MFA из файла
-    statiс MemoryFiniteAutomaton parse_MFA(std::string filename);
+    static MemoryFiniteAutomaton parse_MFA(std::string filename);
 
     // Разбор FA из файла
     static FiniteAutomaton parse_FA(std::string filename);

@@ -20,6 +20,7 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
+#include "AutomataParser/Parser.h"
 
 using namespace Typization; // NOLINT(build/namespaces)
 using namespace FuncLib;	// NOLINT(build/namespaces)

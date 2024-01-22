@@ -313,11 +313,11 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	}
 	if (function.name == "getNFA") {
 		string filename = get<ObjectString>(arguments[0]).value;
-		return ObjectNFA(FiniteAutomaton());
+		return ObjectNFA(Parser::parse_FA(filename));
 	}
 	if (function.name == "getMFA") {
 		string filename = get<ObjectString>(arguments[0]).value;
-		return ObjectMFA(MemoryFiniteAutomaton());
+		return ObjectMFA(Parser::parse_MFA(filename));
 	}
 	// # place for another diff types funcs
 
