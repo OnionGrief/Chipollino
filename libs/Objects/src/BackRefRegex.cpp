@@ -788,7 +788,7 @@ void BackRefRegex::swap_memory_operations(unordered_set<BackRefRegex*>& already_
 	}
 }
 
-BackRefRegex BackRefRegex::reverse() {
+BackRefRegex BackRefRegex::reverse(iLogTemplate* log) {
 	BackRefRegex temp(*this);
 
 	unordered_map<int, BackRefRegex*> memory_writers;

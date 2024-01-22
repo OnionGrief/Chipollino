@@ -197,73 +197,6 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		else
 			return ObjectOptionalBool(a.is_nfa_minimal(&log_template));
 	}
-	if (function.name == "Deterministic") {
-		return ObjectBoolean(get_automaton(arguments[0]).is_deterministic(&log_template));
-	}
-	if (function.name == "Subset") {
-		if (function.input[0] == ObjectType::NFA) {
-			return ObjectBoolean(
-				get_automaton(arguments[0]).subset(get_automaton(arguments[1]), &log_template));
-		} else {
-			return ObjectBoolean(
-				get<ObjectRegex>(arguments[0])
-					.value.subset(get<ObjectRegex>(arguments[1]).value, &log_template));
-		}
-	}
-	if (function.name == "Equiv") {
-
-		if (function.input[0] == ObjectType::NFA) {
-			return ObjectBoolean(FiniteAutomaton::equivalent(
-				get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
-		} else {
-			return ObjectBoolean(Regex::equivalent(get<ObjectRegex>(arguments[0]).value,
-												   get<ObjectRegex>(arguments[1]).value,
-												   &log_template));
-		}
-	}
-	if (function.name == "Equal") {
-		if (function.input[0] == ObjectType::NFA) {
-			return ObjectBoolean(FiniteAutomaton::equal(
-				get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
-		} else if (function.input[0] == ObjectType::Regex) {
-			return ObjectBoolean(Regex::equal(get<ObjectRegex>(arguments[0]).value,
-											  get<ObjectRegex>(arguments[1]).value,
-											  &log_template));
-
-		} else if (function.input[0] == ObjectType::Int) {
-			int value1 = get<ObjectInt>(arguments[0]).value;
-			int value2 = get<ObjectInt>(arguments[1]).value;
-			bool res = (value1 == value2);
-			log_template.set_parameter("value1", value1);
-			log_template.set_parameter("value2", value2);
-			log_template.set_parameter("result", res);
-			return ObjectBoolean(res);
-		} else if (function.input[0] == ObjectType::Boolean) {
-			int value1 = get<ObjectBoolean>(arguments[0]).value;
-			int value2 = get<ObjectBoolean>(arguments[1]).value;
-			bool res = (value1 == value2);
-			log_template.set_parameter("value1", value1);
-			log_template.set_parameter("value2", value2);
-			log_template.set_parameter("result", res);
-			return ObjectBoolean(res);
-		} else {
-			FiniteAutomaton::AmbiguityValue value1 = get<ObjectAmbiguityValue>(arguments[0]).value;
-			FiniteAutomaton::AmbiguityValue value2 = get<ObjectAmbiguityValue>(arguments[1]).value;
-			bool res = (value1 == value2);
-			log_template.set_parameter("value1", value1);
-			log_template.set_parameter("value2", value2);
-			log_template.set_parameter("result", res);
-			return ObjectBoolean(res);
-		}
-	}
-	if (function.name == "OneUnambiguity") {
-		if (function.input[0] == ObjectType::NFA) {
-			return ObjectBoolean(get_automaton(arguments[0]).is_one_unambiguous(&log_template));
-		} else {
-			return ObjectBoolean(
-				get<ObjectRegex>(arguments[0]).value.is_one_unambiguous(&log_template));
-		}
-	}
 	if (function.name == "SemDet") {
 		return ObjectBoolean(get_automaton(arguments[0]).semdet(&log_template));
 	}
@@ -302,9 +235,81 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectNFA(get<ObjectPrefixGrammar>(arguments[0])
 							 .value.prefix_grammar_to_automaton(&log_template));
 	}
-
-	if (function.name == "ToMFA") {
+	if (function.name == "MFA") {
 		return ObjectMFA(get<ObjectBRefRegex>(arguments[0]).value.to_mfa(&log_template));
+	}
+	if (function.name == "MFAexpt") {
+		return ObjectMFA(get<ObjectBRefRegex>(arguments[0]).value.to_mfa_additional(&log_template));
+	}
+	if (function.name == "Deterministic" && function.input[0] == ObjectType::NFA) {
+		return ObjectBoolean(get_automaton(arguments[0]).is_deterministic(&log_template));
+	}
+	if (function.name == "Deterministic" && function.input[0] == ObjectType::MFA) {
+		return ObjectBoolean(get<ObjectMFA>(arguments[0]).value.is_deterministic(&log_template));
+	}
+	if (function.name == "Subset" && function.input[0] == ObjectType::Regex) {
+		return ObjectBoolean(
+			get<ObjectRegex>(arguments[0])
+				.value.subset(get<ObjectRegex>(arguments[1]).value, &log_template));
+	}
+	if (function.name == "Subset" && function.input[0] == ObjectType::NFA) {
+		return ObjectBoolean(get<ObjectNFA>(arguments[0])
+								 .value.subset(get<ObjectNFA>(arguments[1]).value, &log_template));
+	}
+	if (function.name == "Equiv" && function.input[0] == ObjectType::Regex) {
+		return ObjectBoolean(Regex::equivalent(get<ObjectRegex>(arguments[0]).value,
+											   get<ObjectRegex>(arguments[1]).value,
+											   &log_template));
+	}
+	if (function.name == "Equiv" && function.input[0] == ObjectType::NFA) {
+		return ObjectBoolean(FiniteAutomaton::equivalent(
+			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
+	}
+	if (function.name == "Equal" && function.input[0] == ObjectType::Regex) {
+		return ObjectBoolean(Regex::equal(get<ObjectRegex>(arguments[0]).value,
+										  get<ObjectRegex>(arguments[1]).value,
+										  &log_template));
+	}
+	if (function.name == "Equal" && function.input[0] == ObjectType::NFA) {
+		return ObjectBoolean(FiniteAutomaton::equal(
+			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
+	}
+	if (function.name == "Equal" && function.input[0] == ObjectType::Int) {
+		int value1 = get<ObjectInt>(arguments[0]).value;
+		int value2 = get<ObjectInt>(arguments[1]).value;
+		bool res = (value1 == value2);
+		log_template.set_parameter("value1", value1);
+		log_template.set_parameter("value2", value2);
+		log_template.set_parameter("result", res);
+		return ObjectBoolean(res);
+	}
+	if (function.name == "Equal" && function.input[0] == ObjectType::AmbiguityValue) {
+		FiniteAutomaton::AmbiguityValue value1 = get<ObjectAmbiguityValue>(arguments[0]).value;
+		FiniteAutomaton::AmbiguityValue value2 = get<ObjectAmbiguityValue>(arguments[1]).value;
+		bool res = (value1 == value2);
+		log_template.set_parameter("value1", value1);
+		log_template.set_parameter("value2", value2);
+		log_template.set_parameter("result", res);
+		return ObjectBoolean(res);
+	}
+	if (function.name == "Equal" && function.input[0] == ObjectType::Boolean) {
+		int value1 = get<ObjectBoolean>(arguments[0]).value;
+		int value2 = get<ObjectBoolean>(arguments[1]).value;
+		bool res = (value1 == value2);
+		log_template.set_parameter("value1", value1);
+		log_template.set_parameter("value2", value2);
+		log_template.set_parameter("result", res);
+		return ObjectBoolean(res);
+	}
+	if (function.name == "OneUnambiguity" && function.input[0] == ObjectType::Regex) {
+		return ObjectBoolean(
+			get<ObjectRegex>(arguments[0]).value.is_one_unambiguous(&log_template));
+	}
+	if (function.name == "OneUnambiguity" && function.input[0] == ObjectType::NFA) {
+		return ObjectBoolean(get_automaton(arguments[0]).is_one_unambiguous(&log_template));
+	}
+	if (function.name == "IsAcreg") {
+		return ObjectBoolean(get<ObjectBRefRegex>(arguments[0]).value.is_acreg(&log_template));
 	}
 	// # place for another diff types funcs
 
@@ -340,9 +345,6 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	}
 	if (function.name == "Linearize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.linearize(&log_template));
-	}
-	if (function.name == "Reverse") {
-		res = ObjectNFA(get_automaton(arguments[0]).reverse(&log_template));
 	}
 	if (function.name == "DeLinearize") {
 		if (function.output == ObjectType::Regex) {
@@ -399,6 +401,39 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Disambiguate") {
 		res = ObjectRegex(
 			get<ObjectRegex>(arguments[0]).value.get_one_unambiguous_regex(&log_template));
+	}
+	if (function.name == "RemEps" && function.input[0] == ObjectType::NFA) {
+		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.remove_eps(&log_template));
+	}
+	if (function.name == "RemEps" && function.input[0] == ObjectType::MFA) {
+		return ObjectMFA(get<ObjectMFA>(arguments[0]).value.remove_eps(&log_template));
+	}
+	if (function.name == "Reverse" && function.input[0] == ObjectType::NFA) {
+		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.reverse(&log_template));
+	}
+	if (function.name == "Reverse" && function.input[0] == ObjectType::BRefRegex) {
+		return ObjectBRefRegex(get<ObjectBRefRegex>(arguments[0]).value.reverse(&log_template));
+	}
+	if (function.name == "DeLinearize" && function.input[0] == ObjectType::Regex) {
+		return ObjectRegex(get<ObjectRegex>(arguments[0]).value.delinearize(&log_template));
+	}
+	if (function.name == "DeLinearize" && function.input[0] == ObjectType::NFA) {
+		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.delinearize(&log_template));
+	}
+	if (function.name == "AddTrap") {
+		return ObjectMFA(get<ObjectMFA>(arguments[0]).value.add_trap_state(&log_template));
+	}
+	if (function.name == "Complement" && function.input[0] == ObjectType::DFA) {
+		return ObjectDFA(get<ObjectDFA>(arguments[0]).value.complement(&log_template));
+	}
+	if (function.name == "Complement" && function.input[0] == ObjectType::MFA) {
+		return ObjectMFA(get<ObjectMFA>(arguments[0]).value.complement(&log_template));
+	}
+	if (function.name == "DeAnnote" && function.input[0] == ObjectType::Regex) {
+		return ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote(&log_template));
+	}
+	if (function.name == "DeAnnote" && function.input[0] == ObjectType::NFA) {
+		return ObjectNFA(get<ObjectNFA>(arguments[0]).value.deannote(&log_template));
 	}
 	// # place for another same types funcs
 	if (function.name == "Intersect") {

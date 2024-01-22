@@ -26,18 +26,23 @@ inline static const std::vector<Function> functions = {
 	{"Antimirov", {ObjectType::Regex}, ObjectType::NFA},
 	{"Arden", {ObjectType::NFA}, ObjectType::Regex},
 	{"Glushkov", {ObjectType::Regex}, ObjectType::NFA},
-	{"ToMFA", {ObjectType::BRefRegex}, ObjectType::MFA},
+	{"MFA", {ObjectType::BRefRegex}, ObjectType::MFA},
+	{"MFAexpt", {ObjectType::BRefRegex}, ObjectType::MFA},
 	{"Determinize", {ObjectType::NFA}, ObjectType::DFA},
 	{"Determinize+", {ObjectType::NFA}, ObjectType::DFA},
 	{"RemEps", {ObjectType::NFA}, ObjectType::NFA},
+	{"RemEps", {ObjectType::MFA}, ObjectType::MFA},
 	{"Linearize", {ObjectType::Regex}, ObjectType::Regex},
 	{"Minimize", {ObjectType::NFA}, ObjectType::DFA},
 	{"Minimize+", {ObjectType::NFA}, ObjectType::DFA},
 	{"Reverse", {ObjectType::NFA}, ObjectType::NFA},
+	{"Reverse", {ObjectType::BRefRegex}, ObjectType::BRefRegex},
 	{"Annote", {ObjectType::NFA}, ObjectType::DFA},
 	{"DeLinearize", {ObjectType::Regex}, ObjectType::Regex},
 	{"DeLinearize", {ObjectType::NFA}, ObjectType::NFA},
+	{"AddTrap", {ObjectType::MFA}, ObjectType::MFA},
 	{"Complement", {ObjectType::DFA}, ObjectType::DFA},
+	{"Complement", {ObjectType::MFA}, ObjectType::MFA},
 	{"RemoveTrap", {ObjectType::DFA}, ObjectType::DFA},
 	{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
 	{"DeAnnote", {ObjectType::NFA}, ObjectType::NFA},
@@ -46,7 +51,6 @@ inline static const std::vector<Function> functions = {
 	{"Intersect", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA},
 	{"Union", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA},
 	{"Difference", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA},
-	// Многосортные функции
 	{"PumpLength", {ObjectType::Regex}, ObjectType::Int},
 	{"ClassLength", {ObjectType::NFA}, ObjectType::Int},
 	{"Normalize", {ObjectType::Regex, ObjectType::Array}, ObjectType::Regex},
@@ -57,11 +61,10 @@ inline static const std::vector<Function> functions = {
 	{"GlaisterShallit", {ObjectType::NFA}, ObjectType::Int},
 	{"PrefixGrammar", {ObjectType::NFA}, ObjectType::PrefixGrammar},
 	{"PGtoNFA", {ObjectType::PrefixGrammar}, ObjectType::NFA},
-	// Предикаты
 	{"Bisimilar", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean},
-	// для dfa - bool, для nfa - std::optional<bool>
 	{"Minimal", {ObjectType::NFA}, ObjectType::OptionalBool},
 	{"Deterministic", {ObjectType::NFA}, ObjectType::Boolean},
+	{"Deterministic", {ObjectType::MFA}, ObjectType::Boolean},
 	{"Subset", {ObjectType::Regex, ObjectType::Regex}, ObjectType::Boolean},
 	{"Subset", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean},
 	{"Equiv", {ObjectType::Regex, ObjectType::Regex}, ObjectType::Boolean},
@@ -74,6 +77,7 @@ inline static const std::vector<Function> functions = {
 	{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 	{"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean},
 	{"SemDet", {ObjectType::NFA}, ObjectType::Boolean},
+	{"IsAcreg", {ObjectType::BRefRegex}, ObjectType::Boolean},
 };
 
 // вспомогательная функция для Ани и ее курсача
