@@ -105,5 +105,6 @@ class Lexer{
   public:
     
     // Строит дерево разбора по грамматике описанной в private лексера
-    static void parse_buffer(lexy_ascii_tree& tree, lexy::buffer<lexy::ascii_encoding>& buffer);
-};
+    static void parse_buffer(lexy_ascii_tree& tree, // NOLINT(runtime/references)
+     lexy::buffer<lexy::ascii_encoding>& buffer); // NOLINT(runtime/references)
+}; 
