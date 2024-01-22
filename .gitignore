@@ -4,13 +4,13 @@ build/
 .idea/
 
 cmake-build-debug/
+cmake-build-debug-visual-studio/
+cmake-build-debug-wsl/
 
 .vs/
 /CMakeSettings.json
 /enc_temp_folder/
 .idea/
-
-cmake-build-debug/
 
 temp/
 report.*
