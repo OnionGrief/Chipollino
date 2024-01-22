@@ -311,6 +311,14 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "IsAcreg") {
 		return ObjectBoolean(get<ObjectBRefRegex>(arguments[0]).value.is_acreg(&log_template));
 	}
+	if (function.name == "getNFA") {
+		string filename = get<ObjectString>(arguments[0]).value;
+		return ObjectNFA(FiniteAutomaton());
+	}
+	if (function.name == "getMFA") {
+		string filename = get<ObjectString>(arguments[0]).value;
+		return ObjectMFA(MemoryFiniteAutomaton());
+	}
 	// # place for another diff types funcs
 
 	/*
