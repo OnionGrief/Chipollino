@@ -254,8 +254,8 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::add_trap_state(iLogTemplate* log) c
 
 	MemoryFiniteAutomaton new_mfa(initial_state, new_states, language);
 	if (log) {
-		//		log->set_parameter("oldautomaton", *this);
-		//		log->set_parameter("result", new_mfa, new_meta);
+		log->set_parameter("oldmfa", *this);
+		log->set_parameter("result", new_mfa);
 	}
 	return new_mfa;
 }
@@ -382,7 +382,12 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const
 		}
 	}
 
-	return {0, new_states, language};
+	MemoryFiniteAutomaton res = {0, new_states, language};
+	if (log) {
+		log->set_parameter("oldmfa", *this);
+		log->set_parameter("result", res);
+	}
+	return res;
 }
 
 MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const {

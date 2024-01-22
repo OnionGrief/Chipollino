@@ -340,9 +340,6 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Annote") {
 		res = ObjectDFA(get_automaton(arguments[0]).annote(&log_template));
 	}
-	if (function.name == "RemEps") {
-		res = ObjectNFA(get_automaton(arguments[0]).remove_eps(&log_template));
-	}
 	if (function.name == "Linearize") {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.linearize(&log_template));
 	}
