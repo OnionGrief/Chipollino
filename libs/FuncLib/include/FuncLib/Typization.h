@@ -102,7 +102,7 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 // вложенные типы данных:
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_parents = {
 	{ObjectType::NFA, {ObjectType::MFA}},
-	{ObjectType::DFA, {ObjectType::MFA, ObjectType::NFA}},
+	{ObjectType::DFA, {ObjectType::NFA, ObjectType::MFA}},
 	{ObjectType::Regex, {ObjectType::BRefRegex}},
 };
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_children = {
