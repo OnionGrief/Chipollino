@@ -12,17 +12,14 @@ set(SOURCES
         src/Parser.cpp)
 
 # Add a library with the above sources
-# add_library(${PROJECT_NAME} ${SOURCES})
-
-# Executable for testing TODO: delete
-add_executable(${PROJECT_NAME} src/Parser.cpp)
+add_library(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC ${PROJECT_SOURCE_DIR}/include
 )
 
 target_link_libraries(${PROJECT_NAME} 
-    PRIVATE foonathan::lexy
+    foonathan::lexy
     Objects
 )
         

@@ -10,7 +10,7 @@
 #include <lexy_ext/report_error.hpp>
 
 #define LEXY_HAS_UNICODE_DATABASE 1
-#define utf8_tree lexy::parse_tree_for<lexy::buffer<lexy::ascii_encoding>, void, void>
+#define lexy_ascii_tree lexy::parse_tree_for<lexy::buffer<lexy::ascii_encoding>, void, void>
 
 
 namespace dsl = lexy::dsl;
@@ -106,17 +106,7 @@ class Lexer{
     };
 
   public:
-
-    static void prod(utf8_tree& tree, lexy::buffer<lexy::ascii_encoding>& buffer) {
-        auto                                  result
-            = lexy::parse_as_tree<production>(tree, buffer, lexy_ext::report_error);
-
-
-        lexy::visualize(stdout, tree, {lexy::visualize_default});
-
-        if (!result) {
-			throw std::runtime_error("AutomataParser::Lexer::prod() ERROR");
-		}
-
-    }
+    
+    // Строит дерево разбора по грамматике описанной в private лексера
+    static void parse_buffer(lexy_ascii_tree& tree, lexy::buffer<lexy::ascii_encoding>& buffer);
 };
