@@ -202,12 +202,10 @@ FiniteAutomaton Parser::parse_FA(std::string filename) {
     for (int i = 0; i < beg.size(); i++) {
         if (symb[i] == "eps") {
             states[states_id[beg[i]]].set_transition(states_id[end[i]], Symbol::Epsilon);
-        }
-        else {
+        } else {
             if (symb[i][0] == '&') {
                 throw std::runtime_error("AutomataParser::Parser::parse_FA ERROR(MFA transition found)");
-            }
-            else {
+            } else {
                 states[states_id[beg[i]]].set_transition(states_id[end[i]], symb[i]);
                 alphabet.insert(Symbol(symb[i]));
             }
