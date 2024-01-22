@@ -9,13 +9,13 @@
 #include <vector>
 
 #include "AbstractMachine.h"
-#include "Symbol.h"
 #include "iLogTemplate.h"
 
 class Regex;
 class MetaInfo;
 class Language;
 class TransformationMonoid;
+class MemoryFiniteAutomaton;
 
 class FAState : public State {
   public:
@@ -88,7 +88,7 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, std::vector<FAState> states,
 					std::shared_ptr<Language> language);
-	FiniteAutomaton(int initial_state, std::vector<FAState> states, std::set<Symbol> alphabet);
+	FiniteAutomaton(int initial_state, std::vector<FAState> states, Alphabet alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
 	// dynamic_cast unique_ptr к типу FiniteAutomaton*
@@ -151,12 +151,10 @@ class FiniteAutomaton : public AbstractMachine {
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&,
 						  iLogTemplate* log = nullptr);
-	// проверка автомата на детерминированность
 	bool is_deterministic(iLogTemplate* log = nullptr) const override;
 	// проверка НКА на семантический детерминизм
 	bool semdet(iLogTemplate* log = nullptr) const;
-	// проверяет, распознаёт ли автомат слово
-	std::pair<int, bool> parsing_by_nfa(const std::string&) const;
+	std::pair<int, bool> parse(const std::string&) const override;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
 	// определяет меру неоднозначности
@@ -177,6 +175,7 @@ class FiniteAutomaton : public AbstractMachine {
 	std::optional<bool> is_nfa_minimal(iLogTemplate* log = nullptr) const;
 	// проверка на минимальность для дка
 	bool is_dfa_minimal(iLogTemplate* log = nullptr) const;
+	MemoryFiniteAutomaton to_mfa() const;
 
 	friend class Regex;
 	friend class MetaInfo;
