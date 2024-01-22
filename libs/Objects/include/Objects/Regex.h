@@ -97,7 +97,7 @@ class Regex : public AlgExpression {
 	// переписывание regex по пользовательским правилам
 	Regex normalize_regex(const std::vector<std::pair<Regex, Regex>>&,
 						  iLogTemplate* log = nullptr) const;
-	BackRefRegex to_bregex();
+	BackRefRegex to_bregex() const;
 };
 
 /*

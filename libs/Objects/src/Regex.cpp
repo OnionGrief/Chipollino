@@ -1360,6 +1360,6 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules, iLogTempla
 	return regex;
 }
 
-BackRefRegex Regex::to_bregex() {
+BackRefRegex Regex::to_bregex() const {
 	return {this, language->get_alphabet()};
 }

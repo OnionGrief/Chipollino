@@ -135,7 +135,7 @@ static GeneralObject convert_type(const GeneralObject& obj, ObjectType type) {
 	if (std::holds_alternative<ObjectDFA>(obj) && type == ObjectType::MFA)
 		return ObjectMFA(std::get<ObjectDFA>(obj).value.to_mfa());
 	if (std::holds_alternative<ObjectRegex>(obj) && type == ObjectType::BRefRegex)
-		return ObjectBRefRegex(BackRefRegex(&std::get<ObjectRegex>(obj).value));
+		return ObjectBRefRegex(std::get<ObjectRegex>(obj).value.to_bregex());
 	return obj;
 }
 
