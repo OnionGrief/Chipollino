@@ -1085,8 +1085,8 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << partial_derivativ[0].to_txt() << " ";
 			// cout << partial_derivativ[1].to_txt() << " ";
 			// cout << partial_derivativ[2].to_txt() << endl;
-			deriv_log += partial_derivativ[2]._to_txt(false) + "(" +
-						 partial_derivativ[0]._to_txt(false) + ")" + "\\ =\\ ";
+			deriv_log += partial_derivativ[2]._to_txt(true) + "(" +
+						 partial_derivativ[0]._to_txt(true) + ")" + "\\ =\\ ";
 			if (partial_derivativ[1].to_txt() == "") {
 				deriv_log += "eps\\\\";
 			} else {
