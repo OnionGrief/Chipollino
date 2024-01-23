@@ -1050,7 +1050,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 	}
 
 	fa_states.push_back(*this);
-	check.insert(_to_txt(false));
+	check.insert(_to_txt(true));
 	for (size_t i = 0; i < fa_states.size(); i++) {
 		Regex regex_state = fa_states[i];
 		for (const auto& s : symbols) {
@@ -1060,7 +1060,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			for (const auto& reg_der : regs_der) {
 				partial_derivatives_by_regex.push_back({regex_state, reg_der, s});
 				size_t old_checks = check.size();
-				check.insert(reg_der._to_txt(false));
+				check.insert(reg_der._to_txt(true));
 				if (old_checks != check.size()) {
 					fa_states.push_back(reg_der);
 				}
@@ -1071,7 +1071,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 	vector<string> name_states;
 
 	for (auto& state : fa_states) {
-		name_states.push_back(state._to_txt(false));
+		name_states.push_back(state._to_txt(true));
 	}
 
 	vector<FAState> automat_state;
@@ -1090,15 +1090,15 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			if (partial_derivativ[1].to_txt() == "") {
 				deriv_log += "eps\\\\";
 			} else {
-				deriv_log += partial_derivativ[1]._to_txt(false) + "\\\\";
+				deriv_log += partial_derivativ[1]._to_txt(true) + "\\\\";
 			}
 
-			if (partial_derivativ[0]._to_txt(false) == state) {
+			if (partial_derivativ[0]._to_txt(true) == state) {
 				// поиск индекс состояния в которое переходим по символу из state
 				auto elem_iter = find(
-					name_states.begin(), name_states.end(), partial_derivativ[1]._to_txt(false));
+					name_states.begin(), name_states.end(), partial_derivativ[1]._to_txt(true));
 				// записываем расстояние между begin и итератором, который указывает на состояние
-				transit[partial_derivativ[2]._to_txt(false)].insert(
+				transit[partial_derivativ[2]._to_txt(true)].insert(
 					std::distance(name_states.begin(), elem_iter));
 			}
 		}
