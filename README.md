@@ -56,6 +56,8 @@ TG.generate_task(3, 5, false, false);
 * NFA — недетерминированный конечный автомат
 * DFA — детерминированный конечный автомат
 * PrefixGrammar - префиксная грамматика
+* BRefRegex - расширенные регулярные выражения с обратными ссылками
+* MFA - конечный автомат с памятью
 * Int
 * String
 * Boolean
@@ -64,8 +66,6 @@ TG.generate_task(3, 5, false, false);
   (Может принимать одно из 4-х значений: *Unambigious, Almost unambigious, Polynomially ambiguous, Exponentially
   ambiguous*)
 * Array - правила переписывания
-* BRefRegex
-* MFA
 
 ### Синтаксические конструкции
 
@@ -229,6 +229,20 @@ TG.generate_task(3, 5, false, false);
 - `Equal: (Int, Int) -> Boolean`
 - `Equal: (Boolean, Boolean) -> Boolean`
 - `Equal: (AmbiguityValue, AmbiguityValue) -> Boolean`
+
+**Методы регулярных выражений с обратными ссылками:**
+
+- `MFA: BRefRegex -> MFA`
+- `MFAexpt: BRefRegex -> MFA`
+- `Reverse: BRefRegex -> BRefRegex`
+- `IsAcreg: BRefRegex -> Boolean`
+
+**Методы MFA:**
+
+- `RemEps: MFA -> MFA`
+- `AddTrap: MFA -> MFA`
+- `Complement: MFA -> MFA`
+- `Deterministic: MFA -> Boolean`
 
 **Метод Test**
 
