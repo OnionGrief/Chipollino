@@ -50,19 +50,26 @@ void Parser::parse_descriptions(lexy_ascii_tree& tree, std::map<std::string, std
     for (int i = 0; i < descriptions.size(); i++) {
         std::string name = "";
         for (auto desc : descriptions[i].children()) {
-            if (std::string(desc.kind().name()) == "node_id")
+            if (std::string(desc.kind().name()) == "node_id") {
                 name = lexy::as_string<std::string, lexy::ascii_encoding>(desc.children().begin()->lexeme());
-            if (std::string(desc.kind().name()) == "state_label")
-                for (auto alias_child : desc.children())
-                    if (std::string(alias_child.kind().name()) == "node_id")
+            }
+            if (std::string(desc.kind().name()) == "state_label") {
+                for (auto alias_child : desc.children()) {
+                    if (std::string(alias_child.kind().name()) == "node_id") {
                         labels[name] = lexy::as_string<std::string, lexy::ascii_encoding>(alias_child.children().begin()->token().lexeme());
-            if (std::string(desc.kind().name()) == "terminal_mark")
+                    }
+                }
+            }
+            if (std::string(desc.kind().name()) == "terminal_mark") {
                 is_terminal[name] = true;
-            if (std::string(desc.kind().name()) == "initial_mark")
-                if (initial == "")
+            }
+            if (std::string(desc.kind().name()) == "initial_mark") {
+                if (initial == "") {
                     initial = name;
-                else
+                } else {
                     throw std::runtime_error("AutomataParser::Parser::parse_descriptions ERROR(second initial state found)");
+                }
+            }
         }
     }
 }
