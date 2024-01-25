@@ -8,6 +8,8 @@ using std::string;
 using std::to_string;
 using std::vector;
 
+using FuncLib::Function;
+
 TasksGenerator::TasksGenerator() {
 	change_seed();
 	distribute_functions();
@@ -60,7 +62,7 @@ string TasksGenerator::generate_op() {
 bool TasksGenerator::arguments_exist(vector<ObjectType> args) {
 	for (ObjectType arg_type : args) {
 		// аргумент можно подобрать, если его тип есть в памяти, либо его можно сгенерировать
-		if (!(ids_by_type.count(arg_type) || is_belong(generated_types, arg_type)))
+		if (!(ids_by_type.count(arg_type) || Typization::is_belong(generated_types, arg_type)))
 			return false;
 	}
 	return true;
@@ -140,7 +142,7 @@ string TasksGenerator::generate_arguments(Function first_func) {
 	for (auto input_type : first_func.input) {
 		// сгенерировать идентификатор
 		if (ids_by_type.count(input_type) &&
-			!(is_belong(generated_types, input_type) && rand() % 2)) {
+			!(Typization::is_belong(generated_types, input_type) && rand() % 2)) {
 			args_str += " N" + get_random_id_by_type(input_type);
 			/* генерируемые типы: */
 		} else if (input_type == REGEX) {
@@ -151,8 +153,8 @@ string TasksGenerator::generate_arguments(Function first_func) {
 		} else if (input_type == ARRAY) {
 			args_str += " [[{a} {b}]]";
 		} else {
-			cout << "generator error: there is no id with type " + types_to_string.at(input_type) +
-						"\n";
+			cout << "generator error: there is no id with type " +
+						Typization::types_to_string.at(input_type) + "\n";
 		}
 	}
 	return args_str;
@@ -171,7 +173,7 @@ string TasksGenerator::generate_declaration() {
 
 	// запоминаем идентификатор N#
 	// (DFA может быть подан в качестве NFA)
-	for (ObjectType type : get_types(cur_type, types_parents))
+	for (ObjectType type : Typization::get_types(cur_type, Typization::types_parents))
 		ids_by_type[type].push_back({id_num, cur_type});
 
 	return str;
@@ -192,18 +194,18 @@ Function TasksGenerator::generate_next_func(ObjectType prevOutput, int funcNum) 
 }
 
 void TasksGenerator::distribute_functions() {
-	for (Function func : functions) {
+	for (Function func : FuncLib::functions) {
 		if (func.input.size() == 1) {
 			ObjectType input_type = func.input[0];
 			/* ф/я может принимать свой входной тип и его подтипы*/
-			for (ObjectType type : get_types(input_type, types_children))
+			for (ObjectType type : Typization::get_types(input_type, Typization::types_children))
 				funcInput[type].push_back(func);
 		}
 	}
 }
 
 Function TasksGenerator::rand_func() {
-	return functions[rand() % functions.size()];
+	return FuncLib::functions[rand() % FuncLib::functions.size()];
 }
 
 void TasksGenerator::generate_test_for_all_functions() {
@@ -214,7 +216,7 @@ void TasksGenerator::generate_test_for_all_functions() {
 	outfile << "V = Ambiguity A\n";
 	outfile << "B = Deterministic A\n";
 	outfile << "P = PrefixGrammar A\n";
-	for (const auto& function : functions) {
+	for (const auto& function : FuncLib::functions) {
 		string func_id = function.name;
 		outfile << "N = " << func_id;
 		for (const auto& arg : function.input) {
@@ -233,7 +235,8 @@ void TasksGenerator::generate_test_for_all_functions() {
 			} else if (arg == INT) {
 				outfile << " 1";
 			} else {
-				cout << "generator error: can't generate arg " + types_to_string.at(arg) + '\n';
+				cout << "generator error: can't generate arg " +
+							Typization::types_to_string.at(arg) + '\n';
 			}
 		}
 		outfile << "\n";

@@ -15,6 +15,9 @@ using std::string;
 using std::to_string;
 using std::vector;
 
+using FuncLib::Function;
+using namespace Typization; // NOLINT(build/namespaces)
+
 bool operator==(const Function& l, const Function& r) {
 	return l.name == r.name && l.input == r.input && l.output == r.output;
 }
@@ -144,7 +147,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	// преобразование типов
 	vector<GeneralObject> arguments;
 	for (int i = 0; i < arguments0.size(); i++)
-		arguments.push_back(convert_type(arguments0[i], function.input[i]));
+		arguments.push_back(Typization::convert_type(arguments0[i], function.input[i]));
 
 	auto get_automaton = [](const GeneralObject& obj) -> const FiniteAutomaton& {
 		if (holds_alternative<ObjectNFA>(obj))
@@ -469,7 +472,9 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type, vector<ObjectTyp
 	// сверяем тип каждого аргумента
 	for (int i = 0; i < argument_type.size(); i++) {
 		// тип либо одинаковый, либо аргумент явл-ся подтипом требуемого типа
-		if (!(is_belong(get_types(func_input_type[i], types_children), argument_type[i]) ||
+		if (!(Typization::is_belong(
+				  Typization::get_types(func_input_type[i], Typization::types_children),
+				  argument_type[i]) ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
 			  (flags[Flag::weak_type_comparison] && argument_type[i] == ObjectType::NFA &&
 			   func_input_type[i] == ObjectType::DFA) ||
@@ -533,7 +538,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(vector<string> f
 
 	string argument_type = "";
 	for (int i = 0; i < first_type.size(); i++)
-		argument_type += (i == 0 ? "" : ", ") + types_to_string.at(first_type[i]);
+		argument_type += (i == 0 ? "" : ", ") + Typization::types_to_string.at(first_type[i]);
 
 	// устанавливаем тип для 1ой ф/и в посл-ти
 	if (auto num = find_func(function_names[0], first_type); num.has_value()) {
@@ -589,7 +594,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(vector<string> f
 			}*/
 		} else {
 			logger.throw_error("mismatch by type of function \"" + func + "\": passed {" +
-							   types_to_string.at(prev_type) + "}");
+							   Typization::types_to_string.at(prev_type) + "}");
 			return nullopt;
 		}
 	}
@@ -603,7 +608,7 @@ optional<vector<Function>> Interpreter::build_function_sequence(vector<string> f
 		if (needed_funcs[i] >= 0) {
 			Function f = names_to_functions[function_names[i]][needed_funcs[i]];
 			finalfuncs.value().push_back(f);
-			output_type = types_to_string.at(f.output);
+			output_type = Typization::types_to_string.at(f.output);
 			logger.log(f.name + " (type: {" + argument_type + "} -> " + output_type +
 					   ")"); // можно убрать
 			argument_type = output_type;
@@ -1146,7 +1151,8 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems, 
 	Test test;
 	// Language
 	if (const auto& expr = scan_expression(lexems, i, lexems.size());
-		expr.has_value() && ((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
+		expr.has_value() &&
+		((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
 		 (*expr).type == ObjectType::NFA || (*expr).type == ObjectType::BRefRegex ||
 		 (*expr).type == ObjectType::MFA)) {
 		test.language = *expr;
