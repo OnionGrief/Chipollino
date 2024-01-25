@@ -12,12 +12,14 @@
 
 class Language;
 class FAState;
+struct PairHasher;
 
 struct MFATransition {
 	enum MemoryAction {
 		// idle, ◇
 		open,  // o
 		close, // c
+		reset, // r
 	};
 
 	using MemoryActions = std::unordered_map<int, MemoryAction>;
@@ -29,8 +31,19 @@ struct MFATransition {
 	MFATransition(int, MemoryActions);
 	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&);
 	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&,
-				  const std::unordered_set<int>&, const std::unordered_set<int>&,
 				  const std::unordered_set<int>&);
+
+	struct TransitionConfig {
+		// пары {номер ячейки, линеаризованный номер оператора}
+		const std::unordered_set<std::pair<int, int>, PairHasher>* destination_first;
+		const std::unordered_set<int>* source_in_cells;
+		const std::unordered_set<int>* iteration_over_cells;
+		// пары {номер ячейки, линеаризованный номер оператора}
+		const std::unordered_set<std::pair<int, int>, PairHasher>* source_last;
+		const std::unordered_set<int>* destination_in_cells;
+		const std::unordered_set<int>* to_reset;
+	};
+	MFATransition(int, const TransitionConfig& config);
 
 	std::string get_actions_str() const;
 	bool operator==(const MFATransition& other) const;
@@ -50,7 +63,7 @@ class MFAState : public State {
 	explicit MFAState(bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
-	explicit MFAState(FAState state);
+	explicit MFAState(const FAState& state);
 
 	std::string to_txt() const override;
 	void set_transition(const MFATransition&, const Symbol&);
@@ -79,6 +92,7 @@ class Matcher {
 
 	virtual void match(
 		const ParingState&, MFAState::Transitions&,		 // NOLINT(runtime/references)
+		// кортеж {символ-ссылка, левая граница подстроки, правая граница подстроки}
 		std::vector<std::tuple<Symbol, int, int>>&) = 0; // NOLINT(runtime/references)
 };
 

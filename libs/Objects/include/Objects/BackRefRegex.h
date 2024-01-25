@@ -11,6 +11,10 @@ class MemoryFiniteAutomaton;
 class MFAState;
 class Regex;
 
+struct PairHasher {
+	size_t operator()(const std::pair<int, int>& p) const;
+};
+
 class BackRefRegex : public AlgExpression {
   private:
 	// номер ячейки памяти (используется при Type: ref, memoryWriter)
@@ -19,6 +23,8 @@ class BackRefRegex : public AlgExpression {
 	int lin_number = 0;
 	// указатель на memoryWriter для ref
 	BackRefRegex* ref_to = nullptr;
+	// может ли ref ссылаться на пустую память
+	bool may_be_eps = false;
 
 	void copy(const AlgExpression*) override; // NOLINT(build/include_what_you_use)
 	// возвращает указатель на new BackRefRegex
@@ -37,22 +43,37 @@ class BackRefRegex : public AlgExpression {
 	std::vector<MFAState> _to_mfa() const;
 
 	// возвращает вектор листьев дерева
-	// устанавливает для них first_in_cells и last_in_cells
+	// устанавливает для них in_lin_cells, first_in_cells и last_in_cells
 	void preorder_traversal(
 		std::vector<BackRefRegex*>& terms,					  // NOLINT(runtime/references)
-		std::vector<std::unordered_set<int>>& in_cells,		  // NOLINT(runtime/references)
-		std::vector<std::unordered_set<int>>& first_in_cells, // NOLINT(runtime/references)
-		std::vector<std::unordered_set<int>>& last_in_cells,  // NOLINT(runtime/references)
-		std::unordered_set<int> cur_in_cells, std::unordered_set<int> cur_first_in_cells,
-		std::unordered_set<int> cur_last_in_cells);
-
+		int& lin_counter,									// NOLINT(runtime/references)
+		std::vector<std::unordered_set<int>>& in_lin_cells, // NOLINT(runtime/references)
+		std::vector<std::unordered_set<std::pair<int, int>, PairHasher>>&
+			first_in_cells, // NOLINT(runtime/references)
+		std::vector<std::unordered_set<std::pair<int, int>, PairHasher>>&
+			last_in_cells, // NOLINT(runtime/references)
+		std::unordered_set<int> cur_in_lin_cells,
+		std::unordered_set<std::pair<int, int>, PairHasher> cur_first_in_cells,
+		std::unordered_set<std::pair<int, int>, PairHasher> cur_last_in_cells);
+	bool contains_eps() const override;
+	void calculate_may_be_eps(
+		std::unordered_map<int, std::vector<BackRefRegex*>>&); // NOLINT(runtime/references)
+	// добавляет все потенциально пустые memoryWriter в переданное множество
+	bool contains_eps_tracking_resets(std::unordered_set<int>&) const; // NOLINT(runtime/references)
+	// пары {нода, множество потенциально пустых memoryWriter, которые стоят до нее}
+	std::vector<std::pair<AlgExpression*, std::unordered_set<int>>>
+	get_first_nodes_tracking_resets();
+	// пары {нода, множество потенциально пустых memoryWriter, которые стоят после нее}
+	std::vector<std::pair<AlgExpression*, std::unordered_set<int>>>
+	get_last_nodes_tracking_resets();
 	// возвращает номера ячеек памяти, над которыми производится итерация
 	void get_cells_under_iteration(std::unordered_set<int>&) const;
 	// для каждого терма определяет множество номеров термов, которым он может предшествовать
-	// для каждого перехода определяет, над какими ячейками он является итерацией
+	// для каждого перехода определяет, над какими ячейками он является итерацией,
+	// и какие ячейки памяти он должен сбросить
 	void get_follow(
-		std::vector<
-			std::vector<std::pair<int, std::unordered_set<int>>>>& // NOLINT(runtime/references)
+		std::vector<std::vector<std::tuple<int, std::unordered_set<int>,
+										   std::unordered_set<int>>>>& // NOLINT(runtime/references)
 	) const;
 
 	// преобразует star в conc (раскрывает каждую итерацию один раз) и линеаризует memoryWriter

@@ -663,24 +663,6 @@ string AlgExpression::get_iterated_word(int n) const {
 	return str;
 }
 
-bool AlgExpression::contains_eps() const {
-	switch (type) {
-	case Type::alt:
-		return term_l->contains_eps() || term_r->contains_eps();
-	case Type::conc:
-		return term_l->contains_eps() && term_r->contains_eps();
-	case Type::star:
-	case Type::eps:
-		return true;
-	case Type::negative:
-		return !term_l->contains_eps();
-	case Type::memoryWriter:
-		return term_l->contains_eps();
-	default:
-		return false;
-	}
-}
-
 vector<AlgExpression*> AlgExpression::get_first_nodes() {
 	vector<AlgExpression*> l, r;
 	switch (type) {
