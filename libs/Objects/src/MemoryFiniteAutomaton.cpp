@@ -3,8 +3,8 @@
 #include <stack>
 #include <utility>
 
+#include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
-#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/iLogTemplate.h"
 
 using std::map;
@@ -76,6 +76,12 @@ MFAState::MFAState(int index, std::string identifier, bool is_terminal,
 	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
 }
 
+MFAState::MFAState(FAState state) : State::State(state.index, state.identifier, state.is_terminal) {
+	for (const auto& [symbol, states_to] : state.transitions)
+		for (auto to : states_to)
+			transitions[symbol].insert(MFATransition(to));
+}
+
 void MFAState::set_transition(const MFATransition& to, const Symbol& symbol) {
 	transitions[symbol].insert(to);
 }
@@ -144,7 +150,7 @@ MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, vector<MFAState>
 }
 
 MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
-											 set<Symbol> alphabet)
+											 Alphabet alphabet)
 	: AbstractMachine(initial_state, std::move(alphabet)), states(std::move(states)) {
 	for (int i = 0; i < this->states.size(); i++) {
 		if (this->states[i].index != i)
@@ -248,8 +254,8 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::add_trap_state(iLogTemplate* log) c
 
 	MemoryFiniteAutomaton new_mfa(initial_state, new_states, language);
 	if (log) {
-		//		log->set_parameter("oldautomaton", *this);
-		//		log->set_parameter("result", new_mfa, new_meta);
+		log->set_parameter("oldmfa", *this);
+		log->set_parameter("result", new_mfa);
 	}
 	return new_mfa;
 }
@@ -358,8 +364,9 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const
 						s.emplace(cur_closure, closure_memory_actions);
 						states_counter++;
 					}
-					for (auto [num, action] : prev_memory_actions)
-						transition->memory_actions[num] = action;
+					if (!from_closure.count(transition->to))
+						for (auto [num, action] : prev_memory_actions)
+							transition->memory_actions[num] = action;
 					new_states[state_number_by_closure[from_closure]].set_transition(
 						MFATransition(state_number_by_closure[cur_closure],
 									  transition->memory_actions),
@@ -376,12 +383,17 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const
 		}
 	}
 
-	return {0, new_states, language};
+	MemoryFiniteAutomaton res = {0, new_states, language};
+	if (log) {
+		log->set_parameter("oldmfa", *this);
+		log->set_parameter("result", res);
+	}
+	return res;
 }
 
 MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const {
 	MemoryFiniteAutomaton new_mfa(initial_state, states, language->get_alphabet());
-	new_mfa = new_mfa.remove_eps().add_trap_state();
+	new_mfa = new_mfa.add_trap_state();
 	int final_states_counter = 0;
 	for (int i = 0; i < new_mfa.size(); i++) {
 		new_mfa.states[i].is_terminal = !new_mfa.states[i].is_terminal;
@@ -392,8 +404,8 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const
 		new_mfa = MemoryFiniteAutomaton::get_just_one_total_trap(new_mfa.language);
 
 	if (log) {
-		//		log->set_parameter("oldautomaton", *this);
-		//		log->set_parameter("result", new_mfa);
+		log->set_parameter("oldmfa", *this);
+		log->set_parameter("result", new_mfa);
 	}
 	return new_mfa;
 }
@@ -474,8 +486,7 @@ pair<unordered_set<int>, unordered_map<int, pair<int, int>>> update_memory(
 	return {opened_cells, memory};
 }
 
-std::pair<int, bool> MemoryFiniteAutomaton::_parse_by_mfa(const std::string& s,
-														  Matcher* matcher) const {
+std::pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher) const {
 	stack<ParingState> parsing_states_stack;
 	// тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
 	set<tuple<int, int, int>> visited_eps;
@@ -583,9 +594,9 @@ void BasicMatcher::match(const ParingState& parsing_state, MFAState::Transitions
 	}
 }
 
-std::pair<int, bool> MemoryFiniteAutomaton::parse_by_mfa(const string& s) const {
+std::pair<int, bool> MemoryFiniteAutomaton::parse(const string& s) const {
 	BasicMatcher matcher(s);
-	return _parse_by_mfa(s, &matcher);
+	return _parse(s, &matcher);
 }
 
 class FastMatcher : public Matcher {
@@ -728,7 +739,7 @@ void FastMatcher::match(const ParingState& parsing_state, MFAState::Transitions&
 	}
 }
 
-std::pair<int, bool> MemoryFiniteAutomaton::parse_by_mfa_additional(const string& s) const {
+std::pair<int, bool> MemoryFiniteAutomaton::parse_additional(const string& s) const {
 	FastMatcher matcher(s);
-	return _parse_by_mfa(s, &matcher);
+	return _parse(s, &matcher);
 }

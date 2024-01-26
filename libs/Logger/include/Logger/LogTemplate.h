@@ -1,7 +1,4 @@
-#ifndef LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_
-#define LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_
-
-#include <map>
+#pragma once
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -9,7 +6,9 @@
 #include <vector>
 
 #include "AutomatonToImage/AutomatonToImage.h"
+#include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
+#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 
@@ -63,8 +62,7 @@ class LogTemplate : public iLogTemplate {
 
   private:
 	// кеш отрендеренных автоматов
-	// inline static map<const FiniteAutomaton*, string> cache_automatons;
-	inline static std::map<size_t, std::string> cache_automatons;
+	inline static std::unordered_map<size_t, std::string> cache_automatons;
 	//  Путь к папке с шаблонами
 	const std::string template_path = "./resources/template/";
 
@@ -96,4 +94,3 @@ class LogTemplate : public iLogTemplate {
 	// Рекурсивно раскрывает include-выражения в файле
 	std::stringstream expand_includes(std::string filename) const;
 };
-#endif // LIBS_LOGGER_INCLUDE_LOGGER_LOGTEMPLATE_H_

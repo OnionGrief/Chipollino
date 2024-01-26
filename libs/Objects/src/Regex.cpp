@@ -1,7 +1,7 @@
 #include <unordered_set>
 
+#include "Objects/BackRefRegex.h"
 #include "Objects/Language.h"
-#include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 
 using std::cerr;
@@ -34,15 +34,23 @@ Regex::Regex(const string& str, const std::shared_ptr<Language>& new_language) :
 Regex::Regex(Type type, AlgExpression* term_l, AlgExpression* term_r)
 	: AlgExpression(type, term_l, term_r) {}
 
+Regex& Regex::operator=(const Regex& other) {
+	if (this != &other) {
+		clear();
+		copy(&other);
+	}
+	return *this;
+}
+
 void Regex::copy(const AlgExpression* other) {
 	auto* tmp = cast(other);
 	alphabet = tmp->alphabet;
 	type = tmp->type;
 	symbol = tmp->symbol;
 	language = tmp->language;
-	if (tmp->term_l != nullptr)
+	if (tmp->term_l)
 		term_l = tmp->term_l->make_copy();
-	if (tmp->term_r != nullptr)
+	if (tmp->term_r)
 		term_r = tmp->term_r->make_copy();
 }
 
@@ -135,7 +143,7 @@ Regex* Regex::scan_minus(const vector<AlgExpression::Lexeme>& lexemes, int index
 	return p;
 }
 
-vector<FAState> Regex::_to_thompson(const set<Symbol>& root_alphabet) const {
+vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 	vector<FAState> fa_states; // вектор состояний нового автомата
 	// для формирования поля transitions состояния автомата (структуры State)
 	FAState::Transitions state_transitions;
@@ -310,7 +318,7 @@ FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
 Regex Regex::linearize(iLogTemplate* log) const {
 	Regex temp_copy(*this);
 	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
-	set<Symbol> new_alphabet;
+	Alphabet new_alphabet;
 	for (size_t i = 0; i < list.size(); i++) {
 		list[i]->symbol.linearize(i);
 		new_alphabet.insert(list[i]->symbol);
@@ -326,7 +334,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 Regex Regex::delinearize(iLogTemplate* log) const {
 	Regex temp_copy(*this);
 	vector<Regex*> list = cast(temp_copy.preorder_traversal());
-	set<Symbol> new_alphabet;
+	Alphabet new_alphabet;
 	for (auto& i : list) {
 		i->symbol.delinearize();
 		new_alphabet.insert(i->symbol);
@@ -486,8 +494,8 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 
 	FiniteAutomaton fa(0, states, language);
 	if (log) {
-		log->set_parameter("oldregex", temp_copy);
-		log->set_parameter("linearised regex", temp_copy.linearize());
+		log->set_parameter("oldregex", *this);
+		log->set_parameter("linearised regex", temp_copy);
 		log->set_parameter("first", str_first);
 		log->set_parameter("last", str_last);
 		log->set_parameter("get_follow", str_follow);
@@ -914,13 +922,13 @@ std::optional<Regex> Regex::symbol_derivative(const Regex& respected_sym) const 
 	delete rs;
 	return ans;
 }
-// Частичная производная по символу
+
 void Regex::partial_symbol_derivative(const Regex& respected_sym, vector<Regex>& result) const {
 	auto rs = respected_sym.make_copy();
 	partial_derivative_with_respect_to_sym(Regex::cast(rs), this, result);
 	delete rs;
 }
-// Производная по префиксу
+
 std::optional<Regex> Regex::prefix_derivative(string respected_str) const {
 	Regex result;
 	std::optional<Regex> ans;
@@ -930,7 +938,7 @@ std::optional<Regex> Regex::prefix_derivative(string respected_str) const {
 		ans = std::nullopt;
 	return ans;
 }
-// Длина накачки
+
 int Regex::pump_length(iLogTemplate* log) const {
 	if (language->is_pump_length_cached()) {
 		if (log) {
@@ -991,6 +999,10 @@ int Regex::pump_length(iLogTemplate* log) const {
 			}
 		}
 	}
+}
+
+bool Regex::equals(const AlgExpression* other) const {
+	return true;
 }
 
 bool Regex::equal(const Regex& r1, const Regex& r2, iLogTemplate* log) {
@@ -1132,12 +1144,12 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 Regex Regex::deannote(iLogTemplate* log) const {
 	Regex temp_copy(*this);
 	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
-	set<Symbol> lang_deann;
+	Alphabet deannoted_alphabet;
 	for (auto& i : list) {
 		i->symbol.deannote();
-		lang_deann.insert(i->symbol);
+		deannoted_alphabet.insert(i->symbol);
 	}
-	temp_copy.set_language(lang_deann);
+	temp_copy.set_language(deannoted_alphabet);
 	if (log) {
 		log->set_parameter("oldregex", *this);
 		log->set_parameter("result", temp_copy);
@@ -1278,7 +1290,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 				inserted_states_indices.push_back(reachable_state);
 				consistent_symb_automaton_initial_state++;
 			}
-			set<Symbol> consistent_symb_automaton_alphabet;
+			Alphabet consistent_symb_automaton_alphabet;
 			for (int j = 0; j < consistent_symb_automaton.size(); j++) {
 				consistent_symb_automaton.states[j].index = j;
 				FAState::Transitions consistent_symb_automaton_state_transitions;
@@ -1346,4 +1358,8 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules, iLogTempla
 		log->set_parameter("oldregex", *this);
 	}
 	return regex;
+}
+
+BackRefRegex Regex::to_bregex() const {
+	return {this, language->get_alphabet()};
 }

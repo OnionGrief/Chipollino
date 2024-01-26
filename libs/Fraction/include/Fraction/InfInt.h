@@ -33,8 +33,8 @@
  *
  */
 
-#ifndef LIBS_INFINT_INCLUDE_INFINT_INFINT_H_
-#define LIBS_INFINT_INCLUDE_INFINT_INFINT_H_
+#ifndef LIBS_FRACTION_INCLUDE_FRACTION_INFINT_H_
+#define LIBS_FRACTION_INCLUDE_FRACTION_INFINT_H_
 
 #include <climits>
 #include <iomanip>
@@ -1176,4 +1176,4 @@ inline std::ostream& operator<<(std::ostream& s, const InfInt& n) {
 	return s;
 }
 
-#endif // LIBS_INFINT_INCLUDE_INFINT_INFINT_H_
+#endif // LIBS_FRACTION_INCLUDE_FRACTION_INFINT_H_

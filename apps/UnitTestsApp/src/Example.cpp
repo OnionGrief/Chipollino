@@ -172,8 +172,7 @@ void Example::parsing_nfa() {
 	c = r.to_ilieyu(); // to_thompson(-1);
 	cout << c.to_txt();
 	cout << "Parsing: aaaaaaaaaaaaaaaaaaabccccc\n";
-	cout << c.parsing_by_nfa("aaaaaaaaaaaaaaaaaaabccccc").second
-		 << endl; // true если распознал слово
+	cout << c.parse("aaaaaaaaaaaaaaaaaaabccccc").second << endl; // true если распознал слово
 }
 
 void Example::regex_generating() {
@@ -317,12 +316,12 @@ void Example::step() {
 void Example::tester() {
 	Regex r("ab(ab|a)*ababa");
 	FiniteAutomaton dfa1 = r.to_thompson();
-	// cout << dfa1.parsing_by_nfa("abaaabaaababa");
+	// cout << dfa1.parse("abaaabaaababa");
 	// cout << dfa1.to_txt();
 	Regex r1("((ab)*a)*");
 	Regex r2("ab(ab|a)*ababa");
-	Tester::test(dfa1, r1, 1);
-	Tester::test(r2, r1, 1);
+	Tester::test(&dfa1, r1, 1);
+	Tester::test(&r2, r1, 1);
 }
 
 void Example::step_interection() {
@@ -476,9 +475,9 @@ void Example::logger_test() {
 	FiniteAutomaton dfa1 = r.to_thompson();
 	Regex r1("((ab)*a)*");
 	Regex r2("ab(ab|a)*ababa");
-	Tester::test(dfa1, r1, 1, &log_template);
+	Tester::test(&dfa1, r1, 1, &log_template);
 	tex_logger.add_log(log_template);
-	Tester::test(r2, r1, 1, &log_template);
+	Tester::test(&r2, r1, 1, &log_template);
 	tex_logger.add_log(log_template);
 	tex_logger.render_to_file("./resources/report.tex");
 }

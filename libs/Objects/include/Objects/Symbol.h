@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -20,8 +21,8 @@ class Symbol {
   public:
 	static const char linearize_marker = '.';
 	static const char annote_marker = ',';
-	inline static const std::string Epsilon = "_eps_";
-	inline static const std::string EmptySet = "_empty_";
+	inline static const std::string Epsilon = "eps";
+	inline static const std::string EmptySet = "-empty-";
 
 	Symbol() = default;
 	Symbol(const std::string& s); // NOLINT(runtime/explicit)
@@ -66,3 +67,5 @@ class Symbol {
 };
 
 std::ostream& operator<<(std::ostream& os, const Symbol& item);
+
+using Alphabet = std::set<Symbol>;

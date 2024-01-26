@@ -21,7 +21,7 @@ bool State::operator==(const State& other) const {
 AbstractMachine::AbstractMachine(int initial_state, std::shared_ptr<Language> language)
 	: BaseObject(std::move(language)), initial_state(initial_state) {}
 
-AbstractMachine::AbstractMachine(int initial_state, set<Symbol> alphabet)
+AbstractMachine::AbstractMachine(int initial_state, Alphabet alphabet)
 	: BaseObject(std::move(alphabet)), initial_state(initial_state) {}
 
 int AbstractMachine::get_initial() const {

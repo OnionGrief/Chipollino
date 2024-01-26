@@ -1,31 +1,57 @@
+#include <chrono>
+#include <iostream>
+#include <memory>
+#include <regex>
+#include <string>
+#include <variant>
+#include <vector>
+
 #include "Tester/Tester.h"
 
+using std::make_unique;
 using std::string;
 using std::to_string;
+using std::unique_ptr;
 using std::vector;
 
 void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTemplate* log) {
 	iLogTemplate::Table t;
 	iLogTemplate::Plot plot;
 	vector<string> labels;
-	vector<FiniteAutomaton> machines;
-	if (std::holds_alternative<Regex>(lang)) {
-		Regex value = std::get<Regex>(lang);
-		machines.push_back(value.to_thompson());
+	vector<unique_ptr<AbstractMachine>> machines;
+	if (std::holds_alternative<const Regex*>(lang)) {
+		auto value = std::get<const Regex*>(lang);
+		machines.push_back(make_unique<FiniteAutomaton>(value->to_thompson()));
 		labels.emplace_back("Thompson");
-		machines.push_back(value.to_glushkov());
+		machines.push_back(make_unique<FiniteAutomaton>(value->to_glushkov()));
 		labels.emplace_back("Glushkov");
 		machines.push_back(
-			machines[1].reverse().merge_bisimilar().reverse().merge_bisimilar().remove_eps());
+			make_unique<FiniteAutomaton>(dynamic_cast<FiniteAutomaton*>(machines[1].get())
+											 ->reverse()
+											 .merge_bisimilar()
+											 .reverse()
+											 .merge_bisimilar()
+											 .remove_eps()));
 		labels.emplace_back("Small NFA");
-		machines.push_back(machines[2].minimize().remove_trap_states());
+		machines.push_back(make_unique<FiniteAutomaton>(
+			dynamic_cast<FiniteAutomaton*>(machines[2].get())->minimize().remove_trap_states()));
 		labels.emplace_back("Minimal DFA");
-	} else if (std::holds_alternative<FiniteAutomaton>(lang)) {
-		FiniteAutomaton value = std::get<FiniteAutomaton>(lang);
-		machines.push_back(value);
+	} else if (std::holds_alternative<const FiniteAutomaton*>(lang)) {
+		auto value = std::get<const FiniteAutomaton*>(lang);
+		machines.push_back(make_unique<FiniteAutomaton>(*value));
 		labels.emplace_back("Current FA");
-		machines.push_back(value.minimize().remove_trap_states());
+		machines.push_back(make_unique<FiniteAutomaton>(value->minimize().remove_trap_states()));
 		labels.emplace_back("Minimal DFA");
+	} else if (std::holds_alternative<const BackRefRegex*>(lang)) {
+		auto value = std::get<const BackRefRegex*>(lang);
+		machines.push_back(make_unique<MemoryFiniteAutomaton>(value->to_mfa()));
+		labels.emplace_back("MFA");
+		machines.push_back(make_unique<MemoryFiniteAutomaton>(value->to_mfa()));
+		labels.emplace_back("Experimental MFA");
+	} else if (std::holds_alternative<const MemoryFiniteAutomaton*>(lang)) {
+		auto value = std::get<const MemoryFiniteAutomaton*>(lang);
+		machines.push_back(make_unique<MemoryFiniteAutomaton>(*value));
+		labels.emplace_back("MFA");
 	}
 	/* A counter for parsing objects */
 	int obj_types = static_cast<int>(machines.size());
@@ -37,7 +63,7 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 			string word = regex.get_iterated_word(i * step);
 			using clock = std::chrono::high_resolution_clock;
 			const auto start = clock::now();
-			auto [count, is_belongs] = machines[type].parsing_by_nfa(word);
+			auto [count, is_belongs] = machines[type]->parse(word);
 			const auto end = clock::now();
 			const long long elapsed =
 				std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -64,10 +90,14 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 	t.columns.emplace_back("Время парсинга");
 	t.columns.emplace_back("Принадлежность языку");
 	if (log) {
-		if (std::holds_alternative<FiniteAutomaton>(lang)) {
-			log->set_parameter("language", std::get<FiniteAutomaton>(lang));
-		} else {
-			log->set_parameter("language", std::get<Regex>(lang));
+		if (std::holds_alternative<const Regex*>(lang)) {
+			log->set_parameter("language", *std::get<const Regex*>(lang));
+		} else if (std::holds_alternative<const FiniteAutomaton*>(lang)) {
+			log->set_parameter("language", *std::get<const FiniteAutomaton*>(lang));
+		} else if (std::holds_alternative<const BackRefRegex*>(lang)) {
+			log->set_parameter("language", *std::get<const BackRefRegex*>(lang));
+		} else if (std::holds_alternative<const MemoryFiniteAutomaton*>(lang)) {
+			log->set_parameter("language", *std::get<const MemoryFiniteAutomaton*>(lang));
 		}
 		log->set_parameter("regex", regex);
 		log->set_parameter("step", step);
