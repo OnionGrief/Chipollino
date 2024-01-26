@@ -99,8 +99,8 @@ class AlgExpression : public BaseObject {
 
 	virtual bool equals(const AlgExpression* other) const = 0;
 
-	// Проверяет, входит ли eps в дерево regex (принадлежит ли языку)
-	bool contains_eps() const;
+	// проверяет, содержит ли выражение пустое слово (принадлежит ли языку пустое слово)
+	virtual bool contains_eps() const = 0;
 
 	static bool equality_checker(const AlgExpression*, const AlgExpression*);
 

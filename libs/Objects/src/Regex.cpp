@@ -367,6 +367,22 @@ vector<Regex*> Regex::preorder_traversal() {
 	return res;
 }
 
+bool Regex::contains_eps() const {
+	switch (type) {
+	case Type::alt:
+		return cast(term_l)->contains_eps() || cast(term_r)->contains_eps();
+	case Type::conc:
+		return cast(term_l)->contains_eps() && cast(term_r)->contains_eps();
+	case Type::star:
+	case Type::eps:
+		return true;
+	case Type::negative:
+		return !cast(term_l)->contains_eps();
+	default:
+		return false;
+	}
+}
+
 unordered_map<int, vector<int>> Regex::get_follow() const {
 	unordered_map<int, vector<int>> l, r;
 	vector<AlgExpression*> first, last;

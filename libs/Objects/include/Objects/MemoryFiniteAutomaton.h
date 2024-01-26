@@ -13,12 +13,14 @@
 
 class Language;
 class FAState;
+struct PairHasher;
 
 struct MFATransition {
 	enum MemoryAction {
 		// idle, ◇
 		open,  // o
 		close, // c
+		reset, // r
 	};
 
 	using MemoryActions = std::unordered_map<int, MemoryAction>;
@@ -30,8 +32,19 @@ struct MFATransition {
 	MFATransition(int, MemoryActions);
 	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&);
 	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&,
-				  const std::unordered_set<int>&, const std::unordered_set<int>&,
 				  const std::unordered_set<int>&);
+
+	struct TransitionConfig {
+		// пары {номер ячейки, линеаризованный номер оператора}
+		const std::unordered_set<std::pair<int, int>, PairHasher>* destination_first;
+		const std::unordered_set<int>* source_in_cells;
+		const std::unordered_set<int>* iteration_over_cells;
+		// пары {номер ячейки, линеаризованный номер оператора}
+		const std::unordered_set<std::pair<int, int>, PairHasher>* source_last;
+		const std::unordered_set<int>* destination_in_cells;
+		const std::unordered_set<int>* to_reset;
+	};
+	MFATransition(int, const TransitionConfig& config);
 
 	std::string get_actions_str() const;
 	bool operator==(const MFATransition& other) const;
@@ -43,15 +56,14 @@ struct MFATransition {
 
 class MFAState : public State {
   public:
-	using Transitions =
-		std::unordered_map<Symbol, std::unordered_set<MFATransition, MFATransition::Hasher>,
-						   Symbol::Hasher>;
+	using SymbolTransitions = std::unordered_set<MFATransition, MFATransition::Hasher>;
+	using Transitions = std::unordered_map<Symbol, SymbolTransitions, Symbol::Hasher>;
 
 	Transitions transitions;
 	explicit MFAState(bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
-	explicit MFAState(FAState state);
+	explicit MFAState(const FAState& state);
 
 	std::string to_txt() const override;
 	void set_transition(const MFATransition&, const Symbol&);
@@ -69,6 +81,39 @@ struct ParingState {
 				const std::unordered_map<int, std::pair<int, int>>& memory);
 };
 
+// переход дополняется информацией о состоянии памяти
+struct ParseTransition : MFATransition {
+	std::unordered_set<int> opened_cells;
+	std::unordered_map<int, std::pair<int, int>> memory;
+
+  private:
+	// применяет действия над памятью
+	void do_memory_actions(int pos);
+
+  public:
+	ParseTransition(const MFATransition& transition, const ParingState& parsing_state);
+	// "записывает" символы в открытые ячейки
+	void update_memory(const Symbol& symbol);
+};
+
+struct ParseTransitions {
+	std::unordered_map<Symbol, std::unordered_set<ParseTransition, MFATransition::Hasher>,
+					   Symbol::Hasher>
+		transitions;
+
+	void add_transitions(const Symbol& symbol,
+						 const MFAState::SymbolTransitions& symbol_transitions,
+						 const ParingState& parsing_state);
+
+	std::unordered_map<Symbol, std::unordered_set<ParseTransition, MFATransition::Hasher>,
+					   Symbol::Hasher>::const_iterator
+	begin() const;
+
+	std::unordered_map<Symbol, std::unordered_set<ParseTransition, MFATransition::Hasher>,
+					   Symbol::Hasher>::const_iterator
+	end() const;
+};
+
 // предоставляет метод для сопоставления набора содержимого ячеек памяти с позицией в строке
 class Matcher {
   protected:
@@ -78,9 +123,12 @@ class Matcher {
   public:
 	explicit Matcher(const std::string&);
 
-	virtual void match(
-		const ParingState&, MFAState::Transitions&,		 // NOLINT(runtime/references)
-		std::vector<std::tuple<Symbol, int, int>>&) = 0; // NOLINT(runtime/references)
+	virtual void match(const ParingState&,
+					   ParseTransitions&, // NOLINT(runtime/references)
+										  // кортеж {символ-ссылка, левая граница подстроки, правая
+										  // граница подстроки}
+					   std::vector<std::tuple<Symbol, MFAState::SymbolTransitions, int,
+											  int>>&) = 0; // NOLINT(runtime/references)
 };
 
 class MemoryFiniteAutomaton : public AbstractMachine {
@@ -93,9 +141,9 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 
 	// поиск множества состояний НКА,
 	// достижимых из множества состояний по eps-переходам
-	std::tuple<std::set<int>, MFATransition::MemoryActions> get_eps_closure(
-		const std::set<int>& indices) const;
-	void dfs_by_eps(int, std::set<int>&,				  // NOLINT(runtime/references)
+	std::tuple<std::set<int>, std::unordered_set<int>, MFATransition::MemoryActions>
+	get_eps_closure(const std::set<int>& indices) const;
+	void dfs_by_eps(int, std::set<int>&, const int&, int&, // NOLINT(runtime/references)
 					MFATransition::MemoryActions&) const; // NOLINT(runtime/references)
 
   public:

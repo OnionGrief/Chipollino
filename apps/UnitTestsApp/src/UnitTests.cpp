@@ -520,13 +520,14 @@ TEST(TestGlaisterShallit, GetClassesNumber) {
 
 TEST(TestToMFA, ToMfa) {
 	vector<MFAState> states = BackRefRegex("[a|b]:1*").to_mfa().get_states();
-	ASSERT_EQ(states.size(), 4);
+	ASSERT_EQ(states.size(), 5);
 	ASSERT_EQ(states[0],
 			  MFAState(0,
 					   "0",
-					   true,
+					   false,
 					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
-						{"b", {MFATransition(2, {1}, unordered_set<int>())}}}));
+						{"b", {MFATransition(2, {1}, unordered_set<int>())}},
+						{Symbol::Epsilon, {MFATransition(4)}}}));
 	ASSERT_EQ(
 		states[1],
 		MFAState(
@@ -541,12 +542,17 @@ TEST(TestToMFA, ToMfa) {
 					   true,
 					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
 						{"b", {MFATransition(2, {1}, unordered_set<int>())}}}));
+	ASSERT_EQ(states[4], MFAState(4, "4", true, {}));
 
 	states = BackRefRegex("([&2]:1[&1a]:2)*").to_mfa().get_states();
-	ASSERT_EQ(states.size(), 6);
+	ASSERT_EQ(states.size(), 7);
 	ASSERT_EQ(
 		states[0],
-		MFAState(0, "0", true, {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}}}));
+			  MFAState(0,
+					   "0",
+					   false,
+					   {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}},
+						{Symbol::Epsilon, {MFATransition(6)}}}));
 	ASSERT_EQ(
 		states[1],
 		MFAState(
@@ -554,11 +560,7 @@ TEST(TestToMFA, ToMfa) {
 	ASSERT_EQ(
 		states[2],
 		MFAState(2, "2", false, {{Symbol::Ref(1), {MFATransition(3, {2}, unordered_set<int>())}}}));
-	ASSERT_EQ(states[3],
-			  MFAState(3,
-					   "3",
-					   false,
-					   {{"a", {MFATransition(4, unordered_set<int>(), unordered_set<int>())}}}));
+	ASSERT_EQ(states[3], MFAState(3, "3", false, {{"a", {MFATransition(4)}}}));
 	ASSERT_EQ(
 		states[4],
 		MFAState(
@@ -566,6 +568,7 @@ TEST(TestToMFA, ToMfa) {
 	ASSERT_EQ(
 		states[5],
 		MFAState(5, "5", true, {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}}}));
+	ASSERT_EQ(states[6], MFAState(6, "6", true, {}));
 }
 
 TEST(TestToMFA, ToMfaAdditional) {
@@ -577,7 +580,7 @@ TEST(TestToMFA, ToMfaAdditional) {
 					   false,
 					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
 						{"b", {MFATransition(2, {1}, unordered_set<int>())}},
-						{"c", {MFATransition(3, unordered_set<int>(), unordered_set<int>())}}}));
+						{"c", {MFATransition(3)}}}));
 	ASSERT_EQ(states[1],
 			  MFAState(1,
 					   "a.0",
@@ -601,14 +604,10 @@ TEST(TestToMFA, ToMfaAdditional) {
 					   "S",
 					   false,
 					   {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}},
-						{"c", {MFATransition(4, unordered_set<int>(), unordered_set<int>())}}}));
+						{"c", {MFATransition(4)}}}));
 	ASSERT_EQ(states[1],
 			  MFAState(1, "&2.0", false, {{Symbol::Ref(1), {MFATransition(2, {2}, {1})}}}));
-	ASSERT_EQ(states[2],
-			  MFAState(2,
-					   "&1.1",
-					   false,
-					   {{"a", {MFATransition(3, unordered_set<int>(), unordered_set<int>())}}}));
+	ASSERT_EQ(states[2], MFAState(2, "&1.1", false, {{"a", {MFATransition(3)}}}));
 	ASSERT_EQ(states[3],
 			  MFAState(3,
 					   "a.2",
@@ -686,25 +685,29 @@ TEST(TestIsAcreg, BRegex_IsAcreg) {
 }
 
 TEST(TestParsing, MFAParsing) {
-	using Test = std::tuple<string, string, bool>;
+	using Test = std::tuple<bool, string, string, bool>;
 	vector<Test> tests = {
-		{"[a*]:1&1", "aaa", false},
-		{"[a*]:1&1", "aaaa", true},
-		{"[a*]:1&1[b|c]:2*&2", "abcb", false},
-		{"[a*]:1&1[b|c]:2*&2", "bcb", false},
-		{"[a*]:1&1[b|c]:2*&2", "bcc", true},
-		{"[a*]:1&1[b|c]:2*&2", "aaaabcc", true},
-		{"[a*]:1&1[b|c]:1*&1", "bcc", true},
-		{"[a*]:1&1[b|c]:1*&1", "aaaabcc", true},
-		{"[[a*]:1b&1]:2&2", "aabaaaba", false},
-		{"[[a*]:1b&1]:2&2", "aabaaaabaa", true},
-		{"[[a*]:1b&1]:2&2", "aabaaaabaa", true},
-		{"([&2]:1[&1a]:2)*", "aaaaaaaa", false},
-		{"([&2]:1[&1a]:2)*", "aaaaaaaaa", true},
+		{true, "[a*]:1&1", "aaa", false},
+		{true, "[a*]:1&1", "aaaa", true},
+		{true, "[a*]:1&1[b|c]:2*&2", "abcb", false},
+		{true, "[a*]:1&1[b|c]:2*&2", "bcb", false},
+		{true, "[a*]:1&1[b|c]:2*&2", "bcc", true},
+		{true, "[a*]:1&1[b|c]:2*&2", "aaaabcc", true},
+		{true, "[a*]:1&1[b|c]:1*&1", "bcc", true},
+		{true, "[a*]:1&1[b|c]:1*&1", "aaaabcc", true},
+		{true, "[[a*]:1b&1]:2&2", "aabaaaba", false},
+		{true, "[[a*]:1b&1]:2&2", "aabaaaabaa", true},
+		{true, "[[a*]:1b&1]:2&2", "aabaaaabaa", true},
+		{true, "([&2]:1[&1a]:2)*", "aaaaaaaa", false},
+		{true, "([&2]:1[&1a]:2)*", "aaaaaaaaa", true},
+		{false, "[b]:1[a*]:1&1", "bb", false},
+		{false, "[b]:1[a*]:1&1", "b", true},
+		{true, "[b]:1a[a*]:1&1", "ba", true},
+		{false, "(&1[b]:1[a*]:1)*", "bb", true},
 	};
 
 	for_each(tests.begin(), tests.end(), [](const Test& test) {
-		auto [rgx_str, str, expected_res] = test;
+		auto [test_rem_eps, rgx_str, str, expected_res] = test;
 
 		std::stringstream message;
 		message << "Regex: " << rgx_str << ", Str: " << str << ", Res: " << expected_res;
@@ -716,6 +719,12 @@ TEST(TestParsing, MFAParsing) {
 		ASSERT_EQ(mfa.parse_additional(str).second, expected_res);
 		ASSERT_EQ(mfa_add.parse(str).second, expected_res);
 		ASSERT_EQ(mfa_add.parse_additional(str).second, expected_res);
+
+		if (test_rem_eps) {
+			MemoryFiniteAutomaton rem_eps_mfa = mfa.remove_eps();
+			ASSERT_EQ(rem_eps_mfa.parse(str).second, expected_res);
+			ASSERT_EQ(rem_eps_mfa.parse_additional(str).second, expected_res);
+		}
 	});
 }
 
