@@ -10,13 +10,11 @@
 #include <utility>
 
 #include "Fraction/Fraction.h"
-#include "InfInt/InfInt.h"
-#include "Objects/FiniteAutomaton.h"
+#include "Fraction/InfInt.h"
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/MetaInfo.h"
-#include "Objects/TransformationMonoid.h"
 #include "Objects/iLogTemplate.h"
 
 using std::cerr;
@@ -2620,7 +2618,7 @@ void FiniteAutomaton::set_initial_state_to_zero() {
 	initial_state = 0;
 }
 
-MemoryFiniteAutomaton FiniteAutomaton::to_mfa() {
+MemoryFiniteAutomaton FiniteAutomaton::to_mfa() const {
 	vector<MFAState> mfa_states;
 	mfa_states.reserve(states.size());
 	for (const auto& state : states)

@@ -6,7 +6,6 @@
 #include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
-#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/iLogTemplate.h"
 
 using std::map;
@@ -291,8 +290,8 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::add_trap_state(iLogTemplate* log) c
 
 	MemoryFiniteAutomaton new_mfa(initial_state, new_states, language);
 	if (log) {
-		//		log->set_parameter("oldautomaton", *this);
-		//		log->set_parameter("result", new_mfa, new_meta);
+		log->set_parameter("oldmfa", *this);
+		log->set_parameter("result", new_mfa);
 	}
 	return new_mfa;
 }
@@ -408,8 +407,9 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const
 						s.emplace(cur_closure, closure_memory_actions);
 						states_counter++;
 					}
-					for (auto [num, action] : prev_memory_actions)
-						transition->memory_actions[num] = action;
+					if (!from_closure.count(transition->to))
+						for (auto [num, action] : prev_memory_actions)
+							transition->memory_actions[num] = action;
 					new_states[state_number_by_closure[from_closure]].set_transition(
 						MFATransition(state_number_by_closure[cur_closure],
 									  transition->memory_actions),
@@ -426,12 +426,17 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const
 		}
 	}
 
-	return {0, new_states, language};
+	MemoryFiniteAutomaton res = {0, new_states, language};
+	if (log) {
+		log->set_parameter("oldmfa", *this);
+		log->set_parameter("result", res);
+	}
+	return res;
 }
 
 MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const {
 	MemoryFiniteAutomaton new_mfa(initial_state, states, language->get_alphabet());
-	new_mfa = new_mfa.remove_eps().add_trap_state();
+	new_mfa = new_mfa.add_trap_state();
 	int final_states_counter = 0;
 	for (int i = 0; i < new_mfa.size(); i++) {
 		new_mfa.states[i].is_terminal = !new_mfa.states[i].is_terminal;
@@ -442,8 +447,8 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::complement(iLogTemplate* log) const
 		new_mfa = MemoryFiniteAutomaton::get_just_one_total_trap(new_mfa.language);
 
 	if (log) {
-		//		log->set_parameter("oldautomaton", *this);
-		//		log->set_parameter("result", new_mfa);
+		log->set_parameter("oldmfa", *this);
+		log->set_parameter("result", new_mfa);
 	}
 	return new_mfa;
 }

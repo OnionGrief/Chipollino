@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "AbstractMachine.h"
+#include "iLogTemplate.h"
 
 class Language;
 class FAState;

@@ -1,7 +1,4 @@
-#include "Objects/BackRefRegex.h"
 #include "Objects/Language.h"
-#include "Objects/MemoryFiniteAutomaton.h"
-#include "Objects/Regex.h"
 
 using std::cerr;
 using std::pair;
@@ -427,6 +424,8 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa(iLogTemplate* log) const {
 	}
 	MemoryFiniteAutomaton mfa(0, states, language);
 	if (log) {
+		log->set_parameter("brefregex", *this);
+		log->set_parameter("result", mfa);
 	}
 	return mfa;
 }
@@ -830,6 +829,8 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 
 	MemoryFiniteAutomaton mfa(0, states, language);
 	if (log) {
+		log->set_parameter("brefregex", *this);
+		log->set_parameter("result", mfa);
 	}
 	return mfa;
 }
@@ -908,7 +909,13 @@ bool BackRefRegex::is_acreg(iLogTemplate* log) const {
 	// ставит в соответствие номеру ячейки множество линеаризованных номеров ячеек,
 	// на которые она ссылается
 	unordered_map<int, unordered_set<int>> refs_in_cells;
-	return temp._is_acreg({}, {}, refs_in_cells);
+	bool res = temp._is_acreg({}, {}, refs_in_cells);
+
+	if (log) {
+		log->set_parameter("brefregex", *this);
+		log->set_parameter("result", res ? "True" : "False");
+	}
+	return res;
 }
 
 void BackRefRegex::_reverse(unordered_map<int, BackRefRegex*>& memory_writers) {
@@ -970,7 +977,7 @@ void BackRefRegex::swap_memory_operations(unordered_set<BackRefRegex*>& already_
 	}
 }
 
-BackRefRegex BackRefRegex::reverse() {
+BackRefRegex BackRefRegex::reverse(iLogTemplate* log) const {
 	BackRefRegex temp(*this);
 
 	unordered_map<int, BackRefRegex*> memory_writers;
@@ -978,5 +985,9 @@ BackRefRegex BackRefRegex::reverse() {
 	unordered_set<BackRefRegex*> already_swapped;
 	temp.swap_memory_operations(already_swapped);
 
+	if (log) {
+		log->set_parameter("oldbrefregex", *this);
+		log->set_parameter("result", temp);
+	}
 	return temp;
 }

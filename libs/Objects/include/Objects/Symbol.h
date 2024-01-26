@@ -21,8 +21,8 @@ class Symbol {
   public:
 	static const char linearize_marker = '.';
 	static const char annote_marker = ',';
-	inline static const std::string Epsilon = "_eps_";
-	inline static const std::string EmptySet = "_empty_";
+	inline static const std::string Epsilon = "eps";
+	inline static const std::string EmptySet = "-empty-";
 
 	Symbol() = default;
 	Symbol(const std::string& s); // NOLINT(runtime/explicit)

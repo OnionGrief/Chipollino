@@ -1,22 +1,14 @@
 #pragma once
-#include <fstream>
-#include <iostream>
-#include <map>
 #include <memory>
-#include <optional>
 #include <set>
-#include <unordered_set>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "AlgExpression.h"
-#include "BaseObject.h"
-#include "Symbol.h"
 #include "iLogTemplate.h"
 
-class Language;
 class FiniteAutomaton;
 class FAState;
 class BackRefRegex;
@@ -106,7 +98,7 @@ class Regex : public AlgExpression {
 	// переписывание regex по пользовательским правилам
 	Regex normalize_regex(const std::vector<std::pair<Regex, Regex>>&,
 						  iLogTemplate* log = nullptr) const;
-	BackRefRegex to_bregex();
+	BackRefRegex to_bregex() const;
 };
 
 /*
