@@ -72,9 +72,6 @@ class AlgExpression : public BaseObject {
 	void generate_alphabet();
 	// Генерация алфавита и создание нового языка
 	void make_language();
-
-	std::string _to_txt(bool eps_is_empty) const;
-
 	// для print_tree
 	void print_subtree(AlgExpression* expr, int level) const;
 	// для print_dot
