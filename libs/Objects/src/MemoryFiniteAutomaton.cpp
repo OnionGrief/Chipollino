@@ -307,39 +307,73 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::get_just_one_total_trap(
 	return {0, states, language};
 }
 
+void compose_actions(MFATransition::MemoryActions& composition, // NOLINT(runtime/references)
+					 int cell_num, MFATransition::MemoryAction action) {
+	auto cell_action = composition.find(cell_num);
+	if (cell_action != composition.end()) {
+		if (action == MFATransition::close) {
+			switch (cell_action->second) {
+			case MFATransition::open:
+				composition[cell_num] = MFATransition::reset;
+				break;
+			case MFATransition::close:
+				composition[cell_num] = MFATransition::close;
+				break;
+			case MFATransition::reset:
+				break;
+			}
+		} else if (action == MFATransition::open) {
+			switch (cell_action->second) {
+			case MFATransition::open:
+				break;
+			case MFATransition::close:
+			case MFATransition::reset:
+				composition[cell_num] = MFATransition::open;
+				break;
+			}
+		} else {
+			composition[cell_num] = action;
+		}
+	} else {
+		composition[cell_num] = action;
+	}
+}
+
 void MemoryFiniteAutomaton::dfs_by_eps(
-	int index, set<int>& reachable,
+	int state_index, set<int>& reachable, const int& first, int& last,
 	MFATransition::MemoryActions& memory_actions_composition) const {
-	if (!reachable.count(index)) {
-		reachable.insert(index);
-		const auto& by_eps = states[index].transitions.find(Symbol::Epsilon);
-		if (by_eps != states[index].transitions.end()) {
+	if (!reachable.count(state_index)) {
+		reachable.insert(state_index);
+		last = state_index;
+		const auto& by_eps = states[state_index].transitions.find(Symbol::Epsilon);
+		if (by_eps != states[state_index].transitions.end()) {
+			if (states[state_index].transitions.size() > 1 && state_index != first)
+				throw std::logic_error(
+					"dfs_by_eps: eps-transitions have parallel symb-transitions");
 			if (by_eps->second.size() > 1)
 				throw std::logic_error(
 					"dfs_by_eps: trying to make a composition of parallel eps-transitions");
 			for (const auto& transition : by_eps->second) {
 				for (auto [num, action] : transition.memory_actions) {
-					auto cell_action = memory_actions_composition.find(num);
-					if (cell_action != memory_actions_composition.end() &&
-						cell_action->second == MFATransition::open &&
-						action == MFATransition::close)
-						throw std::logic_error("dfs_by_eps: trying to make a composition of "
-											   "opening and closing actions for a cell");
-					memory_actions_composition[num] = action;
+					compose_actions(memory_actions_composition, num, action);
 				}
-				dfs_by_eps(transition.to, reachable, memory_actions_composition);
+				dfs_by_eps(transition.to, reachable, first, last, memory_actions_composition);
 			}
 		}
 	}
 }
 
-tuple<set<int>, MFATransition::MemoryActions> MemoryFiniteAutomaton::get_eps_closure(
-	const set<int>& indices) const {
+tuple<set<int>, unordered_set<int>, MFATransition::MemoryActions> MemoryFiniteAutomaton::
+	get_eps_closure(const set<int>& indices) const {
 	set<int> reachable;
+	unordered_set<int> last;
 	MFATransition::MemoryActions memory_actions_composition;
-	for (int index : indices)
-		dfs_by_eps(index, reachable, memory_actions_composition);
-	return {reachable, memory_actions_composition};
+	for (int index : indices) {
+		int _last = index; // последнее состояние в цепочке eps-переходов
+		dfs_by_eps(index, reachable, index, _last, memory_actions_composition);
+		last.insert(_last);
+	}
+	return {reachable, last, memory_actions_composition};
 }
 
 MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const {
@@ -374,46 +408,57 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::remove_eps(iLogTemplate* log) const
 
 	vector<MFAState> new_states;
 	unordered_map<set<int>, int, Hasher> state_number_by_closure;
-	auto [initial_closure, initial_memory_actions] = get_eps_closure({initial_state});
+	auto [initial_closure, initial_closure_last, initial_memory_actions] =
+		get_eps_closure({initial_state});
 	state_number_by_closure[initial_closure] = 0;
 	new_states.emplace_back(0, get_identifier(initial_closure), false);
 
-	stack<pair<set<int>, MFATransition::MemoryActions>> s;
-	s.emplace(initial_closure, initial_memory_actions);
+	stack<tuple<set<int>, unordered_set<int>, MFATransition::MemoryActions>> s;
+	s.emplace(initial_closure, initial_closure_last, initial_memory_actions);
 	int states_counter = 1;
 	while (!s.empty()) {
-		auto [from_closure, prev_memory_actions] = s.top();
+		auto [from_closure, from_closure_last, prev_memory_actions] = s.top();
 		s.pop();
 		for (const auto& symb : unique_symbols) {
 			optional<MFATransition> transition;
+			int from_state;
 			for (int i : from_closure) {
-				auto transitions_by_symbol = states[i].transitions.find(symb);
-				if (transitions_by_symbol != states[i].transitions.end()) {
-					if (transitions_by_symbol->second.size() > 1 || transition.has_value())
+				auto symbol_transitions = states[i].transitions.find(symb);
+				if (symbol_transitions != states[i].transitions.end()) {
+					if (symbol_transitions->second.size() > 1 || transition.has_value())
 						throw std::logic_error("remove_eps: trying to make a composition of "
 											   "parallel transitions by symb");
-					if (transitions_by_symbol->second.size() == 1) {
-						transition = *transitions_by_symbol->second.begin();
+					if (symbol_transitions->second.size() == 1) {
+						from_state = i;
+						transition = *symbol_transitions->second.begin();
 					}
 				}
 			}
 			if (transition.has_value()) {
-				auto [cur_closure, closure_memory_actions] = get_eps_closure({transition->to});
-				if (!cur_closure.empty()) {
-					if (!state_number_by_closure.count(cur_closure)) {
-						MFAState new_state(states_counter, get_identifier(cur_closure), false);
+				auto [closure, closure_last, closure_memory_actions] =
+					get_eps_closure({transition->to});
+				if (!closure.empty()) {
+					if (!state_number_by_closure.count(closure)) {
+						MFAState new_state(states_counter, get_identifier(closure), false);
 						new_states.push_back(new_state);
-						state_number_by_closure[cur_closure] = states_counter;
-						s.emplace(cur_closure, closure_memory_actions);
+						state_number_by_closure[closure] = states_counter;
+						s.emplace(closure, closure_last, closure_memory_actions);
 						states_counter++;
 					}
-					if (!from_closure.count(transition->to))
-						for (auto [num, action] : prev_memory_actions)
-							transition->memory_actions[num] = action;
-					new_states[state_number_by_closure[from_closure]].set_transition(
-						MFATransition(state_number_by_closure[cur_closure],
-									  transition->memory_actions),
-						symb);
+					if (from_closure_last.count(from_state) &&
+						!from_closure.count(transition->to)) {
+						auto temp_memory_actions = prev_memory_actions;
+						for (auto [num, action] : transition->memory_actions)
+							compose_actions(temp_memory_actions, num, action);
+						new_states[state_number_by_closure[from_closure]].set_transition(
+							MFATransition(state_number_by_closure[closure], temp_memory_actions),
+							symb);
+					} else {
+						new_states[state_number_by_closure[from_closure]].set_transition(
+							MFATransition(state_number_by_closure[closure],
+										  transition->memory_actions),
+							symb);
+					}
 				}
 			}
 		}
@@ -467,7 +512,7 @@ void ParseTransition::do_memory_actions(int pos) {
 			memory[num].second = pos;
 		} else if (action == MFATransition::MemoryAction::close) {
 			if (!opened_cells.count(num))
-				std::cerr << "Cell is already closed\n";
+				std::cerr << "ParseTransition::do_memory_actions: cell is already closed\n";
 			opened_cells.erase(num);
 		} else if (action == MFATransition::MemoryAction::reset) {
 			// ячейка может сбрасываться, даже если она не открыта

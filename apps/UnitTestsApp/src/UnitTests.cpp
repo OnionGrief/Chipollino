@@ -685,29 +685,29 @@ TEST(TestIsAcreg, BRegex_IsAcreg) {
 }
 
 TEST(TestParsing, MFAParsing) {
-	using Test = std::tuple<string, string, bool>;
+	using Test = std::tuple<bool, string, string, bool>;
 	vector<Test> tests = {
-		{"[a*]:1&1", "aaa", false},
-		{"[a*]:1&1", "aaaa", true},
-		{"[a*]:1&1[b|c]:2*&2", "abcb", false},
-		{"[a*]:1&1[b|c]:2*&2", "bcb", false},
-		{"[a*]:1&1[b|c]:2*&2", "bcc", true},
-		{"[a*]:1&1[b|c]:2*&2", "aaaabcc", true},
-		{"[a*]:1&1[b|c]:1*&1", "bcc", true},
-		{"[a*]:1&1[b|c]:1*&1", "aaaabcc", true},
-		{"[[a*]:1b&1]:2&2", "aabaaaba", false},
-		{"[[a*]:1b&1]:2&2", "aabaaaabaa", true},
-		{"[[a*]:1b&1]:2&2", "aabaaaabaa", true},
-		{"([&2]:1[&1a]:2)*", "aaaaaaaa", false},
-		{"([&2]:1[&1a]:2)*", "aaaaaaaaa", true},
-		{"[b]:1[a*]:1&1", "bb", false},
-		{"[b]:1[a*]:1&1", "b", true},
-		{"[b]:1a[a*]:1&1", "ba", true},
-		{"(&1[b]:1[a*]:1)*", "bb", true},
+		{true, "[a*]:1&1", "aaa", false},
+		{true, "[a*]:1&1", "aaaa", true},
+		{true, "[a*]:1&1[b|c]:2*&2", "abcb", false},
+		{true, "[a*]:1&1[b|c]:2*&2", "bcb", false},
+		{true, "[a*]:1&1[b|c]:2*&2", "bcc", true},
+		{true, "[a*]:1&1[b|c]:2*&2", "aaaabcc", true},
+		{true, "[a*]:1&1[b|c]:1*&1", "bcc", true},
+		{true, "[a*]:1&1[b|c]:1*&1", "aaaabcc", true},
+		{true, "[[a*]:1b&1]:2&2", "aabaaaba", false},
+		{true, "[[a*]:1b&1]:2&2", "aabaaaabaa", true},
+		{true, "[[a*]:1b&1]:2&2", "aabaaaabaa", true},
+		{true, "([&2]:1[&1a]:2)*", "aaaaaaaa", false},
+		{true, "([&2]:1[&1a]:2)*", "aaaaaaaaa", true},
+		{false, "[b]:1[a*]:1&1", "bb", false},
+		{false, "[b]:1[a*]:1&1", "b", true},
+		{true, "[b]:1a[a*]:1&1", "ba", true},
+		{false, "(&1[b]:1[a*]:1)*", "bb", true},
 	};
 
 	for_each(tests.begin(), tests.end(), [](const Test& test) {
-		auto [rgx_str, str, expected_res] = test;
+		auto [test_rem_eps, rgx_str, str, expected_res] = test;
 
 		std::stringstream message;
 		message << "Regex: " << rgx_str << ", Str: " << str << ", Res: " << expected_res;
@@ -719,6 +719,12 @@ TEST(TestParsing, MFAParsing) {
 		ASSERT_EQ(mfa.parse_additional(str).second, expected_res);
 		ASSERT_EQ(mfa_add.parse(str).second, expected_res);
 		ASSERT_EQ(mfa_add.parse_additional(str).second, expected_res);
+
+		if (test_rem_eps) {
+			MemoryFiniteAutomaton rem_eps_mfa = mfa.remove_eps();
+			ASSERT_EQ(rem_eps_mfa.parse(str).second, expected_res);
+			ASSERT_EQ(rem_eps_mfa.parse_additional(str).second, expected_res);
+		}
 	});
 }
 
