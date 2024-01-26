@@ -55,9 +55,8 @@ struct MFATransition {
 
 class MFAState : public State {
   public:
-	using Transitions =
-		std::unordered_map<Symbol, std::unordered_set<MFATransition, MFATransition::Hasher>,
-						   Symbol::Hasher>;
+	using SymbolTransitions = std::unordered_set<MFATransition, MFATransition::Hasher>;
+	using Transitions = std::unordered_map<Symbol, SymbolTransitions, Symbol::Hasher>;
 
 	Transitions transitions;
 	explicit MFAState(bool is_terminal);
@@ -81,6 +80,39 @@ struct ParingState {
 				const std::unordered_map<int, std::pair<int, int>>& memory);
 };
 
+// переход дополняется информацией о состоянии памяти
+struct ParseTransition : MFATransition {
+	std::unordered_set<int> opened_cells;
+	std::unordered_map<int, std::pair<int, int>> memory;
+
+  private:
+	// применяет действия над памятью
+	void do_memory_actions(int pos);
+
+  public:
+	ParseTransition(const MFATransition& transition, const ParingState& parsing_state);
+	// "записывает" символы в открытые ячейки
+	void update_memory(const Symbol& symbol);
+};
+
+struct ParseTransitions {
+	std::unordered_map<Symbol, std::unordered_set<ParseTransition, MFATransition::Hasher>,
+					   Symbol::Hasher>
+		transitions;
+
+	void add_transitions(const Symbol& symbol,
+						 const MFAState::SymbolTransitions& symbol_transitions,
+						 const ParingState& parsing_state);
+
+	std::unordered_map<Symbol, std::unordered_set<ParseTransition, MFATransition::Hasher>,
+					   Symbol::Hasher>::const_iterator
+	begin() const;
+
+	std::unordered_map<Symbol, std::unordered_set<ParseTransition, MFATransition::Hasher>,
+					   Symbol::Hasher>::const_iterator
+	end() const;
+};
+
 // предоставляет метод для сопоставления набора содержимого ячеек памяти с позицией в строке
 class Matcher {
   protected:
@@ -90,10 +122,12 @@ class Matcher {
   public:
 	explicit Matcher(const std::string&);
 
-	virtual void match(
-		const ParingState&, MFAState::Transitions&,		 // NOLINT(runtime/references)
-		// кортеж {символ-ссылка, левая граница подстроки, правая граница подстроки}
-		std::vector<std::tuple<Symbol, int, int>>&) = 0; // NOLINT(runtime/references)
+	virtual void match(const ParingState&,
+					   ParseTransitions&, // NOLINT(runtime/references)
+										  // кортеж {символ-ссылка, левая граница подстроки, правая
+										  // граница подстроки}
+					   std::vector<std::tuple<Symbol, MFAState::SymbolTransitions, int,
+											  int>>&) = 0; // NOLINT(runtime/references)
 };
 
 class MemoryFiniteAutomaton : public AbstractMachine {
