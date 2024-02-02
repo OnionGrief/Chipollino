@@ -24,7 +24,18 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
         output << std::to_string(beg) << " " << std::to_string(end) << " " << transition_sym;
         
         if (type == FA_type::MFA) {
-            // TODO: добавить работу с ячейками памяти
+            // С вероятностью 50% открытие или закрытие ячейки
+            for (int i = 0; i < memory_cells_number; i++) {
+                change_seed();
+                if (rand() % 2) {
+                    output << " " << i;
+                    if (rand() % 2) {
+                        output << " c";
+                    } else {
+                        output << " o";
+                    }
+                }
+            }
         }
 
         if (i + 1 != transitions_number)
