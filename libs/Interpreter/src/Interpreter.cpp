@@ -637,6 +637,9 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
+	if (holds_alternative<string>(expr.value) && expr.type == ObjectType::String) {
+		return ObjectString(get<string>(expr.value));
+	}
 	if (holds_alternative<Id>(expr.value)) {
 		Id id = get<Id>(expr.value);
 		if (objects.count(id)) {
@@ -646,9 +649,6 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 			logger.throw_error("evaluating expression: unknown id \"" + id + "\"");
 		}
 		return nullopt;
-	}
-	if (holds_alternative<string>(expr.value)) {
-		return ObjectString(get<string>(expr.value));
 	}
 	if (holds_alternative<Regex>(expr.value)) {
 		return ObjectRegex(get<Regex>(expr.value));
