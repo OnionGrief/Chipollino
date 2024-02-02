@@ -11,8 +11,7 @@
 #include "InputGenerator/RegexGenerator.h"
 #include "Objects/Regex.h"
 
-using namespace Typization; // NOLINT(build/namespaces)
-using namespace FuncLib;	// NOLINT(build/namespaces)
+using Typization::ObjectType;
 
 class TasksGenerator {
   private:
@@ -42,18 +41,18 @@ class TasksGenerator {
 	std::vector<ObjectType> generated_types = {REGEX, INT, ARRAY};
 	std::map<ObjectType, std::vector<Id>> ids_by_type; // поиск идентификатора по его типу
 	// разделение функций (с единственным аргументом) по принимаемым значениям
-	std::map<ObjectType, std::vector<Function>> funcInput;
+	std::map<ObjectType, std::vector<FuncLib::Function>> funcInput;
 	void distribute_functions();
 
 	// проверка на существование подходящих аргументов
 	bool arguments_exist(std::vector<ObjectType> args);
 	// генерация функции по входному типу данных
-	Function generate_next_func(ObjectType prevOutput, int funcNum);
+	FuncLib::Function generate_next_func(ObjectType prevOutput, int funcNum);
 	// генерация аргументов функции
-	std::string generate_arguments(Function first_func);
+	std::string generate_arguments(FuncLib::Function first_func);
 	// выбор идентификатора по типу данных
 	std::string get_random_id_by_type(ObjectType type);
-	Function rand_func();
+	FuncLib::Function rand_func();
 	void change_seed();
 
   public:

@@ -22,8 +22,7 @@
 #include "Objects/TransformationMonoid.h"
 #include "AutomataParser/Parser.h"
 
-using namespace Typization; // NOLINT(build/namespaces)
-using namespace FuncLib;	// NOLINT(build/namespaces)
+using Typization::GeneralObject;
 
 class Interpreter {
   public:
@@ -91,12 +90,12 @@ class Interpreter {
 	using Id = std::string;
 	struct Expression;
 
-	friend bool operator==(const Function& l, const Function& r);
+	friend bool operator==(const FuncLib::Function& l, const FuncLib::Function& r);
 
 	// Композиция функций и аргументы к ней
 	struct FunctionSequence {
 		// Композиция функций
-		std::vector<Function> functions;
+		std::vector<FuncLib::Function> functions;
 		// Параметры композиции функций (1 или более)
 		std::vector<Expression> parameters;
 		// Надо ли отображать результат
@@ -109,7 +108,7 @@ class Interpreter {
 
 	// Общий вид выражения
 	struct Expression {
-		ObjectType type;
+		Typization::ObjectType type;
 		std::variant<int, FunctionSequence, Regex, BackRefRegex, std::string, Array> value;
 		// Преобразование в текст
 		std::string to_txt() const;
@@ -198,7 +197,7 @@ class Interpreter {
 											  size_t end); // NOLINT(runtime/references)
 
 	// Типизация идентификаторов. Нужна для корректного составления опреаций
-	std::unordered_map<std::string, ObjectType> id_types;
+	std::unordered_map<std::string, Typization::ObjectType> id_types;
 	// Считывание операции из набора лексем
 	std::optional<Declaration> scan_declaration(const std::vector<Lexem>&,
 												int& pos); // NOLINT(runtime/references)
@@ -219,13 +218,13 @@ class Interpreter {
 	std::optional<Regex> current_random_regex;
 
 	// Применение цепочки функций к набору аргументов
-	std::optional<GeneralObject> apply_function_sequence(const std::vector<Function>& functions,
-														 std::vector<GeneralObject> arguments,
-														 bool is_logged);
+	std::optional<GeneralObject> apply_function_sequence(
+		const std::vector<FuncLib::Function>& functions, std::vector<GeneralObject> arguments,
+		bool is_logged);
 
 	// Применение функции к набору аргументов
 	std::optional<GeneralObject> apply_function(
-		const Function& function, const std::vector<GeneralObject>& arguments,
+		const FuncLib::Function& function, const std::vector<GeneralObject>& arguments,
 		LogTemplate& log_template); // NOLINT(runtime/references)
 
 	// Вычисление выражения
@@ -243,17 +242,18 @@ class Interpreter {
 	bool run_operation(const GeneralOperation&);
 
 	// Сравнение типов ожидаемых и полученных входных данных
-	bool typecheck(std::vector<ObjectType> func_input_type, std::vector<ObjectType> input_type);
+	bool typecheck(std::vector<Typization::ObjectType> func_input_type,
+				   std::vector<Typization::ObjectType> input_type);
 	// выбрать подходящий вариант функции для данных аргументов (если он есть)
-	std::optional<int> find_func(std::string func, std::vector<ObjectType> input_type);
-	std::optional<std::string> get_func_id(Function function);
+	std::optional<int> find_func(std::string func, std::vector<Typization::ObjectType> input_type);
+	std::optional<std::string> get_func_id(FuncLib::Function function);
 
 	// Построение последовательности функций по их названиям
-	std::optional<std::vector<Function>> build_function_sequence(
-		std::vector<std::string> function_names, std::vector<ObjectType> first_type);
+	std::optional<std::vector<FuncLib::Function>> build_function_sequence(
+		std::vector<std::string> function_names, std::vector<Typization::ObjectType> first_type);
 
 	// Соответствие между названиями функций и сигнатурами
-	std::map<std::string, std::vector<Function>> names_to_functions;
+	std::map<std::string, std::vector<FuncLib::Function>> names_to_functions;
 
 	//== Лексер ===============================================================
 

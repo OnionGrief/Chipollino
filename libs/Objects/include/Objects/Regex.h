@@ -44,6 +44,7 @@ class Regex : public AlgExpression {
 
 	// возвращает вектор листьев дерева
 	std::vector<Regex*> preorder_traversal();
+	bool contains_eps() const override;
 	// для каждой ноды возвращает множество номеров нод, которым она может предшествовать
 	std::unordered_map<int, std::vector<int>> get_follow() const;
 
@@ -97,7 +98,7 @@ class Regex : public AlgExpression {
 	// переписывание regex по пользовательским правилам
 	Regex normalize_regex(const std::vector<std::pair<Regex, Regex>>&,
 						  iLogTemplate* log = nullptr) const;
-	BackRefRegex to_bregex();
+	BackRefRegex to_bregex() const;
 };
 
 /*

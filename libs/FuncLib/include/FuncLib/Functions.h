@@ -5,7 +5,7 @@
 
 #include "Typization.h"
 
-using namespace Typization; // NOLINT(build/namespaces)
+using Typization::ObjectType;
 
 namespace FuncLib {
 
@@ -90,12 +90,12 @@ static void create_yaml() {
 		Function func = functions[j];
 		outfile << " - name: " << func.name << "\n";
 		outfile << "   prog_name: \n";
-		outfile << "   return_type: " << types_to_string.at(func.output) << "\n";
+		outfile << "   return_type: " << Typization::types_to_string.at(func.output) << "\n";
 		outfile << "   arguments: [";
 		for (int i = 0; i < func.input.size(); i++) {
 			if (i != 0)
 				outfile << ", ";
-			outfile << "" << types_to_string.at(func.input[i]) << "";
+			outfile << "" << Typization::types_to_string.at(func.input[i]) << "";
 		}
 		outfile << "]\n\n";
 	}

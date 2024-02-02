@@ -120,16 +120,12 @@ bool AlgExpression::is_terminal_type(Type t) {
 }
 
 string AlgExpression::to_txt() const {
-	return _to_txt(true);
-}
-
-string AlgExpression::_to_txt(bool eps_is_empty) const {
 	string str1, str2;
 	if (term_l) {
-		str1 = term_l->_to_txt(eps_is_empty);
+		str1 = term_l->to_txt();
 	}
 	if (term_r) {
-		str2 = term_r->_to_txt(eps_is_empty);
+		str2 = term_r->to_txt();
 	}
 	string symb;
 	switch (type) {
@@ -145,9 +141,6 @@ string AlgExpression::_to_txt(bool eps_is_empty) const {
 		symb = symbol;
 		break;
 	case Type::eps:
-		if (!eps_is_empty) {
-			symb = Symbol::Epsilon;
-		}
 		break;
 	case Type::alt:
 		symb = '|';
@@ -661,24 +654,6 @@ string AlgExpression::get_iterated_word(int n) const {
 		str += symbol;
 	}
 	return str;
-}
-
-bool AlgExpression::contains_eps() const {
-	switch (type) {
-	case Type::alt:
-		return term_l->contains_eps() || term_r->contains_eps();
-	case Type::conc:
-		return term_l->contains_eps() && term_r->contains_eps();
-	case Type::star:
-	case Type::eps:
-		return true;
-	case Type::negative:
-		return !term_l->contains_eps();
-	case Type::memoryWriter:
-		return term_l->contains_eps();
-	default:
-		return false;
-	}
 }
 
 vector<AlgExpression*> AlgExpression::get_first_nodes() {
