@@ -4,10 +4,11 @@
 #include <ctime>
 #include <optional>
 #include <vector>
+#include <fstream>
+
+enum class FA_type { MFA, FA };
 
 class AutomatonGenerator {
-public:
-    enum class FA_type { MFA, FA };
 private:
     int seed_it, memory_cells_number;
     std::vector<char> alphabet;
@@ -24,4 +25,6 @@ private:
 
 public:
     AutomatonGenerator(FA_type type = FA_type::FA);
+
+    void write_to_file(std::string filename);
 };

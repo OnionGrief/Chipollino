@@ -1,5 +1,7 @@
 #include "InputGenerator/AutomatonGenerator.h"
 
+using std::ofstream;
+
 void AutomatonGenerator::change_seed() {
 	seed_it++;
 	srand((size_t)time(nullptr) + seed_it + rand());
@@ -86,7 +88,7 @@ void AutomatonGenerator::generate_alphabet(int max_alphabet_size) {
     }
 }
 
-AutomatonGenerator::AutomatonGenerator(FA_type type = FA_type::FA) {
+AutomatonGenerator::AutomatonGenerator(FA_type type) {
     if (type == FA_type::FA) {
         output << "FA {\n";
         memory_cells_number = 0;
@@ -112,4 +114,12 @@ AutomatonGenerator::AutomatonGenerator(FA_type type = FA_type::FA) {
     generate_transitions(transitions_number, states_number, type);
 
     output << "}";
+}
+
+void AutomatonGenerator::write_to_file(std::string filename) {
+    ofstream out;
+	out.open(filename, ofstream::trunc);
+	if (out.is_open())
+		out << output.str();
+	out.close();
 }
