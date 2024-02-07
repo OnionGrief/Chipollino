@@ -24,7 +24,7 @@ private:
     void generate_transitions(int transitions_number, int states_number, FA_type type);
 
 public:
-    AutomatonGenerator(FA_type type = FA_type::FA);
+    explicit AutomatonGenerator(FA_type type = FA_type::FA);
 
     void write_to_file(std::string filename);
 };
