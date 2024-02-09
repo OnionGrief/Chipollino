@@ -29,6 +29,12 @@ class Parser {
     static std::vector<lexy_ascii_child> find_children(lexy_ascii_tree& tree, // NOLINT(runtime/references)
      std::set<std::string> names, std::set<std::string> exclude = {});
 
+    // лексема первого потомка для вершины lexy
+    static std::string first_child(lexy::_pt_node<lexy::_bra, void>::children_range::iterator it);
+
+    // лексема первого потомка для вершины lexy
+    static std::string first_child(lexy::_pt_node<lexy::_bra, void> it);
+
     // Поиск имён всех состояний 
     static void parse_states(lexy_ascii_tree& tree, std::set<std::string>& names, // NOLINT(runtime/references)
      std::map<std::string, std::string>& labels); // NOLINT(runtime/references)
@@ -42,8 +48,7 @@ class Parser {
      std::vector<std::string>& end, std::vector<std::string>& symb); // NOLINT(runtime/references)
 
     // Парсинг переходов для MFA
-    static std::vector<MFATransition_info> parse_MFA_transitions(lexy_ascii_tree& tree); // NOLINT(runtime/references)
-
+    static void parse_MFA_transitions(lexy_ascii_tree& tree, std::vector<MFATransition_info>& transitions); // NOLINT(runtime/references)
 
   public:
     // Разбор MFA из файла

@@ -34,11 +34,18 @@ std::vector<lexy_ascii_child> Parser::find_children(lexy_ascii_tree& tree, std::
     return result;
 }
 
+std::string first_child(lexy::_pt_node<lexy::_bra, void>::children_range::iterator it) {
+    return lexy::as_string<std::string, lexy::ascii_encoding>(it->children().begin()->token().lexeme());
+}
+
+std::string first_child(lexy::_pt_node<lexy::_bra, void> it) {
+    return lexy::as_string<std::string, lexy::ascii_encoding>(it.children().begin()->token().lexeme());
+}
+
 void Parser::parse_states(lexy_ascii_tree& tree, std::set<std::string>& names, std::map<std::string, std::string>& labels) {
     auto nodes = find_children(tree, {"node_id"}, {"state_label"});
     for (int i = 0; i < nodes.size(); i++) {
-        auto lexeme = nodes[i].children().begin()->token().lexeme();
-        auto name = lexy::as_string<std::string, lexy::ascii_encoding>(lexeme);
+        auto name = first_child(nodes[i]);
 
         names.insert(name);
         labels[name] = name;
@@ -51,12 +58,12 @@ void Parser::parse_descriptions(lexy_ascii_tree& tree, std::map<std::string, std
         std::string name = "";
         for (auto desc : descriptions[i].children()) {
             if (std::string(desc.kind().name()) == "node_id") {
-                name = lexy::as_string<std::string, lexy::ascii_encoding>(desc.children().begin()->lexeme());
+                name = first_child(desc);
             }
             if (std::string(desc.kind().name()) == "state_label") {
                 for (auto alias_child : desc.children()) {
                     if (std::string(alias_child.kind().name()) == "node_id") {
-                        labels[name] = lexy::as_string<std::string, lexy::ascii_encoding>(alias_child.children().begin()->token().lexeme());
+                        labels[name] = first_child(alias_child);
                     }
                 }
             }
@@ -78,30 +85,30 @@ void Parser::parse_transitions(lexy_ascii_tree& tree, std::vector<std::string>& 
     auto transitions = find_children(tree, {"stmt"});
     for (int i = 0; i < transitions.size(); i++) {
         auto it = transitions[i].children().begin();
-        beg.push_back(lexy::as_string<std::string, lexy::ascii_encoding>(it->children().begin()->lexeme()));
+        beg.push_back(first_child(it));
         it++;
-        end.push_back(lexy::as_string<std::string, lexy::ascii_encoding>(it->children().begin()->lexeme()));
+        end.push_back(first_child(it));
         it++;
-        symb.push_back(lexy::as_string<std::string, lexy::ascii_encoding>(it->children().begin()->lexeme()));
+        symb.push_back(first_child(it));
     }
 }
 
-std::vector<Parser::MFATransition_info> Parser::parse_MFA_transitions(lexy_ascii_tree& tree) {
+void Parser::parse_MFA_transitions(lexy_ascii_tree& tree, std::vector<Parser::MFATransition_info>& transitions) {
     auto edges = find_children(tree, {"MFA_edge"});
     std::vector<MFATransition_info> mfat_info;
     for (int i = 0; i < edges.size(); i++) {
         auto edge_child = edges[i].children().begin();
         auto it = edge_child->children().begin();
-        std::string beg = lexy::as_string<std::string, lexy::ascii_encoding>(it->children().begin()->lexeme());
+        std::string beg = first_child(it);
         it++;
-        std::string end = lexy::as_string<std::string, lexy::ascii_encoding>(it->children().begin()->lexeme());
+        std::string end = first_child(it);
         it++;
-        Symbol symb = lexy::as_string<std::string, lexy::ascii_encoding>(it->children().begin()->lexeme());
+        Symbol symb = first_child(it);
         
         if (symb == "&") {
             for (auto symb_child : it->children()) {
                 if (std::string(symb_child.kind().name()) == "cell_id") {
-                    symb = Symbol::Ref(std::stoi(lexy::as_string<std::string, lexy::ascii_encoding>(symb_child.children().begin()->lexeme())));
+                    symb = Symbol::Ref(std::stoi(first_child(symb_child)));
                 }
             }
         }
@@ -114,11 +121,11 @@ std::vector<Parser::MFATransition_info> Parser::parse_MFA_transitions(lexy_ascii
         for (auto memory_cell : edge_child->children()) {
             if (std::string(memory_cell.kind().name()) == "memory_cell") {
                 auto cell = memory_cell.children().begin();
-                int cell_id = std::stoi(lexy::as_string<std::string, lexy::ascii_encoding>(cell->children().begin()->lexeme()));
+                int cell_id = std::stoi(first_child(cell));
                 cell++;
-                if (lexy::as_string<std::string, lexy::ascii_encoding>(cell->children().begin()->lexeme()) == "c")
+                if (first_child(cell) == "c")
                     close.insert(cell_id);
-                if (lexy::as_string<std::string, lexy::ascii_encoding>(cell->children().begin()->lexeme()) == "o")
+                if (first_child(cell) == "o")
                     open.insert(cell_id);
             }
         }
@@ -126,7 +133,7 @@ std::vector<Parser::MFATransition_info> Parser::parse_MFA_transitions(lexy_ascii
         mfat_info.push_back({beg, end, symb, open, close});
     }
 
-    return mfat_info;
+    transitions = mfat_info;
 }
 
 MemoryFiniteAutomaton Parser::parse_MFA(std::string filename) {
@@ -158,7 +165,8 @@ MemoryFiniteAutomaton Parser::parse_MFA(std::string filename) {
 
     std::set<Symbol> alphabet;
 
-    auto mfat_info = parse_MFA_transitions(tree);
+    std::vector<MFATransition_info> mfat_info;
+    parse_MFA_transitions(tree, mfat_info);
 
     for (int i = 0; i < mfat_info.size(); i++) {
         if (!mfat_info[i].symb.is_epsilon() && !mfat_info[i].symb.is_ref()) {
