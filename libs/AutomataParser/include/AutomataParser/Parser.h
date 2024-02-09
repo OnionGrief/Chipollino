@@ -26,6 +26,10 @@ class Parser {
     struct MFATransition_info : FATransition_info {
         std::unordered_set<int> open;
         std::unordered_set<int> close;
+
+        MFATransition_info(std::string _beg, std::string _end,
+         Symbol _symb, std::unordered_set<int> _open, std::unordered_set<int> _close) :
+         FATransition_info(_beg, _end, _symb), open(_open), close(_close) {}
     };
 
     // Поиск рекурсивный поиск вершин с названиями из names, игнорируя спуск в вершины из exclude

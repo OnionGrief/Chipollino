@@ -34,11 +34,11 @@ std::vector<lexy_ascii_child> Parser::find_children(lexy_ascii_tree& tree, std::
     return result;
 }
 
-std::string first_child(lexy::_pt_node<lexy::_bra, void>::children_range::iterator it) {
+std::string Parser::first_child(lexy::_pt_node<lexy::_bra, void>::children_range::iterator it) {
     return lexy::as_string<std::string, lexy::ascii_encoding>(it->children().begin()->token().lexeme());
 }
 
-std::string first_child(lexy::_pt_node<lexy::_bra, void> it) {
+std::string Parser::first_child(lexy::_pt_node<lexy::_bra, void> it) {
     return lexy::as_string<std::string, lexy::ascii_encoding>(it.children().begin()->token().lexeme());
 }
 
@@ -104,11 +104,11 @@ void Parser::parse_MFA_transitions(lexy_ascii_tree& tree, std::vector<Parser::MF
     for (int i = 0; i < edges.size(); i++) {
         auto edge_child = edges[i].children().begin();
         auto it = edge_child->children().begin();
-        std::string beg = first_child(it);
+        std::string beg = first_child(*it);
         it++;
-        std::string end = first_child(it);
+        std::string end = first_child(*it);
         it++;
-        Symbol symb = first_child(it);
+        Symbol symb = first_child(*it);
         
         if (symb == "&") {
             for (auto symb_child : it->children()) {
@@ -126,7 +126,7 @@ void Parser::parse_MFA_transitions(lexy_ascii_tree& tree, std::vector<Parser::MF
         for (auto memory_cell : edge_child->children()) {
             if (std::string(memory_cell.kind().name()) == "memory_cell") {
                 auto cell = memory_cell.children().begin();
-                int cell_id = std::stoi(first_child(cell));
+                int cell_id = std::stoi(first_child(*cell));
                 cell++;
                 if (first_child(cell) == "c")
                     close.insert(cell_id);
@@ -134,6 +134,8 @@ void Parser::parse_MFA_transitions(lexy_ascii_tree& tree, std::vector<Parser::MF
                     open.insert(cell_id);
             }
         }
+
+        ;
         mfat_info.emplace_back(beg, end, symb, open, close);
     }
 
