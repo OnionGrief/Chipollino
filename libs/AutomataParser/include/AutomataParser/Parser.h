@@ -15,12 +15,15 @@
 
 class Parser {
   private:
-    // Информация для сборки перехода MFA
-    struct MFATransition_info{
+    // Информация для сборки перехода FA
+    struct FATransition_info {
         std::string beg;
         std::string end;
         Symbol symb;
+    };
 
+    // Информация для сборки перехода MFA
+    struct MFATransition_info : FATransition_info {
         std::unordered_set<int> open;
         std::unordered_set<int> close;
     };
@@ -44,8 +47,7 @@ class Parser {
      std::map<std::string, bool>& is_terminal, std::string& initial); // NOLINT(runtime/references)
     
     // Парсинг переходов для FA
-    static void parse_transitions(lexy_ascii_tree& tree, std::vector<std::string>& beg, // NOLINT(runtime/references)
-     std::vector<std::string>& end, std::vector<std::string>& symb); // NOLINT(runtime/references)
+    static void parse_FA_transitions(lexy_ascii_tree& tree, std::vector<FATransition_info>& transitions); // NOLINT(runtime/references)
 
     // Парсинг переходов для MFA
     static void parse_MFA_transitions(lexy_ascii_tree& tree, std::vector<MFATransition_info>& transitions); // NOLINT(runtime/references)

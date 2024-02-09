@@ -81,15 +81,20 @@ void Parser::parse_descriptions(lexy_ascii_tree& tree, std::map<std::string, std
     }
 }
 
-void Parser::parse_transitions(lexy_ascii_tree& tree, std::vector<std::string>& beg, std::vector<std::string>& end, std::vector<std::string>& symb) {
+void Parser::parse_FA_transitions(lexy_ascii_tree& tree, std::vector<FATransition_info>& trans) {
     auto transitions = find_children(tree, {"stmt"});
     for (int i = 0; i < transitions.size(); i++) {
         auto it = transitions[i].children().begin();
-        beg.push_back(first_child(it));
+        auto beg = first_child(it);
         it++;
-        end.push_back(first_child(it));
+        auto end = first_child(it);
         it++;
-        symb.push_back(first_child(it));
+        auto symb = first_child(it);
+        if (first_child(it)[0] == '&') {
+            throw std::runtime_error("AutomataParser::Parser::parse_FA ERROR(MFA transition found)");
+        }
+
+        trans.emplace_back(beg, end, symb);
     }
 }
 
@@ -129,8 +134,7 @@ void Parser::parse_MFA_transitions(lexy_ascii_tree& tree, std::vector<Parser::MF
                     open.insert(cell_id);
             }
         }
-
-        mfat_info.push_back({beg, end, symb, open, close});
+        mfat_info.emplace_back(beg, end, symb, open, close);
     }
 
     transitions = mfat_info;
@@ -210,20 +214,16 @@ FiniteAutomaton Parser::parse_FA(std::string filename) {
     }
 
     std::set<Symbol> alphabet;
-    std::vector<std::string> beg, end, symb;
+    std::vector<FATransition_info> trans;
 
-    parse_transitions(tree, beg, end, symb);
+    parse_FA_transitions(tree, trans);
 
-    for (int i = 0; i < beg.size(); i++) {
-        if (symb[i] == "eps") {
-            states[states_id[beg[i]]].set_transition(states_id[end[i]], Symbol::Epsilon);
+    for (int i = 0; i < trans.size(); i++) {
+        if (trans[i].symb == "eps") {
+            states[states_id[trans[i].beg]].set_transition(states_id[trans[i].end], Symbol::Epsilon);
         } else {
-            if (symb[i][0] == '&') {
-                throw std::runtime_error("AutomataParser::Parser::parse_FA ERROR(MFA transition found)");
-            } else {
-                states[states_id[beg[i]]].set_transition(states_id[end[i]], symb[i]);
-                alphabet.insert(Symbol(symb[i]));
-            }
+            states[states_id[trans[i].beg]].set_transition(states_id[trans[i].end], trans[i].symb);
+            alphabet.insert(Symbol(trans[i].symb));
         }
     }
 
