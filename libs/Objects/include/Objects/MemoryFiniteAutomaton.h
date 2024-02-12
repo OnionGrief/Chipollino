@@ -79,6 +79,7 @@ struct ParingState {
 
 	ParingState(int pos, const MFAState* state, const std::unordered_set<int>& opened_cells,
 				const std::unordered_map<int, std::pair<int, int>>& memory);
+	bool operator==(const ParingState& other) const;
 };
 
 // переход дополняется информацией о состоянии памяти
@@ -137,6 +138,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 
 	static MemoryFiniteAutomaton get_just_one_total_trap(const std::shared_ptr<Language>& language);
 
+	std::pair<int, bool> _parse_slow(const std::string&, Matcher*) const;
 	std::pair<int, bool> _parse(const std::string&, Matcher*) const;
 
 	// поиск множества состояний НКА,

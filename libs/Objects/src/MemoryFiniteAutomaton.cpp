@@ -502,6 +502,11 @@ ParingState::ParingState(int pos, const MFAState* state, const unordered_set<int
 						 const unordered_map<int, pair<int, int>>& memory)
 	: pos(pos), state(state), opened_cells(opened_cells), memory(memory) {}
 
+bool ParingState::operator==(const ParingState& other) const {
+	return pos == other.pos && state == other.state && opened_cells == other.opened_cells &&
+		   memory == other.memory;
+}
+
 Matcher::Matcher(const string& s) : s(&s) {}
 
 void ParseTransition::do_memory_actions(int pos) {
@@ -614,7 +619,7 @@ pair<ParseTransitions, ParseTransitions> get_transitions(const string& s,
 	return {transitions, eps_transitions};
 }
 
-pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher) const {
+pair<int, bool> MemoryFiniteAutomaton::_parse_slow(const string& s, Matcher* matcher) const {
 	stack<ParingState> parsing_states_stack;
 	// тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
 	set<tuple<int, int, int>> visited_eps;
@@ -627,11 +632,11 @@ pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher)
 		if (state->is_terminal && parsed_len == s.size()) {
 			break;
 		}
+		counter++;
 		ParingState parsing_state = parsing_states_stack.top();
 		state = parsing_state.state;
 		parsed_len = parsing_state.pos;
 		parsing_states_stack.pop();
-		counter++;
 		// состояния достижимые по символам-буквам/символам-ссылкам
 		// и состояния достижимые по эпсилон-переходам/пустым ссылкам
 		auto [reach, reach_eps] = get_transitions(s, parsing_state, matcher);
@@ -676,6 +681,82 @@ pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher)
 
 	if (s.size() == parsed_len && state->is_terminal) {
 		return {counter, true};
+	}
+
+	return {counter, false};
+}
+
+struct ParingStateHasher {
+	std::size_t operator()(const ParingState& state) const {
+		std::size_t seed = 0;
+
+		hash_combine(seed, state.pos);
+		hash_combine(seed, state.state);
+
+		for (const auto& cell : state.opened_cells) {
+			hash_combine(seed, cell);
+		}
+
+		for (const auto& entry : state.memory) {
+			hash_combine(seed, entry.first);
+			hash_combine(seed, entry.second.first);
+			hash_combine(seed, entry.second.second);
+		}
+
+		return seed;
+	}
+
+  private:
+	template <typename T> static void hash_combine(std::size_t& seed, const T& value) { // NOLINT(runtime/references)
+		seed ^= std::hash<T>{}(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+};
+
+pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher) const {
+	unordered_set<ParingState, ParingStateHasher> current_states;
+	current_states.insert(ParingState(
+		0, &states[initial_state], unordered_set<int>({}), unordered_map<int, pair<int, int>>({})));
+
+	int counter = 0;
+	int parsed_len = 0;
+	const MFAState* state;
+	while (!current_states.empty()) {
+		unordered_set<ParingState, ParingStateHasher> following_states;
+		for (const auto& parsing_state : current_states) {
+			state = parsing_state.state;
+			parsed_len = parsing_state.pos;
+			if (state->is_terminal && parsed_len == s.size()) {
+				return {counter, true};
+			}
+
+			// состояния достижимые по символам-буквам/символам-ссылкам
+			// и состояния достижимые по эпсилон-переходам/пустым ссылкам
+			auto [reach, reach_eps] = get_transitions(s, parsing_state, matcher);
+
+			// переходы в новые состояния по букве/непустой ссылке
+			if (parsed_len + 1 <= s.size()) {
+				for (const auto& [symbol, symbol_transitions] : reach) {
+					for (auto tr : symbol_transitions) {
+						tr.update_memory(symbol);
+						following_states.emplace(parsed_len + get_symbol_len(tr.memory, symbol),
+												 &states[tr.to],
+												 tr.opened_cells,
+												 tr.memory);
+					}
+				}
+			}
+
+			// эпсилон-переходы
+			for (const auto& [symb, symb_transitions] : reach_eps.transitions) {
+				for (auto eps_tr : symb_transitions) {
+					eps_tr.update_memory(Symbol::Epsilon);
+					following_states.emplace(
+						parsed_len, &states[eps_tr.to], eps_tr.opened_cells, eps_tr.memory);
+				}
+			}
+		}
+		current_states = following_states;
+		counter++;
 	}
 
 	return {counter, false};

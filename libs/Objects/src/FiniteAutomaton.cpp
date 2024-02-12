@@ -2304,10 +2304,10 @@ pair<int, bool> FiniteAutomaton::parse(const string& s) const {
 		if (state->is_terminal && parsed_len == s.size()) {
 			break;
 		}
+		counter++;
 		state = stack_state.top().state;
 		parsed_len = stack_state.top().pos;
 		stack_state.pop();
-		counter++;
 		Symbol symb(s[parsed_len]);
 		set<int> trans;
 		if (state->transitions.count(symb))
