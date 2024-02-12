@@ -7,13 +7,14 @@
 #include <lexy/visualize.hpp>
 #include <lexy/input/file.hpp>
 #include <lexy_ext/report_error.hpp>
+#include <string>
 #include <map>
 #define lexy_ascii_tree lexy::parse_tree_for<lexy::buffer<lexy::ascii_encoding>, void, void>
 
 namespace dsl = lexy::dsl;
 
 //=== string constants ===//
-namespace AutomataParser { // namespace AutomataParser
+namespace AutomataParser {
     const std::string node_id = "node_id";
     const std::string statement = "stmt";
     const std::string terminal_mark = "terminal_mark";
@@ -25,7 +26,7 @@ namespace AutomataParser { // namespace AutomataParser
     const std::string memory_cell = "memory_cell";
 
     const std::string epsilon = "eps";
-}
+} // namespace AutomataParser
 
 class Lexer{
   private:
