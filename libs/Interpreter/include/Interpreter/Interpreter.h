@@ -20,6 +20,7 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
+#include "AutomataParser/Parser.h"
 
 using Typization::GeneralObject;
 

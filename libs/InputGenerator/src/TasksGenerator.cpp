@@ -145,7 +145,15 @@ string TasksGenerator::generate_arguments(Function first_func) {
 			!(Typization::is_belong(generated_types, input_type) && rand() % 2)) {
 			args_str += " N" + get_random_id_by_type(input_type);
 			/* генерируемые типы: */
-		} else if (input_type == REGEX) {
+		} else if(input_type == NFA) {
+            std::string filename = std::to_string(automata_id++) + ".txt";
+            AutomatonGenerator(FA_type::FA).write_to_file(filename);
+            args_str += " (getNFA \"" + filename + "\")"; 
+        } else if (input_type == MFA) {
+            std::string filename = std::to_string(automata_id++) + ".txt";
+            AutomatonGenerator(FA_type::MFA).write_to_file(filename);
+            args_str += " (getMFA \"" + filename + "\")"; 
+        } else if (input_type == REGEX) {
 			args_str += " " + regex_generator.generate_framed_regex();
 		} else if (input_type == INT) {
 			int rand_num = rand() % 5; // пусть будет до 5..

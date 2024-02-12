@@ -9,6 +9,7 @@
 #include "FuncLib/Functions.h"
 #include "FuncLib/Typization.h"
 #include "InputGenerator/RegexGenerator.h"
+#include "InputGenerator/AutomatonGenerator.h"
 #include "Objects/Regex.h"
 
 using Typization::ObjectType;
@@ -21,11 +22,13 @@ class TasksGenerator {
 		ObjectType type;
 	};
 	RegexGenerator regex_generator;
+    AutomatonGenerator automaton_generator;
 	size_t seed_it = 0; // итерация для рандома
 
 	std::string res_str = "";
 	int max_num_of_func_in_seq = 5; // максимальное кол-во функций в посл-ти
 	int id_num = 0;		 // кол-во объявленных идентификаторов
+    int automata_id = 0; // кол-во объявленных имён файлов (с автоматами)
 	ObjectType cur_type; // выходный тип данных последней сгенерированной функции
 
 	/* для статического тайпчекера - генерируем все функции подряд, для динамического - dfa = nfa,
@@ -36,9 +39,9 @@ class TasksGenerator {
 								   DFA = ObjectType::DFA, INT = ObjectType::Int,
 								   VALUE = ObjectType::AmbiguityValue,
 								   BOOLEAN = ObjectType::Boolean, ARRAY = ObjectType::Array,
-								   PG = ObjectType::PrefixGrammar;
+								   PG = ObjectType::PrefixGrammar, STRING = ObjectType::String, MFA = ObjectType::MFA;
 
-	std::vector<ObjectType> generated_types = {REGEX, INT, ARRAY};
+	std::vector<ObjectType> generated_types = {REGEX, INT, ARRAY, NFA, MFA};
 	std::map<ObjectType, std::vector<Id>> ids_by_type; // поиск идентификатора по его типу
 	// разделение функций (с единственным аргументом) по принимаемым значениям
 	std::map<ObjectType, std::vector<FuncLib::Function>> funcInput;

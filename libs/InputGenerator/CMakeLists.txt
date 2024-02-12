@@ -3,6 +3,7 @@ project(InputGenerator)
 
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
+        src/AutomatonGenerator.cpp
         src/RegexGenerator.cpp
         src/TasksGenerator.cpp)
 
