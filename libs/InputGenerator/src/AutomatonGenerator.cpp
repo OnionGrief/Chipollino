@@ -1,7 +1,9 @@
 #include "InputGenerator/AutomatonGenerator.h"
 
 using std::ofstream;
-using namespace std;
+using std::string;
+using std::to_string;
+using std::rand;
 
 void AutomatonGenerator::change_seed() {
 	seed_it++;

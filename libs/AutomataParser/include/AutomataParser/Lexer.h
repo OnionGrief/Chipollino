@@ -13,7 +13,7 @@
 namespace dsl = lexy::dsl;
 
 //=== string constants ===//
-namespace AutomataParser {
+namespace AutomataParser { // namespace AutomataParser
     const std::string node_id = "node_id";
     const std::string statement = "stmt";
     const std::string terminal_mark = "terminal_mark";
