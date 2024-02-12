@@ -10,6 +10,15 @@ void AutomatonGenerator::change_seed() {
 	srand((size_t)time(nullptr) + seed_it + rand());
 }
 
+bool AutomatonGenerator::dice_throwing(int percentage) {
+    change_seed();
+    if (percentage < rand() % 100) {
+        return true;
+    }
+
+    return false;
+}
+
 void AutomatonGenerator::generate_transitions(int transitions_number, int states_number, FA_type type) {
     for (int i = 0; i < transitions_number; i++) {
         change_seed();
@@ -31,10 +40,9 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
         if (type == FA_type::MFA) {
             // С вероятностью 50% открытие или закрытие ячейки
             for (int i = 0; i < memory_cells_number; i++) {
-                change_seed();
-                if (rand() % 2) {
+                if (dice_throwing(50)) {
                     output << " " << i;
-                    if (rand() % 2) {
+                    if (dice_throwing(50)) {
                         output << " c";
                     } else {
                         output << " o";
@@ -60,15 +68,13 @@ void AutomatonGenerator::generate_states_description(int states_number) {
 
             // Пусть состояние терминально с вероятностью 20%
             change_seed();
-            if (rand() % 5) {
+            if (dice_throwing(GeneratorConstants::terminal_probability)) {
                 output << " terminal";
             }
 
             output << "\n";
         } else {
-            // Пусть состояние терминально с вероятностью 20%
-            change_seed();
-            if (rand() % 5) {
+            if (dice_throwing(GeneratorConstants::terminal_probability)) {
                 output << to_string(i) << " terminal";
             }
         }
@@ -100,19 +106,20 @@ AutomatonGenerator::AutomatonGenerator(FA_type type) {
 
         // Пусть кол-во ячеек не больше 10;
         change_seed();
-        memory_cells_number = rand() % 10;
+        memory_cells_number = rand() % GeneratorConstants::max_memory_cells_number;
     }
 
     change_seed();
     // Пусть в автомате будет не более 10 состояний
-    int states_number = rand() % 10;
+    int states_number = rand() % GeneratorConstants::max_states_number;
 
     generate_states_description(states_number);
 
-    generate_alphabet(52);
+    generate_alphabet(GeneratorConstants::alphabet_size);
 
     change_seed();
-    int transitions_number = rand() % (states_number * (states_number - 1) / 2 + 10);
+    int transitions_number = rand() % (states_number * (states_number - 1) / 2 +
+     GeneratorConstants::additional_max_transitions_number);
 
     generate_transitions(transitions_number, states_number, type);
 

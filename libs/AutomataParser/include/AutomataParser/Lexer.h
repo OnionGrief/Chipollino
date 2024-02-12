@@ -18,7 +18,7 @@ namespace AutomataParser {
     const std::string node_id = "node_id";
     const std::string statement = "stmt";
     const std::string terminal_mark = "terminal_mark";
-    const std::string initial_state = "initial_state";
+    const std::string initial_mark = "initial_mark";
     const std::string state_label = "state_label";
     const std::string state_description = "state_description";
     const std::string MFA_edge = "MFA_edge";

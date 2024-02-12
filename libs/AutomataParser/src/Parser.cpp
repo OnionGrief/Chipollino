@@ -78,7 +78,7 @@ void Parser::parse_descriptions(lexy_ascii_tree& tree, map<string, string>& labe
             if (string(desc.kind().name()) == AutomataParser::terminal_mark) {
                 is_terminal[name] = true;
             }
-            if (string(desc.kind().name()) == AutomataParser::initial_state) {
+            if (string(desc.kind().name()) == AutomataParser::initial_mark) {
                 if (initial == "") {
                     initial = name;
                 } else {
