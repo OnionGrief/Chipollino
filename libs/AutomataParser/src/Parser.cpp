@@ -1,6 +1,12 @@
 #include <AutomataParser/Parser.h>
 
-using namespace std;
+using std::string;
+using std::vector;
+using std::set;
+using std::map;
+using std::unordered_set;
+using std::runtime_error;
+
 
 vector<lexy_ascii_child> Parser::find_children(lexy_ascii_tree& tree, set<string> names, set<string> exclude) {
     vector<lexy_ascii_child> result;
