@@ -1,6 +1,7 @@
 #include "InputGenerator/AutomatonGenerator.h"
 
 using std::ofstream;
+using namespace std;
 
 void AutomatonGenerator::change_seed() {
 	seed_it++;
@@ -16,14 +17,14 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
         int end = rand() % states_number;
 
         change_seed();
-        std::string transition_sym;
+        string transition_sym;
         int transition_symbol_num = rand() % (alphabet.size() + memory_cells_number);
         if (transition_symbol_num < alphabet.size())
             transition_sym.push_back(alphabet[i]);
         else
-            transition_sym = "&" + std::to_string(transition_symbol_num - alphabet.size());
+            transition_sym = "&" + to_string(transition_symbol_num - alphabet.size());
 
-        output << std::to_string(beg) << " " << std::to_string(end) << " " << transition_sym;
+        output << to_string(beg) << " " << to_string(end) << " " << transition_sym;
         
         if (type == FA_type::MFA) {
             // С вероятностью 50% открытие или закрытие ячейки
@@ -53,7 +54,7 @@ void AutomatonGenerator::generate_states_description(int states_number) {
 
     for (int i = 0; i < states_number; i++) {
         if (initial == i) {
-            output << std::to_string(i) << " initial_state";
+            output << to_string(i) << " initial_state";
 
             // Пусть состояние терминально с вероятностью 20%
             change_seed();
@@ -66,7 +67,7 @@ void AutomatonGenerator::generate_states_description(int states_number) {
             // Пусть состояние терминально с вероятностью 20%
             change_seed();
             if (rand() % 5) {
-                output << std::to_string(i) << " terminal";
+                output << to_string(i) << " terminal";
             }
         }
     }
@@ -116,7 +117,7 @@ AutomatonGenerator::AutomatonGenerator(FA_type type) {
     output << "}";
 }
 
-void AutomatonGenerator::write_to_file(std::string filename) {
+void AutomatonGenerator::write_to_file(string filename) {
     ofstream out;
 	out.open(filename, ofstream::trunc);
 	if (out.is_open())
