@@ -1,10 +1,10 @@
 #pragma once
 
+#include <time.h>
 #include <iostream>
 #include <map>
 #include <stdexcept>
 #include <string>
-#include <time.h>
 
 #include <lexy/action/parse_as_tree.hpp>
 #include <lexy/dsl.hpp>
