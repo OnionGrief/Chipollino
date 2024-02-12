@@ -5,6 +5,15 @@ using std::string;
 using std::to_string;
 using std::rand;
 
+namespace AutomatonGeneratorConstants {
+    int terminal_probability = 20;
+    int max_memory_cells_number = 10;
+    int max_states_number = 10;
+    int alphabet_size = 52;
+    // макс кол-во переходов = кол-во рёбер в полном графе + additional_max_transitions_number
+    int additional_max_transitions_number = 10;
+} // AutomatonGeneratorConstants
+
 void AutomatonGenerator::change_seed() {
 	seed_it++;
 	srand((size_t)time(nullptr) + seed_it + rand());
@@ -68,13 +77,13 @@ void AutomatonGenerator::generate_states_description(int states_number) {
 
             // Пусть состояние терминально с вероятностью 20%
             change_seed();
-            if (dice_throwing(GeneratorConstants::terminal_probability)) {
+            if (dice_throwing(AutomatonGeneratorConstants::terminal_probability)) {
                 output << " terminal";
             }
 
             output << "\n";
         } else {
-            if (dice_throwing(GeneratorConstants::terminal_probability)) {
+            if (dice_throwing(AutomatonGeneratorConstants::terminal_probability)) {
                 output << to_string(i) << " terminal";
             }
         }
@@ -106,20 +115,20 @@ AutomatonGenerator::AutomatonGenerator(FA_type type) {
 
         // Пусть кол-во ячеек не больше 10;
         change_seed();
-        memory_cells_number = rand() % GeneratorConstants::max_memory_cells_number;
+        memory_cells_number = rand() % AutomatonGeneratorConstants::max_memory_cells_number;
     }
 
     change_seed();
     // Пусть в автомате будет не более 10 состояний
-    int states_number = rand() % GeneratorConstants::max_states_number;
+    int states_number = rand() % AutomatonGeneratorConstants::max_states_number;
 
     generate_states_description(states_number);
 
-    generate_alphabet(GeneratorConstants::alphabet_size);
+    generate_alphabet(AutomatonGeneratorConstants::alphabet_size);
 
     change_seed();
     int transitions_number = rand() % (states_number * (states_number - 1) / 2 +
-     GeneratorConstants::additional_max_transitions_number);
+     AutomatonGeneratorConstants::additional_max_transitions_number);
 
     generate_transitions(transitions_number, states_number, type);
 
