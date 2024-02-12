@@ -15,8 +15,8 @@ private:
 
     void change_seed();
 
-    // возращает true с вероятностью percentage%
-    bool dice_throwing(int percentage);
+	// возвращает true с вероятностью percentage%
+	bool dice_throwing(int percentage);
 
     std::stringstream output;
 

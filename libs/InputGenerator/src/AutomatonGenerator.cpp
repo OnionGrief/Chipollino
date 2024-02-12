@@ -48,10 +48,10 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
         
         if (type == FA_type::MFA) {
             // С вероятностью 50% открытие или закрытие ячейки
-            for (int i = 0; i < memory_cells_number; i++) {
-                if (dice_throwing(50)) {
-                    output << " " << i;
-                    if (dice_throwing(50)) {
+			for (int j = 0; j < memory_cells_number; j++) {
+				if (dice_throwing(50)) {
+					output << " " << j;
+					if (dice_throwing(50)) {
                         output << " c";
                     } else {
                         output << " o";
