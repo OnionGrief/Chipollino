@@ -80,6 +80,7 @@ inline static const std::vector<Function> functions = {
 	{"IsAcreg", {ObjectType::BRefRegex}, ObjectType::Boolean},
 	{"getNFA", {ObjectType::String}, ObjectType::NFA},
 	{"getMFA", {ObjectType::String}, ObjectType::MFA},
+	{"getPDA", {ObjectType::String}, ObjectType::PDA},
 };
 
 // вспомогательная функция для Ани и ее курсача
