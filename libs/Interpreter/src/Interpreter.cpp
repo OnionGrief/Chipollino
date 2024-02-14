@@ -250,6 +250,9 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Deterministic" && function.input[0] == ObjectType::MFA) {
 		return ObjectBoolean(get<ObjectMFA>(arguments[0]).value.is_deterministic(&log_template));
 	}
+	if (function.name == "Deterministic" && function.input[0] == ObjectType::PDA) {
+		return ObjectBoolean(get<ObjectPDA>(arguments[0]).value.is_deterministic(&log_template));
+	}
 	if (function.name == "Subset" && function.input[0] == ObjectType::Regex) {
 		return ObjectBoolean(
 			get<ObjectRegex>(arguments[0])
@@ -338,7 +341,14 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	GeneralObject predres = arguments[0];
 	optional<GeneralObject> res;
 
-	if (function.name == "Determinize") {
+	if (function.name == "Determinize" && function.input[0] == ObjectType::PDA) {
+		auto pda = get<ObjectPDA>(arguments[0]).value;
+		if (!pda.is_deterministic()) {
+			logger.throw_error("Determinization is supported only for DPDAs");
+			return nullopt;
+		}
+		res = ObjectDPDA(pda);
+	} else if (function.name == "Determinize") {
 		res = ObjectDFA(get_automaton(arguments[0]).determinize(true, &log_template));
 	}
 	if (function.name == "Determinize+") {
@@ -426,6 +436,9 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	}
 	if (function.name == "Complement" && function.input[0] == ObjectType::MFA) {
 		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.complement(&log_template));
+	}
+	if (function.name == "Complement" && function.input[0] == ObjectType::DPDA) {
+		res = ObjectDPDA(get<ObjectDPDA>(arguments[0]).value.complement(&log_template));
 	}
 	if (function.name == "DeAnnote" && function.input[0] == ObjectType::Regex) {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote(&log_template));

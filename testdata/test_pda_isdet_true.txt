@@ -1,0 +1,2 @@
+X = getPDA "testdata/test_pda_anbn_content.txt"
+Deterministic X !!

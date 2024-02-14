@@ -33,6 +33,7 @@ enum class ObjectType {
 	BRefRegex,
 	MFA,
 	PDA,
+	DPDA,
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -60,11 +61,12 @@ struct ObjectArray;
 struct ObjectBRefRegex;
 struct ObjectMFA;
 struct ObjectPDA;
+struct ObjectDPDA;
 
 // Универсальный объект
 using GeneralObject = std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString,
 								   ObjectBoolean, ObjectOptionalBool, ObjectAmbiguityValue,
-								   ObjectPrefixGrammar, ObjectArray, ObjectBRefRegex, ObjectMFA, ObjectPDA>;
+								   ObjectPrefixGrammar, ObjectArray, ObjectBRefRegex, ObjectMFA, ObjectPDA, ObjectDPDA>;
 
 #define OBJECT_DEFINITION(type, value)                                                             \
 	struct Object##type : public ObjectHolder<ObjectType::type, value> {                           \
@@ -85,6 +87,7 @@ OBJECT_DEFINITION(Array, std::vector<GeneralObject>)
 OBJECT_DEFINITION(BRefRegex, BackRefRegex)
 OBJECT_DEFINITION(MFA, MemoryFiniteAutomaton)
 OBJECT_DEFINITION(PDA, PushdownAutomaton)
+OBJECT_DEFINITION(DPDA, PushdownAutomaton)
 
 // перевод ObjectType в string (для логирования и дебага)
 inline static const std::unordered_map<ObjectType, std::string> types_to_string = {
@@ -92,6 +95,7 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 	{ObjectType::DFA, "DFA"},
 	{ObjectType::MFA, "MFA"},
 	{ObjectType::PDA, "PDA"},
+	{ObjectType::DPDA, "DPDA"},
 	{ObjectType::Regex, "Regex"},
 	{ObjectType::BRefRegex, "BRefRegex"},
 	{ObjectType::RandomRegex, "RandomRegex"},
@@ -108,10 +112,12 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_parents = {
 	{ObjectType::NFA, {ObjectType::MFA}},
 	{ObjectType::DFA, {ObjectType::NFA, ObjectType::MFA}},
+	{ObjectType::DPDA, {ObjectType::PDA}},
 	{ObjectType::Regex, {ObjectType::BRefRegex}},
 };
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_children = {
 	{ObjectType::NFA, {ObjectType::DFA}},
+	{ObjectType::PDA, {ObjectType::DPDA}},
 	{ObjectType::MFA, {ObjectType::NFA, ObjectType::DFA}},
 	{ObjectType::BRefRegex, {ObjectType::Regex}},
 };
@@ -141,6 +147,8 @@ static GeneralObject convert_type(const GeneralObject& obj, ObjectType type) {
 		return ObjectMFA(std::get<ObjectDFA>(obj).value.to_mfa());
 	if (std::holds_alternative<ObjectRegex>(obj) && type == ObjectType::BRefRegex)
 		return ObjectBRefRegex(std::get<ObjectRegex>(obj).value.to_bregex());
+	if (std::holds_alternative<ObjectDPDA>(obj) && type == ObjectType::PDA)
+		return ObjectPDA(std::get<ObjectPDA>(obj).value);
 	return obj;
 }
 

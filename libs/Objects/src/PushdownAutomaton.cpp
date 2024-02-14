@@ -1,3 +1,6 @@
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/Language.h"
+#include "Objects/iLogTemplate.h"
 #include <Objects/PushdownAutomaton.h>
 #include <Objects/Symbol.h>
 #include <sstream>
@@ -102,7 +105,35 @@ size_t PushdownAutomaton::size(iLogTemplate* log) const {
 }
 
 bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
-	return false;
+	bool result = true;
+	for (const auto& state : states) {
+		// Отображение символов стэка в символы алфавита
+		std::unordered_map<Symbol, std::unordered_set<Symbol, Symbol::Hasher>, Symbol::Hasher> stack_sym_to_sym;
+		for (const auto& [symb, symbol_transitions] : state.transitions) {
+			for (const auto& tr : symbol_transitions) {
+				if (symb.is_epsilon() && !stack_sym_to_sym[tr.pop].empty()) {
+					// Переход по эпсилону с pop некоторого символа стэка.
+					// С этим символом стэка не должно быть иных переходов.
+					result = false;
+					break;
+				}
+
+				if (stack_sym_to_sym[tr.pop].count(symb) || stack_sym_to_sym[tr.pop].count(Symbol::Epsilon)) {
+					// Перехода по одной и той же паре (symb, stack_symb) не должно быть.
+					// Так же не может быть перехода по символу стэка, для которого ранее
+					// зафиксировали наличие эпсилон-перехода.
+					result = false;
+					break;
+				}
+
+				stack_sym_to_sym[tr.pop].emplace(symb);
+			}
+		}
+	}
+	if (log) {
+		log->set_parameter("result", result ? "True" : "False");
+	}
+	return result;
 }
 
 PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
