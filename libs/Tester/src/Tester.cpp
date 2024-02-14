@@ -8,6 +8,8 @@
 
 #include "Tester/Tester.h"
 
+#include <Objects/PushdownAutomaton.h>
+
 using std::make_unique;
 using std::string;
 using std::to_string;
@@ -52,6 +54,10 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 		auto value = std::get<const MemoryFiniteAutomaton*>(lang);
 		machines.push_back(make_unique<MemoryFiniteAutomaton>(*value));
 		labels.emplace_back("MFA");
+	} else if (std::holds_alternative<const PushdownAutomaton*>(lang)) {
+		auto value = std::get<const PushdownAutomaton*>(lang);
+		machines.push_back(make_unique<PushdownAutomaton>(*value));
+		labels.emplace_back("PDA");
 	}
 	/* A counter for parsing objects */
 	int obj_types = static_cast<int>(machines.size());
@@ -98,6 +104,8 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 			log->set_parameter("language", *std::get<const BackRefRegex*>(lang));
 		} else if (std::holds_alternative<const MemoryFiniteAutomaton*>(lang)) {
 			log->set_parameter("language", *std::get<const MemoryFiniteAutomaton*>(lang));
+		} else if (std::holds_alternative<const PushdownAutomaton*>(lang)) {
+			log->set_parameter("language", *std::get<const PushdownAutomaton*>(lang));
 		}
 		log->set_parameter("regex", regex);
 		log->set_parameter("step", step);

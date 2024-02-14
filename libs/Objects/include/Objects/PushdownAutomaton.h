@@ -39,6 +39,14 @@ class PDAState : public State {
 	void set_transition(const PDATransition& to, const Symbol& input_symbol);
 };
 
+struct ParsingState {
+	int pos;
+	const PDAState* state;
+	std::stack<Symbol> stack;
+
+	ParsingState(int pos, const PDAState* state, const std::stack<Symbol>& stack) : pos(pos), state(state), stack(stack) {};
+};
+
 class PushdownAutomaton : public AbstractMachine {
   private:
 	std::vector<PDAState> states;
@@ -49,6 +57,7 @@ class PushdownAutomaton : public AbstractMachine {
 					  std::shared_ptr<Language> language);
 	PushdownAutomaton(int initial_state, std::vector<PDAState> states, Alphabet alphabet);
 
+	template <typename T> PushdownAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
 	std::string to_txt() const override;
 

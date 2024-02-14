@@ -1,0 +1,11 @@
+PDA {
+0 terminal initial_state;
+1;
+2;
+3 terminal...
+0 1 eps $/eps;
+1 1 a A/eps;
+1 2 b eps/A;
+2 2 b eps/A;
+2 3 eps eps/$
+}

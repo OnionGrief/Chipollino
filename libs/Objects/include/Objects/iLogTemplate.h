@@ -9,6 +9,7 @@ class FiniteAutomaton;
 class Regex;
 class MemoryFiniteAutomaton;
 class BackRefRegex;
+class PushdownAutomaton;
 
 class iLogTemplate {
   public:
@@ -28,7 +29,7 @@ class iLogTemplate {
 		std::vector<Point> data;
 	};
 
-	using LogObject = std::variant<FiniteAutomaton, MemoryFiniteAutomaton, Regex, BackRefRegex,
+	using LogObject = std::variant<FiniteAutomaton, MemoryFiniteAutomaton, PushdownAutomaton, Regex, BackRefRegex,
 								   std::string, int, Table, Plot>;
 
 	virtual void set_parameter(const std::string& key, const LogObject& value,

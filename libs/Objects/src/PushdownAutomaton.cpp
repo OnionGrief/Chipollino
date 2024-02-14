@@ -109,15 +109,115 @@ PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
 	return PushdownAutomaton();
 }
 
-std::pair<int, bool> PushdownAutomaton::parse(const std::string&) const {
-	struct ParsingState {
-		int pos;
-		const PDAState* state;
-		std::stack<Symbol> stack;
+std::vector<PDATransition> get_regular_transitions(const string& s, const ParsingState& parsing_state) {
+	std::vector<PDATransition> transitions;
+	const Symbol symb(parsing_state.pos < s.size() ? s[parsing_state.pos] : char());
+	if (parsing_state.state->transitions.find(symb) == parsing_state.state->transitions.end()) {
+		return transitions;
+	}
 
-		ParsingState(int pos, const PDAState* state, const std::stack<Symbol>& stack);
-	};
+	auto symbol_transitions = parsing_state.state->transitions.at(symb);
+	for (auto tr: symbol_transitions) {
+		if (!parsing_state.stack.empty() && parsing_state.stack.top() == tr.pop) {
+			transitions.emplace_back(tr);
+		}
+	}
 
-	stack<ParsingState> state_stack;
-	return {0, false};
+	return transitions;
+}
+
+std::vector<std::pair<bool, PDATransition>> get_epsilon_transitions(const string& s, const ParsingState& parsing_state) {
+	std::vector<std::pair<bool, PDATransition>> epsilon_transitions;
+
+	if (parsing_state.state->transitions.find(Symbol::Epsilon) != parsing_state.state->transitions.end()) {
+		for (auto tr : parsing_state.state->transitions.at(Symbol::Epsilon)) {
+			// переход по epsilon -> не потребляем символ
+			if (tr.pop.is_epsilon() || (!parsing_state.stack.empty() && parsing_state.stack.top() == tr.pop)) {
+				epsilon_transitions.emplace_back(false, tr);
+			}
+		}
+	}
+
+	const Symbol symb(parsing_state.pos < s.size() ? s[parsing_state.pos] : char());
+	if (parsing_state.state->transitions.find(symb) == parsing_state.state->transitions.end()) {
+		return epsilon_transitions;
+	}
+
+	auto symbol_transitions = parsing_state.state->transitions.at(symb);
+	for (auto tr: symbol_transitions) {
+		// переход по не-epsilon, epsilon на стэке -> потребляем символ + эпсилон-переход
+		if (tr.pop.is_epsilon()) {
+			epsilon_transitions.emplace_back(true, tr);
+		}
+	}
+
+	return epsilon_transitions;
+}
+
+std::stack<Symbol> perform_stack_actions(std::stack<Symbol> stack, const PDATransition& tr) {
+	auto result = stack;
+	if (!tr.pop.is_epsilon()) {
+		result.pop();
+	}
+	if (!tr.push.is_epsilon()) {
+		result.push(tr.push);
+	}
+	return result;
+}
+
+std::pair<int, bool> PushdownAutomaton::parse(const std::string& s) const {
+	int counter = 0, parsed_len = 0;
+	const PDAState* state = &states[initial_state];
+	set<tuple<int, int, int>> visited_eps;
+	std::stack<Symbol> pda_stack;
+	std::stack<ParsingState> parsing_stack;
+	parsing_stack.emplace(parsed_len, state, pda_stack);
+
+	while (!parsing_stack.empty()) {
+		if (state->is_terminal && parsed_len == s.size()) {
+			break;
+		}
+
+		auto parsing_state = parsing_stack.top();
+		parsing_stack.pop();
+
+		state = parsing_state.state;
+		parsed_len = parsing_state.pos;
+		pda_stack = parsing_state.stack;
+		counter++;
+
+		auto transitions = get_regular_transitions(s, parsing_state);
+		if (parsed_len + 1 <= s.size()) {
+			for (auto tr: transitions) {
+				parsing_stack.emplace(parsed_len+1, &states[tr.to], perform_stack_actions(parsing_state.stack, tr));
+			}
+		}
+
+		// если произошёл откат по строке, то эпсилон-переходы из рассмотренных состояний больше не
+		// считаются повторными
+		if (!visited_eps.empty()) {
+			set<tuple<int, int, int>> temp_eps;
+			for (auto pos : visited_eps) {
+				if (std::get<0>(pos) < parsed_len)
+					temp_eps.insert(pos);
+			}
+			visited_eps = temp_eps;
+		}
+
+		// добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
+		// состояния и этого стэкового символа
+		auto eps_transitions = get_epsilon_transitions(s, parsing_state);
+		for (const auto& [consume, tr] : eps_transitions) {
+			if (!visited_eps.count({parsed_len, state->index, tr.to})) {
+				parsing_stack.emplace(parsed_len+consume, &states[tr.to], perform_stack_actions(parsing_state.stack, tr));
+				visited_eps.insert({parsed_len+consume, state->index, tr.to});
+			}
+		}
+	}
+
+	if (s.size() == parsed_len && state->is_terminal) {
+		return {counter, true};
+	}
+
+	return {counter, false};
 }

@@ -755,6 +755,9 @@ bool Interpreter::run_test(const Test& test) {
 		} else if (holds_alternative<ObjectMFA>(*language)) {
 			log_template.load_tex_template("Test4");
 			Tester::test(&get<ObjectMFA>(*language).value, reg, test.iterations, &log_template);
+		} else if (holds_alternative<ObjectPDA>(*language)) {
+			log_template.load_tex_template("Test5");
+			Tester::test(&get<ObjectPDA>(*language).value, reg, test.iterations, &log_template);
 		} else {
 			logger.throw_error("while running test: invalid language expression");
 			success = false;
@@ -1164,7 +1167,7 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems, 
 		expr.has_value() &&
 		((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
 		 (*expr).type == ObjectType::NFA || (*expr).type == ObjectType::BRefRegex ||
-		 (*expr).type == ObjectType::MFA)) {
+		 (*expr).type == ObjectType::MFA) || (*expr).type == ObjectType::PDA) {
 		test.language = *expr;
 	} else {
 		logger.throw_error("Scan test: wrong type at position 1, nfa or regex expected");

@@ -8,6 +8,7 @@
 #include "BackRefRegex.h"
 #include "FiniteAutomaton.h"
 #include "MemoryFiniteAutomaton.h"
+#include "PushdownAutomaton.h"
 #include "Regex.h"
 #include "Symbol.h"
 #include "TransformationMonoid.h"

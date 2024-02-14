@@ -9,6 +9,7 @@
 #include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MemoryFiniteAutomaton.h"
+#include "Objects/PushdownAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 
