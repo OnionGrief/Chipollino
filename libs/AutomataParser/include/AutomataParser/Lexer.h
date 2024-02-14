@@ -67,7 +67,7 @@ class Lexer {
 	};
 
 	struct stack_symbol {
-		static constexpr auto rule = dsl::p<node_id>;
+		static constexpr auto rule = LEXY_LIT("$") | dsl::p<node_id>;
 	};
 
 	struct stack_actions {

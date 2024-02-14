@@ -84,7 +84,7 @@ std::string PushdownAutomaton::to_txt() const {
 		for (const auto& elem : state.transitions) {
 			for (const auto& transition : elem.second) {
 				ss << "\t" << state.index << " -> " << transition.to << " [label = \""
-				   << string(elem.first) << transition.push << "/" << transition.pop << "\"]\n";
+				   << string(elem.first) << ", " << transition.push << "/" << transition.pop << "\"]\n";
 			}
 		}
 	}
@@ -110,5 +110,14 @@ PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
 }
 
 std::pair<int, bool> PushdownAutomaton::parse(const std::string&) const {
+	struct ParsingState {
+		int pos;
+		const PDAState* state;
+		std::stack<Symbol> stack;
+
+		ParsingState(int pos, const PDAState* state, const std::stack<Symbol>& stack);
+	};
+
+	stack<ParsingState> state_stack;
 	return {0, false};
 }

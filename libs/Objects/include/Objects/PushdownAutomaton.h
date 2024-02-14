@@ -39,14 +39,6 @@ class PDAState : public State {
 	void set_transition(const PDATransition& to, const Symbol& input_symbol);
 };
 
-struct ParsingState {
-	int pos;
-	const PDAState* state;
-	std::stack<Symbol> stack;
-
-	ParsingState(int pos, const PDAState* state, const std::stack<Symbol>& stack);
-};
-
 class PushdownAutomaton : public AbstractMachine {
   private:
 	std::vector<PDAState> states;
