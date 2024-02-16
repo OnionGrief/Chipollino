@@ -193,6 +193,10 @@ MemoryFiniteAutomaton Parser::parse_MFA(const string& filename) {
 
 	auto mfa = MemoryFiniteAutomaton(initial_state, states, alphabet);
 
+    if (!mfa.check_memory_correctness()) {
+        throw runtime_error("AutomataParser::Parser::parse_MFA ERROR(Reading or opening an open cell)");
+    }
+
 	return mfa;
 }
 

@@ -5,13 +5,29 @@
 #include <optional>
 #include <vector>
 #include <fstream>
+#include <map>
+#include <set>
 
 enum class FA_type { MFA, FA };
 
 class AutomatonGenerator {
 private:
+    struct MFA_edge {
+        int ref;
+        int to;
+
+        std::set<int> open;
+        std::set<int> close;
+    };
+
     int seed_it, memory_cells_number;
     std::vector<char> alphabet;
+    std::map<int, std::set<int>> open_cells;
+    std::map<int, std::vector<MFA_edge>> MFA_graph;
+
+    void calculate_open_cells(int state, std::map<int, std::set<int>>& _open_cells);
+    bool is_MFA_transition_legal(int state, MFA_edge edge);
+    void add_MFA_transition(int state, MFA_edge edge);
 
     void change_seed();
 
