@@ -8,7 +8,7 @@
 #include <map>
 #include <set>
 
-enum class FA_type { MFA, FA };
+enum class FA_type { MFA, FA, DFA };
 
 class AutomatonGenerator {
 private:
@@ -22,12 +22,19 @@ private:
 
     int seed_it, memory_cells_number;
     std::vector<char> alphabet;
+    // Ячейки, которые могут быть открыты при попадании в состояние
     std::map<int, std::set<int>> open_cells;
+    // Переходы в MFA, необходимы для проверки корректности MFA переходов
     std::map<int, std::vector<MFA_edge>> MFA_graph;
+    // Существование перехода по символу из состояния (для DFA)
+    std::map<std::pair<int, string>, bool> symbol_transitions;
 
     void calculate_open_cells(int state, std::map<int, std::set<int>>& _open_cells); // NOLINT(runtime/references)
     bool is_MFA_transition_legal(int state, MFA_edge edge);
     void add_MFA_transition(int state, MFA_edge edge);
+
+    bool is_DFA_trasition_legal(int state, string symbol);
+    void add_DFA_transition(int state, string symbol);
 
     void change_seed();
 

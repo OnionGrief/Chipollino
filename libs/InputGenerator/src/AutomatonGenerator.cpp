@@ -93,6 +93,14 @@ void AutomatonGenerator::add_MFA_transition(int state, MFA_edge edge) {
     calculate_open_cells(state, open_cells);
 }
 
+bool AutomatonGenerator::is_DFA_trasition_legal(int state, string symbol) {
+    return !symbol_transitions[{state, symbol}];
+}
+
+void AutomatonGenerator::add_DFA_transition(int state, string symbol) {
+    symbol_transitions[{state, symbol}] = true;
+}
+
 void AutomatonGenerator::generate_transitions(int transitions_number, int states_number, FA_type type) {
     for (int i = 0; i < transitions_number; i++) {
         MFA_edge new_edge;
@@ -108,12 +116,17 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
         change_seed();
         string transition_sym;
         bool generation_success = true;
+        int tries = 0;
         do {
+            generation_success = true;
             transition_sym = "";
             int transition_symbol_num = rand() % (alphabet.size() + memory_cells_number);
             if (transition_symbol_num < alphabet.size()) {
                 transition_sym.push_back(alphabet[i]);
                 new_edge.ref = -1;
+                if (type == FA_type::DFA) {
+                    generation_success = is_DFA_trasition_legal(beg, transition_sym);
+                }
             } else {
                 transition_sym = "&" + to_string(transition_symbol_num - alphabet.size());
                 new_edge.ref = transition_symbol_num - alphabet.size();
@@ -121,9 +134,8 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
             if (type == FA_type::MFA)
                 generation_success = is_MFA_transition_legal(beg, new_edge);
 
-            if (transition_symbol_num < alphabet.size() && !generation_success)
-                break;
-        } while (!generation_success);
+            tries++;
+        } while (!generation_success && tries < 10);
 
 
         if (!generation_success)
@@ -155,6 +167,7 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
             output << "\n";
 
         add_MFA_transition(beg, new_edge);
+        add_DFA_transition(beg, transition_sym);
     }
 }
 

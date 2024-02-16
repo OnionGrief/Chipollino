@@ -130,7 +130,7 @@ optional<GeneralObject> Interpreter::apply_function_sequence(const vector<Functi
 		else
 			return nullopt;
 
-		if (is_logged && func.name != "getNFA" && func.name != "getMFA")
+		if (is_logged && func.name != "getNFA" && func.name != "getMFA" && func.name != "getDFA")
 			tex_logger.add_log(log_template);
 	}
 
@@ -321,6 +321,10 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "getMFA") {
 		string filename = get<ObjectString>(arguments[0]).value;
 		return ObjectMFA(Parser::parse_MFA(filename));
+	}
+    if (function.name == "getDFA") {
+		string filename = get<ObjectString>(arguments[0]).value;
+		return ObjectDFA(Parser::parse_DFA(filename));
 	}
 	// # place for another diff types funcs
 

@@ -245,3 +245,12 @@ FiniteAutomaton Parser::parse_FA(const string& filename) {
 
 	return fa;
 }
+
+FiniteAutomaton Parser::parse_DFA(const string& filename) {
+    auto res = parse_FA(filename.c_str());
+    if (!res.is_deterministic()) {
+        throw runtime_error("AutomataParser::Parser::parse_DFA ERROR(FA is not deterministic)");
+    }
+    
+    return res;
+}
