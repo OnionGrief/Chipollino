@@ -78,5 +78,5 @@ class Parser {
 	static FiniteAutomaton parse_FA(const std::string& filename);
 
     // Разбор FA из файла
-    static FiniteAutomaton Parser::parse_DFA(const string& filename);
+    static FiniteAutomaton parse_DFA(const std::string& filename);
 };

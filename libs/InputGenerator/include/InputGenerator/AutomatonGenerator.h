@@ -7,6 +7,7 @@
 #include <fstream>
 #include <map>
 #include <set>
+#include <utility>
 
 enum class FA_type { MFA, FA, DFA };
 
@@ -27,14 +28,14 @@ private:
     // Переходы в MFA, необходимы для проверки корректности MFA переходов
     std::map<int, std::vector<MFA_edge>> MFA_graph;
     // Существование перехода по символу из состояния (для DFA)
-    std::map<std::pair<int, string>, bool> symbol_transitions;
+    std::map<std::pair<int, std::string>, bool> symbol_transitions;
 
     void calculate_open_cells(int state, std::map<int, std::set<int>>& _open_cells); // NOLINT(runtime/references)
     bool is_MFA_transition_legal(int state, MFA_edge edge);
     void add_MFA_transition(int state, MFA_edge edge);
 
-    bool is_DFA_trasition_legal(int state, string symbol);
-    void add_DFA_transition(int state, string symbol);
+    bool is_DFA_trasition_legal(int state, std::string symbol);
+    void add_DFA_transition(int state, std::string symbol);
 
     void change_seed();
 
