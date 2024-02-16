@@ -1,6 +1,7 @@
 #include "UnitTestsApp/UnitTests.h"
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "Interpreter/Interpreter.h"
+#include "AutomataParser/Parser.h"
 #include "Objects/AlgExpression.h"
 #include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
@@ -794,4 +795,20 @@ TEST(TestAmbiguity, AmbiguityValues) {
 			break;
 		}
 	});
+}
+
+TEST(TestAutomatonParser, MFA_correctness_failure) {
+    string cycle_with_cell_reopen = "TestData/MFAparser/test1.txt";
+
+    try {
+        Parser::parse_MFA(cycle_with_cell_reopen);
+    } catch (const std::runtime_error& re) {
+        ASSERT_EQ(re.what(), "AutomataParser::Parser::parse_MFA ERROR(Reading or opening an open cell)");
+    }
+}
+
+TEST(TestAutomatonParser, MFA_correctness) {
+    string cycle_with_cell_reopen = "TestData/MFAparser/test2.txt";
+
+    ASSERT_NO_THROW(Parser::parse_MFA(cycle_with_cell_reopen));
 }

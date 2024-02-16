@@ -1,0 +1,9 @@
+MFA {
+    aba initial_state;
+    ab terminal;
+    aba terminal
+    ...
+    aba bab v;
+    bab ab eps 12 o;
+    ab aba 12 c
+}
