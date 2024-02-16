@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 #include <utility>
+#include <iostream>
 
 enum class FA_type { MFA, FA, DFA };
 
@@ -20,6 +21,19 @@ private:
         std::set<int> open;
         std::set<int> close;
     };
+
+    struct AutomatonGeneratorConstants {
+        static inline int terminal_probability = 20;
+        static inline int max_memory_cells_number = 10;
+        static inline int max_states_number = 40;
+        static inline int alphabet_size = 10;
+        // макс кол-во переходов = кол-во рёбер в полном графе + additional_max_transitions_number
+        static inline int additional_max_transitions_number = 10;
+        // вероятность генерации открытия/закрытия для ячейки
+        static inline int action_probability = 50;
+        // вероятность генерации закрытия для ячейки, при генерации взаимодействия
+        static inline int action_closing_probability = 50;
+    }; // namespace AutomatonGeneratorConstants
 
     int seed_it, memory_cells_number;
     std::vector<char> alphabet;
@@ -54,4 +68,6 @@ public:
     explicit AutomatonGenerator(FA_type type = FA_type::FA);
 
     void write_to_file(std::string filename);
+
+   static  void set_terminal_probability(int);
 };
