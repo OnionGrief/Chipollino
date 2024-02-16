@@ -25,7 +25,7 @@ private:
     std::map<int, std::set<int>> open_cells;
     std::map<int, std::vector<MFA_edge>> MFA_graph;
 
-    void calculate_open_cells(int state, std::map<int, std::set<int>>& _open_cells);
+    void calculate_open_cells(int state, std::map<int, std::set<int>>& _open_cells); // NOLINT(runtime/references)
     bool is_MFA_transition_legal(int state, MFA_edge edge);
     void add_MFA_transition(int state, MFA_edge edge);
 

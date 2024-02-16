@@ -16,7 +16,7 @@ namespace AutomatonGeneratorConstants {
     int action_probability = 50;
     // вероятность генерации закрытия для ячейки, при генерации взаимодействия
     int action_closing_probability = 50;
-} // AutomatonGeneratorConstants
+} // namespace AutomatonGeneratorConstants
 
 void AutomatonGenerator::change_seed() {
 	seed_it++;
@@ -114,8 +114,7 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
             if (transition_symbol_num < alphabet.size()) {
                 transition_sym.push_back(alphabet[i]);
                 new_edge.ref = -1;
-            }
-            else {
+            } else {
                 transition_sym = "&" + to_string(transition_symbol_num - alphabet.size());
                 new_edge.ref = transition_symbol_num - alphabet.size();
             }
