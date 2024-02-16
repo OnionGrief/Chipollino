@@ -867,3 +867,53 @@ pair<int, bool> MemoryFiniteAutomaton::parse_additional(const string& s) const {
 	FastMatcher matcher(s);
 	return _parse(s, &matcher);
 }
+
+bool MemoryFiniteAutomaton::check_memory_correctness() {
+    // Ячейки, которые могут быть открыты при попадании в состояние
+    map<int, set<int>> open_cells;
+    // Ячейки, переходы из которых надо проверить
+    set<int> states_to_check;
+    for (auto state : get_states()) {
+        states_to_check.insert(state.index);
+    }
+    
+    while (!states_to_check.empty()) {
+        int cur_state = *states_to_check.begin();
+        states_to_check.erase(cur_state);
+        auto transitions = get_states()[cur_state].transitions;
+        for (auto symbol_transitions : transitions) {
+            for (auto transition : symbol_transitions.second) {
+                for (auto cell : open_cells[cur_state]) {
+                    // Если в текущем состоянии ячейка открыта для записи и переход её не закрывает
+                    bool pass = !transition.memory_actions.count(transition.to) && open_cells[cur_state].count(cell);
+                    // Если переход открывает ячейку
+                    bool open = transition.memory_actions.count(transition.to) && transition.memory_actions.at(transition.to);
+                    // Если раньше в open_cells для состояния transition.to ячейка была закрыта, то это состояние надо проверить
+                    if (!open_cells[transition.to].count(cell) && (pass || open)) {
+                        open_cells[transition.to].insert(cell);
+                        states_to_check.insert(transition.to);
+                    }
+                }
+            }
+        }
+    }
+
+    for (auto state : get_states()) {
+        auto transitions = get_states()[state.index].transitions;
+        for (auto symbol_transitions : transitions) {
+            // Ячейка может быть открыта и по ней существует переход
+            if (symbol_transitions.first.is_ref() && open_cells[state.index].count(symbol_transitions.first.get_ref())) {
+                return false;
+                // throw runtime_error("MFA ERROR(Reading from the open cell)");
+            }
+            for (auto transition : symbol_transitions.second) {
+                for (auto action : transition.memory_actions) {
+                    if (action.second == MFATransition::open && open_cells[state.index].count(action.first)) {
+                        return false;
+                        //throw runtime_error("MFA ERROR(Openning the open cell)");
+                    }
+                }
+            }
+        }
+    }
+}

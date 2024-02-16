@@ -161,6 +161,9 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	size_t size(iLogTemplate* log = nullptr) const override;
 
 	bool is_deterministic(iLogTemplate* log = nullptr) const override;
+
+    // Проверка корректности MFA (нет записи внутри той же ячейки или чтения внутри записи в ячейку)
+    bool check_memory_correctness();
 	// добавление ловушки
 	// (нетерминальное состояние с переходами только в себя)
 	MemoryFiniteAutomaton add_trap_state(iLogTemplate* log = nullptr) const;
