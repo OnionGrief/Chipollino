@@ -5,5 +5,5 @@ MFA {
     ...
     aba bab v;
     bab ab eps 12 o;
-    ab aba 12 c
+    ab aba a 12 c
 }

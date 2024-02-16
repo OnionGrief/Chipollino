@@ -24,6 +24,7 @@ class Parser {
 		std::string beg;
 		std::string end;
 		Symbol symb;
+		FATransition_info(std::string beg, std::string end, const Symbol& symb) : beg(std::move(beg)), end(std::move(end)), symb(symb) {}
 	};
 
 	// Информация для сборки перехода MFA
