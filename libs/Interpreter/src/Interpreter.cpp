@@ -343,7 +343,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 
 	if (function.name == "Determinize" && function.input[0] == ObjectType::PDA) {
 		auto pda = get<ObjectPDA>(arguments[0]).value;
-		if (!pda.is_deterministic()) {
+		if (!pda.is_deterministic(&log_template)) {
 			logger.throw_error("Determinization is supported only for DPDAs");
 			return nullopt;
 		}

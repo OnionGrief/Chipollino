@@ -122,15 +122,23 @@ size_t PushdownAutomaton::size(iLogTemplate* log) const {
 
 bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 	bool result = true;
+	std::unordered_set<int> nondeterministic_states;
 	for (const auto& state : states) {
 		// Отображение символов стэка в символы алфавита
 		std::unordered_map<Symbol, std::unordered_set<Symbol, Symbol::Hasher>, Symbol::Hasher> stack_sym_to_sym;
 		for (const auto& [symb, symbol_transitions] : state.transitions) {
 			for (const auto& tr : symbol_transitions) {
+				if (symb.is_epsilon() && tr.pop.is_epsilon() && state.transitions.size() > 1) {
+					result = false;
+					nondeterministic_states.emplace(state.index);
+					break;
+				}
+
 				if (symb.is_epsilon() && !stack_sym_to_sym[tr.pop].empty()) {
 					// Переход по эпсилону с pop некоторого символа стэка.
 					// С этим символом стэка не должно быть иных переходов.
 					result = false;
+					nondeterministic_states.emplace(state.index);
 					break;
 				}
 
@@ -139,6 +147,7 @@ bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 					// Так же не может быть перехода по символу стэка, для которого ранее
 					// зафиксировали наличие эпсилон-перехода.
 					result = false;
+					nondeterministic_states.emplace(state.index);
 					break;
 				}
 
@@ -146,9 +155,18 @@ bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 			}
 		}
 	}
+
 	if (log) {
+		MetaInfo meta;
+		for (const auto&state: states) {
+			if (nondeterministic_states.count(state.index)) {
+				meta.upd(NodeMeta{state.index, MetaInfo::trap_color});
+			}
+		}
+		log->set_parameter("pda", *this, meta);
 		log->set_parameter("result", result ? "True" : "False");
 	}
+
 	return result;
 }
 
