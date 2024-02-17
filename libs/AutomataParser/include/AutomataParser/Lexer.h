@@ -70,8 +70,14 @@ class Lexer {
 		static constexpr auto rule = LEXY_LIT("$") | dsl::p<node_id>;
 	};
 
+	struct stack_pushes {
+		static constexpr auto sep = dsl::sep(dsl::comma);
+
+		static constexpr auto rule = dsl::list(dsl::p<stack_symbol>, sep);
+	};
+
 	struct stack_actions {
-		static constexpr auto rule = dsl::p<stack_symbol> + LEXY_LIT("/") + dsl::p<stack_symbol>;
+		static constexpr auto rule = dsl::p<stack_symbol> + LEXY_LIT("/") + dsl::p<stack_pushes>;
 	};
 
 	struct MFA_edge {

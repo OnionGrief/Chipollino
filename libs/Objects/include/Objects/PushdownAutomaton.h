@@ -10,10 +10,10 @@
 struct PDATransition {
 	int to;
 	Symbol input_symbol;
-	Symbol push;
 	Symbol pop;
+	std::vector<Symbol> push;
 
-	PDATransition(const int to, const Symbol& input, const Symbol& push, const Symbol& pop);
+	PDATransition(const int to, const Symbol& input, const Symbol& pop, const std::vector<Symbol>& push);
 
 	bool operator==(const PDATransition& other) const;
 

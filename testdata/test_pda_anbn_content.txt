@@ -3,9 +3,9 @@ PDA {
 1;
 2;
 3 terminal...
-0 1 eps $/eps;
-1 1 a A/eps;
-1 2 b eps/A;
-2 2 b eps/A;
-2 3 eps eps/$
+0 1 eps eps/z0;
+1 1 a eps/A;
+1 2 b A/eps;
+2 2 b A/eps;
+2 3 eps z0/eps
 }

@@ -18,11 +18,27 @@ using std::unordered_map;
 using std::unordered_set;
 using std::vector;
 
+template <typename Range, typename Value = typename Range::value_type>
+std::string Join(Range const& elements, const char *const delimiter) {
+	std::ostringstream os;
+	auto b = begin(elements), e = end(elements);
+
+	if (b != e) {
+		std::copy(b, prev(e), std::ostream_iterator<Value>(os, delimiter));
+		b = prev(e);
+	}
+	if (b != e) {
+		os << *b;
+	}
+
+	return os.str();
+}
+
 template <typename T> void hash_combine(std::size_t& seed, const T& v) {
 	seed ^= std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-PDATransition::PDATransition(const int to, const Symbol& input, const Symbol& push, const Symbol& pop)
+PDATransition::PDATransition(const int to, const Symbol& input, const Symbol& pop, const std::vector<Symbol>& push)
 	: to(to), input_symbol(input), push(push), pop(pop) {}
 
 bool PDATransition::operator==(const PDATransition& other) const {
@@ -76,9 +92,9 @@ PushdownAutomaton::PushdownAutomaton(int initial_state, vector<PDAState> states,
 std::string PushdownAutomaton::to_txt() const {
 	stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
-	for (int i = 0; i < states.size(); i++) {
-		ss << states[i].index << " [label = \"" << states[i].identifier << "\", shape = ";
-		ss << (states[i].is_terminal ? "doublecircle]\n\t" : "circle]\n\t");
+	for (const auto & state : states) {
+		ss << state.index << " [label = \"" << state.identifier << "\", shape = ";
+		ss << (state.is_terminal ? "doublecircle]\n\t" : "circle]\n\t");
 	}
 	if (states.size() > initial_state)
 		ss << "dummy -> " << states[initial_state].index << "\n";
@@ -87,7 +103,7 @@ std::string PushdownAutomaton::to_txt() const {
 		for (const auto& elem : state.transitions) {
 			for (const auto& transition : elem.second) {
 				ss << "\t" << state.index << " -> " << transition.to << " [label = \""
-				   << string(elem.first) << ", " << transition.push << "/" << transition.pop << "\"]\n";
+				   << string(elem.first) << ", " << transition.pop << "/" << Join(transition.push, ",") << "\"]\n";
 			}
 		}
 	}
@@ -190,8 +206,10 @@ std::stack<Symbol> perform_stack_actions(std::stack<Symbol> stack, const PDATran
 	if (!tr.pop.is_epsilon()) {
 		result.pop();
 	}
-	if (!tr.push.is_epsilon()) {
-		result.push(tr.push);
+	for (const auto& push_sym:tr.push) {
+		if (!push_sym.is_epsilon()) {
+			result.push(push_sym);
+		}
 	}
 	return result;
 }

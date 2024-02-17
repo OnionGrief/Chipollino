@@ -155,28 +155,40 @@ void Parser::parse_MFA_transitions(lexy_ascii_tree& tree,
 }
 
 void Parser::parse_PDA_transitions(lexy_ascii_tree& tree, vector<PDATransition_info>& trans) {
+	// https://lexy.foonathan.net/playground/
+
 	auto edges = find_children(tree, {AutomataParser::PDA_edge});
 	vector<PDATransition_info> pda_info;
 
 	for (auto edge : edges) {
-		auto edge_child = edge.children().begin();
-		auto it = edge_child->children().begin();
-		string beg = first_child(*it);
-		it++;
-		string end = first_child(*it);
-		it++;
-		Symbol symb = first_child(*it);
+		auto pda_edge_children = edge.children().begin();
+		auto stmt_children = pda_edge_children->children().begin();
+		string beg = first_child(*stmt_children);
+		stmt_children++;
+		string end = first_child(*stmt_children);
+		stmt_children++;
+		Symbol symb = first_child(*stmt_children);
 
-		edge_child++;
-		it = edge_child->children().begin();
+		pda_edge_children++; // pda_edge_children points at stack_actions
+		auto stack_actions_children = pda_edge_children->children().begin();
 
-		Symbol push = first_child(it->children().begin());
-		it++;
-		it++;
-		Symbol pop = first_child(it->children().begin());
+		Symbol pop = first_child(stack_actions_children->children().begin()); // pop sym
+		stack_actions_children++; // "/"
+		stack_actions_children++; // stack_actions_children points at stack_pushes
+
+		std::vector<Symbol> push;
+		auto push_syms = stack_actions_children->children();
+		for (auto push_sym: push_syms) {
+			auto push_data = first_child(push_sym.children().begin());
+			if (push_data == ",") {
+				continue;
+			}
+
+			push.emplace_back(push_data);
+		}
 
 		// Create a PDATransition_info object and add it to the vector
-		pda_info.emplace_back(beg, end, symb, push, pop);
+		pda_info.emplace_back(beg, end, symb, pop, push);
 	}
 
 	// Assign parsed PDATransition_info objects to the output vector
@@ -307,7 +319,7 @@ PushdownAutomaton Parser::parse_PDA(const string& filename) {
 	parse_PDA_transitions(tree, trans);
 
 	for (auto& rawTransition : trans) {
-		auto transition = PDATransition(states_id[rawTransition.end], rawTransition.symb, rawTransition.push, rawTransition.pop);
+		auto transition = PDATransition(states_id[rawTransition.end], rawTransition.symb,  rawTransition.pop, rawTransition.push);
 
 		if (rawTransition.symb == AutomataParser::epsilon) {
 			states[states_id[rawTransition.beg]].set_transition(transition, Symbol::Epsilon);

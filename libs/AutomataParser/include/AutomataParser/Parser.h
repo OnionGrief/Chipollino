@@ -42,11 +42,11 @@ class Parser {
 
 	// Информация для сборки перехода MFA
 	struct PDATransition_info : FATransition_info {
-		Symbol push;
 		Symbol pop;
+		std::vector<Symbol> push;
 
 		PDATransition_info(std::string beg, std::string end, const Symbol& symb,
-						   const Symbol& push, const Symbol& pop)
+						   const Symbol& pop, const std::vector<Symbol>& push)
 			: FATransition_info(std::move(beg), std::move(end), symb), pop(pop), push(push) {}
 	};
 
