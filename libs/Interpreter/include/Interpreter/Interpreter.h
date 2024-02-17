@@ -10,8 +10,10 @@
 #include <variant>
 #include <vector>
 
+#include "AutomataParser/Parser.h"
 #include "FuncLib/Functions.h"
 #include "FuncLib/Typization.h"
+#include "InputGenerator/AutomatonGenerator.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "Logger/Logger.h"
 #include "Objects/BackRefRegex.h"
@@ -20,7 +22,6 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
-#include "AutomataParser/Parser.h"
 
 using Typization::GeneralObject;
 

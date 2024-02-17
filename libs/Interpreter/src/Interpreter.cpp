@@ -794,6 +794,8 @@ bool Interpreter::run_verification(const Verification& verification) {
 
 	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
+		
+        AutomatonGenerator(FA_type::FA).write_to_file("TestData/test.txt");
 		current_random_regex = Regex(RG.generate_regex()); // хз как еще передавать
 		auto predicate = eval_expression(expr);
 
@@ -820,7 +822,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 	logger.log("result: " + res + "%");
 	log_template.set_parameter("result", res + +"\\%");
 
-	if (results < tests_size) {
+	/*if (results < tests_size) {
 		logger.log("");
 		logger.log("Tests with negative result:");
 		string neg_tests = "";
@@ -829,7 +831,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 			neg_tests += str + "\\\\";
 		}
 		log_template.set_parameter("neg tests", neg_tests);
-	}
+	}*/
 
 	tex_logger.add_log(log_template);
 
