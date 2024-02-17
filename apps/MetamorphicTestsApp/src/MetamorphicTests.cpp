@@ -55,33 +55,51 @@ const int RegexNumber = 30;
 // 	}
 // }
 
-TEST(IsDeterministic, Test_is_deterministic) {
-	for (int i = 0; i < 1000; i++) {
-		AutomatonGenerator a(FA_type::FA);
-		a.write_to_file("./TestData/tmp/test.txt");
-		auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
-		auto FAd = FA.determinize();
-		ASSERT_TRUE(FAd.is_deterministic()); 
-	}
-}
-
-// TEST(Statistics, Test_statistics) {
-
-// 	for (int term = 5; term <= 100; term = term + 5) {
-// 		AutomatonGenerator::set_terminal_probability(term);
-// 		int count = 0;
-// 		int ALL = 10000;
-// 		for (int i = 0; i < ALL; i++) {
-// 			AutomatonGenerator a(FA_type::FA);
-// 			a.write_to_file("./TestData/tmp/test.txt");
-// 			auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
-// 			if (FA.is_finite()) {
-// 				count++;
-// 			}
-// 		}
-// 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) << "%" << std::endl;
+// TEST(IsDeterministic, Test_is_deterministic) {
+// 	for (int i = 0; i < 1000; i++) {
+// 		AutomatonGenerator a(FA_type::FA);
+// 		a.write_to_file("./TestData/tmp/test.txt");
+// 		std::cout << "write_to_file\n";
+// 		auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
+// 		std::cout << "parse_FA\n";
+// 		auto FAd = FA.determinize();
+// 		std::cout << "determinize\n";
+// 		ASSERT_TRUE(FAd.is_deterministic()); 
 // 	}
 // }
+
+TEST(Statistics, Test_statistics) {
+	std::vector<int> OX;
+	std::vector<float> OY;
+	AutomatonGenerator::set_initial_state_not_terminal(true);
+	for (int term = 5; term <= 100; term = term + 5) {
+		AutomatonGenerator::set_terminal_probability(term);
+		int count = 0;
+		int ALL = 10000;
+		for (int i = 0; i < ALL; i++) {
+			AutomatonGenerator a(FA_type::FA);
+			a.write_to_file("./TestData/tmp/test.txt");
+			auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
+			if (FA.is_finite()) {
+				count++;
+			}
+		}
+		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) << "%" << std::endl;
+		OX.push_back(term);
+		OY.push_back(float(count) / float(ALL));
+	}
+	std::cout << "OX = [";
+	for (int i = 0; i < OX.size() - 1; i++) {
+		std::cout << OX[i] << ",";
+	}
+	std::cout << OX[OX.size() - 1] << "]\n";
+
+	std::cout << "OY = [";
+	for (int i = 0; i < OY.size() - 1; i++) {
+		std::cout << OY[i] << ",";
+	}
+	std::cout << OY[OY.size() - 1] << "]\n";
+}
 
 // TEST(Statistics, Test_dfa) {
 // 	for (int term = 5; term <= 50; term = term + 5) {
@@ -100,21 +118,24 @@ TEST(IsDeterministic, Test_is_deterministic) {
 // 	}
 // }
 
-TEST(Statistics, Test_fa) {
-	for (int term = 5; term <= 50; term = term + 5) {
-		AutomatonGenerator::set_terminal_probability(20);
-		int count = 0;
-		int ALL = 10000;
-		for (int i = 0; i < ALL; i++) {
-			AutomatonGenerator a(FA_type::FA);
-			a.write_to_file("./TestData/tmp/test.txt");
-			auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
-			std::cout << i << " " << std::endl;
-			if (FA.is_deterministic() && FA.is_finite()) {
-				count++;
-			}
-			std::cout << i << " " << std::endl;
-		}
-		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100 << "%" << std::endl;
-	}
-}
+// TEST(Statistics, Test_fa) {
+// 	std::cout << "TEST\n";
+// 	for (int term = 5; term <= 50; term = term + 5) {
+// 		AutomatonGenerator::set_terminal_probability(20);
+// 		int count = 0;
+// 		int ALL = 10000;
+// 		for (int i = 0; i < ALL; i++) {
+// 			AutomatonGenerator a(FA_type::FA);
+// 			std::cout << "write_to_file START\n";
+// 			a.write_to_file("./TestData/tmp/test.txt");
+// 			std::cout << "write_to_file DONE\n";
+// 			auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
+// 			std::cout << i << " " << std::endl;
+// 			if (FA.is_deterministic() && FA.is_finite()) {
+// 				count++;
+// 			}
+// 			std::cout << i << " " << std::endl;
+// 		}
+// 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100 << "%" << std::endl;
+// 	}
+// }

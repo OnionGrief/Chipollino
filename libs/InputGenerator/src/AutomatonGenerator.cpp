@@ -94,7 +94,7 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
     bool is_print_transit = false;
 
     for (int i = 0; i < transitions_number; i++) {
-        std::cout << "- " << i << " " << std::endl;
+        // std::cout << "- " << i << " " << std::endl;
         MFA_edge new_edge;
 
         change_seed();
@@ -127,6 +127,7 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
                 generation_success = is_MFA_transition_legal(beg, new_edge);
 
             tries++;
+            // std::cout << "tries: " << tries << std::endl;
         } while (!generation_success && tries < 10);
 
 
@@ -171,6 +172,7 @@ void AutomatonGenerator::generate_transitions(int transitions_number, int states
         
     }
     output << "\n";
+    // std::cout << "END generate_transitions\n";
 }
 
 void AutomatonGenerator::generate_states_description(int states_number) {
@@ -184,7 +186,7 @@ void AutomatonGenerator::generate_states_description(int states_number) {
             output << to_string(i) << " initial_state";
 
             change_seed();
-            if (dice_throwing(AutomatonGeneratorConstants::terminal_probability)) {
+            if (AutomatonGeneratorConstants::initial_state_not_terminal && dice_throwing(AutomatonGeneratorConstants::terminal_probability)) {
                 output << " terminal";
             }
         } else {
@@ -262,4 +264,9 @@ void AutomatonGenerator::write_to_file(string filename) {
 
 void AutomatonGenerator::set_terminal_probability(int elem) {
     AutomatonGeneratorConstants::terminal_probability = elem;
+}
+
+void AutomatonGenerator::set_initial_state_not_terminal(bool f)
+{
+    AutomatonGeneratorConstants::initial_state_not_terminal = f;
 }
