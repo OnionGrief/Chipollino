@@ -177,7 +177,7 @@ PushdownAutomaton PushdownAutomaton::_remove_unreachable_states(iLogTemplate* lo
 	}
 
 	// Remap transitions
-	for (auto & state : new_states) {
+	for (auto& state : new_states) {
 		PDAState::Transitions new_transitions;
 		for (const auto& [symbol, symbol_transitions] : state.transitions) {
 			for (const auto& trans : symbol_transitions) {
@@ -283,13 +283,6 @@ bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 			stack_sym_to_sym;
 		for (const auto& [symb, symbol_transitions] : state.transitions) {
 			for (const auto& tr : symbol_transitions) {
-				// Т.к. мы разрешаем pop epsilon,
-				if (symb.is_epsilon() && tr.pop.is_epsilon() && state.transitions.size() > 1) {
-					result = false;
-					nondeterministic_states.emplace(state.index);
-					break;
-				}
-
 				if (symb.is_epsilon() && !stack_sym_to_sym[tr.pop].empty()) {
 					// Переход по эпсилону с pop некоторого символа стэка.
 					// С этим символом стэка не должно быть иных переходов.
@@ -346,47 +339,37 @@ PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
 
 std::vector<PDATransition> get_regular_transitions(const string& s,
 												   const ParsingState& parsing_state) {
-	std::vector<PDATransition> transitions;
+	std::vector<PDATransition> regular_transitions;
+	const auto& transitions = parsing_state.state->transitions;
+
 	const Symbol symb(parsing_state.pos < s.size() ? s[parsing_state.pos] : char());
-	if (parsing_state.state->transitions.find(symb) == parsing_state.state->transitions.end()) {
-		return transitions;
+	if (transitions.find(symb) == transitions.end()) {
+		return regular_transitions;
 	}
 
-	auto symbol_transitions = parsing_state.state->transitions.at(symb);
-	for (auto tr : symbol_transitions) {
-		if (!parsing_state.stack.empty() && parsing_state.stack.top() == tr.pop) {
-			transitions.emplace_back(tr);
+	auto symbol_transitions = transitions.at(symb);
+	for (const auto& trans : symbol_transitions) {
+		if (!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop) {
+			regular_transitions.emplace_back(trans);
 		}
 	}
 
-	return transitions;
+	return regular_transitions;
 }
 
-std::vector<std::pair<bool, PDATransition>> get_epsilon_transitions(
-	const string& s, const ParsingState& parsing_state) {
-	std::vector<std::pair<bool, PDATransition>> epsilon_transitions;
+std::vector<PDATransition> get_epsilon_transitions(const string& s,
+												   const ParsingState& parsing_state) {
+	std::vector<PDATransition> epsilon_transitions;
+	const auto& transitions = parsing_state.state->transitions;
 
-	if (parsing_state.state->transitions.find(Symbol::Epsilon) !=
-		parsing_state.state->transitions.end()) {
-		for (auto tr : parsing_state.state->transitions.at(Symbol::Epsilon)) {
-			// переход по epsilon -> не потребляем символ
-			if (tr.pop.is_epsilon() ||
-				(!parsing_state.stack.empty() && parsing_state.stack.top() == tr.pop)) {
-				epsilon_transitions.emplace_back(false, tr);
-			}
-		}
-	}
-
-	const Symbol symb(parsing_state.pos < s.size() ? s[parsing_state.pos] : char());
-	if (parsing_state.state->transitions.find(symb) == parsing_state.state->transitions.end()) {
+	if (transitions.find(Symbol::Epsilon) == transitions.end()) {
 		return epsilon_transitions;
 	}
 
-	auto symbol_transitions = parsing_state.state->transitions.at(symb);
-	for (auto tr : symbol_transitions) {
-		// переход по не-epsilon, epsilon на стэке -> потребляем символ + эпсилон-переход
-		if (tr.pop.is_epsilon()) {
-			epsilon_transitions.emplace_back(true, tr);
+	for (const auto& trans : transitions.at(Symbol::Epsilon)) {
+		// переход по epsilon -> не потребляем символ
+		if (!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop) {
+			epsilon_transitions.emplace_back(trans);
 		}
 	}
 
@@ -395,9 +378,8 @@ std::vector<std::pair<bool, PDATransition>> get_epsilon_transitions(
 
 std::stack<Symbol> perform_stack_actions(std::stack<Symbol> stack, const PDATransition& tr) {
 	auto result = stack;
-	if (!tr.pop.is_epsilon()) {
-		result.pop();
-	}
+	result.pop();
+
 	for (const auto& push_sym : tr.push) {
 		if (!push_sym.is_epsilon()) {
 			result.push(push_sym);
@@ -411,6 +393,7 @@ std::pair<int, bool> PushdownAutomaton::parse(const std::string& s) const {
 	const PDAState* state = &states[initial_state];
 	set<tuple<int, int, int>> visited_eps;
 	std::stack<Symbol> pda_stack;
+	pda_stack.emplace(Symbol::StackTop);
 	std::stack<ParsingState> parsing_stack;
 	parsing_stack.emplace(parsed_len, state, pda_stack);
 
@@ -429,9 +412,10 @@ std::pair<int, bool> PushdownAutomaton::parse(const std::string& s) const {
 
 		auto transitions = get_regular_transitions(s, parsing_state);
 		if (parsed_len + 1 <= s.size()) {
-			for (auto tr : transitions) {
-				parsing_stack.emplace(
-					parsed_len + 1, &states[tr.to], perform_stack_actions(parsing_state.stack, tr));
+			for (const auto& trans : transitions) {
+				parsing_stack.emplace(parsed_len + 1,
+									  &states[trans.to],
+									  perform_stack_actions(parsing_state.stack, trans));
 			}
 		}
 
@@ -449,10 +433,10 @@ std::pair<int, bool> PushdownAutomaton::parse(const std::string& s) const {
 		// добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
 		// состояния и этого стэкового символа
 		auto eps_transitions = get_epsilon_transitions(s, parsing_state);
-		for (const auto& [consume, tr] : eps_transitions) {
-			if (!visited_eps.count({parsed_len, state->index, tr.to})) {
-				parsing_stack.emplace(parsed_len+consume, &states[tr.to], perform_stack_actions(parsing_state.stack, tr));
-				visited_eps.insert({parsed_len+consume, state->index, tr.to});
+		for (const auto& trans : eps_transitions) {
+			if (!visited_eps.count({parsed_len, state->index, trans.to})) {
+				parsing_stack.emplace(parsed_len, &states[trans.to], perform_stack_actions(parsing_state.stack, trans));
+				visited_eps.insert({parsed_len, state->index, trans.to});
 			}
 		}
 	}
