@@ -51,6 +51,7 @@ class PushdownAutomaton : public AbstractMachine {
   private:
 	std::vector<PDAState> states;
 	PushdownAutomaton _remove_unreachable_states(iLogTemplate*log);
+	std::pair<MetaInfo, PushdownAutomaton> _add_trap_state(iLogTemplate*log);
 
   public:
 	PushdownAutomaton();
@@ -67,6 +68,7 @@ class PushdownAutomaton : public AbstractMachine {
 	bool is_deterministic(iLogTemplate* log = nullptr) const override;
 	// меняет язык
 	PushdownAutomaton complement(iLogTemplate* log = nullptr) const;
+	bool equal(PushdownAutomaton pda1, PushdownAutomaton pda2);
 	// пересечение с регуляркой
 	PushdownAutomaton regular_intersect(const Regex& re, iLogTemplate* log);
 	// проверяет, распознаёт ли автомат слово (использует BasicMatcher)

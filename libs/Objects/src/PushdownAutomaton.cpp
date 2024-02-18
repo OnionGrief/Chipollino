@@ -320,21 +320,132 @@ bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 	return result;
 }
 
-PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
-	std::vector<PDAState> new_states;
-	new_states.reserve(states.size());
-	for (const auto& state : states) {
-		new_states.emplace_back(
-			state.index, state.identifier, !state.is_terminal, state.transitions);
+std::pair<MetaInfo, PushdownAutomaton> PushdownAutomaton::_add_trap_state(iLogTemplate* log) {
+	std::vector<PDAState> new_states = states;
+	bool has_trap = false;
+	MetaInfo meta;
+	int count = static_cast<int>(size());
+	for (auto& state : new_states) {
+		for (const Symbol& symb : language->get_alphabet()) {
+			if (!state.transitions.count(symb) || state.transitions.at(symb).empty()) {
+				state.set_transition(
+					{count, symb, Symbol::Epsilon, std::vector<Symbol>{Symbol::Epsilon}}, symb);
+				has_trap = true;
+			}
+		}
 	}
 
-	PushdownAutomaton result = {initial_state, new_states, get_language()};
-	if (log) {
+
+	if (has_trap) {
+		new_states.emplace_back(count, "", false);
+		// meta.upd(NodeMeta{count, MetaInfo::trap_color});
+		for (const Symbol& symb : language->get_alphabet()) {
+			new_states[count].set_transition(
+				{count, symb, Symbol::Epsilon, std::vector<Symbol>{Symbol::Epsilon}}, symb);
+		}
+	}
+
+	PushdownAutomaton result(initial_state, new_states, language);
+	return {meta, result};
+}
+
+void invert_all_states(std::vector<PDAState>& states) {
+	for (auto& state : states) {
+		state.is_terminal = !state.is_terminal;
+	}
+}
+
+bool has_final_state(const std::vector<PDAState>& states) {
+	for (const auto& state : states) {
+		if (state.is_terminal) {
+			return true;
+		}
+	}
+	return false;
+}
+
+PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
+	PushdownAutomaton new_pda(initial_state, states, language);
+	auto [meta, result] = new_pda._add_trap_state(log);
+	for (auto&state : result.states) {
+		state.is_terminal = !state.is_terminal;
+	}
+
+	if(log) {
 		log->set_parameter("oldpda", *this);
-		log->set_parameter("result", result);
+		log->set_parameter("result", result, meta);
 	}
 
 	return result;
+	// if (!has_final_state(result.states)) {
+	// 	invert_all_states(result.states);
+	// 	return result;
+	// }
+	//
+	// std::set<int> reading_states;
+	// std::map<int, std::vector<PDATransition>> new_transitions;
+	// for (auto& state : result.states) {
+	// 	bool has_input = false, has_input_eps = false;
+	// 	for (const auto& [symbol, symbol_transitions] : state.transitions) {
+	// 		for (const auto& trans : symbol_transitions) {
+	// 			if (trans.input_symbol.is_epsilon()) {
+	// 				has_input_eps = true;
+	// 			} else {
+	// 				has_input = true;
+	// 			}
+	// 		}
+	// 	}
+	//
+	// 	if (!has_input_eps) {
+	// 		reading_states.insert(state.index);
+	// 	}
+	// 	if (!has_input) {
+	// 		continue;
+	// 	}
+	//
+	// 	std::map<Symbol, int> stack_sym_to_state;
+	// 	for (const auto& [symbol, symbol_transitions] : state.transitions) {
+	// 		for (const auto& trans : symbol_transitions) {
+	// 			if (!trans.input_symbol.is_epsilon()) {
+	// 				auto it = stack_sym_to_state.find(trans.pop);
+	// 				if (it == stack_sym_to_state.end()) {
+	// 					it = stack_sym_to_state.try_emplace(trans.pop).first;
+	// 					state.set_transition({it->second, Symbol::Epsilon, trans.pop, std::vector<Symbol>({Symbol::Epsilon})}, Symbol::Epsilon);
+	// 					reading_states.insert(it->second);
+	// 					if(state.is_terminal) {
+	// 						result.states[it->second].is_terminal = true;
+	// 					}
+	// 				}
+	//
+	// 				new_transitions[it->second].emplace_back(trans.to, trans.input_symbol, Symbol::Epsilon, trans.push);
+	// 			}
+	// 		}
+	// 	}
+	// }
+	//
+	// for (auto&[state_index, transitions_to_add]: new_transitions) {
+	// 	for (auto trans: transitions_to_add) {
+	// 		result.states[state_index].set_transition(trans, trans.input_symbol);
+	// 	}
+	// }
+	//
+	// for(auto& state: result.states) {
+	// 	if (reading_states.count(state.index) && !state.is_terminal) {
+	// 		state.is_terminal = true;
+	// 	} else {
+	// 		state.is_terminal = false;
+	// 	}
+	// }
+
+	return new_pda;
+}
+
+bool PushdownAutomaton::equal(PushdownAutomaton pda1, PushdownAutomaton pda2) {
+	if(pda1.size() != pda2.size()) {
+		return false;
+	}
+
+
 }
 
 std::vector<PDATransition> get_regular_transitions(const string& s,
@@ -349,7 +460,7 @@ std::vector<PDATransition> get_regular_transitions(const string& s,
 
 	auto symbol_transitions = transitions.at(symb);
 	for (const auto& trans : symbol_transitions) {
-		if (!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop) {
+		if (trans.pop.is_epsilon() || (!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop)) {
 			regular_transitions.emplace_back(trans);
 		}
 	}
@@ -368,7 +479,7 @@ std::vector<PDATransition> get_epsilon_transitions(const string& s,
 
 	for (const auto& trans : transitions.at(Symbol::Epsilon)) {
 		// переход по epsilon -> не потребляем символ
-		if (!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop) {
+		if (trans.pop.is_epsilon() ||(!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop)) {
 			epsilon_transitions.emplace_back(trans);
 		}
 	}
@@ -378,7 +489,10 @@ std::vector<PDATransition> get_epsilon_transitions(const string& s,
 
 std::stack<Symbol> perform_stack_actions(std::stack<Symbol> stack, const PDATransition& tr) {
 	auto result = stack;
-	result.pop();
+
+	if(!tr.pop.is_epsilon()) {
+		result.pop();
+	}
 
 	for (const auto& push_sym : tr.push) {
 		if (!push_sym.is_epsilon()) {
