@@ -50,6 +50,7 @@ struct ParsingState {
 class PushdownAutomaton : public AbstractMachine {
   private:
 	std::vector<PDAState> states;
+	PushdownAutomaton _remove_unreachable_states(iLogTemplate*log);
 
   public:
 	PushdownAutomaton();
@@ -66,6 +67,8 @@ class PushdownAutomaton : public AbstractMachine {
 	bool is_deterministic(iLogTemplate* log = nullptr) const override;
 	// меняет язык
 	PushdownAutomaton complement(iLogTemplate* log = nullptr) const;
+	// пересечение с регуляркой
+	PushdownAutomaton regular_intersect(const Regex& re, iLogTemplate* log);
 	// проверяет, распознаёт ли автомат слово (использует BasicMatcher)
 	std::pair<int, bool> parse(const std::string&) const override;
 };

@@ -451,6 +451,11 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 	}
 	// # place for another same types funcs
+	if (function.name == "RegularIntersect") {
+		auto pda = get<ObjectPDA>(arguments[0]).value;
+		auto re = get<ObjectRegex>(arguments[1]).value;
+		res = ObjectPDA(pda.regular_intersect(re, &log_template));
+	}
 	if (function.name == "Intersect") {
 		res = ObjectNFA(FiniteAutomaton::intersection(
 			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
@@ -771,6 +776,9 @@ bool Interpreter::run_test(const Test& test) {
 		} else if (holds_alternative<ObjectPDA>(*language)) {
 			log_template.load_tex_template("Test5");
 			Tester::test(&get<ObjectPDA>(*language).value, reg, test.iterations, &log_template);
+		} else if (holds_alternative<ObjectDPDA>(*language)) {
+			log_template.load_tex_template("Test6");
+			Tester::test(&get<ObjectDPDA>(*language).value, reg, test.iterations, &log_template);
 		} else {
 			logger.throw_error("while running test: invalid language expression");
 			success = false;
@@ -1178,9 +1186,10 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems, 
 	// Language
 	if (const auto& expr = scan_expression(lexems, i, lexems.size());
 		expr.has_value() &&
-		((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
-		 (*expr).type == ObjectType::NFA || (*expr).type == ObjectType::BRefRegex ||
-		 (*expr).type == ObjectType::MFA) || (*expr).type == ObjectType::PDA) {
+			((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
+			 (*expr).type == ObjectType::NFA || (*expr).type == ObjectType::BRefRegex ||
+			 (*expr).type == ObjectType::MFA) ||
+		(*expr).type == ObjectType::PDA || (*expr).type == ObjectType::DPDA) {
 		test.language = *expr;
 	} else {
 		logger.throw_error("Scan test: wrong type at position 1, nfa or regex expected");

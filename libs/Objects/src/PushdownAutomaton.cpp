@@ -19,7 +19,7 @@ using std::unordered_set;
 using std::vector;
 
 template <typename Range, typename Value = typename Range::value_type>
-std::string Join(Range const& elements, const char *const delimiter) {
+std::string Join(Range const& elements, const char* const delimiter) {
 	std::ostringstream os;
 	auto b = begin(elements), e = end(elements);
 
@@ -34,15 +34,24 @@ std::string Join(Range const& elements, const char *const delimiter) {
 	return os.str();
 }
 
+struct pairhash {
+  public:
+	template <typename T, typename U> std::size_t operator()(const std::pair<T, U>& x) const {
+		return std::hash<T>()(x.first) ^ std::hash<U>()(x.second);
+	}
+};
+
 template <typename T> void hash_combine(std::size_t& seed, const T& v) {
 	seed ^= std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-PDATransition::PDATransition(const int to, const Symbol& input, const Symbol& pop, const std::vector<Symbol>& push)
+PDATransition::PDATransition(const int to, const Symbol& input, const Symbol& pop,
+							 const std::vector<Symbol>& push)
 	: to(to), input_symbol(input), push(push), pop(pop) {}
 
 bool PDATransition::operator==(const PDATransition& other) const {
-	return to == other.to && input_symbol == other.input_symbol && push == other.push && pop == other.pop;
+	return to == other.to && input_symbol == other.input_symbol && push == other.push &&
+		   pop == other.pop;
 }
 
 std::size_t PDATransition::Hasher::operator()(const PDATransition& t) const {
@@ -92,7 +101,7 @@ PushdownAutomaton::PushdownAutomaton(int initial_state, vector<PDAState> states,
 std::string PushdownAutomaton::to_txt() const {
 	stringstream ss;
 	ss << "digraph {\n\trankdir = LR\n\tdummy [label = \"\", shape = none]\n\t";
-	for (const auto & state : states) {
+	for (const auto& state : states) {
 		ss << state.index << " [label = \"" << state.identifier << "\", shape = ";
 		ss << (state.is_terminal ? "doublecircle]\n\t" : "circle]\n\t");
 	}
@@ -103,7 +112,8 @@ std::string PushdownAutomaton::to_txt() const {
 		for (const auto& elem : state.transitions) {
 			for (const auto& transition : elem.second) {
 				ss << "\t" << state.index << " -> " << transition.to << " [label = \""
-				   << string(elem.first) << ", " << transition.pop << "/" << Join(transition.push, ",") << "\"]\n";
+				   << string(elem.first) << ", " << transition.pop << "/"
+				   << Join(transition.push, ",") << "\"]\n";
 			}
 		}
 	}
@@ -120,14 +130,160 @@ size_t PushdownAutomaton::size(iLogTemplate* log) const {
 	return states.size();
 }
 
+PushdownAutomaton PushdownAutomaton::_remove_unreachable_states(iLogTemplate* log) {
+	if (states.size() == 1) {
+		return *this;
+	}
+
+	std::unordered_set<int> reachable_states = {initial_state};
+	std::queue<int> states_to_visit;
+	states_to_visit.push(initial_state);
+
+	// Perform BFS to find reachable states
+	while (!states_to_visit.empty()) {
+		int current_state_index = states_to_visit.front();
+		states_to_visit.pop();
+		const PDAState& current_state = states[current_state_index];
+
+		// Visit transitions from the current state
+		for (const auto& [symbol, symbol_transitions] : current_state.transitions) {
+			for (const auto& trans : symbol_transitions) {
+				int index = trans.to;
+				// If the next state is not already marked as reachable
+				if (!reachable_states.count(index)) {
+					reachable_states.insert(index);
+					states_to_visit.push(index);
+				}
+			}
+		}
+	}
+
+	// Remove unreachable states from the states vector
+	std::vector<PDAState> new_states;
+	int i = 0, new_initial_index;
+	std::map<int, int> recover_index;
+	for (auto state : states) {
+		if (!reachable_states.count(state.index)) {
+			continue;
+		}
+
+		if (state.index == initial_state) {
+			new_initial_index = i;
+		}
+		recover_index[state.index] = i;
+		state.index = i;
+		new_states.emplace_back(state);
+		i++;
+	}
+
+	// Remap transitions
+	for (auto & state : new_states) {
+		PDAState::Transitions new_transitions;
+		for (const auto& [symbol, symbol_transitions] : state.transitions) {
+			for (const auto& trans : symbol_transitions) {
+				new_transitions[symbol].insert(PDATransition(
+					recover_index[trans.to], trans.input_symbol, trans.pop, trans.push));
+			}
+		}
+		state.transitions = new_transitions;
+	}
+
+	return {new_initial_index, new_states, get_language()->get_alphabet()};
+}
+
+PushdownAutomaton PushdownAutomaton::regular_intersect(const Regex& re, iLogTemplate* log) {
+	auto dfa = re.to_thompson(log).determinize(log).minimize(log);
+
+	// Flatten PDA transitions
+	using PDA_from = int;
+	std::vector<std::pair<PDA_from, PDATransition>> pda_transitions_by_from;
+	for (const auto& state : states) {
+		for (const auto& [symbol, symbol_transitions] : state.transitions) {
+			for (const auto& trans : symbol_transitions) {
+				pda_transitions_by_from.emplace_back(state.index, trans);
+			}
+		}
+	}
+
+	// Initialize states.
+	// recover_index maps (pda_index, dfa_index) to result_index.
+	std::vector<PDAState> result_states;
+	std::unordered_map<std::pair<int, int>, int, pairhash> recover_index;
+	int i = 0;
+	for (const auto& pda_state : states) {
+		for (const auto& dfa_state : dfa.get_states()) {
+			std::ostringstream oss;
+			oss << "(" << pda_state.identifier << ";" << dfa_state.identifier << ")";
+			result_states.emplace_back(
+				i, oss.str(), pda_state.is_terminal && dfa_state.is_terminal);
+			recover_index[{pda_state.index, dfa_state.index}] = i;
+			i++;
+		}
+	}
+
+	// Calculate transitions
+	for (const auto& [pda_from, pda_trans] : pda_transitions_by_from) {
+		for (const auto& dfa_state : dfa.get_states()) {
+			// Process epsilon transitions separately
+			if (pda_trans.input_symbol.is_epsilon()) {
+				auto from_index = recover_index[{pda_from, dfa_state.index}];
+				auto to_index = recover_index[{pda_trans.to, dfa_state.index}];
+				result_states[from_index].set_transition(
+					PDATransition(to_index, pda_trans.input_symbol, pda_trans.pop, pda_trans.push),
+					pda_trans.input_symbol);
+				continue;
+			}
+
+			// Process regular transitions separately
+			auto matching_transitions = dfa_state.transitions.find(pda_trans.input_symbol);
+			if (matching_transitions == dfa_state.transitions.end()) {
+				continue;
+			}
+
+			for (const auto& dfa_to : matching_transitions->second) {
+				auto from_index = recover_index[{pda_from, dfa_state.index}];
+				auto to_index = recover_index[{pda_trans.to, dfa_to}];
+				result_states[from_index].set_transition(
+					PDATransition(to_index, pda_trans.input_symbol, pda_trans.pop, pda_trans.push),
+					pda_trans.input_symbol);
+			}
+		}
+	}
+
+	auto result_initial_state = recover_index[{initial_state, dfa.get_initial()}];
+
+	// Calculate resulting alphabet
+	auto pda_alphabet = get_language()->get_alphabet();
+	auto dfa_alphabet = dfa.get_language()->get_alphabet();
+	set<Symbol> result_alphabet;
+	std::set_intersection(pda_alphabet.begin(),
+						  pda_alphabet.end(),
+						  dfa_alphabet.begin(),
+						  dfa_alphabet.end(),
+						  std::inserter(result_alphabet, result_alphabet.begin()));
+
+	auto result = PushdownAutomaton(result_initial_state, result_states, result_alphabet);
+	result = result._remove_unreachable_states(log);
+
+	if (log) {
+		log->set_parameter("pda", *this);
+		log->set_parameter("regex", dfa);
+		log->set_parameter("result", result);
+	}
+
+	return result;
+}
+
 bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 	bool result = true;
 	std::unordered_set<int> nondeterministic_states;
 	for (const auto& state : states) {
 		// Отображение символов стэка в символы алфавита
-		std::unordered_map<Symbol, std::unordered_set<Symbol, Symbol::Hasher>, Symbol::Hasher> stack_sym_to_sym;
+		std::unordered_map<Symbol, std::unordered_set<Symbol, Symbol::Hasher>, Symbol::Hasher>
+			stack_sym_to_sym;
 		for (const auto& [symb, symbol_transitions] : state.transitions) {
 			for (const auto& tr : symbol_transitions) {
+				// Т.к. мы разрешаем pop epsilon,
 				if (symb.is_epsilon() && tr.pop.is_epsilon() && state.transitions.size() > 1) {
 					result = false;
 					nondeterministic_states.emplace(state.index);
@@ -142,7 +298,8 @@ bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 					break;
 				}
 
-				if (stack_sym_to_sym[tr.pop].count(symb) || stack_sym_to_sym[tr.pop].count(Symbol::Epsilon)) {
+				if (stack_sym_to_sym[tr.pop].count(symb) ||
+					stack_sym_to_sym[tr.pop].count(Symbol::Epsilon)) {
 					// Перехода по одной и той же паре (symb, stack_symb) не должно быть.
 					// Так же не может быть перехода по символу стэка, для которого ранее
 					// зафиксировали наличие эпсилон-перехода.
@@ -158,7 +315,7 @@ bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 
 	if (log) {
 		MetaInfo meta;
-		for (const auto&state: states) {
+		for (const auto& state : states) {
 			if (nondeterministic_states.count(state.index)) {
 				meta.upd(NodeMeta{state.index, MetaInfo::trap_color});
 			}
@@ -171,10 +328,24 @@ bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 }
 
 PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
-	return PushdownAutomaton();
+	std::vector<PDAState> new_states;
+	new_states.reserve(states.size());
+	for (const auto& state : states) {
+		new_states.emplace_back(
+			state.index, state.identifier, !state.is_terminal, state.transitions);
+	}
+
+	PushdownAutomaton result = {initial_state, new_states, get_language()};
+	if (log) {
+		log->set_parameter("oldpda", *this);
+		log->set_parameter("result", result);
+	}
+
+	return result;
 }
 
-std::vector<PDATransition> get_regular_transitions(const string& s, const ParsingState& parsing_state) {
+std::vector<PDATransition> get_regular_transitions(const string& s,
+												   const ParsingState& parsing_state) {
 	std::vector<PDATransition> transitions;
 	const Symbol symb(parsing_state.pos < s.size() ? s[parsing_state.pos] : char());
 	if (parsing_state.state->transitions.find(symb) == parsing_state.state->transitions.end()) {
@@ -182,7 +353,7 @@ std::vector<PDATransition> get_regular_transitions(const string& s, const Parsin
 	}
 
 	auto symbol_transitions = parsing_state.state->transitions.at(symb);
-	for (auto tr: symbol_transitions) {
+	for (auto tr : symbol_transitions) {
 		if (!parsing_state.stack.empty() && parsing_state.stack.top() == tr.pop) {
 			transitions.emplace_back(tr);
 		}
@@ -191,13 +362,16 @@ std::vector<PDATransition> get_regular_transitions(const string& s, const Parsin
 	return transitions;
 }
 
-std::vector<std::pair<bool, PDATransition>> get_epsilon_transitions(const string& s, const ParsingState& parsing_state) {
+std::vector<std::pair<bool, PDATransition>> get_epsilon_transitions(
+	const string& s, const ParsingState& parsing_state) {
 	std::vector<std::pair<bool, PDATransition>> epsilon_transitions;
 
-	if (parsing_state.state->transitions.find(Symbol::Epsilon) != parsing_state.state->transitions.end()) {
+	if (parsing_state.state->transitions.find(Symbol::Epsilon) !=
+		parsing_state.state->transitions.end()) {
 		for (auto tr : parsing_state.state->transitions.at(Symbol::Epsilon)) {
 			// переход по epsilon -> не потребляем символ
-			if (tr.pop.is_epsilon() || (!parsing_state.stack.empty() && parsing_state.stack.top() == tr.pop)) {
+			if (tr.pop.is_epsilon() ||
+				(!parsing_state.stack.empty() && parsing_state.stack.top() == tr.pop)) {
 				epsilon_transitions.emplace_back(false, tr);
 			}
 		}
@@ -209,7 +383,7 @@ std::vector<std::pair<bool, PDATransition>> get_epsilon_transitions(const string
 	}
 
 	auto symbol_transitions = parsing_state.state->transitions.at(symb);
-	for (auto tr: symbol_transitions) {
+	for (auto tr : symbol_transitions) {
 		// переход по не-epsilon, epsilon на стэке -> потребляем символ + эпсилон-переход
 		if (tr.pop.is_epsilon()) {
 			epsilon_transitions.emplace_back(true, tr);
@@ -224,7 +398,7 @@ std::stack<Symbol> perform_stack_actions(std::stack<Symbol> stack, const PDATran
 	if (!tr.pop.is_epsilon()) {
 		result.pop();
 	}
-	for (const auto& push_sym:tr.push) {
+	for (const auto& push_sym : tr.push) {
 		if (!push_sym.is_epsilon()) {
 			result.push(push_sym);
 		}
@@ -255,8 +429,9 @@ std::pair<int, bool> PushdownAutomaton::parse(const std::string& s) const {
 
 		auto transitions = get_regular_transitions(s, parsing_state);
 		if (parsed_len + 1 <= s.size()) {
-			for (auto tr: transitions) {
-				parsing_stack.emplace(parsed_len+1, &states[tr.to], perform_stack_actions(parsing_state.stack, tr));
+			for (auto tr : transitions) {
+				parsing_stack.emplace(
+					parsed_len + 1, &states[tr.to], perform_stack_actions(parsing_state.stack, tr));
 			}
 		}
 
