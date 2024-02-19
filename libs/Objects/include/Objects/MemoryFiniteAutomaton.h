@@ -80,6 +80,27 @@ struct ParingState {
 	ParingState(int pos, const MFAState* state, const std::unordered_set<int>& opened_cells,
 				const std::unordered_map<int, std::pair<int, int>>& memory);
 	bool operator==(const ParingState& other) const;
+
+	struct Hasher {
+		std::size_t operator()(const ParingState& s) const;
+	};
+};
+
+// состояние идентифицирующее шаг обхода MFA
+struct TraversalState {
+	std::string str;
+	const MFAState* state;
+	std::unordered_set<int> opened_cells;
+	std::unordered_map<int, std::pair<int, int>> memory; // значение - начало и конец подстроки
+
+	TraversalState(std::string str, const MFAState* state,
+				   const std::unordered_set<int>& opened_cells,
+				   const std::unordered_map<int, std::pair<int, int>>& memory);
+	bool operator==(const TraversalState& other) const;
+
+	struct Hasher {
+		std::size_t operator()(const TraversalState& s) const;
+	};
 };
 
 // переход дополняется информацией о состоянии памяти
@@ -93,6 +114,7 @@ struct ParseTransition : MFATransition {
 
   public:
 	ParseTransition(const MFATransition& transition, const ParingState& parsing_state);
+	ParseTransition(const MFATransition& transition, const TraversalState& traversal_state);
 	// "записывает" символы в открытые ячейки
 	void update_memory(const Symbol& symbol);
 };
@@ -105,6 +127,10 @@ struct ParseTransitions {
 	void add_transitions(const Symbol& symbol,
 						 const MFAState::SymbolTransitions& symbol_transitions,
 						 const ParingState& parsing_state);
+
+	void add_transitions(const Symbol& symbol,
+						 const MFAState::SymbolTransitions& symbol_transitions,
+						 const TraversalState& traversal_state);
 
 	std::unordered_map<Symbol, std::unordered_set<ParseTransition, MFATransition::Hasher>,
 					   Symbol::Hasher>::const_iterator
@@ -174,4 +200,6 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<int, bool> parse(const std::string&) const override;
 	// проверяет, распознаёт ли автомат слово (использует FastMatcher)
 	std::pair<int, bool> parse_additional(const std::string&) const;
+	// возвращает множество уникальных слов длины <= max_len, распознаваемых автоматом
+	std::unordered_set<std::string> generate_test_set(int max_len);
 };

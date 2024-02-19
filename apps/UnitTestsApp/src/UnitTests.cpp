@@ -684,7 +684,7 @@ TEST(TestIsAcreg, BRegex_IsAcreg) {
 	ASSERT_FALSE(BackRefRegex("([&2]:1([&1]:2|[a]:2))*").is_acreg());
 }
 
-TEST(TestParsing, MFAParsing) {
+TEST(TestParsing, MFA_parse) {
 	using Test = std::tuple<bool, string, string, bool>;
 	vector<Test> tests = {
 		{true, "[a*]:1&1", "aaa", false},
@@ -724,6 +724,41 @@ TEST(TestParsing, MFAParsing) {
 			MemoryFiniteAutomaton rem_eps_mfa = mfa.remove_eps();
 			ASSERT_EQ(rem_eps_mfa.parse(str).second, expected_res);
 			ASSERT_EQ(rem_eps_mfa.parse_additional(str).second, expected_res);
+		}
+	});
+}
+
+TEST(TestParsing, MFA_equivalence) {
+	using Test = std::tuple<bool, string>;
+	vector<Test> tests = {
+		{true, "[a*]:1&1"},
+		{true, "[[a*]:1b&1]:2&2"},
+		{true, "([&2]:1[&1a]:2)*"},
+		{false, "[b]:1[a*]:1&1"},
+		{true, "[b]:1a[a*]:1&1"},
+		{false, "(&1[b]:1[a*]:1)*"},
+		{true, "[a*]:1&1[b|c]:2*&2"},
+		{true, "[a*]:1&1[b|c]:1*&1"},
+	};
+
+	int MAX_LEN = 10;
+
+	for_each(tests.begin(), tests.end(), [&MAX_LEN](const Test& test) {
+		auto [test_rem_eps, rgx_str] = test;
+		std::cout << rgx_str << std::endl;
+		SCOPED_TRACE("Regex: " + rgx_str);
+
+		MemoryFiniteAutomaton mfa = BackRefRegex(rgx_str).to_mfa();
+		vector<MemoryFiniteAutomaton> MFAs = {BackRefRegex(rgx_str).to_mfa_additional()};
+		if (test_rem_eps) {
+			MFAs.emplace_back(mfa.remove_eps());
+		}
+
+		unordered_set<string> base_test_set = mfa.generate_test_set(MAX_LEN);
+		for (auto& cur_mfa : MFAs) {
+			unordered_set<string> test_set = cur_mfa.generate_test_set(MAX_LEN);
+			std::cout << test_set.size() << std::endl;
+			ASSERT_EQ(base_test_set, test_set);
 		}
 	});
 }
