@@ -13,7 +13,7 @@ struct PDATransition {
 	Symbol pop;
 	std::vector<Symbol> push;
 
-	PDATransition(const int to, const Symbol& input, const Symbol& pop, const std::vector<Symbol>& push);
+	PDATransition(int to, const Symbol& input, const Symbol& pop, const std::vector<Symbol>& push);
 
 	bool operator==(const PDATransition& other) const;
 
@@ -44,14 +44,21 @@ struct ParsingState {
 	const PDAState* state;
 	std::stack<Symbol> stack;
 
-	ParsingState(int pos, const PDAState* state, const std::stack<Symbol>& stack) : pos(pos), state(state), stack(stack) {};
+	ParsingState(int pos, const PDAState* state, const std::stack<Symbol>& stack)
+		: pos(pos), state(state), stack(stack){};
 };
 
 class PushdownAutomaton : public AbstractMachine {
   private:
 	std::vector<PDAState> states;
-	PushdownAutomaton _remove_unreachable_states(iLogTemplate*log);
-	std::pair<MetaInfo, PushdownAutomaton> _add_trap_state(iLogTemplate*log);
+	PushdownAutomaton _remove_unreachable_states(iLogTemplate* log);
+	std::pair<MetaInfo, PushdownAutomaton> _add_trap_state(iLogTemplate* log);
+	PushdownAutomaton _remove_bad_epsilon();
+	PushdownAutomaton _add_trap_state();
+	[[nodiscard]] std::vector<std::pair<int, PDATransition>> _find_problematic_epsilon_transitions()
+		const;
+	[[nodiscard]] std::vector<std::pair<int, PDATransition>> _find_transitions_to(int index) const;
+	[[nodiscard]] std::set<Symbol> _get_stack_symbols() const;
 
   public:
 	PushdownAutomaton();

@@ -3,3 +3,6 @@ D = Determinize X
 C = Complement D !!
 Test (C) {(a)*(b)*} 1
 Test (C) {(abb)*} 1
+CC = Complement C
+Test (C) {(a)*(b)*} 1
+Test (C) {(abb)*} 1

@@ -148,7 +148,7 @@ static GeneralObject convert_type(const GeneralObject& obj, ObjectType type) {
 	if (std::holds_alternative<ObjectRegex>(obj) && type == ObjectType::BRefRegex)
 		return ObjectBRefRegex(std::get<ObjectRegex>(obj).value.to_bregex());
 	if (std::holds_alternative<ObjectDPDA>(obj) && type == ObjectType::PDA)
-		return ObjectPDA(std::get<ObjectPDA>(obj).value);
+		return ObjectPDA(std::get<ObjectDPDA>(obj).value);
 	return obj;
 }
 

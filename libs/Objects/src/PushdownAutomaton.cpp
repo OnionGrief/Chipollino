@@ -4,6 +4,8 @@
 #include <Objects/PushdownAutomaton.h>
 #include <Objects/Symbol.h>
 #include <sstream>
+#include <string>
+#include <unistd.h>
 
 #include <utility>
 
@@ -320,132 +322,173 @@ bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 	return result;
 }
 
-std::pair<MetaInfo, PushdownAutomaton> PushdownAutomaton::_add_trap_state(iLogTemplate* log) {
-	std::vector<PDAState> new_states = states;
-	bool has_trap = false;
-	MetaInfo meta;
-	int count = static_cast<int>(size());
-	for (auto& state : new_states) {
-		for (const Symbol& symb : language->get_alphabet()) {
-			if (!state.transitions.count(symb) || state.transitions.at(symb).empty()) {
-				state.set_transition(
-					{count, symb, Symbol::Epsilon, std::vector<Symbol>{Symbol::Epsilon}}, symb);
-				has_trap = true;
+std::set<Symbol> PushdownAutomaton::_get_stack_symbols() const {
+	std::set<Symbol> result;
+	for (const auto& state : states) {
+		for (const auto& [_, symbol_transitions] : state.transitions) {
+			for (const auto& trans : symbol_transitions) {
+				if (!trans.pop.is_epsilon()) {
+					result.emplace(trans.pop);
+				}
+			}
+		}
+	}
+	return result;
+}
+
+std::vector<std::pair<int, PDATransition>> PushdownAutomaton::
+	_find_problematic_epsilon_transitions() const {
+	std::vector<std::pair<int, PDATransition>> result;
+
+	for (const auto& state : states) {
+		// Ищем нефинальные состояния, из которых есть помимо eps-переходов есть иные переходы.
+		if (state.is_terminal ||
+			state.transitions.find(Symbol::Epsilon) == state.transitions.end() ||
+			state.transitions.size() == 1) {
+			continue;
+		}
+
+		// Отмечаем все eps-переходы в финальные состояния как проблемные.
+		for (const auto& trans : state.transitions.at(Symbol::Epsilon)) {
+			if (states[trans.to].is_terminal) {
+				result.emplace_back(state.index, trans);
 			}
 		}
 	}
 
-
-	if (has_trap) {
-		new_states.emplace_back(count, "", false);
-		// meta.upd(NodeMeta{count, MetaInfo::trap_color});
-		for (const Symbol& symb : language->get_alphabet()) {
-			new_states[count].set_transition(
-				{count, symb, Symbol::Epsilon, std::vector<Symbol>{Symbol::Epsilon}}, symb);
-		}
-	}
-
-	PushdownAutomaton result(initial_state, new_states, language);
-	return {meta, result};
+	return result;
 }
 
-void invert_all_states(std::vector<PDAState>& states) {
-	for (auto& state : states) {
-		state.is_terminal = !state.is_terminal;
-	}
-}
+std::vector<std::pair<int, PDATransition>> PushdownAutomaton::_find_transitions_to(
+	int index) const {
+	std::vector<std::pair<int, PDATransition>> result;
 
-bool has_final_state(const std::vector<PDAState>& states) {
 	for (const auto& state : states) {
-		if (state.is_terminal) {
-			return true;
+		for (const auto& [symbol, symbol_transitions] : state.transitions) {
+			for (const auto& trans : symbol_transitions) {
+				if (trans.to == index) {
+					result.emplace_back(state.index, trans);
+				}
+			}
 		}
-	}
-	return false;
-}
-
-PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
-	PushdownAutomaton new_pda(initial_state, states, language);
-	auto [meta, result] = new_pda._add_trap_state(log);
-	for (auto&state : result.states) {
-		state.is_terminal = !state.is_terminal;
-	}
-
-	if(log) {
-		log->set_parameter("oldpda", *this);
-		log->set_parameter("result", result, meta);
 	}
 
 	return result;
-	// if (!has_final_state(result.states)) {
-	// 	invert_all_states(result.states);
-	// 	return result;
-	// }
-	//
-	// std::set<int> reading_states;
-	// std::map<int, std::vector<PDATransition>> new_transitions;
-	// for (auto& state : result.states) {
-	// 	bool has_input = false, has_input_eps = false;
-	// 	for (const auto& [symbol, symbol_transitions] : state.transitions) {
-	// 		for (const auto& trans : symbol_transitions) {
-	// 			if (trans.input_symbol.is_epsilon()) {
-	// 				has_input_eps = true;
-	// 			} else {
-	// 				has_input = true;
-	// 			}
-	// 		}
-	// 	}
-	//
-	// 	if (!has_input_eps) {
-	// 		reading_states.insert(state.index);
-	// 	}
-	// 	if (!has_input) {
-	// 		continue;
-	// 	}
-	//
-	// 	std::map<Symbol, int> stack_sym_to_state;
-	// 	for (const auto& [symbol, symbol_transitions] : state.transitions) {
-	// 		for (const auto& trans : symbol_transitions) {
-	// 			if (!trans.input_symbol.is_epsilon()) {
-	// 				auto it = stack_sym_to_state.find(trans.pop);
-	// 				if (it == stack_sym_to_state.end()) {
-	// 					it = stack_sym_to_state.try_emplace(trans.pop).first;
-	// 					state.set_transition({it->second, Symbol::Epsilon, trans.pop, std::vector<Symbol>({Symbol::Epsilon})}, Symbol::Epsilon);
-	// 					reading_states.insert(it->second);
-	// 					if(state.is_terminal) {
-	// 						result.states[it->second].is_terminal = true;
-	// 					}
-	// 				}
-	//
-	// 				new_transitions[it->second].emplace_back(trans.to, trans.input_symbol, Symbol::Epsilon, trans.push);
-	// 			}
-	// 		}
-	// 	}
-	// }
-	//
-	// for (auto&[state_index, transitions_to_add]: new_transitions) {
-	// 	for (auto trans: transitions_to_add) {
-	// 		result.states[state_index].set_transition(trans, trans.input_symbol);
-	// 	}
-	// }
-	//
-	// for(auto& state: result.states) {
-	// 	if (reading_states.count(state.index) && !state.is_terminal) {
-	// 		state.is_terminal = true;
-	// 	} else {
-	// 		state.is_terminal = false;
-	// 	}
-	// }
-
-	return new_pda;
 }
 
-bool PushdownAutomaton::equal(PushdownAutomaton pda1, PushdownAutomaton pda2) {
-	if(pda1.size() != pda2.size()) {
-		return false;
+PushdownAutomaton PushdownAutomaton::_add_trap_state() {
+	PushdownAutomaton result(initial_state, states, language);
+	auto stack_symbols = result._get_stack_symbols();
+	int i_trap = static_cast<int>(result.size());
+	bool already_has_trap = false;
+	for (const auto&state: result.states) {
+		if (state.identifier == "trap") {
+			already_has_trap = true;
+			i_trap = state.index;
+		}
 	}
 
+	bool need_create_trap = false;
+	for (auto& state : result.states) {
+		std::set<std::pair<Symbol, Symbol>> stack_sym_in_sym_transitions;
 
+		for (const auto& [symbol, symbol_transitions] : state.transitions) {
+			for (const auto& trans : symbol_transitions) {
+				stack_sym_in_sym_transitions.emplace(trans.pop, trans.input_symbol);
+			}
+		}
+
+		std::set<Symbol> symbols = result.get_language()->get_alphabet();
+
+		for (const auto& symb : symbols) {
+			for (const auto& stack_symb : stack_symbols) {
+				if (stack_sym_in_sym_transitions.count({stack_symb, symb})||
+					stack_sym_in_sym_transitions.count({stack_symb, Symbol::Epsilon})) {
+					continue;
+				}
+				need_create_trap = true;
+				state.set_transition({i_trap, symb, stack_symb, std::vector<Symbol>{stack_symb}}, symb);
+			}
+		}
+	}
+
+	if (!need_create_trap || already_has_trap) {
+		return result;
+	}
+
+	result.states.emplace_back(i_trap, "trap", false);
+	for (const auto& symb : result.get_language()->get_alphabet()) {
+		if (symb.is_epsilon())
+			continue;
+
+		for (const auto& stack_symb : stack_symbols) {
+			result.states[i_trap].set_transition({i_trap, symb, stack_symb, std::vector<Symbol>{stack_symb}},
+												 symb);
+		}
+	}
+
+	return result;
+}
+
+PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
+	// PDA here is deterministic.
+
+	PushdownAutomaton result(initial_state, states, language);
+	result = result._add_trap_state();
+
+	std::set<int> no_toggle_states;
+	for (const auto& [from_index, bad_trans] : result._find_problematic_epsilon_transitions()) {
+		auto bad_symbol = bad_trans.pop;
+		auto final_state_index = bad_trans.to;
+		auto problems_trap_index = static_cast<int>(result.size());
+		no_toggle_states.emplace(problems_trap_index); // Состояние-ловушка проблемных переходов не
+													   // меняет финальность при обращении
+
+		for (const auto& [from_from_index, trans] : result._find_transitions_to(from_index)) {
+			if (!trans.push.empty() && trans.push.back() == bad_symbol) {
+				// Если после перехода на вершине стэка точно окажется "проблемный символ", то
+				// перенаправляем переход сразу в финальное состояние.
+				result.states[from_from_index].set_transition(
+					{final_state_index, trans.input_symbol, trans.pop, trans.push},
+					trans.input_symbol);
+				result.states[from_from_index].transitions[trans.input_symbol].erase(trans);
+				continue;
+			}
+
+			// Иначе перенаправляем переход в ловушку проблемных переходов
+			result.states[from_from_index].set_transition(
+				{problems_trap_index, trans.input_symbol, trans.pop, trans.push},
+				trans.input_symbol);
+			result.states[from_from_index].transitions[trans.input_symbol].erase(trans);
+		}
+
+		// Добавляем состояние-ловушку проблемных переходов.
+		result.states.emplace_back(
+			problems_trap_index, "eps-trap", false);
+		result.states[problems_trap_index].set_transition(
+			{final_state_index, Symbol::Epsilon, bad_symbol, std::vector({bad_symbol})},
+			Symbol::Epsilon);
+		for (const auto& stack_symb : result._get_stack_symbols()) {
+			if (stack_symb != bad_symbol && stack_symb != Symbol::StackTop) {
+				result.states[problems_trap_index].set_transition(
+					{from_index, Symbol::Epsilon, stack_symb, std::vector({stack_symb})},
+					Symbol::Epsilon);
+			}
+		}
+	}
+
+	result = result._add_trap_state();
+	for (auto& state : result.states) {
+		if (!no_toggle_states.count(state.index)) {
+			state.is_terminal = !state.is_terminal;
+		}
+	}
+
+	if (log) {
+		log->set_parameter("oldpda", *this);
+		log->set_parameter("result", result);
+	}
+	return result;
 }
 
 std::vector<PDATransition> get_regular_transitions(const string& s,
@@ -460,7 +503,7 @@ std::vector<PDATransition> get_regular_transitions(const string& s,
 
 	auto symbol_transitions = transitions.at(symb);
 	for (const auto& trans : symbol_transitions) {
-		if (trans.pop.is_epsilon() || (!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop)) {
+		if (!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop) {
 			regular_transitions.emplace_back(trans);
 		}
 	}
@@ -479,7 +522,7 @@ std::vector<PDATransition> get_epsilon_transitions(const string& s,
 
 	for (const auto& trans : transitions.at(Symbol::Epsilon)) {
 		// переход по epsilon -> не потребляем символ
-		if (trans.pop.is_epsilon() ||(!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop)) {
+		if (!parsing_state.stack.empty() && parsing_state.stack.top() == trans.pop) {
 			epsilon_transitions.emplace_back(trans);
 		}
 	}
@@ -490,9 +533,7 @@ std::vector<PDATransition> get_epsilon_transitions(const string& s,
 std::stack<Symbol> perform_stack_actions(std::stack<Symbol> stack, const PDATransition& tr) {
 	auto result = stack;
 
-	if(!tr.pop.is_epsilon()) {
-		result.pop();
-	}
+	result.pop();
 
 	for (const auto& push_sym : tr.push) {
 		if (!push_sym.is_epsilon()) {
