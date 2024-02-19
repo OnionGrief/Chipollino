@@ -428,7 +428,7 @@ TEST(TestGetOneUnambigous, GetOneUnambigousWorks) {
 	check_one_unambiguous("a(bbb*aaa*)*bb*|aaa*(bbb*aaa*)*|b(aaa*bbb*)*aa*|", false);
 }
 
-TEST(TestInrepetor, RunLineTest) {
+TEST(TestInterpreter, RunLineTest) {
 	Interpreter interpreter;
 	interpreter.set_log_mode(Interpreter::LogMode::nothing);
 	ASSERT_TRUE(!interpreter.run_line("A =	 Annote (Glushkova {a})"));
