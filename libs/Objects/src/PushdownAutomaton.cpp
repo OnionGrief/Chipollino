@@ -339,8 +339,7 @@ std::vector<std::pair<int, PDATransition>> PushdownAutomaton::
 	for (const auto& state : states) {
 		// Ищем нефинальные состояния, из которых есть помимо eps-переходов есть иные переходы.
 		if (state.is_terminal ||
-			state.transitions.find(Symbol::Epsilon) == state.transitions.end() ||
-			state.transitions.size() == 1) {
+			state.transitions.find(Symbol::Epsilon) == state.transitions.end()) {
 			continue;
 		}
 
@@ -429,7 +428,7 @@ PushdownAutomaton PushdownAutomaton::_add_trap_state() {
 
 PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
 	// PDA here is deterministic.
-	if(!is_deterministic()) {
+	if (!is_deterministic()) {
 		throw std::logic_error("Complement is available only for deterministic PDA");
 	}
 
@@ -437,7 +436,8 @@ PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
 	result = result._add_trap_state();
 
 	std::set<int> no_toggle_states;
-	for (const auto& [from_index, bad_trans] : result._find_problematic_epsilon_transitions()) {
+	auto problematic_transitions = result._find_problematic_epsilon_transitions();
+	for (const auto& [from_index, bad_trans] : problematic_transitions) {
 		auto bad_symbol = bad_trans.pop;
 		auto final_state_index = bad_trans.to;
 		auto problems_trap_index = static_cast<int>(result.size());
@@ -468,7 +468,7 @@ PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
 			{final_state_index, Symbol::Epsilon, bad_symbol, std::vector({bad_symbol})},
 			Symbol::Epsilon);
 		for (const auto& stack_symb : result._get_stack_symbols()) {
-			if (stack_symb != bad_symbol && stack_symb != Symbol::StackTop) {
+			if (stack_symb != bad_symbol) {
 				result.states[problems_trap_index].set_transition(
 					{from_index, Symbol::Epsilon, stack_symb, std::vector({stack_symb})},
 					Symbol::Epsilon);
