@@ -58,7 +58,7 @@ class PushdownAutomaton : public AbstractMachine {
 	[[nodiscard]] std::vector<std::pair<int, PDATransition>> _find_problematic_epsilon_transitions()
 		const;
 	[[nodiscard]] std::vector<std::pair<int, PDATransition>> _find_transitions_to(int index) const;
-	[[nodiscard]] std::set<Symbol> _get_stack_symbols() const;
+	[[nodiscard]] std::unordered_set<Symbol, Symbol::Hasher> _get_stack_symbols() const;
 
   public:
 	PushdownAutomaton();
@@ -75,7 +75,7 @@ class PushdownAutomaton : public AbstractMachine {
 	bool is_deterministic(iLogTemplate* log = nullptr) const override;
 	// меняет язык
 	PushdownAutomaton complement(iLogTemplate* log = nullptr) const;
-	bool equal(PushdownAutomaton pda1, PushdownAutomaton pda2);
+	static bool equal(PushdownAutomaton pda1, PushdownAutomaton pda2, iLogTemplate*log);
 	// пересечение с регуляркой
 	PushdownAutomaton regular_intersect(const Regex& re, iLogTemplate* log);
 	// проверяет, распознаёт ли автомат слово (использует BasicMatcher)
