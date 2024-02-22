@@ -10,6 +10,7 @@
 
 #include <lexy/callback/string.hpp>
 #include <lexy/lexeme.hpp>
+#include <variant>
 #define lexy_ascii_child lexy::_pt_node<lexy::_bra, void>
 
 #include "Lexer.h"
@@ -19,24 +20,20 @@
 
 class Parser {
   private:
-	// Информация для сборки перехода FA
-	struct FATransition_info {
-		std::string beg;
-		std::string end;
-		Symbol symb;
-		FATransition_info(std::string beg, std::string end, const Symbol& symb) : beg(std::move(beg)), end(std::move(end)), symb(symb) {}
-	};
+    struct FAtransition {
+        std::string beg;
+        std::string end;
 
-	// Информация для сборки перехода MFA
-	struct MFATransition_info : FATransition_info {
-		std::unordered_set<int> open;
-		std::unordered_set<int> close;
+        Symbol symbol;
 
-		MFATransition_info(std::string beg, std::string end, const Symbol& symb,
-						   std::unordered_set<int> open, std::unordered_set<int> close)
-			: FATransition_info(std::move(beg), std::move(end), symb), open(std::move(open)),
-			  close(std::move(close)) {}
-	};
+        // MFA fields
+        unordered_set<int> close;
+        unordered_set<int> open;
+
+        // PDA fields
+        Symbol pop;
+        std::vector<Symbol> push;
+    };
 
 	// Поиск рекурсивный поиск вершин с названиями из names, игнорируя спуск в вершины из exclude
 	static std::vector<lexy_ascii_child> find_children(
@@ -49,35 +46,25 @@ class Parser {
 	// лексема первого потомка для вершины lexy
 	static std::string first_child(lexy::_pt_node<lexy::_bra, void> it);
 
-	// Поиск имён всех состояний
-	static void parse_states(
-		lexy_ascii_tree& tree, std::set<std::string>& names, // NOLINT(runtime/references)
-		std::map<std::string, std::string>& labels);		 // NOLINT(runtime/references)
+    std::map<std::string, lexy::_pt_node<lexy::_bra, void>> rewriting_rules;
+    std::set<std::string> attributes;
 
-	// Парсинг описаний вершин
-	static void parse_descriptions(
-		lexy_ascii_tree& tree,						// NOLINT(runtime/references)
-		std::map<std::string, std::string>& labels, // NOLINT(runtime/references)
-		std::map<std::string, bool>& is_terminal,	// NOLINT(runtime/references)
-		std::string& initial); // NOLINT(runtime/references)
+    std::string file;
+    int cur_pos;
+    void read_symbols(int num);
 
-	// Парсинг переходов для FA
-	static void parse_FA_transitions(
-		lexy_ascii_tree& tree,						  // NOLINT(runtime/references)
-		std::vector<FATransition_info>& transitions); // NOLINT(runtime/references)
+    void parse_attribute(lexy::_pt_node<lexy::_bra, void> ref);
 
-	// Парсинг переходов для MFA
-	static void parse_MFA_transitions(
-		lexy_ascii_tree& tree,						   // NOLINT(runtime/references)
-		std::vector<MFATransition_info>& transitions); // NOLINT(runtime/references)
+    bool parse_transition(std::string name);
+
+    bool parse_nonterminal(lexy::_pt_node<lexy::_bra, void> ref);
+    
+    bool parse_reserved(std::string res_case);
+
+    bool parse_terminal(lexy::_pt_node<lexy::_bra, void> ref);
+
+    bool parse_alternative(lexy::_pt_node<lexy::_bra, void> ref);
 
   public:
-	// Разбор MFA из файла
-	static MemoryFiniteAutomaton parse_MFA(const std::string& filename);
-
-	// Разбор FA из файла
-	static FiniteAutomaton parse_FA(const std::string& filename);
-
-    // Разбор FA из файла
-    static FiniteAutomaton parse_DFA(const std::string& filename);
+	bool parse(lexy_ascii_tree& grammar, std::string filename);
 };

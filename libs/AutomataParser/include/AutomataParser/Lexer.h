@@ -32,95 +32,47 @@ const char epsilon[] = "eps";
 class Lexer {
   private:
 	//=== grammar ===//
-	struct node_id {
-		static constexpr auto rule
-			// One or more alphanumeric characters, underscores or hyphens.
-			= dsl::identifier(dsl::unicode::alnum / dsl::lit_c<'_'> / dsl::lit_c<'-'>);
-	};
+	struct nonterminal {
+        static constexpr auto rule
+            // One or more alphanumeric characters, underscores or hyphens.
+            = dsl::identifier(dsl::unicode::alnum / dsl::lit_c<'_'> / dsl::lit_c<'-'>);
+    };
 
-	struct cell_id {
-		static constexpr auto rule = dsl::digits<>.no_leading_zero();
-	};
+    struct reserved {
+        static constexpr auto  rule = LEXY_LIT("LETTER") | LEXY_LIT("DIGIT") | LEXY_LIT("STRING") | LEXY_LIT("NUMBER") | LEXY_LIT("EPS");
+    };
 
-	struct transition {
-		static constexpr auto rule =
-			LEXY_LIT("eps") | dsl::unicode::alnum | (LEXY_LIT("&") >> dsl::p<cell_id>);
-	};
+    struct terminal {
+        static constexpr auto c = -dsl::apostrophe;
 
-	struct stmt {
-		static constexpr auto rule = dsl::p<node_id> + dsl::p<node_id> + dsl::p<transition>;
-	};
+        static constexpr auto  rule = dsl::single_quoted(c);
+    };
 
-	struct memory_state {
-		static constexpr auto rule = (LEXY_LIT("o") | LEXY_LIT("c"));
-	};
+    struct attribute {
+        static constexpr auto  rule = dsl::lit_c<'!'> >> dsl::p<nonterminal>;
+    };
 
-	struct memory_cell {
-		static constexpr auto rule = dsl::p<cell_id> >> dsl::p<memory_state>;
-	};
+    struct alternative {
+        static constexpr auto sep = dsl::sep(dsl::lit_c<'|'>);
+        
+        static constexpr auto ternary_operator = dsl::parenthesized(dsl::p<nonterminal> + LEXY_LIT("?") + dsl::recurse<alternative> + LEXY_LIT(":") + dsl::recurse<alternative>);
+        
+        static constexpr auto expr = dsl::while_(dsl::p<reserved> | dsl::p<nonterminal> | dsl::p<terminal> | dsl::p<attribute> | ternary_operator);
+        
+        static constexpr auto rule = dsl::list(expr, sep);
+    };
 
-	struct memory_lists {
-		static constexpr auto rule = dsl::while_(dsl::p<memory_cell>);
-	};
+    struct transition {
+        static constexpr auto rule = dsl::p<nonterminal> + LEXY_LIT("-->") + dsl::p<alternative>;
+    };
 
-	struct MFA_edge {
-		static constexpr auto rule = (dsl::p<stmt> + dsl::p<memory_lists>);
-	};
+    struct production {
+        static constexpr auto whitespace = dsl::ascii::space;
 
-	struct FA_edge {
-		static constexpr auto rule = dsl::p<stmt>;
-	};
+        static constexpr auto sep = dsl::sep(dsl::semicolon);
 
-	struct state_label {
-		static constexpr auto rule = LEXY_LIT("label") >> (LEXY_LIT("=") + dsl::p<node_id>);
-	};
-
-	struct terminal_mark {
-		static constexpr auto rule = LEXY_LIT("terminal");
-	};
-
-	struct initial_mark {
-		static constexpr auto rule = LEXY_LIT("initial_state");
-	};
-
-	struct state_description {
-		static constexpr auto variants = dsl::partial_combination(
-			dsl::p<state_label>, dsl::p<terminal_mark>, dsl::p<initial_mark>);
-
-		static constexpr auto rule = dsl::p<node_id> + variants;
-	};
-
-	struct states {
-		static constexpr auto sep = dsl::sep(dsl::semicolon);
-
-		static constexpr auto rule = dsl::list(dsl::p<state_description>, sep) + LEXY_LIT("...");
-	};
-
-	struct MFA {
-		// Allow arbitrary spaces between individual tokens.
-
-		static constexpr auto whitespace = dsl::ascii::space;
-
-		static constexpr auto sep = dsl::sep(dsl::semicolon);
-
-		static constexpr auto rule =
-			LEXY_LIT("{") + dsl::p<states> + dsl::list(dsl::p<MFA_edge>, sep) + LEXY_LIT("}");
-	};
-
-	struct FA {
-		// Allow arbitrary spaces between individual tokens.
-
-		static constexpr auto whitespace = dsl::ascii::space;
-
-		static constexpr auto sep = dsl::sep(dsl::semicolon);
-
-		static constexpr auto rule =
-			LEXY_LIT("{") + dsl::p<states> + dsl::list(dsl::p<FA_edge>, sep) + LEXY_LIT("}");
-	};
-
-	struct production {
-		static constexpr auto rule = LEXY_LIT("MFA") >> dsl::p<MFA> | LEXY_LIT("FA") >> dsl::p<FA>;
-	};
+        static constexpr auto rule = dsl::list(dsl::p<transition>, sep);
+    };
 
   public:
 	// Строит дерево разбора по грамматике описанной в private лексера
