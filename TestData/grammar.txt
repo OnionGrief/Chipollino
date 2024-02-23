@@ -1,0 +1,23 @@
+production --> atribute automaton ;
+atribute --> 'MFA' !MFA | 'NFA' !NFA | 'PDA' !PDA | 'DFA' !DFA ;
+automaton --> '{' states transitions '}' ;
+states --> state_descriptions '...' ;
+state_descriptions --> state_description state_descriptions | EPS ;
+state_description --> node_id variants ;
+variants --> label terminal (initial_set ? EPS : initial_state) ;
+label --> 'label' '=' node_id | EPS ;
+terminal --> 'terminal' | EPS ;
+initial_state --> 'initial_state' !initial_set | EPS ;
+transitions --> transition transitions | EPS ;
+transition --> stmt (MFA? memory_lists : EPS) (PDA? stack_actions : EPS);
+stmt --> node_id node_id symbol
+memory_lists --> memory_cell memory_lists | EPS ;
+memory_cell --> cell_id memory_state ;
+memory_state --> 'o' | 'c' ;
+stack_actions --> stack_symbol '/' stack_pushes ;
+stack_symbol --> '$' | node_id ;
+stack_pushes --> stack_symbol stack_pushes | EPS ;
+node_id --> STRING ;
+cell_id --> NUMBER ;
+symbol --> (MFA ? '&' cell_id | eps_symbol : eps_symbol) ;
+eps_symbol --> (DFA ? LETTER | DIGIT : 'eps' | LETTER | DIGIT) 

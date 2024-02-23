@@ -103,6 +103,7 @@ bool Parser::parse_reserved(std::string res_case) {
         read_symbols(0);
         return (beg_pos != cur_pos);
     }
+    return false;
 }
 
 bool Parser::parse_nonterminal(lexy::_pt_node<lexy::_bra, void> ref) {
@@ -170,15 +171,19 @@ bool Parser::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
 }
 
 bool Parser::parse_transition(std::string name) {
+    if (!rewriting_rules.count(name)) {
+        return false;
+    }
+
     if (!parse_func.count(name)) {
         auto transition = rewriting_rules[name];
-        return parse_alternative(transition);  
+        return parse_alternative(*transition);  
     }
 
     return parse_func[name]();
 }
 
-bool Parser::parse(lexy_ascii_tree& grammar, std::string filename) {
+std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tree& grammar, std::string filename) {
     auto transitions = find_children(grammar, {"transition"}, {});
     for (auto transition : transitions) {
         // итератор по описанию перехода
@@ -189,8 +194,111 @@ bool Parser::parse(lexy_ascii_tree& grammar, std::string filename) {
         it++;
         // альтернатива
         it++;
-        rewriting_rules[nonterminal] = *it;
+        rewriting_rules[nonterminal] = it;
     }
 
-    return parse_transition("production");
+    if (!parse_transition("production")) {
+        throw(std::runtime_error("Parser: error occurred while parsing FA"));
+    }
+
+    if (!attributes.count("initial_set")) {
+        throw(std::runtime_error("Parser: initial state is not set"));
+    }
+
+    std::ifstream t("file.txt");
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    file = buffer.str();
+
+    if (attributes.count("MFA")) {
+        vector<MFAState> MFAstates;
+        map<std::string, int> name_to_ind;
+        int cnt = 0;
+        for (auto state : states) {
+            MFAstates.emplace_back(cnt, state, terminal.count(state));
+            name_to_ind[state] = cnt++;
+        }
+
+        Alphabet alphabet;
+
+        for (auto transition : FAtransitions) {
+            MFAstates[name_to_ind[transition.beg]]
+            .set_transition(MFATransition(name_to_ind[transition.end],
+            transition.open, transition.close), transition.symbol);
+            alphabet.insert(transition.symbol);
+        }
+
+        auto mfa = MemoryFiniteAutomaton(name_to_ind[initial], MFAstates, alphabet);
+
+        if (!mfa.check_memory_correctness()) {
+            throw(std::runtime_error("Parser: incorrect memory usage in MFA"));
+        }
+
+        return mfa;
+    }
+
+    if (attributes.count("NFA") || attributes.count("DFA")) {
+        vector<FAState> FAstates;
+        map<std::string, int> name_to_ind;
+        int cnt = 0;
+        for (auto state : states) {
+            FAstates.emplace_back(cnt, state, terminal.count(state));
+            name_to_ind[state] = cnt++;
+        }
+
+        Alphabet alphabet;
+
+        for (auto transition : FAtransitions) {
+            FAstates[name_to_ind[transition.beg]]
+            .set_transition(name_to_ind[transition.end], transition.symbol);
+            alphabet.insert(transition.symbol);
+        }
+
+        auto fa = FiniteAutomaton(name_to_ind[initial], FAstates, alphabet);
+
+        if (attributes.count("DFA") && !fa.is_deterministic()) {
+            throw(std::runtime_error("Parser: FA expected to be deterministic"));
+        }
+
+        return fa;
+    }
+}
+
+void Parser::grammar_parser(std::string grammar_file, lexy_ascii_tree& tree) {
+    auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
+    auto input = file.buffer();
+    Lexer::parse_buffer(tree, input);
+}
+
+FiniteAutomaton Parser::parse_NFA(std::string grammar_file, std::string automaton_file) {
+    lexy_ascii_tree grammar;
+    grammar_parser(grammar_file, grammar);
+
+    auto res = parse(grammar, automaton_file);
+
+    if (attributes.count("DFA") || attributes.count("NFA"))
+        return std::get<FiniteAutomaton>(res);
+    throw(std::runtime_error("Parse: parsed automaton is not NFA"));
+}
+
+FiniteAutomaton Parser::parse_DFA(std::string grammar_file, std::string automaton_file) {
+    lexy_ascii_tree grammar;
+    grammar_parser(grammar_file, grammar);
+
+    auto res = parse(grammar, automaton_file);
+
+    if (attributes.count("DFA"))
+        return std::get<FiniteAutomaton>(res);
+    throw(std::runtime_error("Parse: parsed automaton is not DFA"));    
+}
+
+MemoryFiniteAutomaton Parser::parse_MFA(std::string grammar_file, std::string automaton_file) {
+    lexy_ascii_tree grammar;
+    grammar_parser(grammar_file, grammar);
+    
+    auto res = parse(grammar, automaton_file);
+
+    if (attributes.count("MFA"))
+        return std::get<MemoryFiniteAutomaton>(res);
+    throw(std::runtime_error("Parse: parsed automaton is not MFA"));
 }

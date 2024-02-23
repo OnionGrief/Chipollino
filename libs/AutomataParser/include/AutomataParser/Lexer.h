@@ -4,6 +4,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <fstream>
 
 #include <lexy/action/parse_as_tree.hpp>
 #include <lexy/dsl.hpp>

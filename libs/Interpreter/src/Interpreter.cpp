@@ -315,16 +315,22 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectBoolean(get<ObjectBRefRegex>(arguments[0]).value.is_acreg(&log_template));
 	}
 	if (function.name == "getNFA") {
-		string filename = get<ObjectString>(arguments[0]).value;
-		return ObjectNFA(Parser::parse_FA(filename));
+		string grammar = get<ObjectString>(arguments[0]).value;
+        string filename = get<ObjectString>(arguments[1]).value;
+        Parser parser;
+		return ObjectNFA(parser.parse_NFA(grammar, filename));
 	}
 	if (function.name == "getMFA") {
-		string filename = get<ObjectString>(arguments[0]).value;
-		return ObjectMFA(Parser::parse_MFA(filename));
+		string grammar = get<ObjectString>(arguments[0]).value;
+        string filename = get<ObjectString>(arguments[1]).value;
+        Parser parser;
+		return ObjectMFA(parser.parse_MFA(grammar, filename));
 	}
     if (function.name == "getDFA") {
-		string filename = get<ObjectString>(arguments[0]).value;
-		return ObjectDFA(Parser::parse_DFA(filename));
+		string grammar = get<ObjectString>(arguments[0]).value;
+        string filename = get<ObjectString>(arguments[1]).value;
+        Parser parser;
+		return ObjectDFA(parser.parse_DFA(grammar, filename));
 	}
 	// # place for another diff types funcs
 
