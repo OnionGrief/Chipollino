@@ -85,6 +85,8 @@ bool Parser::parse_reserved(std::string res_case) {
          (file[cur_pos] >= '0' && file[cur_pos] <= '9')) {
             cur_pos++;
         }
+        if (beg_pos != cur_pos)
+            STRING = file.substr(beg_pos, cur_pos - beg_pos);
         read_symbols(0);
         return (beg_pos != cur_pos);
     }
@@ -96,6 +98,8 @@ bool Parser::parse_reserved(std::string res_case) {
         while (file[cur_pos] >= '0' && file[cur_pos] <= '9') {
             cur_pos++;
         }
+        if (beg_pos != cur_pos)
+            NUMBER = std::stoi(file.substr(beg_pos, cur_pos - beg_pos));
         read_symbols(0);
         return (beg_pos != cur_pos);
     }
@@ -109,6 +113,7 @@ bool Parser::parse_terminal(lexy::_pt_node<lexy::_bra, void> ref) {
     auto it = ref.children().begin();
     it++;
     std::string to_read = lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme());
+    TERMINAL = to_read;
     return (file.size() - cur_pos > to_read.size() && file.substr(cur_pos, to_read.size()) == to_read);
 }
 
@@ -165,9 +170,12 @@ bool Parser::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
 }
 
 bool Parser::parse_transition(std::string name) {
-    auto transition = rewriting_rules[name];
+    if (!parse_func.count(name)) {
+        auto transition = rewriting_rules[name];
+        return parse_alternative(transition);  
+    }
 
-    return parse_alternative(transition);   
+    return parse_func[name]();
 }
 
 bool Parser::parse(lexy_ascii_tree& grammar, std::string filename) {
