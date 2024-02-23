@@ -801,7 +801,8 @@ TEST(TestAutomatonParser, MFA_correctness_failure) {
     string cycle_with_cell_reopen = "TestData/MFAparser/test1.txt";
 
     try {
-        Parser::parse_MFA(cycle_with_cell_reopen);
+        Parser parser;
+        parser.parse_MFA("./TestData/grammar.txt", cycle_with_cell_reopen);
     } catch (const std::runtime_error& re) {
 		ASSERT_EQ(string(re.what()), string("AutomataParser::Parser::parse_MFA ERROR(Reading or opening an open cell)"));
     }
@@ -810,5 +811,6 @@ TEST(TestAutomatonParser, MFA_correctness_failure) {
 TEST(TestAutomatonParser, MFA_correctness) {
     string cycle_with_cell_reopen = "TestData/MFAparser/test2.txt";
 
-    ASSERT_NO_THROW(Parser::parse_MFA(cycle_with_cell_reopen));
+    Parser parser;
+    ASSERT_NO_THROW(parser.parse_MFA("./TestData/grammar.txt", cycle_with_cell_reopen));
 }

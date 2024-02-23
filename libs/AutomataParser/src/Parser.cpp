@@ -143,8 +143,7 @@ bool Parser::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
                 while (it->kind().name() != "alternative")
                     it++;
                 parse_alternative(*it);
-            }
-            else {
+            } else {
                 while (lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) != ":")
                     it++;
 

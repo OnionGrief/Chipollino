@@ -9,10 +9,10 @@
 #include <vector>
 #include <queue>
 #include <functional>
+#include <variant>
 
 #include <lexy/callback/string.hpp>
 #include <lexy/lexeme.hpp>
-#include <variant>
 #define lexy_ascii_child lexy::_pt_node<lexy::_bra, void>
 
 #include "Lexer.h"
@@ -221,12 +221,13 @@ class Parser {
 
     bool parse_alternative(lexy_ascii_child ref);
 
-    void grammar_parser(std::string grammar_file, lexy_ascii_tree& tree);
+    void grammar_parser(std::string grammar_file, lexy_ascii_tree& tree); // NOLINT(runtime/references)
 
   public:
-    Parser() {};
+    Parser() {}
 
-	std::variant<FiniteAutomaton, MemoryFiniteAutomaton> parse(lexy_ascii_tree& grammar, std::string filename);
+	std::variant<FiniteAutomaton, MemoryFiniteAutomaton> parse(
+        lexy_ascii_tree& grammar, std::string filename); // NOLINT(runtime/references)
 
     FiniteAutomaton parse_NFA(std::string grammar_file, std::string automaton_file);
 
