@@ -804,7 +804,7 @@ TEST(TestAutomatonParser, MFA_correctness_failure) {
         Parser parser;
         parser.parse_MFA("./TestData/grammar.txt", cycle_with_cell_reopen);
     } catch (const std::runtime_error& re) {
-		ASSERT_EQ(string(re.what()), string("AutomataParser::Parser::parse_MFA ERROR(Reading or opening an open cell)"));
+		ASSERT_EQ(string(re.what()), string("Parser: incorrect memory usage in MFA"));
     }
 }
 
