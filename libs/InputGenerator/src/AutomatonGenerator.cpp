@@ -21,10 +21,77 @@ bool AutomatonGenerator::dice_throwing(int percentage) {
     return false;
 }
 
+void AutomatonGenerator::add_terminality() {
+    std::vector<int> unreachable;
+    for (int i = 0; i < states_number; i++)
+        if (!finaity_coloring[i])
+            unreachable.push_back(i);
+
+    while (!unreachable.empty()) {
+        unreachable.clear();
+        for (int i = 0; i < states_number; i++)
+            if (!finaity_coloring[i])
+                unreachable.push_back(i);
+        int vertex = unreachable[rand() % unreachable.size()];
+        stateDescriptions[vertex].terminal = true;
+        std::queue<int> bfs;
+        bfs.push(vertex);
+        while (!bfs.empty()) {
+            finaity_coloring[vertex] = 1;
+            for (int i = 0; i < regraph[bfs.front()].size(); i++) {
+                if (!finaity_coloring[regraph[bfs.front()][i]])
+                    bfs.push(regraph[bfs.front()][i]);
+            }
+            bfs.pop();
+        }
+    }
+    for (int i = 0; i < states_number; i++) {
+        if (!stateDescriptions[i].terminal && dice_throwing(terminal_probability))
+            stateDescriptions[i].terminal = true;
+    }
+}
+
+bool AutomatonGenerator::coloring_MFA_transition(int beg, FAtransition& trans, int color) {
+    // red
+    if (MFA_coloring[color][trans.end] == 1)
+        return false;
+    // set color memory cell idle
+    trans.close.erase(color);
+    // not yellow
+    if (MFA_coloring[color][beg] != 2) {
+        MFA_coloring[color][beg] = 1;
+        trans.open.insert(color);
+    }
+    // closing color memory cell for all transitions from the end vertex
+    for (auto t : graph[trans.end]) {
+        t.close.insert(color);
+    }
+    // yellow
+    MFA_coloring[color][trans.end] = 2;
+    return true;
+}
+
+void AutomatonGenerator::generate_symbol(int beg, FAtransition& trans) {
+    vector<int> possible_colors;
+    for (int color = 0; color < colors; color++) {
+        if (!trans.open.count(color) && MFA_coloring[color][beg] != 2)
+            possible_colors.push_back(color);
+    }
+
+    if (dice_throwing(ref_probability) && !possible_colors.empty()) {
+        trans.symbol = Symbol::Ref(possible_colors[rand() % possible_colors.size()]);
+    } else {
+        if (dice_throwing(epsilon_probability))
+            trans.symbol = Symbol::Epsilon;
+        else
+            trans.symbol = alphabet[rand() % alphabet.size()];
+    }
+}
+
 void AutomatonGenerator::generate_graph() {
-    int initial = 0, states_number = 10;
-    int max_edges_number = states_number * (states_number - 1) / 2 + 3;
-    int edges_number = rand() % (max_edges_number - states_number + 1) + states_number - 1;
+    max_edges_number = states_number * (states_number - 1) / 2 + 3;
+    edges_number = rand() % (max_edges_number - states_number + 1) + states_number - 1;
+    colors_tries = edges_number;
 
     graph.resize(states_number);
 
@@ -45,10 +112,37 @@ void AutomatonGenerator::generate_graph() {
             included_states.push_back(excluded_states[ind]);
             excluded_states.erase(excluded_states.begin() + ind);
         }
-        cur.symbol = generate_symbol();
         cur.pop = "$";
 
         graph[beg].push_back(cur);
+    }
+
+    for (int i = 0; i < states_number; i++) {
+        stateDescriptions.emplace_back(i, 0, i == initial);
+    }
+
+    regraph.resize(states_number);
+    for (int i = 0; i < states_number; i++) {
+        for (int j = 0; j < graph[i].size(); j++) {
+            regraph[graph[i][j].end].push_back(i);
+        }
+    }
+
+    add_terminality();
+
+    for (int i = 0; i < colors_tries; i++) {
+        int color = rand() % colors;
+        int beg = included_states[rand() % included_states.size()];
+        while (graph[beg].empty())
+            beg = included_states[rand() % included_states.size()];
+        int transition_num = rand() % graph[beg].size();
+        coloring_MFA_transition(beg, graph[beg][transition_num], color);
+    }
+
+    for (int i = 0; i < states_number; i++) {
+        for (auto trans : graph[i]) {
+            generate_symbol(i, trans);
+        }
     }
 }
 
@@ -82,47 +176,6 @@ void AutomatonGenerator::set_terminal_probability(int elem) {
 void AutomatonGenerator::set_initial_state_not_terminal(bool f)
 {
     AutomatonGeneratorConstants::initial_state_not_terminal = f;
-}
-
-vector<lexy_ascii_child> AutomatonGenerator::find_children(lexy_ascii_tree& tree, const set<string>& names,
-											   const set<string>& exclude) {
-	vector<lexy_ascii_child> result;
-	int skip = 0;
-	for (auto [event, node] : tree.traverse()) {
-		auto depth = 0;
-		switch (event) {
-		case lexy::traverse_event::enter:
-			if (!skip && names.count(node.kind().name())) {
-				result.push_back(node);
-			}
-			if (exclude.count(node.kind().name())) {
-				skip++;
-			}
-			depth++;
-			break;
-		case lexy::traverse_event::exit:
-			if (exclude.count(node.kind().name())) {
-				skip--;
-			}
-			depth--;
-			break;
-
-		case lexy::traverse_event::leaf:
-			if (!skip && names.count(node.kind().name())) {
-				result.push_back(node);
-			}
-			break;
-		}
-	}
-	return result;
-}
-
-string Parser::first_child(lexy::_pt_node<lexy::_bra, void>::children_range::iterator it) {
-	return lexy::as_string<string, lexy::ascii_encoding>(it->children().begin()->token().lexeme());
-}
-
-string Parser::first_child(lexy::_pt_node<lexy::_bra, void> it) {
-	return lexy::as_string<string, lexy::ascii_encoding>(it.children().begin()->token().lexeme());
 }
 
 bool AutomatonGenerator::parse_reserved(std::string res_case) {
@@ -162,7 +215,7 @@ bool AutomatonGenerator::parse_reserved(std::string res_case) {
 }
 
 bool AutomatonGenerator::parse_nonterminal(lexy::_pt_node<lexy::_bra, void> ref) {
-    return parse_transition(first_child(ref));
+    return parse_transition(Parser::first_child(ref));
 }
 
 bool AutomatonGenerator::parse_terminal(lexy::_pt_node<lexy::_bra, void> ref) {
@@ -186,7 +239,7 @@ void AutomatonGenerator::parse_attribute(lexy::_pt_node<lexy::_bra, void> ref) {
     auto it = ref.children().begin();
     while(std::string(it->kind().name()) != "nonterminal")
         it++;
-    attributes.insert(first_child(it));
+    attributes.insert(Parser::first_child(it));
 }
 
 bool AutomatonGenerator::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
@@ -206,7 +259,7 @@ bool AutomatonGenerator::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref)
         }
         if (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "(") {
             it++;
-            if (attributes.count(first_child(it->children().begin()))) {
+            if (attributes.count(Parser::first_child(it->children().begin()))) {
                 while (it->kind().is_token() || std::string(it->kind().name()) != "alternative")
                     it++;
                 parse_alternative(*it);
@@ -231,7 +284,7 @@ bool AutomatonGenerator::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref)
             continue;
         }
         if (std::string(it->kind().name()) == "reserved") {
-            parse_reserved(first_child(it));
+            parse_reserved(Parser::first_child(it));
             continue;
         }
         if (std::string(it->kind().name()) == "attribute") {
@@ -257,7 +310,25 @@ bool AutomatonGenerator::parse_transition(std::string name) {
     return parse_func[name]();
 }
 
-AutomatonGenerator::AutomatonGenerator(FA_type type) {
+AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type) {
+    lexy_ascii_tree grammar;
+    
+    auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
+    auto input = file.buffer();
+    Lexer::parse_buffer(grammar, input);
+
+    auto transitions = Parser::find_children(grammar, {"transition"}, {});
+    for (auto transition : transitions) {
+        // итератор по описанию перехода
+        auto it = transition.children().begin();
+        // имя нетерминала
+        std::string nonterminal = Parser::first_child(it);
+        while (std::string(it->kind().name()) != "alternative") {
+            it++;
+        }
+        rewriting_rules[nonterminal] = it;    
+    }
+
     switch (type)
     {
     case FA_type::MFA:
@@ -265,9 +336,15 @@ AutomatonGenerator::AutomatonGenerator(FA_type type) {
         break;
     case FA_type::NFA:
         TERMINAL.push("NFA");
+        colors = 0;
         break;
     case FA_type::DFA:
         TERMINAL.push("DFA");
+        colors = 0;
+        epsilon_probability = 0;
         break;
     }
+
+    generate_graph();
+    parse_transition("production");
 }

@@ -22,7 +22,6 @@ class TasksGenerator {
 		ObjectType type;
 	};
 	RegexGenerator regex_generator;
-    AutomatonGenerator automaton_generator;
 	size_t seed_it = 0; // итерация для рандома
 
 	std::string res_str = "";

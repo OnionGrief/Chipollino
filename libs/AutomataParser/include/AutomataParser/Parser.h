@@ -19,7 +19,6 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MemoryFiniteAutomaton.h"
 
-
 class Parser {
   private:
     struct FAtransition {
@@ -203,17 +202,6 @@ class Parser {
         }},
     };
 
-	// Поиск рекурсивный поиск вершин с названиями из names, игнорируя спуск в вершины из exclude
-	static std::vector<lexy_ascii_child> find_children(
-		lexy_ascii_tree& tree, // NOLINT(runtime/references)
-		const std::set<std::string>& names, const std::set<std::string>& exclude = {});
-
-	// лексема первого потомка для вершины lexy
-	static std::string first_child(lexy_ascii_child::children_range::iterator it);
-
-	// лексема первого потомка для вершины lexy
-	static std::string first_child(lexy_ascii_child it);
-
     std::map<std::string, lexy_ascii_child::children_range::iterator> rewriting_rules;
     std::set<std::string> attributes;
 
@@ -237,6 +225,17 @@ class Parser {
 
   public:
     Parser() {}
+
+    // Поиск рекурсивный поиск вершин с названиями из names, игнорируя спуск в вершины из exclude
+    static std::vector<lexy_ascii_child> find_children(
+        lexy_ascii_tree& tree, // NOLINT(runtime/references)
+        const std::set<std::string>& names, const std::set<std::string>& exclude = {});
+
+    // лексема первого потомка для вершины lexy
+    static std::string first_child(lexy_ascii_child::children_range::iterator it);
+
+    // лексема первого потомка для вершины lexy
+    static std::string first_child(lexy_ascii_child it);
 
 	std::variant<FiniteAutomaton, MemoryFiniteAutomaton> parse(
         lexy_ascii_tree& grammar, std::string filename); // NOLINT(runtime/references)

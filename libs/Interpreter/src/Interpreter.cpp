@@ -801,7 +801,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
 		
-        AutomatonGenerator(FA_type::FA).write_to_file("TestData/test.txt");
+        AutomatonGenerator("./TestData/grammar.txt", FA_type::NFA).write_to_file("TestData/test.txt");
 		current_random_regex = Regex(RG.generate_regex()); // хз как еще передавать
 		auto predicate = eval_expression(expr);
 

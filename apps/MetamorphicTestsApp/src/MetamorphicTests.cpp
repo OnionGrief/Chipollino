@@ -77,7 +77,7 @@ TEST(Statistics, Test_statistics) {
 		int count = 0;
 		int ALL = 10000;
 		for (int i = 0; i < ALL; i++) {
-			AutomatonGenerator a(FA_type::FA);
+			AutomatonGenerator a("./TestData/grammar.txt", FA_type::NFA);
 			a.write_to_file("./TestData/tmp/test.txt");
             Parser parser;
 			auto FA = parser.parse_NFA("./TestData/grammar.txt", "./TestData/tmp/test.txt");
