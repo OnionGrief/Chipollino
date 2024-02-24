@@ -52,6 +52,7 @@ private:
 
         bool terminal;
         bool initial;
+        StateDescription(int index, bool terminal, bool initial) : index(index), terminal(terminal), initial(initial)  {};
     };
 
     int initial = 0, states_number = 10;

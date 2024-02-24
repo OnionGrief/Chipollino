@@ -85,9 +85,9 @@ void AutomatonGenerator::generate_symbol(int beg, FAtransition& trans) {
     if (dice_throwing(ref_probability) && !possible_colors.empty()) {
         trans.symbol = Symbol::Ref(possible_colors[rand() % possible_colors.size()]);
     } else {
-        if (dice_throwing(epsilon_probability))
+        if (dice_throwing(epsilon_probability)) {
             trans.symbol = Symbol::Epsilon;
-        else {
+        } else {
             trans.symbol = alphabet[rand() % alphabet.size()];
             if (attributes.count("DFA")) {
                 bool checked = false;
@@ -260,7 +260,7 @@ bool AutomatonGenerator::parse_terminal(lexy::_pt_node<lexy::_bra, void> ref) {
     std::string to_read = lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme());
     auto res = (!TERMINAL.empty() && TERMINAL.front() == to_read);
     // std::cout << to_read << " ";
-    if (!TERMINAL.empty())
+    // if (!TERMINAL.empty())
         // std::cout << TERMINAL.front();
     // std::cout << "\n";
     if (res) {
