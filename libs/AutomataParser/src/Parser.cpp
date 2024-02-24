@@ -231,6 +231,7 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
     std::stringstream buffer;
     buffer << t.rdbuf();
     file = buffer.str();
+    read_symbols(0);
     // std::cout << file;
 
 
