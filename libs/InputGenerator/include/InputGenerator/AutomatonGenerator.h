@@ -13,7 +13,7 @@
 #include "AutomataParser/Lexer.h"
 #include "AutomataParser/Parser.h"
 
-enum class FA_type { MFA, FA, DFA };
+enum class FA_type { MFA, NFA, DFA };
 
 class AutomatonGenerator {
 private:
@@ -182,7 +182,7 @@ private:
     void grammar_parser(std::string grammar_file, lexy_ascii_tree& tree); // NOLINT(runtime/references)
 
 public:
-    explicit AutomatonGenerator(FA_type type = FA_type::FA);
+    explicit AutomatonGenerator(FA_type type = FA_type::NFA);
 
     void write_to_file(std::string filename);
 

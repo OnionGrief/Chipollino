@@ -67,10 +67,6 @@ void AutomatonGenerator::generate_alphabet(int max_alphabet_size) {
     }
 }
 
-AutomatonGenerator::AutomatonGenerator(FA_type type) {
-    
-}
-
 void AutomatonGenerator::write_to_file(string filename) {
     ofstream out;
 	out.open(filename, ofstream::trunc);
@@ -259,4 +255,19 @@ bool AutomatonGenerator::parse_transition(std::string name) {
     }
 
     return parse_func[name]();
+}
+
+AutomatonGenerator::AutomatonGenerator(FA_type type) {
+    switch (type)
+    {
+    case FA_type::MFA:
+        TERMINAL.push("MFA");
+        break;
+    case FA_type::NFA:
+        TERMINAL.push("NFA");
+        break;
+    case FA_type::DFA:
+        TERMINAL.push("DFA");
+        break;
+    }
 }
