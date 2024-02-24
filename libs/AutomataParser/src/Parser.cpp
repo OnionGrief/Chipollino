@@ -56,6 +56,7 @@ void Parser::read_symbols(int num) {
 }
 
 bool Parser::parse_reserved(std::string res_case) {
+    // std::cout << "parse_reserved: " << res_case << "\n";
     if (res_case == "EPS")
         return true;
 
@@ -64,25 +65,28 @@ bool Parser::parse_reserved(std::string res_case) {
 
     if (res_case == "LETTER") {
         if (file[cur_pos] >= 'a' && file[cur_pos] <= 'z') {
+            LETTER = file[cur_pos];
             read_symbols(1);
             return true;
         }
         if (file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') {
+            LETTER = file[cur_pos];
             read_symbols(1);
             return true;
         }
     }
     if (res_case == "DIGIT") {
         if (file[cur_pos] >= '0' && file[cur_pos] <= '9') {
+            NUMBER = int(file[cur_pos] - '0');
             read_symbols(1);
             return true;
         }
     }
     int beg_pos = cur_pos;
     if (res_case == "STRING") {
-        while ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
+        while (cur_pos < file.size() && ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
          (file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') ||
-         (file[cur_pos] >= '0' && file[cur_pos] <= '9')) {
+         (file[cur_pos] >= '0' && file[cur_pos] <= '9'))) {
             cur_pos++;
         }
         if (beg_pos != cur_pos)
@@ -95,7 +99,7 @@ bool Parser::parse_reserved(std::string res_case) {
             read_symbols(1);
             return true;
         }
-        while (file[cur_pos] >= '0' && file[cur_pos] <= '9') {
+        while (cur_pos < file.size() && (file[cur_pos] >= '0' && file[cur_pos] <= '9')) {
             cur_pos++;
         }
         if (beg_pos != cur_pos)
@@ -111,65 +115,86 @@ bool Parser::parse_nonterminal(lexy::_pt_node<lexy::_bra, void> ref) {
 }
 
 bool Parser::parse_terminal(lexy::_pt_node<lexy::_bra, void> ref) {
+    // std::cout << "parsing terminal\n";
     auto it = ref.children().begin();
     it++;
     std::string to_read = lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme());
-    TERMINAL = to_read;
-    return (file.size() - cur_pos > to_read.size() && file.substr(cur_pos, to_read.size()) == to_read);
+    // std::cout << "\n" << to_read << " " << cur_pos << " " << file.size() << "\n";
+    // std::cout << file.substr(cur_pos, to_read.size()) << "\n";
+    auto res = (file.size() - cur_pos >= to_read.size() && file.substr(cur_pos, to_read.size()) == to_read);
+    read_symbols(to_read.size());
+    if (res)
+        TERMINAL = to_read;
+    // std::cout << "terminal? --> " << res << "\n";
+    return res;
 }
 
 void Parser::parse_attribute(lexy::_pt_node<lexy::_bra, void> ref) {
+    // std::cout << "\nparsing attribute\n";
     auto it = ref.children().begin();
-    it++;
-    attributes.insert(lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()));
+    while(std::string(it->kind().name()) != "nonterminal")
+        it++;
+    attributes.insert(first_child(it));
 }
 
 bool Parser::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
+    // std::cout << "Enter alternative\n";
     bool read = true;
     int beg_pos = cur_pos;
     for (auto it = ref.children().begin(); it != ref.children().end(); it++) {
-        if (lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "|") {
+        // std::cout << "tring to parse: " << it->kind().name() << "\n";
+        if (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "|") {
             if (read)
                 return true;
             cur_pos = beg_pos;
             read = true;
             continue;
         }
-        if (!read)
+        if (!read) {
+            // std::cout << "Oops... read failed\n";
             continue;
-        if (lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "(") {
+        }
+        if (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "(") {
             it++;
             if (attributes.count(first_child(it->children().begin()))) {
-                while (it->kind().name() != "alternative")
+                while (it->kind().is_token() || std::string(it->kind().name()) != "alternative")
                     it++;
                 parse_alternative(*it);
             } else {
-                while (lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) != ":")
+                while (!it->kind().is_token() || lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) != ":")
                     it++;
 
-                while (it->kind().name() != "alternative")
+                while (it->kind().is_token() || std::string(it->kind().name()) != "alternative")
                     it++;
                 parse_alternative(*it);
             }
-            while (lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) != ")")
+            while (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) != ")")
                 it++;
         }
-        if (it->kind().name() == "terminal") {
+        // std::cout << "terminal?\n";
+        if (std::string(it->kind().name()) == "terminal") {
             read &= parse_terminal(*it);
+            continue;
         }
-        if (it->kind().name() == "nonterminal") {
+        if (std::string(it->kind().name()) == "nonterminal") {
             read &= parse_nonterminal(*it);
+            continue;
         }
-        if (it->kind().name() == "reserved") {
+        if (std::string(it->kind().name()) == "reserved") {
             parse_reserved(first_child(it));
+            continue;
         }
-        if (it->kind().name() == "attribute") {
+        if (std::string(it->kind().name()) == "attribute") {
             parse_attribute(*it);
+            continue;
         }
     }
+    return read;
 }
 
 bool Parser::parse_transition(std::string name) {
+    // std::cout << name << "\n";
+
     if (!rewriting_rules.count(name)) {
         return false;
     }
@@ -189,12 +214,25 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
         auto it = transition.children().begin();
         // имя нетерминала
         std::string nonterminal = first_child(it);
-        // -->
-        it++;
-        // альтернатива
-        it++;
-        rewriting_rules[nonterminal] = it;
+        while (std::string(it->kind().name()) != "alternative") {
+            it++;
+        }
+        rewriting_rules[nonterminal] = it;    
     }
+
+    // std::cout << rewriting_rules.size() << "\n";
+    for (auto rule : rewriting_rules) {
+        // std::cout << rule.first << "\n";
+    }
+
+    // std::cout << "\n\n";
+
+    std::ifstream t(filename);
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    file = buffer.str();
+    // std::cout << file;
+
 
     if (!parse_transition("production")) {
         throw(std::runtime_error("Parser: error occurred while parsing FA"));
@@ -204,17 +242,21 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
         throw(std::runtime_error("Parser: initial state is not set"));
     }
 
-    std::ifstream t("file.txt");
-    std::stringstream buffer;
-    buffer << t.rdbuf();
-    file = buffer.str();
+
+    for (auto transition : FAtransitions) {
+        states.insert(transition.beg);
+        states.insert(transition.end);
+    }
 
     if (attributes.count("MFA")) {
         vector<MFAState> MFAstates;
         map<std::string, int> name_to_ind;
         int cnt = 0;
         for (auto state : states) {
-            MFAstates.emplace_back(cnt, state, terminal.count(state));
+            std::string name = state;
+            if (labels.count(state))
+                name = labels[state];
+            MFAstates.emplace_back(cnt, name, terminal.count(state));
             name_to_ind[state] = cnt++;
         }
 
@@ -241,7 +283,10 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
         map<std::string, int> name_to_ind;
         int cnt = 0;
         for (auto state : states) {
-            FAstates.emplace_back(cnt, state, terminal.count(state));
+            std::string name = state;
+            if (labels.count(state))
+                name = labels[state];
+            FAstates.emplace_back(cnt, name, terminal.count(state));
             name_to_ind[state] = cnt++;
         }
 
@@ -263,15 +308,12 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
     }
 }
 
-void Parser::grammar_parser(std::string grammar_file, lexy_ascii_tree& tree) {
-    auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
-    auto input = file.buffer();
-    Lexer::parse_buffer(tree, input);
-}
-
 FiniteAutomaton Parser::parse_NFA(std::string grammar_file, std::string automaton_file) {
     lexy_ascii_tree grammar;
-    grammar_parser(grammar_file, grammar);
+    
+    auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
+    auto input = file.buffer();
+    Lexer::parse_buffer(grammar, input);
 
     auto res = parse(grammar, automaton_file);
 
@@ -282,7 +324,10 @@ FiniteAutomaton Parser::parse_NFA(std::string grammar_file, std::string automato
 
 FiniteAutomaton Parser::parse_DFA(std::string grammar_file, std::string automaton_file) {
     lexy_ascii_tree grammar;
-    grammar_parser(grammar_file, grammar);
+
+    auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
+    auto input = file.buffer();
+    Lexer::parse_buffer(grammar, input);
 
     auto res = parse(grammar, automaton_file);
 
@@ -293,9 +338,16 @@ FiniteAutomaton Parser::parse_DFA(std::string grammar_file, std::string automato
 
 MemoryFiniteAutomaton Parser::parse_MFA(std::string grammar_file, std::string automaton_file) {
     lexy_ascii_tree grammar;
-    grammar_parser(grammar_file, grammar);
+
+    auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
+    auto input = file.buffer();
+    Lexer::parse_buffer(grammar, input);
+
+    // std::cout << "grammar parsed\n";
     
     auto res = parse(grammar, automaton_file);
+
+    // std::cout << "automaton parsed\n";
 
     if (attributes.count("MFA"))
         return std::get<MemoryFiniteAutomaton>(res);

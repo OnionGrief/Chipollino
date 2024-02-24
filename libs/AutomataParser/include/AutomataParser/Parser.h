@@ -81,12 +81,15 @@ class Parser {
             auto transition = rewriting_rules["state_description"];
             auto res = parse_alternative(*transition);
 
-            if (was_labeled)
-                labels[cur_state] = STRING;
-            if (init)
-                initial = cur_state;
-            if (term)
-                terminal.insert(cur_state);
+            if (res) {
+                states.insert(cur_state);
+                if (was_labeled)
+                    labels[cur_state] = STRING;
+                if (init)
+                    initial = cur_state;
+                if (term)
+                    terminal.insert(cur_state);
+            }
 
             return res;     
         }},
@@ -108,10 +111,15 @@ class Parser {
             auto transition = rewriting_rules["terminal"];
             return parse_alternative(*transition);
         }},
-        {"transitions", [=]() {
+        {"transition", [=]() {
             FAtransitions.resize(FAtransitions.size() + 1);
-            auto transition = rewriting_rules["transitions"];
-            return parse_alternative(*transition);
+            auto transition = rewriting_rules["transition"];
+            auto res = parse_alternative(*transition);
+            if (!res) {
+                FAtransitions.pop_back();
+            }
+            // std::cout << "TRANSSSSITION: " << res;
+            return res;
         }},
         {"stmt", [=]() {
             nodes.push(&FAtransitions.back().beg);
@@ -122,10 +130,11 @@ class Parser {
             auto transition = rewriting_rules["stmt"];
             return parse_alternative(*transition);
         }},
-        {"node", [=]() {
-            auto transition = rewriting_rules["node"];
+        {"node_id", [=]() {
+            auto transition = rewriting_rules["node_id"];
             auto res = parse_alternative(*transition);
             if(!nodes.empty()) {
+                // std::cout << "SSSSSSSTRING " << STRING << "\n";
                 *nodes.front() = STRING;
                 nodes.pop();
             }
@@ -139,6 +148,7 @@ class Parser {
             auto transition = rewriting_rules["symbol"];
             auto res = parse_alternative(*transition);
             if(!symbols.empty()) {
+                // std::cout << "SSYYYYYMBOLS: " << DIGIT << " " << LETTER << " " << TERMINAL << " " << NUMBER << "\n";
                 if (DIGIT != 0) {
                     std::string r;
                     r.push_back(DIGIT);
@@ -160,11 +170,13 @@ class Parser {
             return res;
         }},
         {"memory_cell", [=]() {
+            TERMINAL = "";
             auto transition = rewriting_rules["memory_cell"];
             auto res = parse_alternative(*transition);
             if(TERMINAL == "o") {
                 FAtransitions.back().open.insert(NUMBER);
-            } else {
+            }
+            if(TERMINAL == "c"){
                 FAtransitions.back().close.insert(NUMBER);
             }
             return res;
@@ -206,7 +218,7 @@ class Parser {
     std::set<std::string> attributes;
 
     std::string file;
-    int cur_pos;
+    int cur_pos = 0;
     void read_symbols(int num);
 
     void parse_attribute(lexy_ascii_child ref);
