@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <sstream>
 #include <ctime>
@@ -9,7 +10,6 @@
 #include <set>
 #include <utility>
 #include <iostream>
-#include <set>
 #include <unordered_set>
 #include <queue>
 #include "AutomataParser/Lexer.h"
@@ -56,7 +56,7 @@ private:
 
     int initial = 0, states_number = 10;
     int max_edges_number, edges_number;
-    int colors = 4, colors_tries;
+    int colors = 4, colors_tries = 10;
     int terminal_probability = 20;
     int epsilon_probability = 10;
     int ref_probability = 50;
@@ -75,7 +75,7 @@ private:
     std::vector<std::vector<FAtransition>> graph;
     std::vector<std::vector<int>> regraph;
 
-    std::map<int, bool> finaity_coloring;
+    std::map<int, bool> finality_coloring;
     std::map<int, std::map<int, int>> MFA_coloring;
 
     void add_terminality();
@@ -84,7 +84,7 @@ private:
 
     void generate_graph();
 
-    std::stringstream output;
+    //std::stringstream output;
 
     std::queue<std::string> TERMINAL, STRING, NUMBER, LETTER, DIGIT, STACK_SYMBOLS;
     int cur_state = 0, cur_transition = 0;
@@ -94,14 +94,25 @@ private:
 
     std::map<std::string, std::function<bool()>> parse_func = {
         // transition --> stmt (MFA? memory_lists : EPS) (PDA? stack_actions : EPS);
+        {"atribute", [=](){
+            auto transition = rewriting_rules["atribute"];
+            auto res = parse_alternative(*transition);
+            if (res) {
+                output << "\n";
+            }
+            return res;
+        }},
         {"states", [=](){
+            // std::cout << "SSSSSSSSSSTATES\n";
+
             for (int i = 0; i < stateDescriptions.size(); i++) {
                 if (stateDescriptions[i].initial || stateDescriptions[i].terminal) {
+                    // std::cout << stateDescriptions[i].index <<  stateDescriptions[i].initial <<  stateDescriptions[i].terminal << "\n";
                     STRING.push(std::to_string(stateDescriptions[i].index));
-                    if (stateDescriptions[i].initial)
-                        TERMINAL.push("initial_state");
                     if (stateDescriptions[i].terminal)
                         TERMINAL.push("terminal");
+                    if (stateDescriptions[i].initial)
+                        TERMINAL.push("initial_state");
                     TERMINAL.push(";");
                 }
             }
@@ -109,19 +120,20 @@ private:
             auto transition = rewriting_rules["states"];
             auto res = parse_alternative(*transition);
             if (res) {
-                std::cout << "\n";
+                output << "\n";
             }
             return res;
         }},
-        {"state", [=](){
-            auto transition = rewriting_rules["state"];
+        {"state_description", [=](){
+            auto transition = rewriting_rules["state_description"];
             auto res = parse_alternative(*transition);
             if (res) {
-                std::cout << "\n";
+                output << "\n";
             }
             return res;
         }},
         {"transition", [=](){
+            // std::cout << "transition\n";
             while(cur_state < graph.size() && cur_transition >= graph[cur_state].size()) {
                 cur_state++;
                 cur_transition = 0;
@@ -130,6 +142,7 @@ private:
                 // stmt
                 STRING.push(std::to_string(cur_state));
                 STRING.push(std::to_string(graph[cur_state][cur_transition].end));
+                // std::cout << "SSSSSYMBOL: " << graph[cur_state][cur_transition].symbol;
                 if (graph[cur_state][cur_transition].symbol.is_epsilon()) {
                     TERMINAL.push("eps");
                 } else {
@@ -161,6 +174,8 @@ private:
                 cur_transition++;
             }
 
+            // std::cout << "parsing transition\n";
+
             auto transition = rewriting_rules["transition"];
             auto res = parse_alternative(*transition);
             if (res)
@@ -188,6 +203,8 @@ private:
     void grammar_parser(std::string grammar_file, lexy_ascii_tree& tree); // NOLINT(runtime/references)
 
 public:
+    std::stringstream output;
+
     explicit AutomatonGenerator(std::string grammar_file, FA_type type = FA_type::NFA);
 
     void write_to_file(std::string filename);
