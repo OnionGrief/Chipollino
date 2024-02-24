@@ -388,6 +388,11 @@ PushdownAutomaton::_find_problematic_epsilon_transitions() const {
 	}
 
 	for (const auto& state : states) {
+		if (state.is_terminal ||
+			state.transitions.find(Symbol::Epsilon) == state.transitions.end()) {
+			continue;
+		}
+
 		auto reachable = closure({state.index});
 		// Ищем нефинальные состояния, из которых есть помимо eps-переходов есть иные переходы.
 		for (const auto& [eps_trans, indices] : reachable) {
