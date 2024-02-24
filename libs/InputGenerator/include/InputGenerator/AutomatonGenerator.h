@@ -10,6 +10,8 @@
 #include <utility>
 #include <iostream>
 #include <set>
+#include <unordered_set>
+#include <queue>
 #include "AutomataParser/Lexer.h"
 #include "AutomataParser/Parser.h"
 
@@ -67,7 +69,7 @@ private:
 	// возвращает true с вероятностью percentage%
 	bool dice_throwing(int percentage);
 
-    void generate_symbol(int beg, FAtransition& trans);
+    void generate_symbol(int beg, FAtransition& trans); // NOLINT(runtime/references)
 
     std::vector<StateDescription> stateDescriptions;
     std::vector<std::vector<FAtransition>> graph;
@@ -78,7 +80,7 @@ private:
 
     void add_terminality();
 
-    bool coloring_MFA_transition(int beg, FAtransition& trans, int color);
+    bool coloring_MFA_transition(int beg, FAtransition& trans, int color); // NOLINT(runtime/references)
 
     void generate_graph();
 
