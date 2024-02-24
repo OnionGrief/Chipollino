@@ -1,6 +1,6 @@
 production --> atribute automaton ;
 atribute --> 'MFA' !MFA | 'NFA' !NFA | 'PDA' !PDA | 'DFA' !DFA ;
-automaton --> '{' states transitions '}' ;
+automaton --> states transitions;
 states --> state_descriptions '...' ;
 state_descriptions --> state_description state_descriptions | EPS ;
 state_description --> node_id variants ';' ;

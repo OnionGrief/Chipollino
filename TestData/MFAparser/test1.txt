@@ -1,4 +1,4 @@
-MFA {
+MFA
     aba initial_state;
     ab terminal;
     aba terminal;
@@ -6,4 +6,3 @@ MFA {
     aba bab v;
     bab ab eps 12 o;
     ab aba c;
-}
