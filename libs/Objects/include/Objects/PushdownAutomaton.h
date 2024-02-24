@@ -55,7 +55,10 @@ class PushdownAutomaton : public AbstractMachine {
 	std::pair<MetaInfo, PushdownAutomaton> _add_trap_state(iLogTemplate* log);
 	PushdownAutomaton _remove_bad_epsilon();
 	PushdownAutomaton _add_trap_state();
-	[[nodiscard]] std::vector<std::pair<int, PDATransition>> _find_problematic_epsilon_transitions()
+	void _dfs(int index, std::unordered_set<int>& reachable) const;
+	[[nodiscard]] std::unordered_map<PDATransition, std::unordered_set<int>, PDATransition::Hasher> closure(const int index) const;
+	static bool _equality_checker(PushdownAutomaton pda1, PushdownAutomaton pda2);
+	[[nodiscard]] std::unordered_map<int, std::unordered_set<PDATransition, PDATransition::Hasher>> _find_problematic_epsilon_transitions()
 		const;
 	[[nodiscard]] std::vector<std::pair<int, PDATransition>> _find_transitions_to(int index) const;
 	[[nodiscard]] std::unordered_set<Symbol, Symbol::Hasher> _get_stack_symbols() const;
@@ -75,7 +78,7 @@ class PushdownAutomaton : public AbstractMachine {
 	bool is_deterministic(iLogTemplate* log = nullptr) const override;
 	// меняет язык
 	PushdownAutomaton complement(iLogTemplate* log = nullptr) const;
-	static bool equal(PushdownAutomaton pda1, PushdownAutomaton pda2, iLogTemplate*log);
+	static bool equal(PushdownAutomaton pda1, PushdownAutomaton pda2, iLogTemplate* log);
 	// пересечение с регуляркой
 	PushdownAutomaton regular_intersect(const Regex& re, iLogTemplate* log);
 	// проверяет, распознаёт ли автомат слово (использует BasicMatcher)

@@ -1,9 +1,9 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
 #include "Objects/iLogTemplate.h"
+#include <Objects/BackRefRegex.h>
 #include <Objects/PushdownAutomaton.h>
 #include <Objects/Symbol.h>
-#include <Objects/BackRefRegex.h>
 #include <sstream>
 #include <string>
 
@@ -332,10 +332,45 @@ std::unordered_set<Symbol, Symbol::Hasher> PushdownAutomaton::_get_stack_symbols
 	return result;
 }
 
-std::vector<std::pair<int, PDATransition>> PushdownAutomaton::
-	_find_problematic_epsilon_transitions() const {
-	std::vector<std::pair<int, PDATransition>> result;
+void PushdownAutomaton::_dfs(int index, unordered_set<int>& reachable) const {
+	if (reachable.count(index)) {
+		return;
+	}
+	reachable.insert(index);
 
+	const auto& by_eps = states[index].transitions.find(Symbol::Epsilon);
+	if (by_eps == states[index].transitions.end()) {
+		return;
+	}
+
+	for (auto& trans_to : by_eps->second) {
+		_dfs(trans_to.to, reachable);
+	}
+}
+
+unordered_map<PDATransition, unordered_set<int>, PDATransition::Hasher> PushdownAutomaton::closure(
+	const int index) const {
+	unordered_map<PDATransition, unordered_set<int>, PDATransition::Hasher> result;
+
+	auto state = states[index];
+	if (state.transitions.find(Symbol::Epsilon) == state.transitions.end()) {
+		return result;
+	}
+
+	for (const auto& eps_trans : state.transitions.at(Symbol::Epsilon)) {
+		unordered_set<int> reachable;
+		_dfs(eps_trans.to, reachable);
+		result[eps_trans] = reachable;
+	}
+
+	return result;
+}
+
+std::unordered_map<int, std::unordered_set<PDATransition, PDATransition::Hasher>>
+PushdownAutomaton::_find_problematic_epsilon_transitions() const {
+	std::unordered_map<int, std::unordered_set<PDATransition, PDATransition::Hasher>> result;
+
+	std::unordered_set<int> states_with_problematic_trans;
 	for (const auto& state : states) {
 		// Ищем нефинальные состояния, из которых есть помимо eps-переходов есть иные переходы.
 		if (state.is_terminal ||
@@ -346,7 +381,20 @@ std::vector<std::pair<int, PDATransition>> PushdownAutomaton::
 		// Отмечаем все eps-переходы в финальные состояния как проблемные.
 		for (const auto& trans : state.transitions.at(Symbol::Epsilon)) {
 			if (states[trans.to].is_terminal) {
-				result.emplace_back(state.index, trans);
+				result[state.index].emplace(trans);
+				states_with_problematic_trans.emplace(state.index);
+			}
+		}
+	}
+
+	for (const auto& state : states) {
+		auto reachable = closure({state.index});
+		// Ищем нефинальные состояния, из которых есть помимо eps-переходов есть иные переходы.
+		for (const auto& [eps_trans, indices] : reachable) {
+			for (const auto& index : indices) {
+				if (states[index].is_terminal) {
+					result[state.index].emplace(eps_trans);
+				}
 			}
 		}
 	}
@@ -437,41 +485,44 @@ PushdownAutomaton PushdownAutomaton::complement(iLogTemplate* log) const {
 
 	std::set<int> no_toggle_states;
 	auto problematic_transitions = result._find_problematic_epsilon_transitions();
-	for (const auto& [from_index, bad_trans] : problematic_transitions) {
-		auto bad_symbol = bad_trans.pop;
-		auto final_state_index = bad_trans.to;
-		auto problems_trap_index = static_cast<int>(result.size());
-		no_toggle_states.emplace(problems_trap_index); // Состояние-ловушка проблемных переходов не
-													   // меняет финальность при обращении
+	for (const auto& [from_index, bad_transitions] : problematic_transitions) {
+		for (const auto& bad_trans : bad_transitions) {
+			auto bad_symbol = bad_trans.pop;
+			auto final_state_index = bad_trans.to;
+			auto problems_trap_index = static_cast<int>(result.size());
+			no_toggle_states.emplace(
+				problems_trap_index); // Состояние-ловушка проблемных переходов не
+			// меняет финальность при обращении
 
-		for (const auto& [from_from_index, trans] : result._find_transitions_to(from_index)) {
-			if (!trans.push.empty() && trans.push.back() == bad_symbol) {
-				// Если после перехода на вершине стэка точно окажется "проблемный символ", то
-				// перенаправляем переход сразу в финальное состояние.
+			for (const auto& [from_from_index, trans] : result._find_transitions_to(from_index)) {
+				if (!trans.push.empty() && trans.push.back() == bad_symbol) {
+					// Если после перехода на вершине стэка точно окажется "проблемный символ", то
+					// перенаправляем переход сразу в финальное состояние.
+					result.states[from_from_index].set_transition(
+						{final_state_index, trans.input_symbol, trans.pop, trans.push},
+						trans.input_symbol);
+					result.states[from_from_index].transitions[trans.input_symbol].erase(trans);
+					continue;
+				}
+
+				// Иначе перенаправляем переход в ловушку проблемных переходов
 				result.states[from_from_index].set_transition(
-					{final_state_index, trans.input_symbol, trans.pop, trans.push},
+					{problems_trap_index, trans.input_symbol, trans.pop, trans.push},
 					trans.input_symbol);
 				result.states[from_from_index].transitions[trans.input_symbol].erase(trans);
-				continue;
 			}
 
-			// Иначе перенаправляем переход в ловушку проблемных переходов
-			result.states[from_from_index].set_transition(
-				{problems_trap_index, trans.input_symbol, trans.pop, trans.push},
-				trans.input_symbol);
-			result.states[from_from_index].transitions[trans.input_symbol].erase(trans);
-		}
-
-		// Добавляем состояние-ловушку проблемных переходов.
-		result.states.emplace_back(problems_trap_index, "eps-trap", false);
-		result.states[problems_trap_index].set_transition(
-			{final_state_index, Symbol::Epsilon, bad_symbol, std::vector({bad_symbol})},
-			Symbol::Epsilon);
-		for (const auto& stack_symb : result._get_stack_symbols()) {
-			if (stack_symb != bad_symbol) {
-				result.states[problems_trap_index].set_transition(
-					{from_index, Symbol::Epsilon, stack_symb, std::vector({stack_symb})},
-					Symbol::Epsilon);
+			// Добавляем состояние-ловушку проблемных переходов.
+			result.states.emplace_back(problems_trap_index, "eps-trap", false);
+			result.states[problems_trap_index].set_transition(
+				{final_state_index, Symbol::Epsilon, bad_symbol, std::vector({bad_symbol})},
+				Symbol::Epsilon);
+			for (const auto& stack_symb : result._get_stack_symbols()) {
+				if (stack_symb != bad_symbol) {
+					result.states[problems_trap_index].set_transition(
+						{from_index, Symbol::Epsilon, stack_symb, std::vector({stack_symb})},
+						Symbol::Epsilon);
+				}
 			}
 		}
 	}
