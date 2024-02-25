@@ -148,15 +148,16 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
         FiniteAutomaton FA;
         FA = parser.parse_NFA(grammar_path, test_path);
 		auto ard =  FA.to_regex().to_glushkov();
-        auto first = ard.ambiguity();
-        auto second = FA.ambiguity();
+        auto first = ard;
+        auto second = FA;
 
         std::ifstream t(test_path);
         std::stringstream buffer;
         buffer << t.rdbuf();
         std::string file = buffer.str();
 
-        ASSERT_EQ(first, second) << file << "\n" << FA.minimize().to_txt() << "\n" << ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
+        auto equality = FiniteAutomaton::equivalent(first, second);
+        ASSERT_TRUE(equality) << file << "\n" << FA.minimize().to_txt() << "\n" << ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
 		std::cout << ALL - i << std::endl;
     }
 }
