@@ -111,6 +111,28 @@ TEST(Statistics, Test_statistics) {
     std::cout << OY[OY.size() - 1] << "]\n";
 }
 
+TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
+    int ALL = 10000;
+    for (int i = 0; i < ALL; i++) {
+        AutomatonGenerator a("./TestData/grammar.txt", FA_type::NFA, 5);
+        a.write_to_file("./TestData/tmp/test.txt");
+        Parser parser;
+        FiniteAutomaton FA;
+        FA = parser.parse_NFA("./TestData/grammar.txt", "./TestData/tmp/test.txt");
+		auto ard =  FA.to_regex().to_glushkov();
+        auto first = ard.ambiguity();
+        auto second = FA.ambiguity();
+
+        std::ifstream t("./TestData/tmp/test.txt");
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        std::string file = buffer.str();
+
+        ASSERT_EQ(first, second) << file << "\n" << FA.minimize().to_txt() << "\n" << ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
+		std::cout << ALL - i << std::endl;
+    }
+}
+
 // TEST(Statistics, Test_dfa) {
 // 	for (int term = 5; term <= 50; term = term + 5) {
 // 		AutomatonGenerator::set_terminal_probability(20);

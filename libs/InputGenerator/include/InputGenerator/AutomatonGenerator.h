@@ -206,10 +206,12 @@ private:
 public:
     std::stringstream output;
 
-    explicit AutomatonGenerator(std::string grammar_file, FA_type type = FA_type::NFA);
-
+    explicit AutomatonGenerator(std::string grammar_file, FA_type type = FA_type::NFA, int n = 10);
+ 
     void write_to_file(std::string filename);
 
-   static  void set_terminal_probability(int elem);
-   static  void set_initial_state_not_terminal(bool f);
+    static  void set_terminal_probability(int elem);
+    static  void set_initial_state_not_terminal(bool f);
+
+    void set_states_number(int n);
 };

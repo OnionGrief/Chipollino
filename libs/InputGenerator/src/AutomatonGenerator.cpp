@@ -209,6 +209,11 @@ void AutomatonGenerator::set_initial_state_not_terminal(bool f)
     AutomatonGeneratorConstants::initial_state_not_terminal = f;
 }
 
+void AutomatonGenerator::set_states_number(int n)
+{
+    states_number = n;
+}
+
 bool AutomatonGenerator::parse_reserved(std::string res_case) {
     // std::cout << "parse_reserved: " << res_case << "\n";
     if (res_case == "EPS")
@@ -348,7 +353,8 @@ bool AutomatonGenerator::parse_transition(std::string name) {
     return parse_func[name]();
 }
 
-AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type) {
+AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type, int n) {
+    states_number = n;
     generate_alphabet(52);
 
     lexy_ascii_tree grammar;
