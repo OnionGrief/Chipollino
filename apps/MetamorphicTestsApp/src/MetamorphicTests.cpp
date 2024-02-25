@@ -131,7 +131,7 @@ TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
         buffer << t.rdbuf();
         std::string file = buffer.str();
 
-        auto equality = FiniteAutomaton::equal(first, second);
+        auto equality = FiniteAutomaton::equivalent(first, second);
         ASSERT_TRUE(equality) << file << "\n" << first.to_txt() << "\n" << second.to_txt() << "\n" << FA.to_regex().to_txt();
 		std::cout << ALL - i << std::endl;
     }
