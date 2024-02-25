@@ -118,7 +118,7 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
     for (int i = 0; i < ALL; i++) {
         std::string grammar_path = "./TestData/grammar.txt";
         std::string test_path = "./TestData/MetamorphicTest/test1.txt";
-        AutomatonGenerator a(, FA_type::NFA, 5);
+        AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
         a.write_to_file(test_path);
         Parser parser;
         FiniteAutomaton FA;
