@@ -55,18 +55,21 @@ TEST(TestNFA, Test_equivalent_nfa_negative) {
 	}
 }
 
-// TEST(IsDeterministic, Test_is_deterministic) {
-// 	for (int i = 0; i < 1000; i++) {
-// 		AutomatonGenerator a(FA_type::FA);
-// 		a.write_to_file("./TestData/tmp/test.txt");
-// 		std::cout << "write_to_file\n";
-// 		auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
-// 		std::cout << "parse_FA\n";
-// 		auto FAd = FA.determinize();
-// 		std::cout << "determinize\n";
-// 		ASSERT_TRUE(FAd.is_deterministic()); 
-// 	}
-// }
+TEST(IsDeterministic, Test_is_deterministic) {
+    std::string grammar_path = "./TestData/grammar.txt";
+    std::string test_path = "./TestData/MetamorphicTest/test1.txt";
+	for (int i = 0; i < 1000; i++) {
+		AutomatonGenerator a(grammar_path, FA_type::NFA);
+		a.write_to_file(test_path);
+		std::cout << "write_to_file\n";
+        Parser parser;
+		auto FA = parser.parse_NFA(grammar_path, test_path);
+		std::cout << "parse_FA\n";
+		auto FAd = FA.determinize();
+		std::cout << "determinize\n";
+		ASSERT_TRUE(FAd.is_deterministic()); 
+	}
+}
 
 // TEST(Statistics, Test_statistics) {
 //     std::string grammar_path = "./TestData/grammar.txt";

@@ -63,9 +63,11 @@ bool AutomatonGenerator::coloring_MFA_transition(int beg, FAtransition& trans, i
         MFA_coloring[color][beg] = 1;
         trans.open.insert(color);
     }
-    // closing color memory cell for all transitions from the end vertex
-    for (int i = 0; i < graph[trans.end].size(); i++) {
-        graph[trans.end][i].close.insert(color);
+    // closing color memory cell for all transitions from the end vertex if it's not done yet
+    if (MFA_coloring[color][trans.end] != 2) {
+        for (int i = 0; i < graph[trans.end].size(); i++) {
+            graph[trans.end][i].close.insert(color);
+        }
     }
     // yellow
     MFA_coloring[color][trans.end] = 2;
