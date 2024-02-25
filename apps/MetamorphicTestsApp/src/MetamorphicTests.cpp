@@ -69,37 +69,46 @@ TEST(TestNFA, Test_equivalent_nfa_negative) {
 // }
 
 TEST(Statistics, Test_statistics) {
-	std::vector<int> OX;
-	std::vector<float> OY;
-	AutomatonGenerator::set_initial_state_not_terminal(true);
-	for (int term = 5; term <= 100; term = term + 5) {
-		AutomatonGenerator::set_terminal_probability(term);
-		int count = 0;
-		int ALL = 10000;
-		for (int i = 0; i < ALL; i++) {
-			AutomatonGenerator a("./TestData/grammar.txt", FA_type::NFA);
-			a.write_to_file("./TestData/tmp/test.txt");
+    std::vector<int> OX;
+    std::vector<float> OY;
+    AutomatonGenerator::set_initial_state_not_terminal(true);
+    for (int term = 5; term <= 100; term = term + 5) {
+        AutomatonGenerator::set_terminal_probability(term);
+        int count = 0;
+        int ALL = 10000;
+        for (int i = 0; i < ALL; i++) {
+            AutomatonGenerator a("./TestData/grammar.txt", FA_type::NFA);
+            a.write_to_file("./TestData/tmp/test.txt");
             Parser parser;
-			auto FA = parser.parse_NFA("./TestData/grammar.txt", "./TestData/tmp/test.txt");
-			if (FA.is_finite()) {
-				count++;
-			}
-		}
-		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) << "%" << std::endl;
-		OX.push_back(term);
-		OY.push_back(float(count) / float(ALL));
-	}
-	std::cout << "OX = [";
-	for (int i = 0; i < OX.size() - 1; i++) {
-		std::cout << OX[i] << ",";
-	}
-	std::cout << OX[OX.size() - 1] << "]\n";
+            FiniteAutomaton FA;
+            try {
+                FA = parser.parse_NFA("./TestData/grammar.txt", "./TestData/tmp/test.txt"); 
+            } catch (const std::runtime_error& re) {
+                std::ifstream t("./TestData/tmp/test.txt");
+                std::stringstream buffer;
+                buffer << t.rdbuf();
+                std::string file = buffer.str();
+                throw(std::runtime_error(file));
+            }
+            if (FA.is_finite()) {
+                count++;
+            }
+        }
+        std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) << "%" << std::endl;
+        OX.push_back(term);
+        OY.push_back(float(count) / float(ALL));
+    }
+    std::cout << "OX = [";
+    for (int i = 0; i < OX.size() - 1; i++) {
+        std::cout << OX[i] << ",";
+    }
+    std::cout << OX[OX.size() - 1] << "]\n";
 
-	std::cout << "OY = [";
-	for (int i = 0; i < OY.size() - 1; i++) {
-		std::cout << OY[i] << ",";
-	}
-	std::cout << OY[OY.size() - 1] << "]\n";
+    std::cout << "OY = [";
+    for (int i = 0; i < OY.size() - 1; i++) {
+        std::cout << OY[i] << ",";
+    }
+    std::cout << OY[OY.size() - 1] << "]\n";
 }
 
 // TEST(Statistics, Test_dfa) {
