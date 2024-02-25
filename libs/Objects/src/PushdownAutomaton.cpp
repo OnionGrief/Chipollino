@@ -287,11 +287,6 @@ vector<PDATransition> _flatten_transitions(PDAState state) {
 pair<bool, EqualityCheckerState> PushdownAutomaton::_equality_dfs(
 	const PushdownAutomaton& pda1, const PushdownAutomaton& pda2, EqualityCheckerState chst) const {
 
-	std::cout << "Verifying state " << pda1.states[chst.index1].identifier << " vs " << pda2.states[chst.index2].identifier << ": ";
-	for (auto [f, s]: chst.stack_mapping) {
-		std::cout << string(f) << " -> " << string(s) << ";";
-	}
-	std::cout << "\n";
 	if (!chst.can_map_states(chst.index1, chst.index2) ||
 		pda1.states[chst.index1].is_terminal != pda2.states[chst.index2].is_terminal) {
 		return {false, {}};
