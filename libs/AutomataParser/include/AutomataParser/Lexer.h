@@ -23,6 +23,9 @@ const char initial_mark[] = "initial_mark";
 const char state_label[] = "state_label";
 const char state_description[] = "state_description";
 const char MFA_edge[] = "MFA_edge";
+const char PDA_edge[] = "PDA_edge";
+const char stack_symbol[] = "stack_symbol";
+const char stack_actions[] = "stack_actions";
 const char cell_id[] = "cell_id";
 const char memory_cell[] = "memory_cell";
 
@@ -63,12 +66,30 @@ class Lexer {
 		static constexpr auto rule = dsl::while_(dsl::p<memory_cell>);
 	};
 
+	struct stack_symbol {
+		static constexpr auto rule = LEXY_LIT("$") | dsl::p<node_id>;
+	};
+
+	struct stack_pushes {
+		static constexpr auto sep = dsl::sep(dsl::comma);
+
+		static constexpr auto rule = dsl::list(dsl::p<stack_symbol>, sep);
+	};
+
+	struct stack_actions {
+		static constexpr auto rule = dsl::p<stack_symbol> + LEXY_LIT("/") + dsl::p<stack_pushes>;
+	};
+
 	struct MFA_edge {
 		static constexpr auto rule = (dsl::p<stmt> + dsl::p<memory_lists>);
 	};
 
 	struct FA_edge {
 		static constexpr auto rule = dsl::p<stmt>;
+	};
+
+	struct PDA_edge {
+		static constexpr auto rule = dsl::p<stmt> + dsl::p<stack_actions>;
 	};
 
 	struct state_label {
@@ -96,6 +117,15 @@ class Lexer {
 		static constexpr auto rule = dsl::list(dsl::p<state_description>, sep) + LEXY_LIT("...");
 	};
 
+	struct PDA {
+		static constexpr auto whitespace = dsl::ascii::space;
+
+		static constexpr auto sep = dsl::sep(dsl::semicolon);
+
+		static constexpr auto rule =
+			LEXY_LIT("{") + dsl::p<states> + dsl::list(dsl::p<PDA_edge>, sep) + LEXY_LIT("}");
+	};
+
 	struct MFA {
 		// Allow arbitrary spaces between individual tokens.
 
@@ -119,7 +149,8 @@ class Lexer {
 	};
 
 	struct production {
-		static constexpr auto rule = LEXY_LIT("MFA") >> dsl::p<MFA> | LEXY_LIT("FA") >> dsl::p<FA>;
+		static constexpr auto rule = LEXY_LIT("MFA") >> dsl::p<MFA> | LEXY_LIT("FA") >> dsl::p<FA> |
+									 LEXY_LIT("PDA") >> dsl::p<PDA>;
 	};
 
   public:

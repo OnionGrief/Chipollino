@@ -11,7 +11,7 @@
 \usepackage{makeidx,fancybox,tikz,nicematrix}
 %\usepackage[inkscapearea=page]{svg}
 \usetikzlibrary{automata, positioning, arrows,patterns}
-\usetikzlibrary{arrows.meta,patterns.meta, datavisualization}
+\usetikzlibrary{arrows.meta,patterns.meta, datavisualization, shapes.geometric}
 \usepackage{tempora} %по желанию -- русские штрифты с засечками
 \usepackage{dirtree} %дерево вычислений
 
@@ -168,12 +168,15 @@
 \def\MFAexpt{\mathtt{MFAexpt}}
 \def\AddTrap{\mathtt{AddTrap}}
 \def\IsAcreg{\mathtt{IsAcreg}}
+\def\RegularIntersect{\mathtt{RegularIntersect}}
 
 % типы интерпретатора
 \def\VoidTYPE{\mathtt{VOID}}
 \def\RegexTYPE{\mathtt{Regex}}
 \def\DFATYPE{\mathtt{DFA}}
 \def\NFATYPE{\mathtt{NFA}}
+\def\DPDATYPE{\mathtt{DPDA}}
+\def\PDATYPE{\mathtt{PDA}}
 \def\IntTYPE{\mathtt{Int}}
 \def\PrefixGrammarTYPE{\mathtt{PrefixGrammar}}
 \def\BooleanTYPE{\mathtt{Bool}}

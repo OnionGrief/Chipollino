@@ -1,3 +1,5 @@
+#include "Objects/PushdownAutomaton.h"
+
 #include <AutomataParser/Parser.h>
 
 using std::map;
@@ -49,7 +51,9 @@ string Parser::first_child(lexy::_pt_node<lexy::_bra, void> it) {
 }
 
 void Parser::parse_states(lexy_ascii_tree& tree, set<string>& names, map<string, string>& labels) {
-	auto nodes = find_children(tree, {AutomataParser::node_id}, {AutomataParser::state_label});
+	auto nodes = find_children(tree,
+							   {AutomataParser::node_id},
+							   {AutomataParser::state_label, AutomataParser::stack_symbol});
 	for (auto node : nodes) {
 		auto name = first_child(node);
 
@@ -150,6 +154,47 @@ void Parser::parse_MFA_transitions(lexy_ascii_tree& tree,
 	transitions = mfat_info;
 }
 
+void Parser::parse_PDA_transitions(lexy_ascii_tree& tree, vector<PDATransition_info>& trans) {
+	// https://lexy.foonathan.net/playground/
+
+	auto edges = find_children(tree, {AutomataParser::PDA_edge});
+	vector<PDATransition_info> pda_info;
+
+	for (auto edge : edges) {
+		auto pda_edge_children = edge.children().begin();
+		auto stmt_children = pda_edge_children->children().begin();
+		string beg = first_child(*stmt_children);
+		stmt_children++;
+		string end = first_child(*stmt_children);
+		stmt_children++;
+		Symbol symb = first_child(*stmt_children);
+
+		pda_edge_children++; // pda_edge_children points at stack_actions
+		auto stack_actions_children = pda_edge_children->children().begin();
+
+		Symbol pop = first_child(stack_actions_children->children().begin()); // pop sym
+		stack_actions_children++; // "/"
+		stack_actions_children++; // stack_actions_children points at stack_pushes
+
+		std::vector<Symbol> push;
+		auto push_syms = stack_actions_children->children();
+		for (auto push_sym: push_syms) {
+			auto push_data = first_child(push_sym.children().begin());
+			if (push_data == ",") {
+				continue;
+			}
+
+			push.emplace_back(push_data);
+		}
+
+		// Create a PDATransition_info object and add it to the vector
+		pda_info.emplace_back(beg, end, symb, pop, push);
+	}
+
+	// Assign parsed PDATransition_info objects to the output vector
+	trans = pda_info;
+}
+
 MemoryFiniteAutomaton Parser::parse_MFA(const string& filename) {
 	lexy_ascii_tree tree;
 	auto file = lexy::read_file<lexy::ascii_encoding>(filename.c_str());
@@ -240,4 +285,51 @@ FiniteAutomaton Parser::parse_FA(const string& filename) {
 	auto fa = FiniteAutomaton(initial_state, states, alphabet);
 
 	return fa;
+}
+
+PushdownAutomaton Parser::parse_PDA(const string& filename) {
+	lexy_ascii_tree tree;
+	auto file = lexy::read_file<lexy::ascii_encoding>(filename.c_str());
+	auto input = file.buffer();
+
+	Lexer::parse_buffer(tree, input);
+
+	map<string, bool> is_terminal;
+	set<string> names;
+	map<string, string> labels;
+	string initial;
+
+	parse_states(tree, names, labels);
+	parse_descriptions(tree, labels, is_terminal, initial);
+
+	vector<PDAState> states;
+	map<string, int> states_id;
+
+	int k = 0;
+	int initial_state = 0;
+	for (const auto& name : names) {
+		if (name == initial)
+			initial_state = k;
+		states_id[name] = k;
+		states.emplace_back(k++, labels[name], is_terminal[name]);
+	}
+
+	set<Symbol> alphabet;
+	vector<PDATransition_info> trans;
+	parse_PDA_transitions(tree, trans);
+
+	for (auto& rawTransition : trans) {
+		auto transition = PDATransition(states_id[rawTransition.end], rawTransition.symb,  rawTransition.pop, rawTransition.push);
+
+		if (rawTransition.symb == AutomataParser::epsilon) {
+			states[states_id[rawTransition.beg]].set_transition(transition, Symbol::Epsilon);
+		} else {
+			states[states_id[rawTransition.beg]].set_transition(transition, rawTransition.symb);
+			alphabet.insert(Symbol(rawTransition.symb));
+		}
+	}
+
+	auto pda = PushdownAutomaton(initial_state, states, alphabet);
+
+	return pda;
 }

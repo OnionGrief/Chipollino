@@ -1,0 +1,4 @@
+P = getPDA "testdata/test_pda_anbn_content.txt"
+I = RegularIntersect P {(aa|bb|(ab|ba)(aa|bb)*(ab|ba))*} !!
+Deterministic I !!
+Test (I) {(a)*(b)*} 1

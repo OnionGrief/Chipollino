@@ -1,0 +1,4 @@
+X = getPDA "testdata/test_pda_anbn_content.txt"
+D = Determinize X !!
+C = Complement D !!
+Test (C) {(a)*(b)*} 1

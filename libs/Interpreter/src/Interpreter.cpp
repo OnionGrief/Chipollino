@@ -130,7 +130,7 @@ optional<GeneralObject> Interpreter::apply_function_sequence(const vector<Functi
 		else
 			return nullopt;
 
-		if (is_logged && func.name != "getNFA" && func.name != "getMFA")
+		if (is_logged && func.name != "getNFA" && func.name != "getMFA" && func.name != "getPDA")
 			tex_logger.add_log(log_template);
 	}
 
@@ -154,6 +154,13 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 			return get<ObjectNFA>(obj).value;
 		else
 			return get<ObjectDFA>(obj).value;
+	};
+
+	auto get_automaton_pda = [](const GeneralObject& obj) -> const PushdownAutomaton& {
+		if (holds_alternative<ObjectPDA>(obj))
+			return get<ObjectPDA>(obj).value;
+		else
+			return get<ObjectDPDA>(obj).value;
 	};
 
 	auto is_automaton = [](const GeneralObject& obj) -> const bool {
@@ -250,6 +257,9 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Deterministic" && function.input[0] == ObjectType::MFA) {
 		return ObjectBoolean(get<ObjectMFA>(arguments[0]).value.is_deterministic(&log_template));
 	}
+	if (function.name == "Deterministic" && function.input[0] == ObjectType::PDA) {
+		return ObjectBoolean(get<ObjectPDA>(arguments[0]).value.is_deterministic(&log_template));
+	}
 	if (function.name == "Subset" && function.input[0] == ObjectType::Regex) {
 		return ObjectBoolean(
 			get<ObjectRegex>(arguments[0])
@@ -276,6 +286,10 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Equal" && function.input[0] == ObjectType::NFA) {
 		return ObjectBoolean(FiniteAutomaton::equal(
 			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
+	}
+	if (function.name == "Equal" && function.input[0] == ObjectType::PDA) {
+		return ObjectBoolean(PushdownAutomaton::equal(
+			get_automaton_pda(arguments[0]), get_automaton_pda(arguments[1]), &log_template));
 	}
 	if (function.name == "Equal" && function.input[0] == ObjectType::Int) {
 		int value1 = get<ObjectInt>(arguments[0]).value;
@@ -322,6 +336,10 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		string filename = get<ObjectString>(arguments[0]).value;
 		return ObjectMFA(Parser::parse_MFA(filename));
 	}
+	if (function.name == "getPDA") {
+		string filename = get<ObjectString>(arguments[0]).value;
+		return ObjectPDA(Parser::parse_PDA(filename));
+	}
 	// # place for another diff types funcs
 
 	/*
@@ -334,7 +352,14 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	GeneralObject predres = arguments[0];
 	optional<GeneralObject> res;
 
-	if (function.name == "Determinize") {
+	if (function.name == "Determinize" && function.input[0] == ObjectType::PDA) {
+		auto pda = get<ObjectPDA>(arguments[0]).value;
+		if (!pda.is_deterministic(&log_template)) {
+			logger.throw_error("Determinization is supported only for DPDAs");
+			return nullopt;
+		}
+		res = ObjectDPDA(pda);
+	} else if (function.name == "Determinize") {
 		res = ObjectDFA(get_automaton(arguments[0]).determinize(true, &log_template));
 	}
 	if (function.name == "Determinize+") {
@@ -423,6 +448,9 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Complement" && function.input[0] == ObjectType::MFA) {
 		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.complement(&log_template));
 	}
+	if (function.name == "Complement" && function.input[0] == ObjectType::DPDA) {
+		res = ObjectDPDA(get<ObjectDPDA>(arguments[0]).value.complement(&log_template));
+	}
 	if (function.name == "DeAnnote" && function.input[0] == ObjectType::Regex) {
 		res = ObjectRegex(get<ObjectRegex>(arguments[0]).value.deannote(&log_template));
 	}
@@ -434,6 +462,11 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 	}
 	// # place for another same types funcs
+	if (function.name == "RegularIntersect") {
+		auto pda = get<ObjectPDA>(arguments[0]).value;
+		auto re = get<ObjectRegex>(arguments[1]).value;
+		res = ObjectPDA(pda.regular_intersect(re, &log_template));
+	}
 	if (function.name == "Intersect") {
 		res = ObjectNFA(FiniteAutomaton::intersection(
 			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
@@ -751,6 +784,12 @@ bool Interpreter::run_test(const Test& test) {
 		} else if (holds_alternative<ObjectMFA>(*language)) {
 			log_template.load_tex_template("Test4");
 			Tester::test(&get<ObjectMFA>(*language).value, reg, test.iterations, &log_template);
+		} else if (holds_alternative<ObjectPDA>(*language)) {
+			log_template.load_tex_template("Test5");
+			Tester::test(&get<ObjectPDA>(*language).value, reg, test.iterations, &log_template);
+		} else if (holds_alternative<ObjectDPDA>(*language)) {
+			log_template.load_tex_template("Test6");
+			Tester::test(&get<ObjectDPDA>(*language).value, reg, test.iterations, &log_template);
 		} else {
 			logger.throw_error("while running test: invalid language expression");
 			success = false;
@@ -1158,9 +1197,10 @@ optional<Interpreter::Test> Interpreter::scan_test(const vector<Lexem>& lexems, 
 	// Language
 	if (const auto& expr = scan_expression(lexems, i, lexems.size());
 		expr.has_value() &&
-		((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
-		 (*expr).type == ObjectType::NFA || (*expr).type == ObjectType::BRefRegex ||
-		 (*expr).type == ObjectType::MFA)) {
+			((*expr).type == ObjectType::Regex || (*expr).type == ObjectType::DFA ||
+			 (*expr).type == ObjectType::NFA || (*expr).type == ObjectType::BRefRegex ||
+			 (*expr).type == ObjectType::MFA) ||
+		(*expr).type == ObjectType::PDA || (*expr).type == ObjectType::DPDA) {
 		test.language = *expr;
 	} else {
 		logger.throw_error("Scan test: wrong type at position 1, nfa or regex expected");

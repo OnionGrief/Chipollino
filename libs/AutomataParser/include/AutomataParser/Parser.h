@@ -15,6 +15,7 @@
 #include "Lexer.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MemoryFiniteAutomaton.h"
+#include "Objects/PushdownAutomaton.h"
 
 
 class Parser {
@@ -24,6 +25,8 @@ class Parser {
 		std::string beg;
 		std::string end;
 		Symbol symb;
+
+		FATransition_info(std::string beg, std::string end, const Symbol& symb) : beg(std::move(beg)), end(std::move(end)), symb(symb) {}
 	};
 
 	// Информация для сборки перехода MFA
@@ -35,6 +38,16 @@ class Parser {
 						   std::unordered_set<int> open, std::unordered_set<int> close)
 			: FATransition_info(std::move(beg), std::move(end), symb), open(std::move(open)),
 			  close(std::move(close)) {}
+	};
+
+	// Информация для сборки перехода MFA
+	struct PDATransition_info : FATransition_info {
+		Symbol pop;
+		std::vector<Symbol> push;
+
+		PDATransition_info(std::string beg, std::string end, const Symbol& symb,
+						   const Symbol& pop, const std::vector<Symbol>& push)
+			: FATransition_info(std::move(beg), std::move(end), symb), pop(pop), push(push) {}
 	};
 
 	// Поиск рекурсивный поиск вершин с названиями из names, игнорируя спуск в вершины из exclude
@@ -70,10 +83,17 @@ class Parser {
 		lexy_ascii_tree& tree,						   // NOLINT(runtime/references)
 		std::vector<MFATransition_info>& transitions); // NOLINT(runtime/references)
 
+	static void parse_PDA_transitions(
+		lexy_ascii_tree& tree,						   // NOLINT(runtime/references)
+		std::vector<PDATransition_info>& transitions); // NOLINT(runtime/references)
+
   public:
 	// Разбор MFA из файла
 	static MemoryFiniteAutomaton parse_MFA(const std::string& filename);
 
 	// Разбор FA из файла
 	static FiniteAutomaton parse_FA(const std::string& filename);
+
+	// Разбор PDA из файла
+	static PushdownAutomaton parse_PDA(const std::string& filename);
 };
