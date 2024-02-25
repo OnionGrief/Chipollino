@@ -156,6 +156,13 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 			return get<ObjectDFA>(obj).value;
 	};
 
+	auto get_automaton_pda = [](const GeneralObject& obj) -> const PushdownAutomaton& {
+		if (holds_alternative<ObjectPDA>(obj))
+			return get<ObjectPDA>(obj).value;
+		else
+			return get<ObjectDPDA>(obj).value;
+	};
+
 	auto is_automaton = [](const GeneralObject& obj) -> const bool {
 		return holds_alternative<ObjectNFA>(obj) || holds_alternative<ObjectDFA>(obj);
 	};
@@ -279,6 +286,10 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Equal" && function.input[0] == ObjectType::NFA) {
 		return ObjectBoolean(FiniteAutomaton::equal(
 			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
+	}
+	if (function.name == "Equal" && function.input[0] == ObjectType::PDA) {
+		return ObjectBoolean(PushdownAutomaton::equal(
+			get_automaton_pda(arguments[0]), get_automaton_pda(arguments[1]), &log_template));
 	}
 	if (function.name == "Equal" && function.input[0] == ObjectType::Int) {
 		int value1 = get<ObjectInt>(arguments[0]).value;

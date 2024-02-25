@@ -77,6 +77,7 @@ inline static const std::vector<Function> functions = {
 	{"Equal", {ObjectType::Int, ObjectType::Int}, ObjectType::Boolean},
 	{"Equal", {ObjectType::AmbiguityValue, ObjectType::AmbiguityValue}, ObjectType::Boolean},
 	{"Equal", {ObjectType::Boolean, ObjectType::Boolean}, ObjectType::Boolean},
+	{"Equal", {ObjectType::PDA, ObjectType::PDA}, ObjectType::Boolean},
 	{"OneUnambiguity", {ObjectType::Regex}, ObjectType::Boolean},
 	{"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean},
 	{"SemDet", {ObjectType::NFA}, ObjectType::Boolean},

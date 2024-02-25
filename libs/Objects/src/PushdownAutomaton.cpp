@@ -272,6 +272,146 @@ PushdownAutomaton PushdownAutomaton::regular_intersect(const Regex& re, iLogTemp
 	return result;
 }
 
+vector<PDATransition> _flatten_transitions(PDAState state) {
+	vector<PDATransition> result;
+
+	for (const auto& [symbol, symbol_transitions] : state.transitions) {
+		for (const auto& trans : symbol_transitions) {
+			result.emplace_back(trans);
+		}
+	}
+
+	return result;
+}
+
+pair<bool, EqualityCheckerState> PushdownAutomaton::_equality_dfs(
+	const PushdownAutomaton& pda1, const PushdownAutomaton& pda2, EqualityCheckerState chst) const {
+
+	std::cout << "Verifying state " << pda1.states[chst.index1].identifier << " vs " << pda2.states[chst.index2].identifier << ": ";
+	for (auto [f, s]: chst.stack_mapping) {
+		std::cout << string(f) << " -> " << string(s) << ";";
+	}
+	std::cout << "\n";
+	if (!chst.can_map_states(chst.index1, chst.index2) ||
+		pda1.states[chst.index1].is_terminal != pda2.states[chst.index2].is_terminal) {
+		return {false, {}};
+	} else if (chst.states_mapping.count(chst.index1) && chst.states_mapping[chst.index1] == chst.index2) {
+		return {true, chst};
+	}
+	chst.map_states(chst.index1, chst.index2);
+
+	const auto state1 = pda1.states[chst.index1];
+	const auto state2 = pda2.states[chst.index2];
+
+	if (state1.transitions.size() != state2.transitions.size()) {
+		// Два состояния должны иметь переходы по равному количеству символов.
+		return {false, {}};
+	}
+
+	auto transitions1 = _flatten_transitions(state1);
+	auto transitions2 = _flatten_transitions(state2);
+	if (transitions1.size() != transitions2.size()) {
+		return {false, {}};
+	}
+
+	struct st {
+		int rem1_index;
+		vector<PDATransition> rem1, rem2;
+		EqualityCheckerState chst;
+	};
+
+	std::queue<st> q;
+	q.push({0, transitions1, transitions2, chst});
+	while (!q.empty()) {
+		auto data = q.front();
+		q.pop();
+
+		if (data.rem1_index >= data.rem1.size()) {
+			return {true, data.chst};
+		}
+
+		auto trans1 = data.rem1[data.rem1_index];
+		for (int i = 0; i<data.rem2.size(); i++) {
+			auto chst_copy = data.chst;
+			auto trans2 = data.rem2[i];
+
+			// Проверяем возможность сопоставить pop символы
+			if (!chst_copy.can_map_stack(trans1.pop, trans2.pop))
+				continue;
+			chst_copy.map_stack(trans1.pop, trans2.pop);
+
+			// Проверяем возможность сопоставить push символы
+			if (trans1.push.size() != trans2.push.size())
+				continue;
+
+			bool is_push_mapped = true;
+			for (int i = 0; i < trans1.push.size(); i++) {
+				auto ss1 = trans1.push[i], ss2 = trans2.push[i];
+				if (!chst_copy.can_map_stack(ss1, ss2)) {
+					is_push_mapped = false;
+					break;
+				}
+				chst_copy.map_stack(ss1, ss2);
+			}
+			if (!is_push_mapped)
+				continue;
+
+			auto [success, chst_new] = _equality_dfs(pda1, pda2, {trans1.to, trans2.to, chst_copy.stack_mapping, chst_copy.states_mapping});
+			if (!success) {
+				continue;
+			}
+
+			// Удалось сопоставить переход, пробуем раскрывать дальше
+			data.rem2.erase(data.rem2.begin()+i);
+			q.push({data.rem1_index+1, data.rem1, data.rem2, chst_new});
+		}
+	}
+
+	return {false, {}};
+}
+
+pair<bool, unordered_map<Symbol, Symbol, Symbol::Hasher>> PushdownAutomaton::_equality_checker(PushdownAutomaton pda1, PushdownAutomaton pda2) {
+	// Автоматы должны как минимум иметь равное количество состояний,
+	// равное количество символов стэка и равные алфавиты.
+	if (pda1.size() != pda2.size() ||
+		pda1.get_language()->get_alphabet() != pda2.get_language()->get_alphabet() ||
+		pda1._get_stack_symbols().size() != pda2._get_stack_symbols().size()) {
+		return {false, {}};
+	}
+
+	const EqualityCheckerState chst(pda1.initial_state,
+									pda2.initial_state,
+									{{Symbol::StackTop, Symbol::StackTop}, {Symbol::Epsilon, Symbol::Epsilon}},
+									{});
+	const auto [success, chst_new] = pda1._equality_dfs(pda1, pda2, chst);
+	if (!success) {
+		return {false, {}};
+	}
+
+	return {true, chst_new.stack_mapping};
+}
+
+bool PushdownAutomaton::equal(PushdownAutomaton pda1, PushdownAutomaton pda2, iLogTemplate* log) {
+	auto [result, stack_mapping] = _equality_checker(pda1, pda2);
+
+	if (log) {
+		log->set_parameter("pda1", pda1);
+		log->set_parameter("pda2", pda2);
+		log->set_parameter("result", result);
+		if (!result) {
+			log->set_parameter("stack", "{}");
+		} else {
+			std::ostringstream oss;
+			for (auto [first, second]: stack_mapping) {
+				oss << first << " -> " << second << "; ";
+			}
+			log->set_parameter("stack", oss.str());
+		}
+	}
+
+	return result;
+}
+
 bool PushdownAutomaton::is_deterministic(iLogTemplate* log) const {
 	bool result = true;
 	std::unordered_set<int> nondeterministic_states;
