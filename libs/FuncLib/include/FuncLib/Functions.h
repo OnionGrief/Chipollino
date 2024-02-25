@@ -78,9 +78,9 @@ inline static const std::vector<Function> functions = {
 	{"OneUnambiguity", {ObjectType::NFA}, ObjectType::Boolean},
 	{"SemDet", {ObjectType::NFA}, ObjectType::Boolean},
 	{"IsAcreg", {ObjectType::BRefRegex}, ObjectType::Boolean},
-	{"getNFA", {ObjectType::String}, ObjectType::NFA},
-	{"getMFA", {ObjectType::String}, ObjectType::MFA},
-	{"getDFA", {ObjectType::String}, ObjectType::DFA},
+	{"getNFA", {ObjectType::String, ObjectType::String}, ObjectType::NFA},
+	{"getMFA", {ObjectType::String, ObjectType::String}, ObjectType::MFA},
+	{"getDFA", {ObjectType::String, ObjectType::String}, ObjectType::DFA},
 };
 
 // вспомогательная функция для Ани и ее курсача
