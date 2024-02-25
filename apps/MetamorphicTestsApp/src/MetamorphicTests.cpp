@@ -69,6 +69,8 @@ TEST(TestNFA, Test_equivalent_nfa_negative) {
 // }
 
 TEST(Statistics, Test_statistics) {
+    std::string grammar_path = "./TestData/grammar.txt";
+    std::string test_path = "./TestData/MetamorphicTest/test1.txt";
     std::vector<int> OX;
     std::vector<float> OY;
     AutomatonGenerator::set_initial_state_not_terminal(true);
@@ -77,14 +79,14 @@ TEST(Statistics, Test_statistics) {
         int count = 0;
         int ALL = 10000;
         for (int i = 0; i < ALL; i++) {
-            AutomatonGenerator a("./TestData/grammar.txt", FA_type::NFA);
-            a.write_to_file("./TestData/tmp/test.txt");
+            AutomatonGenerator a(grammar_path, FA_type::NFA);
+            a.write_to_file(test_path);
             Parser parser;
             FiniteAutomaton FA;
             try {
-                FA = parser.parse_NFA("./TestData/grammar.txt", "./TestData/tmp/test.txt"); 
+                FA = parser.parse_NFA(grammar_path, test_path); 
             } catch (const std::runtime_error& re) {
-                std::ifstream t("./TestData/tmp/test.txt");
+                std::ifstream t(test_path);
                 std::stringstream buffer;
                 buffer << t.rdbuf();
                 std::string file = buffer.str();
@@ -114,16 +116,18 @@ TEST(Statistics, Test_statistics) {
 TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
     int ALL = 10000;
     for (int i = 0; i < ALL; i++) {
-        AutomatonGenerator a("./TestData/grammar.txt", FA_type::NFA, 5);
-        a.write_to_file("./TestData/tmp/test.txt");
+        std::string grammar_path = "./TestData/grammar.txt";
+        std::string test_path = "./TestData/MetamorphicTest/test1.txt";
+        AutomatonGenerator a(, FA_type::NFA, 5);
+        a.write_to_file(test_path);
         Parser parser;
         FiniteAutomaton FA;
-        FA = parser.parse_NFA("./TestData/grammar.txt", "./TestData/tmp/test.txt");
+        FA = parser.parse_NFA(grammar_path, test_path);
 		auto ard =  FA.to_regex().to_glushkov();
         auto first = ard.ambiguity();
         auto second = FA.ambiguity();
 
-        std::ifstream t("./TestData/tmp/test.txt");
+        std::ifstream t(test_path);
         std::stringstream buffer;
         buffer << t.rdbuf();
         std::string file = buffer.str();
