@@ -330,6 +330,10 @@ pair<bool, EqualityCheckerState> PushdownAutomaton::_equality_dfs(
 			auto chst_copy = data.chst;
 			auto trans2 = data.rem2[i];
 
+			if(trans1.input_symbol != trans2.input_symbol) {
+				continue;
+			}
+
 			// Проверяем возможность сопоставить pop символы
 			if (!chst_copy.can_map_stack(trans1.pop, trans2.pop))
 				continue;
