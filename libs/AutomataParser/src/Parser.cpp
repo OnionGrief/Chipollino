@@ -267,7 +267,8 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
             MFAstates[name_to_ind[transition.beg]]
             .set_transition(MFATransition(name_to_ind[transition.end],
             transition.open, transition.close), transition.symbol);
-            alphabet.insert(transition.symbol);
+            if (!transition.symbol.is_epsilon() && !transition.symbol.is_ref())
+                alphabet.insert(transition.symbol);
         }
 
         auto mfa = MemoryFiniteAutomaton(name_to_ind[initial], MFAstates, alphabet);
@@ -296,7 +297,8 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
         for (auto transition : FAtransitions) {
             FAstates[name_to_ind[transition.beg]]
             .set_transition(name_to_ind[transition.end], transition.symbol);
-            alphabet.insert(transition.symbol);
+            if (!transition.symbol.is_epsilon())
+                alphabet.insert(transition.symbol);
         }
 
         auto fa = FiniteAutomaton(name_to_ind[initial], FAstates, alphabet);
