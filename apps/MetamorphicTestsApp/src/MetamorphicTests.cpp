@@ -124,7 +124,7 @@ TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
         FiniteAutomaton FA;
         FA = parser.parse_NFA(grammar_path, test_path);
         auto first = FA.merge_bisimilar();
-        auto second = FA;
+        auto second = parser.parse_NFA(grammar_path, test_path);
 
         std::ifstream t(test_path);
         std::stringstream buffer;
