@@ -13,11 +13,12 @@
 #include <unordered_set>
 #include <queue>
 #include "AutomataParser/Lexer.h"
+#include "AutomataParser/ParseTreeDescend.h"
 #include "AutomataParser/Parser.h"
 
 enum class FA_type { MFA, NFA, DFA };
 
-class AutomatonGenerator {
+class AutomatonGenerator : protected ParseTreeDescend {
 private:
     struct FAtransition {
         int end;
@@ -163,27 +164,15 @@ private:
     };
 
     void generate_alphabet(int max_alphabet_size);
-
-    void read_symbols(int num);
-
-    void parse_attribute(lexy_ascii_child ref);
-
-    bool parse_transition(std::string name);
-
-    bool parse_nonterminal(lexy_ascii_child ref);
     
-    bool parse_reserved(std::string res_case);
+    bool _parse_reserved(std::string res_case);
 
-    bool parse_terminal(lexy_ascii_child ref);
-
-    bool parse_alternative(lexy_ascii_child ref);
-
-    void grammar_parser(std::string grammar_file, lexy_ascii_tree& tree); // NOLINT(runtime/references)
+    bool _parse_terminal(lexy_ascii_child ref);
 
 public:
     std::stringstream output;
 
-    explicit AutomatonGenerator(std::string grammar_file, FA_type type = FA_type::NFA, int n = 10);
+    AutomatonGenerator(std::string grammar_file, FA_type type = FA_type::NFA, int n = 10);
  
     void write_to_file(std::string filename);
 

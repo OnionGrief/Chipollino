@@ -16,10 +16,11 @@
 #define lexy_ascii_child lexy::_pt_node<lexy::_bra, void>
 
 #include "Lexer.h"
+#include "ParseTreeDescend.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MemoryFiniteAutomaton.h"
 
-class Parser {
+class Parser : protected ParseTreeDescend  {
   private:
     struct FAtransition {
         std::string beg;
@@ -191,34 +192,21 @@ class Parser {
     std::string file;
     int cur_pos = 0;
     void read_symbols(int num);
-
-    void parse_attribute(lexy_ascii_child ref);
-
-    bool parse_transition(std::string name);
-
-    bool parse_nonterminal(lexy_ascii_child ref);
     
-    bool parse_reserved(std::string res_case);
+    bool _parse_reserved(std::string res_case);
 
-    bool parse_terminal(lexy_ascii_child ref);
+    bool _parse_terminal(lexy_ascii_child ref);
 
-    bool parse_alternative(lexy_ascii_child ref);
-
-    void grammar_parser(std::string grammar_file, lexy_ascii_tree& tree); // NOLINT(runtime/references)
 
   public:
-    Parser() {}
-
-    // Поиск рекурсивный поиск вершин с названиями из names, игнорируя спуск в вершины из exclude
-    static std::vector<lexy_ascii_child> find_children(
-        lexy_ascii_tree& tree, // NOLINT(runtime/references)
-        const std::set<std::string>& names, const std::set<std::string>& exclude = {});
-
-    // лексема первого потомка для вершины lexy
-    static std::string first_child(lexy_ascii_child::children_range::iterator it);
-
-    // лексема первого потомка для вершины lexy
-    static std::string first_child(lexy_ascii_child it);
+    Parser() {
+        parse_reserved = [=](std::string x) {
+            return _parse_reserved(x);
+        };
+        parse_terminal = [=](lexy_ascii_child ref) {
+            return _parse_terminal(ref);
+        };
+    }
 
 	std::variant<FiniteAutomaton, MemoryFiniteAutomaton> parse(
         lexy_ascii_tree& grammar, std::string filename); // NOLINT(runtime/references)

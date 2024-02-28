@@ -9,7 +9,9 @@ FetchContent_MakeAvailable(lexy)
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
         src/Lexer.cpp
-        src/Parser.cpp)
+        src/ParseTreeDescend.cpp
+        src/Parser.cpp
+)
 
 # Add a library with the above sources
 add_library(${PROJECT_NAME} ${SOURCES})

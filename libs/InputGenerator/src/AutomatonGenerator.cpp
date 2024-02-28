@@ -195,7 +195,7 @@ void AutomatonGenerator::set_states_number(int n)
     states_number = n;
 }
 
-bool AutomatonGenerator::parse_reserved(std::string res_case) {
+bool AutomatonGenerator::_parse_reserved(std::string res_case) {
     if (res_case == "EPS")
         return true;
 
@@ -234,11 +234,7 @@ bool AutomatonGenerator::parse_reserved(std::string res_case) {
     return false;
 }
 
-bool AutomatonGenerator::parse_nonterminal(lexy::_pt_node<lexy::_bra, void> ref) {
-    return parse_transition(Parser::first_child(ref));
-}
-
-bool AutomatonGenerator::parse_terminal(lexy::_pt_node<lexy::_bra, void> ref) {
+bool AutomatonGenerator::_parse_terminal(lexy::_pt_node<lexy::_bra, void> ref) {
     auto it = ref.children().begin();
     it++;
     std::string to_read = lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme());
@@ -250,77 +246,15 @@ bool AutomatonGenerator::parse_terminal(lexy::_pt_node<lexy::_bra, void> ref) {
     return res;
 }
 
-void AutomatonGenerator::parse_attribute(lexy::_pt_node<lexy::_bra, void> ref) {
-    auto it = ref.children().begin();
-    while(std::string(it->kind().name()) != "nonterminal")
-        it++;
-    attributes.insert(Parser::first_child(it));
-}
-
-bool AutomatonGenerator::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
-    bool read = true;
-    for (auto it = ref.children().begin(); it != ref.children().end(); it++) {
-        if (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "|") {
-            if (read)
-                return true;
-            read = true;
-            continue;
-        }
-        if (!read) {
-            continue;
-        }
-        if (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "(") {
-            it++;
-            if (attributes.count(Parser::first_child(it->children().begin()))) {
-                while (it->kind().is_token() || std::string(it->kind().name()) != "alternative")
-                    it++;
-                parse_alternative(*it);
-            } else {
-                while (!it->kind().is_token() || lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) != ":")
-                    it++;
-
-                while (it->kind().is_token() || std::string(it->kind().name()) != "alternative")
-                    it++;
-                parse_alternative(*it);
-            }
-            while (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) != ")")
-                it++;
-        }
-        if (std::string(it->kind().name()) == "terminal") {
-            read &= parse_terminal(*it);
-            continue;
-        }
-        if (std::string(it->kind().name()) == "nonterminal") {
-            read &= parse_nonterminal(*it);
-            continue;
-        }
-        if (std::string(it->kind().name()) == "reserved") {
-            parse_reserved(Parser::first_child(it));
-            continue;
-        }
-        if (std::string(it->kind().name()) == "attribute") {
-            parse_attribute(*it);
-            continue;
-        }
-    }
-    return read;
-}
-
-bool AutomatonGenerator::parse_transition(std::string name) {
-
-    if (!rewriting_rules.count(name)) {
-        return false;
-    }
-
-    if (!parse_func.count(name)) {
-        auto transition = rewriting_rules[name];
-        return parse_alternative(*transition);  
-    }
-
-    return parse_func[name]();
-}
-
 AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type, int n) {
+    parse_reserved = [=](std::string x) {
+        return _parse_reserved(x);
+    };
+    parse_terminal = [=](lexy_ascii_child ref) {
+        return _parse_terminal(ref);
+    };
+
+
     states_number = n;
     generate_alphabet(52);
 
@@ -330,12 +264,12 @@ AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type, i
     auto input = file.buffer();
     Lexer::parse_buffer(grammar, input);
 
-    auto transitions = Parser::find_children(grammar, {"transition"}, {});
+    auto transitions = find_children(grammar, {"transition"}, {});
     for (auto transition : transitions) {
         // итератор по описанию перехода
         auto it = transition.children().begin();
         // имя нетерминала
-        std::string nonterminal = Parser::first_child(it);
+        std::string nonterminal = first_child(it);
         while (std::string(it->kind().name()) != "alternative") {
             it++;
         }
