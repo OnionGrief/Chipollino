@@ -71,8 +71,6 @@ private:
 
     void generate_graph();
 
-    //std::stringstream output;
-
     std::queue<std::string> TERMINAL, STRING, NUMBER, LETTER, DIGIT, STACK_SYMBOLS;
     int cur_state = 0, cur_transition = 0;
 
@@ -90,11 +88,8 @@ private:
             return res;
         }},
         {"states", [=](){
-            // std::cout << "SSSSSSSSSSTATES\n";
-
             for (int i = 0; i < stateDescriptions.size(); i++) {
                 if (stateDescriptions[i].initial || stateDescriptions[i].terminal) {
-                    // std::cout << stateDescriptions[i].index <<  stateDescriptions[i].initial <<  stateDescriptions[i].terminal << "\n";
                     STRING.push(std::to_string(stateDescriptions[i].index));
                     if (stateDescriptions[i].terminal)
                         TERMINAL.push("terminal");
@@ -120,7 +115,6 @@ private:
             return res;
         }},
         {"transition", [=](){
-            // std::cout << "transition\n";
             while(cur_state < graph.size() && cur_transition >= graph[cur_state].size()) {
                 cur_state++;
                 cur_transition = 0;
@@ -129,7 +123,6 @@ private:
                 // stmt
                 STRING.push(std::to_string(cur_state));
                 STRING.push(std::to_string(graph[cur_state][cur_transition].end));
-                // std::cout << "SSSSSYMBOL: " << graph[cur_state][cur_transition].symbol;
                 if (graph[cur_state][cur_transition].symbol.is_epsilon()) {
                     TERMINAL.push("eps");
                 } else {
@@ -160,8 +153,6 @@ private:
 
                 cur_transition++;
             }
-
-            // std::cout << "parsing transition\n";
 
             auto transition = rewriting_rules["transition"];
             auto res = parse_alternative(*transition);

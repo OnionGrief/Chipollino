@@ -77,12 +77,9 @@ bool AutomatonGenerator::coloring_MFA_transition(int beg, FAtransition& trans, i
 void AutomatonGenerator::generate_symbol(int beg, FAtransition& trans) {
     vector<int> possible_colors;
     for (int color = 0; color < colors; color++) {
-        // std::cout << "check color: " << color << "\n";
         if (!trans.open.count(color) && MFA_coloring[color][beg] != 2)
             possible_colors.push_back(color);
     }
-
-    // std::cout << "pos col size: " << possible_colors.size() << "\n";
 
     if (dice_throwing(ref_probability) && !possible_colors.empty()) {
         trans.symbol = Symbol::Ref(possible_colors[rand() % possible_colors.size()]);
@@ -106,8 +103,6 @@ void AutomatonGenerator::generate_symbol(int beg, FAtransition& trans) {
             }
         }
     }
-
-    //// std::cout << "symbol: " << trans.symbol << "\n";
 }
 
 void AutomatonGenerator::generate_graph() {
@@ -149,19 +144,9 @@ void AutomatonGenerator::generate_graph() {
         }
     }
 
-    for (int i = 0; i < states_number; i++) {
-        // std::cout << i << ": ";
-        for (int j = 0; j < regraph[i].size(); j++) {
-            // std::cout << regraph[i][j] << " ";
-        }
-        // std::cout << "\n";
-    }
-
     add_terminality();
 
-    // std::cout << "generating MFA colors\n";
     for (int i = 0; i < colors_tries; i++) {
-        // std::cout << "try gen col: " << i << "\n";
         int color = rand() % colors;
         int beg = included_states[rand() % included_states.size()];
         while (graph[beg].empty())
@@ -169,8 +154,6 @@ void AutomatonGenerator::generate_graph() {
         int transition_num = rand() % graph[beg].size();
         coloring_MFA_transition(beg, graph[beg][transition_num], color);
     }
-
-    // std::cout << "generating symbols\n";
 
     for (int i = 0; i < states_number; i++) {
         for (int j = 0; j < graph[i].size(); j++) {
@@ -189,6 +172,7 @@ void AutomatonGenerator::generate_alphabet(int max_alphabet_size) {
     for (char i = 'a'; i < 'a' + alphabet_size && i <= 'z'; i++) {
         alphabet.push_back(i);
     }
+    // Символы, приходящие из regex - малые латинские буквы
     // for (char i = 'A'; i < 'A' + alphabet_size - 26 && i <= 'Z'; i++) {
     //     alphabet.push_back(i);
     // }
@@ -212,7 +196,6 @@ void AutomatonGenerator::set_states_number(int n)
 }
 
 bool AutomatonGenerator::parse_reserved(std::string res_case) {
-    // std::cout << "parse_reserved: " << res_case << "\n";
     if (res_case == "EPS")
         return true;
 
@@ -256,26 +239,18 @@ bool AutomatonGenerator::parse_nonterminal(lexy::_pt_node<lexy::_bra, void> ref)
 }
 
 bool AutomatonGenerator::parse_terminal(lexy::_pt_node<lexy::_bra, void> ref) {
-    // std::cout << "parsing terminal\n";
     auto it = ref.children().begin();
     it++;
     std::string to_read = lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme());
     auto res = (!TERMINAL.empty() && TERMINAL.front() == to_read);
-    // std::cout << to_read << " ";
-    // if (!TERMINAL.empty())
-        // std::cout << TERMINAL.front();
-    // std::cout << "\n";
     if (res) {
         output << " " << TERMINAL.front();
         TERMINAL.pop();
     }
-
-    // std::cout << "terminal? --> " << res << "\n";
     return res;
 }
 
 void AutomatonGenerator::parse_attribute(lexy::_pt_node<lexy::_bra, void> ref) {
-    // std::cout << "\nparsing attribute\n";
     auto it = ref.children().begin();
     while(std::string(it->kind().name()) != "nonterminal")
         it++;
@@ -283,10 +258,8 @@ void AutomatonGenerator::parse_attribute(lexy::_pt_node<lexy::_bra, void> ref) {
 }
 
 bool AutomatonGenerator::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
-    //// std::cout << "Enter alternative\n";
     bool read = true;
     for (auto it = ref.children().begin(); it != ref.children().end(); it++) {
-        // // std::cout << "tring to parse: " << it->kind().name() << "\n";
         if (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "|") {
             if (read)
                 return true;
@@ -294,7 +267,6 @@ bool AutomatonGenerator::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref)
             continue;
         }
         if (!read) {
-            // // std::cout << "Oops... read failed\n";
             continue;
         }
         if (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "(") {
@@ -314,7 +286,6 @@ bool AutomatonGenerator::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref)
             while (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) != ")")
                 it++;
         }
-        // // std::cout << "terminal?\n";
         if (std::string(it->kind().name()) == "terminal") {
             read &= parse_terminal(*it);
             continue;
@@ -336,7 +307,6 @@ bool AutomatonGenerator::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref)
 }
 
 bool AutomatonGenerator::parse_transition(std::string name) {
-    // std::cout << name << "\n";
 
     if (!rewriting_rules.count(name)) {
         return false;
@@ -360,8 +330,6 @@ AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type, i
     auto input = file.buffer();
     Lexer::parse_buffer(grammar, input);
 
-    // std::cout << "hello2\n";
-
     auto transitions = Parser::find_children(grammar, {"transition"}, {});
     for (auto transition : transitions) {
         // итератор по описанию перехода
@@ -373,10 +341,6 @@ AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type, i
         }
         rewriting_rules[nonterminal] = it;    
     }
-
-    // for (auto rule : rewriting_rules) {
-    //     // std::cout << rule.first << "\n";
-    // }
 
     switch (type)
     {
@@ -396,9 +360,7 @@ AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type, i
         break;
     }
 
-    // std::cout << "generating graph\n";
     generate_graph();
-    // std::cout << "graph generated\n";
     if (!parse_transition("production"))
         throw(std::runtime_error("Generator: can not apply grammar for generated automaton"));
 }

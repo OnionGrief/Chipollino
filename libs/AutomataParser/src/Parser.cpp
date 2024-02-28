@@ -56,7 +56,6 @@ void Parser::read_symbols(int num) {
 }
 
 bool Parser::parse_reserved(std::string res_case) {
-    // std::cout << "parse_reserved: " << res_case << "\n";
     if (res_case == "EPS")
         return true;
 
@@ -115,22 +114,17 @@ bool Parser::parse_nonterminal(lexy::_pt_node<lexy::_bra, void> ref) {
 }
 
 bool Parser::parse_terminal(lexy::_pt_node<lexy::_bra, void> ref) {
-    // std::cout << "parsing terminal\n";
     auto it = ref.children().begin();
     it++;
     std::string to_read = lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme());
-    // std::cout << "\n" << to_read << " " << cur_pos << " " << file.size() << "\n";
-    // std::cout << file.substr(cur_pos, to_read.size()) << "\n";
     auto res = (file.size() - cur_pos >= to_read.size() && file.substr(cur_pos, to_read.size()) == to_read);
     read_symbols(to_read.size());
     if (res)
         TERMINAL = to_read;
-    // std::cout << "terminal? --> " << res << "\n";
     return res;
 }
 
 void Parser::parse_attribute(lexy::_pt_node<lexy::_bra, void> ref) {
-    // std::cout << "\nparsing attribute\n";
     auto it = ref.children().begin();
     while(std::string(it->kind().name()) != "nonterminal")
         it++;
@@ -138,11 +132,9 @@ void Parser::parse_attribute(lexy::_pt_node<lexy::_bra, void> ref) {
 }
 
 bool Parser::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
-    // std::cout << "Enter alternative\n";
     bool read = true;
     int beg_pos = cur_pos;
     for (auto it = ref.children().begin(); it != ref.children().end(); it++) {
-        // std::cout << "tring to parse: " << it->kind().name() << "\n";
         if (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "|") {
             if (read)
                 return true;
@@ -151,7 +143,6 @@ bool Parser::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
             continue;
         }
         if (!read) {
-            // std::cout << "Oops... read failed\n";
             continue;
         }
         if (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) == "(") {
@@ -171,7 +162,6 @@ bool Parser::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
             while (it->kind().is_token() && lexy::as_string<string, lexy::ascii_encoding>(it->token().lexeme()) != ")")
                 it++;
         }
-        // std::cout << "terminal?\n";
         if (std::string(it->kind().name()) == "terminal") {
             read &= parse_terminal(*it);
             continue;
@@ -193,8 +183,6 @@ bool Parser::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
 }
 
 bool Parser::parse_transition(std::string name) {
-    // std::cout << name << "\n";
-
     if (!rewriting_rules.count(name)) {
         return false;
     }
@@ -220,19 +208,11 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
         rewriting_rules[nonterminal] = it;    
     }
 
-    // std::cout << rewriting_rules.size() << "\n";
-    for (auto rule : rewriting_rules) {
-        // std::cout << rule.first << "\n";
-    }
-
-    // std::cout << "\n\n";
-
     std::ifstream t(filename);
     std::stringstream buffer;
     buffer << t.rdbuf();
     file = buffer.str();
     read_symbols(0);
-    // std::cout << file;
 
 
     if (!parse_transition("production")) {
@@ -345,12 +325,8 @@ MemoryFiniteAutomaton Parser::parse_MFA(std::string grammar_file, std::string au
     auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
     auto input = file.buffer();
     Lexer::parse_buffer(grammar, input);
-
-    // std::cout << "grammar parsed\n";
     
     auto res = parse(grammar, automaton_file);
-
-    // std::cout << "automaton parsed\n";
 
     if (attributes.count("MFA"))
         return std::get<MemoryFiniteAutomaton>(res);
