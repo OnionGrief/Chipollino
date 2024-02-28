@@ -203,12 +203,7 @@ void AutomatonGenerator::write_to_file(string filename) {
 }
 
 void AutomatonGenerator::set_terminal_probability(int elem) {
-    AutomatonGeneratorConstants::terminal_probability = elem;
-}
-
-void AutomatonGenerator::set_initial_state_not_terminal(bool f)
-{
-    AutomatonGeneratorConstants::initial_state_not_terminal = f;
+    terminal_probability = elem;
 }
 
 void AutomatonGenerator::set_states_number(int n)

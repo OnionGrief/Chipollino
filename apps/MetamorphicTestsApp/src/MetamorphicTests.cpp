@@ -61,12 +61,9 @@ TEST(IsDeterministic, Test_is_deterministic) {
 	for (int i = 0; i < 1000; i++) {
 		AutomatonGenerator a(grammar_path, FA_type::NFA);
 		a.write_to_file(test_path);
-		std::cout << "write_to_file\n";
         Parser parser;
 		auto FA = parser.parse_NFA(grammar_path, test_path);
-		std::cout << "parse_FA\n";
 		auto FAd = FA.determinize();
-		std::cout << "determinize\n";
 		ASSERT_TRUE(FAd.is_deterministic()); 
 	}
 }
@@ -136,7 +133,6 @@ TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
 
         auto equality = FiniteAutomaton::equivalent(first, second);
         ASSERT_TRUE(equality) << file << "\n" << first.to_txt() << "\n" << second.to_txt() << "\n" << FA.to_regex().to_txt();
-		std::cout << ALL - i << std::endl;
     }
 }
 
@@ -161,7 +157,6 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
 
         auto equality = FiniteAutomaton::equivalent(first, second);
         ASSERT_TRUE(equality) << file << "\n" << FA.minimize().to_txt() << "\n" << ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
-		std::cout << ALL - i << std::endl;
     }
 }
 
@@ -185,7 +180,6 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
         std::string file = buffer.str();
 
         ASSERT_EQ(first,second) << file << "\n" << FA.minimize().to_txt() << "\n" << ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
-		std::cout << ALL - i << std::endl;
     }
 }
 

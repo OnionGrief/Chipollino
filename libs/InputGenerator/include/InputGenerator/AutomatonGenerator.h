@@ -19,20 +19,6 @@ enum class FA_type { MFA, NFA, DFA };
 
 class AutomatonGenerator {
 private:
-    struct AutomatonGeneratorConstants {
-        static inline int terminal_probability = 20;
-        static inline int max_memory_cells_number = 10;
-        static inline int max_states_number = 20;
-        static inline int alphabet_size = 10;
-        // макс кол-во переходов = кол-во рёбер в полном графе + additional_max_transitions_number
-        static inline int additional_max_transitions_number = 10;
-        // вероятность генерации открытия/закрытия для ячейки
-        static inline int action_probability = 50;
-        // вероятность генерации закрытия для ячейки, при генерации взаимодействия
-        static inline int action_closing_probability = 50;
-        static inline bool initial_state_not_terminal = false;
-    };
-
     struct FAtransition {
         int end;
 
@@ -210,8 +196,7 @@ public:
  
     void write_to_file(std::string filename);
 
-    static  void set_terminal_probability(int elem);
-    static  void set_initial_state_not_terminal(bool f);
+    void set_terminal_probability(int elem);
 
     void set_states_number(int n);
 };
