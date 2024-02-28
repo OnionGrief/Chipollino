@@ -47,23 +47,6 @@ class Parser {
     std::queue<std::string*> nodes;
     std::queue<Symbol*> symbols;
 
-    // state_description --> nodes.push(cur_state); init = false; term = false; was_labeled = false;
-    // ||| if (was_labeled) labels[cur_state] = STRING; if (init) initial = cur_state; if (term) terminal.insert(cur_state);
-    // label --> was_labeled = true;
-    // initial_state --> init = true;
-    // terminal --> term = true;
-
-
-    // transition --> FAtransitions.resize(FAtransitions.size() + 1);
-    // stmt --> nodes.push(FAtransitions.back().beg); nodes.push(FAtransitions.back().end);
-    // symbols.push(FAtransitions.back().symbol); if(PDA) symbols.push(pop);
-    // node --> if(!nodes.empty()) { nodes.front() = STRING; nodes.pop(); }
-    // symbol --> if(!symbols.empty()) { symbols.front() = SYMBOL; symbols.pop(); }
-    // memory_cell --> if(memory_state == 'o') { FAtransitions.back().open.insert(cell_id); }
-    // else { FAtransitions.back().close.insert(cell_id); }
-    // stack_symbol --> if(!symbols.empty()) { symbols.front() = SYMBOL; symbols.pop(); }
-    // else { FAtransitions.back().push.push_back(SYMBOL); }
-
     std::string STRING;
     int NUMBER;
     std::string TERMINAL;

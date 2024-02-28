@@ -165,6 +165,30 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
     }
 }
 
+TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
+    int ALL = 10000;
+    for (int i = 0; i < ALL; i++) {
+        std::string grammar_path = "./TestData/grammar.txt";
+        std::string test_path = "./TestData/MetamorphicTest/test1.txt";
+        AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
+        a.write_to_file(test_path);
+        Parser parser;
+        FiniteAutomaton FA;
+        FA = parser.parse_NFA(grammar_path, test_path);
+		auto ard =  FA.to_regex().to_glushkov();
+        auto first = ard.ambiguity();
+        auto second = ard.to_regex().to_glushkov().ambiguity();
+
+        std::ifstream t(test_path);
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        std::string file = buffer.str();
+
+        ASSERT_EQ(first,second) << file << "\n" << FA.minimize().to_txt() << "\n" << ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
+		std::cout << ALL - i << std::endl;
+    }
+}
+
 // TEST(Statistics, Test_dfa) {
 // 	for (int term = 5; term <= 50; term = term + 5) {
 // 		AutomatonGenerator::set_terminal_probability(20);

@@ -15,21 +15,6 @@
 
 namespace dsl = lexy::dsl;
 
-//=== string constants ===//
-namespace AutomataParser {
-const char node_id[] = "node_id";
-const char statement[] = "stmt";
-const char terminal_mark[] = "terminal_mark";
-const char initial_mark[] = "initial_mark";
-const char state_label[] = "state_label";
-const char state_description[] = "state_description";
-const char MFA_edge[] = "MFA_edge";
-const char cell_id[] = "cell_id";
-const char memory_cell[] = "memory_cell";
-
-const char epsilon[] = "eps";
-} // namespace AutomataParser
-
 class Lexer {
   private:
 	//=== grammar ===//
