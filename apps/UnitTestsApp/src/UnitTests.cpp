@@ -814,3 +814,13 @@ TEST(TestAutomatonParser, MFA_correctness) {
     Parser parser;
     ASSERT_NO_THROW(parser.parse_MFA("./TestData/grammar.txt", cycle_with_cell_reopen));
 }
+
+TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
+    Regex r("((e|k)he*cg)*(|(e|k)he*|((e|k)(b|i)|(e|k)he*(e|ck)))");
+    auto ard =  r.to_glushkov();
+    auto first = ard.ambiguity();
+    auto second = ard.to_regex().to_glushkov().ambiguity();
+
+
+    ASSERT_EQ(first,second) << "\n" << ard.minimize().to_txt() << "\n" << ard.to_regex().to_glushkov().minimize().to_txt() << "\n" << ard.to_regex().to_txt() << "\n" << ard.to_regex().to_glushkov().to_regex().to_txt();
+}
