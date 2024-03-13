@@ -1488,10 +1488,10 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1, const Fin
 	// log
 	stringstream ss;
 	for (auto& elem : class_to_nonterminals_names) {
-		ss << "\\{";
+		ss << "{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
 			ss << elem.second[i] << ",";
-		ss << elem.second[elem.second.size() - 1] << "\\}";
+		ss << elem.second[elem.second.size() - 1] << "}";
 	}
 
 	// проверяю равенство классов начальных состояний
@@ -1594,14 +1594,12 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 		if (nonterminals[i]->class_number != -1)
 			continue;
 		nonterminals[i]->class_number = new_class;
-		vector<int> equiv_nont; // нетерминалы с таким же классом, что и i-й
+		// поиск нетерминалов с классом, как у i-го
 		for (int j = i + 1; j < bisimilar_classes.size(); j++) {
 			if (bisimilar_classes[j] == bisimilar_classes[i])
-				equiv_nont.push_back(j);
+				if (reverse_bisimilar_classes[j] == reverse_bisimilar_classes[i])
+					nonterminals[j]->class_number = new_class;
 		}
-		for (int ind : equiv_nont)
-			if (reverse_bisimilar_classes[ind] == reverse_bisimilar_classes[i])
-				nonterminals[ind]->class_number = new_class;
 		new_class++;
 	}
 

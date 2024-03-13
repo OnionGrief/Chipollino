@@ -1,6 +1,9 @@
 #include <algorithm>
+#include <random>
 #include <sstream>
 #include <stack>
+#include <string>
+#include <unordered_set>
 #include <utility>
 
 #include "Objects/FiniteAutomaton.h"
@@ -16,6 +19,7 @@ using std::stack;
 using std::string;
 using std::stringstream;
 using std::tuple;
+using std::uniform_int_distribution;
 using std::unordered_map;
 using std::unordered_set;
 using std::vector;
@@ -681,7 +685,7 @@ pair<int, bool> MemoryFiniteAutomaton::_parse_slow(const string& s, Matcher* mat
 
 		// добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
 		// состояния
-		for (const auto& [symb, symb_transitions] : reach_eps) {
+		for (const auto& [_, symb_transitions] : reach_eps) {
 			for (auto eps_tr : symb_transitions) {
 				if (!visited_eps.count({parsed_len, state->index, eps_tr.to})) {
 					eps_tr.update_memory(Symbol::Epsilon);
@@ -762,7 +766,7 @@ pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher)
 			}
 
 			// эпсилон-переходы
-			for (const auto& [symb, symb_transitions] : reach_eps) {
+			for (const auto& [_, symb_transitions] : reach_eps) {
 				for (auto eps_tr : symb_transitions) {
 					eps_tr.update_memory(Symbol::Epsilon);
 					following_states.emplace(
@@ -966,10 +970,67 @@ pair<int, bool> MemoryFiniteAutomaton::parse_additional(const string& s) const {
 	return _parse(s, &matcher);
 }
 
-TraversalState::TraversalState(string str, const MFAState* state,
+string random_mutation(const string& word, int l, int r, const Alphabet& alphabet) {
+	string mutated_word = word.substr(l, r - l);
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	uniform_int_distribution<int> distribution(0, 1);
+	int mutation_type = distribution(gen);
+	if (mutation_type == 0 || mutated_word.size() == 1) {
+		// вставка
+		int insertionPoint = uniform_int_distribution<int>(0, mutated_word.size() - 1)(gen);
+		int fragmentLength = uniform_int_distribution<int>(0, (mutated_word.size() + 1) / 2)(gen);
+		string randomFragment;
+		for (int i = 0; i < fragmentLength; ++i) {
+			Symbol random_symb = *next(begin(alphabet), gen() % alphabet.size());
+			randomFragment += random_symb;
+		}
+		mutated_word.insert(insertionPoint, randomFragment);
+	} else {
+		// удаление
+		int numDeletions = uniform_int_distribution<int>(1, mutated_word.size() / 2)(gen);
+		for (int i = 0; i < numDeletions; ++i) {
+			int deletionPoint = uniform_int_distribution<int>(0, mutated_word.size() - 1)(gen);
+			mutated_word.erase(deletionPoint, 1);
+		}
+	}
+
+	auto s = word;
+	s.insert(r, mutated_word);
+	return s;
+}
+
+size_t MutationHasher::operator()(const std::tuple<int, int, int>& t) const {
+	return std::hash<int>{}(std::get<0>(t)) ^ std::hash<int>{}(std::get<2>(t) - std::get<1>(t));
+}
+
+TraversalState::TraversalState(const string& str, const MFAState* state,
 							   const unordered_set<int>& opened_cells,
-							   const unordered_map<int, pair<int, int>>& memory)
-	: str(std::move(str)), state(state), opened_cells(opened_cells), memory(memory) {}
+							   const unordered_map<int, std::pair<int, int>>& memory,
+							   const TraversalState& previous_state, bool memory_used)
+	: str(str), state(state), opened_cells(opened_cells), memory(memory),
+	  visited_path(previous_state.visited_path), visited_states(previous_state.visited_states),
+	  last_memory_reading(previous_state.last_memory_reading),
+	  substrs_to_mutate(previous_state.substrs_to_mutate) {
+	if (memory_used)
+		last_memory_reading = str.size();
+
+	auto visited_state = visited_states.find(state->index);
+	// нашли цикл для мутации
+	if (visited_state != visited_states.end()) {
+		// если с момента последнего посещения не было чтения из памяти,
+		// добавляем подстроку в список мутаций
+		if (visited_state->second.second > last_memory_reading)
+			substrs_to_mutate.insert({state->index, visited_state->second.second, str.size()});
+		// удаляем все промежуточные посещенные состояния
+		for (int i = visited_state->second.first; i < visited_path.size(); i++)
+			visited_states.erase(visited_path[i]);
+	}
+	visited_path.push_back(state->index);
+	// сохраняем позиции на момент посещения
+	visited_states[state->index] = {visited_path.size() - 1, str.size()};
+}
 
 bool TraversalState::operator==(const TraversalState& other) const {
 	return str == other.str && state == other.state && opened_cells == other.opened_cells &&
@@ -995,14 +1056,19 @@ size_t TraversalState::Hasher::operator()(const TraversalState& s) const {
 	return seed;
 }
 
-std::unordered_set<std::string> MemoryFiniteAutomaton::generate_test_set(int max_len) {
+pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::generate_test_sets(
+	int max_len) {
+	unordered_set<string> words_in_language;
+	unordered_map<string, unordered_set<pair<int, int>, PairHasher>> words_to_mutate;
+
 	unordered_set<TraversalState, TraversalState::Hasher> current_states;
-	current_states.insert(TraversalState(
-		"", &states[initial_state], unordered_set<int>(), unordered_map<int, pair<int, int>>()));
+	current_states.insert(TraversalState("",
+										 &states[initial_state],
+										 unordered_set<int>(),
+										 unordered_map<int, pair<int, int>>(),
+										 TraversalState()));
 
 	unordered_set<TraversalState, TraversalState::Hasher> visited_states;
-	unordered_set<string> res;
-
 	while (!current_states.empty()) {
 		unordered_set<TraversalState, TraversalState::Hasher> following_states;
 		for (const auto& cur_state : current_states) {
@@ -1011,9 +1077,12 @@ std::unordered_set<std::string> MemoryFiniteAutomaton::generate_test_set(int max
 
 			const MFAState* state = cur_state.state;
 			if (state->is_terminal) {
-				res.insert(cur_state.str);
+				words_in_language.insert(cur_state.str);
+				for (const auto& [_, l, r] : cur_state.substrs_to_mutate)
+					words_to_mutate[cur_state.str].insert({l, r});
 			}
 
+			// выбор переходов
 			ParseTransitions reach, reach_eps;
 			for (const auto& [symbol, symbol_transitions] : cur_state.state->transitions) {
 				if (symbol.is_ref()) {
@@ -1057,18 +1126,20 @@ std::unordered_set<std::string> MemoryFiniteAutomaton::generate_test_set(int max
 					tr.update_memory(symbol);
 					if (symbol.is_ref()) {
 						pair<int, int> substr = tr.memory.at(symbol.get_ref());
-						auto t = cur_state.str.substr(substr.first, substr.second - substr.first);
 						following_states.emplace(
 							cur_state.str +
 								cur_state.str.substr(substr.first, substr.second - substr.first),
 							&states[tr.to],
 							tr.opened_cells,
-							tr.memory);
-					} else if (!symbol.is_epsilon()) {
+							tr.memory,
+							cur_state,
+							true);
+					} else if (!symbol.is_epsilon()) { // проверка на eps, вероятно, излишняя
 						following_states.emplace(cur_state.str + string(symbol),
 												 &states[tr.to],
 												 tr.opened_cells,
-												 tr.memory);
+												 tr.memory,
+												 cur_state);
 					}
 				}
 
@@ -1076,16 +1147,25 @@ std::unordered_set<std::string> MemoryFiniteAutomaton::generate_test_set(int max
 			}
 
 			// эпсилон-переходы
-			for (const auto& [symb, symb_transitions] : reach_eps) {
+			for (const auto& [_, symb_transitions] : reach_eps) {
 				for (auto eps_tr : symb_transitions) {
 					eps_tr.update_memory(Symbol::Epsilon);
-					following_states.emplace(
-						cur_state.str, &states[eps_tr.to], eps_tr.opened_cells, eps_tr.memory);
+					following_states.emplace(cur_state.str,
+											 &states[eps_tr.to],
+											 eps_tr.opened_cells,
+											 eps_tr.memory,
+											 cur_state);
 				}
 			}
 		}
 		current_states = following_states;
 	}
 
-	return res;
+	unordered_set<string> mutated_words;
+	for (const auto& [word, mutations] : words_to_mutate)
+		for (const auto& mutation_bounds : mutations)
+			mutated_words.insert(random_mutation(
+				word, mutation_bounds.first, mutation_bounds.second, language->get_alphabet()));
+
+	return {words_in_language, mutated_words};
 }

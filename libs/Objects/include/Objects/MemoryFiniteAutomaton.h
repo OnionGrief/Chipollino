@@ -86,6 +86,10 @@ struct ParingState {
 	};
 };
 
+struct MutationHasher {
+	std::size_t operator()(const std::tuple<int, int, int>& m) const;
+};
+
 // состояние идентифицирующее шаг обхода MFA
 struct TraversalState {
 	std::string str;
@@ -93,9 +97,19 @@ struct TraversalState {
 	std::unordered_set<int> opened_cells;
 	std::unordered_map<int, std::pair<int, int>> memory; // значение - начало и конец подстроки
 
-	TraversalState(std::string str, const MFAState* state,
+	// последовательность посещенных состояний
+	std::vector<int> visited_path;
+	// {индекс состояния, {индекс в visited_path, размер строки на момент последнего посещения}}
+	std::unordered_map<int, std::pair<int, int>> visited_states;
+	int last_memory_reading = 0; // индекс в строке, на котором последний раз происходило чтение
+	// номер(индекс) состояния и пара индексов, ограничивающих подстроку для мутации
+	std::unordered_set<std::tuple<int, int, int>, MutationHasher> substrs_to_mutate;
+
+	TraversalState() = default;
+	TraversalState(const std::string& str, const MFAState* state,
 				   const std::unordered_set<int>& opened_cells,
-				   const std::unordered_map<int, std::pair<int, int>>& memory);
+				   const std::unordered_map<int, std::pair<int, int>>& memory,
+				   const TraversalState& previous_state, bool memory_used = false);
 	bool operator==(const TraversalState& other) const;
 
 	struct Hasher {
@@ -201,5 +215,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	// проверяет, распознаёт ли автомат слово (использует FastMatcher)
 	std::pair<int, bool> parse_additional(const std::string&) const;
 	// возвращает множество уникальных слов длины <= max_len, распознаваемых автоматом
-	std::unordered_set<std::string> generate_test_set(int max_len);
+	// и множество тестовых слов с мутациями
+	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_sets(
+		int max_len);
 };

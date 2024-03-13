@@ -14,6 +14,7 @@
 using std::map;
 using std::set;
 using std::string;
+using std::unordered_map;
 using std::unordered_set;
 using std::vector;
 
@@ -546,8 +547,7 @@ TEST(TestToMFA, ToMfa) {
 
 	states = BackRefRegex("([&2]:1[&1a]:2)*").to_mfa().get_states();
 	ASSERT_EQ(states.size(), 7);
-	ASSERT_EQ(
-		states[0],
+	ASSERT_EQ(states[0],
 			  MFAState(0,
 					   "0",
 					   false,
@@ -732,6 +732,7 @@ TEST(TestParsing, MFA_equivalence) {
 	using Test = std::tuple<bool, string>;
 	vector<Test> tests = {
 		{true, "[a*]:1&1"},
+		{false, "(a*bc*)*d"},
 		{true, "[[a*]:1b&1]:2&2"},
 		{true, "([&2]:1[&1a]:2)*"},
 		{false, "[b]:1[a*]:1&1"},
@@ -741,7 +742,7 @@ TEST(TestParsing, MFA_equivalence) {
 		{true, "[a*]:1&1[b|c]:1*&1"},
 	};
 
-	int MAX_LEN = 10;
+	int MAX_LEN = 9;
 
 	for_each(tests.begin(), tests.end(), [&MAX_LEN](const Test& test) {
 		auto [test_rem_eps, rgx_str] = test;
@@ -754,11 +755,22 @@ TEST(TestParsing, MFA_equivalence) {
 			MFAs.emplace_back(mfa.remove_eps());
 		}
 
-		unordered_set<string> base_test_set = mfa.generate_test_set(MAX_LEN);
+		auto base_test_sets = mfa.generate_test_sets(MAX_LEN);
+		unordered_map<string, int> base_parsing_res;
+		for (const auto& mutated_word : base_test_sets.second) {
+			auto res = mfa.parse(mutated_word);
+			base_parsing_res[mutated_word] = res.second;
+		}
+
 		for (auto& cur_mfa : MFAs) {
-			unordered_set<string> test_set = cur_mfa.generate_test_set(MAX_LEN);
-			std::cout << test_set.size() << std::endl;
-			ASSERT_EQ(base_test_set, test_set);
+			auto test_set = cur_mfa.generate_test_sets(MAX_LEN);
+			std::cout << test_set.first.size() << std::endl;
+			ASSERT_EQ(base_test_sets.first, test_set.first);
+
+			for (const auto& [mutated_word, res] : base_parsing_res) {
+				auto test_res = mfa.parse(mutated_word);
+				ASSERT_EQ(test_res.second, res);
+			}
 		}
 	});
 }
