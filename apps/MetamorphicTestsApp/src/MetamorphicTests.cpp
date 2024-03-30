@@ -14,12 +14,13 @@ const int RegexNumber = 30;
 
 TEST(TestRegex, ToTxt) {
 	RegexGenerator rg(15, 10, 5, 3);
+	// rg.set_neg_chance(50); // для отрицания
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = rg.generate_regex();
 		SCOPED_TRACE("Regex: " + rgx_str);
 		Regex r1(rgx_str);
 		Regex r2(r1.to_txt());
-		ASSERT_EQ(true, Regex::equivalent(r1, r2));
+		ASSERT_TRUE(Regex::equivalent(r1, r2));
 	}
 }
 
@@ -48,7 +49,7 @@ TEST(TestEqual, ThompsonGlushkov) {
 
 TEST(TestNFA, NegativeNFAEquivalence) {
 	RegexGenerator rg(5, 2, 2, 2);
-	rg.set_neg_chance(2); // для отрицания
+	rg.set_neg_chance(50); // для отрицания
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = rg.generate_regex();
 		SCOPED_TRACE("Regex: " + rgx_str);
@@ -76,5 +77,16 @@ TEST(TestMFA, Fuzzing) {
 			auto res2 = mfa2.parse(mutated_word);
 			ASSERT_EQ(res1.second, res2.second);
 		}
+	}
+}
+
+TEST(TestParsing, RandomBrefRegexParsing) {
+	RegexGenerator rg(15, 5, 3, 3);
+	for (int i = 0; i < RegexNumber; i++) {
+		string str = rg.generate_brefregex(2, 40, 40);
+		BackRefRegex r1(str);
+		string r1_str = r1.to_txt();
+		BackRefRegex r2(r1_str);
+		// ASSERT_TRUE(BackRefRegex::equal(r1, r2)) << str;
 	}
 }

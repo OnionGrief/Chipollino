@@ -4,12 +4,13 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "FuncLib/Functions.h"
 #include "FuncLib/Typization.h"
-#include "InputGenerator/RegexGenerator.h"
 #include "InputGenerator/AutomatonGenerator.h"
+#include "InputGenerator/RegexGenerator.h"
 #include "Objects/Regex.h"
 
 using Typization::ObjectType;
@@ -22,13 +23,13 @@ class TasksGenerator {
 		ObjectType type;
 	};
 	RegexGenerator regex_generator;
-    AutomatonGenerator automaton_generator;
+	AutomatonGenerator automaton_generator;
 	size_t seed_it = 0; // итерация для рандома
 
 	std::string res_str = "";
 	int max_num_of_func_in_seq = 5; // максимальное кол-во функций в посл-ти
-	int id_num = 0;		 // кол-во объявленных идентификаторов
-    int automata_id = 0; // кол-во объявленных имён файлов (с автоматами)
+	int id_num = 0; // кол-во объявленных идентификаторов
+	int automata_id = 0; // кол-во объявленных имён файлов (с автоматами)
 	ObjectType cur_type; // выходный тип данных последней сгенерированной функции
 
 	/* для статического тайпчекера - генерируем все функции подряд, для динамического - dfa = nfa,
@@ -39,9 +40,10 @@ class TasksGenerator {
 								   DFA = ObjectType::DFA, INT = ObjectType::Int,
 								   VALUE = ObjectType::AmbiguityValue,
 								   BOOLEAN = ObjectType::Boolean, ARRAY = ObjectType::Array,
-								   PG = ObjectType::PrefixGrammar, STRING = ObjectType::String, MFA = ObjectType::MFA;
+								   PG = ObjectType::PrefixGrammar, STRING = ObjectType::String,
+								   MFA = ObjectType::MFA, BRefRegex = ObjectType::BRefRegex;
 
-	std::vector<ObjectType> generated_types = {REGEX, INT, ARRAY, NFA, MFA};
+	std::unordered_set<ObjectType> generated_types = {REGEX, INT, ARRAY, BRefRegex, NFA, MFA};
 	std::map<ObjectType, std::vector<Id>> ids_by_type; // поиск идентификатора по его типу
 	// разделение функций (с единственным аргументом) по принимаемым значениям
 	std::map<ObjectType, std::vector<FuncLib::Function>> funcInput;
@@ -56,7 +58,10 @@ class TasksGenerator {
 	// выбор идентификатора по типу данных
 	std::string get_random_id_by_type(ObjectType type);
 	FuncLib::Function rand_func();
+	std::string generate_regex();
+	std::string generate_brefregex();
 	void change_seed();
+	bool check_probability(int chance);
 
   public:
 	TasksGenerator();

@@ -20,6 +20,20 @@ void TasksGenerator::change_seed() {
 	srand(static_cast<unsigned int>((size_t)time(nullptr) + seed_it + rand()));
 }
 
+bool TasksGenerator::check_probability(int percentage) {
+	if (rand() % 100 <= percentage)
+		return true;
+	return false;
+}
+
+string TasksGenerator::generate_regex() {
+	return "{" + regex_generator.generate_regex() + "}";
+}
+
+string TasksGenerator::generate_brefregex() {
+	return "{" + regex_generator.generate_brefregex() + "}";
+}
+
 string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 									 bool for_static_tpchkr_, bool for_dynamic_tpchkr_) {
 	change_seed();
@@ -62,7 +76,7 @@ string TasksGenerator::generate_op() {
 bool TasksGenerator::arguments_exist(vector<ObjectType> args) {
 	for (ObjectType arg_type : args) {
 		// аргумент можно подобрать, если его тип есть в памяти, либо его можно сгенерировать
-		if (!(ids_by_type.count(arg_type) || Typization::is_belong(generated_types, arg_type)))
+		if (!(ids_by_type.count(arg_type) || generated_types.count(arg_type) != 0))
 			return false;
 	}
 	return true;
@@ -76,7 +90,7 @@ string TasksGenerator::generate_expression() {
 	string str = "";
 
 	if (funcNum == 0) {
-		if (rand() % 3 && ids_by_type.size() > 0) {
+		if (check_probability(30) && ids_by_type.size() > 0) {
 			/* N# = id */
 			map<ObjectType, vector<Id>>::iterator it = ids_by_type.begin();
 			advance(it, (rand() % ids_by_type.size()));
@@ -84,7 +98,7 @@ string TasksGenerator::generate_expression() {
 			str += "N" + get_random_id_by_type(cur_type);
 		} else {
 			/* N# = {regex}*/
-			str += regex_generator.generate_framed_regex();
+			str += generate_regex();
 			cur_type = REGEX;
 		}
 	} else {
@@ -122,14 +136,14 @@ string TasksGenerator::generate_test() {
 	change_seed();
 	string str = "Test ";
 
-	if (rand() % 2 && ids_by_type.count(NFA))
+	if (check_probability(50) && ids_by_type.count(NFA))
 		str += "N" + get_random_id_by_type(NFA);
-	else if (rand() % 2 && ids_by_type.count(REGEX))
+	else if (check_probability(50) && ids_by_type.count(REGEX))
 		str += "N" + get_random_id_by_type(REGEX);
 	else
-		str += regex_generator.generate_framed_regex();
+		str += generate_regex();
 
-	str += " " + regex_generator.generate_framed_regex();
+	str += " " + generate_regex();
 
 	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
 	str += " " + to_string(rand_num);
@@ -142,19 +156,21 @@ string TasksGenerator::generate_arguments(Function first_func) {
 	for (auto input_type : first_func.input) {
 		// сгенерировать идентификатор
 		if (ids_by_type.count(input_type) &&
-			!(Typization::is_belong(generated_types, input_type) && rand() % 2)) {
+			!(generated_types.count(input_type) != 0 && check_probability(50))) {
 			args_str += " N" + get_random_id_by_type(input_type);
 			/* генерируемые типы: */
-		} else if(input_type == NFA) {
-            std::string filename = std::to_string(automata_id++) + ".txt";
-            AutomatonGenerator(FA_type::FA).write_to_file(filename);
-            args_str += " (getNFA \"" + filename + "\")"; 
-        } else if (input_type == MFA) {
-            std::string filename = std::to_string(automata_id++) + ".txt";
-            AutomatonGenerator(FA_type::MFA).write_to_file(filename);
-            args_str += " (getMFA \"" + filename + "\")"; 
-        } else if (input_type == REGEX) {
-			args_str += " " + regex_generator.generate_framed_regex();
+		} else if (input_type == NFA) {
+			std::string filename = std::to_string(automata_id++) + ".txt";
+			AutomatonGenerator(FA_type::FA).write_to_file(filename);
+			args_str += " (getNFA \"" + filename + "\")";
+		} else if (input_type == MFA) {
+			std::string filename = std::to_string(automata_id++) + ".txt";
+			AutomatonGenerator(FA_type::MFA).write_to_file(filename);
+			args_str += " (getMFA \"" + filename + "\")";
+		} else if (input_type == REGEX) {
+			args_str += " " + generate_regex();
+		} else if (input_type == BRefRegex) {
+			args_str += " " + generate_brefregex();
 		} else if (input_type == INT) {
 			int rand_num = rand() % 5; // пусть будет до 5..
 			args_str += " " + to_string(rand_num);
@@ -220,6 +236,7 @@ void TasksGenerator::generate_test_for_all_functions() {
 	ofstream outfile("./resources/all_functions.txt");
 	outfile << "Set log_theory true\n";
 	outfile << "R = {a*b*}\n";
+	outfile << "BR = {[a*]:1b&1}\n";
 	outfile << "A = Determinize.Glushkov R\n";
 	outfile << "V = Ambiguity A\n";
 	outfile << "B = Deterministic A\n";
@@ -238,6 +255,8 @@ void TasksGenerator::generate_test_for_all_functions() {
 				outfile << " P";
 			} else if (arg == REGEX) {
 				outfile << " R";
+			} else if (arg == BRefRegex) {
+				outfile << " BR";
 			} else if (arg == ARRAY) {
 				outfile << " [[{a} {b}]]";
 			} else if (arg == INT) {
