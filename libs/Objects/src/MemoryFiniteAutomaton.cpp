@@ -1056,7 +1056,7 @@ size_t TraversalState::Hasher::operator()(const TraversalState& s) const {
 	return seed;
 }
 
-pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::generate_test_sets(
+pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::generate_test_set(
 	int max_len) {
 	unordered_set<string> words_in_language;
 	unordered_map<string, unordered_set<pair<int, int>, PairHasher>> words_to_mutate;

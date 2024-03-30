@@ -1681,7 +1681,7 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1, const FiniteAutomat
 		if ((!fa1.language->is_min_dfa_cached() || !fa2.language->is_min_dfa_cached()) && log) {
 			log->set_parameter("cachedMINDFA", "Минимальные автоматы сохранены в кэше");
 		}
-		result = equal(fa1.minimize(), fa2.minimize());
+		result = bisimilar(fa1.minimize(), fa2.minimize());
 	}
 	if (log) {
 		log->set_parameter("automaton1", fa1);

@@ -755,17 +755,17 @@ TEST(TestParsing, MFA_equivalence) {
 			MFAs.emplace_back(mfa.remove_eps());
 		}
 
-		auto base_test_sets = mfa.generate_test_sets(MAX_LEN);
+		auto base_test_set = mfa.generate_test_set(MAX_LEN);
 		unordered_map<string, int> base_parsing_res;
-		for (const auto& mutated_word : base_test_sets.second) {
+		for (const auto& mutated_word : base_test_set.second) {
 			auto res = mfa.parse(mutated_word);
 			base_parsing_res[mutated_word] = res.second;
 		}
 
 		for (auto& cur_mfa : MFAs) {
-			auto test_set = cur_mfa.generate_test_sets(MAX_LEN);
+			auto test_set = cur_mfa.generate_test_set(MAX_LEN);
 			std::cout << test_set.first.size() << std::endl;
-			ASSERT_EQ(base_test_sets.first, test_set.first);
+			ASSERT_EQ(base_test_set.first, test_set.first);
 
 			for (const auto& [mutated_word, res] : base_parsing_res) {
 				auto test_res = mfa.parse(mutated_word);

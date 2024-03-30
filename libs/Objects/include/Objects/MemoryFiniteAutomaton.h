@@ -216,6 +216,6 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<int, bool> parse_additional(const std::string&) const;
 	// возвращает множество уникальных слов длины <= max_len, распознаваемых автоматом
 	// и множество тестовых слов с мутациями
-	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_sets(
+	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_set(
 		int max_len);
 };
