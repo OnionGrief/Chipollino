@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "InputGenerator/RegexGenerator.h"
+#include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Regex.h"
 
@@ -10,13 +11,13 @@ const int RegexNumber = 30;
 
 TEST(TestParsing, RandomRegexParsing) {
 	RegexGenerator rg(15, 10, 5, 3);
-    //rg.set_neg_chance(2); // для отрицания
+	// rg.set_neg_chance(50); // для отрицания
 	for (int i = 0; i < RegexNumber; i++) {
 		string str = rg.generate_regex();
 		Regex r1(str);
 		string r1_str = r1.to_txt();
 		Regex r2(r1_str);
-		ASSERT_EQ(true, Regex::equivalent(r1, r2)) << str;
+		ASSERT_TRUE(Regex::equivalent(r1, r2)) << str;
 	}
 }
 
@@ -45,10 +46,21 @@ TEST(TestEqual, ThompsonGlushkov) {
 
 TEST(TestNFA, Test_equivalent_nfa_negative) {
 	RegexGenerator rg(5, 2, 2, 2);
-	rg.set_neg_chance(2); // для отрицания
-	for (int i = 0; i < 30; i++) {
+	rg.set_neg_chance(50); // для отрицания
+	for (int i = 0; i < RegexNumber; i++) {
 		string str = rg.generate_regex();
 		Regex r1(str), r2(str);
 		ASSERT_TRUE(FiniteAutomaton::equivalent(r1.to_thompson(), r2.to_antimirov())) << str;
+	}
+}
+
+TEST(TestParsing, RandomBrefRegexParsing) {
+	RegexGenerator rg(15, 5, 3, 3);
+	for (int i = 0; i < RegexNumber; i++) {
+		string str = rg.generate_brefregex(2, 40, 40);
+		BackRefRegex r1(str);
+		string r1_str = r1.to_txt();
+		BackRefRegex r2(r1_str);
+		// ASSERT_TRUE(BackRefRegex::equal(r1, r2)) << str;
 	}
 }

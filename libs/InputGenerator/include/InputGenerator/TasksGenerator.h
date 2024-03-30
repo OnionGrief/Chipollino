@@ -8,8 +8,8 @@
 
 #include "FuncLib/Functions.h"
 #include "FuncLib/Typization.h"
-#include "InputGenerator/RegexGenerator.h"
 #include "InputGenerator/AutomatonGenerator.h"
+#include "InputGenerator/RegexGenerator.h"
 #include "Objects/Regex.h"
 
 using Typization::ObjectType;
@@ -39,9 +39,10 @@ class TasksGenerator {
 								   DFA = ObjectType::DFA, INT = ObjectType::Int,
 								   VALUE = ObjectType::AmbiguityValue,
 								   BOOLEAN = ObjectType::Boolean, ARRAY = ObjectType::Array,
-								   PG = ObjectType::PrefixGrammar, STRING = ObjectType::String, MFA = ObjectType::MFA;
+								   PG = ObjectType::PrefixGrammar, STRING = ObjectType::String,
+								   MFA = ObjectType::MFA, BRefRegex = ObjectType::BRefRegex;
 
-	std::vector<ObjectType> generated_types = {REGEX, INT, ARRAY, NFA, MFA};
+	std::vector<ObjectType> generated_types = {REGEX, INT, ARRAY, BRefRegex, NFA, MFA};
 	std::map<ObjectType, std::vector<Id>> ids_by_type; // поиск идентификатора по его типу
 	// разделение функций (с единственным аргументом) по принимаемым значениям
 	std::map<ObjectType, std::vector<FuncLib::Function>> funcInput;
@@ -56,7 +57,10 @@ class TasksGenerator {
 	// выбор идентификатора по типу данных
 	std::string get_random_id_by_type(ObjectType type);
 	FuncLib::Function rand_func();
+	std::string generate_regex();
+	std::string generate_brefregex();
 	void change_seed();
+	bool check_probability(int chance);
 
   public:
 	TasksGenerator();
