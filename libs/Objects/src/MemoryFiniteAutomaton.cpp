@@ -1,11 +1,14 @@
 #include <algorithm>
+#include <random>
 #include <sstream>
 #include <stack>
+#include <string>
+#include <unordered_set>
 #include <utility>
 
-#include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/Language.h"
+#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/iLogTemplate.h"
 
 using std::map;
@@ -16,6 +19,7 @@ using std::stack;
 using std::string;
 using std::stringstream;
 using std::tuple;
+using std::uniform_int_distribution;
 using std::unordered_map;
 using std::unordered_set;
 using std::vector;
@@ -502,6 +506,11 @@ ParingState::ParingState(int pos, const MFAState* state, const unordered_set<int
 						 const unordered_map<int, pair<int, int>>& memory)
 	: pos(pos), state(state), opened_cells(opened_cells), memory(memory) {}
 
+bool ParingState::operator==(const ParingState& other) const {
+	return pos == other.pos && state == other.state && opened_cells == other.opened_cells &&
+		   memory == other.memory;
+}
+
 Matcher::Matcher(const string& s) : s(&s) {}
 
 void ParseTransition::do_memory_actions(int pos) {
@@ -546,11 +555,25 @@ ParseTransition::ParseTransition(const MFATransition& transition, const ParingSt
 	do_memory_actions(parsing_state.pos);
 }
 
+ParseTransition::ParseTransition(const MFATransition& transition,
+								 const TraversalState& traversal_state)
+	: MFATransition(transition), opened_cells(traversal_state.opened_cells),
+	  memory(traversal_state.memory) {
+	do_memory_actions(traversal_state.str.size());
+}
+
 void ParseTransitions::add_transitions(const Symbol& symbol,
 									   const MFAState::SymbolTransitions& symbol_transitions,
 									   const ParingState& parsing_state) {
 	for (const auto& tr : symbol_transitions)
 		transitions[symbol].insert(ParseTransition(tr, parsing_state));
+}
+
+void ParseTransitions::add_transitions(const Symbol& symbol,
+									   const MFAState::SymbolTransitions& symbol_transitions,
+									   const TraversalState& traversal_state) {
+	for (const auto& tr : symbol_transitions)
+		transitions[symbol].insert(ParseTransition(tr, traversal_state));
 }
 
 unordered_map<Symbol, unordered_set<ParseTransition, MFATransition::Hasher>,
@@ -614,7 +637,7 @@ pair<ParseTransitions, ParseTransitions> get_transitions(const string& s,
 	return {transitions, eps_transitions};
 }
 
-pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher) const {
+pair<int, bool> MemoryFiniteAutomaton::_parse_slow(const string& s, Matcher* matcher) const {
 	stack<ParingState> parsing_states_stack;
 	// тройка (актуальный индекс элемента в строке, начало эпсилон-перехода, конец эпсилон-перехода)
 	set<tuple<int, int, int>> visited_eps;
@@ -622,30 +645,30 @@ pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher)
 	int parsed_len = 0;
 	const MFAState* state = &states[initial_state];
 	parsing_states_stack.emplace(
-		parsed_len, state, unordered_set<int>({}), unordered_map<int, pair<int, int>>({}));
+		parsed_len, state, unordered_set<int>(), unordered_map<int, pair<int, int>>());
 	while (!parsing_states_stack.empty()) {
 		if (state->is_terminal && parsed_len == s.size()) {
 			break;
 		}
+		counter++;
 		ParingState parsing_state = parsing_states_stack.top();
 		state = parsing_state.state;
 		parsed_len = parsing_state.pos;
 		parsing_states_stack.pop();
-		counter++;
 		// состояния достижимые по символам-буквам/символам-ссылкам
 		// и состояния достижимые по эпсилон-переходам/пустым ссылкам
 		auto [reach, reach_eps] = get_transitions(s, parsing_state, matcher);
 
 		// переходы в новые состояния по букве/непустой ссылке
-		if (parsed_len + 1 <= s.size()) {
-			for (const auto& [symbol, symbol_transitions] : reach) {
-				for (auto tr : symbol_transitions) {
-					tr.update_memory(symbol);
-					parsing_states_stack.emplace(parsed_len + get_symbol_len(tr.memory, symbol),
-												 &states[tr.to],
-												 tr.opened_cells,
-												 tr.memory);
-				}
+		for (const auto& [symbol, symbol_transitions] : reach) {
+			for (auto tr : symbol_transitions) {
+				if (parsed_len + get_symbol_len(tr.memory, symbol) > s.size())
+					continue;
+				tr.update_memory(symbol);
+				parsing_states_stack.emplace(parsed_len + get_symbol_len(tr.memory, symbol),
+											 &states[tr.to],
+											 tr.opened_cells,
+											 tr.memory);
 			}
 		}
 
@@ -662,7 +685,7 @@ pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher)
 
 		// добавление тех эпсилон-переходов, по которым ещё не было разбора от этой позиции и этого
 		// состояния
-		for (const auto& [symb, symb_transitions] : reach_eps.transitions) {
+		for (const auto& [_, symb_transitions] : reach_eps) {
 			for (auto eps_tr : symb_transitions) {
 				if (!visited_eps.count({parsed_len, state->index, eps_tr.to})) {
 					eps_tr.update_memory(Symbol::Epsilon);
@@ -676,6 +699,85 @@ pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher)
 
 	if (s.size() == parsed_len && state->is_terminal) {
 		return {counter, true};
+	}
+
+	return {counter, false};
+}
+
+template <typename T>
+void hash_combine(std::size_t& seed, const T& value) { // NOLINT(runtime/references)
+	seed ^= std::hash<T>{}(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+size_t ParingState::Hasher::operator()(const ParingState& s) const {
+	std::size_t seed = 0;
+
+	hash_combine(seed, s.pos);
+	hash_combine(seed, s.state);
+
+	for (const auto& cell : s.opened_cells) {
+		hash_combine(seed, cell);
+	}
+
+	for (const auto& entry : s.memory) {
+		hash_combine(seed, entry.first);
+		hash_combine(seed, entry.second.first);
+		hash_combine(seed, entry.second.second);
+	}
+
+	return seed;
+}
+
+pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher) const {
+	unordered_set<ParingState, ParingState::Hasher> current_states;
+	current_states.insert(ParingState(
+		0, &states[initial_state], unordered_set<int>(), unordered_map<int, pair<int, int>>()));
+
+	unordered_set<ParingState, ParingState::Hasher> visited_states;
+
+	int counter = 0;
+	while (!current_states.empty()) {
+		unordered_set<ParingState, ParingState::Hasher> following_states;
+		for (const auto& cur_state : current_states) {
+			if (visited_states.count(cur_state))
+				continue;
+
+			const MFAState* state = cur_state.state;
+			int parsed_len = cur_state.pos;
+			if (state->is_terminal && parsed_len == s.size()) {
+				return {counter, true};
+			}
+
+			// состояния достижимые по символам-буквам/символам-ссылкам
+			// и состояния достижимые по эпсилон-переходам/пустым ссылкам
+			auto [reach, reach_eps] = get_transitions(s, cur_state, matcher);
+
+			// переходы в новые состояния по букве/непустой ссылке
+			for (const auto& [symbol, symbol_transitions] : reach) {
+				for (auto tr : symbol_transitions) {
+					if (parsed_len + get_symbol_len(tr.memory, symbol) > s.size())
+						continue;
+					tr.update_memory(symbol);
+					following_states.emplace(parsed_len + get_symbol_len(tr.memory, symbol),
+											 &states[tr.to],
+											 tr.opened_cells,
+											 tr.memory);
+				}
+			}
+
+			// эпсилон-переходы
+			for (const auto& [_, symb_transitions] : reach_eps) {
+				for (auto eps_tr : symb_transitions) {
+					eps_tr.update_memory(Symbol::Epsilon);
+					following_states.emplace(
+						parsed_len, &states[eps_tr.to], eps_tr.opened_cells, eps_tr.memory);
+				}
+			}
+
+			visited_states.insert(cur_state);
+		}
+		current_states = following_states;
+		counter++;
 	}
 
 	return {counter, false};
@@ -866,4 +968,204 @@ void FastMatcher::match(
 pair<int, bool> MemoryFiniteAutomaton::parse_additional(const string& s) const {
 	FastMatcher matcher(s);
 	return _parse(s, &matcher);
+}
+
+string random_mutation(const string& word, int l, int r, const Alphabet& alphabet) {
+	string mutated_word = word.substr(l, r - l);
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	uniform_int_distribution<int> distribution(0, 1);
+	int mutation_type = distribution(gen);
+	if (mutation_type == 0 || mutated_word.size() == 1) {
+		// вставка
+		int insertionPoint = uniform_int_distribution<int>(0, mutated_word.size() - 1)(gen);
+		int fragmentLength = uniform_int_distribution<int>(0, (mutated_word.size() + 1) / 2)(gen);
+		string randomFragment;
+		for (int i = 0; i < fragmentLength; ++i) {
+			Symbol random_symb = *next(begin(alphabet), gen() % alphabet.size());
+			randomFragment += random_symb;
+		}
+		mutated_word.insert(insertionPoint, randomFragment);
+	} else {
+		// удаление
+		int numDeletions = uniform_int_distribution<int>(1, mutated_word.size() / 2)(gen);
+		for (int i = 0; i < numDeletions; ++i) {
+			int deletionPoint = uniform_int_distribution<int>(0, mutated_word.size() - 1)(gen);
+			mutated_word.erase(deletionPoint, 1);
+		}
+	}
+
+	auto s = word;
+	s.insert(r, mutated_word);
+	return s;
+}
+
+size_t MutationHasher::operator()(const std::tuple<int, int, int>& t) const {
+	return std::hash<int>{}(std::get<0>(t)) ^ std::hash<int>{}(std::get<2>(t) - std::get<1>(t));
+}
+
+TraversalState::TraversalState(const string& str, const MFAState* state,
+							   const unordered_set<int>& opened_cells,
+							   const unordered_map<int, std::pair<int, int>>& memory,
+							   const TraversalState& previous_state, bool memory_used)
+	: str(str), state(state), opened_cells(opened_cells), memory(memory),
+	  visited_path(previous_state.visited_path), visited_states(previous_state.visited_states),
+	  last_memory_reading(previous_state.last_memory_reading),
+	  substrs_to_mutate(previous_state.substrs_to_mutate) {
+	if (memory_used)
+		last_memory_reading = str.size();
+
+	auto visited_state = visited_states.find(state->index);
+	// нашли цикл для мутации
+	if (visited_state != visited_states.end()) {
+		// если с момента последнего посещения не было чтения из памяти,
+		// добавляем подстроку в список мутаций
+		if (visited_state->second.second > last_memory_reading)
+			substrs_to_mutate.insert({state->index, visited_state->second.second, str.size()});
+		// удаляем все промежуточные посещенные состояния
+		for (int i = visited_state->second.first; i < visited_path.size(); i++)
+			visited_states.erase(visited_path[i]);
+	}
+	visited_path.push_back(state->index);
+	// сохраняем позиции на момент посещения
+	visited_states[state->index] = {visited_path.size() - 1, str.size()};
+}
+
+bool TraversalState::operator==(const TraversalState& other) const {
+	return str == other.str && state == other.state && opened_cells == other.opened_cells &&
+		   memory == other.memory;
+}
+
+size_t TraversalState::Hasher::operator()(const TraversalState& s) const {
+	std::size_t seed = 0;
+
+	hash_combine(seed, s.str);
+	hash_combine(seed, s.state);
+
+	for (const auto& cell : s.opened_cells) {
+		hash_combine(seed, cell);
+	}
+
+	for (const auto& entry : s.memory) {
+		hash_combine(seed, entry.first);
+		hash_combine(seed, entry.second.first);
+		hash_combine(seed, entry.second.second);
+	}
+
+	return seed;
+}
+
+pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::generate_test_set(
+	int max_len) {
+	unordered_set<string> words_in_language;
+	unordered_map<string, unordered_set<pair<int, int>, PairHasher>> words_to_mutate;
+
+	unordered_set<TraversalState, TraversalState::Hasher> current_states;
+	current_states.insert(TraversalState("",
+										 &states[initial_state],
+										 unordered_set<int>(),
+										 unordered_map<int, pair<int, int>>(),
+										 TraversalState()));
+
+	unordered_set<TraversalState, TraversalState::Hasher> visited_states;
+	while (!current_states.empty()) {
+		unordered_set<TraversalState, TraversalState::Hasher> following_states;
+		for (const auto& cur_state : current_states) {
+			if (visited_states.count(cur_state))
+				continue;
+
+			const MFAState* state = cur_state.state;
+			if (state->is_terminal) {
+				words_in_language.insert(cur_state.str);
+				for (const auto& [_, l, r] : cur_state.substrs_to_mutate)
+					words_to_mutate[cur_state.str].insert({l, r});
+			}
+
+			// выбор переходов
+			ParseTransitions reach, reach_eps;
+			for (const auto& [symbol, symbol_transitions] : cur_state.state->transitions) {
+				if (symbol.is_ref()) {
+					if (!cur_state.memory.count(symbol.get_ref())) {
+						// пустая ссылка добавляется к eps-переходам
+						reach_eps.add_transitions(symbol, symbol_transitions, cur_state);
+						continue;
+					}
+					const auto& [l, r] = cur_state.memory.at(symbol.get_ref());
+					if (l == r) {
+						// пустая ссылка добавляется к eps-переходам
+						reach_eps.add_transitions(symbol, symbol_transitions, cur_state);
+						continue;
+					}
+					MFAState::SymbolTransitions non_empty_ref_transitions, empty_ref_transitions;
+					for (const auto& tr : symbol_transitions) {
+						auto ref_cell_memory_action = tr.memory_actions.find(symbol.get_ref());
+						if (ref_cell_memory_action != tr.memory_actions.end() &&
+							ref_cell_memory_action->second == MFATransition::reset) {
+							empty_ref_transitions.insert(tr);
+							continue;
+						}
+						non_empty_ref_transitions.insert(tr);
+					}
+					if (!empty_ref_transitions.empty()) {
+						reach_eps.add_transitions(symbol, empty_ref_transitions, cur_state);
+					}
+					reach.add_transitions(symbol, non_empty_ref_transitions, cur_state);
+				} else if (symbol.is_epsilon()) {
+					reach_eps.add_transitions(symbol, symbol_transitions, cur_state);
+				} else {
+					reach.add_transitions(symbol, symbol_transitions, cur_state);
+				}
+			}
+
+			// переходы в новые состояния по букве/непустой ссылке
+			for (const auto& [symbol, symbol_transitions] : reach) {
+				for (auto tr : symbol_transitions) {
+					if (cur_state.str.size() + get_symbol_len(tr.memory, symbol) > max_len)
+						continue;
+					tr.update_memory(symbol);
+					if (symbol.is_ref()) {
+						pair<int, int> substr = tr.memory.at(symbol.get_ref());
+						following_states.emplace(
+							cur_state.str +
+								cur_state.str.substr(substr.first, substr.second - substr.first),
+							&states[tr.to],
+							tr.opened_cells,
+							tr.memory,
+							cur_state,
+							true);
+					} else if (!symbol.is_epsilon()) { // проверка на eps, вероятно, излишняя
+						following_states.emplace(cur_state.str + string(symbol),
+												 &states[tr.to],
+												 tr.opened_cells,
+												 tr.memory,
+												 cur_state);
+					}
+				}
+
+				visited_states.insert(cur_state);
+			}
+
+			// эпсилон-переходы
+			for (const auto& [_, symb_transitions] : reach_eps) {
+				for (auto eps_tr : symb_transitions) {
+					eps_tr.update_memory(Symbol::Epsilon);
+					following_states.emplace(cur_state.str,
+											 &states[eps_tr.to],
+											 eps_tr.opened_cells,
+											 eps_tr.memory,
+											 cur_state);
+				}
+			}
+		}
+		current_states = following_states;
+	}
+
+	unordered_set<string> mutated_words;
+	for (const auto& [word, mutations] : words_to_mutate)
+		for (const auto& mutation_bounds : mutations)
+			mutated_words.insert(random_mutation(
+				word, mutation_bounds.first, mutation_bounds.second, language->get_alphabet()));
+
+	return {words_in_language, mutated_words};
 }
