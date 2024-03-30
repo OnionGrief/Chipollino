@@ -297,7 +297,6 @@ FiniteAutomaton Parser::parse_NFA(std::string grammar_file, std::string automato
     auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
     auto input = file.buffer();
     Lexer::parse_buffer(grammar, input);
-
     auto res = parse(grammar, automaton_file);
 
     if (attributes.count("DFA") || attributes.count("NFA"))

@@ -315,21 +315,21 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectBoolean(get<ObjectBRefRegex>(arguments[0]).value.is_acreg(&log_template));
 	}
 	if (function.name == "getNFA") {
-		string grammar = get<ObjectString>(arguments[0]).value;
-        string filename = get<ObjectString>(arguments[1]).value;
-        Parser parser;
+		string filename = get<ObjectFileName>(arguments[0]).value;
+		string grammar = "TestData/grammar.txt";
+		Parser parser;
 		return ObjectNFA(parser.parse_NFA(grammar, filename));
 	}
 	if (function.name == "getMFA") {
-		string grammar = get<ObjectString>(arguments[0]).value;
-        string filename = get<ObjectString>(arguments[1]).value;
-        Parser parser;
+		string filename = get<ObjectFileName>(arguments[0]).value;
+		string grammar = "TestData/grammar.txt";
+		Parser parser;
 		return ObjectMFA(parser.parse_MFA(grammar, filename));
 	}
-    if (function.name == "getDFA") {
-		string grammar = get<ObjectString>(arguments[0]).value;
-        string filename = get<ObjectString>(arguments[1]).value;
-        Parser parser;
+	if (function.name == "getDFA") {
+		string filename = get<ObjectFileName>(arguments[0]).value;
+		string grammar = "TestData/grammar.txt";
+		Parser parser;
 		return ObjectDFA(parser.parse_DFA(grammar, filename));
 	}
 	// # place for another diff types funcs
@@ -647,8 +647,8 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
-	if (holds_alternative<string>(expr.value) && expr.type == ObjectType::String) {
-		return ObjectString(get<string>(expr.value));
+	if (holds_alternative<string>(expr.value) && expr.type == ObjectType::FileName) {
+		return ObjectFileName(get<string>(expr.value));
 	}
 	if (holds_alternative<Id>(expr.value)) {
 		Id id = get<Id>(expr.value);
@@ -800,8 +800,9 @@ bool Interpreter::run_verification(const Verification& verification) {
 
 	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
-		
-        AutomatonGenerator("./TestData/grammar.txt", FA_type::NFA).write_to_file("TestData/test.txt");
+
+		AutomatonGenerator("./TestData/grammar.txt", FA_type::NFA)
+			.write_to_file("TestData/test.txt");
 		current_random_regex = Regex(RG.generate_regex()); // хз как еще передавать
 		auto predicate = eval_expression(expr);
 
@@ -1089,7 +1090,7 @@ optional<Interpreter::Expression> Interpreter::scan_expression(const vector<Lexe
 	}
 	// string
 	if (end > pos && lexems[pos].type == Lexem::stringval) {
-		expr.type = ObjectType::String;
+		expr.type = ObjectType::FileName;
 		expr.value = lexems[pos].value;
 		pos++;
 		return expr;

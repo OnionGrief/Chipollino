@@ -23,7 +23,7 @@ enum class ObjectType {
 	Regex,		 // регулярное выражение
 	RandomRegex, // место для подстановки сгенерированных регулярных выражений
 	Int,		 // целое число
-	String,		 // имя файла для чтения
+	FileName,		 // имя файла для чтения
 	Boolean,	 // true/false
 	OptionalBool,	// optional<bool>
 	AmbiguityValue, // yes/no/ы/ь
@@ -49,7 +49,7 @@ struct ObjectNFA;
 struct ObjectDFA;
 struct ObjectRegex;
 struct ObjectInt;
-struct ObjectString;
+struct ObjectFileName;
 struct ObjectBoolean;
 struct ObjectOptionalBool;
 struct ObjectAmbiguityValue;
@@ -59,7 +59,7 @@ struct ObjectBRefRegex;
 struct ObjectMFA;
 
 // Универсальный объект
-using GeneralObject = std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString,
+using GeneralObject = std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectFileName,
 								   ObjectBoolean, ObjectOptionalBool, ObjectAmbiguityValue,
 								   ObjectPrefixGrammar, ObjectArray, ObjectBRefRegex, ObjectMFA>;
 
@@ -73,7 +73,7 @@ OBJECT_DEFINITION(NFA, FiniteAutomaton)
 OBJECT_DEFINITION(DFA, FiniteAutomaton)
 OBJECT_DEFINITION(Regex, Regex)
 OBJECT_DEFINITION(Int, int)
-OBJECT_DEFINITION(String, std::string)
+OBJECT_DEFINITION(FileName, std::string)
 OBJECT_DEFINITION(Boolean, bool)
 OBJECT_DEFINITION(OptionalBool, std::optional<bool>)
 OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
@@ -91,7 +91,7 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 	{ObjectType::BRefRegex, "BRefRegex"},
 	{ObjectType::RandomRegex, "RandomRegex"},
 	{ObjectType::Int, "Int"},
-	{ObjectType::String, "String"},
+	{ObjectType::FileName, "FileName"},
 	{ObjectType::Boolean, "Boolean"},
 	{ObjectType::OptionalBool, "OptionalBool"},
 	{ObjectType::AmbiguityValue, "AmbiguityValue"},
