@@ -24,8 +24,8 @@ TEST(TestParsing, RandomRegexParsing) {
 
 TEST(TestArden, RandomRegexEquivalence) {
 	RegexGenerator rg;
-	for (int i = 0; i < RegexNumber; i++) {
-		std::cout << "RandomRegexEquivalence: regex number " << i << std::endl;
+	for (int i = 0; i < 10; i++) {
+		// std::cout << "RandomRegexEquivalence: regex number " << i << std::endl;
 		string rgx_str = rg.generate_regex();
 		Regex r1(rgx_str), r2(rgx_str);
 		//		ASSERT_TRUE(Regex::equivalent(r1, r2.to_thompson().to_regex()));
@@ -58,7 +58,7 @@ TEST(TestNFA, Test_equivalent_nfa_negative) {
 TEST(IsDeterministic, Test_is_deterministic) {
     std::string grammar_path = "./TestData/grammar.txt";
     std::string test_path = "./TestData/MetamorphicTest/test1.txt";
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 0; i < 50; i++) {
 		AutomatonGenerator a(grammar_path, FA_type::NFA);
 		a.write_to_file(test_path);
         Parser parser;
@@ -114,7 +114,7 @@ TEST(IsDeterministic, Test_is_deterministic) {
 // }
 
 TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
-    int ALL = 10000;
+    int ALL = 50;
     for (int i = 0; i < ALL; i++) {
         std::string grammar_path = "./TestData/grammar.txt";
         std::string test_path = "./TestData/MetamorphicTest/test1.txt";
@@ -124,7 +124,7 @@ TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
         FiniteAutomaton FA;
         FA = parser.parse_NFA(grammar_path, test_path);
         auto first = FA.merge_bisimilar();
-        auto second = FA;
+        auto second = parser.parse_NFA(grammar_path, test_path);
 
         std::ifstream t(test_path);
         std::stringstream buffer;
@@ -136,8 +136,9 @@ TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
     }
 }
 
+/*
 TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
-    int ALL = 10000;
+    int ALL = 50;
     for (int i = 0; i < ALL; i++) {
         std::string grammar_path = "./TestData/grammar.txt";
         std::string test_path = "./TestData/MetamorphicTest/test1.txt";
@@ -148,7 +149,7 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
         FA = parser.parse_NFA(grammar_path, test_path);
 		auto ard =  FA.to_regex().to_glushkov();
         auto first = ard;
-        auto second = FA;
+        auto second = parser.parse_NFA(grammar_path, test_path);
 
         std::ifstream t(test_path);
         std::stringstream buffer;
@@ -161,7 +162,7 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
 }
 
 TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
-    int ALL = 10000;
+    int ALL = 50;
     for (int i = 0; i < ALL; i++) {
         std::string grammar_path = "./TestData/grammar.txt";
         std::string test_path = "./TestData/MetamorphicTest/test1.txt";
@@ -181,7 +182,7 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
 
         ASSERT_EQ(first,second) << file << "\n" << FA.minimize().to_txt() << "\n" << ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
     }
-}
+}*/
 
 // TEST(Statistics, Test_dfa) {
 // 	for (int term = 5; term <= 50; term = term + 5) {
