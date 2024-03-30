@@ -26,8 +26,8 @@ class RegexGenerator {
 	// вер-ть появления ссылки &1
 	int ref_chance = 0;
 	// не допускает вложенности [[..]:1]:2 и [&1]:1.
-	// хранит номер текущего memoryWriter, 0 - если находимся вне [..]:1
-	int in_memory_writer = 0;
+	// хранит номера текущих memoryWriters, вектор пустой - если находимся вне [..]:1
+	std::vector<int> in_memory_writer;
 
 	// для проверки на отсутствие (|||)
 	bool all_alts_are_eps = true;
@@ -62,10 +62,6 @@ class RegexGenerator {
 	ref_chance - шанс появления ссылки &1 (в %) вместо буквы. */
 	std::string generate_brefregex(int cells_num = 3, int mem_writer_chance = 30,
 								   int ref_chance = 30);
-	/*сгенерировать регулярное выражение, обрамленное фигурными скобками
-	(для интерпретатора)*/
-	std::string generate_framed_regex();
-	std::string generate_framed_brefregex();
 	/*запись регулярки в файл*/
 	void write_to_file(std::string filename);
 	/*установить шанс появления отрицания - чем больше значение, тем реже шанс*/
