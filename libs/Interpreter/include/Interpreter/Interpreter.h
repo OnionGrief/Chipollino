@@ -88,7 +88,9 @@ class Interpreter {
 	std::map<std::string, GeneralObject> objects;
 
 	//== Элементы грамматики интерпретатора ===================================
-	using Id = std::string;
+	struct Id {
+		std::string name;
+	};
 	struct Expression;
 
 	friend bool operator==(const FuncLib::Function& l, const FuncLib::Function& r);
@@ -110,7 +112,7 @@ class Interpreter {
 	// Общий вид выражения
 	struct Expression {
 		Typization::ObjectType type;
-		std::variant<int, FunctionSequence, Regex, BackRefRegex, std::string, Array> value;
+		std::variant<int, FunctionSequence, Regex, BackRefRegex, std::string, Array, Id> value;
 		// Преобразование в текст
 		std::string to_txt() const;
 	};
@@ -119,7 +121,7 @@ class Interpreter {
 	// [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
 	struct Declaration {
 		// Идентификатор, в который запишется объект
-		Id id;
+		std::string id;
 		// Выражение
 		Expression expr;
 	};

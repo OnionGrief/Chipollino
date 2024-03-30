@@ -647,11 +647,11 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	if (holds_alternative<int>(expr.value)) {
 		return ObjectInt(get<int>(expr.value));
 	}
-	if (holds_alternative<string>(expr.value) && expr.type == ObjectType::FileName) {
+	if (holds_alternative<string>(expr.value)) {
 		return ObjectFileName(get<string>(expr.value));
 	}
 	if (holds_alternative<Id>(expr.value)) {
-		Id id = get<Id>(expr.value);
+		string id = get<Id>(expr.value).name;
 		if (objects.count(id)) {
 			return objects[id];
 		} else {
@@ -934,7 +934,7 @@ int Interpreter::find_closing_par(const vector<Lexem>& lexems, size_t pos) {
 optional<Interpreter::Id> Interpreter::scan_id(const vector<Lexem>& lexems, int& pos, size_t end) {
 	if (end > pos && lexems[pos].type == Lexem::name) {
 		pos += 1;
-		return lexems[pos].value;
+		return Id{lexems[pos].value};
 	}
 	return nullopt;
 }
@@ -1084,7 +1084,7 @@ optional<Interpreter::Expression> Interpreter::scan_expression(const vector<Lexe
 	// Id
 	if (end > pos && lexems[pos].type == Lexem::name && id_types.count(lexems[pos].value)) {
 		expr.type = id_types[lexems[pos].value];
-		expr.value = lexems[pos].value;
+		expr.value = Id{lexems[pos].value};
 		pos++;
 		return expr;
 	}
