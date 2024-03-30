@@ -475,9 +475,7 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type, vector<ObjectTyp
 	// сверяем тип каждого аргумента
 	for (int i = 0; i < argument_type.size(); i++) {
 		// тип либо одинаковый, либо аргумент явл-ся подтипом требуемого типа
-		if (!(Typization::is_belong(
-				  Typization::get_types(func_input_type[i], Typization::types_children),
-				  argument_type[i]) ||
+		if (!(Typization::get_types(func_input_type[i], Typization::types_children).count(argument_type[i]) != 0 ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
 			  (flags[Flag::weak_type_comparison] && argument_type[i] == ObjectType::NFA &&
 			   func_input_type[i] == ObjectType::DFA) ||

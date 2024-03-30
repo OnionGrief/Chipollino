@@ -76,7 +76,7 @@ string TasksGenerator::generate_op() {
 bool TasksGenerator::arguments_exist(vector<ObjectType> args) {
 	for (ObjectType arg_type : args) {
 		// аргумент можно подобрать, если его тип есть в памяти, либо его можно сгенерировать
-		if (!(ids_by_type.count(arg_type) || Typization::is_belong(generated_types, arg_type)))
+		if (!(ids_by_type.count(arg_type) || generated_types.count(arg_type) != 0))
 			return false;
 	}
 	return true;
@@ -156,7 +156,7 @@ string TasksGenerator::generate_arguments(Function first_func) {
 	for (auto input_type : first_func.input) {
 		// сгенерировать идентификатор
 		if (ids_by_type.count(input_type) &&
-			!(Typization::is_belong(generated_types, input_type) && check_probability(50))) {
+			!(generated_types.count(input_type) != 0 && check_probability(50))) {
 			args_str += " N" + get_random_id_by_type(input_type);
 			/* генерируемые типы: */
 		} else if (input_type == NFA) {

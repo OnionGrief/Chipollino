@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 class RegexGenerator {
@@ -27,7 +28,7 @@ class RegexGenerator {
 	int ref_chance = 0;
 	// не допускает вложенности [[..]:1]:2 и [&1]:1.
 	// хранит номера текущих memoryWriters, вектор пустой - если находимся вне [..]:1
-	std::vector<int> in_memory_writer;
+	std::unordered_set<int> in_memory_writer;
 
 	// для проверки на отсутствие (|||)
 	bool all_alts_are_eps = true;

@@ -130,10 +130,6 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 	}
 }
 
-static bool is_belong(const std::vector<int>& vec, int value) {
-	return std::find(vec.begin(), vec.end(), value) != vec.end();
-}
-
 void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? буква <star>? |
 											   //        <neg>? <lbr><regex><rbr> <star>?
 	if (check_probability(40)) {
@@ -172,15 +168,15 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? бу
 
 			int ref_num = rand_num(cells_num) + 1;
 			// запрещено [[]:1]:1, но допускается [[]:2]:1
-			while (is_belong(in_memory_writer, ref_num))
+			while (in_memory_writer.count(ref_num) != 0)
 				ref_num = rand_num(cells_num) + 1;
-			in_memory_writer.push_back(ref_num);
+			in_memory_writer.insert(ref_num);
 
 			res_str += "[";
 			generate_regex_();
 			res_str += "]:" + to_string(ref_num);
 
-			in_memory_writer.pop_back();
+			in_memory_writer.erase(ref_num);
 		} else {
 			res_str += '(';
 			generate_regex_();
@@ -202,7 +198,7 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? бу
 		if (is_backref && check_probability(ref_chance) && (cells_num > in_memory_writer.size())) {
 			int ref_num = rand_num(cells_num) + 1;
 			// запрещено [&1]:1, но допускается [&2]:1
-			while (is_belong(in_memory_writer, ref_num))
+			while (in_memory_writer.count(ref_num) != 0)
 				ref_num = rand_num(cells_num) + 1;
 			res_str += "&" + to_string(ref_num);
 		} else {
