@@ -7,15 +7,12 @@
 #include <vector>
 
 #include "AlgExpression.h"
+#include "MemoryCommon.h"
 #include "iLogTemplate.h"
 
 class MemoryFiniteAutomaton;
 class MFAState;
 class Regex;
-
-struct PairHasher {
-	size_t operator()(const std::pair<int, int>& p) const;
-};
 
 class BackRefRegex : public AlgExpression {
   private:
@@ -23,9 +20,9 @@ class BackRefRegex : public AlgExpression {
 	int cell_number = 0;
 	// номер линеаризации (используется при Type: memoryWriter)
 	int lin_number = 0;
-	// указатель на memoryWriter для ref
+	// для ref - указатель на memoryWriter
 	BackRefRegex* ref_to = nullptr;
-	// может ли ref ссылаться на пустую память
+	// признак для ref - может ли ссылаться на пустую память
 	bool may_be_eps = false;
 
 	void copy(const AlgExpression*) override; // NOLINT(build/include_what_you_use)
@@ -50,32 +47,30 @@ class BackRefRegex : public AlgExpression {
 		std::vector<BackRefRegex*>& terms,					  // NOLINT(runtime/references)
 		int& lin_counter,									// NOLINT(runtime/references)
 		std::vector<std::unordered_set<int>>& in_lin_cells, // NOLINT(runtime/references)
-		std::vector<std::unordered_set<std::pair<int, int>, PairHasher>>&
-			first_in_cells, // NOLINT(runtime/references)
-		std::vector<std::unordered_set<std::pair<int, int>, PairHasher>>&
-			last_in_cells, // NOLINT(runtime/references)
-		std::unordered_set<int> cur_in_lin_cells,
-		std::unordered_set<std::pair<int, int>, PairHasher> cur_first_in_cells,
-		std::unordered_set<std::pair<int, int>, PairHasher> cur_last_in_cells);
+		std::vector<CellSet>& first_in_cells,				// NOLINT(runtime/references)
+		std::vector<CellSet>& last_in_cells,				// NOLINT(runtime/references)
+		std::unordered_set<int> cur_in_lin_cells, CellSet cur_first_in_cells,
+		CellSet cur_last_in_cells);
 	bool contains_eps() const override;
+	// вычисляет поля may_be_eps (передать пустой вектор на вход)
 	void calculate_may_be_eps(
 		std::unordered_map<int, std::vector<BackRefRegex*>>&); // NOLINT(runtime/references)
 	// добавляет все потенциально пустые memoryWriter в переданное множество
-	bool contains_eps_tracking_resets(std::unordered_set<int>&) const; // NOLINT(runtime/references)
-	// пары {нода, множество потенциально пустых memoryWriter, которые стоят до нее}
-	std::vector<std::pair<AlgExpression*, std::unordered_set<int>>>
-	get_first_nodes_tracking_resets();
-	// пары {нода, множество потенциально пустых memoryWriter, которые стоят после нее}
-	std::vector<std::pair<AlgExpression*, std::unordered_set<int>>>
-	get_last_nodes_tracking_resets();
-	// возвращает номера ячеек памяти, над которыми производится итерация
-	void get_cells_under_iteration(std::unordered_set<int>&) const;
-	// для каждого терма определяет множество номеров термов, которым он может предшествовать
-	// для каждого перехода определяет, над какими ячейками он является итерацией,
+	bool contains_eps_tracking_resets(CellSet&) const; // NOLINT(runtime/references)
+	// пары {нода, {потенциально пустые memoryWriter, которые стоят до нее}}
+	std::vector<std::pair<AlgExpression*, CellSet>> get_first_nodes_tracking_resets();
+	// пары {нода, {потенциально пустые memoryWriter, которые стоят после нее}}
+	std::vector<std::pair<AlgExpression*, CellSet>> get_last_nodes_tracking_resets();
+	// возвращает номера ячеек памяти, над которыми производится итерация,
+	// и номера потенциально пустых ячеек памяти, над которыми производится итерация
+	void get_cells_under_iteration(std::unordered_set<int>&, CellSet&) const;
+	// 1) для каждого терма определяет множество номеров термов, которым он может предшествовать
+	// и над какими потенциально пустыми ячейками из него совершаются итерации
+	// 2) для каждого перехода определяет, над какими ячейками он является итерацией,
 	// и какие ячейки памяти он должен сбросить
 	void get_follow(
-		std::vector<std::vector<std::tuple<int, std::unordered_set<int>,
-										   std::unordered_set<int>>>>& // NOLINT(runtime/references)
+		std::vector<std::pair<std::vector<std::tuple<int, std::unordered_set<int>, CellSet>>,
+							  CellSet>>& // NOLINT(runtime/references)
 	) const;
 
 	// преобразует star в conc (раскрывает каждую итерацию один раз) и линеаризует memoryWriter

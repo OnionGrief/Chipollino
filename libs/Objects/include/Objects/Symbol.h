@@ -62,7 +62,7 @@ class Symbol {
 	int last_linearization_number();
 
 	struct Hasher {
-		std::size_t operator()(const Symbol& s) const;
+		std::size_t operator()(const Symbol&) const;
 	};
 };
 

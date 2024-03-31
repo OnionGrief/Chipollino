@@ -15,7 +15,8 @@ set(SOURCES
         src/AbstractMachine.cpp
         src/MemoryFiniteAutomaton.cpp
         src/BackRefRegex.cpp
-        )
+        src/MemoryCommon.cpp
+)
 
 # Add a library with the above sources
 add_library(${PROJECT_NAME} ${SOURCES})
