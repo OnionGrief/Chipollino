@@ -9,11 +9,12 @@
 #include <vector>
 
 #include "AbstractMachine.h"
+#include "MemoryCommon.h"
 #include "iLogTemplate.h"
 
 class Language;
 class FAState;
-struct PairHasher;
+class FiniteAutomaton;
 
 struct MFATransition {
 	enum MemoryAction {
@@ -36,13 +37,13 @@ struct MFATransition {
 
 	struct TransitionConfig {
 		// пары {номер ячейки, линеаризованный номер оператора}
-		const std::unordered_set<std::pair<int, int>, PairHasher>* destination_first;
-		const std::unordered_set<int>* source_in_cells;
+		const CellSet* destination_first;
+		const std::unordered_set<int>* source_in_lin_cells;
 		const std::unordered_set<int>* iteration_over_cells;
 		// пары {номер ячейки, линеаризованный номер оператора}
-		const std::unordered_set<std::pair<int, int>, PairHasher>* source_last;
-		const std::unordered_set<int>* destination_in_cells;
-		const std::unordered_set<int>* to_reset;
+		const CellSet* source_last;
+		const std::unordered_set<int>* destination_in_lin_cells;
+		const CellSet* to_reset;
 	};
 	MFATransition(int, const TransitionConfig& config);
 
@@ -50,7 +51,7 @@ struct MFATransition {
 	bool operator==(const MFATransition& other) const;
 
 	struct Hasher {
-		std::size_t operator()(const MFATransition& t) const;
+		std::size_t operator()(const MFATransition&) const;
 	};
 };
 
@@ -82,7 +83,7 @@ struct ParingState {
 	bool operator==(const ParingState& other) const;
 
 	struct Hasher {
-		std::size_t operator()(const ParingState& s) const;
+		std::size_t operator()(const ParingState&) const;
 	};
 };
 
@@ -106,14 +107,17 @@ struct TraversalState {
 	std::unordered_set<std::tuple<int, int, int>, MutationHasher> substrs_to_mutate;
 
 	TraversalState() = default;
+	explicit TraversalState(const MFAState* state);
 	TraversalState(const std::string& str, const MFAState* state,
 				   const std::unordered_set<int>& opened_cells,
 				   const std::unordered_map<int, std::pair<int, int>>& memory,
 				   const TraversalState& previous_state, bool memory_used = false);
 	bool operator==(const TraversalState& other) const;
 
+	void process_mutations();
+
 	struct Hasher {
-		std::size_t operator()(const TraversalState& s) const;
+		std::size_t operator()(const TraversalState&) const;
 	};
 };
 
@@ -218,4 +222,6 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	// и множество тестовых слов с мутациями
 	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_set(
 		int max_len);
+	// ссылки считаются символами алфавита, операции над памятью игнорируются
+	FiniteAutomaton to_fa() const;
 };

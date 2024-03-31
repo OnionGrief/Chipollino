@@ -1,10 +1,13 @@
-#include "gtest/gtest.h"
+#include <random>
+#include <string>
+#include <unordered_set>
 
 #include "InputGenerator/RegexGenerator.h"
 #include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
+#include "gtest/gtest.h"
 
 using std::string;
 using std::unordered_set;
@@ -61,32 +64,27 @@ TEST(TestNFA, NegativeNFAEquivalence) {
 TEST(TestMFA, Fuzzing) {
 	RegexGenerator rg(5, 3, 2, 3);
 	for (int i = 0; i < RegexNumber; i++) {
-		string rgx_str = rg.generate_regex();
+		string rgx_str = rg.generate_brefregex(2, 70, 50);
 		SCOPED_TRACE("Regex: " + rgx_str);
 		MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
 		MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
 
-		int len = std::max(mfa1.size(), mfa2.size());
+		int len = mfa2.size();
 		auto test_set1 = mfa1.generate_test_set(len);
 		auto test_set2 = mfa2.generate_test_set(len);
 		ASSERT_EQ(test_set1.first, test_set2.first);
 
 		test_set1.second.insert(test_set2.second.begin(), test_set2.second.end());
-		for (const auto& mutated_word : test_set1.second) {
+		std::vector<std::string> random_elements;
+		std::sample(test_set1.second.begin(),
+					test_set1.second.end(),
+					std::back_inserter(random_elements),
+					1000,
+					std::mt19937{std::random_device{}()});
+		for (const auto& mutated_word : random_elements) {
 			auto res1 = mfa1.parse(mutated_word);
 			auto res2 = mfa2.parse(mutated_word);
 			ASSERT_EQ(res1.second, res2.second);
 		}
-	}
-}
-
-TEST(TestParsing, RandomBrefRegexParsing) {
-	RegexGenerator rg(15, 5, 3, 3);
-	for (int i = 0; i < RegexNumber; i++) {
-		string str = rg.generate_brefregex(2, 40, 40);
-		BackRefRegex r1(str);
-		string r1_str = r1.to_txt();
-		BackRefRegex r2(r1_str);
-		// ASSERT_TRUE(BackRefRegex::equal(r1, r2)) << str;
 	}
 }

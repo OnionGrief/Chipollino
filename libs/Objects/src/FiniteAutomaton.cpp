@@ -51,6 +51,15 @@ FAState::FAState(int index, set<int> label, string identifier, bool is_terminal,
 	: State::State(index, std::move(identifier), is_terminal), label(std::move(label)),
 	  transitions(std::move(transitions)) {}
 
+FAState::FAState(const MFAState& state, Alphabet& alphabet)
+	: State::State(state.index, state.identifier, state.is_terminal) {
+	for (const auto& [symbol, symbol_transitions] : state.transitions) {
+		alphabet.insert(symbol);
+		for (const auto& tr : symbol_transitions)
+			transitions[symbol].insert(tr.to);
+	}
+}
+
 void FAState::set_transition(int to, const Symbol& symbol) {
 	transitions[symbol].insert(to);
 }

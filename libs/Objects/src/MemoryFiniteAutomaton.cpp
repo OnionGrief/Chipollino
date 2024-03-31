@@ -62,20 +62,26 @@ MFATransition::MFATransition(int to, const unordered_set<int>& opens,
 }
 
 MFATransition::MFATransition(int to, const TransitionConfig& config) : MFATransition(to) {
-	for (auto [cell_num, lin_num] : *config.source_last) {
-		if (config.destination_in_cells->count(lin_num))
-			continue;
-		memory_actions[cell_num] = MFATransition::close;
-	}
-	for (auto cell_num : *config.to_reset) {
-		memory_actions[cell_num] = MFATransition::reset;
-	}
+	if (config.source_last)
+		for (auto [cell_num, lin_num] : *config.source_last) {
+			if (config.destination_in_lin_cells->count(lin_num))
+				continue;
+			memory_actions[cell_num] = MFATransition::close;
+		}
+	if (config.to_reset)
+		for (auto [cell_num, lin_num] : *config.to_reset) {
+			if (config.destination_in_lin_cells->count(lin_num))
+				continue;
+			memory_actions[cell_num] = MFATransition::reset;
+		}
 	// при конфликте действий над ячейкой, открытие имеет приоритет
-	for (auto [cell_num, lin_num] : *config.destination_first) {
-		if (config.source_in_cells->count(lin_num) && !config.iteration_over_cells->count(lin_num))
-			continue;
-		memory_actions[cell_num] = MFATransition::open;
-	}
+	if (config.destination_first)
+		for (auto [cell_num, lin_num] : *config.destination_first) {
+			if (config.source_in_lin_cells->count(lin_num) &&
+				!config.iteration_over_cells->count(lin_num))
+				continue;
+			memory_actions[cell_num] = MFATransition::open;
+		}
 }
 
 bool MFATransition::operator==(const MFATransition& other) const {
@@ -1005,6 +1011,8 @@ size_t MutationHasher::operator()(const std::tuple<int, int, int>& t) const {
 	return std::hash<int>{}(std::get<0>(t)) ^ std::hash<int>{}(std::get<2>(t) - std::get<1>(t));
 }
 
+TraversalState::TraversalState(const MFAState* state) : state(state) {}
+
 TraversalState::TraversalState(const string& str, const MFAState* state,
 							   const unordered_set<int>& opened_cells,
 							   const unordered_map<int, std::pair<int, int>>& memory,
@@ -1015,26 +1023,29 @@ TraversalState::TraversalState(const string& str, const MFAState* state,
 	  substrs_to_mutate(previous_state.substrs_to_mutate) {
 	if (memory_used)
 		last_memory_reading = str.size();
-
-	auto visited_state = visited_states.find(state->index);
-	// нашли цикл для мутации
-	if (visited_state != visited_states.end()) {
-		// если с момента последнего посещения не было чтения из памяти,
-		// добавляем подстроку в список мутаций
-		if (visited_state->second.second > last_memory_reading)
-			substrs_to_mutate.insert({state->index, visited_state->second.second, str.size()});
-		// удаляем все промежуточные посещенные состояния
-		for (int i = visited_state->second.first; i < visited_path.size(); i++)
-			visited_states.erase(visited_path[i]);
-	}
-	visited_path.push_back(state->index);
-	// сохраняем позиции на момент посещения
-	visited_states[state->index] = {visited_path.size() - 1, str.size()};
 }
 
 bool TraversalState::operator==(const TraversalState& other) const {
 	return str == other.str && state == other.state && opened_cells == other.opened_cells &&
 		   memory == other.memory;
+}
+
+void TraversalState::process_mutations() {
+	auto visited_state = visited_states.find(state->index);
+	// нашли цикл для мутации
+	if (visited_state != visited_states.end()) {
+		auto [index_in_visited_path, prev_size] = visited_state->second;
+		// если с момента последнего посещения не было чтения из памяти,
+		// добавляем подстроку в список мутаций
+		if (prev_size != str.size() && prev_size > last_memory_reading)
+			substrs_to_mutate.insert({state->index, prev_size, str.size()});
+		// удаляем все промежуточные посещенные состояния
+		for (int i = index_in_visited_path; i < visited_path.size(); i++)
+			visited_states.erase(visited_path[i]);
+	}
+	visited_path.push_back(state->index);
+	// сохраняем позиции в автомате и строке на момент посещения
+	visited_states[state->index] = {visited_path.size() - 1, str.size()};
 }
 
 size_t TraversalState::Hasher::operator()(const TraversalState& s) const {
@@ -1049,8 +1060,11 @@ size_t TraversalState::Hasher::operator()(const TraversalState& s) const {
 
 	for (const auto& entry : s.memory) {
 		hash_combine(seed, entry.first);
-		hash_combine(seed, entry.second.first);
-		hash_combine(seed, entry.second.second);
+		// если память непустая
+		if (entry.second.first != entry.second.second) {
+			hash_combine(seed, entry.second.first);
+			hash_combine(seed, entry.second.second);
+		}
 	}
 
 	return seed;
@@ -1059,22 +1073,20 @@ size_t TraversalState::Hasher::operator()(const TraversalState& s) const {
 pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::generate_test_set(
 	int max_len) {
 	unordered_set<string> words_in_language;
-	unordered_map<string, unordered_set<pair<int, int>, PairHasher>> words_to_mutate;
+	unordered_map<string, IntPairSet> words_to_mutate;
 
 	unordered_set<TraversalState, TraversalState::Hasher> current_states;
-	current_states.insert(TraversalState("",
-										 &states[initial_state],
-										 unordered_set<int>(),
-										 unordered_map<int, pair<int, int>>(),
-										 TraversalState()));
+	current_states.insert(TraversalState(&states[initial_state]));
 
 	unordered_set<TraversalState, TraversalState::Hasher> visited_states;
 	while (!current_states.empty()) {
 		unordered_set<TraversalState, TraversalState::Hasher> following_states;
-		for (const auto& cur_state : current_states) {
-			if (visited_states.count(cur_state))
+		for (const auto& state_to_process : current_states) {
+			if (visited_states.count(state_to_process))
 				continue;
 
+			auto cur_state = state_to_process;
+			cur_state.process_mutations();
 			const MFAState* state = cur_state.state;
 			if (state->is_terminal) {
 				words_in_language.insert(cur_state.str);
@@ -1142,8 +1154,6 @@ pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::genera
 												 cur_state);
 					}
 				}
-
-				visited_states.insert(cur_state);
 			}
 
 			// эпсилон-переходы
@@ -1157,6 +1167,8 @@ pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::genera
 											 cur_state);
 				}
 			}
+
+			visited_states.insert(cur_state);
 		}
 		current_states = following_states;
 	}
@@ -1168,4 +1180,13 @@ pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::genera
 				word, mutation_bounds.first, mutation_bounds.second, language->get_alphabet()));
 
 	return {words_in_language, mutated_words};
+}
+
+FiniteAutomaton MemoryFiniteAutomaton::to_fa() const {
+	vector<FAState> fa_states;
+	Alphabet alphabet;
+	fa_states.reserve(states.size());
+	for (const auto& state : states)
+		fa_states.emplace_back(state, alphabet);
+	return {initial_state, fa_states, alphabet};
 }
