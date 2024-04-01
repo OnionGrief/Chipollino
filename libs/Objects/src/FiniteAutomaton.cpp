@@ -1457,6 +1457,7 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1, const Fin
 	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size())
 		return false;
 	// из объединения полученных ранее получаем итоговую
+	// ! порядок нетерминалов соответствует порядку правил
 	vector<RLGrammar::Item*> nonterminals(fa1_bisimilar_nonterminals);
 	nonterminals.insert(
 		nonterminals.end(), fa2_bisimilar_nonterminals.begin(), fa2_bisimilar_nonterminals.end());
@@ -1547,10 +1548,12 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 		if (*fa1_terminals[i] != *fa2_terminals[i])
 			return false;
 	// биективная бисимуляция состояний
+	// ! порядок нетерминалов соответствует порядку правил
 	vector<RLGrammar::Item*> nonterminals(fa1_nonterminals);
 	nonterminals.insert(nonterminals.end(), fa2_nonterminals.begin(), fa2_nonterminals.end());
 	vector<vector<vector<RLGrammar::Item*>>> rules(fa1_rules);
 	rules.insert(rules.end(), fa2_rules.begin(), fa2_rules.end());
+
 	for (RLGrammar::Item* nont : nonterminals)
 		nont->class_number = 0; // сбрасываю номера классов
 	vector<RLGrammar::Item*> bisimilar_nonterminals;
@@ -1581,6 +1584,7 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 	vector<vector<vector<RLGrammar::Item*>>> fa2_reverse_rules = RLGrammar::get_reverse_grammar(
 		fa2_rules, fa2_nonterminals, fa2_terminals, fa2.initial_state);
 
+	// ! порядок нетерминалов соответствует порядку правил
 	vector<vector<vector<RLGrammar::Item*>>> reverse_rules(fa1_reverse_rules);
 	reverse_rules.insert(reverse_rules.end(), fa2_reverse_rules.begin(), fa2_reverse_rules.end());
 	for (RLGrammar::Item* nont : nonterminals)
@@ -1637,6 +1641,7 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 	if (transitions1_nonterminals.size() != transitions2_nonterminals.size())
 		return false;
 	// биективная бисимуляция переходов
+	// ! порядок нетерминалов соответствует порядку правил
 	vector<RLGrammar::Item*> transitions_nonterminals(transitions1_nonterminals);
 	transitions_nonterminals.insert(transitions_nonterminals.end(),
 									transitions2_nonterminals.begin(),
