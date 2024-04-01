@@ -14,6 +14,7 @@
 class Regex;
 class MetaInfo;
 class Language;
+class MFAState;
 class TransformationMonoid;
 class MemoryFiniteAutomaton;
 
@@ -33,6 +34,8 @@ class FAState : public State {
 	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal);
 	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal,
 			Transitions transitions);
+	// принимает алфавит, чтобы дополнить его символами переходов
+	explicit FAState(const MFAState& state, Alphabet& alphabet); // NOLINT(runtime/references)
 
 	std::string to_txt() const override;
 	void set_transition(int, const Symbol&);

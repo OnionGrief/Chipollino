@@ -9,11 +9,12 @@
 #include <vector>
 
 #include "AbstractMachine.h"
+#include "MemoryCommon.h"
 #include "iLogTemplate.h"
 
 class Language;
 class FAState;
-struct PairHasher;
+class FiniteAutomaton;
 
 struct MFATransition {
 	enum MemoryAction {
@@ -36,13 +37,13 @@ struct MFATransition {
 
 	struct TransitionConfig {
 		// пары {номер ячейки, линеаризованный номер оператора}
-		const std::unordered_set<std::pair<int, int>, PairHasher>* destination_first;
-		const std::unordered_set<int>* source_in_cells;
+		const CellSet* destination_first;
+		const std::unordered_set<int>* source_in_lin_cells;
 		const std::unordered_set<int>* iteration_over_cells;
 		// пары {номер ячейки, линеаризованный номер оператора}
-		const std::unordered_set<std::pair<int, int>, PairHasher>* source_last;
-		const std::unordered_set<int>* destination_in_cells;
-		const std::unordered_set<int>* to_reset;
+		const CellSet* source_last;
+		const std::unordered_set<int>* destination_in_lin_cells;
+		const CellSet* to_reset;
 	};
 	MFATransition(int, const TransitionConfig& config);
 
@@ -50,7 +51,7 @@ struct MFATransition {
 	bool operator==(const MFATransition& other) const;
 
 	struct Hasher {
-		std::size_t operator()(const MFATransition& t) const;
+		std::size_t operator()(const MFATransition&) const;
 	};
 };
 
@@ -79,6 +80,45 @@ struct ParingState {
 
 	ParingState(int pos, const MFAState* state, const std::unordered_set<int>& opened_cells,
 				const std::unordered_map<int, std::pair<int, int>>& memory);
+	bool operator==(const ParingState& other) const;
+
+	struct Hasher {
+		std::size_t operator()(const ParingState&) const;
+	};
+};
+
+struct MutationHasher {
+	std::size_t operator()(const std::tuple<int, int, int>& m) const;
+};
+
+// состояние идентифицирующее шаг обхода MFA
+struct TraversalState {
+	std::string str;
+	const MFAState* state;
+	std::unordered_set<int> opened_cells;
+	std::unordered_map<int, std::pair<int, int>> memory; // значение - начало и конец подстроки
+
+	// последовательность посещенных состояний
+	std::vector<int> visited_path;
+	// {индекс состояния, {индекс в visited_path, размер строки на момент последнего посещения}}
+	std::unordered_map<int, std::pair<int, int>> visited_states;
+	int last_memory_reading = 0; // индекс в строке, на котором последний раз происходило чтение
+	// номер(индекс) состояния и пара индексов, ограничивающих подстроку для мутации
+	std::unordered_set<std::tuple<int, int, int>, MutationHasher> substrs_to_mutate;
+
+	TraversalState() = default;
+	explicit TraversalState(const MFAState* state);
+	TraversalState(const std::string& str, const MFAState* state,
+				   const std::unordered_set<int>& opened_cells,
+				   const std::unordered_map<int, std::pair<int, int>>& memory,
+				   const TraversalState& previous_state, bool memory_used = false);
+	bool operator==(const TraversalState& other) const;
+
+	void process_mutations();
+
+	struct Hasher {
+		std::size_t operator()(const TraversalState&) const;
+	};
 };
 
 // переход дополняется информацией о состоянии памяти
@@ -92,6 +132,7 @@ struct ParseTransition : MFATransition {
 
   public:
 	ParseTransition(const MFATransition& transition, const ParingState& parsing_state);
+	ParseTransition(const MFATransition& transition, const TraversalState& traversal_state);
 	// "записывает" символы в открытые ячейки
 	void update_memory(const Symbol& symbol);
 };
@@ -104,6 +145,10 @@ struct ParseTransitions {
 	void add_transitions(const Symbol& symbol,
 						 const MFAState::SymbolTransitions& symbol_transitions,
 						 const ParingState& parsing_state);
+
+	void add_transitions(const Symbol& symbol,
+						 const MFAState::SymbolTransitions& symbol_transitions,
+						 const TraversalState& traversal_state);
 
 	std::unordered_map<Symbol, std::unordered_set<ParseTransition, MFATransition::Hasher>,
 					   Symbol::Hasher>::const_iterator
@@ -137,6 +182,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 
 	static MemoryFiniteAutomaton get_just_one_total_trap(const std::shared_ptr<Language>& language);
 
+	std::pair<int, bool> _parse_slow(const std::string&, Matcher*) const;
 	std::pair<int, bool> _parse(const std::string&, Matcher*) const;
 
 	// поиск множества состояний НКА,
@@ -175,4 +221,10 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<int, bool> parse(const std::string&) const override;
 	// проверяет, распознаёт ли автомат слово (использует FastMatcher)
 	std::pair<int, bool> parse_additional(const std::string&) const;
+	// возвращает множество уникальных слов длины <= max_len, распознаваемых автоматом
+	// и множество тестовых слов с мутациями
+	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_set(
+		int max_len);
+	// ссылки считаются символами алфавита, операции над памятью игнорируются
+	FiniteAutomaton to_fa() const;
 };

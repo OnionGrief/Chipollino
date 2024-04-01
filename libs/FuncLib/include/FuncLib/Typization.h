@@ -112,18 +112,13 @@ inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> type
 };
 
 // используется, чтобы получить всех возможных детей / родителей типа
-static std::vector<ObjectType> get_types(
+static std::set<ObjectType> get_types(
 	ObjectType type, const std::unordered_map<ObjectType, std::vector<ObjectType>>& other) {
-	std::vector<ObjectType> res = {type};
+	std::set<ObjectType> res = {type};
 	if (other.count(type))
 		for (ObjectType t : other.at(type))
-			res.push_back(t);
+			res.insert(t);
 	return res;
-}
-
-// проверка на прринадлежность элемента вектору
-static bool is_belong(const std::vector<ObjectType>& vec, ObjectType value) {
-	return std::find(vec.begin(), vec.end(), value) != vec.end();
 }
 
 // преообразование типа (мб можно покреативнее)

@@ -1,24 +1,31 @@
+#include <random>
+#include <string>
+#include <unordered_set>
+
+#include "AutomataParser/Parser.h"
+#include "InputGenerator/AutomatonGenerator.h"
+#include "InputGenerator/RegexGenerator.h"
+#include "Objects/BackRefRegex.h"
+#include "Objects/FiniteAutomaton.h"
+#include "Objects/MemoryFiniteAutomaton.h"
+#include "Objects/Regex.h"
 #include "gtest/gtest.h"
 
-#include "InputGenerator/RegexGenerator.h"
-#include "InputGenerator/AutomatonGenerator.h"
-#include "AutomataParser/Parser.h"
-#include "Objects/FiniteAutomaton.h"
-#include "Objects/Regex.h"
-
 using std::string;
+using std::unordered_set;
+using std::vector;
 
 const int RegexNumber = 30;
 
-TEST(TestParsing, RandomRegexParsing) {
+TEST(TestRegex, ToTxt) {
 	RegexGenerator rg(15, 10, 5, 3);
-    //rg.set_neg_chance(2); // для отрицания
+	// rg.set_neg_chance(50); // для отрицания
 	for (int i = 0; i < RegexNumber; i++) {
-		string str = rg.generate_regex();
-		Regex r1(str);
-		string r1_str = r1.to_txt();
-		Regex r2(r1_str);
-		ASSERT_EQ(true, Regex::equivalent(r1, r2)) << str;
+		string rgx_str = rg.generate_regex();
+		SCOPED_TRACE("Regex: " + rgx_str);
+		Regex r1(rgx_str);
+		Regex r2(r1.to_txt());
+		ASSERT_TRUE(Regex::equivalent(r1, r2));
 	}
 }
 
@@ -27,11 +34,12 @@ TEST(TestArden, RandomRegexEquivalence) {
 	for (int i = 0; i < 10; i++) {
 		// std::cout << "RandomRegexEquivalence: regex number " << i << std::endl;
 		string rgx_str = rg.generate_regex();
+		SCOPED_TRACE("Regex: " + rgx_str);
 		Regex r1(rgx_str), r2(rgx_str);
 		//		ASSERT_TRUE(Regex::equivalent(r1, r2.to_thompson().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(r1, r2.to_glushkov().to_regex())) << rgx_str;
-		ASSERT_TRUE(Regex::equivalent(r1, r2.to_ilieyu().to_regex())) << rgx_str;
-		ASSERT_TRUE(Regex::equivalent(r1, r2.to_antimirov().to_regex())) << rgx_str;
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_glushkov().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_ilieyu().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_antimirov().to_regex()));
 	}
 }
 
@@ -39,32 +47,61 @@ TEST(TestEqual, ThompsonGlushkov) {
 	RegexGenerator rg;
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = rg.generate_regex();
+		SCOPED_TRACE("Regex: " + rgx_str);
 		Regex r(rgx_str);
-		ASSERT_TRUE(FiniteAutomaton::equal(r.to_thompson().remove_eps(), r.to_glushkov()))
-			<< rgx_str;
+		ASSERT_TRUE(FiniteAutomaton::equal(r.to_thompson().remove_eps(), r.to_glushkov()));
 	}
 }
 
-TEST(TestNFA, Test_equivalent_nfa_negative) {
+TEST(TestNFA, NegativeNFAEquivalence) {
 	RegexGenerator rg(5, 2, 2, 2);
-	rg.set_neg_chance(2); // для отрицания
-	for (int i = 0; i < 30; i++) {
-		string str = rg.generate_regex();
-		Regex r1(str), r2(str);
-		ASSERT_TRUE(FiniteAutomaton::equivalent(r1.to_thompson(), r2.to_antimirov())) << str;
+	rg.set_neg_chance(50); // для отрицания
+	for (int i = 0; i < RegexNumber; i++) {
+		string rgx_str = rg.generate_regex();
+		SCOPED_TRACE("Regex: " + rgx_str);
+		Regex r1(rgx_str), r2(rgx_str);
+		ASSERT_TRUE(FiniteAutomaton::equivalent(r1.to_thompson(), r2.to_antimirov()));
+	}
+}
+
+TEST(TestMFA, Fuzzing) {
+	RegexGenerator rg(5, 3, 2, 3);
+	for (int i = 0; i < RegexNumber; i++) {
+		string rgx_str = rg.generate_brefregex(2, 70, 50);
+		SCOPED_TRACE("Regex: " + rgx_str);
+		MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
+		MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
+
+		int len = mfa2.size();
+		auto test_set1 = mfa1.generate_test_set(len);
+		auto test_set2 = mfa2.generate_test_set(len);
+		ASSERT_EQ(test_set1.first, test_set2.first);
+
+		test_set1.second.insert(test_set2.second.begin(), test_set2.second.end());
+		std::vector<std::string> random_elements;
+		std::sample(test_set1.second.begin(),
+					test_set1.second.end(),
+					std::back_inserter(random_elements),
+					1000,
+					std::mt19937{std::random_device{}()});
+		for (const auto& mutated_word : random_elements) {
+			auto res1 = mfa1.parse(mutated_word);
+			auto res2 = mfa2.parse(mutated_word);
+			ASSERT_EQ(res1.second, res2.second);
+		}
 	}
 }
 
 TEST(IsDeterministic, Test_is_deterministic) {
-    std::string grammar_path = "./TestData/grammar.txt";
-    std::string test_path = "./TestData/MetamorphicTest/test1.txt";
+	std::string grammar_path = "./TestData/grammar.txt";
+	std::string test_path = "./TestData/MetamorphicTest/test1.txt";
 	for (int i = 0; i < 50; i++) {
 		AutomatonGenerator a(grammar_path, FA_type::NFA);
 		a.write_to_file(test_path);
-        Parser parser;
+		Parser parser;
 		auto FA = parser.parse_NFA(grammar_path, test_path);
 		auto FAd = FA.determinize();
-		ASSERT_TRUE(FAd.is_deterministic()); 
+		ASSERT_TRUE(FAd.is_deterministic());
 	}
 }
 
@@ -84,7 +121,7 @@ TEST(IsDeterministic, Test_is_deterministic) {
 //             Parser parser;
 //             FiniteAutomaton FA;
 //             try {
-//                 FA = parser.parse_NFA(grammar_path, test_path); 
+//                 FA = parser.parse_NFA(grammar_path, test_path);
 //             } catch (const std::runtime_error& re) {
 //                 std::ifstream t(test_path);
 //                 std::stringstream buffer;
@@ -96,9 +133,8 @@ TEST(IsDeterministic, Test_is_deterministic) {
 //                 count++;
 //             }
 //         }
-//         std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) << "%" << std::endl;
-//         OX.push_back(term);
-//         OY.push_back(float(count) / float(ALL));
+//         std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) <<
+//         "%" << std::endl; OX.push_back(term); OY.push_back(float(count) / float(ALL));
 //     }
 //     std::cout << "OX = [";
 //     for (int i = 0; i < OX.size() - 1; i++) {
@@ -114,74 +150,79 @@ TEST(IsDeterministic, Test_is_deterministic) {
 // }
 
 TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
-    int ALL = 50;
-    for (int i = 0; i < ALL; i++) {
-        std::string grammar_path = "./TestData/grammar.txt";
-        std::string test_path = "./TestData/MetamorphicTest/test1.txt";
-        AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
-        a.write_to_file(test_path);
-        Parser parser;
-        FiniteAutomaton FA;
-        FA = parser.parse_NFA(grammar_path, test_path);
-        auto first = FA.merge_bisimilar();
-        auto second = parser.parse_NFA(grammar_path, test_path);
+	int ALL = 50;
+	for (int i = 0; i < ALL; i++) {
+		std::string grammar_path = "./TestData/grammar.txt";
+		std::string test_path = "./TestData/MetamorphicTest/test1.txt";
+		AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
+		a.write_to_file(test_path);
+		Parser parser;
+		FiniteAutomaton FA, second;
+		FA = parser.parse_NFA(grammar_path, test_path);
+		auto first = FA.merge_bisimilar();
+		second = parser.parse_NFA(grammar_path, test_path);
 
-        std::ifstream t(test_path);
-        std::stringstream buffer;
-        buffer << t.rdbuf();
-        std::string file = buffer.str();
+		std::ifstream t(test_path);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		std::string file = buffer.str();
 
-        auto equality = FiniteAutomaton::equivalent(first, second);
-        ASSERT_TRUE(equality) << file << "\n" << first.to_txt() << "\n" << second.to_txt() << "\n" << FA.to_regex().to_txt();
-    }
+		auto equality = FiniteAutomaton::equivalent(first, second);
+		ASSERT_TRUE(equality) << file << "\n"
+							  << first.to_txt() << "\n"
+							  << second.to_txt() << "\n"
+							  << FA.to_regex().to_txt();
+	}
 }
 
 /*
 TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
-    int ALL = 50;
-    for (int i = 0; i < ALL; i++) {
-        std::string grammar_path = "./TestData/grammar.txt";
-        std::string test_path = "./TestData/MetamorphicTest/test1.txt";
-        AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
-        a.write_to_file(test_path);
-        Parser parser;
-        FiniteAutomaton FA;
-        FA = parser.parse_NFA(grammar_path, test_path);
+	int ALL = 50;
+	for (int i = 0; i < ALL; i++) {
+		std::string grammar_path = "./TestData/grammar.txt";
+		std::string test_path = "./TestData/MetamorphicTest/test1.txt";
+		AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
+		a.write_to_file(test_path);
+		Parser parser;
+		FiniteAutomaton FA;
+		FA = parser.parse_NFA(grammar_path, test_path);
 		auto ard =  FA.to_regex().to_glushkov();
-        auto first = ard;
-        auto second = parser.parse_NFA(grammar_path, test_path);
+		auto first = ard;
+		auto second = parser.parse_NFA(grammar_path, test_path);
 
-        std::ifstream t(test_path);
-        std::stringstream buffer;
-        buffer << t.rdbuf();
-        std::string file = buffer.str();
+		std::ifstream t(test_path);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		std::string file = buffer.str();
 
-        auto equality = FiniteAutomaton::equivalent(first, second);
-        ASSERT_TRUE(equality) << file << "\n" << FA.minimize().to_txt() << "\n" << ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
-    }
+		auto equality = FiniteAutomaton::equivalent(first, second);
+		ASSERT_TRUE(equality) << file << "\n" << FA.minimize().to_txt() << "\n" <<
+ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
+	}
 }
 
 TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
-    int ALL = 50;
-    for (int i = 0; i < ALL; i++) {
-        std::string grammar_path = "./TestData/grammar.txt";
-        std::string test_path = "./TestData/MetamorphicTest/test1.txt";
-        AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
-        a.write_to_file(test_path);
-        Parser parser;
-        FiniteAutomaton FA;
-        FA = parser.parse_NFA(grammar_path, test_path);
+	int ALL = 50;
+	for (int i = 0; i < ALL; i++) {
+		std::string grammar_path = "./TestData/grammar.txt";
+		std::string test_path = "./TestData/MetamorphicTest/test1.txt";
+		AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
+		a.write_to_file(test_path);
+		Parser parser;
+		FiniteAutomaton FA;
+		FA = parser.parse_NFA(grammar_path, test_path);
 		auto ard =  FA.to_regex().to_glushkov();
-        auto first = ard.ambiguity();
-        auto second = ard.to_regex().to_glushkov().ambiguity();
+		auto first = ard.ambiguity();
+		auto second = ard.to_regex().to_glushkov().ambiguity();
 
-        std::ifstream t(test_path);
-        std::stringstream buffer;
-        buffer << t.rdbuf();
-        std::string file = buffer.str();
+		std::ifstream t(test_path);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		std::string file = buffer.str();
 
-        ASSERT_EQ(first,second) << file << "\n" << FA.minimize().to_txt() << "\n" << ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
-    }
+		ASSERT_EQ(first,second) << file << "\n" << FA.minimize().to_txt() << "\n" <<
+ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
+	}
 }*/
 
 // TEST(Statistics, Test_dfa) {
@@ -197,7 +238,8 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
 // 				count++;
 // 			}
 // 		}
-// 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100<< "%" << std::endl;
+// 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100<<
+// "%" << std::endl;
 // 	}
 // }
 
@@ -219,6 +261,7 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
 // 			}
 // 			std::cout << i << " " << std::endl;
 // 		}
-// 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100 << "%" << std::endl;
+// 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100
+// << "%" << std::endl;
 // 	}
 // }

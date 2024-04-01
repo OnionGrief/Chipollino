@@ -51,6 +51,15 @@ FAState::FAState(int index, set<int> label, string identifier, bool is_terminal,
 	: State::State(index, std::move(identifier), is_terminal), label(std::move(label)),
 	  transitions(std::move(transitions)) {}
 
+FAState::FAState(const MFAState& state, Alphabet& alphabet)
+	: State::State(state.index, state.identifier, state.is_terminal) {
+	for (const auto& [symbol, symbol_transitions] : state.transitions) {
+		alphabet.insert(symbol);
+		for (const auto& tr : symbol_transitions)
+			transitions[symbol].insert(tr.to);
+	}
+}
+
 void FAState::set_transition(int to, const Symbol& symbol) {
 	transitions[symbol].insert(to);
 }
@@ -1488,10 +1497,10 @@ bool FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1, const Fin
 	// log
 	stringstream ss;
 	for (auto& elem : class_to_nonterminals_names) {
-		ss << "\\{";
+		ss << "{";
 		for (int i = 0; i < elem.second.size() - 1; i++)
 			ss << elem.second[i] << ",";
-		ss << elem.second[elem.second.size() - 1] << "\\}";
+		ss << elem.second[elem.second.size() - 1] << "}";
 	}
 
 	// проверяю равенство классов начальных состояний
@@ -1594,14 +1603,12 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 		if (nonterminals[i]->class_number != -1)
 			continue;
 		nonterminals[i]->class_number = new_class;
-		vector<int> equiv_nont; // нетерминалы с таким же классом, что и i-й
+		// поиск нетерминалов с классом, как у i-го
 		for (int j = i + 1; j < bisimilar_classes.size(); j++) {
 			if (bisimilar_classes[j] == bisimilar_classes[i])
-				equiv_nont.push_back(j);
+				if (reverse_bisimilar_classes[j] == reverse_bisimilar_classes[i])
+					nonterminals[j]->class_number = new_class;
 		}
-		for (int ind : equiv_nont)
-			if (reverse_bisimilar_classes[ind] == reverse_bisimilar_classes[i])
-				nonterminals[ind]->class_number = new_class;
 		new_class++;
 	}
 
@@ -1683,7 +1690,7 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1, const FiniteAutomat
 		if ((!fa1.language->is_min_dfa_cached() || !fa2.language->is_min_dfa_cached()) && log) {
 			log->set_parameter("cachedMINDFA", "Минимальные автоматы сохранены в кэше");
 		}
-		result = equal(fa1.minimize(), fa2.minimize());
+		result = bisimilar(fa1.minimize(), fa2.minimize());
 	}
 	if (log) {
 		log->set_parameter("automaton1", fa1);
@@ -2304,10 +2311,10 @@ pair<int, bool> FiniteAutomaton::parse(const string& s) const {
 		if (state->is_terminal && parsed_len == s.size()) {
 			break;
 		}
+		counter++;
 		state = stack_state.top().state;
 		parsed_len = stack_state.top().pos;
 		stack_state.pop();
-		counter++;
 		Symbol symb(s[parsed_len]);
 		set<int> trans;
 		if (state->transitions.count(symb))
