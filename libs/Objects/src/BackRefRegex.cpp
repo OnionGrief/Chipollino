@@ -666,6 +666,14 @@ void BackRefRegex::get_cells_under_iteration(unordered_set<int>& iteration_over_
 		cast(term_l)->get_cells_under_iteration(iteration_over_cells, iteration_over_empty_cells);
 		cast(term_r)->get_cells_under_iteration(iteration_over_cells, iteration_over_empty_cells);
 		return;
+	case Type::conc:
+		if (cast(term_l)->contains_eps()) {
+			cast(term_l)->get_cells_under_iteration(iteration_over_cells,
+													iteration_over_empty_cells);
+			cast(term_r)->get_cells_under_iteration(iteration_over_cells,
+													iteration_over_empty_cells);
+		}
+		return;
 	case Type::star:
 		cast(term_l)->get_cells_under_iteration(iteration_over_cells, iteration_over_empty_cells);
 		return;

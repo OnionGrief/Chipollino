@@ -1,4 +1,5 @@
 #include <sstream>
+#include <utility>
 
 #include "Objects/Grammar.h"
 #include "Objects/Language.h"
@@ -12,18 +13,19 @@ using std::stringstream;
 using std::to_string;
 using std::vector;
 
-RLGrammar::Item::Item() : type(terminal), state_index(-1), class_number(-1) {}
+RLGrammar::Item::Item() : type(terminal), sequential_number(-1), class_number(-1) {}
 
-RLGrammar::Item::Item(Type type, string name, int state_index, int class_number)
-	: type(type), name(name), state_index(state_index), class_number(class_number) {}
+RLGrammar::Item::Item(Type type, string name, int sequential_number, int class_number)
+	: type(type), name(std::move(name)), sequential_number(sequential_number),
+	  class_number(class_number) {}
 
-RLGrammar::Item::Item(Type type, string name, int state_index)
-	: type(type), name(name), state_index(state_index) {}
+RLGrammar::Item::Item(Type type, string name, int sequential_number)
+	: type(type), name(std::move(name)), sequential_number(sequential_number) {}
 
-RLGrammar::Item::Item(Type type, string name) : type(type), name(name) {}
+RLGrammar::Item::Item(Type type, string name) : type(type), name(std::move(name)) {}
 
 bool RLGrammar::Item::operator!=(const Item& other) const {
-	return type != other.type || state_index != other.state_index ||
+	return type != other.type || sequential_number != other.sequential_number ||
 		   class_number != other.class_number || name != other.name;
 }
 
@@ -31,8 +33,13 @@ std::ostream& operator<<(std::ostream& os, const RLGrammar::Item& item) {
 	if (item.type == RLGrammar::Item::terminal) {
 		return os << item.name;
 	} else {
-		return os << "S" << item.state_index;
+		return os << "S" << item.sequential_number;
 	}
+}
+
+void RLGrammar::reset_nonterminals_numbering(vector<Item*>& nonterminals) {
+	for (int i = 0; i < nonterminals.size(); i++)
+		nonterminals[i]->sequential_number = i;
 }
 
 void RLGrammar::update_classes(set<int>& checker,
@@ -40,7 +47,7 @@ void RLGrammar::update_classes(set<int>& checker,
 	int classNum = 0;
 	checker.clear();
 	for (const auto& elem : classes_check_map) {
-		checker.insert(elem.second[0]->state_index);
+		checker.insert(elem.second[0]->sequential_number);
 		for (Item* nont : elem.second) {
 			nont->class_number = classNum;
 		}
@@ -73,6 +80,7 @@ void RLGrammar::check_classes(const vector<vector<vector<Item*>>>& rules,
 vector<vector<vector<RLGrammar::Item*>>> RLGrammar::get_bisimilar_grammar(
 	vector<vector<vector<Item*>>>& rules, vector<Item*>& nonterminals,
 	vector<Item*>& bisimilar_nonterminals, map<int, vector<Item*>>& class_to_nonterminals) {
+	reset_nonterminals_numbering(nonterminals);
 	class_to_nonterminals.clear();
 	map<set<string>, vector<Item*>> classes_check_map;
 	set<int> checker;
@@ -90,9 +98,9 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::get_bisimilar_grammar(
 			class_to_nonterminals[elem.second[0]->class_number].push_back(t);
 	vector<vector<vector<Item*>>> bisimilar_rules;
 	for (const auto& elem : classes_check_map) {
-		Item* curNonterm = elem.second[0];
+		Item* cur_nonterm = elem.second[0];
 		vector<vector<Item*>> temp_rules;
-		for (const vector<Item*>& rule : rules[curNonterm->state_index]) {
+		for (const vector<Item*>& rule : rules[cur_nonterm->sequential_number]) {
 			vector<Item*> tempRule;
 			for (Item* item : rule) {
 				if (item->type == Item::nonterminal) {
@@ -103,9 +111,10 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::get_bisimilar_grammar(
 			}
 			temp_rules.push_back(tempRule);
 		}
-		bisimilar_nonterminals.push_back(curNonterm);
+		bisimilar_nonterminals.push_back(cur_nonterm);
 		bisimilar_rules.push_back(temp_rules);
 	}
+
 	return bisimilar_rules;
 }
 
@@ -162,7 +171,7 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::tansitions_to_grammar(
 			vector<Item>& item_vec = fa_items[i].second[elem.first];
 			item_vec.resize(elem.second.size());
 			for (int j = 0; j < elem.second.size(); j++) {
-				item_vec[j] = (Item(Item::nonterminal, "Tr" + to_string(ind), ind, 0));
+				item_vec[j] = Item(Item::nonterminal, "Tr" + to_string(ind), ind, 0);
 				nonterminals.push_back(&item_vec[j]);
 				ind++;
 			}
@@ -177,8 +186,9 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::tansitions_to_grammar(
 				// смотрим все переходы из состояния transition_to
 				for (const auto& transition_elem : states[transition_to].transitions) {
 					for (int k = 0; k < transition_elem.second.size(); k++) {
-						int nonterm_ind =
-							fa_items[transition_to].second[transition_elem.first][k].state_index;
+						int nonterm_ind = fa_items[transition_to]
+											  .second[transition_elem.first][k]
+											  .sequential_number;
 						rules[ind].push_back({terminals[transition_to], nonterminals[nonterm_ind]});
 					}
 				}
@@ -196,11 +206,12 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::tansitions_to_grammar(
 vector<vector<vector<RLGrammar::Item*>>> RLGrammar::get_reverse_grammar(
 	vector<vector<vector<Item*>>>& rules, vector<Item*>& nonterminals, vector<Item*>& terminals,
 	int initial_state) {
+	reset_nonterminals_numbering(nonterminals);
 	vector<vector<vector<Item*>>> reverse_rules(rules.size());
 	for (int i = 0; i < rules.size(); i++) {
 		for (int j = 0; j < rules[i].size(); j++) {
 			if (rules[i][j].size() == 2)
-				reverse_rules[rules[i][j][1]->state_index].push_back(
+				reverse_rules[rules[i][j][1]->sequential_number].push_back(
 					{rules[i][j][0], nonterminals[i]});
 		}
 	}
