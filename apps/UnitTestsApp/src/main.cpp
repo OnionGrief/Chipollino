@@ -19,9 +19,4 @@ int main(int argc, char** argv) {
 	// Тестирование
 	Language::disable_retrieving_from_cache();
 	return UnitTests::RunTests(argc, argv);
-
-	//	std::string filename = "123.txt";
-	//	AutomatonGenerator(FA_type::MFA).write_to_file(filename);
-	//	Parser parser;
-	//	cout << parser.parse_MFA(filename).to_txt();
 }

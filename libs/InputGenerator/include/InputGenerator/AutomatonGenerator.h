@@ -81,75 +81,80 @@ private:
 
     std::map<std::string, std::function<bool()>> parse_func = {
         // transition --> stmt (MFA? memory_lists : EPS) (PDA? stack_actions : EPS);
-        {"atribute", [=](){
-            auto transition = rewriting_rules["atribute"];
-            auto res = parse_alternative(*transition);
-            if (res) {
+		{"atribute",
+		 [=, this]() {
+			 auto transition = rewriting_rules["atribute"];
+			 auto res = parse_alternative(*transition);
+			 if (res) {
                 output << "\n";
             }
             return res;
         }},
-        {"states", [=](){
-            for (int i = 0; i < stateDescriptions.size(); i++) {
-                if (stateDescriptions[i].initial || stateDescriptions[i].terminal) {
-                    STRING.push(std::to_string(stateDescriptions[i].index));
-                    if (stateDescriptions[i].terminal)
-                        TERMINAL.push("terminal");
-                    if (stateDescriptions[i].initial)
-                        TERMINAL.push("initial_state");
-                    TERMINAL.push(";");
-                }
-            }
-            TERMINAL.push("...");
-            auto transition = rewriting_rules["states"];
-            auto res = parse_alternative(*transition);
-            if (res) {
+		{"states",
+		 [=, this]() {
+			 for (auto& stateDescription : stateDescriptions) {
+				 if (stateDescription.initial || stateDescription.terminal) {
+					 STRING.push(std::to_string(stateDescription.index));
+					 if (stateDescription.terminal)
+						 TERMINAL.emplace("terminal");
+					 if (stateDescription.initial)
+						 TERMINAL.emplace("initial_state");
+					 TERMINAL.emplace(";");
+				 }
+			 }
+			 TERMINAL.emplace("...");
+			 auto transition = rewriting_rules["states"];
+			 auto res = parse_alternative(*transition);
+			 if (res) {
                 output << "\n";
             }
             return res;
         }},
-        {"state_description", [=](){
-            auto transition = rewriting_rules["state_description"];
-            auto res = parse_alternative(*transition);
-            if (res) {
+		{"state_description",
+		 [=, this]() {
+			 auto transition = rewriting_rules["state_description"];
+			 auto res = parse_alternative(*transition);
+			 if (res) {
                 output << "\n";
             }
             return res;
         }},
-        {"transition", [=](){
-            while(cur_state < graph.size() && cur_transition >= graph[cur_state].size()) {
-                cur_state++;
-                cur_transition = 0;
+		{"transition",
+		 [=, this]() {
+			 while (cur_state < graph.size() && cur_transition >= graph[cur_state].size()) {
+				 cur_state++;
+				 cur_transition = 0;
             }
             if (cur_state < graph.size()) {
                 // stmt
                 STRING.push(std::to_string(cur_state));
                 STRING.push(std::to_string(graph[cur_state][cur_transition].end));
                 if (graph[cur_state][cur_transition].symbol.is_epsilon()) {
-                    TERMINAL.push("eps");
-                } else {
-                    if (graph[cur_state][cur_transition].symbol.is_ref()) {
-                        TERMINAL.push("&");
-                        NUMBER.push(std::to_string(graph[cur_state][cur_transition].symbol.get_ref()));
-                    } else {
-                        LETTER.push(graph[cur_state][cur_transition].symbol); 
-                    }
+					TERMINAL.emplace("eps");
+				} else {
+					if (graph[cur_state][cur_transition].symbol.is_ref()) {
+						TERMINAL.emplace("&");
+						NUMBER.push(
+							std::to_string(graph[cur_state][cur_transition].symbol.get_ref()));
+					} else {
+						LETTER.push(graph[cur_state][cur_transition].symbol);
+					}
                 }
 
                 // memory_lists
                 for (auto cell : graph[cur_state][cur_transition].open) {
                     NUMBER.push(std::to_string(cell));
-                    TERMINAL.push("o");
-                }
-                for (auto cell : graph[cur_state][cur_transition].close) {
-                    NUMBER.push(std::to_string(cell));
-                    TERMINAL.push("c");
-                }
+					TERMINAL.emplace("o");
+				}
+				for (auto cell : graph[cur_state][cur_transition].close) {
+					NUMBER.push(std::to_string(cell));
+					TERMINAL.emplace("c");
+				}
 
-                // stack_actions
-                STACK_SYMBOLS.push(graph[cur_state][cur_transition].pop);
-                for (auto sym : graph[cur_state][cur_transition].push)
-                    STACK_SYMBOLS.push(sym);
+				// stack_actions
+				STACK_SYMBOLS.push(graph[cur_state][cur_transition].pop);
+				for (const auto& sym : graph[cur_state][cur_transition].push)
+					STACK_SYMBOLS.push(sym);
 
 				TERMINAL.emplace(";");
 
@@ -168,17 +173,15 @@ private:
 
     void parse_attribute(lexy_ascii_child ref);
 
-    bool parse_transition(std::string name);
+	bool parse_transition(const std::string& name);
 
-    bool parse_nonterminal(lexy_ascii_child ref);
-    
-    bool parse_reserved(std::string res_case);
+	bool parse_nonterminal(lexy_ascii_child ref);
 
-    bool parse_terminal(lexy_ascii_child ref);
+	bool parse_reserved(const std::string& res_case);
+
+	bool parse_terminal(lexy_ascii_child ref);
 
     bool parse_alternative(lexy_ascii_child ref);
-
-    void grammar_parser(std::string grammar_file, lexy_ascii_tree& tree); // NOLINT(runtime/references)
 
 public:
     std::stringstream output;
@@ -186,7 +189,7 @@ public:
   AutomatonGenerator(FA_type type = FA_type::NFA, int n = 10,
 					 const std::string& grammar_file = GrammarPath);
 
-  void write_to_file(std::string filename);
+	void write_to_file(const std::string& filename);
 
   void set_terminal_probability(int elem);
 
