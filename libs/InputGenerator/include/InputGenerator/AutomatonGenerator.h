@@ -12,6 +12,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <queue>
+
 #include "AutomataParser/Lexer.h"
 #include "AutomataParser/Parser.h"
 
@@ -43,12 +44,13 @@ private:
 
     int initial = 0, states_number = 10;
     int max_edges_number, edges_number;
-    int colors = 4, colors_tries = 10;
-    int terminal_probability = 20;
-    int epsilon_probability = 10;
-    int ref_probability = 50;
+	// количество ячеек, количество попыток создать открытие ячейки
+	int colors = 4, colors_tries = 10;
+	int terminal_probability = 20;
+	int epsilon_probability = 10;
+	int ref_probability = 50;
 
-    int seed_it, memory_cells_number;
+	int seed_it, memory_cells_number;
     std::vector<char> alphabet;
 
     void change_seed();
@@ -149,9 +151,9 @@ private:
                 for (auto sym : graph[cur_state][cur_transition].push)
                     STACK_SYMBOLS.push(sym);
 
-                TERMINAL.push(";");
+				TERMINAL.emplace(";");
 
-                cur_transition++;
+				cur_transition++;
             }
 
             auto transition = rewriting_rules["transition"];
@@ -163,8 +165,6 @@ private:
     };
 
     void generate_alphabet(int max_alphabet_size);
-
-    void read_symbols(int num);
 
     void parse_attribute(lexy_ascii_child ref);
 
@@ -183,11 +183,12 @@ private:
 public:
     std::stringstream output;
 
-    explicit AutomatonGenerator(std::string grammar_file, FA_type type = FA_type::NFA, int n = 10);
- 
-    void write_to_file(std::string filename);
+  AutomatonGenerator(FA_type type = FA_type::NFA, int n = 10,
+					 const std::string& grammar_file = GrammarPath);
 
-    void set_terminal_probability(int elem);
+  void write_to_file(std::string filename);
 
-    void set_states_number(int n);
+  void set_terminal_probability(int elem);
+
+  void set_states_number(int n);
 };

@@ -78,7 +78,7 @@ TEST(TestMFA, Fuzzing) {
 		ASSERT_EQ(test_set1.first, test_set2.first);
 
 		test_set1.second.insert(test_set2.second.begin(), test_set2.second.end());
-		std::vector<std::string> random_elements;
+		std::vector<string> random_elements;
 		std::sample(test_set1.second.begin(),
 					test_set1.second.end(),
 					std::back_inserter(random_elements),
@@ -93,21 +93,43 @@ TEST(TestMFA, Fuzzing) {
 }
 
 TEST(IsDeterministic, Test_is_deterministic) {
-	std::string grammar_path = "./TestData/grammar.txt";
-	std::string test_path = "./TestData/MetamorphicTest/test1.txt";
-	for (int i = 0; i < 50; i++) {
-		AutomatonGenerator a(grammar_path, FA_type::NFA);
+	string test_path = "./test_data/MetamorphicTest/test1.txt";
+	for (int i = 0; i < RegexNumber; i++) {
+		AutomatonGenerator a(FA_type::NFA);
 		a.write_to_file(test_path);
 		Parser parser;
-		auto FA = parser.parse_NFA(grammar_path, test_path);
+		auto FA = parser.parse_NFA(test_path);
 		auto FAd = FA.determinize();
 		ASSERT_TRUE(FAd.is_deterministic());
 	}
 }
 
+TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
+	string test_path = "./test_data/MetamorphicTest/test1.txt";
+	for (int i = 0; i < RegexNumber; i++) {
+		AutomatonGenerator a(FA_type::NFA, 5);
+		a.write_to_file(test_path);
+		Parser parser;
+		FiniteAutomaton FA, second;
+		FA = parser.parse_NFA(test_path);
+		auto first = FA.merge_bisimilar();
+		second = parser.parse_NFA(test_path);
+
+		std::ifstream t(test_path);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		string file = buffer.str();
+
+		auto equality = FiniteAutomaton::equivalent(first, second);
+		ASSERT_TRUE(equality) << file << "\n"
+							  << first.to_txt() << "\n"
+							  << second.to_txt() << "\n"
+							  << FA.to_regex().to_txt();
+	}
+}
+
 // TEST(Statistics, Test_statistics) {
-//     std::string grammar_path = "./TestData/grammar.txt";
-//     std::string test_path = "./TestData/MetamorphicTest/test1.txt";
+//     string test_path = "./TestData/MetamorphicTest/test1.txt";
 //     std::vector<int> OX;
 //     std::vector<float> OY;
 //     AutomatonGenerator::set_initial_state_not_terminal(true);
@@ -116,17 +138,17 @@ TEST(IsDeterministic, Test_is_deterministic) {
 //         int count = 0;
 //         int ALL = 10000;
 //         for (int i = 0; i < ALL; i++) {
-//             AutomatonGenerator a(grammar_path, FA_type::NFA);
+//             AutomatonGenerator a(FA_type::NFA);
 //             a.write_to_file(test_path);
 //             Parser parser;
 //             FiniteAutomaton FA;
 //             try {
-//                 FA = parser.parse_NFA(grammar_path, test_path);
+//                 FA = parser.parse_NFA(test_path);
 //             } catch (const std::runtime_error& re) {
 //                 std::ifstream t(test_path);
-//                 std::stringstream buffer;
+//                 stringstream buffer;
 //                 buffer << t.rdbuf();
-//                 std::string file = buffer.str();
+//                 string file = buffer.str();
 //                 throw(std::runtime_error(file));
 //             }
 //             if (FA.is_finite()) {
@@ -149,51 +171,24 @@ TEST(IsDeterministic, Test_is_deterministic) {
 //     std::cout << OY[OY.size() - 1] << "]\n";
 // }
 
-TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
-	int ALL = 50;
-	for (int i = 0; i < ALL; i++) {
-		std::string grammar_path = "./TestData/grammar.txt";
-		std::string test_path = "./TestData/MetamorphicTest/test1.txt";
-		AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
-		a.write_to_file(test_path);
-		Parser parser;
-		FiniteAutomaton FA, second;
-		FA = parser.parse_NFA(grammar_path, test_path);
-		auto first = FA.merge_bisimilar();
-		second = parser.parse_NFA(grammar_path, test_path);
-
-		std::ifstream t(test_path);
-		std::stringstream buffer;
-		buffer << t.rdbuf();
-		std::string file = buffer.str();
-
-		auto equality = FiniteAutomaton::equivalent(first, second);
-		ASSERT_TRUE(equality) << file << "\n"
-							  << first.to_txt() << "\n"
-							  << second.to_txt() << "\n"
-							  << FA.to_regex().to_txt();
-	}
-}
-
 /*
 TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
 	int ALL = 50;
 	for (int i = 0; i < ALL; i++) {
-		std::string grammar_path = "./TestData/grammar.txt";
-		std::string test_path = "./TestData/MetamorphicTest/test1.txt";
-		AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
+		string test_path = "./TestData/MetamorphicTest/test1.txt";
+		AutomatonGenerator a(FA_type::NFA, 5);
 		a.write_to_file(test_path);
 		Parser parser;
 		FiniteAutomaton FA;
-		FA = parser.parse_NFA(grammar_path, test_path);
+		FA = parser.parse_NFA(test_path);
 		auto ard =  FA.to_regex().to_glushkov();
 		auto first = ard;
-		auto second = parser.parse_NFA(grammar_path, test_path);
+		auto second = parser.parse_NFA(test_path);
 
 		std::ifstream t(test_path);
-		std::stringstream buffer;
+		stringstream buffer;
 		buffer << t.rdbuf();
-		std::string file = buffer.str();
+		string file = buffer.str();
 
 		auto equality = FiniteAutomaton::equivalent(first, second);
 		ASSERT_TRUE(equality) << file << "\n" << FA.minimize().to_txt() << "\n" <<
@@ -204,21 +199,20 @@ ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
 TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
 	int ALL = 50;
 	for (int i = 0; i < ALL; i++) {
-		std::string grammar_path = "./TestData/grammar.txt";
-		std::string test_path = "./TestData/MetamorphicTest/test1.txt";
-		AutomatonGenerator a(grammar_path, FA_type::NFA, 5);
+		string test_path = "./TestData/MetamorphicTest/test1.txt";
+		AutomatonGenerator a(FA_type::NFA, 5);
 		a.write_to_file(test_path);
 		Parser parser;
 		FiniteAutomaton FA;
-		FA = parser.parse_NFA(grammar_path, test_path);
+		FA = parser.parse_NFA(test_path);
 		auto ard =  FA.to_regex().to_glushkov();
 		auto first = ard.ambiguity();
 		auto second = ard.to_regex().to_glushkov().ambiguity();
 
 		std::ifstream t(test_path);
-		std::stringstream buffer;
+		stringstream buffer;
 		buffer << t.rdbuf();
-		std::string file = buffer.str();
+		string file = buffer.str();
 
 		ASSERT_EQ(first,second) << file << "\n" << FA.minimize().to_txt() << "\n" <<
 ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();

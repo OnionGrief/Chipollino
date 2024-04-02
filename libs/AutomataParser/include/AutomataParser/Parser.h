@@ -19,6 +19,8 @@
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MemoryFiniteAutomaton.h"
 
+const std::string GrammarPath = "./config/automata_parser/grammar.txt";
+
 class Parser {
   private:
     struct FAtransition {
@@ -223,9 +225,12 @@ class Parser {
 	std::variant<FiniteAutomaton, MemoryFiniteAutomaton> parse(
         lexy_ascii_tree& grammar, std::string filename); // NOLINT(runtime/references)
 
-    FiniteAutomaton parse_NFA(std::string grammar_file, std::string automaton_file);
+	FiniteAutomaton parse_NFA(std::string automaton_file,
+							  const std::string& grammar_file = GrammarPath);
 
-    FiniteAutomaton parse_DFA(std::string grammar_file, std::string automaton_file);
+	FiniteAutomaton parse_DFA(std::string automaton_file,
+							  const std::string& grammar_file = GrammarPath);
 
-    MemoryFiniteAutomaton parse_MFA(std::string grammar_file, std::string automaton_file);
+	MemoryFiniteAutomaton parse_MFA(std::string automaton_file,
+									const std::string& grammar_file = GrammarPath);
 };

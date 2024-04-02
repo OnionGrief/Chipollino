@@ -845,21 +845,21 @@ TEST(TestAmbiguity, AmbiguityValues) {
 }
 
 TEST(TestAutomatonParser, MFA_correctness_failure) {
-    string cycle_with_cell_reopen = "TestData/MFAparser/test1.txt";
+	string cycle_with_cell_reopen = "test_data/MFAparser/test1.txt";
 
-    try {
-        Parser parser;
-        parser.parse_MFA("./TestData/grammar.txt", cycle_with_cell_reopen);
-    } catch (const std::runtime_error& re) {
+	try {
+		Parser parser;
+		parser.parse_MFA(cycle_with_cell_reopen);
+	} catch (const std::runtime_error& re) {
 		ASSERT_EQ(string(re.what()), string("Parser: incorrect memory usage in MFA"));
     }
 }
 
 TEST(TestAutomatonParser, MFA_correctness) {
-    string cycle_with_cell_reopen = "TestData/MFAparser/test2.txt";
+	string cycle_with_cell_reopen = "test_data/MFAparser/test2.txt";
 
-    Parser parser;
-    ASSERT_NO_THROW(parser.parse_MFA("./TestData/grammar.txt", cycle_with_cell_reopen));
+	Parser parser;
+	ASSERT_NO_THROW(parser.parse_MFA(cycle_with_cell_reopen));
 }
 
 // TODO: FAILED:

@@ -316,21 +316,18 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	}
 	if (function.name == "getNFA") {
 		string filename = get<ObjectFileName>(arguments[0]).value;
-		string grammar = "TestData/grammar.txt";
 		Parser parser;
-		return ObjectNFA(parser.parse_NFA(grammar, filename));
+		return ObjectNFA(parser.parse_NFA(filename));
 	}
 	if (function.name == "getMFA") {
 		string filename = get<ObjectFileName>(arguments[0]).value;
-		string grammar = "TestData/grammar.txt";
 		Parser parser;
-		return ObjectMFA(parser.parse_MFA(grammar, filename));
+		return ObjectMFA(parser.parse_MFA(filename));
 	}
 	if (function.name == "getDFA") {
 		string filename = get<ObjectFileName>(arguments[0]).value;
-		string grammar = "TestData/grammar.txt";
 		Parser parser;
-		return ObjectDFA(parser.parse_DFA(grammar, filename));
+		return ObjectDFA(parser.parse_DFA(filename));
 	}
 	// # place for another diff types funcs
 
@@ -799,8 +796,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 	for (int i = 0; i < verification.size; i++) {
 		// подстановка равных Regex на место '*'
 
-		AutomatonGenerator("./TestData/grammar.txt", FA_type::NFA)
-			.write_to_file("TestData/test.txt");
+		AutomatonGenerator(FA_type::NFA).write_to_file("TestData/test.txt");
 		current_random_regex = Regex(RG.generate_regex()); // хз как еще передавать
 		auto predicate = eval_expression(expr);
 
