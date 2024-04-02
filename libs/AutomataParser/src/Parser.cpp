@@ -95,6 +95,7 @@ bool Parser::parse_reserved(std::string res_case) {
     }
     if (res_case == "NUMBER") {
         if (file[cur_pos] == '0') {
+            NUMBER = std::stoi(file.substr(beg_pos, 1));
             read_symbols(1);
             return true;
         }

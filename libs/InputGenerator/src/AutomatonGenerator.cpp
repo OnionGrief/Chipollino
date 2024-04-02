@@ -53,6 +53,9 @@ void AutomatonGenerator::add_terminality() {
 }
 
 bool AutomatonGenerator::coloring_MFA_transition(int beg, FAtransition& trans, int color) {
+    // We are coloring white vertex with red and making an edge with memory reopening
+    if (trans.end == beg && MFA_coloring[color][trans.end] == 0)
+        return false;
     // red
     if (MFA_coloring[color][trans.end] == 1)
         return false;
