@@ -320,9 +320,9 @@ bool AutomatonGenerator::parse_transition(std::string name) {
     return parse_func[name]();
 }
 
-AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type, int n) {
-    states_number = n;
-    generate_alphabet(52);
+AutomatonGenerator::AutomatonGenerator(FA_type type, int n, const std::string& grammar_file)
+	: states_number(n) {
+	generate_alphabet(52);
 
     lexy_ascii_tree grammar;
     

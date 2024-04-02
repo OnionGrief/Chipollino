@@ -50,9 +50,9 @@ string Parser::first_child(lexy::_pt_node<lexy::_bra, void> it) {
 
 void Parser::read_symbols(int num) {
     cur_pos += num;
-    while (cur_pos < file.size() && file[cur_pos] == ' ' || file[cur_pos] == '\n') {
-        cur_pos++;
-    }
+	while (cur_pos < file.size() && (file[cur_pos] == ' ' || file[cur_pos] == '\n')) {
+		cur_pos++;
+	}
 }
 
 bool Parser::parse_reserved(std::string res_case) {
@@ -95,8 +95,9 @@ bool Parser::parse_reserved(std::string res_case) {
     }
     if (res_case == "NUMBER") {
         if (file[cur_pos] == '0') {
-            read_symbols(1);
-            return true;
+			NUMBER = std::stoi(file.substr(beg_pos, 1));
+			read_symbols(1);
+			return true;
         }
         while (cur_pos < file.size() && (file[cur_pos] >= '0' && file[cur_pos] <= '9')) {
             cur_pos++;
@@ -243,11 +244,11 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 
         Alphabet alphabet;
 
-        for (auto transition : FAtransitions) {
-            MFAstates[name_to_ind[transition.beg]]
-            .set_transition(MFATransition(name_to_ind[transition.end],
-            transition.open, transition.close), transition.symbol);
-            if (!transition.symbol.is_epsilon() && !transition.symbol.is_ref())
+		for (const auto& transition : FAtransitions) {
+			MFAstates[name_to_ind[transition.beg]].set_transition(
+				MFATransition(name_to_ind[transition.end], transition.open, transition.close),
+				transition.symbol);
+			if (!transition.symbol.is_epsilon() && !transition.symbol.is_ref())
                 alphabet.insert(transition.symbol);
         }
 
@@ -291,43 +292,44 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
     }
 }
 
-FiniteAutomaton Parser::parse_NFA(std::string grammar_file, std::string automaton_file) {
-    lexy_ascii_tree grammar;
-    
-    auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
-    auto input = file.buffer();
-    Lexer::parse_buffer(grammar, input);
-    auto res = parse(grammar, automaton_file);
+FiniteAutomaton Parser::parse_NFA(std::string automaton_file, const std::string& grammar_file) {
+	lexy_ascii_tree grammar;
 
-    if (attributes.count("DFA") || attributes.count("NFA"))
-        return std::get<FiniteAutomaton>(res);
-    throw(std::runtime_error("Parse: parsed automaton is not NFA"));
+	auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
+	auto input = file.buffer();
+	Lexer::parse_buffer(grammar, input);
+	auto res = parse(grammar, automaton_file);
+
+	if (attributes.count("DFA") || attributes.count("NFA"))
+		return std::get<FiniteAutomaton>(res);
+	throw(std::runtime_error("Parse: parsed automaton is not NFA"));
 }
 
-FiniteAutomaton Parser::parse_DFA(std::string grammar_file, std::string automaton_file) {
-    lexy_ascii_tree grammar;
+FiniteAutomaton Parser::parse_DFA(std::string automaton_file, const std::string& grammar_file) {
+	lexy_ascii_tree grammar;
 
-    auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
-    auto input = file.buffer();
-    Lexer::parse_buffer(grammar, input);
+	auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
+	auto input = file.buffer();
+	Lexer::parse_buffer(grammar, input);
 
-    auto res = parse(grammar, automaton_file);
+	auto res = parse(grammar, automaton_file);
 
-    if (attributes.count("DFA"))
-        return std::get<FiniteAutomaton>(res);
-    throw(std::runtime_error("Parse: parsed automaton is not DFA"));    
+	if (attributes.count("DFA"))
+		return std::get<FiniteAutomaton>(res);
+	throw(std::runtime_error("Parse: parsed automaton is not DFA"));
 }
 
-MemoryFiniteAutomaton Parser::parse_MFA(std::string grammar_file, std::string automaton_file) {
-    lexy_ascii_tree grammar;
+MemoryFiniteAutomaton Parser::parse_MFA(std::string automaton_file,
+										const std::string& grammar_file) {
+	lexy_ascii_tree grammar;
 
-    auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
-    auto input = file.buffer();
-    Lexer::parse_buffer(grammar, input);
-    
-    auto res = parse(grammar, automaton_file);
+	auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
+	auto input = file.buffer();
+	Lexer::parse_buffer(grammar, input);
 
-    if (attributes.count("MFA"))
-        return std::get<MemoryFiniteAutomaton>(res);
-    throw(std::runtime_error("Parse: parsed automaton is not MFA"));
+	auto res = parse(grammar, automaton_file);
+
+	if (attributes.count("MFA"))
+		return std::get<MemoryFiniteAutomaton>(res);
+	throw(std::runtime_error("Parse: parsed automaton is not MFA"));
 }
