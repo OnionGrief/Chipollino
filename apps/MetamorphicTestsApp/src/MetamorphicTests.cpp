@@ -109,11 +109,11 @@ TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
 	for (int i = 0; i < RegexNumber; i++) {
 		AutomatonGenerator a(FA_type::NFA, 5);
 		a.write_to_file(test_path);
-		Parser parser;
+		Parser parser1, parse2;
 		FiniteAutomaton FA, second;
-		FA = parser.parse_NFA(test_path);
+		FA = parser1.parse_NFA(test_path);
 		auto first = FA.merge_bisimilar();
-		second = parser.parse_NFA(test_path);
+		second = parse2.parse_NFA(test_path);
 
 		std::ifstream t(test_path);
 		std::stringstream buffer;
