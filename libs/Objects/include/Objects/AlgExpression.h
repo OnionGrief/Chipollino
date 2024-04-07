@@ -60,7 +60,7 @@ class AlgExpression : public BaseObject {
 	AlgExpression* term_l = nullptr;
 	AlgExpression* term_r = nullptr;
 
-	// копирует объект (!!! не чистит память !!!)
+	// копирует объект в себя (!!! не чистит память !!!)
 	virtual void copy(const AlgExpression*) = 0; // NOLINT(build/include_what_you_use)
 	// возвращает указатель на 'new' объект своего типа
 	virtual AlgExpression* make() const = 0;
@@ -111,6 +111,17 @@ class AlgExpression : public BaseObject {
 	std::vector<AlgExpression*> get_first_nodes();
 	// возвращает множество нод, на которые может заканчиваться слово языка выражения
 	std::vector<AlgExpression*> get_last_nodes();
+
+	static void sort_alts(std::vector<AlgExpression*>& alts, // NOLINT(runtime/references)
+						  bool erase_alts = true);
+	// возвращает указатели на альтернативы в регулярке, построенной от переданного корня
+	std::vector<AlgExpression*> join_alts(std::vector<AlgExpression*>, AlgExpression*) const;
+	// аргументы: выражения под альтернативами (собираются для ноды выше)
+	// признак from_alt указывает на то, что вызов был из ноды с типом Alt (избавляет от лишних
+	// операций)
+	// признак erase_alts указывает на то, что при переписывании нужно убирать лишние альтернативы
+	void _rewrite_aci(std::vector<AlgExpression*>& alts, // NOLINT(runtime/references)
+					  bool from_alt, bool erase_alts);
 
   public:
 	AlgExpression();

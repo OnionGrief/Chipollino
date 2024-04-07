@@ -2,6 +2,7 @@
 
 #include "Objects/BackRefRegex.h"
 #include "Objects/Language.h"
+#include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 
 using std::cerr;
@@ -761,51 +762,6 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 	}
 }
 
-Regex* Regex::add_alt(std::vector<Regex> res, Regex* root) {
-	if (res.size() == 1) {
-		return res[0].make_copy();
-	}
-
-	root = new Regex;
-	root->type = Type::alt;
-	root->term_l = res[0].make_copy();
-	res.erase(res.begin());
-	root->term_r = add_alt(res, Regex::cast(root->term_r, false));
-	return root;
-}
-
-Regex* Regex::to_aci(std::vector<Regex>& res) {
-	// отсортировали вектор регулярок
-	std::sort(res.begin(), res.end(), [](const Regex& i, const Regex& j) {
-		return i.to_txt() < j.to_txt();
-	});
-
-	// rule w | w = w
-	for (size_t i = 0; i < res.size(); i++) {
-		for (size_t j = i + 1; j < res.size(); j++) {
-			if (i == j)
-				continue;
-
-			if (res[i].to_txt() == res[j].to_txt()) {
-				res.erase(res.begin() + j);
-			}
-		}
-	}
-	// rule w1 | w2 = w2 | w1 не имеют смысла тк наборы отсортированы
-	// rule (w1 | w2) | w3 = w1 | (w2 | w3)
-
-	// Regex собранный из вектора через альтерантивы
-	// и всё ставится под отрицание
-	Regex* res_alt;
-	res_alt = new Regex;
-	res_alt->type = Type::negative;
-	if (!res.size())
-		return nullptr;
-
-	res_alt->term_l = add_alt(res, cast(res_alt->term_l, false));
-	return res_alt;
-}
-
 bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 												   vector<Regex>& result) const {
 	Regex cur_result;
@@ -896,11 +852,20 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 			cur_result.term_l = nullptr;
 			return !answer;
 		} else {
-			auto r_alt = to_aci(subresult);
-			if (r_alt == nullptr)
+			vector<AlgExpression*> alts;
+			alts.reserve(subresult.size());
+			for (auto& i : subresult)
+				alts.emplace_back(&i);
+			sort_alts(alts);
+			if (alts.empty())
 				return answer;
-			result.push_back(*r_alt);
-			delete r_alt;
+			// Regex, собранный из вектора через альтернативы
+			// и всё ставится под отрицание
+			Regex r_alt;
+			r_alt.type = Type::negative;
+			r_alt.term_l = new Regex;
+			join_alts(alts, r_alt.term_l);
+			result.push_back(r_alt);
 		}
 
 		return answer;
@@ -1378,4 +1343,11 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules, iLogTempla
 
 BackRefRegex Regex::to_bregex() const {
 	return {this, language->get_alphabet()};
+}
+
+Regex Regex::rewrite_aci() const {
+	Regex res(*this);
+	vector<AlgExpression*> alts;
+	res._rewrite_aci(alts, false, true);
+	return res;
 }

@@ -27,6 +27,7 @@ class FAState : public State {
 	// преобразования автоматов возможно для визуализации
 	std::set<int> label;
 
+	FAState() = default;
 	FAState(int index, bool is_terminal);
 	FAState(int index, std::string identifier, bool is_terminal);
 	FAState(int index, bool is_terminal, Transitions transitions);

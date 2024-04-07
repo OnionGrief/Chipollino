@@ -35,9 +35,6 @@ class Regex : public AlgExpression {
 	// Производная по префиксу
 	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
-	// применение ACI правил
-	static Regex* to_aci(std::vector<Regex>& res); // NOLINT(runtime/references)
-	static Regex* add_alt(std::vector<Regex> res, Regex* root);
 
 	// возвращает вектор состояний нового автомата, построенного из регулярного выражения
 	std::vector<FAState> _to_thompson(const Alphabet&) const;
@@ -99,6 +96,7 @@ class Regex : public AlgExpression {
 	Regex normalize_regex(const std::vector<std::pair<Regex, Regex>>&,
 						  iLogTemplate* log = nullptr) const;
 	BackRefRegex to_bregex() const;
+	Regex rewrite_aci() const;
 };
 
 /*

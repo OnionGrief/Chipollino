@@ -128,7 +128,7 @@ int Symbol::get_ref() const {
 	return reference.value();
 }
 
-int Symbol::last_linearization_number() {
+int Symbol::last_linearization_number() const {
 	if (!linearize_numbers.empty())
 		return linearize_numbers.back();
 	else

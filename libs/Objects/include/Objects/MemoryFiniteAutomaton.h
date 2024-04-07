@@ -221,7 +221,9 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	// возвращает множество уникальных слов длины <= max_len, распознаваемых автоматом
 	// и множество тестовых слов с мутациями
 	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_set(
-		int max_len);
+		int max_len) const;
 	// ссылки считаются символами алфавита, операции над памятью игнорируются
 	FiniteAutomaton to_fa() const;
+	// ссылки считаются символами алфавита, операции над памятью преобразуются в переходы Oi, Ci, Ri
+	FiniteAutomaton to_fa_mem() const;
 };

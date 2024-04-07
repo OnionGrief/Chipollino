@@ -11,7 +11,6 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/iLogTemplate.h"
 
-using std::map;
 using std::optional;
 using std::pair;
 using std::set;
@@ -226,10 +225,10 @@ string MemoryFiniteAutomaton::to_txt() const {
 		ss << "dummy -> " << states[initial_state].index << "\n";
 
 	for (const auto& state : states) {
-		for (const auto& elem : state.transitions) {
-			for (const auto& transition : elem.second) {
+		for (const auto& [symbol, symbol_transitions] : state.transitions) {
+			for (const auto& transition : symbol_transitions) {
 				ss << "\t" << state.index << " -> " << transition.to << " [label = \""
-				   << string(elem.first) << transition.get_actions_str() << "\"]\n";
+				   << string(symbol) << transition.get_actions_str() << "\"]\n";
 			}
 		}
 	}
@@ -375,6 +374,7 @@ void MemoryFiniteAutomaton::dfs_by_eps(
 
 tuple<set<int>, unordered_set<int>, MFATransition::MemoryActions> MemoryFiniteAutomaton::
 	get_eps_closure(const set<int>& indices) const {
+	// оставил set, потому что важен порядок для идентификаторов состояний (тесты)
 	set<int> reachable;
 	unordered_set<int> last;
 	MFATransition::MemoryActions memory_actions_composition;
@@ -1071,7 +1071,7 @@ size_t TraversalState::Hasher::operator()(const TraversalState& s) const {
 }
 
 pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::generate_test_set(
-	int max_len) {
+	int max_len) const {
 	unordered_set<string> words_in_language;
 	unordered_map<string, IntPairSet> words_to_mutate;
 
@@ -1146,7 +1146,7 @@ pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::genera
 							tr.memory,
 							cur_state,
 							true);
-					} else if (!symbol.is_epsilon()) { // проверка на eps, вероятно, излишняя
+					} else {
 						following_states.emplace(cur_state.str + string(symbol),
 												 &states[tr.to],
 												 tr.opened_cells,
@@ -1175,9 +1175,12 @@ pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::genera
 
 	unordered_set<string> mutated_words;
 	for (const auto& [word, mutations] : words_to_mutate)
-		for (const auto& mutation_bounds : mutations)
-			mutated_words.insert(random_mutation(
-				word, mutation_bounds.first, mutation_bounds.second, language->get_alphabet()));
+		for (const auto& mutation_bounds : mutations) {
+			string mutation = random_mutation(
+				word, mutation_bounds.first, mutation_bounds.second, language->get_alphabet());
+			if (!words_in_language.count(mutation))
+				mutated_words.insert(mutation);
+		}
 
 	return {words_in_language, mutated_words};
 }
@@ -1188,5 +1191,56 @@ FiniteAutomaton MemoryFiniteAutomaton::to_fa() const {
 	fa_states.reserve(states.size());
 	for (const auto& state : states)
 		fa_states.emplace_back(state, alphabet);
+	return {initial_state, fa_states, alphabet};
+}
+
+FiniteAutomaton MemoryFiniteAutomaton::to_fa_mem() const {
+	int n = size();
+	vector<FAState> fa_states(n);
+	Alphabet alphabet;
+	for (int i = 0; i < n; i++) {
+		const auto& state = states[i];
+		fa_states[i] = FAState(i, state.identifier, state.is_terminal);
+		for (const auto& [symbol, symbol_transitions] : state.transitions) {
+			alphabet.insert(symbol);
+			for (const auto& transition : symbol_transitions) {
+				set<int> opens;
+				set<int> closes;
+				set<int> resets;
+				for (const auto& [num, action] : transition.memory_actions) {
+					switch (action) {
+					case MFATransition::open:
+						opens.insert(num);
+						break;
+					case MFATransition::close:
+						closes.insert(num);
+						break;
+					case MFATransition::reset:
+						resets.insert(num);
+						break;
+					}
+				}
+				int start = n;
+				for (auto ind : closes)
+					fa_states.emplace_back(n++, "C" + std::to_string(ind), false);
+				for (auto ind : resets)
+					fa_states.emplace_back(n++, "R" + std::to_string(ind), false);
+				for (auto ind : opens)
+					fa_states.emplace_back(n++, "O" + std::to_string(ind), false);
+
+				if (n > start) {
+					alphabet.insert(fa_states[start].identifier);
+					fa_states[i].transitions[fa_states[start].identifier].insert(start);
+					for (int j = start; j < n - 1; j++) {
+						alphabet.insert(fa_states[j + 1].identifier);
+						fa_states[j].transitions[fa_states[j + 1].identifier].insert(j + 1);
+					}
+					fa_states[fa_states.size() - 1].transitions[symbol].insert(transition.to);
+				} else {
+					fa_states[i].transitions[symbol].insert(transition.to);
+				}
+			}
+		}
+	}
 	return {initial_state, fa_states, alphabet};
 }
