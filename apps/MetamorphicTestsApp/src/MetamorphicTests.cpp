@@ -116,11 +116,17 @@ void MetamorphicTests::cmp_automatons(const MemoryFiniteAutomaton& mfa1,
 				500,
 				std::mt19937{std::random_device{}()});
 	unordered_set<string> random_set(random_elements.begin(), random_elements.end());
+	//	int a = 0, b = 0;
 	for (const auto& mutated_word : random_set) {
 		auto res1 = mfa1.parse(mutated_word);
 		auto res2 = mfa2.parse(mutated_word);
 		ASSERT_EQ(res1.second, res2.second) << debug.str();
+		//		if (res1.second)
+		//			a++;
+		//		else
+		//			b++;
 	}
+	//	std::cout << " " << a << " " << b << " " << double(b) / (a + b) << "\n";
 }
 
 TEST(TestMFA, Fuzzing) {
@@ -137,12 +143,14 @@ TEST(TestMFA, Fuzzing) {
 }
 
 // TEST(TestMFA, Fuzz) {
-//	string rgx_str = "[[|b]:2*]:1*a&1&2";
+//	string rgx_str = "(([[b*]:1|]:2|)&1&1&2)*";
 //	MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
 //	MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
 //
+//	std::cout << mfa1.to_txt() << mfa2.to_txt();
+//
 //	MetamorphicTests::cmp_automatons(mfa1, mfa2);
-// }
+//}
 
 TEST(TestMFA, ToTxt) {
 	RegexGenerator rg(5, 3, 3, 2);

@@ -14,7 +14,11 @@ class MemoryFiniteAutomaton;
 class MFAState;
 class Regex;
 
-using ToResetMap = std::unordered_map<Cell, bool, Cell::Hasher>;
+// Cell -> pair{A, B}
+// A = true, если потенциально пустая ячейка будет пройдена в любом случае
+// (иначе есть пути, которые ее не включают).
+// B - множество ячеек, от пустоты которых может зависеть пустота Cell.
+using ToResetMap = std::unordered_map<Cell, std::pair<bool, CellSet>, Cell::Hasher>;
 
 class BackRefRegex : public AlgExpression {
   private:
@@ -58,9 +62,7 @@ class BackRefRegex : public AlgExpression {
 	void calculate_may_be_eps(
 		std::unordered_map<int, std::vector<BackRefRegex*>>&); // NOLINT(runtime/references)
 
-	// ToResetMap заполняется ячейками, которые нужно сбросить
-	// значение по ключу = true, если ячейка будет в сброшена любом случае
-	// (иначе есть пути, когда она не сбрасывается)
+	// ToResetMap заполняется ячейками, которые нужно сбросить.
 	std::pair<bool, ToResetMap> contains_eps_tracking_resets() const; // NOLINT(runtime/references)
 	// пары {нода, {потенциально пустые memoryWriter, которые стоят до нее}}
 	std::vector<std::pair<AlgExpression*, ToResetMap>> get_first_nodes_tracking_resets();

@@ -17,8 +17,18 @@ size_t Cell::Hasher::operator()(const Cell& c) const {
 	return hasher({c.number, c.lin_number});
 }
 
-CellSet merge_sets(const CellSet& set1, const CellSet& set2) {
+CellSet get_union(const CellSet& set1, const CellSet& set2) {
 	CellSet result = set1;
 	result.insert(set2.begin(), set2.end());
+	return result;
+}
+
+CellSet get_intersection(const CellSet& set1, const CellSet& set2) {
+	CellSet result;
+	for (const auto& element : set1) {
+		if (set2.find(element) != set2.end()) {
+			result.insert(element);
+		}
+	}
 	return result;
 }

@@ -23,4 +23,6 @@ struct Cell {
 
 using CellSet = std::unordered_set<Cell, Cell::Hasher>;
 
-CellSet merge_sets(const CellSet& set1, const CellSet& set2);
+CellSet get_union(const CellSet& set1, const CellSet& set2);
+
+CellSet get_intersection(const CellSet& set1, const CellSet& set2);

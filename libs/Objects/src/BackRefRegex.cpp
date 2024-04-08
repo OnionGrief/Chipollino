@@ -578,17 +578,17 @@ bool BackRefRegex::contains_eps() const {
 }
 
 pair<bool, ToResetMap> BackRefRegex::contains_eps_tracking_resets() const {
-	pair<bool, std::unordered_map<Cell, bool, Cell::Hasher>> l, r;
+	pair<bool, ToResetMap> l, r;
 	switch (type) {
 	case Type::alt:
 		l = cast(term_l)->contains_eps_tracking_resets();
 		r = cast(term_r)->contains_eps_tracking_resets();
 		if (l.first)
 			for (auto& i : r.second)
-				i.second = false;
+				i.second.first = false;
 		if (r.first)
 			for (auto& i : l.second)
-				i.second = false;
+				i.second.first = false;
 		l.first |= r.first;
 		l.second.insert(r.second.begin(), r.second.end());
 		return l;
@@ -605,16 +605,23 @@ pair<bool, ToResetMap> BackRefRegex::contains_eps_tracking_resets() const {
 		auto t = to_txt();
 		l = cast(term_l)->contains_eps_tracking_resets();
 		for (auto& i : l.second)
-			i.second = false;
+			i.second.first = false;
 		return {true, l.second};
 	}
 	case Type::eps:
 		return {true, {}};
 	case Type::memoryWriter:
 		l = cast(term_l)->contains_eps_tracking_resets();
-		if (l.first)
-			l.second.insert({{cell_number, lin_number}, true});
-		return l;
+		if (l.first) {
+			CellSet depends_on;
+			for (auto& [cell, info] : l.second)
+				if (info.first)
+					depends_on.insert(cell);
+			l.second.insert({{cell_number, lin_number}, {true, depends_on}});
+			return l;
+		} else {
+			return {false, {}};
+		}
 	case Type::ref:
 		return {may_be_eps, {}};
 	default:
@@ -720,18 +727,45 @@ vector<CellSet> get_all_combinations(const CellSet& s) {
 }
 
 vector<CellSet> merge_to_reset_maps(const vector<ToResetMap>& maps) {
+	ToResetMap merged;
 	CellSet to_reset, maybe_to_reset;
 	for (const auto& map : maps) {
-		for (const auto& i : map) {
-			if (i.second)
-				to_reset.insert(i.first);
+		for (const auto& [cell, info] : map) {
+			if (info.first)
+				to_reset.insert(cell);
 			else
-				maybe_to_reset.insert(i.first);
+				maybe_to_reset.insert(cell);
+
+			auto it = merged.find(cell);
+			if (it != merged.end()) {
+				it->second.first &= info.first;
+				it->second.second = get_intersection(it->second.second, info.second);
+			} else {
+				merged[cell] = info;
+			}
 		}
 	}
+
+	unordered_map<Cell, CellSet, Cell::Hasher> must_be_equal_to;
+	for (const auto& [cell, info] : merged)
+		for (const auto& depends_on_cell : info.second) {
+			must_be_equal_to[cell].insert(depends_on_cell);
+			must_be_equal_to[depends_on_cell].insert(cell);
+		}
+
 	vector<CellSet> res({to_reset});
 	auto t = get_all_combinations(maybe_to_reset);
 	for (const auto& i : get_all_combinations(maybe_to_reset)) {
+		bool skip = std::any_of(i.begin(), i.end(), [&](const auto& cell) {
+			return must_be_equal_to.count(cell) &&
+				   std::any_of(
+					   must_be_equal_to.at(cell).begin(),
+					   must_be_equal_to.at(cell).end(),
+					   [&](const auto& must_be_equal_to) { return !i.count(must_be_equal_to); });
+		});
+		if (skip)
+			continue;
+
 		CellSet temp(to_reset);
 		temp.insert(i.begin(), i.end());
 		res.emplace_back(temp);
@@ -782,6 +816,8 @@ void BackRefRegex::get_follow(
 		first = cast(term_r)->get_first_nodes_tracking_resets();
 		for (auto& [i, last_to_reset] : last) {
 			for (auto& [j, first_to_reset] : first) {
+				//				string t1 = i->get_symbol();
+				//				string t2 = j->get_symbol();
 				for (const auto& k : merge_to_reset_maps({last_to_reset, first_to_reset}))
 					following_states[i->get_symbol().last_linearization_number()].emplace_back(
 						j->get_symbol().last_linearization_number(), unordered_set<int>(), k);
@@ -796,6 +832,8 @@ void BackRefRegex::get_follow(
 		get_cells_under_iteration(iteration_over_cells);
 		for (auto& [i, last_to_reset] : last) {
 			for (auto& [j, first_to_reset] : first) {
+				//				string t1 = i->get_symbol();
+				//				string t2 = j->get_symbol();
 				vector<CellSet> to_reset;
 				if (i != j)
 					to_reset = merge_to_reset_maps({last_to_reset, first_to_reset, is_eps.second});
