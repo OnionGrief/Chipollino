@@ -226,4 +226,10 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton to_fa() const;
 	// ссылки считаются символами алфавита, операции над памятью преобразуются в переходы Oi, Ci, Ri
 	FiniteAutomaton to_fa_mem() const;
+	static std::optional<bool> bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+										 iLogTemplate* log = nullptr);
+	static bool action_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+								 iLogTemplate* log = nullptr);
+	static bool literally_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+									iLogTemplate* log = nullptr);
 };

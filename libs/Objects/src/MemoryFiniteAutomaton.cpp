@@ -1244,3 +1244,30 @@ FiniteAutomaton MemoryFiniteAutomaton::to_fa_mem() const {
 	}
 	return {initial_state, fa_states, alphabet};
 }
+
+
+/*
+std::optional<bool> MemoryFiniteAutomaton::bisimilar(const MemoryFiniteAutomaton& mfa1, const MemoryFiniteAutomaton& mfa2, iLogTemplate* log) const {
+	if (log) {
+		log->set_parameter("mfa1", mfa1);
+		log->set_parameter("mfa2", mfa2);
+		log->set_parameter("result", res);
+	}
+}
+
+bool MemoryFiniteAutomaton::action_bisimilar(const MemoryFiniteAutomaton& mfa1, const MemoryFiniteAutomaton& mfa2, iLogTemplate* log) const {
+	if (log) {
+		log->set_parameter("mfa1", mfa1);
+		log->set_parameter("mfa2", mfa2);
+		log->set_parameter("result", res);
+	}
+}
+
+bool MemoryFiniteAutomaton::literally_bisimilar(const MemoryFiniteAutomaton& mfa1, const MemoryFiniteAutomaton& mfa2, iLogTemplate* log) const {
+	if (log) {
+		log->set_parameter("mfa1", mfa1);
+		log->set_parameter("mfa2", mfa2);
+		log->set_parameter("result", res);
+	}
+}
+*/
