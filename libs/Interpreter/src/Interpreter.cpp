@@ -189,7 +189,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Arden") {
 		return ObjectRegex((get<ObjectNFA>(arguments[0]).value.to_regex(&log_template)));
 	}
-	if (function.name == "Bisimilar") {
+	if (function.name == "Bisimilar" && function.input[0] == ObjectType::NFA) {
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
 			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
 	}
@@ -321,6 +321,18 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "getMFA") {
 		string filename = get<ObjectString>(arguments[0]).value;
 		return ObjectMFA(Parser::parse_MFA(filename));
+	}
+	if (function.name == "Bisimilar" && function.input[0] == ObjectType::MFA) {
+		return ObjectOptionalBool(MemoryFiniteAutomaton::bisimilar(
+			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
+	}
+	if (function.name == "ActionBisimilar") {
+		return ObjectBoolean(MemoryFiniteAutomaton::action_bisimilar(
+			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
+	}
+	if (function.name == "LiterallyBisimilar") {
+		return ObjectBoolean(MemoryFiniteAutomaton::literally_bisimilar(
+			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
 	}
 	// # place for another diff types funcs
 
@@ -475,7 +487,8 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type, vector<ObjectTyp
 	// сверяем тип каждого аргумента
 	for (int i = 0; i < argument_type.size(); i++) {
 		// тип либо одинаковый, либо аргумент явл-ся подтипом требуемого типа
-		if (!(Typization::get_types(func_input_type[i], Typization::types_children).count(argument_type[i]) != 0 ||
+		if (!(Typization::get_types(func_input_type[i], Typization::types_children)
+					  .count(argument_type[i]) != 0 ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
 			  (flags[Flag::weak_type_comparison] && argument_type[i] == ObjectType::NFA &&
 			   func_input_type[i] == ObjectType::DFA) ||

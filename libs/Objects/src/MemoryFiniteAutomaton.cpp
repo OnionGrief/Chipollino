@@ -1193,9 +1193,9 @@ bool MemoryFiniteAutomaton::action_bisimilar(const MemoryFiniteAutomaton& mfa1,
 	FiniteAutomaton fa1(mfa1.to_fa()), fa2(mfa2.to_fa());
 	bool result = FiniteAutomaton::bisimilar(fa1, fa2);
 	if (log) {
-		log->set_parameter("automaton1", fa1);
-		log->set_parameter("automaton2", fa2);
-		log->set_parameter("result", result);
+		log->set_parameter("mfa1", mfa1);
+		log->set_parameter("mfa2", mfa2);
+		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
 }
@@ -1257,9 +1257,9 @@ bool MemoryFiniteAutomaton::literally_bisimilar(const MemoryFiniteAutomaton& mfa
 	FiniteAutomaton fa1(mfa1.to_fa_mem()), fa2(mfa2.to_fa_mem());
 	bool result = FiniteAutomaton::bisimilar(fa1, fa2);
 	if (log) {
-		log->set_parameter("automaton1", fa1);
-		log->set_parameter("automaton2", fa2);
-		log->set_parameter("result", result);
+		log->set_parameter("mfa1", mfa1);
+		log->set_parameter("mfa2", mfa2);
+		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
 }
@@ -1317,7 +1317,7 @@ void find_opening_states_dfs(int state_index,
 
 	for (const auto& [symbol, symbol_transitions] : reversed_transitions[state_index])
 		for (const auto& tr : symbol_transitions) {
-			std::optional<MFATransition::MemoryAction> action;
+			optional<MFATransition::MemoryAction> action;
 			if (tr.memory_actions.count(cell))
 				action = tr.memory_actions.at(cell);
 			if (action && (action == MFATransition::open || action == MFATransition::reset))
@@ -1335,7 +1335,7 @@ vector<vector<int>> MemoryFiniteAutomaton::find_cg_traces(int state_index,
 
 	for (const auto& [symbol, symbol_transitions] : states[state_index].transitions)
 		for (const auto& tr : symbol_transitions) {
-			std::optional<MFATransition::MemoryAction> action;
+			optional<MFATransition::MemoryAction> action;
 			if (tr.memory_actions.count(cell))
 				action = tr.memory_actions.at(cell);
 			if (action && (action == MFATransition::close || action == MFATransition::reset)) {
@@ -1383,7 +1383,7 @@ bool MemoryFiniteAutomaton::find_path_decisions(int state_index, vector<int>& vi
 												const unordered_set<int>& path_states) const {
 	visited[state_index] = 1;
 
-	std::optional<MFATransition> single_tr;
+	optional<MFATransition> single_tr;
 	int count = 0;
 	for (const auto& [symbol, symbol_transitions] : states[state_index].transitions)
 		for (const auto& tr : symbol_transitions)
@@ -1414,9 +1414,8 @@ bool MemoryFiniteAutomaton::path_contains_decisions(const unordered_set<int>& pa
 	return false;
 }
 
-optional<bool> MemoryFiniteAutomaton::bisimilar(const MemoryFiniteAutomaton& mfa1,
-												const MemoryFiniteAutomaton& mfa2,
-												iLogTemplate* log) {
+optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAutomaton& mfa1,
+														   const MemoryFiniteAutomaton& mfa2) {
 	const int N = 2;
 	// раскрашиваем состояния
 	vector<unordered_map<int, unordered_set<int>>> mfa_colors(N);
@@ -1542,4 +1541,21 @@ optional<bool> MemoryFiniteAutomaton::bisimilar(const MemoryFiniteAutomaton& mfa
 	}
 
 	return true;
+}
+
+optional<bool> MemoryFiniteAutomaton::bisimilar(const MemoryFiniteAutomaton& mfa1,
+												const MemoryFiniteAutomaton& mfa2,
+												iLogTemplate* log) {
+	optional<bool> result = bisimilarity_checker(mfa1, mfa2);
+
+	if (log) {
+		if (result)
+			log->set_parameter("result", *result ? "True" : "False");
+		else
+			log->set_parameter("result", "Unknown");
+
+		log->set_parameter("mfa1", mfa1);
+		log->set_parameter("mfa2", mfa2);
+	}
+	return result;
 }

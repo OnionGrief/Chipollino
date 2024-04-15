@@ -1686,7 +1686,7 @@ bool FiniteAutomaton::equal(const FiniteAutomaton& fa1, const FiniteAutomaton& f
 	if (log) {
 		log->set_parameter("automaton1", fa1);
 		log->set_parameter("automaton2", fa2);
-		log->set_parameter("result", result);
+		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
 }
@@ -1709,7 +1709,7 @@ bool FiniteAutomaton::equivalent(const FiniteAutomaton& fa1, const FiniteAutomat
 	if (log) {
 		log->set_parameter("automaton1", fa1);
 		log->set_parameter("automaton2", fa2);
-		log->set_parameter("result", result);
+		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
 }
@@ -1720,7 +1720,7 @@ bool FiniteAutomaton::subset(const FiniteAutomaton& fa, iLogTemplate* log) const
 	if (log) {
 		log->set_parameter("automaton1", *this);
 		log->set_parameter("automaton2", fa);
-		log->set_parameter("result", result);
+		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
 }
@@ -2147,12 +2147,11 @@ std::optional<bool> FiniteAutomaton::is_nfa_minimal(iLogTemplate* log) const {
 		log->set_parameter("oldautomaton", *this);
 	}
 	std::optional<bool> result = get_nfa_minimality_value();
-	if (result) {
-		if (log) {
+	if (log) {
+		if (result)
 			log->set_parameter("result", *result ? "True" : "False");
-		}
-	} else if (log) {
-		log->set_parameter("result", "Unknown");
+		else
+			log->set_parameter("result", "Unknown");
 	}
 	return result;
 }

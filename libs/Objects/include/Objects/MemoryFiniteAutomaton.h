@@ -213,6 +213,9 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 							 const std::unordered_set<int>& path_states) const;
 	bool path_contains_decisions(const std::unordered_set<int>& path_states) const;
 
+	static std::optional<bool> bisimilarity_checker(const MemoryFiniteAutomaton&,
+													const MemoryFiniteAutomaton&);
+
   public:
 	MemoryFiniteAutomaton();
 	MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
