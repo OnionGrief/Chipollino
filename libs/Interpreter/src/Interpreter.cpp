@@ -314,21 +314,18 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	}
 	if (function.name == "getNFA") {
 		string filename = get<ObjectFileName>(arguments[0]).value;
-		string grammar = "TestData/grammar.txt";
 		Parser parser;
-		return ObjectNFA(parser.parse_NFA(grammar, filename));
+		return ObjectNFA(parser.parse_NFA(filename));
 	}
 	if (function.name == "getMFA") {
 		string filename = get<ObjectFileName>(arguments[0]).value;
-		string grammar = "TestData/grammar.txt";
 		Parser parser;
-		return ObjectMFA(parser.parse_MFA(grammar, filename));
+		return ObjectMFA(parser.parse_MFA(filename));
 	}
 	if (function.name == "getDFA") {
 		string filename = get<ObjectFileName>(arguments[0]).value;
-		string grammar = "TestData/grammar.txt";
 		Parser parser;
-		return ObjectDFA(parser.parse_DFA(grammar, filename));
+		return ObjectDFA(parser.parse_DFA(filename));
 	}
 	// # place for another diff types funcs
 
@@ -661,24 +658,23 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 		current_random_objects[expr.type] = generated_object;
 		return generated_object;
 	}
-	std::string grammar_path = "./TestData/grammar.txt";
-	std::string test_path = "./TestData/MetamorphicTest/test1.txt";
+	std::string test_path = "./test_data/MetamorphicTest/test1.txt";
 	Parser parser;
 	if (expr.type == ObjectType::RandomDFA) {
 		generate_automaton(test_path, FA_type::DFA);
-		GeneralObject generated_object = ObjectDFA(parser.parse_DFA(grammar_path, test_path));
+		GeneralObject generated_object = ObjectDFA(parser.parse_DFA(test_path));
 		current_random_objects[expr.type] = generated_object;
 		return generated_object;
 	}
 	if (expr.type == ObjectType::RandomNFA) {
 		generate_automaton(test_path, FA_type::NFA);
-		GeneralObject generated_object = ObjectNFA(parser.parse_NFA(grammar_path, test_path));
+		GeneralObject generated_object = ObjectNFA(parser.parse_NFA(test_path));
 		current_random_objects[expr.type] = generated_object;
 		return generated_object;
 	}
 	if (expr.type == ObjectType::RandomMFA) {
 		generate_automaton(test_path, FA_type::MFA);
-		GeneralObject generated_object = ObjectMFA(parser.parse_MFA(grammar_path, test_path));
+		GeneralObject generated_object = ObjectMFA(parser.parse_MFA(test_path));
 		current_random_objects[expr.type] = generated_object;
 		return generated_object;
 	}
@@ -911,7 +907,9 @@ string Interpreter::FunctionSequence::to_txt() const {
 }
 
 string Interpreter::Expression::to_txt() const {
-	if (type == ObjectType::RandomRegex) {
+	if (type == ObjectType::RandomRegex || type == ObjectType::RandomBRefRegex ||
+		type == ObjectType::RandomNFA || type == ObjectType::RandomDFA ||
+		type == ObjectType::RandomMFA) {
 		return "*";
 	}
 	if (const auto* pval = get_if<FunctionSequence>(&value)) {
@@ -1326,8 +1324,7 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(const vector
 }
 
 void Interpreter::generate_automaton(string test_path, FA_type fa_type, int states_num) {
-	std::string grammar_path = "./TestData/grammar.txt";
-	AutomatonGenerator a(grammar_path, fa_type, 5);
+	AutomatonGenerator a(fa_type, 5);
 	a.write_to_file(test_path);
 }
 

@@ -24,9 +24,9 @@ bool AutomatonGenerator::dice_throwing(int percentage) {
 void AutomatonGenerator::add_terminality() {
     std::vector<int> unreachable;
 
-    while (1) {
-        unreachable.clear();
-        for (int i = 0; i < states_number; i++)
+	while (true) {
+		unreachable.clear();
+		for (int i = 0; i < states_number; i++)
             if (!finality_coloring[i])
                 unreachable.push_back(i);
         if (unreachable.empty())
@@ -35,14 +35,14 @@ void AutomatonGenerator::add_terminality() {
         stateDescriptions[vertex].terminal = true;
         std::queue<int> bfs;
         bfs.push(vertex);
-        finality_coloring[vertex] = 1;
-        while (!bfs.empty()) {
-            for (int i = 0; i < regraph[bfs.front()].size(); i++) {
-                if (!finality_coloring[regraph[bfs.front()][i]]) {
-                    finality_coloring[regraph[bfs.front()][i]] = 1;
-                    bfs.push(regraph[bfs.front()][i]);
-                }
-            }
+		finality_coloring[vertex] = true;
+		while (!bfs.empty()) {
+			for (int i = 0; i < regraph[bfs.front()].size(); i++) {
+				if (!finality_coloring[regraph[bfs.front()][i]]) {
+					finality_coloring[regraph[bfs.front()][i]] = true;
+					bfs.push(regraph[bfs.front()][i]);
+				}
+			}
             bfs.pop();
         }
     }
@@ -53,6 +53,9 @@ void AutomatonGenerator::add_terminality() {
 }
 
 bool AutomatonGenerator::coloring_MFA_transition(int beg, FAtransition& trans, int color) {
+    // We are coloring white vertex with red and making an edge with memory reopening
+    if (trans.end == beg && MFA_coloring[color][trans.end] == 0)
+        return false;
     // red
     if (MFA_coloring[color][trans.end] == 1)
         return false;
@@ -65,12 +68,12 @@ bool AutomatonGenerator::coloring_MFA_transition(int beg, FAtransition& trans, i
     }
     // closing color memory cell for all transitions from the end vertex if it's not done yet
     if (MFA_coloring[color][trans.end] != 2) {
-        for (int i = 0; i < graph[trans.end].size(); i++) {
-            graph[trans.end][i].close.insert(color);
-        }
-    }
-    // yellow
-    MFA_coloring[color][trans.end] = 2;
+		for (auto& i : graph[trans.end]) {
+			i.close.insert(color);
+		}
+	}
+	// yellow
+	MFA_coloring[color][trans.end] = 2;
     return true;
 }
 
@@ -93,13 +96,13 @@ void AutomatonGenerator::generate_symbol(int beg, FAtransition& trans) {
                 while(!checked) {
                     trans.symbol = alphabet[rand() % alphabet.size()];
                     checked = true;
-                    for (int i = 0; i < graph[beg].size(); i++) {
-                        if (trans.symbol == graph[beg][i].symbol) {
-                            checked = false;
-                            break;
-                        }
-                    }   
-                }
+					for (auto& i : graph[beg]) {
+						if (trans.symbol == i.symbol) {
+							checked = false;
+							break;
+						}
+					}
+				}
             }
         }
     }
@@ -178,8 +181,8 @@ void AutomatonGenerator::generate_alphabet(int max_alphabet_size) {
     // }
 }
 
-void AutomatonGenerator::write_to_file(string filename) {
-    ofstream out;
+void AutomatonGenerator::write_to_file(const string& filename) {
+	ofstream out;
 	out.open(filename, ofstream::trunc);
 	if (out.is_open())
 		out << output.str();
@@ -195,8 +198,8 @@ void AutomatonGenerator::set_states_number(int n)
     states_number = n;
 }
 
-bool AutomatonGenerator::parse_reserved(std::string res_case) {
-    if (res_case == "EPS")
+bool AutomatonGenerator::parse_reserved(const std::string& res_case) {
+	if (res_case == "EPS")
         return true;
 
     if (res_case == "LETTER") {
@@ -306,9 +309,9 @@ bool AutomatonGenerator::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref)
     return read;
 }
 
-bool AutomatonGenerator::parse_transition(std::string name) {
+bool AutomatonGenerator::parse_transition(const std::string& name) {
 
-    if (!rewriting_rules.count(name)) {
+	if (!rewriting_rules.count(name)) {
         return false;
     }
 
@@ -320,9 +323,9 @@ bool AutomatonGenerator::parse_transition(std::string name) {
     return parse_func[name]();
 }
 
-AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type, int n) {
-    states_number = n;
-    generate_alphabet(52);
+AutomatonGenerator::AutomatonGenerator(FA_type type, int n, const std::string& grammar_file)
+	: states_number(n) {
+	generate_alphabet(52);
 
     lexy_ascii_tree grammar;
     
@@ -345,16 +348,16 @@ AutomatonGenerator::AutomatonGenerator(std::string grammar_file, FA_type type, i
     switch (type)
     {
     case FA_type::MFA:
-        TERMINAL.push("MFA");
-        break;
+		TERMINAL.emplace("MFA");
+		break;
     case FA_type::NFA:
-        TERMINAL.push("NFA");
-        colors_tries = 0;
+		TERMINAL.emplace("NFA");
+		colors_tries = 0;
         colors = 0;
         break;
     case FA_type::DFA:
-        TERMINAL.push("DFA");
-        colors_tries = 0;
+		TERMINAL.emplace("DFA");
+		colors_tries = 0;
         colors = 0;
         epsilon_probability = 0;
         break;
