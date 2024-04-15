@@ -4,11 +4,14 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <stack>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include "AbstractMachine.h"
+#include "MemoryCommon.h"
 #include "iLogTemplate.h"
 
 class Regex;
@@ -39,7 +42,7 @@ class FAState : public State {
 	explicit FAState(const MFAState& state, Alphabet& alphabet); // NOLINT(runtime/references)
 
 	std::string to_txt() const override;
-	void set_transition(int, const Symbol&);
+	void add_transition(int, const Symbol&);
 };
 
 // TODO если меняешь структуру, поменяй FA_model в TransformationMonoid.h
@@ -68,7 +71,9 @@ class FiniteAutomaton : public AbstractMachine {
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	std::set<int> closure(const std::set<int>&, bool) const;
 	static bool equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
-	static bool bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
+	// дополнительно возвращает в векторах номера классов состояний каждого автомата
+	static std::pair<bool, std::vector<std::vector<int>>> bisimilarity_checker(
+		const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// принимает в качестве лимита максимальное количество цифр в
 	// числителе + знаменателе дроби, которая может встретиться при вычислениях
 	AmbiguityValue get_ambiguity_value(
@@ -87,6 +92,16 @@ class FiniteAutomaton : public AbstractMachine {
 	// меняет местами состояние под индексом 0 с начальным
 	// используется в томпсоне
 	void set_initial_state_to_zero();
+
+	std::vector<FAState::Transitions> get_reversed_transitions() const;
+
+	void fill_order(int state_index, std::vector<bool>& visited, // NOLINT(runtime/references)
+					std::stack<int>& order						 // NOLINT(runtime/references)
+	);
+	// возвращает компоненты сильной связности
+	std::vector<std::vector<int>> get_SCCs();
+
+	FiniteAutomaton get_subautomaton(const CaptureGroup&);
 
   public:
 	FiniteAutomaton();
@@ -182,6 +197,7 @@ class FiniteAutomaton : public AbstractMachine {
 	MemoryFiniteAutomaton to_mfa() const;
 
 	friend class Regex;
+	friend class MemoryFiniteAutomaton;
 	friend class MetaInfo;
 	friend class RLGrammar;
 	friend class PrefixGrammar;

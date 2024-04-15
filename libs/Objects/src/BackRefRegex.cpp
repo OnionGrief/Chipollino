@@ -271,7 +271,7 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 	case eps:
 		states.emplace_back(false);
 		// переход по пустому слову в конечное состояние
-		states[0].set_transition(MFATransition(states.size()), Symbol::Epsilon);
+		states[0].add_transition(MFATransition(states.size()), Symbol::Epsilon);
 		// добавляем конечное состояние для пустого перехода
 		states.emplace_back(true);
 		return states;
@@ -280,7 +280,7 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 		states.emplace_back(false);
 		states.emplace_back(true);
 
-		states[0].set_transition(MFATransition(1), symbol);
+		states[0].add_transition(MFATransition(1), symbol);
 		return states;
 	case memoryWriter:
 		left_states = BackRefRegex::cast(term_l)->_to_mfa();
@@ -291,7 +291,7 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 			for (const auto& transition : states_to) {
 				MFATransition::MemoryActions new_memory_actions = transition.memory_actions;
 				new_memory_actions[cell_number] = MFATransition::MemoryAction::open;
-				states[0].set_transition(MFATransition(transition.to, new_memory_actions), symbol);
+				states[0].add_transition(MFATransition(transition.to, new_memory_actions), symbol);
 			}
 
 		for (int i = 1; i < left_states.size(); i++) {
@@ -301,11 +301,11 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 
 			for (const auto& [symbol, states_to] : state.transitions)
 				for (const auto& transition : states_to)
-					new_state.set_transition(transition, symbol);
+					new_state.add_transition(transition, symbol);
 
 			// из конечных состояний добавляем эпсилон-переход, закрывающий память
 			if (state.is_terminal)
-				new_state.set_transition(
+				new_state.add_transition(
 					MFATransition(left_states.size(),
 								  {{cell_number, MFATransition::MemoryAction::close}}),
 					Symbol::Epsilon);
@@ -323,10 +323,10 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 		states.emplace_back(left_states[0].is_terminal || right_states[0].is_terminal);
 		for (const auto& [symbol, states_to] : left_states[0].transitions)
 			for (const auto& transition : states_to)
-				states[0].set_transition(transition, symbol);
+				states[0].add_transition(transition, symbol);
 		for (const auto& [symbol, states_to] : right_states[0].transitions)
 			for (const auto& transition : states_to)
-				states[0].set_transition(
+				states[0].add_transition(
 					MFATransition(transition.to + offset, transition.memory_actions), symbol);
 
 		for (int i = 1; i < left_states.size(); i++) {
@@ -336,7 +336,7 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 
 			for (const auto& [symbol, states_to] : state.transitions)
 				for (const auto& transition : states_to)
-					new_state.set_transition(transition, symbol);
+					new_state.add_transition(transition, symbol);
 		}
 
 		for (int i = 1; i < right_states.size(); i++) {
@@ -346,7 +346,7 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 
 			for (const auto& [symbol, states_to] : state.transitions)
 				for (const auto& transition : states_to)
-					new_state.set_transition(
+					new_state.add_transition(
 						MFATransition(transition.to + offset, transition.memory_actions), symbol);
 		}
 
@@ -363,12 +363,12 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 
 			for (const auto& [symbol, states_to] : state.transitions)
 				for (const auto& transition : states_to)
-					new_state.set_transition(transition, symbol);
+					new_state.add_transition(transition, symbol);
 
 			if (state.is_terminal)
 				for (const auto& [symbol, states_to] : right_states[0].transitions)
 					for (const auto& transition : states_to)
-						new_state.set_transition(
+						new_state.add_transition(
 							MFATransition(transition.to + offset, transition.memory_actions),
 							symbol);
 		}
@@ -380,7 +380,7 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 
 			for (const auto& [symbol, states_to] : state.transitions)
 				for (const auto& transition : states_to)
-					new_state.set_transition(
+					new_state.add_transition(
 						MFATransition(transition.to + offset, transition.memory_actions), symbol);
 		}
 
@@ -391,7 +391,7 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 		states.emplace_back(left_states[0].is_terminal);
 		for (const auto& [symbol, states_to] : left_states[0].transitions)
 			for (const auto& transition : states_to)
-				states[0].set_transition(transition, symbol);
+				states[0].add_transition(transition, symbol);
 
 		for (int i = 1; i < left_states.size(); i++) {
 			const MFAState& state = left_states[i];
@@ -400,17 +400,17 @@ vector<MFAState> BackRefRegex::_to_mfa() const {
 
 			for (const auto& [symbol, states_to] : state.transitions)
 				for (const auto& transition : states_to)
-					new_state.set_transition(transition, symbol);
+					new_state.add_transition(transition, symbol);
 
 			// дублируем переходы из начального для конечных состояний
 			if (state.is_terminal)
 				for (const auto& [symbol, states_to] : left_states[0].transitions)
 					for (const auto& transition : states_to)
-						new_state.set_transition(transition, symbol);
+						new_state.add_transition(transition, symbol);
 		}
 
 		// переход по пустому слову в новое конечное состояние (случай нуля итераций)
-		states[0].set_transition(MFATransition(left_states.size()), Symbol::Epsilon);
+		states[0].add_transition(MFATransition(left_states.size()), Symbol::Epsilon);
 		// добавляем конечное состояние для пустого перехода
 		states.emplace_back(true);
 

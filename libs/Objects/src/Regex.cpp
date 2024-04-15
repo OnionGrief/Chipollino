@@ -160,21 +160,21 @@ vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 	switch (type) {
 	case Type::eps:
 		fa_states.emplace_back(0, false);
-		fa_states[0].set_transition(1, Symbol::Epsilon);
+		fa_states[0].add_transition(1, Symbol::Epsilon);
 		fa_states.emplace_back(1, true);
 		return fa_states;
 	case Type::symb:
 		fa_states.emplace_back(0, false);
 		fa_states.emplace_back(1, true);
-		fa_states[0].set_transition(1, symbol);
+		fa_states[0].add_transition(1, symbol);
 		return fa_states;
 	case Type::alt: // |
 		fa_left = Regex::cast(term_l)->_to_thompson(root_alphabet);
 		fa_right = Regex::cast(term_r)->_to_thompson(root_alphabet);
 
 		fa_states.emplace_back(0, false);
-		fa_states.back().set_transition(1, Symbol::Epsilon);
-		fa_states.back().set_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
+		fa_states.back().add_transition(1, Symbol::Epsilon);
+		fa_states.back().add_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
 
 		for (const auto& state : fa_left) {
 			state_transitions = {};
@@ -250,8 +250,8 @@ vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 		fa_left = Regex::cast(term_l)->_to_thompson(root_alphabet);
 
 		fa_states.emplace_back(0, false);
-		fa_states.back().set_transition(1, Symbol::Epsilon);
-		fa_states.back().set_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
+		fa_states.back().add_transition(1, Symbol::Epsilon);
+		fa_states.back().add_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
 
 		for (const auto& state : fa_left) {
 			state_transitions = {};
@@ -287,7 +287,7 @@ vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 		for (auto& state : fa_negative.states) {
 			if (state.is_terminal) {
 				state.is_terminal = false;
-				state.set_transition(fa_negative.size(), Symbol::Epsilon);
+				state.add_transition(fa_negative.size(), Symbol::Epsilon);
 			}
 		}
 
@@ -1221,7 +1221,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	}
 
 	FiniteAutomaton min_fa_cut =
-		FiniteAutomaton(min_fa.initial_state, min_fa.states, min_fa.language);
+		FiniteAutomaton(min_fa.get_initial(), min_fa.get_states(), min_fa.get_language());
 
 	for (int i = 0; i < min_fa.size(); i++) {
 		if (min_fa.states[i].is_terminal) {

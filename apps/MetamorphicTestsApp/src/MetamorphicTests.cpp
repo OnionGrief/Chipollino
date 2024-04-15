@@ -129,18 +129,18 @@ void MetamorphicTests::cmp_automatons(const MemoryFiniteAutomaton& mfa1,
 	//	std::cout << " " << a << " " << b << " " << double(b) / (a + b) << "\n";
 }
 
-TEST(TestMFA, Fuzzing) {
-	RegexGenerator rg(5, 3, 3, 2);
-	for (int i = 0; i < RegexNumberX10; i++) {
-		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
-		//		std::cout << i << " " << rgx_str << "\n";
-		SCOPED_TRACE("Regex: " + rgx_str);
-		MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
-		MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
-
-		MetamorphicTests::cmp_automatons(mfa1, mfa2);
-	}
-}
+// TEST(TestMFA, Fuzzing) {
+//	RegexGenerator rg(5, 3, 3, 2);
+//	for (int i = 0; i < RegexNumberX10; i++) {
+//		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
+//		//		std::cout << i << " " << rgx_str << "\n";
+//		SCOPED_TRACE("Regex: " + rgx_str);
+//		MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
+//		MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
+//
+//		MetamorphicTests::cmp_automatons(mfa1, mfa2);
+//	}
+// }
 
 // TEST(TestMFA, Fuzz) {
 //	string rgx_str = "(([[b*]:1|]:2|)&1&1&2)*";

@@ -81,31 +81,31 @@ TEST(TestNegativeRegex, Thompson) {
 		states.emplace_back(i, set<int>{i}, std::to_string(i), false, FAState::Transitions());
 	}
 
-	states[0].set_transition(1, Symbol::Epsilon);
-	states[0].set_transition(5, Symbol::Epsilon);
+	states[0].add_transition(1, Symbol::Epsilon);
+	states[0].add_transition(5, Symbol::Epsilon);
 
-	states[1].set_transition(4, Symbol::Epsilon);
-	states[1].set_transition(2, "a");
-	states[1].set_transition(3, "b");
-	states[1].set_transition(3, "c");
-	states[1].set_transition(4, Symbol::Epsilon);
+	states[1].add_transition(4, Symbol::Epsilon);
+	states[1].add_transition(2, "a");
+	states[1].add_transition(3, "b");
+	states[1].add_transition(3, "c");
+	states[1].add_transition(4, Symbol::Epsilon);
 
-	states[2].set_transition(3, "a");
-	states[2].set_transition(3, "b");
-	states[2].set_transition(3, "c");
+	states[2].add_transition(3, "a");
+	states[2].add_transition(3, "b");
+	states[2].add_transition(3, "c");
 
-	states[3].set_transition(3, "a");
-	states[3].set_transition(3, "b");
-	states[3].set_transition(3, "c");
-	states[3].set_transition(4, Symbol::Epsilon);
+	states[3].add_transition(3, "a");
+	states[3].add_transition(3, "b");
+	states[3].add_transition(3, "c");
+	states[3].add_transition(4, Symbol::Epsilon);
 
-	states[4].set_transition(7, Symbol::Epsilon);
+	states[4].add_transition(7, Symbol::Epsilon);
 
-	states[7].set_transition(8, "c");
+	states[7].add_transition(8, "c");
 
-	states[5].set_transition(6, "b");
+	states[5].add_transition(6, "b");
 
-	states[6].set_transition(7, Symbol::Epsilon);
+	states[6].add_transition(7, Symbol::Epsilon);
 
 	states[8].is_terminal = true;
 	FiniteAutomaton fa(0, states, {"a", "b", "c"});
@@ -119,22 +119,22 @@ TEST(TestNegativeRegex, Antimirov) {
 		states.emplace_back(i, set<int>{i}, std::to_string(i), false, FAState::Transitions());
 	}
 
-	states[0].set_transition(1, "a");
-	states[0].set_transition(2, "b");
-	states[0].set_transition(3, "b");
-	states[0].set_transition(2, "c");
-	states[0].set_transition(4, "c");
+	states[0].add_transition(1, "a");
+	states[0].add_transition(2, "b");
+	states[0].add_transition(3, "b");
+	states[0].add_transition(2, "c");
+	states[0].add_transition(4, "c");
 
-	states[1].set_transition(2, "a");
-	states[1].set_transition(2, "b");
-	states[1].set_transition(2, "c");
+	states[1].add_transition(2, "a");
+	states[1].add_transition(2, "b");
+	states[1].add_transition(2, "c");
 
-	states[2].set_transition(2, "a");
-	states[2].set_transition(2, "b");
-	states[2].set_transition(2, "c");
-	states[2].set_transition(4, "c");
+	states[2].add_transition(2, "a");
+	states[2].add_transition(2, "b");
+	states[2].add_transition(2, "c");
+	states[2].add_transition(4, "c");
 
-	states[3].set_transition(4, "c");
+	states[3].add_transition(4, "c");
 
 	states[4].is_terminal = true;
 	FiniteAutomaton fa(0, states, {"a", "b", "c"});
@@ -147,13 +147,13 @@ TEST(TestEqual, FA_Equal) {
 	for (int i = 0; i < 6; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states1[0].set_transition(1, "b");
-	states1[0].set_transition(2, "b");
-	states1[0].set_transition(5, "c");
-	states1[1].set_transition(3, "a");
-	states1[1].set_transition(4, "c");
-	states1[2].set_transition(4, "a");
-	states1[5].set_transition(4, "a");
+	states1[0].add_transition(1, "b");
+	states1[0].add_transition(2, "b");
+	states1[0].add_transition(5, "c");
+	states1[1].add_transition(3, "a");
+	states1[1].add_transition(4, "c");
+	states1[2].add_transition(4, "a");
+	states1[5].add_transition(4, "a");
 	states1[3].is_terminal = true;
 	states1[4].is_terminal = true;
 	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
@@ -162,13 +162,13 @@ TEST(TestEqual, FA_Equal) {
 	for (int i = 0; i < 6; i++) {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states2[0].set_transition(1, "b");
-	states2[0].set_transition(2, "b");
-	states2[0].set_transition(5, "c");
-	states2[1].set_transition(3, "a");
-	states2[1].set_transition(3, "c");
-	states2[2].set_transition(4, "a");
-	states2[5].set_transition(4, "a");
+	states2[0].add_transition(1, "b");
+	states2[0].add_transition(2, "b");
+	states2[0].add_transition(5, "c");
+	states2[1].add_transition(3, "a");
+	states2[1].add_transition(3, "c");
+	states2[2].add_transition(4, "a");
+	states2[5].add_transition(4, "a");
 	states2[3].is_terminal = true;
 	states2[4].is_terminal = true;
 	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
@@ -177,13 +177,13 @@ TEST(TestEqual, FA_Equal) {
 	for (int i = 0; i < 6; i++) {
 		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states3[5].set_transition(4, "b");
-	states3[5].set_transition(3, "b");
-	states3[5].set_transition(0, "c");
-	states3[4].set_transition(2, "a");
-	states3[4].set_transition(1, "c");
-	states3[3].set_transition(1, "a");
-	states3[0].set_transition(1, "a");
+	states3[5].add_transition(4, "b");
+	states3[5].add_transition(3, "b");
+	states3[5].add_transition(0, "c");
+	states3[4].add_transition(2, "a");
+	states3[4].add_transition(1, "c");
+	states3[3].add_transition(1, "a");
+	states3[0].add_transition(1, "a");
 	states3[2].is_terminal = true;
 	states3[1].is_terminal = true;
 	FiniteAutomaton fa3(5, states3, {"a", "b", "c"});
@@ -207,12 +207,12 @@ TEST(TestEquivalent, FA_Equivalent) {
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states1[0].set_transition(0, "c");
-	states1[0].set_transition(1, "d");
-	states1[1].set_transition(2, "c");
-	states1[1].set_transition(0, "d");
-	states1[2].set_transition(1, "c");
-	states1[2].set_transition(2, "d");
+	states1[0].add_transition(0, "c");
+	states1[0].add_transition(1, "d");
+	states1[1].add_transition(2, "c");
+	states1[1].add_transition(0, "d");
+	states1[2].add_transition(1, "c");
+	states1[2].add_transition(2, "d");
 	states1[0].is_terminal = true;
 	FiniteAutomaton fa1(0, states1, {"c", "d"});
 
@@ -220,14 +220,14 @@ TEST(TestEquivalent, FA_Equivalent) {
 	for (int i = 0; i < 4; i++) {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states2[0].set_transition(0, "c");
-	states2[0].set_transition(1, "d");
-	states2[1].set_transition(2, "c");
-	states2[1].set_transition(0, "d");
-	states2[2].set_transition(3, "c");
-	states2[2].set_transition(2, "d");
-	states2[3].set_transition(2, "c");
-	states2[3].set_transition(0, "d");
+	states2[0].add_transition(0, "c");
+	states2[0].add_transition(1, "d");
+	states2[1].add_transition(2, "c");
+	states2[1].add_transition(0, "d");
+	states2[2].add_transition(3, "c");
+	states2[2].add_transition(2, "d");
+	states2[3].add_transition(2, "c");
+	states2[3].add_transition(0, "d");
 	states2[0].is_terminal = true;
 	FiniteAutomaton fa2(0, states2, {"c", "d"});
 
@@ -239,14 +239,14 @@ TEST(TestBisimilar, FA_Bisimilar) {
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states1[0].set_transition(1, "a");
-	states1[0].set_transition(1, "eps");
-	states1[0].set_transition(2, "b");
-	states1[1].set_transition(2, "a");
-	states1[1].set_transition(1, "b");
-	states1[2].set_transition(1, "a");
-	states1[2].set_transition(1, "eps");
-	states1[2].set_transition(0, "b");
+	states1[0].add_transition(1, "a");
+	states1[0].add_transition(1, "eps");
+	states1[0].add_transition(2, "b");
+	states1[1].add_transition(2, "a");
+	states1[1].add_transition(1, "b");
+	states1[2].add_transition(1, "a");
+	states1[2].add_transition(1, "eps");
+	states1[2].add_transition(0, "b");
 	states1[0].is_terminal = true;
 	states1[2].is_terminal = true;
 	FiniteAutomaton fa1(1, states1, {"a", "b"});
@@ -255,11 +255,11 @@ TEST(TestBisimilar, FA_Bisimilar) {
 	for (int i = 0; i < 2; i++) {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states2[0].set_transition(1, "a");
-	states2[0].set_transition(1, "eps");
-	states2[0].set_transition(0, "b");
-	states2[1].set_transition(0, "a");
-	states2[1].set_transition(1, "b");
+	states2[0].add_transition(1, "a");
+	states2[0].add_transition(1, "eps");
+	states2[0].add_transition(0, "b");
+	states2[1].add_transition(0, "a");
+	states2[1].add_transition(1, "b");
 	states2[0].is_terminal = true;
 	FiniteAutomaton fa2(1, states2, {"a", "b"});
 
@@ -274,14 +274,14 @@ TEST(TestBisimilar, FA_MergeBisimilar) {
 	for (int i = 0; i < 3; i++) {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states2[0].set_transition(1, "a");
-	states2[0].set_transition(1, "eps");
-	states2[0].set_transition(2, "b");
-	states2[1].set_transition(2, "a");
-	states2[1].set_transition(1, "b");
-	states2[2].set_transition(1, "a");
-	states2[2].set_transition(1, "eps");
-	states2[2].set_transition(0, "b");
+	states2[0].add_transition(1, "a");
+	states2[0].add_transition(1, "eps");
+	states2[0].add_transition(2, "b");
+	states2[1].add_transition(2, "a");
+	states2[1].add_transition(1, "b");
+	states2[2].add_transition(1, "a");
+	states2[2].add_transition(1, "eps");
+	states2[2].add_transition(0, "b");
 	states2[0].is_terminal = true;
 	states2[2].is_terminal = true;
 	FiniteAutomaton fa2(1, states2, {"a", "b"});
@@ -290,11 +290,11 @@ TEST(TestBisimilar, FA_MergeBisimilar) {
 	for (int i = 0; i < 2; i++) {
 		states3.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states3[0].set_transition(0, "b");
-	states3[0].set_transition(1, "a");
-	states3[1].set_transition(0, "eps");
-	states3[1].set_transition(0, "a");
-	states3[1].set_transition(1, "b");
+	states3[0].add_transition(0, "b");
+	states3[0].add_transition(1, "a");
+	states3[1].add_transition(0, "eps");
+	states3[1].add_transition(0, "a");
+	states3[1].add_transition(1, "b");
 	states3[1].is_terminal = true;
 	FiniteAutomaton fa3(0, states3, {"a", "b"});
 
@@ -369,15 +369,15 @@ TEST(TestPrefixGrammar, PrefixGrammarBuilding) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states1[4].set_transition(1, "a");
-	states1[1].set_transition(2, "b");
-	states1[1].set_transition(4, "c");
-	states1[2].set_transition(2, "b");
-	states1[2].set_transition(2, "c");
+	states1[4].add_transition(1, "a");
+	states1[1].add_transition(2, "b");
+	states1[1].add_transition(4, "c");
+	states1[2].add_transition(2, "b");
+	states1[2].add_transition(2, "c");
 	states1[2].is_terminal = true;
-	states1[0].set_transition(4, "c");
-	states1[3].set_transition(0, "a");
-	states1[3].set_transition(0, "b");
+	states1[0].add_transition(4, "c");
+	states1[3].add_transition(0, "a");
+	states1[3].add_transition(0, "b");
 	states1[4].is_terminal = true;
 	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
 
@@ -476,13 +476,13 @@ TEST(TestTransformationMonoid, IsMinimal) {
 	for (int i = 0; i < 5; i++) {
 		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states[0].set_transition(1, "a");
-	states[1].set_transition(2, "c");
-	states[2].set_transition(3, "a");
-	states[3].set_transition(2, "c");
-	states[3].set_transition(4, "b");
-	states[4].set_transition(4, "b");
-	states[4].set_transition(4, "c");
+	states[0].add_transition(1, "a");
+	states[1].add_transition(2, "c");
+	states[2].add_transition(3, "a");
+	states[3].add_transition(2, "c");
+	states[3].add_transition(4, "b");
+	states[4].add_transition(4, "b");
+	states[4].add_transition(4, "c");
 	states[4].is_terminal = true;
 	FiniteAutomaton fa2(0, states, {"a", "b", "c"});
 	TransformationMonoid tm2(fa2);
@@ -780,6 +780,26 @@ TEST(TestReverse, BRegex_Reverse) {
 									BackRefRegex("[ba*]:1&1|&1b")));
 	ASSERT_EQ(BackRefRegex("(cb)*(c[ca*b]:1&1b(c&1b)*)*").reverse().to_txt(),
 			  "((b[ba*c]:1c)*b&1&1c)*(bc)*");
+}
+
+TEST(TestBisimilar, MFA_Bisimilar) {
+	ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[aa*]:1a&1").to_mfa_additional(),
+												 BackRefRegex("a[a*a]:1&1").to_mfa_additional())
+					.value());
+	//	ASSERT_FALSE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[a*]:1a*&1").to_mfa_additional(),
+	//												  BackRefRegex("a*[a*]:1&1").to_mfa_additional())
+	//					 .value());
+	ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[ab]:2cab&2").to_mfa_additional(),
+												 BackRefRegex("abc[ab]:2&2").to_mfa_additional())
+					.value());
+	ASSERT_FALSE(
+		MemoryFiniteAutomaton::bisimilar(BackRefRegex("[a|b]:1c(a|b)&1").to_mfa_additional(),
+										 BackRefRegex("(a|b)c[a|b]:1&1").to_mfa_additional())
+			.value());
+	ASSERT_FALSE(
+		MemoryFiniteAutomaton::bisimilar(BackRefRegex("[[a*]:1]:2a*&1").to_mfa_additional(),
+										 BackRefRegex("a*[a*]:1&1").to_mfa_additional())
+			.has_value());
 }
 
 TEST(TestAmbiguity, AmbiguityValues) {
