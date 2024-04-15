@@ -85,7 +85,12 @@ class Interpreter {
 	InterpreterLogger init_log();
 
 	// Тут хранятся объекты по их id
-	std::map<std::string, GeneralObject> objects;
+	std::unordered_map<std::string, GeneralObject> objects;
+
+	// Выражение для подстановки на место *
+	std::unordered_map<ObjectType, GeneralObject> current_random_objects;
+	RegexGenerator regex_generator; // TODO: менять параметры
+	void generate_automaton(std::string test_path, FA_type fa_type, int states_num = 6);
 
 	//== Элементы грамматики интерпретатора ===================================
 	struct Id {
@@ -155,6 +160,7 @@ class Interpreter {
 	};
 
 	// Флаги:
+	bool in_verification = false;
 
 	std::unordered_map<std::string, Flag> flags_names = {
 		{"auto_remove_trap_states", Flag::auto_remove_trap_states},
@@ -217,9 +223,6 @@ class Interpreter {
 
 	//== Исполнение комманд ===================================================
 
-	// Выражение для подстановки на место *
-	std::optional<Regex> current_random_regex;
-
 	// Применение цепочки функций к набору аргументов
 	std::optional<GeneralObject> apply_function_sequence(
 		const std::vector<FuncLib::Function>& functions, std::vector<GeneralObject> arguments,
@@ -264,7 +267,7 @@ class Interpreter {
 		enum Type { // TODO добавить тип строки (для filename)
 			error,
 			equalSign,
-			star,
+			randomObject,
 			doubleExclamation,
 			parL,
 			parR,

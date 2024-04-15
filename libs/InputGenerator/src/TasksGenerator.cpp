@@ -76,7 +76,7 @@ string TasksGenerator::generate_op() {
 bool TasksGenerator::arguments_exist(vector<ObjectType> args) {
 	for (ObjectType arg_type : args) {
 		// аргумент можно подобрать, если его тип есть в памяти, либо его можно сгенерировать
-		if (!(ids_by_type.count(arg_type) || generated_types.count(arg_type) != 0))
+		if (!(ids_by_type.count(arg_type) || generated_types.count(arg_type)))
 			return false;
 	}
 	return true;
@@ -156,18 +156,18 @@ string TasksGenerator::generate_arguments(Function first_func) {
 	for (auto input_type : first_func.input) {
 		// сгенерировать идентификатор
 		if (ids_by_type.count(input_type) &&
-			!(generated_types.count(input_type) != 0 && check_probability(50))) {
+			!(generated_types.count(input_type) && check_probability(50))) {
 			args_str += " N" + get_random_id_by_type(input_type);
 			/* генерируемые типы: */
-		} else if(input_type == NFA) {
-            std::string filename = std::to_string(automata_id++) + ".txt";
-            AutomatonGenerator("./TestData/grammar.txt", FA_type::NFA).write_to_file(filename);
-            args_str += " (getNFA \"" + filename + "\")"; 
-        } else if (input_type == MFA) {
-            std::string filename = std::to_string(automata_id++) + ".txt";
-            AutomatonGenerator("./TestData/grammar.txt", FA_type::MFA).write_to_file(filename);
-            args_str += " (getMFA \"" + filename + "\")"; 
-        } else if (input_type == REGEX) {
+		} else if (input_type == NFA) {
+			std::string filename = std::to_string(automata_id++) + ".txt";
+			AutomatonGenerator("./TestData/grammar.txt", FA_type::NFA).write_to_file(filename);
+			args_str += " (getNFA \"" + filename + "\")";
+		} else if (input_type == MFA) {
+			std::string filename = std::to_string(automata_id++) + ".txt";
+			AutomatonGenerator("./TestData/grammar.txt", FA_type::MFA).write_to_file(filename);
+			args_str += " (getMFA \"" + filename + "\")";
+		} else if (input_type == REGEX) {
 			args_str += " " + generate_regex();
 		} else if (input_type == BRefRegex) {
 			args_str += " " + generate_brefregex();

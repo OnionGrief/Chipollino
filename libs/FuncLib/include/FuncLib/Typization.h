@@ -18,19 +18,23 @@ namespace Typization {
 
 // Перечисление типов объектов
 enum class ObjectType {
-	NFA,		 // недетерминированный КА
-	DFA,		 // детерминированный КА
-	Regex,		 // регулярное выражение
-	RandomRegex, // место для подстановки сгенерированных регулярных выражений
-	Int,		 // целое число
-	FileName,		 // имя файла для чтения
-	Boolean,	 // true/false
+	NFA,			// недетерминированный КА
+	DFA,			// детерминированный КА
+	Regex,			// регулярное выражение
+	Int,			// целое число
+	FileName,		// имя файла для чтения
+	Boolean,		// true/false
 	OptionalBool,	// optional<bool>
 	AmbiguityValue, // yes/no/ы/ь
 	PrefixGrammar,	// префиксная грамматика
 	Array,			// массив
 	BRefRegex,
 	MFA,
+	RandomRegex, // место для подстановки сгенерированных регулярных выражений
+	RandomDFA,
+	RandomNFA,
+	RandomMFA,
+	RandomBRefRegex,
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -90,6 +94,10 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 	{ObjectType::Regex, "Regex"},
 	{ObjectType::BRefRegex, "BRefRegex"},
 	{ObjectType::RandomRegex, "RandomRegex"},
+	{ObjectType::RandomBRefRegex, "RandomBRefRegex"},
+	{ObjectType::RandomDFA, "RandomDFA"},
+	{ObjectType::RandomNFA, "RandomNFA"},
+	{ObjectType::RandomMFA, "RandomMFA"},
 	{ObjectType::Int, "Int"},
 	{ObjectType::FileName, "FileName"},
 	{ObjectType::Boolean, "Boolean"},
@@ -104,11 +112,24 @@ inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> type
 	{ObjectType::NFA, {ObjectType::MFA}},
 	{ObjectType::DFA, {ObjectType::NFA, ObjectType::MFA}},
 	{ObjectType::Regex, {ObjectType::BRefRegex}},
+	{ObjectType::RandomRegex, {ObjectType::Regex, ObjectType::BRefRegex}},
+	{ObjectType::RandomBRefRegex, {ObjectType::BRefRegex}},
+	{ObjectType::RandomDFA, {ObjectType::NFA, ObjectType::DFA, ObjectType::MFA}},
+	{ObjectType::RandomNFA, {ObjectType::NFA, ObjectType::MFA}},
+	{ObjectType::RandomMFA, {ObjectType::MFA}},
 };
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_children = {
-	{ObjectType::NFA, {ObjectType::DFA}},
-	{ObjectType::MFA, {ObjectType::NFA, ObjectType::DFA}},
-	{ObjectType::BRefRegex, {ObjectType::Regex}},
+	{ObjectType::NFA, {ObjectType::RandomDFA, ObjectType::DFA, ObjectType::RandomNFA}},
+	{ObjectType::DFA, {ObjectType::RandomDFA}},
+	{ObjectType::MFA,
+	 {ObjectType::RandomNFA,
+	  ObjectType::NFA,
+	  ObjectType::RandomDFA,
+	  ObjectType::DFA,
+	  ObjectType::RandomMFA}},
+	{ObjectType::Regex, {ObjectType::RandomRegex}},
+	{ObjectType::BRefRegex,
+	 {ObjectType::RandomBRefRegex, ObjectType::RandomRegex, ObjectType::Regex}},
 };
 
 // используется, чтобы получить всех возможных детей / родителей типа
