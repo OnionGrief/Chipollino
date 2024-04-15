@@ -19,7 +19,7 @@ class RLGrammar {
 			nonterminal
 		};
 		Type type = terminal;
-		int state_index = -1, class_number = -1;
+		int sequential_number = -1, class_number = -1;
 		std::string name;
 		Item();
 		Item(Type type, std::string name, int state_index, int class_number);
@@ -27,6 +27,12 @@ class RLGrammar {
 		Item(Type type, std::string name);
 		bool operator!=(const Item& other) const;
 	};
+
+	// обновляет порядковые номера нетерминалов
+	// применяется когда нужно, чтобы они соответствовали индексам в rules
+	// (считаем, что по порядку они уже соответствуют)
+	static void reset_nonterminals_numbering(
+		std::vector<Item*>& nonterminals); // NOLINT(runtime/references)
 
 	// обновляет значение class_number для каждого нетерминала
 	static void update_classes(std::set<int>& checker, // NOLINT(runtime/references)
