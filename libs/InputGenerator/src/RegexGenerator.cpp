@@ -4,7 +4,7 @@ using std::ofstream;
 using std::string;
 using std::to_string;
 
-RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {}
+RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 4, 3, 3) {}
 
 RegexGenerator::RegexGenerator(int neg_chance_) : RegexGenerator::RegexGenerator() {
 	neg_chance = neg_chance_;

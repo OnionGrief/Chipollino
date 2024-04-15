@@ -15,12 +15,12 @@ using std::string;
 using std::unordered_set;
 using std::vector;
 
-const int RegexNumber = 30;
+const int RegexNumber = 50;
+const int RegexNumberX10 = RegexNumber * 10;
 
 TEST(TestRegex, ToTxt) {
 	RegexGenerator rg(15, 10, 5, 3);
-	// rg.set_neg_chance(50); // для отрицания
-	for (int i = 0; i < RegexNumber; i++) {
+	for (int i = 0; i < RegexNumberX10; i++) {
 		string rgx_str = rg.generate_regex();
 		SCOPED_TRACE("Regex: " + rgx_str);
 		Regex r1(rgx_str);
@@ -45,11 +45,14 @@ TEST(TestArden, RandomRegexEquivalence) {
 
 TEST(TestEqual, ThompsonGlushkov) {
 	RegexGenerator rg;
-	for (int i = 0; i < RegexNumber; i++) {
+	for (int i = 0; i < RegexNumberX10; i++) {
 		string rgx_str = rg.generate_regex();
 		SCOPED_TRACE("Regex: " + rgx_str);
 		Regex r(rgx_str);
-		ASSERT_TRUE(FiniteAutomaton::equal(r.to_thompson().remove_eps(), r.to_glushkov()));
+		FiniteAutomaton fa1 = r.to_thompson().remove_eps();
+		FiniteAutomaton fa2 = r.to_glushkov();
+		ASSERT_TRUE(FiniteAutomaton::equal(fa1, fa2));
+		ASSERT_TRUE(FiniteAutomaton::bisimilar(fa1, fa2));
 	}
 }
 
@@ -65,7 +68,7 @@ TEST(TestNFA, NegativeNFAEquivalence) {
 }
 
 TEST(TestMFA, Fuzzing) {
-	RegexGenerator rg(5, 3, 2, 3);
+	RegexGenerator rg(6, 3, 3, 3);
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = rg.generate_brefregex(2, 70, 50);
 		SCOPED_TRACE("Regex: " + rgx_str);
@@ -77,14 +80,19 @@ TEST(TestMFA, Fuzzing) {
 		auto test_set2 = mfa2.generate_test_set(len);
 		ASSERT_EQ(test_set1.first, test_set2.first);
 
-		test_set1.second.insert(test_set2.second.begin(), test_set2.second.end());
-		std::vector<std::string> random_elements;
+		vector<string> random_elements;
 		std::sample(test_set1.second.begin(),
 					test_set1.second.end(),
 					std::back_inserter(random_elements),
-					1000,
+					500,
 					std::mt19937{std::random_device{}()});
-		for (const auto& mutated_word : random_elements) {
+		std::sample(test_set2.second.begin(),
+					test_set2.second.end(),
+					std::back_inserter(random_elements),
+					500,
+					std::mt19937{std::random_device{}()});
+		unordered_set<string> random_set(random_elements.begin(), random_elements.end());
+		for (const auto& mutated_word : random_set) {
 			auto res1 = mfa1.parse(mutated_word);
 			auto res2 = mfa2.parse(mutated_word);
 			ASSERT_EQ(res1.second, res2.second);
