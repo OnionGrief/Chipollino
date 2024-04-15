@@ -2659,7 +2659,7 @@ void FiniteAutomaton::fill_order(int state_index, vector<bool>& visited, stack<i
 }
 
 void find_scc_dfs(int state_index, const vector<FAState::Transitions>& reversed_transitions,
-				  vector<bool>& visited, vector<int>& component) {
+				  vector<bool>& visited, vector<int>& component) { // NOLINT(runtime/references)
 	visited[state_index] = true;
 	component.push_back(state_index);
 

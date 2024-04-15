@@ -1322,9 +1322,8 @@ void find_opening_states_dfs(int state_index,
 				action = tr.memory_actions.at(cell);
 			if (action && (action == MFATransition::open || action == MFATransition::reset))
 				opening_states.insert(tr.to);
-			else if (!visited[tr.to]) {
+			else if (!visited[tr.to])
 				find_opening_states_dfs(tr.to, reversed_transitions, visited, opening_states, cell);
-			}
 		}
 }
 
@@ -1339,10 +1338,10 @@ vector<vector<int>> MemoryFiniteAutomaton::find_cg_traces(int state_index,
 			std::optional<MFATransition::MemoryAction> action;
 			if (tr.memory_actions.count(cell))
 				action = tr.memory_actions.at(cell);
-			if (action && (action == MFATransition::close || action == MFATransition::reset))
+			if (action && (action == MFATransition::close || action == MFATransition::reset)) {
 				res.push_back({state_index});
-			else if (!visited.count(tr.to) && !(state_index == opening_state &&
-												(!action || action != MFATransition::open))) {
+			} else if (!visited.count(tr.to) && !(state_index == opening_state &&
+												  (!action || action != MFATransition::open))) {
 				auto t = find_cg_traces(tr.to, visited, cell, opening_state);
 				for (auto i : t) {
 					i.insert(i.begin(), state_index);
