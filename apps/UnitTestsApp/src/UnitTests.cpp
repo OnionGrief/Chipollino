@@ -786,9 +786,9 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 	ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[aa*]:1a&1").to_mfa_additional(),
 												 BackRefRegex("a[a*a]:1&1").to_mfa_additional())
 					.value());
-	//	ASSERT_FALSE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[a*]:1a*&1").to_mfa_additional(),
-	//												  BackRefRegex("a*[a*]:1&1").to_mfa_additional())
-	//					 .value());
+	ASSERT_FALSE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[a*]:1a*&1").to_mfa_additional(),
+												  BackRefRegex("a*[a*]:1&1").to_mfa_additional())
+					 .value());
 	ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[ab]:2cab&2").to_mfa_additional(),
 												 BackRefRegex("abc[ab]:2&2").to_mfa_additional())
 					.value());

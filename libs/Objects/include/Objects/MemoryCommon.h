@@ -30,6 +30,7 @@ struct CaptureGroup {
 		int index;
 		int class_num;
 
+		static const int reset_class = -1;
 		bool operator==(const State& other) const;
 
 		struct Hasher {

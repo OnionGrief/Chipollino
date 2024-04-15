@@ -1406,8 +1406,10 @@ bool MemoryFiniteAutomaton::find_path_decisions(int state_index, vector<int>& vi
 }
 
 bool MemoryFiniteAutomaton::path_contains_decisions(const unordered_set<int>& path_states) const {
+	vector<int> visited(size(), 0);
 	for (auto start : path_states) {
-		vector<int> visited(size(), 0);
+		if (visited[start] != 0)
+			continue;
 		if (find_path_decisions(start, visited, path_states))
 			return true;
 	}
@@ -1519,22 +1521,28 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		const auto& CGs1 = CGs.first;
 		const auto& CGs2 = CGs.second;
 
-		for (const auto& cg1 : CGs1)
-			for (const auto& cg2 : CGs2) {
+		unordered_set<int> check_set1, check_set2;
+		for (int i = 0; i < CGs1.size(); i++)
+			for (int j = 0; j < CGs2.size(); j++) {
+				const auto &cg1 = CGs1[i], cg2 = CGs2[j];
 				unordered_set<int> states_to_check_1 = cg1.get_states_diff(cg2.state_classes),
 								   states_to_check_2 = cg2.get_states_diff(cg1.state_classes);
 
-				if (mfa1.path_contains_decisions(states_to_check_1))
-					return false;
-				if (mfa2.path_contains_decisions(states_to_check_2))
-					return false;
+				if (!mfa1.path_contains_decisions(states_to_check_1) &&
+					!mfa2.path_contains_decisions(states_to_check_2)) {
+					check_set1.insert(i);
+					check_set2.insert(j);
+				}
 			}
+
+		if (check_set1.size() != CGs1.size() || check_set2.size() != CGs2.size())
+			return false;
 
 		FiniteAutomaton CGs1_fa(fas[0].get_subautomaton(CGs1[0])),
 			CGs2_fa(fas[1].get_subautomaton(CGs2[0]));
 		for (int i = 1; i < CGs1.size(); i++)
 			CGs1_fa = FiniteAutomaton::uunion(CGs1_fa, fas[0].get_subautomaton(CGs1[i]));
-		for (int i = 1; i < CGs1.size(); i++)
+		for (int i = 1; i < CGs2.size(); i++)
 			CGs2_fa = FiniteAutomaton::uunion(CGs2_fa, fas[1].get_subautomaton(CGs2[i]));
 		if (!FiniteAutomaton::equivalent(CGs1_fa, CGs2_fa))
 			return false;

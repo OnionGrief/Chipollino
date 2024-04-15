@@ -42,8 +42,9 @@ CaptureGroup::CaptureGroup(int cell, const std::vector<std::vector<int>>& _trace
 	for (const auto& trace : _traces) {
 		traces.insert(trace);
 		for (auto st : trace) {
-			states.insert({st, _state_classes[st]});
-			state_classes.insert(_state_classes[st]);
+			int class_num = (trace.size() > 1) ? _state_classes[st] : State::reset_class;
+			states.insert({st, class_num});
+			state_classes.insert(class_num);
 		}
 	}
 }
@@ -56,7 +57,7 @@ std::unordered_set<int> CaptureGroup::get_states_diff(
 	const std::unordered_set<int>& other_state_classes) const {
 	std::unordered_set<int> res;
 	for (auto st : states)
-		if (!other_state_classes.count(st.class_num))
+		if (st.class_num != State::reset_class && !other_state_classes.count(st.class_num))
 			res.insert(st.index);
 
 	for (const auto& trace : traces)
