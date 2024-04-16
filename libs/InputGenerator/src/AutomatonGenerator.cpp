@@ -189,14 +189,6 @@ void AutomatonGenerator::write_to_file(const string& filename) {
 	out.close();
 }
 
-void AutomatonGenerator::set_terminal_probability(int elem) {
-	terminal_probability = elem;
-}
-
-void AutomatonGenerator::set_states_number(int n) {
-	states_number = n;
-}
-
 bool AutomatonGenerator::parse_reserved(const std::string& res_case) {
 	if (res_case == "EPS")
 		return true;
