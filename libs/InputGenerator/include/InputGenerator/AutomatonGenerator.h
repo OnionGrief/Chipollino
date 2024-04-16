@@ -75,8 +75,8 @@ class AutomatonGenerator {
 
 	void add_terminality();
 
-	bool coloring_MFA_transition(int beg, FAtransition& trans,
-								 int color); // NOLINT(runtime/references)
+	bool coloring_MFA_transition(int beg, FAtransition& trans, // NOLINT(runtime/references)
+								 int color);
 
 	void generate_graph();
 
