@@ -14,6 +14,12 @@ class MemoryFiniteAutomaton;
 class MFAState;
 class Regex;
 
+// Cell -> pair{A, B}
+// A = true, если потенциально пустая ячейка будет пройдена в любом случае
+// (иначе есть пути, которые ее не включают).
+// B - множество ячеек, от пустоты которых может зависеть пустота Cell.
+using ToResetMap = std::unordered_map<Cell, std::pair<bool, CellSet>, Cell::Hasher>;
+
 class BackRefRegex : public AlgExpression {
   private:
 	// номер ячейки памяти (используется при Type: ref, memoryWriter)
@@ -55,22 +61,20 @@ class BackRefRegex : public AlgExpression {
 	// вычисляет поля may_be_eps (передать пустой вектор на вход)
 	void calculate_may_be_eps(
 		std::unordered_map<int, std::vector<BackRefRegex*>>&); // NOLINT(runtime/references)
-	// добавляет все потенциально пустые memoryWriter в переданное множество
-	bool contains_eps_tracking_resets(CellSet&) const; // NOLINT(runtime/references)
+
+	// ToResetMap заполняется ячейками, которые нужно сбросить.
+	std::pair<bool, ToResetMap> contains_eps_tracking_resets() const; // NOLINT(runtime/references)
 	// пары {нода, {потенциально пустые memoryWriter, которые стоят до нее}}
-	std::vector<std::pair<AlgExpression*, CellSet>> get_first_nodes_tracking_resets();
+	std::vector<std::pair<AlgExpression*, ToResetMap>> get_first_nodes_tracking_resets();
 	// пары {нода, {потенциально пустые memoryWriter, которые стоят после нее}}
-	std::vector<std::pair<AlgExpression*, CellSet>> get_last_nodes_tracking_resets();
-	// возвращает номера ячеек памяти, над которыми производится итерация,
-	// и номера потенциально пустых ячеек памяти, над которыми производится итерация
-	void get_cells_under_iteration(std::unordered_set<int>&, CellSet&) const;
-	// 1) для каждого терма определяет множество номеров термов, которым он может предшествовать
-	// и над какими потенциально пустыми ячейками из него совершаются итерации
-	// 2) для каждого перехода определяет, над какими ячейками он является итерацией,
+	std::vector<std::pair<AlgExpression*, ToResetMap>> get_last_nodes_tracking_resets();
+	// возвращает номера ячеек памяти, над которыми производится итерация
+	void get_cells_under_iteration(std::unordered_set<int>&) const;
+	// для каждого терма определяет множество номеров термов, которым он может предшествовать
+	// для каждого перехода определяет, над какими ячейками он является итерацией,
 	// и какие ячейки памяти он должен сбросить
-	void get_follow(
-		std::vector<std::pair<std::vector<std::tuple<int, std::unordered_set<int>, CellSet>>,
-							  CellSet>>& // NOLINT(runtime/references)
+	void get_follow(std::vector<std::vector<std::tuple<int, std::unordered_set<int>,
+													   CellSet>>>& // NOLINT(runtime/references)
 	) const;
 
 	// преобразует star в conc (раскрывает каждую итерацию один раз) и линеаризует memoryWriter
@@ -79,6 +83,9 @@ class BackRefRegex : public AlgExpression {
 	bool _is_acreg(
 		std::unordered_set<int>, std::unordered_set<int>,
 		std::unordered_map<int, std::unordered_set<int>>&) const; // NOLINT(runtime/references)
+
+	void linearize_refs(int& number); // NOLINT(runtime/references)
+	void _check_refs(std::unordered_set<int>&, std::unordered_set<int>&) const;
 
 	// меняет порядок конкатенаций в дереве (swap term_l и term_r)
 	void _reverse(std::unordered_map<int, BackRefRegex*>&); // NOLINT(runtime/references)
@@ -113,4 +120,7 @@ class BackRefRegex : public AlgExpression {
 	bool is_acreg(iLogTemplate* log = nullptr) const;
 	// обращение выражения (для СНФ)
 	BackRefRegex reverse(iLogTemplate* log = nullptr) const;
+	// проверяет, что каждая ссылка может следовать за записью в память (соответствующую ячейку)
+	bool check_refs() const;
+	BackRefRegex rewrite_aci() const;
 };

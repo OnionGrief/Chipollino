@@ -104,7 +104,7 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::get_bisimilar_grammar(
 			vector<Item*> tempRule;
 			for (Item* item : rule) {
 				if (item->type == Item::nonterminal) {
-					tempRule.push_back(class_to_nonterminals[item->class_number][0]);
+					tempRule.push_back(class_to_nonterminals.at(item->class_number)[0]);
 				} else {
 					tempRule.push_back(item);
 				}
@@ -147,7 +147,7 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::fa_to_grammar(const vector<F
 		for (const auto& [symb, to_states] : states[i].transitions) {
 			for (int transition_to : to_states)
 				rules[i].push_back(
-					{terminals[terminal_indexes[symb]], nonterminals[transition_to]});
+					{terminals[terminal_indexes.at(symb)], nonterminals[transition_to]});
 		}
 		if (states[i].is_terminal)
 			rules[i].push_back({terminals[0]});

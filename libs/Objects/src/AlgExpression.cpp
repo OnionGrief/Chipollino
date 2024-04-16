@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
@@ -17,7 +18,7 @@ using std::unordered_map;
 using std::vector;
 
 AlgExpression::AlgExpression() {
-	type = AlgExpression::eps;
+	type = Type::eps;
 }
 
 AlgExpression::Lexeme::Lexeme(Type type, const Symbol& symbol, int number)
@@ -95,7 +96,7 @@ void AlgExpression::set_language(const std::shared_ptr<Language>& _language) {
 }
 
 void AlgExpression::generate_alphabet() {
-	if (type == AlgExpression::symb) {
+	if (type == Type::symb) {
 		alphabet = {symbol};
 		return;
 	}
@@ -501,8 +502,8 @@ AlgExpression* AlgExpression::scan_conc(const vector<AlgExpression::Lexeme>& lex
 		if (lexemes[i].type == Lexeme::Type::conc && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
 			AlgExpression* r = expr(lexemes, i + 1, index_end);
-			if (l == nullptr || r == nullptr || r->type == AlgExpression::eps ||
-				l->type == AlgExpression::eps) { // Проверка на адекватность)
+			if (l == nullptr || r == nullptr || r->type == Type::eps ||
+				l->type == Type::eps) { // Проверка на адекватность)
 				delete r;
 				delete l;
 				return p;
@@ -530,7 +531,7 @@ AlgExpression* AlgExpression::scan_star(const vector<AlgExpression::Lexeme>& lex
 		update_balance(lexemes[i], balance);
 		if (lexemes[i].type == Lexeme::Type::star && balance == 0) {
 			AlgExpression* l = expr(lexemes, index_start, i);
-			if (l == nullptr || l->type == AlgExpression::eps) {
+			if (l == nullptr || l->type == Type::eps) {
 				delete l;
 				return p;
 			}
@@ -584,7 +585,7 @@ AlgExpression* AlgExpression::scan_symb(const vector<AlgExpression::Lexeme>& lex
 
 	p = make();
 	p->symbol = lexemes[index_start].symbol;
-	p->type = AlgExpression::symb;
+	p->type = Type::symb;
 	p->alphabet = {lexemes[index_start].symbol};
 	return p;
 }
@@ -599,7 +600,7 @@ AlgExpression* AlgExpression::scan_eps(const vector<AlgExpression::Lexeme>& lexe
 
 	p = make();
 	p->symbol = Symbol::Epsilon;
-	p->type = AlgExpression::eps;
+	p->type = Type::eps;
 	return p;
 }
 
@@ -615,21 +616,30 @@ AlgExpression* AlgExpression::scan_par(const vector<AlgExpression::Lexeme>& lexe
 	return p;
 }
 
-bool AlgExpression::equality_checker(const AlgExpression* expr1, const AlgExpression* expr2) {
-	if (expr1 == nullptr && expr2 == nullptr)
-		return true;
-	if (expr1 == nullptr || expr2 == nullptr)
-		return false;
-	if (expr1->type != expr2->type || expr1->symbol != expr2->symbol || !expr1->equals(expr2))
-		return false;
+// bool AlgExpression::equality_checker(const AlgExpression* expr1, const AlgExpression* expr2) {
+//	if (expr1 == nullptr && expr2 == nullptr)
+//		return true;
+//	if (expr1 == nullptr || expr2 == nullptr)
+//		return false;
+//	if (expr1->type != expr2->type || expr1->symbol != expr2->symbol || !expr1->equals(expr2))
+//		return false;
+//
+//	if (equality_checker(expr1->term_l, expr2->term_l) &&
+//		equality_checker(expr1->term_r, expr2->term_r))
+//		return true;
+//	if (expr1->type != Type::conc && equality_checker(expr1->term_r, expr2->term_l) &&
+//		equality_checker(expr1->term_l, expr2->term_r))
+//		return true;
+//	return false;
+// }
 
-	if (equality_checker(expr1->term_l, expr2->term_l) &&
-		equality_checker(expr1->term_r, expr2->term_r))
-		return true;
-	if (equality_checker(expr1->term_r, expr2->term_l) &&
-		equality_checker(expr1->term_l, expr2->term_r))
-		return true;
-	return false;
+bool AlgExpression::equality_checker(const AlgExpression* expr1, const AlgExpression* expr2) {
+	AlgExpression *temp1 = expr1->make_copy(), *temp2 = expr2->make_copy();
+	vector<AlgExpression*> alts;
+	temp1->_rewrite_aci(alts, false, false);
+	alts.clear();
+	temp2->_rewrite_aci(alts, false, false);
+	return temp1->to_txt() == temp2->to_txt();
 }
 
 // для метода test
@@ -674,7 +684,7 @@ vector<AlgExpression*> AlgExpression::get_first_nodes() {
 	case Type::star:
 	case Type::memoryWriter:
 		return term_l->get_first_nodes();
-	case AlgExpression::eps:
+	case Type::eps:
 		return {};
 	default:
 		return {this};
@@ -699,9 +709,104 @@ vector<AlgExpression*> AlgExpression::get_last_nodes() {
 	case Type::star:
 	case Type::memoryWriter:
 		return term_l->get_last_nodes();
-	case AlgExpression::eps:
+	case Type::eps:
 		return {};
 	default:
 		return {this};
+	}
+}
+
+void AlgExpression::sort_alts(std::vector<AlgExpression*>& alts, bool erase_alts) {
+	// rule w1 | w2 = w2 | w1
+	// rule (w1 | w2) | w3 = w1 | (w2 | w3)
+	std::sort(alts.begin(), alts.end(), [](AlgExpression*& a, AlgExpression*& b) {
+		return a->to_txt() < b->to_txt();
+	});
+	if (erase_alts) {
+		// rule w | w = w
+		alts.erase(std::unique(alts.begin(),
+							   alts.end(),
+							   [](AlgExpression*& a, AlgExpression*& b) {
+								   return a->to_txt() == b->to_txt();
+							   }),
+				   alts.end());
+		bool found_eps = false;
+		for (auto i : alts)
+			if (i->type != Type::eps && i->contains_eps())
+				found_eps = true;
+		if (found_eps)
+			alts.erase(std::remove_if(alts.begin(),
+									  alts.end(),
+									  [](AlgExpression*& a) { return a->type == eps; }),
+					   alts.end());
+	}
+}
+
+vector<AlgExpression*> AlgExpression::join_alts(std::vector<AlgExpression*> alts_to_join,
+												AlgExpression* root) const {
+	vector<AlgExpression*> res;
+	if (!root)
+		return res;
+	if (alts_to_join.size() == 1) {
+		root->copy(alts_to_join[0]);
+		res.emplace_back(root);
+		return res;
+	}
+
+	root->type = Type::alt;
+	root->term_l = alts_to_join[0]->make_copy();
+	res.emplace_back(root->term_l);
+	for (int i = 1; i < alts_to_join.size() - 1; i++) {
+		root->term_r = make();
+		root = root->term_r;
+		root->type = Type::alt;
+		root->term_l = alts_to_join[i]->make_copy();
+		res.emplace_back(root->term_l);
+	}
+	root->term_r = alts_to_join[alts_to_join.size() - 1]->make_copy();
+	res.emplace_back(root->term_r);
+	return res;
+}
+
+void AlgExpression::_rewrite_aci(std::vector<AlgExpression*>& alts, bool from_alt,
+								 bool erase_alts) {
+	auto t = to_txt();
+	vector<AlgExpression*> cur_alts;
+	switch (type) {
+	case Type::alt: {
+		term_l->_rewrite_aci(cur_alts, true, erase_alts);
+		term_r->_rewrite_aci(cur_alts, true, erase_alts);
+		if (!from_alt) {
+			sort_alts(cur_alts, erase_alts);
+			vector<AlgExpression*> aci_alts(cur_alts.size());
+			for (int i = 0; i < aci_alts.size(); i++)
+				aci_alts[i] = cur_alts[i]->make_copy();
+			clear(); // очистятся в том числе cur_alts
+			auto root_l =
+				language; // чтобы сохранить указатель в корне на случай удаления (пример a|a)
+			vector<AlgExpression*> res_alts = join_alts(aci_alts, this);
+			language = root_l;
+			for (auto& aci_alt : aci_alts)
+				delete aci_alt;
+			alts.insert(alts.end(), res_alts.begin(), res_alts.end());
+		} else {
+			alts.insert(alts.end(), cur_alts.begin(), cur_alts.end());
+		}
+		break;
+	}
+	case Type::conc:
+		alts.emplace_back(this);
+		term_l->_rewrite_aci(cur_alts, false, erase_alts);
+		term_r->_rewrite_aci(cur_alts, false, erase_alts);
+		break;
+	case Type::star:
+	case Type::negative:
+	case Type::memoryWriter:
+		alts.emplace_back(this);
+		term_l->_rewrite_aci(cur_alts, false, erase_alts);
+		break;
+	default:
+		alts.emplace_back(this);
+		break;
 	}
 }

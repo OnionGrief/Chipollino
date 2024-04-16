@@ -188,7 +188,7 @@ MemoryFiniteAutomaton Parser::parse_MFA(const string& filename) {
 		}
 
 		auto x = MFATransition(states_id[i.end], i.open, i.close);
-		states[states_id[i.beg]].set_transition(x, i.symb);
+		states[states_id[i.beg]].add_transition(x, i.symb);
 	}
 
 	auto mfa = MemoryFiniteAutomaton(initial_state, states, alphabet);
@@ -230,9 +230,9 @@ FiniteAutomaton Parser::parse_FA(const string& filename) {
 
 	for (auto& tran : trans) {
 		if (tran.symb == AutomataParser::epsilon) {
-			states[states_id[tran.beg]].set_transition(states_id[tran.end], Symbol::Epsilon);
+			states[states_id[tran.beg]].add_transition(states_id[tran.end], Symbol::Epsilon);
 		} else {
-			states[states_id[tran.beg]].set_transition(states_id[tran.end], tran.symb);
+			states[states_id[tran.beg]].add_transition(states_id[tran.end], tran.symb);
 			alphabet.insert(Symbol(tran.symb));
 		}
 	}

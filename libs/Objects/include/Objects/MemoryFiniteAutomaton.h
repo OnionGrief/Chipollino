@@ -67,19 +67,22 @@ class MFAState : public State {
 	explicit MFAState(const FAState& state);
 
 	std::string to_txt() const override;
-	void set_transition(const MFATransition&, const Symbol&);
+	void add_transition(const MFATransition&, const Symbol&);
 	bool operator==(const MFAState& other) const;
 };
+
+using MemoryConfiguration = std::unordered_set<int>;
+using MemoryContents = std::unordered_map<int, std::pair<int, int>>;
 
 // состояние идентифицирующее шаг парсинга по MFA
 struct ParingState {
 	int pos;
 	const MFAState* state;
-	std::unordered_set<int> opened_cells;
-	std::unordered_map<int, std::pair<int, int>> memory; // значение - начало и конец подстроки
+	MemoryConfiguration opened_cells;
+	MemoryContents memory; // значение - начало и конец подстроки
 
-	ParingState(int pos, const MFAState* state, const std::unordered_set<int>& opened_cells,
-				const std::unordered_map<int, std::pair<int, int>>& memory);
+	ParingState(int pos, const MFAState* state, const MemoryConfiguration& opened_cells,
+				const MemoryContents& memory);
 	bool operator==(const ParingState& other) const;
 
 	struct Hasher {
@@ -95,8 +98,8 @@ struct MutationHasher {
 struct TraversalState {
 	std::string str;
 	const MFAState* state;
-	std::unordered_set<int> opened_cells;
-	std::unordered_map<int, std::pair<int, int>> memory; // значение - начало и конец подстроки
+	MemoryConfiguration opened_cells;
+	MemoryContents memory; // значение - начало и конец подстроки
 
 	// последовательность посещенных состояний
 	std::vector<int> visited_path;
@@ -108,9 +111,8 @@ struct TraversalState {
 
 	TraversalState() = default;
 	explicit TraversalState(const MFAState* state);
-	TraversalState(const std::string& str, const MFAState* state,
-				   const std::unordered_set<int>& opened_cells,
-				   const std::unordered_map<int, std::pair<int, int>>& memory,
+	TraversalState(const std::string& str, const MFAState* state, MemoryConfiguration opened_cells,
+				   std::unordered_map<int, std::pair<int, int>> memory,
 				   const TraversalState& previous_state, bool memory_used = false);
 	bool operator==(const TraversalState& other) const;
 
@@ -123,8 +125,8 @@ struct TraversalState {
 
 // переход дополняется информацией о состоянии памяти
 struct ParseTransition : MFATransition {
-	std::unordered_set<int> opened_cells;
-	std::unordered_map<int, std::pair<int, int>> memory;
+	MemoryConfiguration opened_cells;
+	MemoryContents memory;
 
   private:
 	// применяет действия над памятью
@@ -134,7 +136,7 @@ struct ParseTransition : MFATransition {
 	ParseTransition(const MFATransition& transition, const ParingState& parsing_state);
 	ParseTransition(const MFATransition& transition, const TraversalState& traversal_state);
 	// "записывает" символы в открытые ячейки
-	void update_memory(const Symbol& symbol);
+	void update_memory_contents(const Symbol& symbol);
 };
 
 struct ParseTransitions {
@@ -192,6 +194,28 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	void dfs_by_eps(int, std::set<int>&, const int&, int&, // NOLINT(runtime/references)
 					MFATransition::MemoryActions&) const; // NOLINT(runtime/references)
 
+	void color_mem_dfs(
+		int state_index,
+		std::vector<bool>& visited, // NOLINT(runtime/references)
+		const MemoryConfiguration& opened_cells,
+		std::unordered_map<int, std::unordered_set<int>>& colors // NOLINT(runtime/references)
+	) const;
+
+	std::vector<MFAState::Transitions> get_reversed_transitions() const;
+
+	std::vector<std::vector<int>> find_cg_traces(int state_index, std::unordered_set<int> visited,
+												 int cell, int opening_state) const;
+	std::vector<CaptureGroup> find_capture_groups_backward(
+		int ref_incoming_state, int cell, const std::vector<int>& fa_classes) const;
+
+	bool find_path_decisions(int state_index,
+							 std::vector<int>& visited, // NOLINT(runtime/references)
+							 const std::unordered_set<int>& path_states) const;
+	bool path_contains_decisions(const std::unordered_set<int>& path_states) const;
+
+	static std::optional<bool> bisimilarity_checker(const MemoryFiniteAutomaton&,
+													const MemoryFiniteAutomaton&);
+
   public:
 	MemoryFiniteAutomaton();
 	MemoryFiniteAutomaton(int initial_state, std::vector<MFAState> states,
@@ -221,7 +245,16 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	// возвращает множество уникальных слов длины <= max_len, распознаваемых автоматом
 	// и множество тестовых слов с мутациями
 	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_set(
-		int max_len);
+		int max_len) const;
 	// ссылки считаются символами алфавита, операции над памятью игнорируются
 	FiniteAutomaton to_fa() const;
+	// ссылки считаются символами алфавита, операции над памятью преобразуются в переходы Oi, Ci, Ri
+	FiniteAutomaton to_fa_mem() const;
+	// проверка автоматов на бисимилярность
+	static std::optional<bool> bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+										 iLogTemplate* log = nullptr);
+	static bool action_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+								 iLogTemplate* log = nullptr);
+	static bool literally_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+									iLogTemplate* log = nullptr);
 };
