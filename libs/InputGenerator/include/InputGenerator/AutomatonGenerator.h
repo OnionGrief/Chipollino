@@ -22,6 +22,8 @@ enum class FA_type {
 	DFA
 };
 
+class AutomatonGenerator; // Прототип класса AutomatonGenerator
+
 class AutomatonGeneratorBuilder {
 public:
     int initial_ = 0;
