@@ -13,6 +13,7 @@
 
 #include <lexy/callback/string.hpp>
 #include <lexy/lexeme.hpp>
+
 #define lexy_ascii_child lexy::_pt_node<lexy::_bra, void>
 
 #include "Lexer.h"
@@ -107,7 +108,6 @@ class Parser {
 			 if (!res) {
 				 FAtransitions.pop_back();
 			 }
-			 // std::cout << "TRANSSSSITION: " << res;
 			 return res;
 		 }},
 		{"stmt",
@@ -125,7 +125,6 @@ class Parser {
 			 auto transition = rewriting_rules["node_id"];
 			 auto res = parse_alternative(*transition);
 			 if (!nodes.empty()) {
-				 // std::cout << "SSSSSSSTRING " << STRING << "\n";
 				 *nodes.front() = STRING;
 				 nodes.pop();
 			 }
@@ -140,8 +139,6 @@ class Parser {
 			 auto transition = rewriting_rules["symbol"];
 			 auto res = parse_alternative(*transition);
 			 if (!symbols.empty()) {
-				 // std::cout << "SSYYYYYMBOLS: " << DIGIT << " " << LETTER << " " << TERMINAL << "
-				 // " << NUMBER << "\n";
 				 if (DIGIT != 0) {
 					 std::string r;
 					 r.push_back(DIGIT);
@@ -176,8 +173,7 @@ class Parser {
 			 return res;
 		 }},
 		{"stack_symbol",
-		 [=]() {
-			 std::string TERMINAL;
+		 [=, this]() {
 			 auto transition = rewriting_rules["stack_symbol"];
 			 auto res = parse_alternative(*transition);
 
@@ -203,11 +199,12 @@ class Parser {
 
 	std::string file;
 	int cur_pos = 0;
+
 	void read_symbols(int num);
 
 	void parse_attribute(lexy_ascii_child ref);
 
-	bool parse_transition(std::string name);
+	bool parse_transition(const std::string& name);
 
 	bool parse_nonterminal(lexy_ascii_child ref);
 
@@ -220,8 +217,8 @@ class Parser {
   public:
 	Parser() = default;
 
-	// Поиск рекурсивный поиск вершин с названиями из names, игнорируя спуск в вершины из
-	// exclude
+	// Поиск рекурсивный поиск вершин с названиями из names,
+	// игнорируя спуск в вершины из exclude
 	static std::vector<lexy_ascii_child> find_children(
 		lexy_ascii_tree& tree, // NOLINT(runtime/references)
 		const std::set<std::string>& names, const std::set<std::string>& exclude = {});
@@ -235,12 +232,12 @@ class Parser {
 	std::variant<FiniteAutomaton, MemoryFiniteAutomaton> parse(
 		lexy_ascii_tree& grammar, const std::string& filename); // NOLINT(runtime/references)
 
-	FiniteAutomaton parse_NFA(std::string automaton_file,
+	FiniteAutomaton parse_NFA(const std::string& automaton_file,
 							  const std::string& grammar_file = GrammarPath);
 
-	FiniteAutomaton parse_DFA(std::string automaton_file,
+	FiniteAutomaton parse_DFA(const std::string& automaton_file,
 							  const std::string& grammar_file = GrammarPath);
 
-	MemoryFiniteAutomaton parse_MFA(std::string automaton_file,
+	MemoryFiniteAutomaton parse_MFA(const std::string& automaton_file,
 									const std::string& grammar_file = GrammarPath);
 };

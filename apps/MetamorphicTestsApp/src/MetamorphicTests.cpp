@@ -1,7 +1,9 @@
 #include <random>
+#include <regex>
 #include <string>
 #include <unordered_set>
 
+#include "MetamorphicTestsApp/MetamorphicTests.h"
 #include "AutomataParser/Parser.h"
 #include "InputGenerator/AutomatonGenerator.h"
 #include "InputGenerator/RegexGenerator.h"
@@ -26,13 +28,13 @@ TEST(TestRegex, ToTxt) {
 		Regex r1(rgx_str);
 		Regex r2(r1.to_txt());
 		ASSERT_TRUE(Regex::equivalent(r1, r2));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.rewrite_aci()));
 	}
 }
 
 TEST(TestArden, RandomRegexEquivalence) {
 	RegexGenerator rg;
-	for (int i = 0; i < 10; i++) {
-		// std::cout << "RandomRegexEquivalence: regex number " << i << std::endl;
+	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = rg.generate_regex();
 		SCOPED_TRACE("Regex: " + rgx_str);
 		Regex r1(rgx_str), r2(rgx_str);
@@ -57,7 +59,7 @@ TEST(TestEqual, ThompsonGlushkov) {
 }
 
 TEST(TestNFA, NegativeNFAEquivalence) {
-	RegexGenerator rg(5, 2, 2, 2);
+	RegexGenerator rg(5, 3, 3, 2);
 	rg.set_neg_chance(50); // для отрицания
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = rg.generate_regex();
@@ -67,39 +69,103 @@ TEST(TestNFA, NegativeNFAEquivalence) {
 	}
 }
 
-TEST(TestMFA, Fuzzing) {
-	RegexGenerator rg(6, 3, 3, 3);
-	for (int i = 0; i < RegexNumber; i++) {
-		string rgx_str = rg.generate_brefregex(2, 70, 50);
+string patch(const string& s) {
+	std::regex pattern("\\|\\|+");
+	return std::regex_replace(s, pattern, "|");
+}
+
+std::string MetamorphicTests::generate_bregex(RegexGenerator& rg, int cells_num) {
+	string rgx_str;
+	BackRefRegex r;
+	bool condition;
+	do {
+		condition = true;
+		rgx_str = patch(BackRefRegex(rg.generate_brefregex(2, 70, 60)).to_txt());
+		r = BackRefRegex(rgx_str);
+
+		condition &=
+			(rgx_str.find('&') != std::string::npos && rgx_str.find('[') != std::string::npos);
+		for (int i = 1; i <= cells_num && condition; i++)
+			if ((rgx_str.find(":" + std::to_string(i)) == std::string::npos) !=
+				(rgx_str.find("&" + std::to_string(i)) == std::string::npos)) {
+				condition = false;
+			}
+		if (condition)
+			condition &= r.check_refs();
+	} while (!condition);
+
+	return rgx_str;
+}
+
+void MetamorphicTests::cmp_automatons(const MemoryFiniteAutomaton& mfa1,
+									  const MemoryFiniteAutomaton& mfa2) {
+	int len = mfa2.size();
+	auto test_set1 = mfa1.generate_test_set(len);
+	auto test_set2 = mfa2.generate_test_set(len);
+	std::stringstream debug;
+	debug << "Set sizes 1) " << test_set1.first.size() << " " << test_set1.second.size() << " 2) "
+		  << test_set2.first.size() << " " << test_set2.second.size();
+	ASSERT_EQ(test_set1.first, test_set2.first) << debug.str();
+
+	vector<string> random_elements;
+	std::sample(test_set1.second.begin(),
+				test_set1.second.end(),
+				std::back_inserter(random_elements),
+				500,
+				std::mt19937{std::random_device{}()});
+	std::sample(test_set2.second.begin(),
+				test_set2.second.end(),
+				std::back_inserter(random_elements),
+				500,
+				std::mt19937{std::random_device{}()});
+	unordered_set<string> random_set(random_elements.begin(), random_elements.end());
+	//	int a = 0, b = 0;
+	for (const auto& mutated_word : random_set) {
+		auto res1 = mfa1.parse(mutated_word);
+		auto res2 = mfa2.parse(mutated_word);
+		ASSERT_EQ(res1.second, res2.second) << debug.str();
+		//		if (res1.second)
+		//			a++;
+		//		else
+		//			b++;
+	}
+	//	std::cout << " " << a << " " << b << " " << double(b) / (a + b) << "\n";
+}
+
+// TEST(TestMFA, Fuzzing) {
+//	RegexGenerator rg(5, 3, 3, 2);
+//	for (int i = 0; i < RegexNumberX10; i++) {
+//		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
+//		//		std::cout << i << " " << rgx_str << "\n";
+//		SCOPED_TRACE("Regex: " + rgx_str);
+//		MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
+//		MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
+//
+//		MetamorphicTests::cmp_automatons(mfa1, mfa2);
+//	}
+// }
+
+// TEST(TestMFA, Fuzz) {
+//	string rgx_str = "(([[b*]:1|]:2|)&1&1&2)*";
+//	MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
+//	MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
+//
+//	std::cout << mfa1.to_txt() << mfa2.to_txt();
+//
+//	MetamorphicTests::cmp_automatons(mfa1, mfa2);
+//}
+
+TEST(TestMFA, ToTxt) {
+	RegexGenerator rg(5, 3, 3, 2);
+	for (int i = 0; i < RegexNumberX10; i++) {
+		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
+		//		std::cout << i << " " << rgx_str << "\n";
 		SCOPED_TRACE("Regex: " + rgx_str);
-		MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
-		MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
+		BackRefRegex r = BackRefRegex(rgx_str);
+		MemoryFiniteAutomaton mfa1 = r.to_mfa_additional();
+		MemoryFiniteAutomaton mfa2 = BackRefRegex(r.to_txt()).to_mfa_additional();
 
-		int len = mfa2.size();
-		auto test_set1 = mfa1.generate_test_set(len);
-		auto test_set2 = mfa2.generate_test_set(len);
-		ASSERT_EQ(test_set1.first, test_set2.first);
-
-
-		test_set1.second.insert(test_set2.second.begin(), test_set2.second.end());
-		std::vector<string> random_elements;
-    
-		std::sample(test_set1.second.begin(),
-					test_set1.second.end(),
-					std::back_inserter(random_elements),
-					500,
-					std::mt19937{std::random_device{}()});
-		std::sample(test_set2.second.begin(),
-					test_set2.second.end(),
-					std::back_inserter(random_elements),
-					500,
-					std::mt19937{std::random_device{}()});
-		unordered_set<string> random_set(random_elements.begin(), random_elements.end());
-		for (const auto& mutated_word : random_set) {
-			auto res1 = mfa1.parse(mutated_word);
-			auto res2 = mfa2.parse(mutated_word);
-			ASSERT_EQ(res1.second, res2.second);
-		}
+		MetamorphicTests::cmp_automatons(mfa1, mfa2);
 	}
 }
 
@@ -139,50 +205,51 @@ TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
 	}
 }
 
-// TEST(Statistics, Test_statistics) {
-//     string test_path = "./TestData/MetamorphicTest/test1.txt";
-//     std::vector<int> OX;
-//     std::vector<float> OY;
-//     AutomatonGenerator::set_initial_state_not_terminal(true);
-//     for (int term = 5; term <= 100; term = term + 5) {
-//         AutomatonGenerator::set_terminal_probability(term);
-//         int count = 0;
-//         int ALL = 10000;
-//         for (int i = 0; i < ALL; i++) {
-//             AutomatonGenerator a(FA_type::NFA);
-//             a.write_to_file(test_path);
-//             Parser parser;
-//             FiniteAutomaton FA;
-//             try {
-//                 FA = parser.parse_NFA(test_path);
-//             } catch (const std::runtime_error& re) {
-//                 std::ifstream t(test_path);
-//                 stringstream buffer;
-//                 buffer << t.rdbuf();
-//                 string file = buffer.str();
-//                 throw(std::runtime_error(file));
-//             }
-//             if (FA.is_finite()) {
-//                 count++;
-//             }
-//         }
-//         std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) <<
-//         "%" << std::endl; OX.push_back(term); OY.push_back(float(count) / float(ALL));
-//     }
-//     std::cout << "OX = [";
-//     for (int i = 0; i < OX.size() - 1; i++) {
-//         std::cout << OX[i] << ",";
-//     }
-//     std::cout << OX[OX.size() - 1] << "]\n";
-
-//     std::cout << "OY = [";
-//     for (int i = 0; i < OY.size() - 1; i++) {
-//         std::cout << OY[i] << ",";
-//     }
-//     std::cout << OY[OY.size() - 1] << "]\n";
-// }
-
 /*
+ TEST(Statistics, Test_statistics) {
+     string test_path = "./TestData/MetamorphicTest/test1.txt";
+     std::vector<int> OX;
+     std::vector<float> OY;
+     AutomatonGenerator::set_initial_state_not_terminal(true);
+     for (int term = 5; term <= 100; term = term + 5) {
+         AutomatonGenerator::set_terminal_probability(term);
+         int count = 0;
+         int ALL = 10000;
+         for (int i = 0; i < ALL; i++) {
+             AutomatonGenerator a(FA_type::NFA);
+             a.write_to_file(test_path);
+             Parser parser;
+             FiniteAutomaton FA;
+             try {
+                 FA = parser.parse_NFA(test_path);
+             } catch (const std::runtime_error& re) {
+                 std::ifstream t(test_path);
+                 stringstream buffer;
+                 buffer << t.rdbuf();
+                 string file = buffer.str();
+                 throw(std::runtime_error(file));
+             }
+             if (FA.is_finite()) {
+                 count++;
+             }
+         }
+         std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) <<
+         "%" << std::endl; OX.push_back(term); OY.push_back(float(count) / float(ALL));
+     }
+     std::cout << "OX = [";
+     for (int i = 0; i < OX.size() - 1; i++) {
+         std::cout << OX[i] << ",";
+     }
+     std::cout << OX[OX.size() - 1] << "]\n";
+
+     std::cout << "OY = [";
+     for (int i = 0; i < OY.size() - 1; i++) {
+         std::cout << OY[i] << ",";
+     }
+     std::cout << OY[OY.size() - 1] << "]\n";
+ }
+
+
 TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
 	int ALL = 50;
 	for (int i = 0; i < ALL; i++) {
@@ -228,45 +295,45 @@ TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
 		ASSERT_EQ(first,second) << file << "\n" << FA.minimize().to_txt() << "\n" <<
 ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
 	}
-}*/
+}
 
-// TEST(Statistics, Test_dfa) {
-// 	for (int term = 5; term <= 50; term = term + 5) {
-// 		AutomatonGenerator::set_terminal_probability(20);
-// 		int count = 0;
-// 		int ALL = 10000;
-// 		for (int i = 0; i < ALL; i++) {
-// 			AutomatonGenerator a(FA_type::DFA);
-// 			a.write_to_file("./TestData/tmp/test.txt");
-// 			auto FA = Parser::parse_DFA("./TestData/tmp/test.txt");
-// 			if (FA.is_deterministic() && FA.is_finite()) {
-// 				count++;
-// 			}
-// 		}
-// 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100<<
-// "%" << std::endl;
-// 	}
-// }
+ TEST(Statistics, Test_dfa) {
+ 	for (int term = 5; term <= 50; term = term + 5) {
+ 		AutomatonGenerator::set_terminal_probability(20);
+ 		int count = 0;
+ 		int ALL = 10000;
+ 		for (int i = 0; i < ALL; i++) {
+ 			AutomatonGenerator a(FA_type::DFA);
+ 			a.write_to_file("./TestData/tmp/test.txt");
+ 			auto FA = Parser::parse_DFA("./TestData/tmp/test.txt");
+ 			if (FA.is_deterministic() && FA.is_finite()) {
+ 				count++;
+ 			}
+ 		}
+ 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100<<
+ "%" << std::endl;
+ 	}
+ }
 
-// TEST(Statistics, Test_fa) {
-// 	std::cout << "TEST\n";
-// 	for (int term = 5; term <= 50; term = term + 5) {
-// 		AutomatonGenerator::set_terminal_probability(20);
-// 		int count = 0;
-// 		int ALL = 10000;
-// 		for (int i = 0; i < ALL; i++) {
-// 			AutomatonGenerator a(FA_type::FA);
-// 			std::cout << "write_to_file START\n";
-// 			a.write_to_file("./TestData/tmp/test.txt");
-// 			std::cout << "write_to_file DONE\n";
-// 			auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
-// 			std::cout << i << " " << std::endl;
-// 			if (FA.is_deterministic() && FA.is_finite()) {
-// 				count++;
-// 			}
-// 			std::cout << i << " " << std::endl;
-// 		}
-// 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100
-// << "%" << std::endl;
-// 	}
-// }
+ TEST(Statistics, Test_fa) {
+ 	std::cout << "TEST\n";
+ 	for (int term = 5; term <= 50; term = term + 5) {
+ 		AutomatonGenerator::set_terminal_probability(20);
+ 		int count = 0;
+ 		int ALL = 10000;
+ 		for (int i = 0; i < ALL; i++) {
+ 			AutomatonGenerator a(FA_type::FA);
+ 			std::cout << "write_to_file START\n";
+ 			a.write_to_file("./TestData/tmp/test.txt");
+ 			std::cout << "write_to_file DONE\n";
+ 			auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
+ 			std::cout << i << " " << std::endl;
+ 			if (FA.is_deterministic() && FA.is_finite()) {
+ 				count++;
+ 			}
+ 			std::cout << i << " " << std::endl;
+ 		}
+ 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100
+ << "%" << std::endl;
+ 	}
+ }*/

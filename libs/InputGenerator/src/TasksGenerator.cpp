@@ -61,7 +61,7 @@ void TasksGenerator::write_to_file(string filename) {
 string TasksGenerator::generate_op() {
 	string str = "";
 	int op = rand() % 5; // на объявление - вероятность 3 / 5;
-						 // на test и выражение 1 / 5
+	// на test и выражение 1 / 5
 
 	if (op == 0) {
 		str = generate_expression();
@@ -159,8 +159,8 @@ string TasksGenerator::generate_arguments(Function first_func) {
 			!(generated_types.count(input_type) != 0 && check_probability(50))) {
 			args_str += " N" + get_random_id_by_type(input_type);
 			/* генерируемые типы: */
-		} else if(input_type == NFA) {
-            std::string filename = std::to_string(automata_id++) + ".txt";
+		} else if (input_type == NFA) {
+			std::string filename = std::to_string(automata_id++) + ".txt";
 			AutomatonGenerator(FA_type::NFA).write_to_file(filename);
 			args_str += " (getNFA \"" + filename + "\")";
 		} else if (input_type == MFA) {
