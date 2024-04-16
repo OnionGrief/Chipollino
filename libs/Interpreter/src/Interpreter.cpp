@@ -933,6 +933,9 @@ string Interpreter::FunctionSequence::to_txt() const {
 }
 
 string Interpreter::Expression::to_txt() const {
+	if (const auto* pval = get_if<Id>(&value)) {
+		return pval->name;
+	}
 	if (type == ObjectType::RandomRegex || type == ObjectType::RandomBRefRegex ||
 		type == ObjectType::RandomNFA || type == ObjectType::RandomDFA ||
 		type == ObjectType::RandomMFA) {
@@ -1350,7 +1353,7 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(const vector
 }
 
 void Interpreter::generate_automaton(string test_path, FA_type fa_type, int states_num) {
-	AutomatonGenerator a(fa_type, 5);
+	AutomatonGenerator a(fa_type, states_num);
 	a.write_to_file(test_path);
 }
 

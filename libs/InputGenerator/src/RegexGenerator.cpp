@@ -143,7 +143,7 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? бу
 			if (cur_regex_length > cur_star_num)
 				star_chance +=
 					cur_star_num / star_nesting; // попытка в зависимость вероятности выпадения
-				// звезды от max звездной высоты
+			// звезды от max звездной высоты
 			else
 				star_chance += cur_regex_length / star_nesting;
 			if (star_chance < 2)
