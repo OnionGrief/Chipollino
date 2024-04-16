@@ -805,7 +805,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 	bool success = true;
 	int results = 0;
 	int tests_size = verification.size;
-	int tests_false_num = std::min(10, (int)ceil(verification.size * 0.1));
+	int tests_false_num = std::min(10, verification.size);
 	vector<string> regex_list;
 	Expression expr = verification.predicate;
 
@@ -821,7 +821,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 	tex_logger.disable();
 	in_verification = true;
 
-	for (int i = 0; i < verification.size; i++) {
+	for (int i = 0; i < tests_size; i++) {
 		// подстановка равных Regex на место '*'
 		current_random_objects.clear();
 		auto predicate = eval_expression(expr);
@@ -830,7 +830,14 @@ bool Interpreter::run_verification(const Verification& verification) {
 			bool res = get<ObjectBoolean>(*predicate).value;
 			results += res;
 			if (!res && tests_false_num > 0) {
-				// regex_list.push_back(current_random_regex->to_txt());
+				if (current_random_objects.count(ObjectType::RandomRegex))
+					regex_list.push_back(
+						get<ObjectRegex>(current_random_objects[ObjectType::RandomRegex])
+							.value.to_txt());
+				if (current_random_objects.count(ObjectType::RandomBRefRegex))
+					regex_list.push_back(
+						get<ObjectBRefRegex>(current_random_objects[ObjectType::RandomBRefRegex])
+							.value.to_txt());
 				tests_false_num--;
 			}
 		} else {

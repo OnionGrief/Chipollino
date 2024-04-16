@@ -40,7 +40,6 @@ bool Interpreter::Lexer::scan_word(string word) {
 
 string Interpreter::Lexer::scan_until_space() {
 	string acc = "";
-	// skip_spaces();
 	while (!eof() && !isspace(current_symbol()) && current_symbol() != '.' &&
 		   current_symbol() != '(' && current_symbol() != ')') {
 
