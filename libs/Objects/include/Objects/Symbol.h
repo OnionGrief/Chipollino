@@ -59,7 +59,7 @@ class Symbol {
 	bool is_ref() const;
 	int get_ref() const;
 
-	int last_linearization_number();
+	int last_linearization_number() const;
 
 	struct Hasher {
 		std::size_t operator()(const Symbol&) const;

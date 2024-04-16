@@ -61,7 +61,7 @@ void TasksGenerator::write_to_file(string filename) {
 string TasksGenerator::generate_op() {
 	string str = "";
 	int op = rand() % 5; // на объявление - вероятность 3 / 5;
-						 // на test и выражение 1 / 5
+	// на test и выражение 1 / 5
 
 	if (op == 0) {
 		str = generate_expression();

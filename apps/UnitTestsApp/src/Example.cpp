@@ -13,17 +13,17 @@ void Example::determinize() {
 		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states[0].set_transition(5, "x");
-	states[0].set_transition(5, "y");
-	states[0].set_transition(1, "eps");
-	states[1].set_transition(2, "eps");
-	states[1].set_transition(3, "eps");
-	states[1].set_transition(4, "eps");
-	states[3].set_transition(3, "x");
-	states[4].set_transition(4, "y");
-	states[4].set_transition(4, "y");
-	states[5].set_transition(5, "z");
-	states[5].set_transition(1, "eps");
+	states[0].add_transition(5, "x");
+	states[0].add_transition(5, "y");
+	states[0].add_transition(1, "eps");
+	states[1].add_transition(2, "eps");
+	states[1].add_transition(3, "eps");
+	states[1].add_transition(4, "eps");
+	states[3].add_transition(3, "x");
+	states[4].add_transition(4, "y");
+	states[4].add_transition(4, "y");
+	states[5].add_transition(5, "z");
+	states[5].add_transition(1, "eps");
 
 	states[2].is_terminal = true;
 	states[3].is_terminal = true;
@@ -39,12 +39,12 @@ void Example::remove_eps() {
 		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states[0].set_transition(0, "0");
-	states[0].set_transition(1, "eps");
-	states[1].set_transition(1, "1");
-	states[1].set_transition(2, "eps");
-	states[2].set_transition(2, "0");
-	states[2].set_transition(2, "1");
+	states[0].add_transition(0, "0");
+	states[0].add_transition(1, "eps");
+	states[1].add_transition(1, "1");
+	states[1].add_transition(2, "eps");
+	states[2].add_transition(2, "0");
+	states[2].add_transition(2, "1");
 
 	states[2].is_terminal = true;
 
@@ -58,22 +58,22 @@ void Example::minimize() {
 		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states[0].set_transition(7, "0");
-	states[0].set_transition(1, "1");
-	states[1].set_transition(0, "1");
-	states[1].set_transition(7, "0");
-	states[2].set_transition(4, "0");
-	states[2].set_transition(5, "1");
-	states[3].set_transition(4, "0");
-	states[3].set_transition(5, "1");
-	states[4].set_transition(5, "0");
-	states[4].set_transition(6, "1");
-	states[5].set_transition(5, "0");
-	states[5].set_transition(5, "1");
-	states[6].set_transition(6, "0");
-	states[6].set_transition(5, "1");
-	states[7].set_transition(2, "0");
-	states[7].set_transition(2, "1");
+	states[0].add_transition(7, "0");
+	states[0].add_transition(1, "1");
+	states[1].add_transition(0, "1");
+	states[1].add_transition(7, "0");
+	states[2].add_transition(4, "0");
+	states[2].add_transition(5, "1");
+	states[3].add_transition(4, "0");
+	states[3].add_transition(5, "1");
+	states[4].add_transition(5, "0");
+	states[4].add_transition(6, "1");
+	states[5].add_transition(5, "0");
+	states[5].add_transition(5, "1");
+	states[6].add_transition(6, "0");
+	states[6].add_transition(5, "1");
+	states[7].add_transition(2, "0");
+	states[7].add_transition(2, "1");
 
 	states[5].is_terminal = true;
 	states[6].is_terminal = true;
@@ -92,21 +92,21 @@ void Example::intersection() {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states1[0].set_transition(0, "b");
-	states1[0].set_transition(1, "a");
-	states1[1].set_transition(1, "b");
-	states1[1].set_transition(2, "a");
-	states1[2].set_transition(2, "a");
-	states1[2].set_transition(2, "b");
+	states1[0].add_transition(0, "b");
+	states1[0].add_transition(1, "a");
+	states1[1].add_transition(1, "b");
+	states1[1].add_transition(2, "a");
+	states1[2].add_transition(2, "a");
+	states1[2].add_transition(2, "b");
 
 	states1[1].is_terminal = true;
 
-	states2[0].set_transition(0, "a");
-	states2[0].set_transition(1, "b");
-	states2[1].set_transition(1, "a");
-	states2[1].set_transition(2, "b");
-	states2[2].set_transition(2, "a");
-	states2[2].set_transition(2, "b");
+	states2[0].add_transition(0, "a");
+	states2[0].add_transition(1, "b");
+	states2[1].add_transition(1, "a");
+	states2[1].add_transition(2, "b");
+	states2[2].add_transition(2, "a");
+	states2[2].add_transition(2, "b");
 
 	states2[1].is_terminal = true;
 
@@ -201,14 +201,14 @@ void Example::transformation_monoid_example() {
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	// states1[0].set_transition(0, "b");
-	states1[0].set_transition(1, "a");
-	states1[1].set_transition(0, "b");
-	states1[0].set_transition(1, "c");
-	states1[1].set_transition(2, "c");
+	// states1[0].add_transition(0, "b");
+	states1[0].add_transition(1, "a");
+	states1[1].add_transition(0, "b");
+	states1[0].add_transition(1, "c");
+	states1[1].add_transition(2, "c");
 	states1[2].is_terminal = true;
-	// states1[2].set_transition(2, "a");
-	// states1[2].set_transition(2, "b");
+	// states1[2].add_transition(2, "a");
+	// states1[2].add_transition(2, "b");
 	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b", "c"});
 	cout << "-----\n";
 	cout << dfa1.to_txt();
@@ -227,11 +227,11 @@ void Example::fa_subset_check() {
 	for (int i = 0; i < 4; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states1[0].set_transition(1, "a");
-	states1[0].set_transition(1, "b");
-	states1[0].set_transition(2, "a");
-	states1[1].set_transition(3, "b");
-	states1[2].set_transition(3, "c");
+	states1[0].add_transition(1, "a");
+	states1[0].add_transition(1, "b");
+	states1[0].add_transition(2, "a");
+	states1[1].add_transition(3, "b");
+	states1[2].add_transition(3, "c");
 	states1[3].is_terminal = true;
 	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
 
@@ -239,8 +239,8 @@ void Example::fa_subset_check() {
 	for (int i = 0; i < 3; i++) {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states2[0].set_transition(1, "b");
-	states2[1].set_transition(2, "b");
+	states2[0].add_transition(1, "b");
+	states2[1].add_transition(2, "b");
 	states2[2].is_terminal = true;
 	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
 
@@ -263,14 +263,14 @@ void Example::to_image() {
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states1[0].set_transition(1, "a");
-	states1[0].set_transition(1, "eps");
-	states1[0].set_transition(2, "b");
-	states1[1].set_transition(2, "a");
-	states1[1].set_transition(1, "b");
-	states1[2].set_transition(1, "a");
-	states1[2].set_transition(1, "eps");
-	states1[2].set_transition(0, "b");
+	states1[0].add_transition(1, "a");
+	states1[0].add_transition(1, "eps");
+	states1[0].add_transition(2, "b");
+	states1[1].add_transition(2, "a");
+	states1[1].add_transition(1, "b");
+	states1[2].add_transition(1, "a");
+	states1[2].add_transition(1, "eps");
+	states1[2].add_transition(0, "b");
 	states1[0].is_terminal = true;
 	states1[2].is_terminal = true;
 	FiniteAutomaton fa1(1, states1, {"a", "b"});
@@ -290,14 +290,14 @@ void Example::step() {
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states1[0].set_transition(1, "a");
-	states1[0].set_transition(1, "eps");
-	states1[0].set_transition(2, "b");
-	states1[1].set_transition(2, "a");
-	states1[1].set_transition(1, "b");
-	states1[2].set_transition(1, "a");
-	states1[2].set_transition(1, "eps");
-	states1[2].set_transition(0, "b");
+	states1[0].add_transition(1, "a");
+	states1[0].add_transition(1, "eps");
+	states1[0].add_transition(2, "b");
+	states1[1].add_transition(2, "a");
+	states1[1].add_transition(1, "b");
+	states1[2].add_transition(1, "a");
+	states1[2].add_transition(1, "eps");
+	states1[2].add_transition(0, "b");
 	states1[0].is_terminal = true;
 	states1[2].is_terminal = true;
 	FiniteAutomaton fa1(1, states1, {"a", "b"});
@@ -334,21 +334,21 @@ void Example::step_interection() {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states1[0].set_transition(0, "b");
-	states1[0].set_transition(1, "a");
-	states1[1].set_transition(1, "b");
-	states1[1].set_transition(2, "a");
-	states1[2].set_transition(2, "a");
-	states1[2].set_transition(2, "b");
+	states1[0].add_transition(0, "b");
+	states1[0].add_transition(1, "a");
+	states1[1].add_transition(1, "b");
+	states1[1].add_transition(2, "a");
+	states1[2].add_transition(2, "a");
+	states1[2].add_transition(2, "b");
 
 	states1[1].is_terminal = true;
 
-	states2[0].set_transition(0, "a");
-	states2[0].set_transition(1, "b");
-	states2[1].set_transition(1, "a");
-	states2[1].set_transition(2, "b");
-	states2[2].set_transition(2, "a");
-	states2[2].set_transition(2, "b");
+	states2[0].add_transition(0, "a");
+	states2[0].add_transition(1, "b");
+	states2[1].add_transition(1, "a");
+	states2[1].add_transition(2, "b");
+	states2[2].add_transition(2, "a");
+	states2[2].add_transition(2, "b");
 
 	states2[1].is_terminal = true;
 
@@ -398,13 +398,13 @@ void Example::fa_semdet_check() {
 	for (int i = 0; i < 4; i++) {
 		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states[0].set_transition(1, "a");
-	states[1].set_transition(1, "a");
-	states[1].set_transition(2, "b");
-	states[2].set_transition(1, "a");
-	states[2].set_transition(3, "b");
-	states[3].set_transition(1, "a");
-	states[3].set_transition(3, "b");
+	states[0].add_transition(1, "a");
+	states[1].add_transition(1, "a");
+	states[1].add_transition(2, "b");
+	states[2].add_transition(1, "a");
+	states[2].add_transition(3, "b");
+	states[3].add_transition(1, "a");
+	states[3].add_transition(3, "b");
 	states[0].is_terminal = true;
 	states[1].is_terminal = true;
 	states[2].is_terminal = true;
@@ -524,20 +524,20 @@ void Example::fa_to_pgrammar() {
 	for (int i = 0; i < 5; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	// states1[0].set_transition(0, "b");
-	states1[4].set_transition(1, "a");
-	// states1[0].set_transition(1, "c");
-	//  states1[1].set_transition(1, "a");
-	//  states1[1].set_transition(1, "c");
-	states1[1].set_transition(2, "b");
-	states1[1].set_transition(4, "c");
-	// states1[2].set_transition(2, "c");
-	states1[2].set_transition(2, "b");
-	states1[2].set_transition(2, "c");
+	// states1[0].add_transition(0, "b");
+	states1[4].add_transition(1, "a");
+	// states1[0].add_transition(1, "c");
+	//  states1[1].add_transition(1, "a");
+	//  states1[1].add_transition(1, "c");
+	states1[1].add_transition(2, "b");
+	states1[1].add_transition(4, "c");
+	// states1[2].add_transition(2, "c");
+	states1[2].add_transition(2, "b");
+	states1[2].add_transition(2, "c");
 	states1[2].is_terminal = true;
-	states1[0].set_transition(4, "c");
-	states1[3].set_transition(0, "a");
-	states1[3].set_transition(0, "b");
+	states1[0].add_transition(4, "c");
+	states1[3].add_transition(0, "a");
+	states1[3].add_transition(0, "b");
 	states1[4].is_terminal = true;
 	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
 

@@ -16,6 +16,7 @@ set(SOURCES
         src/MemoryFiniteAutomaton.cpp
         src/BackRefRegex.cpp
         src/MemoryCommon.cpp
+        src/Tools.cpp
 )
 
 # Add a library with the above sources

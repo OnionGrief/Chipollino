@@ -2,6 +2,7 @@
 
 #include "Objects/BackRefRegex.h"
 #include "Objects/Language.h"
+#include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 
 using std::cerr;
@@ -159,21 +160,21 @@ vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 	switch (type) {
 	case Type::eps:
 		fa_states.emplace_back(0, false);
-		fa_states[0].set_transition(1, Symbol::Epsilon);
+		fa_states[0].add_transition(1, Symbol::Epsilon);
 		fa_states.emplace_back(1, true);
 		return fa_states;
 	case Type::symb:
 		fa_states.emplace_back(0, false);
 		fa_states.emplace_back(1, true);
-		fa_states[0].set_transition(1, symbol);
+		fa_states[0].add_transition(1, symbol);
 		return fa_states;
 	case Type::alt: // |
 		fa_left = Regex::cast(term_l)->_to_thompson(root_alphabet);
 		fa_right = Regex::cast(term_r)->_to_thompson(root_alphabet);
 
 		fa_states.emplace_back(0, false);
-		fa_states.back().set_transition(1, Symbol::Epsilon);
-		fa_states.back().set_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
+		fa_states.back().add_transition(1, Symbol::Epsilon);
+		fa_states.back().add_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
 
 		for (const auto& state : fa_left) {
 			state_transitions = {};
@@ -249,8 +250,8 @@ vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 		fa_left = Regex::cast(term_l)->_to_thompson(root_alphabet);
 
 		fa_states.emplace_back(0, false);
-		fa_states.back().set_transition(1, Symbol::Epsilon);
-		fa_states.back().set_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
+		fa_states.back().add_transition(1, Symbol::Epsilon);
+		fa_states.back().add_transition(int(fa_left.size()) + 1, Symbol::Epsilon);
 
 		for (const auto& state : fa_left) {
 			state_transitions = {};
@@ -286,7 +287,7 @@ vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 		for (auto& state : fa_negative.states) {
 			if (state.is_terminal) {
 				state.is_terminal = false;
-				state.set_transition(fa_negative.size(), Symbol::Epsilon);
+				state.add_transition(fa_negative.size(), Symbol::Epsilon);
 			}
 		}
 
@@ -761,51 +762,6 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 	}
 }
 
-Regex* Regex::add_alt(std::vector<Regex> res, Regex* root) {
-	if (res.size() == 1) {
-		return res[0].make_copy();
-	}
-
-	root = new Regex;
-	root->type = Type::alt;
-	root->term_l = res[0].make_copy();
-	res.erase(res.begin());
-	root->term_r = add_alt(res, Regex::cast(root->term_r, false));
-	return root;
-}
-
-Regex* Regex::to_aci(std::vector<Regex>& res) {
-	// отсортировали вектор регулярок
-	std::sort(res.begin(), res.end(), [](const Regex& i, const Regex& j) {
-		return i.to_txt() < j.to_txt();
-	});
-
-	// rule w | w = w
-	for (size_t i = 0; i < res.size(); i++) {
-		for (size_t j = i + 1; j < res.size(); j++) {
-			if (i == j)
-				continue;
-
-			if (res[i].to_txt() == res[j].to_txt()) {
-				res.erase(res.begin() + j);
-			}
-		}
-	}
-	// rule w1 | w2 = w2 | w1 не имеют смысла тк наборы отсортированы
-	// rule (w1 | w2) | w3 = w1 | (w2 | w3)
-
-	// Regex собранный из вектора через альтерантивы
-	// и всё ставится под отрицание
-	Regex* res_alt;
-	res_alt = new Regex;
-	res_alt->type = Type::negative;
-	if (!res.size())
-		return nullptr;
-
-	res_alt->term_l = add_alt(res, cast(res_alt->term_l, false));
-	return res_alt;
-}
-
 bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 												   vector<Regex>& result) const {
 	Regex cur_result;
@@ -896,11 +852,20 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 			cur_result.term_l = nullptr;
 			return !answer;
 		} else {
-			auto r_alt = to_aci(subresult);
-			if (r_alt == nullptr)
+			vector<AlgExpression*> alts;
+			alts.reserve(subresult.size());
+			for (auto& i : subresult)
+				alts.emplace_back(&i);
+			sort_alts(alts);
+			if (alts.empty())
 				return answer;
-			result.push_back(*r_alt);
-			delete r_alt;
+			// Regex, собранный из вектора через альтернативы
+			// и всё ставится под отрицание
+			Regex r_alt;
+			r_alt.type = Type::negative;
+			r_alt.term_l = new Regex;
+			join_alts(alts, r_alt.term_l);
+			result.push_back(r_alt);
 		}
 
 		return answer;
@@ -1256,7 +1221,7 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 	}
 
 	FiniteAutomaton min_fa_cut =
-		FiniteAutomaton(min_fa.initial_state, min_fa.states, min_fa.language);
+		FiniteAutomaton(min_fa.get_initial(), min_fa.get_states(), min_fa.get_language());
 
 	for (int i = 0; i < min_fa.size(); i++) {
 		if (min_fa.states[i].is_terminal) {
@@ -1378,4 +1343,11 @@ Regex Regex::normalize_regex(const vector<pair<Regex, Regex>>& rules, iLogTempla
 
 BackRefRegex Regex::to_bregex() const {
 	return {this, language->get_alphabet()};
+}
+
+Regex Regex::rewrite_aci() const {
+	Regex res(*this);
+	vector<AlgExpression*> alts;
+	res._rewrite_aci(alts, false, true);
+	return res;
 }

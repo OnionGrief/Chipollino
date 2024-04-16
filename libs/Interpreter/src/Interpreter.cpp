@@ -187,7 +187,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Arden") {
 		return ObjectRegex((get<ObjectNFA>(arguments[0]).value.to_regex(&log_template)));
 	}
-	if (function.name == "Bisimilar") {
+	if (function.name == "Bisimilar" && function.input[0] == ObjectType::NFA) {
 		return ObjectBoolean(FiniteAutomaton::bisimilar(
 			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
 	}
@@ -326,6 +326,18 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		string filename = get<ObjectFileName>(arguments[0]).value;
 		Parser parser;
 		return ObjectDFA(parser.parse_DFA(filename));
+	}
+	if (function.name == "Bisimilar" && function.input[0] == ObjectType::MFA) {
+		return ObjectOptionalBool(MemoryFiniteAutomaton::bisimilar(
+			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
+	}
+	if (function.name == "ActionBisimilar") {
+		return ObjectBoolean(MemoryFiniteAutomaton::action_bisimilar(
+			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
+	}
+	if (function.name == "LiterallyBisimilar") {
+		return ObjectBoolean(MemoryFiniteAutomaton::literally_bisimilar(
+			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
 	}
 	// # place for another diff types funcs
 
