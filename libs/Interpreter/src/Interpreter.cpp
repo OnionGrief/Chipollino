@@ -656,38 +656,47 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 		return ObjectFileName(get<string>(expr.value));
 	}
 
-	if (in_verification && current_random_objects.count(expr.type)) {
-		return current_random_objects[expr.type];
-	}
 	if (expr.type == ObjectType::RandomRegex) {
-		GeneralObject generated_object = ObjectRegex(Regex(regex_generator.generate_regex()));
+		if (in_verification && current_random_objects.count(expr.type)) {
+			return ObjectRegex(Regex(current_random_objects[expr.type]));
+		}
+		string generated_object = regex_generator.generate_regex();
 		current_random_objects[expr.type] = generated_object;
-		return generated_object;
+		return ObjectRegex(Regex(generated_object));
 	}
 	if (expr.type == ObjectType::RandomBRefRegex) {
-		GeneralObject generated_object =
-			ObjectBRefRegex(BackRefRegex(regex_generator.generate_brefregex()));
+		if (in_verification && current_random_objects.count(expr.type)) {
+			return ObjectBRefRegex(BackRefRegex(current_random_objects[expr.type]));
+		}
+		string generated_object = regex_generator.generate_brefregex();
 		current_random_objects[expr.type] = generated_object;
-		return generated_object;
+		return ObjectBRefRegex(BackRefRegex(generated_object));
 	}
-	std::string test_path = "./test_data/MetamorphicTest/test1.txt";
+	std::string test_path =
+		"./test_data/MetamorphicTest/test" + Typization::types_to_string.at(expr.type) + ".txt";
 	Parser parser;
 	if (expr.type == ObjectType::RandomDFA) {
-		generate_automaton(test_path, FA_type::DFA);
+		if (!(in_verification && current_random_objects.count(expr.type))) {
+			generate_automaton(test_path, FA_type::DFA);
+			current_random_objects[expr.type] = test_path;
+		}
 		GeneralObject generated_object = ObjectDFA(parser.parse_DFA(test_path));
-		current_random_objects[expr.type] = generated_object;
 		return generated_object;
 	}
 	if (expr.type == ObjectType::RandomNFA) {
-		generate_automaton(test_path, FA_type::NFA);
+		if (!(in_verification && current_random_objects.count(expr.type))) {
+			generate_automaton(test_path, FA_type::NFA);
+			current_random_objects[expr.type] = test_path;
+		}
 		GeneralObject generated_object = ObjectNFA(parser.parse_NFA(test_path));
-		current_random_objects[expr.type] = generated_object;
 		return generated_object;
 	}
 	if (expr.type == ObjectType::RandomMFA) {
-		generate_automaton(test_path, FA_type::MFA);
+		if (!(in_verification && current_random_objects.count(expr.type))) {
+			generate_automaton(test_path, FA_type::MFA);
+			current_random_objects[expr.type] = test_path;
+		}
 		GeneralObject generated_object = ObjectMFA(parser.parse_MFA(test_path));
-		current_random_objects[expr.type] = generated_object;
 		return generated_object;
 	}
 
@@ -844,12 +853,10 @@ bool Interpreter::run_verification(const Verification& verification) {
 			if (!res && tests_false_num > 0) {
 				if (current_random_objects.count(ObjectType::RandomRegex))
 					regex_list.push_back(
-						get<ObjectRegex>(current_random_objects[ObjectType::RandomRegex])
-							.value.to_txt());
+						Regex(current_random_objects[ObjectType::RandomRegex]).to_txt());
 				if (current_random_objects.count(ObjectType::RandomBRefRegex))
 					regex_list.push_back(
-						get<ObjectBRefRegex>(current_random_objects[ObjectType::RandomBRefRegex])
-							.value.to_txt());
+						BackRefRegex(current_random_objects[ObjectType::RandomBRefRegex]).to_txt());
 				tests_false_num--;
 			}
 		} else {

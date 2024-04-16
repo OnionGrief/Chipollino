@@ -88,7 +88,7 @@ class Interpreter {
 	std::unordered_map<std::string, GeneralObject> objects;
 
 	// Выражение для подстановки на место *
-	std::unordered_map<ObjectType, GeneralObject> current_random_objects;
+	std::unordered_map<ObjectType, std::string> current_random_objects;
 	RegexGenerator regex_generator; // TODO: менять параметры
 	void generate_automaton(std::string test_path, FA_type fa_type, int states_num = 6);
 
