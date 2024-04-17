@@ -77,7 +77,7 @@ std::string MetamorphicTests::generate_bregex(RegexGenerator& rg, int cells_num)
 	bool condition;
 	do {
 		condition = true;
-		rgx_str = patch(BackRefRegex(rg.generate_brefregex(2, 70, 60)).to_txt());
+		rgx_str = patch(BackRefRegex(rg.generate_brefregex(cells_num, 70, 60)).to_txt());
 		r = BackRefRegex(rgx_str);
 
 		condition &=
@@ -163,5 +163,19 @@ TEST(TestMFA, ToTxt) {
 		MemoryFiniteAutomaton mfa2 = BackRefRegex(r.to_txt()).to_mfa_additional();
 
 		MetamorphicTests::cmp_automatons(mfa1, mfa2);
+	}
+}
+
+TEST(TestBisimilar, MFA_Bisimilar) {
+	RegexGenerator rg(5, 3, 3, 2);
+	for (int i = 0; i < RegexNumber; i++) {
+		string rgx_str = MetamorphicTests::generate_bregex(rg, 1);
+		SCOPED_TRACE("Regex: " + rgx_str);
+		BackRefRegex r = BackRefRegex(rgx_str);
+		MemoryFiniteAutomaton mfa = r.to_mfa_additional();
+
+		ASSERT_TRUE(MemoryFiniteAutomaton::action_bisimilar(mfa, mfa));
+		ASSERT_TRUE(MemoryFiniteAutomaton::literally_bisimilar(mfa, mfa));
+		ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(mfa, mfa).value());
 	}
 }

@@ -1374,7 +1374,8 @@ vector<CaptureGroup> MemoryFiniteAutomaton::find_capture_groups_backward(
 				++it;
 			}
 		}
-		res.emplace_back(cell, traces, fa_classes);
+		if (!traces.empty())
+			res.emplace_back(cell, traces, fa_classes);
 	}
 	return res;
 }
@@ -1492,10 +1493,13 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		pairs_to_calc; // {номер ячейки, состояние первого автомата, состояние второго}
 	for (const auto& [fa1_st, fa1_st_incoming_refs] : incoming_refs[0]) {
 		int fa1_st_class = fa_classes[0][fa1_st];
-		for (auto fa2_st : class_to_states[1].at(fa1_st_class))
+		for (auto fa2_st : class_to_states[1].at(fa1_st_class)) {
+			if (!incoming_refs[1].count(fa2_st))
+				continue;
 			for (auto fa2_st_incoming_ref : incoming_refs[1].at(fa2_st))
 				if (fa1_st_incoming_refs.count(fa2_st_incoming_ref))
 					pairs_to_calc.insert({fa2_st_incoming_ref, fa1_st, fa2_st});
+		}
 	}
 
 	//	for (const auto& i : pairs_to_calc)
