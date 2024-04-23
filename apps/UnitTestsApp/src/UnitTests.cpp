@@ -783,19 +783,22 @@ TEST(TestReverse, BRegex_Reverse) {
 }
 
 TEST(TestBisimilar, MFA_Bisimilar) {
-	ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[aa*]:1a&1").to_mfa_additional(),
-												 BackRefRegex("a[a*a]:1&1").to_mfa_additional())
-					.value());
-	ASSERT_FALSE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[a*]:1a*&1").to_mfa_additional(),
-												  BackRefRegex("a*[a*]:1&1").to_mfa_additional())
-					 .value());
-	ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[ab]:2cab&2").to_mfa_additional(),
-												 BackRefRegex("abc[ab]:2&2").to_mfa_additional())
-					.value());
-	ASSERT_FALSE(
-		MemoryFiniteAutomaton::bisimilar(BackRefRegex("[a|b]:1c(a|b)&1").to_mfa_additional(),
-										 BackRefRegex("(a|b)c[a|b]:1&1").to_mfa_additional())
-			.value());
+	using Test = std::tuple<string, string, bool>;
+	vector<Test> tests = {
+		{"[aa*]:1a&1", "a[a*a]:1&1", true},
+		{"[a*]:1a*&1", "a*[a*]:1&1", false},
+		{"[ab]:2cab&2", "abc[ab]:2&2", true},
+		{"[a|b]:1c(a|b)&1", "(a|b)c[a|b]:1&1", false},
+		{"[a]:1*&1", "[a*]:1*&1", false},
+	};
+
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [rgx1, rgx2, expected_res] = test;
+		ASSERT_EQ(MemoryFiniteAutomaton::bisimilar(BackRefRegex(rgx1).to_mfa_additional(),
+												   BackRefRegex(rgx2).to_mfa_additional()),
+				  expected_res);
+	});
+
 	ASSERT_FALSE(
 		MemoryFiniteAutomaton::bisimilar(BackRefRegex("[[a*]:1]:2a*&1").to_mfa_additional(),
 										 BackRefRegex("a*[a*]:1&1").to_mfa_additional())

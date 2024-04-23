@@ -203,15 +203,15 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 
 	std::vector<MFAState::Transitions> get_reversed_transitions() const;
 
-	std::vector<std::vector<int>> find_cg_traces(int state_index, std::unordered_set<int> visited,
-												 int cell, int opening_state) const;
+	std::pair<std::vector<std::vector<int>>, std::vector<std::vector<int>>> find_cg_paths(
+		int state_index, std::unordered_set<int> visited, int cell, int opening_state) const;
 	std::vector<CaptureGroup> find_capture_groups_backward(
 		int ref_incoming_state, int cell, const std::vector<int>& fa_classes) const;
 
-	bool find_path_decisions(int state_index,
-							 std::vector<int>& visited, // NOLINT(runtime/references)
-							 const std::unordered_set<int>& path_states) const;
-	bool path_contains_decisions(const std::unordered_set<int>& path_states) const;
+	bool find_decisions(int state_index,
+						std::vector<int>& visited, // NOLINT(runtime/references)
+						const std::unordered_set<int>& states_to_check) const;
+	bool states_have_decisions(const std::unordered_set<int>& states_to_check) const;
 
 	static std::optional<bool> bisimilarity_checker(const MemoryFiniteAutomaton&,
 													const MemoryFiniteAutomaton&);
