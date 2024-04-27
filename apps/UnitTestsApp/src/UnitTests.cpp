@@ -790,10 +790,14 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		{"[ab]:2cab&2", "abc[ab]:2&2", true},
 		{"[a|b]:1c(a|b)&1", "(a|b)c[a|b]:1&1", false},
 		{"[a]:1*&1", "[a*]:1*&1", false},
+		{"[a*]:1&1", "[a*]:1a*&1", false},
+		{"[a*a*|]:1&1", "[a*]:1&1", true},
+		{"[a|a]:1*&1", "[a]:1*[a]:1*&1", true},
 	};
 
 	for_each(tests.begin(), tests.end(), [](const Test& test) {
 		auto [rgx1, rgx2, expected_res] = test;
+		SCOPED_TRACE(rgx1 + " " + rgx2);
 		ASSERT_EQ(MemoryFiniteAutomaton::bisimilar(BackRefRegex(rgx1).to_mfa_additional(),
 												   BackRefRegex(rgx2).to_mfa_additional()),
 				  expected_res);

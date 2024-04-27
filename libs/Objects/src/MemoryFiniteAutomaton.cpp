@@ -11,7 +11,6 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/iLogTemplate.h"
 
-using std::multiset;
 using std::optional;
 using std::pair;
 using std::set;
@@ -1438,16 +1437,15 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		return false;
 	// проверяем совпадение раскраски эквивалентных состояний в КСС
 	vector<vector<vector<int>>> SCCs({fas[0].get_SCCs(), fas[1].get_SCCs()});
-	vector<multiset<set<pair<int, set<int>>>>> colored_SCCs(N);
+	vector<set<set<pair<int, set<int>>>>> colored_SCCs(N);
 	for (int i = 0; i < N; i++) {
 		for (const auto& SCC : SCCs[i]) {
 			set<pair<int, set<int>>> colored_SCC;
 			for (auto j : SCC) {
-				if (!mfa_colors[i].at(j).empty()) {
-					auto j_colors = mfa_colors[i].at(j);
-					colored_SCC.insert(
-						{fa_classes[i][j], set<int>(j_colors.begin(), j_colors.end())});
-				}
+				unordered_set<int> j_colors;
+				if (!mfa_colors[i].at(j).empty())
+					j_colors = mfa_colors[i].at(j);
+				colored_SCC.insert({fa_classes[i][j], set<int>(j_colors.begin(), j_colors.end())});
 			}
 			if (!colored_SCC.empty())
 				colored_SCCs[i].insert(colored_SCC);
@@ -1498,6 +1496,7 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		}
 	}
 
+	//	cout << fa_classes[0] << fa_classes[1];
 	//	for (const auto& i : pairs_to_calc)
 	//		cout << i;
 
