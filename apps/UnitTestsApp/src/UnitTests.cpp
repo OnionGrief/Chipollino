@@ -740,11 +740,12 @@ TEST(TestParsing, MFA_equivalence) {
 		{false, "(&1[b]:1[a*]:1)*"},
 		{true, "[a*]:1&1[b|c]:2*&2"},
 		{true, "[a*]:1&1[b|c]:1*&1"},
+		{false, "[[|b]:2*]:1*a&1&2"},
+		{false, "(([[b*]:1|]:2|)&1&1&2)*"},
+		{false, "(a[[b|]:1|]:2&1&1)*"},
 	};
 
-	int MAX_LEN = 9;
-
-	for_each(tests.begin(), tests.end(), [&MAX_LEN](const Test& test) {
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
 		auto [test_rem_eps, rgx_str] = test;
 		std::cout << rgx_str << std::endl;
 		SCOPED_TRACE("Regex: " + rgx_str);
@@ -755,6 +756,7 @@ TEST(TestParsing, MFA_equivalence) {
 			MFAs.emplace_back(mfa.remove_eps());
 		}
 
+		int MAX_LEN = mfa.size();
 		auto base_test_set = mfa.generate_test_set(MAX_LEN);
 		unordered_map<string, int> base_parsing_res;
 		for (const auto& mutated_word : base_test_set.second) {
