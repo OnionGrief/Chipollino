@@ -2713,8 +2713,8 @@ FiniteAutomaton FiniteAutomaton::get_subautomaton(const CaptureGroup& cg) {
 	Alphabet alphabet;
 
 	unordered_set<int> terminal_states;
-	for (const auto& trace : cg.traces)
-		terminal_states.insert(trace[trace.size() - 1]);
+	for (const auto& path : cg.paths)
+		terminal_states.insert(path[path.size() - 1]);
 
 	unordered_map<int, int> indexes;
 	int idx = 0;
@@ -2732,5 +2732,5 @@ FiniteAutomaton FiniteAutomaton::get_subautomaton(const CaptureGroup& cg) {
 					sub_states[indexes.at(st.index)].add_transition(indexes.at(to), symbol);
 				}
 
-	return {indexes.at((*cg.traces.begin())[0]), sub_states, alphabet};
+	return {indexes.at((*cg.paths.begin())[0]), sub_states, alphabet};
 }

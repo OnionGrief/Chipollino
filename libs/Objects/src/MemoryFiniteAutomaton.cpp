@@ -11,7 +11,6 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/iLogTemplate.h"
 
-using std::multiset;
 using std::optional;
 using std::pair;
 using std::set;
@@ -1327,10 +1326,10 @@ void find_opening_states_dfs(int state_index,
 		}
 }
 
-vector<vector<int>> MemoryFiniteAutomaton::find_cg_traces(int state_index,
-														  unordered_set<int> visited, int cell,
-														  int opening_state) const {
-	vector<vector<int>> res;
+pair<vector<vector<int>>, vector<vector<int>>> MemoryFiniteAutomaton::find_cg_paths(
+	int state_index, std::unordered_set<int> visited, int cell, int opening_state) const {
+	vector<vector<int>> paths;
+	vector<vector<int>> reset_paths;
 	visited.insert(state_index);
 
 	for (const auto& [symbol, symbol_transitions] : states[state_index].transitions)
@@ -1338,19 +1337,21 @@ vector<vector<int>> MemoryFiniteAutomaton::find_cg_traces(int state_index,
 			optional<MFATransition::MemoryAction> action;
 			if (tr.memory_actions.count(cell))
 				action = tr.memory_actions.at(cell);
-			if (action && (action == MFATransition::close || action == MFATransition::reset)) {
-				res.push_back({state_index});
+			if (action && action == MFATransition::close) {
+				paths.push_back({state_index});
+			} else if (action && action == MFATransition::reset) {
+				reset_paths.push_back({state_index});
 			} else if (!visited.count(tr.to) && !(state_index == opening_state &&
 												  (!action || action != MFATransition::open))) {
-				auto t = find_cg_traces(tr.to, visited, cell, opening_state);
+				auto [t, _] = find_cg_paths(tr.to, visited, cell, opening_state);
 				for (auto i : t) {
 					i.insert(i.begin(), state_index);
-					res.emplace_back(i);
+					paths.emplace_back(i);
 				}
 			}
 		}
 
-	return res;
+	return {paths, reset_paths};
 }
 
 vector<CaptureGroup> MemoryFiniteAutomaton::find_capture_groups_backward(
@@ -1364,31 +1365,24 @@ vector<CaptureGroup> MemoryFiniteAutomaton::find_capture_groups_backward(
 	vector<CaptureGroup> res;
 
 	for (auto opening_st : opening_states) {
-		auto traces = find_cg_traces(opening_st, {}, cell, opening_st);
-		// отделяем ресеты
-		for (auto it = traces.begin(); it != traces.end();) {
-			if (it->size() == 1) {
-				res.push_back(CaptureGroup(cell, {*it}, fa_classes));
-				it = traces.erase(it);
-			} else {
-				++it;
-			}
-		}
-		if (!traces.empty())
-			res.emplace_back(cell, traces, fa_classes);
+		auto [paths, reset_paths] = find_cg_paths(opening_st, {}, cell, opening_st);
+		for (const auto& reset_path : reset_paths)
+			res.push_back(CaptureGroup(cell, {reset_path}, fa_classes, true));
+		if (!paths.empty())
+			res.emplace_back(cell, paths, fa_classes);
 	}
 	return res;
 }
 
-bool MemoryFiniteAutomaton::find_path_decisions(int state_index, vector<int>& visited,
-												const unordered_set<int>& path_states) const {
+bool MemoryFiniteAutomaton::find_decisions(int state_index, std::vector<int>& visited,
+										   const std::unordered_set<int>& states_to_check) const {
 	visited[state_index] = 1;
 
 	optional<MFATransition> single_tr;
 	int count = 0;
 	for (const auto& [symbol, symbol_transitions] : states[state_index].transitions)
 		for (const auto& tr : symbol_transitions)
-			if (path_states.count(tr.to)) {
+			if (states_to_check.count(tr.to)) {
 				if (visited[tr.to] == 0) {
 					if (++count > 1)
 						return true;
@@ -1400,18 +1394,19 @@ bool MemoryFiniteAutomaton::find_path_decisions(int state_index, vector<int>& vi
 
 	bool found = false;
 	if (single_tr)
-		found = find_path_decisions(single_tr->to, visited, path_states);
+		found = find_decisions(single_tr->to, visited, states_to_check);
 
 	visited[state_index] = 2;
 	return found;
 }
 
-bool MemoryFiniteAutomaton::path_contains_decisions(const unordered_set<int>& path_states) const {
+bool MemoryFiniteAutomaton::states_have_decisions(
+	const std::unordered_set<int>& states_to_check) const {
 	vector<int> visited(size(), 0);
-	for (auto start : path_states) {
+	for (auto start : states_to_check) {
 		if (visited[start] != 0)
 			continue;
-		if (find_path_decisions(start, visited, path_states))
+		if (find_decisions(start, visited, states_to_check))
 			return true;
 	}
 	return false;
@@ -1442,16 +1437,15 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		return false;
 	// проверяем совпадение раскраски эквивалентных состояний в КСС
 	vector<vector<vector<int>>> SCCs({fas[0].get_SCCs(), fas[1].get_SCCs()});
-	vector<multiset<multiset<pair<int, set<int>>>>> colored_SCCs(N);
+	vector<set<set<pair<int, set<int>>>>> colored_SCCs(N);
 	for (int i = 0; i < N; i++) {
 		for (const auto& SCC : SCCs[i]) {
-			multiset<pair<int, set<int>>> colored_SCC;
+			set<pair<int, set<int>>> colored_SCC;
 			for (auto j : SCC) {
-				if (!mfa_colors[i].at(j).empty()) {
-					auto j_colors = mfa_colors[i].at(j);
-					colored_SCC.insert(
-						{fa_classes[i][j], set<int>(j_colors.begin(), j_colors.end())});
-				}
+				unordered_set<int> j_colors;
+				if (!mfa_colors[i].at(j).empty())
+					j_colors = mfa_colors[i].at(j);
+				colored_SCC.insert({fa_classes[i][j], set<int>(j_colors.begin(), j_colors.end())});
 			}
 			if (!colored_SCC.empty())
 				colored_SCCs[i].insert(colored_SCC);
@@ -1502,6 +1496,7 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		}
 	}
 
+	//	cout << fa_classes[0] << fa_classes[1];
 	//	for (const auto& i : pairs_to_calc)
 	//		cout << i;
 
@@ -1510,7 +1505,7 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 	for (const auto& [cell, st1, st2] : pairs_to_calc) {
 		capture_groups_to_cmp.emplace_back(
 			mfa1.find_capture_groups_backward(st1, cell, fa_classes[0]),
-			mfa2.find_capture_groups_backward(st1, cell, fa_classes[1]));
+			mfa2.find_capture_groups_backward(st2, cell, fa_classes[1]));
 	}
 
 	for (const auto& CGs : capture_groups_to_cmp) {
@@ -1532,8 +1527,8 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 				unordered_set<int> states_to_check_1 = cg1.get_states_diff(cg2.state_classes),
 								   states_to_check_2 = cg2.get_states_diff(cg1.state_classes);
 
-				if (!mfa1.path_contains_decisions(states_to_check_1) &&
-					!mfa2.path_contains_decisions(states_to_check_2)) {
+				if (!mfa1.states_have_decisions(states_to_check_1) &&
+					!mfa2.states_have_decisions(states_to_check_2)) {
 					check_set1.insert(i);
 					check_set2.insert(j);
 				}

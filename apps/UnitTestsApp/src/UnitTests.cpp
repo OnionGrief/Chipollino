@@ -740,11 +740,12 @@ TEST(TestParsing, MFA_equivalence) {
 		{false, "(&1[b]:1[a*]:1)*"},
 		{true, "[a*]:1&1[b|c]:2*&2"},
 		{true, "[a*]:1&1[b|c]:1*&1"},
+		{false, "[[|b]:2*]:1*a&1&2"},
+		{false, "(([[b*]:1|]:2|)&1&1&2)*"},
+		{false, "(a[[b|]:1|]:2&1&1)*"},
 	};
 
-	int MAX_LEN = 9;
-
-	for_each(tests.begin(), tests.end(), [&MAX_LEN](const Test& test) {
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
 		auto [test_rem_eps, rgx_str] = test;
 		std::cout << rgx_str << std::endl;
 		SCOPED_TRACE("Regex: " + rgx_str);
@@ -755,6 +756,7 @@ TEST(TestParsing, MFA_equivalence) {
 			MFAs.emplace_back(mfa.remove_eps());
 		}
 
+		int MAX_LEN = mfa.size();
 		auto base_test_set = mfa.generate_test_set(MAX_LEN);
 		unordered_map<string, int> base_parsing_res;
 		for (const auto& mutated_word : base_test_set.second) {
@@ -783,19 +785,26 @@ TEST(TestReverse, BRegex_Reverse) {
 }
 
 TEST(TestBisimilar, MFA_Bisimilar) {
-	ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[aa*]:1a&1").to_mfa_additional(),
-												 BackRefRegex("a[a*a]:1&1").to_mfa_additional())
-					.value());
-	ASSERT_FALSE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[a*]:1a*&1").to_mfa_additional(),
-												  BackRefRegex("a*[a*]:1&1").to_mfa_additional())
-					 .value());
-	ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(BackRefRegex("[ab]:2cab&2").to_mfa_additional(),
-												 BackRefRegex("abc[ab]:2&2").to_mfa_additional())
-					.value());
-	ASSERT_FALSE(
-		MemoryFiniteAutomaton::bisimilar(BackRefRegex("[a|b]:1c(a|b)&1").to_mfa_additional(),
-										 BackRefRegex("(a|b)c[a|b]:1&1").to_mfa_additional())
-			.value());
+	using Test = std::tuple<string, string, bool>;
+	vector<Test> tests = {
+		{"[aa*]:1a&1", "a[a*a]:1&1", true},
+		{"[a*]:1a*&1", "a*[a*]:1&1", false},
+		{"[ab]:2cab&2", "abc[ab]:2&2", true},
+		{"[a|b]:1c(a|b)&1", "(a|b)c[a|b]:1&1", false},
+		{"[a]:1*&1", "[a*]:1*&1", false},
+		{"[a*]:1&1", "[a*]:1a*&1", false},
+		{"[a*a*|]:1&1", "[a*]:1&1", true},
+		{"[a|a]:1*&1", "[a]:1*[a]:1*&1", true},
+	};
+
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [rgx1, rgx2, expected_res] = test;
+		SCOPED_TRACE(rgx1 + " " + rgx2);
+		ASSERT_EQ(MemoryFiniteAutomaton::bisimilar(BackRefRegex(rgx1).to_mfa_additional(),
+												   BackRefRegex(rgx2).to_mfa_additional()),
+				  expected_res);
+	});
+
 	ASSERT_FALSE(
 		MemoryFiniteAutomaton::bisimilar(BackRefRegex("[[a*]:1]:2a*&1").to_mfa_additional(),
 										 BackRefRegex("a*[a*]:1&1").to_mfa_additional())
