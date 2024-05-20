@@ -99,7 +99,7 @@ class FiniteAutomaton : public AbstractMachine {
 					std::stack<int>& order						 // NOLINT(runtime/references)
 	);
 	// возвращает компоненты сильной связности
-	std::vector<std::vector<int>> get_SCCs();
+	std::vector<std::unordered_set<int>> get_SCCs();
 
 	FiniteAutomaton get_subautomaton(const CaptureGroup&);
 

@@ -2658,9 +2658,10 @@ void FiniteAutomaton::fill_order(int state_index, vector<bool>& visited, stack<i
 }
 
 void find_scc_dfs(int state_index, const vector<FAState::Transitions>& reversed_transitions,
-				  vector<bool>& visited, vector<int>& component) { // NOLINT(runtime/references)
+				  vector<bool>& visited,		   // NOLINT(runtime/references)
+				  unordered_set<int>& component) { // NOLINT(runtime/references)
 	visited[state_index] = true;
-	component.push_back(state_index);
+	component.insert(state_index);
 
 	for (const auto& [symbol, symbol_transitions] : reversed_transitions[state_index])
 		for (const auto& to : symbol_transitions)
@@ -2668,8 +2669,8 @@ void find_scc_dfs(int state_index, const vector<FAState::Transitions>& reversed_
 				find_scc_dfs(to, reversed_transitions, visited, component);
 }
 
-std::vector<std::vector<int>> FiniteAutomaton::get_SCCs() {
-	vector<vector<int>> SCCs;
+std::vector<std::unordered_set<int>> FiniteAutomaton::get_SCCs() {
+	vector<unordered_set<int>> SCCs;
 	stack<int> order;
 
 	vector<bool> visited(size(), false);
@@ -2685,13 +2686,13 @@ std::vector<std::vector<int>> FiniteAutomaton::get_SCCs() {
 		order.pop();
 
 		if (!visited[state_index]) {
-			vector<int> component;
+			unordered_set<int> component;
 			find_scc_dfs(state_index, reversed_transitions, visited, component);
 			bool has_internal_transitions = false;
 			for (int state : component) {
 				for (const auto& [symbol, symbol_transitions] : states[state].transitions)
 					for (int to : symbol_transitions)
-						if (find(component.begin(), component.end(), to) != component.end()) {
+						if (component.count(to)) {
 							has_internal_transitions = true;
 							break;
 						}
