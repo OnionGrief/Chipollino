@@ -42,7 +42,7 @@ class Parser {
 	std::string cur_state, cur_label;
 	bool init, term, was_labeled;
 	std::set<std::string> states;
-	std::set<std::string> terminal;
+	std::set<std::string> final_states;
 	std::map<std::string, std::string> labels;
 	std::string initial;
 
@@ -74,7 +74,7 @@ class Parser {
 				 if (init)
 					 initial = cur_state;
 				 if (term)
-					 terminal.insert(cur_state);
+					 final_states.insert(cur_state);
 			 }
 
 			 return res;
@@ -93,12 +93,13 @@ class Parser {
 			 auto transition = rewriting_rules["initial_state"];
 			 return parse_alternative(*transition);
 		 }},
-		{"terminal",
+		{"final",
 		 [=, this]() {
-			 term = true;
-
-			 auto transition = rewriting_rules["terminal"];
-			 return parse_alternative(*transition);
+			 auto transition = rewriting_rules["final"];
+			 bool res = parse_alternative(*transition);
+			 if (res && TERMINAL == "final")
+			 	term = true;
+			 return res;
 		 }},
 		{"transition",
 		 [=, this]() {

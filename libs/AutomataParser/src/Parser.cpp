@@ -242,7 +242,7 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 			std::string name = state;
 			if (labels.count(state))
 				name = labels[state];
-			MFAstates.emplace_back(cnt, name, terminal.count(state));
+			MFAstates.emplace_back(cnt, name, final_states.count(state));
 			name_to_ind[state] = cnt++;
 		}
 
@@ -273,7 +273,7 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 			std::string name = state;
 			if (labels.count(state))
 				name = labels[state];
-			FAstates.emplace_back(cnt, name, terminal.count(state));
+			FAstates.emplace_back(cnt, name, final_states.count(state));
 			name_to_ind[state] = cnt++;
 		}
 
