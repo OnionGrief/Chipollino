@@ -41,18 +41,18 @@ class AutomatonGenerator {
 	struct StateDescription {
 		int index;
 
-		bool terminal;
+		bool final;
 		bool initial;
 
-		StateDescription(int index, bool terminal, bool initial)
-			: index(index), terminal(terminal), initial(initial) {}
+		StateDescription(int index, bool final, bool initial)
+			: index(index), final(final), initial(initial) {}
 	};
 
 	int initial = 0, states_number = 10;
 	int max_edges_number, edges_number;
 	// количество ячеек, количество попыток создать открытие ячейки
 	int colors = 4, colors_tries = 10;
-	int terminal_probability = 20;
+	int final_probability = 20;
 	int epsilon_probability = 10;
 	int ref_probability = 50;
 
@@ -100,10 +100,10 @@ class AutomatonGenerator {
 		{"states",
 		 [=, this]() {
 			 for (auto& stateDescription : stateDescriptions) {
-				 if (stateDescription.initial || stateDescription.terminal) {
+				 if (stateDescription.initial || stateDescription.final) {
 					 STRING.push(std::to_string(stateDescription.index));
-					 if (stateDescription.terminal)
-						 TERMINAL.emplace("terminal");
+					 if (stateDescription.final)
+						 TERMINAL.emplace("final");
 					 if (stateDescription.initial)
 						 TERMINAL.emplace("initial_state");
 					 TERMINAL.emplace(";");
@@ -198,7 +198,7 @@ class AutomatonGenerator {
 
 	void write_to_file(const std::string& filename);
 
-	void set_terminal_probability(int elem);
+	void set_final_probability(int elem);
 
 	void set_states_number(int n);
 };

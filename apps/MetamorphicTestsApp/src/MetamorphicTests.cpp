@@ -212,7 +212,7 @@ TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
      std::vector<float> OY;
      AutomatonGenerator::set_initial_state_not_terminal(true);
      for (int term = 5; term <= 100; term = term + 5) {
-         AutomatonGenerator::set_terminal_probability(term);
+         AutomatonGenerator::set_final_probability(term);
          int count = 0;
          int ALL = 10000;
          for (int i = 0; i < ALL; i++) {
@@ -233,7 +233,7 @@ TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
                  count++;
              }
          }
-         std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) <<
+         std::cout << "final_probability = " << term << " : " << float(count) / float(ALL) <<
          "%" << std::endl; OX.push_back(term); OY.push_back(float(count) / float(ALL));
      }
      std::cout << "OX = [";
@@ -299,7 +299,7 @@ ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
 
  TEST(Statistics, Test_dfa) {
  	for (int term = 5; term <= 50; term = term + 5) {
- 		AutomatonGenerator::set_terminal_probability(20);
+ 		AutomatonGenerator::set_final_probability(20);
  		int count = 0;
  		int ALL = 10000;
  		for (int i = 0; i < ALL; i++) {
@@ -310,7 +310,7 @@ ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
  				count++;
  			}
  		}
- 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100<<
+ 		std::cout << "final_probability = " << term << " : " << float(count) / float(ALL) * 100<<
  "%" << std::endl;
  	}
  }
@@ -318,7 +318,7 @@ ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
  TEST(Statistics, Test_fa) {
  	std::cout << "TEST\n";
  	for (int term = 5; term <= 50; term = term + 5) {
- 		AutomatonGenerator::set_terminal_probability(20);
+ 		AutomatonGenerator::set_final_probability(20);
  		int count = 0;
  		int ALL = 10000;
  		for (int i = 0; i < ALL; i++) {
@@ -333,7 +333,7 @@ ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
  			}
  			std::cout << i << " " << std::endl;
  		}
- 		std::cout << "terminal_probability = " << term << " : " << float(count) / float(ALL) * 100
+ 		std::cout << "final_probability = " << term << " : " << float(count) / float(ALL) * 100
  << "%" << std::endl;
  	}
  }*/

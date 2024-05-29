@@ -32,7 +32,7 @@ void AutomatonGenerator::add_terminality() {
 		if (unreachable.empty())
 			break;
 		int vertex = unreachable[rand() % unreachable.size()];
-		stateDescriptions[vertex].terminal = true;
+		stateDescriptions[vertex].final = true;
 		std::queue<int> bfs;
 		bfs.push(vertex);
 		finality_coloring[vertex] = true;
@@ -47,8 +47,8 @@ void AutomatonGenerator::add_terminality() {
 		}
 	}
 	for (int i = 0; i < states_number; i++) {
-		if (!stateDescriptions[i].terminal && dice_throwing(terminal_probability))
-			stateDescriptions[i].terminal = true;
+		if (!stateDescriptions[i].final && dice_throwing(final_probability))
+			stateDescriptions[i].final = true;
 	}
 }
 
@@ -189,8 +189,8 @@ void AutomatonGenerator::write_to_file(const string& filename) {
 	out.close();
 }
 
-void AutomatonGenerator::set_terminal_probability(int elem) {
-	terminal_probability = elem;
+void AutomatonGenerator::set_final_probability(int elem) {
+	final_probability = elem;
 }
 
 void AutomatonGenerator::set_states_number(int n) {
