@@ -1415,12 +1415,13 @@ bool MemoryFiniteAutomaton::states_have_decisions(
 optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAutomaton& mfa1,
 														   const MemoryFiniteAutomaton& mfa2) {
 	const int N = 2;
+	vector<const MemoryFiniteAutomaton*> mfas({&mfa1, &mfa2});
 	// раскрашиваем состояния
 	vector<unordered_map<int, unordered_set<int>>> mfa_colors(N);
-	vector<bool> visited(mfa1.size(), false);
-	mfa1.color_mem_dfs(mfa1.get_initial(), visited, {}, mfa_colors[0]);
-	visited.assign(mfa2.size(), false);
-	mfa2.color_mem_dfs(mfa2.get_initial(), visited, {}, mfa_colors[1]);
+	for (int i = 0; i < N; i++) {
+		vector<bool> visited(mfas[i]->size(), false);
+		mfas[i]->color_mem_dfs(mfas[i]->get_initial(), visited, {}, mfa_colors[i]);
+	}
 	//	using std::cout;
 	//	cout << mfa1.to_txt() << mfa2.to_txt();
 	for (const auto& mfa_colors_i : mfa_colors)
@@ -1436,15 +1437,40 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 	if (!res)
 		return false;
 	// проверяем совпадение раскраски эквивалентных состояний в КСС
-	vector<vector<vector<int>>> SCCs({fas[0].get_SCCs(), fas[1].get_SCCs()});
+	vector<vector<unordered_set<int>>> SCCs({fas[0].get_SCCs(), fas[1].get_SCCs()});
 	vector<set<set<pair<int, set<int>>>>> colored_SCCs(N);
 	for (int i = 0; i < N; i++) {
 		for (const auto& SCC : SCCs[i]) {
+			unordered_set<int> colors_to_ignore;
+			for (auto state : SCC) {
+				unordered_set<int> state_colors_to_ignore;
+				bool has_transitions_without_actions = false;
+				for (const auto& [symbol, symbol_transitions] :
+					 mfas[i]->states[state].transitions) {
+					for (const auto& tr : symbol_transitions) {
+						if (SCC.count(tr.to)) {
+							if (tr.memory_actions.empty()) {
+								state_colors_to_ignore.clear();
+								has_transitions_without_actions = true;
+								break;
+							}
+							for (const auto& [cell, action] : tr.memory_actions)
+								state_colors_to_ignore.insert(cell);
+						}
+					}
+					if (has_transitions_without_actions)
+						break;
+				}
+				colors_to_ignore.insert(state_colors_to_ignore.begin(),
+										state_colors_to_ignore.end());
+			}
+
 			set<pair<int, set<int>>> colored_SCC;
 			for (auto j : SCC) {
 				unordered_set<int> j_colors;
-				if (!mfa_colors[i].at(j).empty())
-					j_colors = mfa_colors[i].at(j);
+				for (auto color : mfa_colors[i].at(j))
+					if (!colors_to_ignore.count(color))
+						j_colors.insert(color);
 				colored_SCC.insert({fa_classes[i][j], set<int>(j_colors.begin(), j_colors.end())});
 			}
 			if (!colored_SCC.empty())
