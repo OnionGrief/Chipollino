@@ -318,8 +318,7 @@ bool AutomatonGenerator::parse_transition(const std::string& name) {
 	return parse_func[name]();
 }
 
-AutomatonGenerator::AutomatonGenerator(FA_type type, int n, const std::string& grammar_file)
-	: states_number(n) {
+void AutomatonGenerator::setup_and_generate(FA_type type, const std::string& grammar_file) {
 	generate_alphabet(52);
 
 	lexy_ascii_tree grammar;
@@ -329,7 +328,7 @@ AutomatonGenerator::AutomatonGenerator(FA_type type, int n, const std::string& g
 	Lexer::parse_buffer(grammar, input);
 
 	auto transitions = Parser::find_children(grammar, {"transition"}, {});
-	for (auto transition: transitions) {
+	for (auto transition : transitions) {
 		// итератор по описанию перехода
 		auto it = transition.children().begin();
 		// имя нетерминала
@@ -341,23 +340,36 @@ AutomatonGenerator::AutomatonGenerator(FA_type type, int n, const std::string& g
 	}
 
 	switch (type) {
-		case FA_type::MFA:
+	case FA_type::MFA:
 		TERMINAL.emplace("MFA");
 		break;
-		case FA_type::NFA:
+	case FA_type::NFA:
 		TERMINAL.emplace("NFA");
 		colors_tries = 0;
-			colors = 0;
-			break;
-		case FA_type::DFA:
+		colors = 0;
+		break;
+	case FA_type::DFA:
 		TERMINAL.emplace("DFA");
 		colors_tries = 0;
-			colors = 0;
-			epsilon_probability = 0;
-			break;
+		colors = 0;
+		epsilon_probability = 0;
+		break;
 	}
 
 	generate_graph();
 	if (!parse_transition("production"))
-		throw (std::runtime_error("Generator: can not apply grammar for generated automaton"));
+		throw(std::runtime_error("Generator: can not apply grammar for generated automaton"));
+}
+
+AutomatonGenerator::AutomatonGenerator(FA_type type, int n, const std::string& grammar_file)
+	: states_number(n) {
+	setup_and_generate(type, grammar_file);
+}
+
+AutomatonGenerator::AutomatonGenerator(const AutomatonGeneratorBuilder& builder)
+	: states_number(builder.states_number_), colors(builder.colors_),
+	  colors_tries(builder.colors_tries_), terminal_probability(builder.terminal_probability_),
+	  epsilon_probability(builder.epsilon_probability_), ref_probability(builder.ref_probability_),
+	  seed_it(builder.seed_it_), memory_cells_number(builder.memory_cells_number_) {
+	setup_and_generate(builder.type_, builder.grammar_file_);
 }
