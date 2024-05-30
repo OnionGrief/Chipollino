@@ -6,8 +6,10 @@
 
 class Logger {
   public:
+	Logger();
 	void add_log(const LogTemplate& log);
-	void render_to_file(const std::string& filename = "./resources/report.tex");
+	void render_to_file(const std::string& filename = "./resources/report.tex",
+						const std::string& user_name = "");
 	void enable();
 	void disable();
 

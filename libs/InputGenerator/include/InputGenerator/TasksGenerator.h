@@ -64,10 +64,6 @@ class TasksGenerator {
 
 	FuncLib::Function rand_func();
 
-	std::string generate_regex();
-
-	std::string generate_brefregex();
-
 	void change_seed();
 
 	bool check_probability(int chance);
@@ -101,4 +97,9 @@ class TasksGenerator {
 
 	// генерация теста для всех функций
 	void generate_test_for_all_functions();
+
+	std::string generate_regex();
+	std::string generate_brefregex();
+	std::string generate_NFA();
+	std::string generate_MFA();
 };

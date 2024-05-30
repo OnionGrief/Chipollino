@@ -14,7 +14,7 @@ $EXTERN ExtractLimitations, FrameData, MakeFrames;
 
 $ENTRY Go {
  , <ExtractLimitations 'pagedata'> : s.DefWidth s.DefHeight
-    =  <Open 'r' 1 '../resources/report.tex'><Open 'w' 2 '../resources/rendered_report.tex'>
+    =  <Open 'r' 1 '../resources/'<Arg 1>'report.tex'><Open 'w' 2 '../resources/'<Arg 1>'rendered_report.tex'>
        <MakeFrames <FrameData Width> <Div <Mul <FrameData Width> s.DefWidth> <FrameData Height>> Normal <Get 1>>
        <Close 1><Close 2>;
 }

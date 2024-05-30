@@ -34,6 +34,13 @@ string TasksGenerator::generate_brefregex() {
 	return "{" + regex_generator.generate_brefregex() + "}";
 }
 
+string TasksGenerator::generate_NFA() {
+	return AutomatonGenerator(FA_type::NFA).output.str();
+}
+string TasksGenerator::generate_MFA() {
+	return AutomatonGenerator(FA_type::MFA).output.str();
+}
+
 string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 									 bool for_static_tpchkr_, bool for_dynamic_tpchkr_) {
 	change_seed();

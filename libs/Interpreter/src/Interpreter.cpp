@@ -48,7 +48,8 @@ bool Interpreter::run_line(const string& line) {
 	return success;
 }
 
-bool Interpreter::run_file(const string& path) {
+bool Interpreter::run_file(const string& path, const string& user_name_) {
+	user_name = user_name_;
 	auto logger = init_log();
 	logger.log("opening file " + path);
 	ifstream input_file(path);
@@ -68,7 +69,6 @@ bool Interpreter::run_file(const string& path) {
 
 	input_file.close();
 	logger.log("successfully interpreted " + path);
-
 	return true;
 }
 
@@ -77,7 +77,7 @@ void Interpreter::set_log_mode(LogMode mode) {
 }
 
 void Interpreter::generate_log(const string& filename) {
-	tex_logger.render_to_file(filename);
+	tex_logger.render_to_file(filename, user_name);
 }
 
 bool Interpreter::set_flag(Flag key, bool value) {
@@ -109,7 +109,7 @@ void Interpreter::InterpreterLogger::throw_error(const string& str) {
 		}
 	}
 	if (parent.log_mode != LogMode::nothing) {
-		cout << "ERROR: " << str << "\n";
+		std::cerr << "ERROR: " << str << "\n";
 	}
 	parent.error = true;
 }

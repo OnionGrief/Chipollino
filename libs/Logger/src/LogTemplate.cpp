@@ -84,7 +84,7 @@ string LogTemplate::get_tex_template() {
 	return template_filename;
 }
 
-string LogTemplate::render() const {
+string LogTemplate::render(const std::string& user_name) const {
 	stringstream infile = expand_includes(template_fullpath);
 
 	// Строка-аккумулятор
@@ -103,16 +103,14 @@ string LogTemplate::render() const {
 				show = false;
 			}
 		}
-		if (s.find("%end detailed") != -1) {
-			show = true;
-		}
 
 		// Отображаем строчку
 		if (show) {
 			for (const auto& [key, param] : parameters) {
-				int insert_place = s.find("%template_" + key);
+				string template_kw = "%template_";
+				size_t insert_place = s.find(template_kw + key);
 				// Если имя шаблона не заканчивает строку, то это может быть и другой шаблон
-				if ((insert_place != s.length() - 10 - key.length()) || (insert_place == -1)) {
+				if ((insert_place != s.length() - template_kw.length() - key.length()) || (insert_place == -1)) {
 					continue;
 				}
 
@@ -140,7 +138,7 @@ string LogTemplate::render() const {
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
 					} else {
-						c_graph = AutomatonToImage::to_image(automaton);
+						c_graph = AutomatonToImage::to_image(automaton, user_name);
 						cache_automatons[hash] = c_graph;
 					}
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
@@ -162,6 +160,9 @@ string LogTemplate::render() const {
 			outstr += s;
 			outstr += "\n";
 		}
+
+		if (s.find("%end detailed") != -1)
+			show = true;
 	}
 
 	return outstr;

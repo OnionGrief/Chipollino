@@ -35,7 +35,7 @@ class LogTemplate : public iLogTemplate {
 	void set_theory_flag(bool value);
 
 	// Рендерит все логи, возвращает строку
-	std::string render() const;
+	std::string render(const std::string& user_name = "") const;
 	// загрузка шаблона
 	void load_tex_template(const std::string& filename);
 	std::string get_tex_template();

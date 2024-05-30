@@ -3,7 +3,7 @@
 #include "InputGenerator/TasksGenerator.h"
 #include "Interpreter/Interpreter.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 
 	/*
 	// Если кому-то вдруг нужна подборка трешовых регулярок
@@ -21,17 +21,37 @@ int main() {
 
 	std::cout << "Input generator\n";
 
-	// Инициализируем интерпретатор
-	Interpreter interpreter;
-	interpreter.set_log_mode(Interpreter::LogMode::all);
+	std::string task = "Test";
+	bool run = true;
 
-	// Используем сгенерированный тест
+	if (argc > 1)
+		task = argv[1];
+	if (argc > 2)
+		run = argv[2];
+
+	
 	TasksGenerator TG;
-	TG.generate_task(3, 5, false, false);
-	// TG.generate_test_for_all_functions();
-	TG.write_to_file("test.txt");
-
-	// Загружаем в интерпретатор файл с коммандами
-	if (interpreter.run_file("test.txt"))
-		interpreter.generate_log("./resources/report.tex");
+	if (task == "Test") {
+		std::string res = TG.generate_task(3, 5, false, false);
+		// TG.generate_test_for_all_functions();
+		if (run) {
+			TG.write_to_file("test.txt");
+			// Инициализируем интерпретатор
+			Interpreter interpreter;
+			interpreter.set_log_mode(Interpreter::LogMode::all);
+			// Используем сгенерированный тест
+			if (interpreter.run_file("test.txt"))
+				interpreter.generate_log("./resources/report.tex");
+		} else {
+			std::cout << res;
+		}
+	} else if (task == "Regex") {
+		std::cout << TG.generate_regex() << "\n";
+	} else if (task == "BackRefRegex") {
+		std::cout << TG.generate_brefregex() << "\n";
+	} else if (task == "NFA") {
+		std::cout << TG.generate_NFA() << "\n";
+	} else if (task == "MFA") {
+		std::cout << TG.generate_MFA() << "\n";
+	}
 }
