@@ -15,7 +15,7 @@ $ENTRY Trim {
 SpecialSymbolList {
  = (NOREGEX ('eps')('\\empt'))(NOREGEX ('DERIV')('\\delta_'))(OK ('FIRST')('\\First'))(OK ('FOLLOW')('\\Follow'))(OK ('LAST')('\\Last'))
    (OK ('UNION')('\\cup'))(OK ('\\{')('\\{'))(OK ('\\}')('\\}'))(OK ('{')('\\{'))(OK ('}')('\\}'))(OK ('[')('['))(OK (']')(']'))
-   (NOREGEX ('LANG')('\\Lang'))(OK ('&')('\\memref'))(NOREGEX ('\\textasciicircum')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
+   (NOREGEX ('LANG')('\\Lang'))(OK ('\\&')('\\memref'))(NOREGEX ('\\textasciicircum')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
    (OK ('>->>')('\\transit'))(MEM ('MEMLOPEN')
    ('\\langle o:\\,'))(MEM ('MEMR')('\\rangle'))(MEM ('MEMLCLOSE')('\\langle c:\\,'));
 }
