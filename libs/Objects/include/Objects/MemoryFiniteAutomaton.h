@@ -192,7 +192,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::tuple<std::set<int>, std::unordered_set<int>, MFATransition::MemoryActions>
 	get_eps_closure(const std::set<int>& indices) const;
 	void dfs_by_eps(int, std::set<int>&, const int&, int&, // NOLINT(runtime/references)
-					MFATransition::MemoryActions&) const; // NOLINT(runtime/references)
+					MFATransition::MemoryActions&) const;  // NOLINT(runtime/references)
 
 	void color_mem_dfs(
 		int state_index,
@@ -255,6 +255,6 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 										 iLogTemplate* log = nullptr);
 	static bool action_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
 								 iLogTemplate* log = nullptr);
-	static bool literally_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
-									iLogTemplate* log = nullptr);
+	static bool symbolic_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+								   iLogTemplate* log = nullptr);
 };

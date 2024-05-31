@@ -1250,9 +1250,9 @@ FiniteAutomaton MemoryFiniteAutomaton::to_fa_mem() const {
 	return {initial_state, fa_states, alphabet};
 }
 
-bool MemoryFiniteAutomaton::literally_bisimilar(const MemoryFiniteAutomaton& mfa1,
-												const MemoryFiniteAutomaton& mfa2,
-												iLogTemplate* log) {
+bool MemoryFiniteAutomaton::symbolic_bisimilar(const MemoryFiniteAutomaton& mfa1,
+											   const MemoryFiniteAutomaton& mfa2,
+											   iLogTemplate* log) {
 	FiniteAutomaton fa1(mfa1.to_fa_mem()), fa2(mfa2.to_fa_mem());
 	bool result = FiniteAutomaton::bisimilar(fa1, fa2);
 	if (log) {

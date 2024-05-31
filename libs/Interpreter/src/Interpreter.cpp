@@ -330,8 +330,8 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectBoolean(MemoryFiniteAutomaton::action_bisimilar(
 			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
 	}
-	if (function.name == "LiterallyBisimilar") {
-		return ObjectBoolean(MemoryFiniteAutomaton::literally_bisimilar(
+	if (function.name == "SymbolicBisimilar") {
+		return ObjectBoolean(MemoryFiniteAutomaton::symbolic_bisimilar(
 			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
 	}
 	// # place for another diff types funcs

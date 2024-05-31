@@ -80,7 +80,7 @@ inline static const std::vector<Function> functions = {
 	{"IsAcreg", {ObjectType::BRefRegex}, ObjectType::Boolean},
 	{"Bisimilar", {ObjectType::MFA, ObjectType::MFA}, ObjectType::OptionalBool},
 	{"ActionBisimilar", {ObjectType::MFA, ObjectType::MFA}, ObjectType::Boolean},
-	{"LiterallyBisimilar", {ObjectType::MFA, ObjectType::MFA}, ObjectType::Boolean},
+	{"SymbolicBisimilar", {ObjectType::MFA, ObjectType::MFA}, ObjectType::Boolean},
 	{"getNFA", {ObjectType::String}, ObjectType::NFA},
 	{"getMFA", {ObjectType::String}, ObjectType::MFA},
 };

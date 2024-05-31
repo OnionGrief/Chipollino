@@ -175,7 +175,7 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		MemoryFiniteAutomaton mfa = r.to_mfa_additional();
 
 		ASSERT_TRUE(MemoryFiniteAutomaton::action_bisimilar(mfa, mfa));
-		ASSERT_TRUE(MemoryFiniteAutomaton::literally_bisimilar(mfa, mfa));
+		ASSERT_TRUE(MemoryFiniteAutomaton::symbolic_bisimilar(mfa, mfa));
 		ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(mfa, mfa).value());
 	}
 }
