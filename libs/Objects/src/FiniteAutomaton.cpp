@@ -383,7 +383,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 			classes[groups[i][j]] = i;
 		}
 	}
-	FiniteAutomaton minimized_dfa = dfa.merge_equivalent_classes(classes);
+	auto [minimized_dfa, class_to_index] = dfa.merge_equivalent_classes(classes);
 
 	// кэширование
 	language->set_min_dfa(minimized_dfa);
@@ -401,7 +401,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 		for (int j = 0; j < dfa.size(); j++)
 			if (classes[i] == classes[j] && (i != j)) {
 				old_meta.upd(NodeMeta{dfa.states[i].index, classes[i]});
-				new_meta.upd(NodeMeta{classes[i], classes[i]});
+				new_meta.upd(NodeMeta{class_to_index.at(classes[i]), classes[i]});
 				break;
 			}
 	}
@@ -1359,44 +1359,47 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	return true;
 }
 
-FiniteAutomaton FiniteAutomaton::merge_equivalent_classes(vector<int> classes) const {
-	map<int, vector<int>> class_to_index; // нужен для подсчета количества классов
+tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_equivalent_classes(
+	const vector<int>& classes) const {
+	map<int, vector<int>> class_to_indexes;
 	for (int i = 0; i < classes.size(); i++)
-		class_to_index[classes[i]].push_back(i);
-	// индексы состояний в новом автомате соответствуют номеру класса эквивалентности
+		class_to_indexes[classes[i]].push_back(i);
+	// класс эквивалентности -> индекс состояния в новом автомате
+	unordered_map<int, int> class_to_index;
 	vector<FAState> new_states;
-	for (int i = 0; i < class_to_index.size(); i++) {
+	for (const auto& [class_num, indexes] : class_to_indexes) {
 		string new_identifier;
-		for (int index : class_to_index[i]) {
+		for (int index : indexes) {
 			new_identifier +=
 				(new_identifier.empty() || states[index].identifier.empty() ? "" : ", ") +
 				states[index].identifier;
 		}
-		new_states.emplace_back(i, set<int>({i}), new_identifier, false, FAState::Transitions());
+		int idx = new_states.size();
+		class_to_index[class_num] = idx;
+		new_states.emplace_back(idx, set<int>({idx}), new_identifier, false);
 	}
 
 	for (int i = 0; i < states.size(); i++) {
-		int from = classes[i];
-		for (const auto& elem : states[i].transitions) {
-			for (int transition_to : elem.second) {
-				int to = classes[transition_to];
-				new_states[from].transitions[elem.first].insert(to);
+		int from = class_to_index.at(classes[i]);
+		for (const auto& [symbol, symbol_transitions] : states[i].transitions) {
+			for (const auto& to : symbol_transitions) {
+				int new_to = class_to_index.at(classes[to]);
+				new_states[from].transitions[symbol].insert(new_to);
 			}
 		}
 	}
 
-	for (const auto& elem : class_to_index)
-		if (states[elem.second[0]].is_terminal)
-			new_states[elem.first].is_terminal = true;
+	for (const auto& [class_num, indexes] : class_to_indexes)
+		if (states[indexes[0]].is_terminal)
+			new_states[class_to_index.at(class_num)].is_terminal = true;
 
-	return {classes[initial_state], new_states, language};
+	return {{class_to_index.at(classes[initial_state]), new_states, language}, class_to_index};
 }
 
-FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
+vector<int> FiniteAutomaton::get_bisimilar_classes() const {
 	vector<RLGrammar::Item> fa_items;
 	vector<RLGrammar::Item*> nonterminals;
 	vector<RLGrammar::Item*> terminals;
-	MetaInfo old_meta, new_meta;
 	vector<vector<vector<RLGrammar::Item*>>> rules = RLGrammar::fa_to_grammar(
 		states, language->get_alphabet(), fa_items, nonterminals, terminals);
 	vector<RLGrammar::Item*> bisimilar_nonterminals;
@@ -1404,33 +1407,44 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	vector<vector<vector<RLGrammar::Item*>>> bisimilar_rules = RLGrammar::get_bisimilar_grammar(
 		rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
 
-	// log
 	vector<int> classes;
 	for (const auto& nont : nonterminals)
 		classes.push_back(nont->class_number);
-	FiniteAutomaton result_fa = merge_equivalent_classes(classes);
+
+	return classes;
+}
+
+FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
+	MetaInfo old_meta, new_meta;
+	vector<int> classes = get_bisimilar_classes();
+	auto [result, class_to_index] = merge_equivalent_classes(classes);
 
 	for (int i = 0; i < classes.size(); i++) {
 		for (int j = 0; j < classes.size(); j++)
 			if (classes[i] == classes[j] && (i != j)) {
 				old_meta.upd(NodeMeta{i, classes[i]});
-				new_meta.upd(NodeMeta{classes[i], classes[i]});
+				new_meta.upd(NodeMeta{class_to_index.at(classes[i]), classes[i]});
 			}
 	}
 
+	map<int, vector<int>> class_to_indexes;
+	for (int i = 0; i < classes.size(); i++)
+		class_to_indexes[classes[i]].push_back(i);
+
 	stringstream ss;
-	for (auto& elem : class_to_nonterminals) {
+	for (const auto& [_, indexes] : class_to_indexes) {
 		ss << "\\{";
-		for (int i = 0; i < elem.second.size() - 1; i++)
-			ss << elem.second[i]->name << ",\\ ";
-		ss << elem.second[elem.second.size() - 1]->name << "\\};";
+		for (int i = 0; i < indexes.size() - 1; i++)
+			ss << states[indexes[i]].identifier << ",\\ ";
+		ss << states[indexes[indexes.size() - 1]].identifier << "\\};";
 	}
+
 	if (log) {
 		log->set_parameter("oldautomaton", *this, old_meta);
 		log->set_parameter("equivclasses", ss.str()); // TODO: logs
-		log->set_parameter("result", result_fa, new_meta);
+		log->set_parameter("result", result, new_meta);
 	}
-	return result_fa;
+	return result;
 }
 
 pair<bool, vector<vector<int>>> FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,

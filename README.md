@@ -249,6 +249,7 @@ TG.generate_task(3, 5, false, false);
 - `Bisimilar: (MFA, MFA) -> OptionalBool`
 - `ActionBisimilar: (MFA, MFA) -> Boolean`
 - `SymbolicBisimilar: (MFA, MFA) -> Boolean`
+- `MergeBisim: MFA -> MFA`
 
 **Метод Test**
 

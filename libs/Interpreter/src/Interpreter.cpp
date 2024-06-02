@@ -376,9 +376,6 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "RemoveTrap") {
 		res = ObjectDFA(get_automaton(arguments[0]).remove_trap_states(&log_template));
 	}
-	if (function.name == "MergeBisim") {
-		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar(&log_template));
-	}
 	if (function.name == "Normalize") {
 		// Преобразуем array в массив пар
 		const auto& arr = get<ObjectArray>(arguments[1]).value;
@@ -444,6 +441,12 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		// ObjectNFA(get_automaton(arguments[0]).deannote(&log_template,
 		// Flag::auto_remove_trap_states));
 		res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
+	}
+	if (function.name == "MergeBisim" && function.input[0] == ObjectType::NFA) {
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.merge_bisimilar(&log_template));
+	}
+	if (function.name == "MergeBisim" && function.input[0] == ObjectType::MFA) {
+		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.merge_bisimilar(&log_template));
 	}
 	// # place for another same types funcs
 	if (function.name == "Intersect") {

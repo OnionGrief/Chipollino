@@ -133,7 +133,6 @@ TEST(TestMFA, Fuzzing) {
 	RegexGenerator rg(5, 3, 3, 2);
 	for (int i = 0; i < RegexNumberX10; i++) {
 		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
-		//		std::cout << i << " " << rgx_str << "\n";
 		SCOPED_TRACE("Regex: " + rgx_str);
 		MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
 		MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
@@ -177,5 +176,17 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		ASSERT_TRUE(MemoryFiniteAutomaton::action_bisimilar(mfa, mfa));
 		ASSERT_TRUE(MemoryFiniteAutomaton::symbolic_bisimilar(mfa, mfa));
 		ASSERT_TRUE(MemoryFiniteAutomaton::bisimilar(mfa, mfa).value());
+	}
+}
+
+TEST(TestBisimilar, MFA_MergeBisimilar) {
+	RegexGenerator rg(6, 3, 3, 2);
+	for (int i = 0; i < RegexNumber; i++) {
+		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
+		SCOPED_TRACE("Regex: " + rgx_str);
+		BackRefRegex r = BackRefRegex(rgx_str);
+		MemoryFiniteAutomaton mfa = r.to_mfa_additional();
+
+		MetamorphicTests::cmp_automatons(mfa, mfa.merge_bisimilar());
 	}
 }

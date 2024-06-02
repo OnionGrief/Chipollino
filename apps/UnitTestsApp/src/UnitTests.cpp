@@ -270,6 +270,8 @@ TEST(TestBisimilar, FA_MergeBisimilar) {
 	FiniteAutomaton fa = Regex("(a|b)*b").to_glushkov();
 	FiniteAutomaton fa1 = fa.merge_bisimilar();
 
+	ASSERT_TRUE(FiniteAutomaton::equal(Regex("(a|b)*b").to_ilieyu(), fa1));
+
 	vector<FAState> states2;
 	for (int i = 0; i < 3; i++) {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
@@ -298,7 +300,6 @@ TEST(TestBisimilar, FA_MergeBisimilar) {
 	states3[1].is_terminal = true;
 	FiniteAutomaton fa3(0, states3, {"a", "b"});
 
-	ASSERT_TRUE(FiniteAutomaton::equal(Regex("(a|b)*b").to_ilieyu(), fa1));
 	ASSERT_TRUE(FiniteAutomaton::equal(fa2.merge_bisimilar(), fa3));
 }
 
@@ -747,7 +748,6 @@ TEST(TestParsing, MFA_equivalence) {
 
 	for_each(tests.begin(), tests.end(), [](const Test& test) {
 		auto [test_rem_eps, rgx_str] = test;
-		std::cout << rgx_str << std::endl;
 		SCOPED_TRACE("Regex: " + rgx_str);
 
 		MemoryFiniteAutomaton mfa = BackRefRegex(rgx_str).to_mfa();
@@ -766,7 +766,6 @@ TEST(TestParsing, MFA_equivalence) {
 
 		for (auto& cur_mfa : MFAs) {
 			auto test_set = cur_mfa.generate_test_set(MAX_LEN);
-			std::cout << test_set.first.size() << std::endl;
 			ASSERT_EQ(base_test_set.first, test_set.first);
 
 			for (const auto& [mutated_word, res] : base_parsing_res) {
