@@ -10,6 +10,7 @@
 #include "Objects/Regex.h"
 #include "gtest/gtest.h"
 
+using std::cout;
 using std::string;
 using std::unordered_set;
 using std::vector;
@@ -187,6 +188,6 @@ TEST(TestBisimilar, MFA_MergeBisimilar) {
 		BackRefRegex r = BackRefRegex(rgx_str);
 		MemoryFiniteAutomaton mfa = r.to_mfa_additional();
 
-		MetamorphicTests::cmp_automatons(mfa, mfa.merge_bisimilar());
+		MetamorphicTests::cmp_automatons(mfa.merge_bisimilar(), mfa);
 	}
 }

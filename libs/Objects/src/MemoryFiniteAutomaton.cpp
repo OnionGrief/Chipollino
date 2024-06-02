@@ -1597,7 +1597,7 @@ optional<bool> MemoryFiniteAutomaton::bisimilar(const MemoryFiniteAutomaton& mfa
 
 tuple<MemoryFiniteAutomaton, unordered_map<int, int>> MemoryFiniteAutomaton::
 	merge_equivalent_classes(const vector<int>& classes) const {
-	unordered_map<int, vector<int>> class_to_indexes;
+	map<int, vector<int>> class_to_indexes;
 	for (int i = 0; i < classes.size(); i++)
 		class_to_indexes[classes[i]].push_back(i);
 	// класс эквивалентности -> индекс состояния в новом автомате
