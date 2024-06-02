@@ -66,9 +66,9 @@ class MFAState : public State {
 	MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
 	explicit MFAState(const FAState& state);
 
+	bool operator==(const MFAState& other) const;
 	std::string to_txt() const override;
 	void add_transition(const MFATransition&, const Symbol&);
-	bool operator==(const MFAState& other) const;
 };
 
 using MemoryConfiguration = std::unordered_set<int>;
@@ -192,7 +192,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::tuple<std::set<int>, std::unordered_set<int>, MFATransition::MemoryActions>
 	get_eps_closure(const std::set<int>& indices) const;
 	void dfs_by_eps(int, std::set<int>&, const int&, int&, // NOLINT(runtime/references)
-					MFATransition::MemoryActions&) const; // NOLINT(runtime/references)
+					MFATransition::MemoryActions&) const;  // NOLINT(runtime/references)
 
 	void color_mem_dfs(
 		int state_index,
@@ -215,6 +215,11 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 
 	static std::optional<bool> bisimilarity_checker(const MemoryFiniteAutomaton&,
 													const MemoryFiniteAutomaton&);
+
+	// объединение эквивалентных классов (принимает на вход вектор размера states.size())
+	// на i-й позиции номер класса i-го состояния
+	std::tuple<MemoryFiniteAutomaton, std::unordered_map<int, int>> merge_equivalent_classes(
+		const std::vector<int>&) const;
 
   public:
 	MemoryFiniteAutomaton();
@@ -247,14 +252,16 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_set(
 		int max_len) const;
 	// ссылки считаются символами алфавита, операции над памятью игнорируются
-	FiniteAutomaton to_fa() const;
+	FiniteAutomaton to_action_fa() const;
 	// ссылки считаются символами алфавита, операции над памятью преобразуются в переходы Oi, Ci, Ri
-	FiniteAutomaton to_fa_mem() const;
+	FiniteAutomaton to_symbolic_fa() const;
 	// проверка автоматов на бисимилярность
 	static std::optional<bool> bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
 										 iLogTemplate* log = nullptr);
 	static bool action_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
 								 iLogTemplate* log = nullptr);
-	static bool literally_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
-									iLogTemplate* log = nullptr);
+	static bool symbolic_bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+								   iLogTemplate* log = nullptr);
+	// объединение эквивалентных по бисимуляции состояний
+	MemoryFiniteAutomaton merge_bisimilar(iLogTemplate* log = nullptr) const;
 };

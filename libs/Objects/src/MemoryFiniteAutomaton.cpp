@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <map>
 #include <random>
 #include <sstream>
 #include <stack>
@@ -11,6 +12,7 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/iLogTemplate.h"
 
+using std::map;
 using std::optional;
 using std::pair;
 using std::set;
@@ -226,9 +228,9 @@ string MemoryFiniteAutomaton::to_txt() const {
 
 	for (const auto& state : states) {
 		for (const auto& [symbol, symbol_transitions] : state.transitions) {
-			for (const auto& transition : symbol_transitions) {
-				ss << "\t" << state.index << " -> " << transition.to << " [label = \""
-				   << string(symbol) << transition.get_actions_str() << "\"]\n";
+			for (const auto& tr : symbol_transitions) {
+				ss << "\t" << state.index << " -> " << tr.to << " [label = \"" << string(symbol)
+				   << tr.get_actions_str() << "\"]\n";
 			}
 		}
 	}
@@ -1178,7 +1180,7 @@ pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::genera
 	return {words_in_language, mutated_words};
 }
 
-FiniteAutomaton MemoryFiniteAutomaton::to_fa() const {
+FiniteAutomaton MemoryFiniteAutomaton::to_action_fa() const {
 	vector<FAState> fa_states;
 	Alphabet alphabet;
 	fa_states.reserve(states.size());
@@ -1189,7 +1191,7 @@ FiniteAutomaton MemoryFiniteAutomaton::to_fa() const {
 
 bool MemoryFiniteAutomaton::action_bisimilar(const MemoryFiniteAutomaton& mfa1,
 											 const MemoryFiniteAutomaton& mfa2, iLogTemplate* log) {
-	FiniteAutomaton fa1(mfa1.to_fa()), fa2(mfa2.to_fa());
+	FiniteAutomaton fa1(mfa1.to_action_fa()), fa2(mfa2.to_action_fa());
 	bool result = FiniteAutomaton::bisimilar(fa1, fa2);
 	if (log) {
 		log->set_parameter("mfa1", mfa1);
@@ -1199,7 +1201,7 @@ bool MemoryFiniteAutomaton::action_bisimilar(const MemoryFiniteAutomaton& mfa1,
 	return result;
 }
 
-FiniteAutomaton MemoryFiniteAutomaton::to_fa_mem() const {
+FiniteAutomaton MemoryFiniteAutomaton::to_symbolic_fa() const {
 	int n = size();
 	vector<FAState> fa_states(n);
 	Alphabet alphabet;
@@ -1208,11 +1210,11 @@ FiniteAutomaton MemoryFiniteAutomaton::to_fa_mem() const {
 		fa_states[i] = FAState(i, state.identifier, state.is_terminal);
 		for (const auto& [symbol, symbol_transitions] : state.transitions) {
 			alphabet.insert(symbol);
-			for (const auto& transition : symbol_transitions) {
+			for (const auto& tr : symbol_transitions) {
 				set<int> opens;
 				set<int> closes;
 				set<int> resets;
-				for (const auto& [num, action] : transition.memory_actions) {
+				for (const auto& [num, action] : tr.memory_actions) {
 					switch (action) {
 					case MFATransition::open:
 						opens.insert(num);
@@ -1225,7 +1227,7 @@ FiniteAutomaton MemoryFiniteAutomaton::to_fa_mem() const {
 						break;
 					}
 				}
-				int start = n;
+				int start = n; // для подсчета дополнительных состояний
 				for (auto ind : closes)
 					fa_states.emplace_back(n++, "C" + std::to_string(ind), false);
 				for (auto ind : resets)
@@ -1240,9 +1242,9 @@ FiniteAutomaton MemoryFiniteAutomaton::to_fa_mem() const {
 						alphabet.insert(fa_states[j + 1].identifier);
 						fa_states[j].transitions[fa_states[j + 1].identifier].insert(j + 1);
 					}
-					fa_states[fa_states.size() - 1].transitions[symbol].insert(transition.to);
+					fa_states[fa_states.size() - 1].transitions[symbol].insert(tr.to);
 				} else {
-					fa_states[i].transitions[symbol].insert(transition.to);
+					fa_states[i].transitions[symbol].insert(tr.to);
 				}
 			}
 		}
@@ -1250,10 +1252,10 @@ FiniteAutomaton MemoryFiniteAutomaton::to_fa_mem() const {
 	return {initial_state, fa_states, alphabet};
 }
 
-bool MemoryFiniteAutomaton::literally_bisimilar(const MemoryFiniteAutomaton& mfa1,
-												const MemoryFiniteAutomaton& mfa2,
-												iLogTemplate* log) {
-	FiniteAutomaton fa1(mfa1.to_fa_mem()), fa2(mfa2.to_fa_mem());
+bool MemoryFiniteAutomaton::symbolic_bisimilar(const MemoryFiniteAutomaton& mfa1,
+											   const MemoryFiniteAutomaton& mfa2,
+											   iLogTemplate* log) {
+	FiniteAutomaton fa1(mfa1.to_symbolic_fa()), fa2(mfa2.to_symbolic_fa());
 	bool result = FiniteAutomaton::bisimilar(fa1, fa2);
 	if (log) {
 		log->set_parameter("mfa1", mfa1);
@@ -1432,7 +1434,7 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 			//			cout << j.second;
 		}
 	// проверяем action bisimilarity
-	vector<FiniteAutomaton> fas({mfa1.to_fa(), mfa2.to_fa()});
+	vector<FiniteAutomaton> fas({mfa1.to_action_fa(), mfa2.to_action_fa()});
 	auto [res, fa_classes] = FiniteAutomaton::bisimilarity_checker(fas[0], fas[1]);
 	if (!res)
 		return false;
@@ -1589,6 +1591,77 @@ optional<bool> MemoryFiniteAutomaton::bisimilar(const MemoryFiniteAutomaton& mfa
 
 		log->set_parameter("mfa1", mfa1);
 		log->set_parameter("mfa2", mfa2);
+	}
+	return result;
+}
+
+tuple<MemoryFiniteAutomaton, unordered_map<int, int>> MemoryFiniteAutomaton::
+	merge_equivalent_classes(const vector<int>& classes) const {
+	map<int, vector<int>> class_to_indexes;
+	for (int i = 0; i < classes.size(); i++)
+		class_to_indexes[classes[i]].push_back(i);
+	// класс эквивалентности -> индекс состояния в новом автомате
+	unordered_map<int, int> class_to_index;
+	vector<MFAState> new_states;
+	for (const auto& [class_num, indexes] : class_to_indexes) {
+		string new_identifier;
+		for (int index : indexes) {
+			new_identifier +=
+				(new_identifier.empty() || states[index].identifier.empty() ? "" : ", ") +
+				states[index].identifier;
+		}
+		int idx = new_states.size();
+		class_to_index[class_num] = idx;
+		new_states.emplace_back(idx, new_identifier, false);
+	}
+
+	for (int i = 0; i < states.size(); i++) {
+		int from = class_to_index.at(classes[i]);
+		for (const auto& [symbol, symbol_transitions] : states[i].transitions) {
+			for (const auto& tr : symbol_transitions) {
+				MFATransition new_tr(class_to_index.at(classes[tr.to]), tr.memory_actions);
+				new_states[from].transitions[symbol].insert(new_tr);
+			}
+		}
+	}
+
+	for (const auto& [class_num, indexes] : class_to_indexes)
+		if (states[indexes[0]].is_terminal)
+			new_states[class_to_index.at(class_num)].is_terminal = true;
+
+	return {{class_to_index.at(classes[initial_state]), new_states, language}, class_to_index};
+}
+
+MemoryFiniteAutomaton MemoryFiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
+	MetaInfo old_meta, new_meta;
+	vector<int> classes = to_symbolic_fa().get_bisimilar_classes();
+	classes.resize(size()); // в symbolic_fa первые n состояний - состояния исходного mfa
+	auto [result, class_to_index] = merge_equivalent_classes(classes);
+
+	for (int i = 0; i < classes.size(); i++) {
+		for (int j = 0; j < classes.size(); j++)
+			if (classes[i] == classes[j] && (i != j)) {
+				old_meta.upd(NodeMeta{i, classes[i]});
+				new_meta.upd(NodeMeta{class_to_index.at(classes[i]), classes[i]});
+			}
+	}
+
+	map<int, vector<int>> class_to_indexes;
+	for (int i = 0; i < classes.size(); i++)
+		class_to_indexes[classes[i]].push_back(i);
+
+	stringstream ss;
+	for (const auto& [_, indexes] : class_to_indexes) {
+		ss << "\\{";
+		for (int i = 0; i < indexes.size() - 1; i++)
+			ss << states[indexes[i]].identifier << ",\\ ";
+		ss << states[indexes[indexes.size() - 1]].identifier << "\\};";
+	}
+
+	if (log) {
+		log->set_parameter("oldautomaton", *this, old_meta);
+		log->set_parameter("equivclasses", ss.str()); // TODO: logs
+		log->set_parameter("result", result, new_meta);
 	}
 	return result;
 }

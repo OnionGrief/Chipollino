@@ -11,6 +11,7 @@
 #include "Objects/TransformationMonoid.h"
 #include "Tester/Tester.h"
 
+using std::cout;
 using std::map;
 using std::set;
 using std::string;
@@ -270,6 +271,8 @@ TEST(TestBisimilar, FA_MergeBisimilar) {
 	FiniteAutomaton fa = Regex("(a|b)*b").to_glushkov();
 	FiniteAutomaton fa1 = fa.merge_bisimilar();
 
+	ASSERT_TRUE(FiniteAutomaton::equal(Regex("(a|b)*b").to_ilieyu(), fa1));
+
 	vector<FAState> states2;
 	for (int i = 0; i < 3; i++) {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
@@ -298,7 +301,6 @@ TEST(TestBisimilar, FA_MergeBisimilar) {
 	states3[1].is_terminal = true;
 	FiniteAutomaton fa3(0, states3, {"a", "b"});
 
-	ASSERT_TRUE(FiniteAutomaton::equal(Regex("(a|b)*b").to_ilieyu(), fa1));
 	ASSERT_TRUE(FiniteAutomaton::equal(fa2.merge_bisimilar(), fa3));
 }
 
@@ -526,23 +528,16 @@ TEST(TestToMFA, ToMfa) {
 			  MFAState(0,
 					   "0",
 					   false,
-					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
-						{"b", {MFATransition(2, {1}, unordered_set<int>())}},
+					   {{"a", {MFATransition(1, {1}, {})}},
+						{"b", {MFATransition(2, {1}, {})}},
 						{Symbol::Epsilon, {MFATransition(4)}}}));
-	ASSERT_EQ(
-		states[1],
-		MFAState(
-			1, "1", false, {{Symbol::Epsilon, {MFATransition(3, unordered_set<int>(), {1})}}}));
-	ASSERT_EQ(
-		states[2],
-		MFAState(
-			2, "2", false, {{Symbol::Epsilon, {MFATransition(3, unordered_set<int>(), {1})}}}));
+	ASSERT_EQ(states[1], MFAState(1, "1", false, {{Symbol::Epsilon, {MFATransition(3, {}, {1})}}}));
+	ASSERT_EQ(states[2], MFAState(2, "2", false, {{Symbol::Epsilon, {MFATransition(3, {}, {1})}}}));
 	ASSERT_EQ(states[3],
 			  MFAState(3,
 					   "3",
 					   true,
-					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
-						{"b", {MFATransition(2, {1}, unordered_set<int>())}}}));
+					   {{"a", {MFATransition(1, {1}, {})}}, {"b", {MFATransition(2, {1}, {})}}}));
 	ASSERT_EQ(states[4], MFAState(4, "4", true, {}));
 
 	states = BackRefRegex("([&2]:1[&1a]:2)*").to_mfa().get_states();
@@ -551,23 +546,13 @@ TEST(TestToMFA, ToMfa) {
 			  MFAState(0,
 					   "0",
 					   false,
-					   {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}},
+					   {{Symbol::Ref(2), {MFATransition(1, {1}, {})}},
 						{Symbol::Epsilon, {MFATransition(6)}}}));
-	ASSERT_EQ(
-		states[1],
-		MFAState(
-			1, "1", false, {{Symbol::Epsilon, {MFATransition(2, unordered_set<int>(), {1})}}}));
-	ASSERT_EQ(
-		states[2],
-		MFAState(2, "2", false, {{Symbol::Ref(1), {MFATransition(3, {2}, unordered_set<int>())}}}));
+	ASSERT_EQ(states[1], MFAState(1, "1", false, {{Symbol::Epsilon, {MFATransition(2, {}, {1})}}}));
+	ASSERT_EQ(states[2], MFAState(2, "2", false, {{Symbol::Ref(1), {MFATransition(3, {2}, {})}}}));
 	ASSERT_EQ(states[3], MFAState(3, "3", false, {{"a", {MFATransition(4)}}}));
-	ASSERT_EQ(
-		states[4],
-		MFAState(
-			4, "4", false, {{Symbol::Epsilon, {MFATransition(5, unordered_set<int>(), {2})}}}));
-	ASSERT_EQ(
-		states[5],
-		MFAState(5, "5", true, {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}}}));
+	ASSERT_EQ(states[4], MFAState(4, "4", false, {{Symbol::Epsilon, {MFATransition(5, {}, {2})}}}));
+	ASSERT_EQ(states[5], MFAState(5, "5", true, {{Symbol::Ref(2), {MFATransition(1, {1}, {})}}}));
 	ASSERT_EQ(states[6], MFAState(6, "6", true, {}));
 }
 
@@ -578,23 +563,23 @@ TEST(TestToMFA, ToMfaAdditional) {
 			  MFAState(0,
 					   "S",
 					   false,
-					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
-						{"b", {MFATransition(2, {1}, unordered_set<int>())}},
+					   {{"a", {MFATransition(1, {1}, {})}},
+						{"b", {MFATransition(2, {1}, {})}},
 						{"c", {MFATransition(3)}}}));
 	ASSERT_EQ(states[1],
 			  MFAState(1,
 					   "a.0",
 					   false,
-					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
-						{"b", {MFATransition(2, {1}, unordered_set<int>())}},
-						{"c", {MFATransition(3, unordered_set<int>(), {1})}}}));
+					   {{"a", {MFATransition(1, {1}, {})}},
+						{"b", {MFATransition(2, {1}, {})}},
+						{"c", {MFATransition(3, {}, {1})}}}));
 	ASSERT_EQ(states[2],
 			  MFAState(2,
 					   "b.1",
 					   false,
-					   {{"a", {MFATransition(1, {1}, unordered_set<int>())}},
-						{"b", {MFATransition(2, {1}, unordered_set<int>())}},
-						{"c", {MFATransition(3, unordered_set<int>(), {1})}}}));
+					   {{"a", {MFATransition(1, {1}, {})}},
+						{"b", {MFATransition(2, {1}, {})}},
+						{"c", {MFATransition(3, {}, {1})}}}));
 	ASSERT_EQ(states[3], MFAState(3, "c.2", true, {}));
 
 	states = BackRefRegex("([&2]:1[&1a]:2)*c").to_mfa_additional().get_states();
@@ -603,8 +588,7 @@ TEST(TestToMFA, ToMfaAdditional) {
 			  MFAState(0,
 					   "S",
 					   false,
-					   {{Symbol::Ref(2), {MFATransition(1, {1}, unordered_set<int>())}},
-						{"c", {MFATransition(4)}}}));
+					   {{Symbol::Ref(2), {MFATransition(1, {1}, {})}}, {"c", {MFATransition(4)}}}));
 	ASSERT_EQ(states[1],
 			  MFAState(1, "&2.0", false, {{Symbol::Ref(1), {MFATransition(2, {2}, {1})}}}));
 	ASSERT_EQ(states[2], MFAState(2, "&1.1", false, {{"a", {MFATransition(3)}}}));
@@ -613,7 +597,7 @@ TEST(TestToMFA, ToMfaAdditional) {
 					   "a.2",
 					   false,
 					   {{Symbol::Ref(2), {MFATransition(1, {1}, {2})}},
-						{"c", {MFATransition(4, unordered_set<int>(), {2})}}}));
+						{"c", {MFATransition(4, {}, {2})}}}));
 	ASSERT_EQ(states[4], MFAState(4, "c.3", true, {}));
 }
 
@@ -668,13 +652,9 @@ TEST(TestRemoveEps, MFA_RemoveEps) {
 	mfa = mfa.remove_eps();
 	vector<MFAState> states = mfa.get_states();
 	ASSERT_EQ(states.size(), 3);
-	ASSERT_EQ(states[0],
-			  MFAState(0, "0", false, {{"a", {MFATransition(1, {1, 2}, unordered_set<int>())}}}));
+	ASSERT_EQ(states[0], MFAState(0, "0", false, {{"a", {MFATransition(1, {1, 2}, {})}}}));
 	ASSERT_EQ(states[1],
-			  MFAState(1,
-					   "1, 2, 3",
-					   false,
-					   {{Symbol::Ref(1), {MFATransition(2, unordered_set<int>(), {1, 2})}}}));
+			  MFAState(1, "1, 2, 3", false, {{Symbol::Ref(1), {MFATransition(2, {}, {1, 2})}}}));
 	ASSERT_EQ(states[2], MFAState(2, "4", true, {}));
 }
 
@@ -747,7 +727,6 @@ TEST(TestParsing, MFA_equivalence) {
 
 	for_each(tests.begin(), tests.end(), [](const Test& test) {
 		auto [test_rem_eps, rgx_str] = test;
-		std::cout << rgx_str << std::endl;
 		SCOPED_TRACE("Regex: " + rgx_str);
 
 		MemoryFiniteAutomaton mfa = BackRefRegex(rgx_str).to_mfa();
@@ -766,7 +745,6 @@ TEST(TestParsing, MFA_equivalence) {
 
 		for (auto& cur_mfa : MFAs) {
 			auto test_set = cur_mfa.generate_test_set(MAX_LEN);
-			std::cout << test_set.first.size() << std::endl;
 			ASSERT_EQ(base_test_set.first, test_set.first);
 
 			for (const auto& [mutated_word, res] : base_parsing_res) {
@@ -810,6 +788,75 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		MemoryFiniteAutomaton::bisimilar(BackRefRegex("[[a*]:1]:2a*&1").to_mfa_additional(),
 										 BackRefRegex("a*[a*]:1&1").to_mfa_additional())
 			.has_value());
+}
+
+TEST(TestBisimilar, MFA_MergeBisimilar) {
+	vector<MFAState> states =
+		BackRefRegex("ab*[b*]:1*&1").to_mfa_additional().merge_bisimilar().get_states();
+	ASSERT_EQ(states.size(), 4);
+	ASSERT_EQ(states[0],
+			  MFAState(0,
+					   "a.0, b.1",
+					   false,
+					   {{"b", {MFATransition(0), MFATransition(1, {1}, {})}},
+						{Symbol::Ref(1), {MFATransition(3), MFATransition(3, {}, {}, {1})}}}));
+	ASSERT_EQ(
+		states[1],
+		MFAState(1,
+				 "b.2",
+				 false,
+				 {{"b", {MFATransition(1), MFATransition(1, {1}, {})}},
+				  {Symbol::Ref(1), {MFATransition(3, {}, {1}), MFATransition(3, {}, {}, {1})}}}));
+	ASSERT_EQ(states[2], MFAState(2, "S", false, {{"a", {MFATransition(0)}}}));
+	ASSERT_EQ(states[3], MFAState(3, "&1.3", true, {}));
+
+	states =
+		BackRefRegex("([a*]:1|[a*a*]:1)*&1").to_mfa_additional().merge_bisimilar().get_states();
+	ASSERT_EQ(states.size(), 3);
+	ASSERT_EQ(states[0],
+			  MFAState(0,
+					   "S",
+					   false,
+					   {{"a", {MFATransition(1, {1}, {})}}, {Symbol::Ref(1), {MFATransition(2)}}}));
+	ASSERT_EQ(
+		states[1],
+		MFAState(1,
+				 "a.0, a.1, a.2",
+				 false,
+				 {{"a", {MFATransition(1), MFATransition(1, {1}, {})}},
+				  {Symbol::Ref(1), {MFATransition(2, {}, {1}), MFATransition(2, {}, {}, {1})}}}));
+	ASSERT_EQ(states[2], MFAState(2, "&1.3", true, {}));
+
+	states =
+		BackRefRegex("(b|[&2*]:1*[a|&1]:2&2)*").to_mfa_additional().merge_bisimilar().get_states();
+	ASSERT_EQ(states.size(), 4);
+	ASSERT_EQ(
+		states[0],
+		MFAState(0,
+				 "&2.1",
+				 false,
+				 {{Symbol::Ref(2), {MFATransition(0), MFATransition(0, {1}, {})}},
+				  {"a", {MFATransition(1, {2}, {1}), MFATransition(1, {2}, {}, {1})}},
+				  {Symbol::Ref(1), {MFATransition(1, {2}, {1}), MFATransition(1, {2}, {}, {1})}}}));
+	ASSERT_EQ(states[1],
+			  MFAState(1, "a.2, &1.3", false, {{Symbol::Ref(2), {MFATransition(2, {}, {2})}}}));
+	ASSERT_EQ(
+		states[2],
+		MFAState(2,
+				 "b.0, &2.4",
+				 true,
+				 {{"b", {MFATransition(2)}},
+				  {Symbol::Ref(2), {MFATransition(0, {1}, {})}},
+				  {"a", {MFATransition(1, {2}, {}), MFATransition(1, {2}, {}, {1})}},
+				  {Symbol::Ref(1), {MFATransition(1, {2}, {}), MFATransition(1, {2}, {}, {1})}}}));
+	ASSERT_EQ(states[3],
+			  MFAState(3,
+					   "S",
+					   true,
+					   {{"b", {MFATransition(2)}},
+						{Symbol::Ref(2), {MFATransition(0, {1}, {})}},
+						{"a", {MFATransition(1, {2}, {})}},
+						{Symbol::Ref(1), {MFATransition(1, {2}, {})}}}));
 }
 
 TEST(TestAmbiguity, AmbiguityValues) {
