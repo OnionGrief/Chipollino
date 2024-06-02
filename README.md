@@ -76,8 +76,8 @@ TG.generate_task(3, 5, false, false);
 * **Function sequence**. Последовательное применение функций справа-налево. Пример: `Annote.Glushkov.DeAnnote {a}`
 * **Int**. Целое число. Пример: `8`
 * **FileName**. Путь к файлу. Пример: `"test.txt"`
-* **Varaible** - переменная. Примеры: `A`, `N1`, `N2`
-* **Expression**. Function sequence, Int, Regex или Varaible
+* **Variable** - переменная. Примеры: `A`, `N1`, `N2`
+* **Expression**. Function sequence, Int, Regex или Variable
 
 Для функций и последовательностей функций должны выполняться соответствия типов. Больше про типы фунцкий - ниже в
 разделе [Функции преобразователя](#functions).

@@ -47,7 +47,6 @@ void Logger::render_to_file(const string& filename, const string& user_name) {
 
 	cmd_command = "cd refal && refgo RunFormatter+FrameFormatter+MathMode " + user_name +
 				  " 2>error_FrameFormatter.raux";
-	cout << cmd_command << "\n";
 	system(cmd_command.c_str());
 
 	cout << "\nConverting to PDF 2...\n";

@@ -1,7 +1,7 @@
 MFA
     aba initial_state;
-    ab terminal;
-    aba terminal;
+    ab final;
+    aba final;
     ...
     aba bab v;
     bab ab eps 12 o;

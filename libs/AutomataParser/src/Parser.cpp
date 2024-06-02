@@ -188,7 +188,7 @@ bool Parser::parse_alternative(lexy::_pt_node<lexy::_bra, void> ref) {
 	return read;
 }
 
-bool Parser::parse_transition(const std::string &name) {
+bool Parser::parse_transition(const std::string& name) {
 	if (!rewriting_rules.count(name)) {
 		return false;
 	}
@@ -216,6 +216,14 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 	}
 
 	std::ifstream t(filename);
+	if (!t) {
+		t.close();
+		t.open("test_data/tmp/" + filename);
+		if (!t) {
+			std::cerr << "failed to open " + filename;
+			exit(1);
+		}
+	}
 	std::stringstream buffer;
 	buffer << t.rdbuf();
 	file = buffer.str();
@@ -296,8 +304,8 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 	}
 }
 
-FiniteAutomaton Parser::parse_NFA(const std::string &automaton_file,
-								  const std::string &grammar_file) {
+FiniteAutomaton Parser::parse_NFA(const std::string& automaton_file,
+								  const std::string& grammar_file) {
 	lexy_ascii_tree grammar;
 
 	auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
@@ -310,8 +318,8 @@ FiniteAutomaton Parser::parse_NFA(const std::string &automaton_file,
 	throw(std::runtime_error("Parse: parsed automaton is not NFA"));
 }
 
-FiniteAutomaton Parser::parse_DFA(const std::string &automaton_file,
-								  const std::string &grammar_file) {
+FiniteAutomaton Parser::parse_DFA(const std::string& automaton_file,
+								  const std::string& grammar_file) {
 	lexy_ascii_tree grammar;
 
 	auto file = lexy::read_file<lexy::ascii_encoding>(grammar_file.c_str());
@@ -325,7 +333,7 @@ FiniteAutomaton Parser::parse_DFA(const std::string &automaton_file,
 	throw(std::runtime_error("Parse: parsed automaton is not DFA"));
 }
 
-MemoryFiniteAutomaton Parser::parse_MFA(const std::string &automaton_file,
+MemoryFiniteAutomaton Parser::parse_MFA(const std::string& automaton_file,
 										const std::string& grammar_file) {
 	lexy_ascii_tree grammar;
 
