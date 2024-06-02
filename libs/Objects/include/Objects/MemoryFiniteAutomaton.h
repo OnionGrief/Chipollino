@@ -252,9 +252,12 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_set(
 		int max_len) const;
 	// ссылки считаются символами алфавита, операции над памятью игнорируются
-	FiniteAutomaton to_action_fa() const;
+	FiniteAutomaton to_action_fa(iLogTemplate* log = nullptr) const;
 	// ссылки считаются символами алфавита, операции над памятью преобразуются в переходы Oi, Ci, Ri
-	FiniteAutomaton to_symbolic_fa() const;
+	FiniteAutomaton to_symbolic_fa(iLogTemplate* log = nullptr) const;
+	// проверка автоматов на равенство (буквальное + строгое равенство номеров ячеек)
+	static bool equal(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+					  iLogTemplate* log = nullptr);
 	// проверка автоматов на бисимилярность
 	static std::optional<bool> bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
 										 iLogTemplate* log = nullptr);

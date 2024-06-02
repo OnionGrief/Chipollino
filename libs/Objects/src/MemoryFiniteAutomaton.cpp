@@ -1180,13 +1180,19 @@ pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::genera
 	return {words_in_language, mutated_words};
 }
 
-FiniteAutomaton MemoryFiniteAutomaton::to_action_fa() const {
+FiniteAutomaton MemoryFiniteAutomaton::to_action_fa(iLogTemplate* log) const {
 	vector<FAState> fa_states;
 	Alphabet alphabet;
 	fa_states.reserve(states.size());
 	for (const auto& state : states)
 		fa_states.emplace_back(state, alphabet);
-	return {initial_state, fa_states, alphabet};
+
+	FiniteAutomaton fa(initial_state, fa_states, alphabet);
+	if (log) {
+		log->set_parameter("mfa", *this);
+		log->set_parameter("result", fa);
+	}
+	return fa;
 }
 
 bool MemoryFiniteAutomaton::action_bisimilar(const MemoryFiniteAutomaton& mfa1,
@@ -1201,7 +1207,7 @@ bool MemoryFiniteAutomaton::action_bisimilar(const MemoryFiniteAutomaton& mfa1,
 	return result;
 }
 
-FiniteAutomaton MemoryFiniteAutomaton::to_symbolic_fa() const {
+FiniteAutomaton MemoryFiniteAutomaton::to_symbolic_fa(iLogTemplate* log) const {
 	int n = size();
 	vector<FAState> fa_states(n);
 	Alphabet alphabet;
@@ -1249,7 +1255,24 @@ FiniteAutomaton MemoryFiniteAutomaton::to_symbolic_fa() const {
 			}
 		}
 	}
-	return {initial_state, fa_states, alphabet};
+
+	FiniteAutomaton fa(initial_state, fa_states, alphabet);
+	if (log) {
+		log->set_parameter("mfa", *this);
+		log->set_parameter("result", fa);
+	}
+	return fa;
+}
+
+bool MemoryFiniteAutomaton::equal(const MemoryFiniteAutomaton& mfa1,
+								  const MemoryFiniteAutomaton& mfa2, iLogTemplate* log) {
+	bool result = FiniteAutomaton::equal(mfa1.to_symbolic_fa(), mfa2.to_symbolic_fa());
+	if (log) {
+		log->set_parameter("automaton1", mfa1);
+		log->set_parameter("automaton2", mfa2);
+		log->set_parameter("result", result ? "True" : "False");
+	}
+	return result;
 }
 
 bool MemoryFiniteAutomaton::symbolic_bisimilar(const MemoryFiniteAutomaton& mfa1,

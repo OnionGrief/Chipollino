@@ -246,8 +246,11 @@ TG.generate_task(3, 5, false, false);
 - `Complement: MFA -> MFA`
 - `Deterministic: MFA -> Boolean`
 - `Bisimilar: (MFA, MFA) -> OptionalBool`
+- `Action: MFA -> NFA`
+- `Symbolic: MFA -> NFA`
 - `ActionBisimilar: (MFA, MFA) -> Boolean`
 - `SymbolicBisimilar: (MFA, MFA) -> Boolean`
+- `Equal: (MFA, MFA) -> Boolean`
 - `MergeBisim: MFA -> MFA`
 
 **Метод Test**

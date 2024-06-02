@@ -334,6 +334,10 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectBoolean(MemoryFiniteAutomaton::symbolic_bisimilar(
 			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
 	}
+	if (function.name == "Equal" && function.input[0] == ObjectType::MFA) {
+		return ObjectBoolean(MemoryFiniteAutomaton::equal(
+			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
+	}
 	// # place for another diff types funcs
 
 	/*
@@ -447,6 +451,12 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	}
 	if (function.name == "MergeBisim" && function.input[0] == ObjectType::MFA) {
 		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.merge_bisimilar(&log_template));
+	}
+	if (function.name == "Action") {
+		res = ObjectNFA(get<ObjectMFA>(arguments[0]).value.to_action_fa(&log_template));
+	}
+	if (function.name == "Symbolic") {
+		res = ObjectNFA(get<ObjectMFA>(arguments[0]).value.to_symbolic_fa(&log_template));
 	}
 	// # place for another same types funcs
 	if (function.name == "Intersect") {

@@ -71,6 +71,7 @@ inline static const std::vector<Function> functions = {
 	{"Equiv", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean},
 	{"Equal", {ObjectType::Regex, ObjectType::Regex}, ObjectType::Boolean},
 	{"Equal", {ObjectType::NFA, ObjectType::NFA}, ObjectType::Boolean},
+	{"Equal", {ObjectType::MFA, ObjectType::MFA}, ObjectType::Boolean},
 	{"Equal", {ObjectType::Int, ObjectType::Int}, ObjectType::Boolean},
 	{"Equal", {ObjectType::AmbiguityValue, ObjectType::AmbiguityValue}, ObjectType::Boolean},
 	{"Equal", {ObjectType::Boolean, ObjectType::Boolean}, ObjectType::Boolean},
@@ -82,6 +83,8 @@ inline static const std::vector<Function> functions = {
 	{"ActionBisimilar", {ObjectType::MFA, ObjectType::MFA}, ObjectType::Boolean},
 	{"SymbolicBisimilar", {ObjectType::MFA, ObjectType::MFA}, ObjectType::Boolean},
 	{"MergeBisim", {ObjectType::MFA}, ObjectType::MFA},
+	{"Action", {ObjectType::MFA}, ObjectType::NFA},
+	{"Symbolic", {ObjectType::MFA}, ObjectType::NFA},
 };
 
 // вспомогательная функция для Ани и ее курсача
