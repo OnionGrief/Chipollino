@@ -1510,7 +1510,6 @@ tuple<bool,pair<MetaInfo,MetaInfo>, vector<vector<int>>> FiniteAutomaton::bisimi
 		int nont_class = fa1_class_to_nonterminals.at(fa1_classes[i])[0]
 							 ->class_number; // класс нетерминала в общей грамматике,
 											 // 0й элемент попал в бисимилярную грамматику
-		class_to_nonterminals_names[nont_class].push_back("FA1:" + std::to_string(i));
 		meta1.upd(NodeMeta{i, nont_class});
 	}
 
