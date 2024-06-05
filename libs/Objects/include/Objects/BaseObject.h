@@ -4,12 +4,7 @@
 #include <set>
 #include <string>
 
-#include "AlphabetSymbol.h"
-
-using std::cout;
-using std::set;
-using std::string;
-using std::vector;
+#include "Symbol.h"
 
 class Language;
 
@@ -19,7 +14,9 @@ class BaseObject {
 
   public:
 	BaseObject();
-	BaseObject(std::shared_ptr<Language>); // NOLINT(runtime/explicit)
-	BaseObject(set<alphabet_symbol>);	   // NOLINT(runtime/explicit)
-	virtual string to_txt() const = 0;
+	explicit BaseObject(std::shared_ptr<Language>);
+	explicit BaseObject(const Alphabet&);
+	virtual std::string to_txt() const = 0;
+
+	std::shared_ptr<Language> get_language() const;
 };

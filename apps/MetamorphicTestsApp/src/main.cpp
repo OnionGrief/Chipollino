@@ -1,12 +1,13 @@
 #include <iostream>
 
-#include "gtest/gtest.h"
+#include "MetamorphicTestsApp/MetamorphicTests.h"
+#include "Objects/Language.h"
 
 using std::cout;
 
 int main(int argc, char** argv) {
 	cout << "Metamorphic Tests\n";
 	// Тестирование
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+	Language::disable_retrieving_from_cache();
+	return MetamorphicTests::RunTests(argc, argv);
 }

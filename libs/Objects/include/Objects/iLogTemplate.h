@@ -7,27 +7,30 @@
 
 class FiniteAutomaton;
 class Regex;
+class MemoryFiniteAutomaton;
+class BackRefRegex;
 
 class iLogTemplate {
   public:
 	struct Table {
-		vector<string> rows;	// названия строк
-		vector<string> columns; // названия столбцов
-		vector<string> data;	// данные
+		std::vector<std::string> rows;	  // названия строк
+		std::vector<std::string> columns; // названия столбцов
+		std::vector<std::string> data;	  // данные
 	};
 
 	struct Point {
-		string plot_id;
-		int x_coord;
+		std::string plot_label;
+		long x_coord;
 		long y_coord;
 	};
 
 	struct Plot {
-		vector<Point> data;
+		std::vector<Point> data;
 	};
 
-	using LogObject = variant<FiniteAutomaton, Regex, string, int, Table, Plot>;
+	using LogObject = std::variant<FiniteAutomaton, MemoryFiniteAutomaton, Regex, BackRefRegex,
+								   std::string, int, Table, Plot>;
 
-	virtual void set_parameter(const string& key, const LogObject& value,
+	virtual void set_parameter(const std::string& key, const LogObject& value,
 							   const MetaInfo& meta = {}) = 0;
 };

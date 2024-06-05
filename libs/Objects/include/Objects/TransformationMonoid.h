@@ -3,25 +3,39 @@
 #include <cmath>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <queue>
 #include <set>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include "AlphabetSymbol.h"
-#include "BaseObject.h"
 #include "FiniteAutomaton.h"
+#include "Symbol.h"
 #include "iLogTemplate.h"
-
-using std::cout;
-using std::map;
-using std::set;
-using std::string;
-using std::vector;
 
 class Language;
 class FiniteAutomaton;
+
+// нужна, чтобы хранить weak_ptr на язык
+class FA_model {
+  private:
+	int initial_state;
+	std::vector<FAState> states;
+	// если не хранить этот указатель,
+	// будут созданы разные shared_ptr
+	std::weak_ptr<Language> language;
+
+  public:
+	FA_model() = default;
+	FA_model(int initial_state, std::vector<FAState> states, std::weak_ptr<Language> language);
+
+	int get_initial_state() const;
+	const std::vector<FAState>& get_states() const;
+	std::shared_ptr<Language> get_language() const;
+
+	FiniteAutomaton make_fa();
+};
 
 class TransformationMonoid {
   public:
@@ -42,8 +56,8 @@ class TransformationMonoid {
 	// Терм (флаг оставляет ли в языке, имя, вектор переходов)
 	struct Term {
 		bool isFinal = false;
-		vector<alphabet_symbol> name;
-		vector<Transition> transitions;
+		std::vector<Symbol> name;
+		std::vector<Transition> transitions;
 		bool operator==(const Term& a) const {
 			return transitions == a.transitions;
 		}
@@ -53,25 +67,25 @@ class TransformationMonoid {
 		Term first;
 		Term second;
 	};
-	TransformationMonoid();
-	TransformationMonoid(const FiniteAutomaton& in); // NOLINT(runtime/explicit)
+	TransformationMonoid() = default;
+	explicit TransformationMonoid(const FiniteAutomaton& in);
 	// получаем все классы эквивалентности
-	vector<Term> get_equalence_classes();
+	std::vector<Term> get_equalence_classes();
 	// получаем термы, что vw - в языке
-	vector<Term> get_equalence_classes_vw(const Term& w);
+	std::vector<Term> get_equalence_classes_vw(const Term& w);
 	// получаем термы, что wv - в языке
-	vector<Term> get_equalence_classes_wv(const Term& w);
+	std::vector<Term> get_equalence_classes_wv(const Term& w);
 	// получаем термы, что vwv - в языке
-	vector<TermDouble> get_equalence_classes_vwv(const Term& w);
+	std::vector<TermDouble> get_equalence_classes_vwv(const Term& w);
 	// получаем правила переписывания
-	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> get_rewriting_rules();
+	std::map<std::vector<Symbol>, std::vector<std::vector<Symbol>>> get_rewriting_rules();
 	// вывод классов эквивалентных
-	string get_equalence_classes_txt();
-	map<string, vector<string>> get_equalence_classes_map();
+	std::string get_equalence_classes_txt();
+	std::map<std::string, std::vector<std::string>> get_equalence_classes_map();
 	// вывод правил переписывания
-	string get_rewriting_rules_txt(iLogTemplate* log = nullptr);
+	std::string get_rewriting_rules_txt(iLogTemplate* log = nullptr);
 	// Вывод всей информации о Моноиде
-	string to_txt();
+	std::string to_txt();
 	// Вернет -1 если не синхронизирован или
 	// номер состояния с которым синхронизирован
 	int is_synchronized(const Term& w);
@@ -84,29 +98,29 @@ class TransformationMonoid {
 	// Вычисление размера по М-Н
 	int get_classes_number_MyhillNerode(iLogTemplate* log = nullptr);
 	// вывод таблицы М-Н
-	string to_txt_MyhillNerode();
-	// переписываем имя терма в  минимальное
-	vector<alphabet_symbol> rewriting(
-		const vector<alphabet_symbol>&,
-		const map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>>&);
+	std::string to_txt_MyhillNerode();
+	//	переписываем имя терма в  минимальное
+	//	std::vector<Symbol> rewriting(
+	//		const std::vector<Symbol>&,
+	//		const std::map<std::vector<Symbol>, std::vector<std::vector<Symbol>>>&);
 	// возвращает таблицу М-Н
-	vector<vector<bool>> get_equivalence_classes_table(
-		vector<string>& table_rows,		// NOLINT(runtime/references)
-		vector<string>& table_columns); // NOLINT(runtime/references)
+	std::vector<std::vector<bool>> get_equivalence_classes_table(
+		std::vector<std::string>& table_rows,	  // NOLINT(runtime/references)
+		std::vector<std::string>& table_columns); // NOLINT(runtime/references)
 
   private:
 	// Автомат
-	FiniteAutomaton automat;
+	FA_model automaton;
 	// Классы эквивалентности
-	vector<Term> terms;
+	std::vector<Term> terms;
 	// Правила переписывания
-	map<vector<alphabet_symbol>, vector<vector<alphabet_symbol>>> rules;
+	std::map<std::vector<Symbol>, std::vector<std::vector<Symbol>>> rules;
 	// Taблица М-Н
-	vector<vector<bool>> equivalence_classes_table_bool;
+	std::vector<std::vector<bool>> equivalence_classes_table_bool;
 	// Левая часть таблицы
-	vector<string> equivalence_classes_table_left;
+	std::vector<std::string> equivalence_classes_table_left;
 	// шапка таблицы
-	vector<string> equivalence_classes_table_top;
+	std::vector<std::string> equivalence_classes_table_top;
 
 	//   | t o p
 	// l |--------
@@ -119,13 +133,13 @@ class TransformationMonoid {
 	// флаг (неминимальны ли ловушки)
 	bool trap_not_minimal = false;
 	// проверяем имя терма на  переписываемость (вспомогательный)
-	static bool was_rewrite(const vector<alphabet_symbol>&, const vector<alphabet_symbol>&);
+	static bool was_rewrite(const std::vector<Symbol>&, const std::vector<Symbol>&);
 	// проверка на присутствие терма
-	static bool was_transition(const set<TransformationMonoid::Transition>&,
+	static bool was_transition(const std::set<TransformationMonoid::Transition>&,
 							   const TransformationMonoid::Transition&);
 	// проверяем имя терма на переписываемость
-	bool searchrewrite(const vector<alphabet_symbol>&);
+	bool searchrewrite(const std::vector<Symbol>&);
 	// генерируем новые переходы по алфавиту
-	void get_new_transition(const vector<TransformationMonoid::Transition>&,
-							const vector<alphabet_symbol>&, const set<alphabet_symbol>&);
+	void get_new_transition(const std::vector<TransformationMonoid::Transition>&,
+							const std::vector<Symbol>&, const std::set<Symbol>&);
 };

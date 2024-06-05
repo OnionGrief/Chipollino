@@ -1,6 +1,14 @@
 #include "InputGenerator/RegexGenerator.h"
 
-RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 3, 2, 2) {}
+using std::ofstream;
+using std::string;
+using std::to_string;
+
+RegexGenerator::RegexGenerator() : RegexGenerator::RegexGenerator(8, 4, 3, 3) {}
+
+RegexGenerator::RegexGenerator(int neg_chance_) : RegexGenerator::RegexGenerator() {
+	neg_chance = neg_chance_;
+}
 
 RegexGenerator::RegexGenerator(int regex_length, int star_num, int star_nesting, int alphabet_size)
 	: regex_length(regex_length), star_num(star_num), star_nesting(star_nesting) {
@@ -31,8 +39,19 @@ void RegexGenerator::change_seed() {
 	srand((size_t)time(nullptr) + seed_it + rand());
 }
 
+// рандомное число в диапозоне [0; n]
+int rand_num(int n) {
+	return n > 0 ? rand() % n : 0;
+}
+
+bool check_probability(int percentage) {
+	if (rand_num(100) < percentage)
+		return true;
+	return false;
+}
+
 void RegexGenerator::write_to_file(string filename) {
-	std::ofstream out(filename, std::ios::app);
+	ofstream out(filename, std::ios::app);
 	if (out.is_open())
 		out << res_str << "\n";
 	out.close();
@@ -43,7 +62,7 @@ int RegexGenerator::generate_alphabet(int regex_length) {
 	int max_alphabet_size = regex_length > 52 ? 52 : regex_length;
 	int alphabet_size = 0;
 	if (max_alphabet_size)
-		alphabet_size = rand() % max_alphabet_size;
+		alphabet_size = rand_num(max_alphabet_size);
 	return alphabet_size + 1;
 }
 
@@ -58,8 +77,15 @@ string RegexGenerator::generate_regex() {
 	return res_str;
 }
 
-string RegexGenerator::generate_framed_regex() {
-	return "{" + generate_regex() + "}";
+string RegexGenerator::generate_brefregex(int cells_num_, int mem_writer_chance_, int ref_chance_) {
+	cells_num = cells_num_;
+	mem_writer_chance = mem_writer_chance_;
+	ref_chance = ref_chance_;
+	is_backref = true;
+	neg_chance = 0;
+	string brefregex = generate_regex();
+	is_backref = false;
+	return brefregex;
 }
 
 void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt>
@@ -87,16 +113,14 @@ void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt>
 
 void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex>
 											  // | пусто
-	int v = rand() % 4; // подкрутим вероятность выпадения пустого слова
-	if (v) {
+	if (check_probability(75)) {
 		generate_conc_regex();
 	}
 }
 
 void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 											 // | <simple-regex><conc-regex>
-	int v = rand() % 2;
-	if (v == 0) {
+	if (check_probability(50)) {
 		generate_simple_regex();
 	} else {
 		generate_simple_regex();
@@ -106,11 +130,9 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 	}
 }
 
-void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
-											   // <lbr><regex-without-eps><rbr><unary>?
-											   // | буква <unary>?
-	int v = rand() % 2;
-	if (v == 0) {
+void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? буква <star>? |
+											   //        <neg>? <lbr><regex><rbr> <star>?
+	if (check_probability(40)) {
 		bool prev_eps_counter = all_alts_are_eps;
 		all_alts_are_eps = true; // новый контроллер эпсилонов
 
@@ -137,9 +159,30 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 		} else {
 			v2 = 1;
 		}
-		res_str += '(';
-		generate_regex_();
-		res_str += ')';
+
+		if (!is_backref && check_probability(neg_chance))
+			res_str += '^';
+
+		if (is_backref && (cells_num > in_memory_writer.size()) &&
+			check_probability(mem_writer_chance)) {
+
+			int ref_num = rand_num(cells_num) + 1;
+			// запрещено [[]:1]:1, но допускается [[]:2]:1
+			while (in_memory_writer.count(ref_num) != 0)
+				ref_num = rand_num(cells_num) + 1;
+			in_memory_writer.insert(ref_num);
+
+			res_str += "[";
+			generate_regex_();
+			res_str += "]:" + to_string(ref_num);
+
+			in_memory_writer.erase(ref_num);
+		} else {
+			res_str += '(';
+			generate_regex_();
+			res_str += ')';
+		}
+
 		all_alts_are_eps = prev_eps_counter;
 
 		if (!v2) {
@@ -148,7 +191,19 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 		}
 	} else {
 		all_alts_are_eps = false;
-		res_str += rand_symb();
+
+		if (!is_backref && check_probability(neg_chance))
+			res_str += '^';
+
+		if (is_backref && check_probability(ref_chance) && (cells_num > in_memory_writer.size())) {
+			int ref_num = rand_num(cells_num) + 1;
+			// запрещено [&1]:1, но допускается [&2]:1
+			while (in_memory_writer.count(ref_num) != 0)
+				ref_num = rand_num(cells_num) + 1;
+			res_str += "&" + to_string(ref_num);
+		} else {
+			res_str += rand_symb();
+		}
 
 		int v2;
 		if (cur_star_num) {
@@ -169,17 +224,22 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::=
 }
 
 char RegexGenerator::rand_symb() {
-	return alphabet[rand() % alphabet.size()];
+	return alphabet[rand_num(alphabet.size())];
 }
 
+void RegexGenerator::set_neg_chance(int new_neg_chance) {
+	neg_chance = 0 < new_neg_chance ? new_neg_chance : 0;
+	neg_chance = neg_chance < 100 ? neg_chance : 100;
+}
 /*
 GRAMMAR:
 <regex> ::= <n-alt-regex> <alt> <regex> | <conc-regex> | пусто
 <n-alt-regex> ::=  <conc-regex> | пусто
 <conc-regex> ::= <simple-regex> | <simple-regex><conc-regex>
-<simple-regex> ::= <lbr><regex><rbr><unary>? | буква <unary>?
+<simple-regex> ::= <neg>? ( <lbr><regex><rbr> | буква | [ <regex> ] : <num> |  & <num> ) <star>?
 <alt> ::= '|'
 <lbr> ::= '('
 <rbr> ::= ')'
-<unary> ::= '*'
+<star> ::= '*'
+<neg> ::= '^'
 */

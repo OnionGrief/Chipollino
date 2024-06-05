@@ -10,12 +10,14 @@ set(SOURCES
         src/Regex.cpp
         src/Language.cpp
         src/Grammar.cpp
-        src/AlphabetSymbol.cpp
+        src/Symbol.cpp
         src/AlgExpression.cpp
         src/AbstractMachine.cpp
         src/MemoryFiniteAutomaton.cpp
         src/BackRefRegex.cpp
-        )
+        src/MemoryCommon.cpp
+        src/Tools.cpp
+)
 
 # Add a library with the above sources
 add_library(${PROJECT_NAME} ${SOURCES})
@@ -26,5 +28,4 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
         Fraction
-        AutomatonToImage
         )

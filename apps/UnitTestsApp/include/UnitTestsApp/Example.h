@@ -33,7 +33,7 @@ class Example {
 	static void regex_parsing();
 	static void regex_generating();
 	static void tasks_generating();
-	static void parsing_regex(string);
+	static void parsing_regex(std::string);
 	static void transformation_monoid_example();
 	static void normalize_regex();
 	static void step();
@@ -46,9 +46,9 @@ class Example {
 	static void table();
 	static void fa_semdet_check();
 	static void classes_number_GlaisterShallit();
-	static void testing_with_generator(int regex_length, int star_num, int star_nesting,
-									   int alphabet_size,
-									   const std::function<void(string& rgx_str)>& check_function);
+	static void testing_with_generator(
+		int regex_length, int star_num, int star_nesting, int alphabet_size,
+		const std::function<void(std::string& rgx_str)>& check_function);
 	static void arden_lemma_testing();
 	static void fa_to_pgrammar();
 	static void logger_test();

@@ -3,6 +3,7 @@ project(InputGenerator)
 
 # Create a sources variable with a link to all cpp files to compile
 set(SOURCES
+        src/AutomatonGenerator.cpp
         src/RegexGenerator.cpp
         src/TasksGenerator.cpp)
 
@@ -15,4 +16,5 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
         Objects
+        FuncLib
         )

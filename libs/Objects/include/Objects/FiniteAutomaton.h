@@ -4,43 +4,50 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <stack>
 #include <string>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "AbstractMachine.h"
-#include "AlphabetSymbol.h"
+#include "MemoryCommon.h"
 #include "iLogTemplate.h"
-
-using std::cout;
-using std::map;
-using std::set;
-using std::string;
-using std::vector;
 
 class Regex;
 class MetaInfo;
 class Language;
+class MFAState;
 class TransformationMonoid;
+class MemoryFiniteAutomaton;
 
-struct State {
-	int index;
+class FAState : public State {
+  public:
+	using Transitions = std::map<Symbol, std::set<int>>;
+
+	Transitions transitions;
 	// используется для объединения состояний в процессе работы алгоритмов
 	// преобразования автоматов возможно для визуализации
-	set<int> label;
-	string identifier;
-	bool is_terminal;
-	map<alphabet_symbol, set<int>> transitions;
-	State();
-	State(int index, set<int> label, string identifier, bool is_terminal,
-		  map<alphabet_symbol, set<int>> transitions);
-	void set_transition(int, const alphabet_symbol&);
+	std::set<int> label;
+
+	FAState() = default;
+	FAState(int index, bool is_terminal);
+	FAState(int index, std::string identifier, bool is_terminal);
+	FAState(int index, bool is_terminal, Transitions transitions);
+	FAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
+	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal);
+	FAState(int index, std::set<int> label, std::string identifier, bool is_terminal,
+			Transitions transitions);
+	// принимает алфавит, чтобы дополнить его символами переходов
+	explicit FAState(const MFAState& state, Alphabet& alphabet); // NOLINT(runtime/references)
+
+	std::string to_txt() const override;
+	void add_transition(int, const Symbol&);
 };
 
-struct expression_arden {
-	int fa_state_number; // индекс состояния на которое ссылаемся
-	Regex* regex_from_state; // Regex по которому переходят из состояния
-};
-
+// TODO если меняешь структуру, поменяй FA_model в TransformationMonoid.h
 class FiniteAutomaton : public AbstractMachine {
   public:
 	enum AmbiguityValue {
@@ -51,25 +58,31 @@ class FiniteAutomaton : public AbstractMachine {
 	};
 
   private:
-	vector<State> states;
+	std::vector<FAState> states;
 
 	// Если режим isTrim включён (т.е. по умолчанию), то на всех подозрительных
 	// преобразованиях всегда удаляем в конце ловушки.
 	// Если isTrim = false, тогда после удаления ловушки в результате
 	// преобразований добавляем её обратно
-	bool is_trim = true;
+	//	bool is_trim = true;
 
-	bool parsing_nfa(const string&, int) const; // парсинг слова в нка
-	pair<int, bool> parsing_nfa_for(const string&) const;
+	void dfs(int index, std::set<int>& reachable, // NOLINT(runtime/references)
+			 bool use_epsilons_only) const;
 
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
-	set<int> closure(const set<int>&, bool) const;
-	// удаление недостижимых из начального состояний
-	FiniteAutomaton remove_unreachable_states() const;
+	std::set<int> closure(const std::set<int>&, bool) const;
+
+	std::vector<int> get_bisimilar_classes() const;
+	// объединение эквивалентных классов (принимает на вход вектор размера states.size())
+	// на i-й позиции номер класса i-го состояния
+	std::tuple<FiniteAutomaton, std::unordered_map<int, int>> merge_equivalent_classes(
+		const std::vector<int>&) const;
 	static bool equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
-	static bool bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
-	// принимает в качетве лимита максимальное количество цифр в
+	// дополнительно возвращает в векторах номера классов состояний каждого автомата
+	static std::pair<bool, std::vector<std::vector<int>>> bisimilarity_checker(
+		const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
+	// принимает в качестве лимита максимальное количество цифр в
 	// числителе + знаменателе дроби, которая может встретиться при вычислениях
 	AmbiguityValue get_ambiguity_value(
 		int digits_number_limit,
@@ -78,33 +91,52 @@ class FiniteAutomaton : public AbstractMachine {
 	std::optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
-	std::optional<string> get_prefix(int state_beg, int state_end,
-									 map<int, bool>& was) const; // NOLINT(runtime/references)
+	std::optional<std::string> get_prefix(
+		int state_beg, int state_end, std::map<int, bool>& was) const; // NOLINT(runtime/references)
 
 	// функция проверки на семантическую детерминированность
 	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
 
-	static vector<expression_arden> arden(const vector<expression_arden>& in, int index);
-	static vector<expression_arden> arden_minimize(const vector<expression_arden>& in);
+	// меняет местами состояние под индексом 0 с начальным
+	// используется в томпсоне
+	void set_initial_state_to_zero();
+
+	std::vector<FAState::Transitions> get_reversed_transitions() const;
+
+	void fill_order(int state_index, std::vector<bool>& visited, // NOLINT(runtime/references)
+					std::stack<int>& order						 // NOLINT(runtime/references)
+	);
+	// возвращает компоненты сильной связности
+	std::vector<std::unordered_set<int>> get_SCCs();
+
+	FiniteAutomaton get_subautomaton(const CaptureGroup&);
 
   public:
-	FiniteAutomaton() = default;
-	FiniteAutomaton(int initial_state, vector<State> states, std::shared_ptr<Language> language);
-	FiniteAutomaton(int initial_state, vector<State> states, set<alphabet_symbol> alphabet);
+	FiniteAutomaton();
+	FiniteAutomaton(int initial_state, std::vector<FAState> states,
+					std::shared_ptr<Language> language);
+	FiniteAutomaton(int initial_state, std::vector<FAState> states, Alphabet alphabet);
 	FiniteAutomaton(const FiniteAutomaton& other);
 
 	// dynamic_cast unique_ptr к типу FiniteAutomaton*
 	template <typename T> static FiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
 	// визуализация автомата
-	string to_txt() const override;
+	std::string to_txt() const override;
+
+	std::vector<FAState> get_states() const;
+	size_t size(iLogTemplate* log = nullptr) const override;
+
 	// детерминизация ДКА
-	FiniteAutomaton determinize(iLogTemplate* log = nullptr, bool is_trim = true) const;
+	FiniteAutomaton determinize(bool is_trim = false, iLogTemplate* log = nullptr) const;
+	// удаление недостижимых из начального состояний
+	// TODO: на самом деле должен быть приватным, но почему-то понадобился ТМ
+	FiniteAutomaton remove_unreachable_states() const;
 	// удаление eps-переходов (построение eps-замыканий)
 	FiniteAutomaton remove_eps(iLogTemplate* log = nullptr) const;
 	// удаление eps-переходов (доп. вариант)
 	FiniteAutomaton remove_eps_additional(iLogTemplate* log = nullptr) const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
-	FiniteAutomaton minimize(iLogTemplate* log = nullptr, bool is_trim = true) const;
+	FiniteAutomaton minimize(bool is_trim = false, iLogTemplate* log = nullptr) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&, const FiniteAutomaton&,
@@ -121,8 +153,8 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton complement(iLogTemplate* log = nullptr) const; // меняет язык
 	// обращение НКА (на выходе - автомат, распознающий язык, обратный к L)
 	FiniteAutomaton reverse(iLogTemplate* log = nullptr) const; // меняет язык
-	// добавление ловушки в ДКА(нетерминальное состояние с переходами только в
-	// себя)
+	// добавление ловушки в ДКА
+	// (нетерминальное состояние с переходами только в себя)
 	FiniteAutomaton add_trap_state(iLogTemplate* log = nullptr) const;
 	// удаление ловушек
 	FiniteAutomaton remove_trap_states(iLogTemplate* log = nullptr) const;
@@ -133,37 +165,30 @@ class FiniteAutomaton : public AbstractMachine {
 	// снятие разметки с букв
 	FiniteAutomaton deannote(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton delinearize(iLogTemplate* log = nullptr) const;
-	// объединение эквивалентных классов (принимает на вход вектор размера
-	// states.size()) i-й элемент хранит номер класса i-го состояния
-	FiniteAutomaton merge_equivalent_classes(vector<int>) const;
 	// объединение эквивалентных по бисимуляции состояний
 	FiniteAutomaton merge_bisimilar(iLogTemplate* log = nullptr) const;
 	// проверка автоматов на эквивалентность
 	static bool equivalent(const FiniteAutomaton&, const FiniteAutomaton&,
 						   iLogTemplate* log = nullptr);
-	// проверка автоматов на равентсво(буквальное)
+	// проверка автоматов на равенство(буквальное)
 	static bool equal(const FiniteAutomaton&, const FiniteAutomaton&, iLogTemplate* log = nullptr);
 	// проверка автоматов на бисимилярность
 	static bool bisimilar(const FiniteAutomaton&, const FiniteAutomaton&,
 						  iLogTemplate* log = nullptr);
-	// проверка автомата на детерминированность
-	bool is_deterministic(iLogTemplate* log = nullptr) const;
+	bool is_deterministic(iLogTemplate* log = nullptr) const override;
 	// проверка НКА на семантический детерминизм
 	bool semdet(iLogTemplate* log = nullptr) const;
-	// проверяет, распознаёт ли автомат слово
-	pair<int,bool> parsing_by_nfa(const string&) const;
+	std::pair<int, bool> parse(const std::string&) const override;
 	// проверка автоматов на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const FiniteAutomaton&, iLogTemplate* log = nullptr) const;
-	// начальное состояние
-	int get_initial();
 	// определяет меру неоднозначности
 	AmbiguityValue ambiguity(iLogTemplate* log = nullptr) const;
 	// проверка на детерминированность методом орбит Брюггеманн-Вуда
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
-	// возвращает количество состояний (пердикат States)
-	size_t size(iLogTemplate* log = nullptr) const;
 	// проверка на пустоту
 	bool is_empty() const;
+	// проверка автомата на финальность
+	bool is_finite() const;
 	// метод Arden
 	Regex to_regex(iLogTemplate* log = nullptr) const;
 	// возвращает число диагональных классов по методу Глейстера-Шаллита
@@ -174,9 +199,11 @@ class FiniteAutomaton : public AbstractMachine {
 	std::optional<bool> is_nfa_minimal(iLogTemplate* log = nullptr) const;
 	// проверка на минимальность для дка
 	bool is_dfa_minimal(iLogTemplate* log = nullptr) const;
+	MemoryFiniteAutomaton to_mfa() const;
 
 	friend class Regex;
+	friend class MemoryFiniteAutomaton;
 	friend class MetaInfo;
-	friend class TransformationMonoid;
-	friend class Grammar;
+	friend class RLGrammar;
+	friend class PrefixGrammar;
 };

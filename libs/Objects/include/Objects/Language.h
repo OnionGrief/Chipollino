@@ -5,49 +5,51 @@
 #include <string>
 #include <vector>
 
-#include "AlphabetSymbol.h"
+#include "BackRefRegex.h"
 #include "FiniteAutomaton.h"
+#include "MemoryFiniteAutomaton.h"
 #include "Regex.h"
+#include "Symbol.h"
 #include "TransformationMonoid.h"
-
-// нужна, чтобы хранить weak_ptr на язык
-struct FA_structure {
-	int initial_state;
-	vector<State> states;
-	// если не хранить этот указатель,
-	// будут созданы разные shared_ptr
-	std::weak_ptr<Language> language;
-
-	FA_structure(int initial_state, vector<State> states, std::weak_ptr<Language> language);
-};
-
-struct Regex_structure {
-	string str;
-	std::weak_ptr<Language> language;
-
-	Regex_structure(string str, std::weak_ptr<Language> language);
-};
 
 class Language {
   private:
-	set<alphabet_symbol> alphabet;
+	struct Regex_model {
+	  private:
+		std::string str;
+		std::weak_ptr<Language> language;
+
+	  public:
+		Regex_model(std::string str, std::weak_ptr<Language> language);
+
+		const std::string& get_str() const;
+		std::shared_ptr<Language> get_language() const;
+	};
+
+	inline static bool allow_retrieving_from_cache = true;
+
+	Alphabet alphabet;
 	// регулярка, описывающая язык
 	// optional<Regex> regular_expression;
 	std::optional<int> pump_length;
-	std::optional<FA_structure> min_dfa;
+	std::optional<FA_model> min_dfa;
 	std::optional<TransformationMonoid> syntactic_monoid;
 	// нижняя граница размера НКА для языка
 	std::optional<int> nfa_minimum_size;
 	// классы эквивалентности минимального дка TODO
 	// аппроксимации минимальных НКА и регулярок TODO
 	std::optional<bool> is_one_unambiguous;
-	std::optional<Regex_structure> one_unambiguous_regex;
+	std::optional<Regex_model> one_unambiguous_regex;
 
   public:
 	Language();
-	Language(set<alphabet_symbol> alphabet); // NOLINT(runtime/explicit)
-	const set<alphabet_symbol>& get_alphabet();
-	void set_alphabet(set<alphabet_symbol>);
+	explicit Language(Alphabet alphabet);
+
+	static void enable_retrieving_from_cache();
+	static void disable_retrieving_from_cache();
+
+	const Alphabet& get_alphabet();
+	void set_alphabet(Alphabet);
 	int get_alphabet_size();
 	// регулярка, описывающая язык
 	bool is_regular_expression_cached() const;
@@ -59,8 +61,7 @@ class Language {
 	int get_pump_length();
 	// минимальный дка
 	bool is_min_dfa_cached() const;
-	void set_min_dfa(int initial_state, const vector<State>& states,
-					 const std::shared_ptr<Language>& Language);
+	void set_min_dfa(const FiniteAutomaton&);
 	FiniteAutomaton get_min_dfa();
 	// синтаксический моноид
 	bool is_syntactic_monoid_cached() const;
@@ -75,7 +76,7 @@ class Language {
 	void set_one_unambiguous_flag(bool);
 	bool get_one_unambiguous_flag();
 	bool is_one_unambiguous_regex_cached() const;
-	void set_one_unambiguous_regex(string, const std::shared_ptr<Language>&);
+	void set_one_unambiguous_regex(std::string, const std::shared_ptr<Language>&);
 	Regex get_one_unambiguous_regex();
 	//  и тд
 };

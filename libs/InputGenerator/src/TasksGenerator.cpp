@@ -1,5 +1,15 @@
 #include "InputGenerator/TasksGenerator.h"
 
+using std::cout;
+using std::map;
+using std::ofstream;
+using std::pair;
+using std::string;
+using std::to_string;
+using std::vector;
+
+using FuncLib::Function;
+
 TasksGenerator::TasksGenerator() {
 	change_seed();
 	distribute_functions();
@@ -7,29 +17,42 @@ TasksGenerator::TasksGenerator() {
 
 void TasksGenerator::change_seed() {
 	seed_it++;
-	srand((size_t)time(nullptr) + seed_it + rand());
+	srand(static_cast<unsigned int>((size_t)time(nullptr) + seed_it + rand()));
+}
+
+bool TasksGenerator::check_probability(int percentage) {
+	if (rand() % 100 <= percentage)
+		return true;
+	return false;
+}
+
+string TasksGenerator::generate_regex() {
+	return "{" + regex_generator.generate_regex() + "}";
+}
+
+string TasksGenerator::generate_brefregex() {
+	return "{" + regex_generator.generate_brefregex() + "}";
 }
 
 string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
-									 bool for_static_Tpchkr_, bool for_dinamic_Tpchkr_) {
+									 bool for_static_tpchkr_, bool for_dynamic_tpchkr_) {
 	change_seed();
-	res_str = "";
 	id_num = 0;
-	ids.clear();
+	ids_by_type.clear();
 	max_num_of_func_in_seq = max_num_of_func_in_seq_;
-	for_static_Tpchkr = for_static_Tpchkr_;
-	for_dinamic_Tpchkr = for_dinamic_Tpchkr_;
+	for_static_tpchkr = for_static_tpchkr_;
+	for_dynamic_tpchkr = for_dynamic_tpchkr_;
 
+	res_str = "";
 	for (int i = 0; i < op_num; i++) {
 		res_str += generate_op() + "\n";
 	}
-
 	return res_str;
 }
 
 void TasksGenerator::write_to_file(string filename) {
-	std::ofstream out;
-	out.open(filename, std::ofstream::trunc);
+	ofstream out;
+	out.open(filename, ofstream::trunc);
 	if (out.is_open())
 		out << res_str;
 	out.close();
@@ -38,9 +61,10 @@ void TasksGenerator::write_to_file(string filename) {
 string TasksGenerator::generate_op() {
 	string str = "";
 	int op = rand() % 5; // на объявление - вероятность 3 / 5;
-						 // на test и предикаты 1 / 5
+						 // на test и выражение 1 / 5
+
 	if (op == 0) {
-		str = generate_predicate();
+		str = generate_expression();
 	} else if (op == 1) {
 		str = generate_test();
 	} else {
@@ -49,250 +73,201 @@ string TasksGenerator::generate_op() {
 	return str;
 }
 
-string TasksGenerator::generate_predicate() {
+bool TasksGenerator::arguments_exist(vector<ObjectType> args) {
+	for (ObjectType arg_type : args) {
+		// аргумент можно подобрать, если его тип есть в памяти, либо его можно сгенерировать
+		if (!(ids_by_type.count(arg_type) || generated_types.count(arg_type) != 0))
+			return false;
+	}
+	return true;
+}
+
+string TasksGenerator::generate_expression() {
 	change_seed();
+
+	int funcNum = max_num_of_func_in_seq > 0 ? rand() % (max_num_of_func_in_seq + 1) : 0;
+
 	string str = "";
 
-	Function predicate = rand_pred();
-	string input_type = predicate.input[0];
-	// да, не логично, но второй аргумент всегда повторяется,
-	// а значит можно забить на их проверку
-
-	while (!for_static_Tpchkr && !(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
-		   ((input_type == DFA && !ids.count(DFA)) ||
-			(input_type == NFA) && !(ids.count(NFA) || ids.count(DFA)))) {
-		predicate = rand_pred();
-		input_type = predicate.input[0];
-	}
-	str += predicate.name;
-
-	for (int i = 0; i < predicate.input.size(); i++) {
-		if (for_static_Tpchkr) {
-			if (rand() % 4 && id_num > 1) {
-				int rand_id = rand() % id_num + 1;
-				str += " N" + std::to_string(rand_id);
-			} else {
-				str += " " + regex_generator.generate_framed_regex();
-			}
+	if (funcNum == 0) {
+		if (check_probability(30) && ids_by_type.size() > 0) {
+			/* N# = id */
+			map<ObjectType, vector<Id>>::iterator it = ids_by_type.begin();
+			advance(it, (rand() % ids_by_type.size()));
+			cur_type = it->first;
+			str += "N" + get_random_id_by_type(cur_type);
 		} else {
-			if (predicate.input[i] == REGEX) {
-				// сгенерировать регулярку или найти идентификатор
-				// если есть идентификаторы с типом Regex
-				if (ids.count(REGEX) && rand() % 2) {
-					vector<Id> possible_ids = ids[REGEX];
-					Id rand_id = possible_ids[rand() % possible_ids.size()];
-					str += " N" + std::to_string(rand_id.num);
-				} else {
-					str += " " + regex_generator.generate_framed_regex();
-				}
-			}
-
-			if (predicate.input[i] == NFA || predicate.input[i] == DFA) {
-				string id_type = predicate.input[i];
-				if (for_dinamic_Tpchkr || id_type == NFA)
-					id_type = NFA_DFA;
-				vector<Id> possible_ids = ids[id_type];
-				int rand_num = rand() % possible_ids.size();
-				Id rand_id = possible_ids[rand_num];
-				str += " N" + std::to_string(rand_id.num);
-			}
+			/* N# = {regex}*/
+			str += generate_regex();
+			cur_type = REGEX;
 		}
+	} else {
+
+		/* генерация первой функции в посл-ти */
+		Function first_func;
+
+		do {
+			first_func = rand_func();
+		} while (
+			// ф/я не подходит, если она не последняя в последовательности и на выходе не
+			// принимаемый другими функциями тип данных
+			((!funcInput.count(first_func.output) && funcNum > 1) ||
+			 // ф/я не подходит, если невозможно подобрать для нее аргументы
+			 !arguments_exist(first_func.input)));
+
+		str += first_func.name;
+		str += generate_arguments(first_func);
+
+		cur_type = first_func.output;
+
+		/* генерация посл-ти функций */
+		for (int i = 1; i < funcNum; i++) {
+			Function func = generate_next_func(cur_type, funcNum - 1 - i);
+			cur_type = func.output;
+			str = func.name + '.' + str;
+		}
+
+		str += " !!";
 	}
+	return str;
+}
+
+string TasksGenerator::generate_test() {
+	change_seed();
+	string str = "Test ";
+
+	if (check_probability(50) && ids_by_type.count(NFA))
+		str += "N" + get_random_id_by_type(NFA);
+	else if (check_probability(50) && ids_by_type.count(REGEX))
+		str += "N" + get_random_id_by_type(REGEX);
+	else
+		str += generate_regex();
+
+	str += " " + generate_regex();
+
+	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
+	str += " " + to_string(rand_num);
 
 	return str;
 }
 
-// TODO: для дин и стат тайпчека
-string TasksGenerator::generate_test() {
-	change_seed();
-	string str = "";
-	str += "Test ";
-
-	if (rand() % 2 && ids.count(NFA_DFA)) {
-		vector<Id> possible_ids = ids[NFA_DFA];
-		Id rand_id = possible_ids[rand() % possible_ids.size()];
-		str += "N" + std::to_string(rand_id.num);
-	} else if (rand() % 2 && ids.count(REGEX)) {
-		vector<Id> possible_ids = ids[REGEX];
-		Id rand_id = possible_ids[rand() % possible_ids.size()];
-		str += "N" + std::to_string(rand_id.num);
-	} else {
-		str += regex_generator.generate_framed_regex();
+string TasksGenerator::generate_arguments(Function first_func) {
+	string args_str = "";
+	for (auto input_type : first_func.input) {
+		// сгенерировать идентификатор
+		if (ids_by_type.count(input_type) &&
+			!(generated_types.count(input_type) != 0 && check_probability(50))) {
+			args_str += " N" + get_random_id_by_type(input_type);
+			/* генерируемые типы: */
+		} else if (input_type == NFA) {
+			std::string filename = std::to_string(automata_id++) + ".txt";
+			AutomatonGenerator(FA_type::FA).write_to_file(filename);
+			args_str += " (getNFA \"" + filename + "\")";
+		} else if (input_type == MFA) {
+			std::string filename = std::to_string(automata_id++) + ".txt";
+			AutomatonGenerator(FA_type::MFA).write_to_file(filename);
+			args_str += " (getMFA \"" + filename + "\")";
+		} else if (input_type == REGEX) {
+			args_str += " " + generate_regex();
+		} else if (input_type == BRefRegex) {
+			args_str += " " + generate_brefregex();
+		} else if (input_type == INT) {
+			int rand_num = rand() % 5; // пусть будет до 5..
+			args_str += " " + to_string(rand_num);
+		} else if (input_type == ARRAY) {
+			args_str += " [[{a} {b}]]";
+		} else {
+			cout << "generator error: there is no id with type " +
+						Typization::types_to_string.at(input_type) + "\n";
+		}
 	}
+	return args_str;
+}
 
-	str += " ";
-	// TODO:
-	// str += "((ab)*a)*";
-	str += regex_generator.generate_framed_regex();
-
-	int rand_num = rand() % 5 + 1; // шаг итерации - пусть будет до 5..
-	str += " " + std::to_string(rand_num);
-
-	return str;
+string TasksGenerator::get_random_id_by_type(ObjectType type) {
+	vector<Id> possible_ids = ids_by_type[type];
+	Id rand_id = possible_ids[rand() % possible_ids.size()];
+	return to_string(rand_id.num);
 }
 
 string TasksGenerator::generate_declaration() {
 	change_seed();
-	string str = "";
 	id_num++;
-	str += "N" + std::to_string(id_num) + " = ";
-	int funcNum = max_num_of_func_in_seq > 0 ? rand() % (max_num_of_func_in_seq + 1) : 0;
-
-	string prevOutput;
-	string func_str = "";
-
-	if (funcNum > 0) {
-		Function first_func = rand_func();
-		// TODO:
-		string input_type = first_func.input[0]; // исправить для ksubset!!!
-
-		// Андрей не дает мне делать большие комменты((
-		while ((!for_static_Tpchkr &&
-				!(input_type == DFA && ids.count(NFA_DFA) && for_dinamic_Tpchkr) &&
-				((input_type == DFA && !ids.count(DFA)) ||
-				 (input_type == NFA) && !(ids.count(NFA) || ids.count(DFA)))) ||
-			   ((first_func.output == INT || first_func.output == VALUE) && !for_static_Tpchkr &&
-				funcNum > 1) ||
-			   (!ids.count(input_type) && input_type != REGEX)) {
-			first_func = rand_func();
-			input_type = first_func.input[0];
-		} // вроде работает
-
-		func_str += first_func.name;
-
-		for (int i = 0; i < first_func.input.size(); i++) {
-			if (for_static_Tpchkr) {
-				if (rand() % 2 && id_num > 1) {
-					int rand_id = rand() % (id_num - 1) + 1;
-					func_str += " N" + std::to_string(rand_id);
-				} else {
-					func_str += " " + regex_generator.generate_framed_regex();
-				}
-			} else {
-
-				if (first_func.input[i] == REGEX) {
-					// сгенерировать регулярку или найти идентификатор
-					// если есть идентификаторы с типом Regex
-					if (ids.count(REGEX) && rand() % 2) {
-						vector<Id> possible_ids = ids[REGEX];
-						Id rand_id = possible_ids[rand() % possible_ids.size()];
-						func_str += " N" + std::to_string(rand_id.num);
-					} else {
-						func_str += " " + regex_generator.generate_framed_regex();
-					}
-				}
-
-				if (first_func.input[i] == INT) {
-					// сгенерировать число или найти идентификатор (так можно??)
-					// таких функций пока нет
-					int rand_num = rand() % 5; // пусть будет до 5..
-					func_str += " " + std::to_string(rand_num);
-				}
-
-				if (first_func.input[i] == NFA || first_func.input[i] == DFA) {
-					string id_type = first_func.input[i];
-					if (for_dinamic_Tpchkr || id_type == NFA)
-						id_type = NFA_DFA;
-					vector<Id> possible_ids = ids[id_type];
-					int rand_num = rand() % possible_ids.size();
-					Id rand_id = possible_ids[rand_num];
-					func_str += " N" + std::to_string(rand_id.num);
-				}
-
-				// TODO:
-
-				if (first_func.input[i] == ARRAY) {
-					func_str += " Rules";
-				}
-
-				if (first_func.input[i] == PG) {
-					vector<Id> possible_ids = ids[PG];
-					Id rand_id = possible_ids[rand() % possible_ids.size()];
-					func_str += " N" + std::to_string(rand_id.num);
-				}
-			}
-		}
-		prevOutput = first_func.output;
-	}
-
-	for (int i = 1; i < funcNum; i++) {
-		Function func = generate_next_func(prevOutput, funcNum - 1 - i);
-		prevOutput = func.output;
-		func_str = func.name + '.' + func_str;
-	}
-
-	str += func_str;
-
-	if (funcNum == 0) {
-		if (rand() % 3 && ids.size() > 0) {
-			string id_output = NFA_DFA;
-			map<string, vector<Id>>::iterator it;
-			while (id_output == NFA_DFA) {
-				it = ids.begin();
-				advance(it, (rand() % ids.size()));
-				std::pair<string, vector<Id>> possible_ids = *it;
-				id_output = possible_ids.first;
-			}
-			vector<Id> possible_ids = it->second;
-			Id rand_id = possible_ids[rand() % possible_ids.size()];
-			str += "N" + std::to_string(rand_id.num);
-			prevOutput = id_output;
-		} else {
-			str += regex_generator.generate_framed_regex();
-			prevOutput = REGEX;
-		}
-	}
+	string str = "N" + to_string(id_num) + " = " + generate_expression();
 
 	// запоминаем идентификатор N#
-	ids[prevOutput].push_back({id_num, prevOutput});
-	if (prevOutput == DFA || prevOutput == NFA)
-		ids[NFA_DFA].push_back({id_num, prevOutput});
-
-	if (/*rand() % 2 && */ funcNum > 0)
-		str += " !!";
+	// (DFA может быть подан в качестве NFA)
+	for (ObjectType type : Typization::get_types(cur_type, Typization::types_parents))
+		ids_by_type[type].push_back({id_num, cur_type});
 
 	return str;
 }
 
-TasksGenerator::Function TasksGenerator::generate_next_func(string prevOutput, int funcNum) {
-	Function str;
-	if (for_static_Tpchkr) {
-		str = rand_func();
+Function TasksGenerator::generate_next_func(ObjectType prevOutput, int funcNum) {
+	Function func;
+	if (for_static_tpchkr) {
+		func = rand_func();
 	} else {
-		if ((for_dinamic_Tpchkr && prevOutput == NFA) || prevOutput == DFA) {
-			vector<Function> possible_functions = funcInput[NFA_DFA];
-			str = possible_functions[rand() % possible_functions.size()];
-			if ((str.output == INT || str.output == VALUE) && funcNum != 0)
-				str = generate_next_func(prevOutput, funcNum);
-		} else {
-			vector<Function> possible_functions = funcInput[prevOutput];
-			str = possible_functions[rand() % possible_functions.size()];
-			if ((str.output == INT || str.output == VALUE) &&
-				funcNum != 0) // может возвращать int если
-							  // последняя функция в посл-ти
-				str = generate_next_func(prevOutput, funcNum);
-		}
+		vector<Function> possible_functions = funcInput[prevOutput];
+		func = possible_functions[rand() % possible_functions.size()];
+		// на выходе дб принимаемый тип данных, если ф/я явл-ся не последней в посл-ти
+		if (!funcInput.count(func.output) && funcNum != 0)
+			func = generate_next_func(prevOutput, funcNum);
 	}
-	return str;
+	return func;
 }
 
 void TasksGenerator::distribute_functions() {
-	for (int i = 0; i < functions.size(); i++) {
-		if (functions[i].input.size() == 1) {
-			string input_type = functions[i].input[0];
-			funcInput[input_type].push_back(functions[i]);
-			if (input_type == NFA || input_type == DFA)
-				funcInput[NFA_DFA].push_back(functions[i]);
+	for (Function func : FuncLib::functions) {
+		if (func.input.size() == 1) {
+			ObjectType input_type = func.input[0];
+			/* ф/я может принимать свой входной тип и его подтипы*/
+			for (ObjectType type : Typization::get_types(input_type, Typization::types_children))
+				funcInput[type].push_back(func);
 		}
 	}
 }
 
-TasksGenerator::Function TasksGenerator::rand_func() {
-	return functions[rand() % functions.size()];
+Function TasksGenerator::rand_func() {
+	return FuncLib::functions[rand() % FuncLib::functions.size()];
 }
 
-TasksGenerator::Function TasksGenerator::rand_pred() {
-	return predicates[rand() % predicates.size()];
+void TasksGenerator::generate_test_for_all_functions() {
+	ofstream outfile("./resources/all_functions.txt");
+	outfile << "Set log_theory true\n";
+	outfile << "R = {a*b*}\n";
+	outfile << "BR = {[a*]:1b&1}\n";
+	outfile << "A = Determinize.Glushkov R\n";
+	outfile << "V = Ambiguity A\n";
+	outfile << "B = Deterministic A\n";
+	outfile << "P = PrefixGrammar A\n";
+	for (const auto& function : FuncLib::functions) {
+		string func_id = function.name;
+		outfile << "N = " << func_id;
+		for (const auto& arg : function.input) {
+			if (arg == NFA || arg == DFA) {
+				outfile << " A";
+			} else if (arg == VALUE) {
+				outfile << " V";
+			} else if (arg == BOOLEAN || arg == ObjectType::OptionalBool) {
+				outfile << " B";
+			} else if (arg == PG) {
+				outfile << " P";
+			} else if (arg == REGEX) {
+				outfile << " R";
+			} else if (arg == BRefRegex) {
+				outfile << " BR";
+			} else if (arg == ARRAY) {
+				outfile << " [[{a} {b}]]";
+			} else if (arg == INT) {
+				outfile << " 1";
+			} else {
+				cout << "generator error: can't generate arg " +
+							Typization::types_to_string.at(arg) + '\n';
+			}
+		}
+		outfile << "\n";
+	}
 }
 
 /*

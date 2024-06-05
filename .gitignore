@@ -4,24 +4,18 @@ build/
 .idea/
 
 cmake-build-debug/
+cmake-build-debug-visual-studio/
+cmake-build-release-visual-studio/
+cmake-build-debug-wsl/
 
 .vs/
 /CMakeSettings.json
 /enc_temp_folder/
 .idea/
 
-cmake-build-debug/.cmake/api/v1/query/
-
-cmake-build-debug/.cmake/api/v1/reply/
-
-cmake-build-debug/
-
-resources/output*.png
-resources/images/
 temp/
 report.*
 rendered_report.*
-log.*
 
 *.log
 test.txt

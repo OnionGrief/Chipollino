@@ -1,38 +1,23 @@
 #pragma once
-#include <chrono>
-#include <iostream>
-#include <regex>
 #include <string>
-#include <variant>
-#include <vector>
 
+#include "Objects/BackRefRegex.h"
 #include "Objects/BaseObject.h"
 #include "Objects/FiniteAutomaton.h"
+#include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/iLogTemplate.h"
 
 class Tester {
-  public:
-	struct word {			// доступ извне Tester::word
-		int iterations_num; // сколько проведено итераций
-		long long time;		// время парсинга в секундах
-		bool belongs;		// принадлежность языку
-	};
-
-	struct table {
-		string r2; // слова порождаются регуляркой r2 и шагом итерации
-		int step;			// шаг итерации
-		vector<word> words; // таблица
-	};
-
   private:
-	static bool parsing_by_regex(string, string);
+	static bool parsing_by_regex(const std::string&, const std::string&);
 
-	using ParseDevice = variant<FiniteAutomaton, Regex>;
+	using ParseDevice = std::variant<const FiniteAutomaton*, const Regex*,
+									 const MemoryFiniteAutomaton*, const BackRefRegex*>;
 
   public:
+	/* проверяет на принадлежность языку (1 аргумент)
+	 * слова из тестового сета (генерируется по 2 и 3 арг-там) */
 	static void test(const ParseDevice& language, const Regex& regex, int iteration_step,
 					 iLogTemplate* log = nullptr);
-	/*	static void test(const Regex& language, const Regex& regex,
-						 int iteration_step, iLogTemplate* log = nullptr); */
 };

@@ -1,12 +1,25 @@
-#include <variant>
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <iostream>
+#include <regex>
+#include <string>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "Logger/LogTemplate.h"
 
-void LogTemplate::add_parameter(string parameter_name) {
+using std::cout;
+using std::ifstream;
+using std::ofstream;
+using std::string;
+using std::stringstream;
+using std::to_string;
+using std::vector;
 
-	std::ifstream infile(template_fullpath);
+void LogTemplate::add_parameter(string parameter_name) {
+	ifstream infile(template_fullpath);
 
 	if (!infile)
 		return; // infile.close();
@@ -17,8 +30,8 @@ void LogTemplate::add_parameter(string parameter_name) {
 	while (!infile.eof()) {
 		getline(infile, s);
 
-		int insert_place = s.find("%template_" + parameter_name);
-		int endframe_place = s.find("\\end{frame}");
+		size_t insert_place = s.find("%template_" + parameter_name);
+		size_t endframe_place = s.find("\\end{frame}");
 		if (endframe_place != -1) {
 			str_endframe_place = i;
 		}
@@ -34,22 +47,21 @@ void LogTemplate::add_parameter(string parameter_name) {
 
 	if (!is_exist) {
 		infile.open(template_fullpath);
-		string outstr = "";
+		string outstr;
 
 		int i = 0;
 		while (!infile.eof()) {
 			getline(infile, s);
-			if (str_endframe_place == i) {
+			if (str_endframe_place == i)
 				outstr += "\t" + parameter_name + ":\n\n\t%template_" + parameter_name + "\n\n" +
 						  s + "\n";
-			} else {
+			else
 				outstr += s + "\n";
-			}
 			i++;
 		}
 
 		infile.close();
-		std::ofstream outfile(template_fullpath);
+		ofstream outfile(template_fullpath);
 		outfile << outstr;
 		outfile.close();
 	}
@@ -63,7 +75,7 @@ void LogTemplate::set_theory_flag(bool value) {
 	render_theory = value;
 }
 
-void LogTemplate::load_tex_template(string filename) {
+void LogTemplate::load_tex_template(const string& filename) {
 	template_filename = filename;
 	template_fullpath = template_path + filename + ".tex";
 }
@@ -72,8 +84,21 @@ string LogTemplate::get_tex_template() {
 	return template_filename;
 }
 
+string replace_for_rendering(const string& s) {
+	vector<std::pair<string, string>> substrs_to_replace = {{"\\^", "\\textasciicircum "},
+															{"&", "\\&"}};
+
+	string result = s;
+	for (const auto& [old_substr, new_substr] : substrs_to_replace) {
+		std::regex re(old_substr);
+		result = std::regex_replace(result, re, new_substr);
+	}
+
+	return result;
+}
+
 string LogTemplate::render() const {
-	std::stringstream infile = expand_includes(template_fullpath);
+	stringstream infile = expand_includes(template_fullpath);
 
 	// Строка-аккумулятор
 	string outstr = "";
@@ -99,18 +124,28 @@ string LogTemplate::render() const {
 		if (show) {
 			for (const auto& [key, param] : parameters) {
 				int insert_place = s.find("%template_" + key);
-				if (insert_place == -1) {
+				// Если имя шаблона не заканчивает строку, то это может быть и другой шаблон
+				if ((insert_place != s.length() - 10 - key.length()) || (insert_place == -1)) {
 					continue;
 				}
 
 				if (std::holds_alternative<Regex>(param.value)) {
-					s.insert(insert_place,
-							 std::get<Regex>(param.value).to_txt()); /* Math mode is done in global
-																	  renderer */
-				} else if (std::holds_alternative<FiniteAutomaton>(param.value)) {
+					// Math mode is done in global renderer
+					string r = std::get<Regex>(param.value).to_txt();
+					s.insert(insert_place, replace_for_rendering(r));
+				} else if (std::holds_alternative<BackRefRegex>(param.value)) {
+					string r = std::get<BackRefRegex>(param.value).to_txt();
+					s.insert(insert_place, replace_for_rendering(r));
+				} else if (std::holds_alternative<FiniteAutomaton>(param.value) ||
+						   std::holds_alternative<MemoryFiniteAutomaton>(param.value)) {
 					std::hash<string> hasher;
 					string c_graph;
-					string automaton = std::get<FiniteAutomaton>(param.value).to_txt();
+					string automaton;
+					if (std::holds_alternative<FiniteAutomaton>(param.value))
+						automaton = std::get<FiniteAutomaton>(param.value).to_txt();
+					else
+						automaton = std::get<MemoryFiniteAutomaton>(param.value).to_txt();
+					automaton = replace_for_rendering(automaton);
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
@@ -119,15 +154,18 @@ string LogTemplate::render() const {
 						cache_automatons[hash] = c_graph;
 					}
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
-					s.insert(insert_place, c_graph);
+					s.insert(insert_place, "\n" + c_graph);
 				} else if (std::holds_alternative<string>(param.value)) {
-					s.insert(insert_place, get<string>(param.value));
+					string str = std::get<string>(param.value);
+					s.insert(insert_place, replace_for_rendering(str));
 				} else if (std::holds_alternative<int>(param.value)) {
-					s.insert(insert_place, to_string(get<int>(param.value)));
+					s.insert(insert_place, to_string(std::get<int>(param.value)));
 				} else if (std::holds_alternative<Table>(param.value)) {
-					s.insert(insert_place, log_table(get<Table>(param.value)));
+					s.insert(insert_place, log_table(std::get<Table>(param.value)));
 				} else if (std::holds_alternative<Plot>(param.value)) {
-					s.insert(insert_place, log_plot(get<Plot>(param.value)));
+					s.insert(insert_place, log_plot(std::get<Plot>(param.value)));
+				} else {
+					cout << "LOGGER ERROR: can not render object";
 				}
 			}
 			outstr += s;
@@ -138,80 +176,19 @@ string LogTemplate::render() const {
 	return outstr;
 }
 
-// Функция заворачивания строки в декорацию (и размер), с учётом того, находится ли среда в мат. режиме
-string decorate_element(string label, Decoration d, TextSize s, bool now_in_math) {
+// Функция заворачивания строки в декорацию (и размер), с учётом того, находится ли среда в мат.
+// режиме
+string decorate_element(const string& label, Decoration d, TextSize s, bool now_in_math) {
 	string mode_switcher = LogTemplate::decor_data.at(d).is_math && !now_in_math ? "$" : "";
-	return "{" + LogTemplate::textsize_to_str.at(s) + mode_switcher + LogTemplate::decor_data.at(d).tag + "{" + label +
-		   "}" + mode_switcher + "}";
-}
-
-string LogTemplate::math_mode(string str) {
-	if (str.empty()) {
-		return str;
-	}
-	string str_math = "";
-	bool flag = true;
-	auto is_number = [](char c) { return c >= '0' && c <= '9'; };
-	auto is_symbol = [](char c) { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'; };
-	for (size_t index = 0; index < str.size(); index++) {
-		char c = str[index];
-		if (c == ' ' && index != str.size() - 1) {
-			if (!flag) {
-				str_math += "}";
-				flag = true;
-			}
-			str_math += ", ";
-		} else if (c == '*') {
-			if (!flag) {
-				str_math += "}";
-				flag = true;
-			}
-			str_math += "\\star ";
-		} else if (c == '|') {
-			if (!flag) {
-				str_math += "}";
-				flag = true;
-			}
-			str_math += "\\alter ";
-		} else if (is_number(c)) {
-			string num = "";
-			for (index; index < str.size() && is_number(str[index]); index++) {
-				num += str[index];
-			}
-			num = "_{" + num + "}";
-			str_math += num;
-			index--;
-		} else if (is_symbol(c)) {
-			string sym = "";
-			if (flag) {
-				str_math += "\\regexpstr{";
-				flag = false;
-			}
-			for (index; index < str.size() && is_symbol(str[index]); index++) {
-				sym += str[index];
-			}
-			str_math += sym;
-			index--;
-		} else {
-
-			if (!flag) {
-				str_math += "}";
-				flag = true;
-			}
-			str_math += c;
-		}
-	}
-	if (!flag) {
-		str_math += "}";
-	}
-	str_math = "$" + str_math + "$";
-	return str_math;
+	return "{" + LogTemplate::textsize_to_str.at(s) + mode_switcher +
+		   LogTemplate::decor_data.at(d).tag + "{" + label + "}" + mode_switcher + "}";
 }
 
 // Вычисление шага для делений на графике
 int step_size(int maxscale, size_t objsize, size_t datasize) {
-	int step = std::ceil((maxscale * (static_cast<int>(objsize) + 3)) / max(static_cast<int>(datasize) - 2, 1));
-	return (step > 10 ? std::floor(step / 10) * 10 : max(step, 1));
+	int step = std::ceil((maxscale * (static_cast<int>(objsize) + 3)) /
+						 std::max(static_cast<int>(datasize) - 2, 1));
+	return (step > 10 ? std::floor(step / 10) * 10 : std::max(step, 1));
 }
 
 // Логирование графиков
@@ -220,39 +197,42 @@ string LogTemplate::log_plot(Plot p) {
 	string visualization = "", styling, legenda;
 	vector<string> styles;
 	for (int i = 0; i < p.data.size(); i++) {
-		if (find(styles.begin(), styles.end(), p.data[i].plot_id) == styles.end()) {
-			styles.push_back(p.data[i].plot_id);
-			styling += (i == 0 ? "" : ", ") + p.data[i].plot_id;
-			legenda += p.data[i].plot_id + " = {label in legend={text=" +
-					   decorate_element(p.data[i].plot_id, regexstyle, none, false) + "}},\n";
+		if (find(styles.begin(), styles.end(), p.data[i].plot_label) == styles.end()) {
+			styles.push_back(p.data[i].plot_label);
+			styling += (i == 0 ? "" : ", ") + p.data[i].plot_label;
+			legenda += p.data[i].plot_label + " = {label in legend={text=" +
+					   decorate_element(p.data[i].plot_label, regexstyle, none, false) + "}},\n";
 		}
-		if (max_x < p.data[i].x_coord) max_x = p.data[i].x_coord;
-		if (max_y < p.data[i].y_coord) max_y = p.data[i].y_coord;
+		if (max_x < p.data[i].x_coord)
+			max_x = p.data[i].x_coord;
+		if (max_y < p.data[i].y_coord)
+			max_y = p.data[i].y_coord;
 	}
-	visualization = "\\begin{tikzpicture}\\scriptsize \%begin_plot\n "
-					"\\datavisualization[scientific axes=clean, visualize as line/.list={" +
-					styling + "},\n x axis={ticks={step=" + to_string(step_size(max_x, styles.size(), p.data.size())) +
-					"}, label=" + decorate_element("длина слова", italic, footnote, false) +
-					"}, y axis={ticks={step=" + to_string(step_size(max_y, styles.size(), p.data.size())) +
-					"}, label=" + decorate_element("шаги", italic, footnote, false) + "},\n" +
-					legenda +
-					"style sheet = vary hue, style sheet = vary dashing]\n "
-					"data[headline={x, y, set}] {\n";
-	for (int i = 0; i < p.data.size(); i++) {
-		visualization += to_string(p.data[i].x_coord) + ", " +
-						 to_string(p.data[i].y_coord) + ", " + p.data[i].plot_id + "\n";
+	visualization =
+		"\\begin{tikzpicture}\\scriptsize \%begin_plot\n " // NOLINT(build/printf_format)
+		"\\datavisualization[scientific axes=clean, visualize as line/.list={" +
+		styling +
+		"},\n x axis={ticks={step=" + to_string(step_size(max_x, styles.size(), p.data.size())) +
+		"}, label=" + decorate_element("длина слова", italic, footnote, false) +
+		"}, y axis={ticks={step=" + to_string(step_size(max_y, styles.size(), p.data.size())) +
+		"}, label=" + decorate_element("шаги", italic, footnote, false) + "},\n" + legenda +
+		"style sheet = vary hue, style sheet = vary dashing]\n "
+		"data[headline={x, y, set}] {\n";
+	for (auto& i : p.data) {
+		visualization +=
+			to_string(i.x_coord) + ", " + to_string(i.y_coord) + ", " + i.plot_label + "\n";
 	}
-	visualization += "};\n \\end{tikzpicture} \%end_plot\n\n";
+	visualization += "};\n \\end{tikzpicture} \%end_plot\n\n"; // NOLINT(build/printf_format)
 	return visualization;
 }
 
 string LogTemplate::log_table(Table t) {
-	string table = "";
-	if (!(t.columns.size() && t.rows.size()))
+	string table;
+	if (!(!t.columns.empty() && !t.rows.empty()))
 		return table;
 	string format = "c!{\\color{black!80}\\vline width .65pt}";
 	string cols = "  &";
-	string row = "";
+	string row;
 	for (int i = 0; i < t.columns.size(); i++) {
 		format += "c";
 		string c = t.columns[i] == " " ? "eps" : t.columns[i];
@@ -280,10 +260,10 @@ string LogTemplate::log_table(Table t) {
 	return table;
 }
 
-std::stringstream LogTemplate::expand_includes(string filename) const {
-	std::stringstream outstream;
+stringstream LogTemplate::expand_includes(string filename) const {
+	stringstream outstream;
 
-	std::ifstream infile(filename);
+	ifstream infile(filename);
 	if (!infile) {
 		std::cerr << "ERROR: while rendering template. Unknown filename " + filename + "\n";
 		return outstream;

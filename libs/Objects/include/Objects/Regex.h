@@ -1,22 +1,17 @@
 #pragma once
-#include <fstream>
-#include <iostream>
-#include <map>
 #include <memory>
-#include <optional>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "AlgExpression.h"
-#include "AlphabetSymbol.h"
-#include "BaseObject.h"
 #include "iLogTemplate.h"
 
-class Language;
 class FiniteAutomaton;
-struct State;
+class FAState;
+class BackRefRegex;
 
 class Regex : public AlgExpression {
   private:
@@ -24,73 +19,84 @@ class Regex : public AlgExpression {
 	// возвращает указатель на new Regex
 	Regex* make() const override;
 
+	Regex* expr(const std::vector<Lexeme>&, int, int) override;
+	Regex* scan_minus(const std::vector<Lexeme>&, int, int);
+
+	bool equals(const AlgExpression* other) const override;
+
 	// Множество префиксов длины len
-	void get_prefix(int len, set<string>& prefs) const; // NOLINT(runtime/references)
+	void get_prefix(int len, std::set<std::string>& prefs) const; // NOLINT(runtime/references)
 	// Производная по символу
 	bool derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
 	bool partial_derivative_with_respect_to_sym(
 		Regex* respected_sym, const Regex* reg_e,
-		vector<Regex>& result) const; // NOLINT(runtime/references)
+		std::vector<Regex>& result) const; // NOLINT(runtime/references)
 	// Производная по префиксу
-	bool derivative_with_respect_to_str(string str, const Regex* reg_e,
+	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
-	std::pair<vector<State>, int> get_thompson(int) const;
 
-	void normalize_this_regex(const vector<std::pair<Regex, Regex>>&); // переписывание regex по
-																	   // пользовательским правилам
+	// возвращает вектор состояний нового автомата, построенного из регулярного выражения
+	std::vector<FAState> _to_thompson(const Alphabet&) const;
 
-	Regex* expr(const vector<Lexeme>&, int, int) override;
-	Regex* scan_minus(const vector<Lexeme>&, int, int);
+	// возвращает вектор листьев дерева
+	std::vector<Regex*> preorder_traversal();
+	bool contains_eps() const override;
+	// для каждой ноды возвращает множество номеров нод, которым она может предшествовать
+	std::unordered_map<int, std::vector<int>> get_follow() const;
+
+	void normalize_this_regex(
+		const std::vector<std::pair<Regex, Regex>>&); // переписывание regex по
+													  // пользовательским правилам
 
   public:
 	Regex() = default;
-	Regex(const string&); // NOLINT(runtime/explicit)
-	Regex(const string&, const std::shared_ptr<Language>&);
+	explicit Regex(const std::string&);
+	Regex(const std::string&, const std::shared_ptr<Language>&);
+	explicit Regex(Type type, AlgExpression* = nullptr, AlgExpression* = nullptr);
 
 	Regex* make_copy() const override;
 	Regex(const Regex&) = default;
+	Regex& operator=(const Regex& other);
 
 	// dynamic_cast к типу Regex*
 	template <typename T> static Regex* cast(T* ptr, bool not_null_ptr = true);
 	template <typename T> static const Regex* cast(const T* ptr, bool not_null_ptr = true);
 	// dynamic_cast каждого элемента вектора к типу Regex*
-	template <typename T> static vector<Regex*> cast(vector<T*> ptr, bool not_null_ptr = true);
+	template <typename T>
+	static std::vector<Regex*> cast(std::vector<T*> ptr, bool not_null_ptr = true);
 
 	FiniteAutomaton to_thompson(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_glushkov(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_ilieyu(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton to_antimirov(iLogTemplate* log = nullptr) const;
-
-	// проверка регулярок на равенство(буквальное)
+	// проверка регулярок на равенство (пока работает только для стандартного построения)
 	static bool equal(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на эквивалентность
 	static bool equivalent(const Regex&, const Regex&, iLogTemplate* log = nullptr);
 	// проверка регулярок на вложенность (проверяет вложен ли аргумент в this)
 	bool subset(const Regex&, iLogTemplate* log = nullptr) const;
-
-	// Производная по символу
+	// производная по символу
 	std::optional<Regex> symbol_derivative(const Regex& respected_sym) const;
-	// Частичная производная по символу
+	// частичная производная по символу
 	void partial_symbol_derivative(const Regex& respected_sym,
-								   vector<Regex>& result) const; // NOLINT(runtime/references)
-	// Производная по префиксу
-	std::optional<Regex> prefix_derivative(string respected_str) const;
-	// Длина накачки
+								   std::vector<Regex>& result) const; // NOLINT(runtime/references)
+	// производная по префиксу
+	std::optional<Regex> prefix_derivative(std::string respected_str) const;
+	// поиск длины накачки
 	int pump_length(iLogTemplate* log = nullptr) const;
-
 	Regex linearize(iLogTemplate* log = nullptr) const;
 	Regex delinearize(iLogTemplate* log = nullptr) const;
 	Regex deannote(iLogTemplate* log = nullptr) const;
-
 	// проверка регулярки на 1-однозначность
 	bool is_one_unambiguous(iLogTemplate* log = nullptr) const;
 	// извлечение 1-однозначной регулярки методом орбит Брюггеман-Вуда
 	Regex get_one_unambiguous_regex(iLogTemplate* log = nullptr) const;
-
-	// Переписывание regex по пользовательским правилам
-	Regex normalize_regex(const vector<std::pair<Regex, Regex>>&,
+	// переписывание regex по пользовательским правилам
+	Regex normalize_regex(const std::vector<std::pair<Regex, Regex>>&,
 						  iLogTemplate* log = nullptr) const;
+	BackRefRegex to_bregex() const;
+	Regex rewrite_aci() const;
 };
 
 /*
