@@ -539,7 +539,7 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 			for (auto& it1 : map1) {
 				set<int> v1 = it1.second;
 				set<int> v2 = map2[it1.first];
-				if (v1 != v2 /*equal(v1.begin(), v1.end(), v2.begin())*/) {
+				if (v1 != v2) {
 					flag = false;
 					break;
 				}
@@ -1078,8 +1078,8 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << partial_derivativ[0].to_txt() << " ";
 			// cout << partial_derivativ[1].to_txt() << " ";
 			// cout << partial_derivativ[2].to_txt() << endl;
-			deriv_log += partial_derivativ[2].to_txt() + "(" +
-						 partial_derivativ[0].to_txt() + ")" + "\\ =\\ ";
+			deriv_log += partial_derivativ[2].to_txt() + "(" + partial_derivativ[0].to_txt() + ")" +
+						 "\\ =\\ ";
 			if (partial_derivativ[1].to_txt() == "") {
 				deriv_log += "eps\\\\";
 			} else {
@@ -1088,8 +1088,8 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 			if (partial_derivativ[0].to_txt() == state) {
 				// поиск индекс состояния в которое переходим по символу из state
-				auto elem_iter = find(
-					name_states.begin(), name_states.end(), partial_derivativ[1].to_txt());
+				auto elem_iter =
+					find(name_states.begin(), name_states.end(), partial_derivativ[1].to_txt());
 				// записываем расстояние между begin и итератором, который указывает на состояние
 				transit[partial_derivativ[2].to_txt()].insert(
 					std::distance(name_states.begin(), elem_iter));

@@ -42,7 +42,7 @@ class Language {
 	std::optional<Regex_model> one_unambiguous_regex;
 
   public:
-	Language();
+	Language() = default;
 	explicit Language(Alphabet alphabet);
 
 	static void enable_retrieving_from_cache();

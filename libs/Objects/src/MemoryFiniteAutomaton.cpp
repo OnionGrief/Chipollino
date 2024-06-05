@@ -107,13 +107,6 @@ MFAState::MFAState(int index, string identifier, bool is_terminal,
 	: State::State(index, std::move(identifier), is_terminal), transitions(std::move(transitions)) {
 }
 
-MFAState::MFAState(const FAState& state)
-	: State::State(state.index, state.identifier, state.is_terminal) {
-	for (const auto& [symbol, states_to] : state.transitions)
-		for (auto to : states_to)
-			transitions[symbol].insert(MFATransition(to));
-}
-
 void MFAState::add_transition(const MFATransition& tr, const Symbol& symbol) {
 	transitions[symbol].insert(tr);
 }
@@ -356,7 +349,7 @@ void MemoryFiniteAutomaton::dfs_by_eps(
 	if (!reachable.count(state_index)) {
 		reachable.insert(state_index);
 		last = state_index;
-		const auto& by_eps = states[state_index].transitions.find(Symbol::Epsilon);
+		auto by_eps = states[state_index].transitions.find(Symbol::Epsilon);
 		if (by_eps != states[state_index].transitions.end()) {
 			if (states[state_index].transitions.size() > 1 && state_index != first)
 				throw std::logic_error(
@@ -1026,9 +1019,9 @@ bool TraversalState::operator==(const TraversalState& other) const {
 }
 
 void TraversalState::process_mutations() {
-	auto visited_state = visited_states.find(state->index);
 	// нашли цикл для мутации
-	if (visited_state != visited_states.end()) {
+	if (auto visited_state = visited_states.find(state->index);
+		visited_state != visited_states.end()) {
 		auto [index_in_visited_path, prev_size] = visited_state->second;
 		// если с момента последнего посещения не было чтения из памяти,
 		// добавляем подстроку в список мутаций
@@ -1235,22 +1228,22 @@ FiniteAutomaton MemoryFiniteAutomaton::to_symbolic_fa(iLogTemplate* log) const {
 				}
 				int start = n; // для подсчета дополнительных состояний
 				for (auto ind : closes)
-					fa_states.emplace_back(n++, "C" + std::to_string(ind), false);
+					fa_states.emplace_back(n++, SpecialSymbols::Close(ind), false);
 				for (auto ind : resets)
-					fa_states.emplace_back(n++, "R" + std::to_string(ind), false);
+					fa_states.emplace_back(n++, SpecialSymbols::Reset(ind), false);
 				for (auto ind : opens)
-					fa_states.emplace_back(n++, "O" + std::to_string(ind), false);
+					fa_states.emplace_back(n++, SpecialSymbols::Open(ind), false);
 
 				if (n > start) {
 					alphabet.insert(fa_states[start].identifier);
-					fa_states[i].transitions[fa_states[start].identifier].insert(start);
+					fa_states[i].add_transition(start, fa_states[start].identifier);
 					for (int j = start; j < n - 1; j++) {
 						alphabet.insert(fa_states[j + 1].identifier);
-						fa_states[j].transitions[fa_states[j + 1].identifier].insert(j + 1);
+						fa_states[j].add_transition(j + 1, fa_states[j + 1].identifier);
 					}
-					fa_states[fa_states.size() - 1].transitions[symbol].insert(tr.to);
+					fa_states[fa_states.size() - 1].add_transition(tr.to, symbol);
 				} else {
-					fa_states[i].transitions[symbol].insert(tr.to);
+					fa_states[i].add_transition(tr.to, symbol);
 				}
 			}
 		}

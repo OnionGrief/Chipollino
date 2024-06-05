@@ -140,3 +140,41 @@ std::size_t Symbol::Hasher::operator()(const Symbol& s) const {
 	std::size_t hash = string_hash(s.value);
 	return hash;
 }
+
+Symbol SpecialSymbols::Close(int number) {
+	return {"C" + std::to_string(number)};
+}
+
+Symbol SpecialSymbols::Reset(int number) {
+	return {"R" + std::to_string(number)};
+}
+
+Symbol SpecialSymbols::Open(int number) {
+	return {"O" + std::to_string(number)};
+}
+
+bool SpecialSymbols::is_special(const Symbol& s) {
+	return s.symbol.size() > 1 && (s.symbol[0] == 'C' || s.symbol[0] == 'R' || s.symbol[0] == 'O');
+}
+
+bool SpecialSymbols::is_close(const Symbol& s) {
+	return s.symbol.size() > 1 && s.symbol[0] == 'C';
+}
+
+bool SpecialSymbols::is_reset(const Symbol& s) {
+	return s.symbol.size() > 1 && s.symbol[0] == 'R';
+}
+
+bool SpecialSymbols::is_open(const Symbol& s) {
+	return s.symbol.size() > 1 && s.symbol[0] == 'O';
+}
+
+int SpecialSymbols::get_cell_number(const Symbol& s) {
+	string number_str = s.symbol.substr(1);
+	if (number_str.empty()) {
+		return 0;
+	}
+
+	int number = std::stoi(number_str);
+	return number;
+}

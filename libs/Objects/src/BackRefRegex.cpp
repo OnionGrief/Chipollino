@@ -742,8 +742,7 @@ vector<CellSet> merge_to_reset_maps(const vector<ToResetMap>& maps) {
 			else
 				maybe_to_reset.insert(cell);
 
-			auto it = merged.find(cell);
-			if (it != merged.end()) {
+			if (auto it = merged.find(cell); it != merged.end()) {
 				it->second.first &= emptiness_info.first;
 				it->second.second = get_intersection(it->second.second, emptiness_info.second);
 			} else {
@@ -826,8 +825,6 @@ void BackRefRegex::get_follow(
 		first = cast(term_r)->get_first_nodes_tracking_resets();
 		for (auto& [i, last_to_reset] : last) {
 			for (auto& [j, first_to_reset] : first) {
-				//				string t1 = i->get_symbol();
-				//				string t2 = j->get_symbol();
 				for (const auto& k : merge_to_reset_maps({last_to_reset, first_to_reset}))
 					following_states[i->get_symbol().last_linearization_number()].emplace_back(
 						j->get_symbol().last_linearization_number(), unordered_set<int>(), k);
@@ -842,8 +839,6 @@ void BackRefRegex::get_follow(
 		get_cells_under_iteration(iteration_over_cells);
 		for (auto& [i, last_to_reset] : last) {
 			for (auto& [j, first_to_reset] : first) {
-				//				string t1 = i->get_symbol();
-				//				string t2 = j->get_symbol();
 				vector<CellSet> to_reset;
 				if (i != j)
 					to_reset = merge_to_reset_maps({last_to_reset, first_to_reset, is_eps.second});

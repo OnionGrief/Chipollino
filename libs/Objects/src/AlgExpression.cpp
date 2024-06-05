@@ -464,8 +464,7 @@ bool AlgExpression::from_string(const string& str, bool allow_ref, bool allow_ne
 	if (str.empty()) {
 		symbol = Lexeme::Type::eps;
 		type = Type::eps;
-		alphabet = {};
-		language = make_shared<Language>(alphabet);
+		language = make_shared<Language>();
 		return true;
 	}
 

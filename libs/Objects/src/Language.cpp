@@ -18,8 +18,6 @@ std::shared_ptr<Language> Language::Regex_model::get_language() const {
 	return language.lock();
 }
 
-Language::Language() {}
-
 Language::Language(Alphabet alphabet) : alphabet(std::move(alphabet)) {}
 
 void Language::enable_retrieving_from_cache() {

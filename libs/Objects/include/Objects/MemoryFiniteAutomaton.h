@@ -16,45 +16,6 @@ class Language;
 class FAState;
 class FiniteAutomaton;
 
-struct MFATransition {
-	enum MemoryAction {
-		// idle, ◇
-		open,  // o
-		close, // c
-		reset, // r
-	};
-
-	using MemoryActions = std::unordered_map<int, MemoryAction>;
-
-	int to;
-	MemoryActions memory_actions;
-
-	explicit MFATransition(int to);
-	MFATransition(int, MemoryActions);
-	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&);
-	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&,
-				  const std::unordered_set<int>&);
-
-	struct TransitionConfig {
-		// пары {номер ячейки, линеаризованный номер оператора}
-		const CellSet* destination_first;
-		const std::unordered_set<int>* source_in_lin_cells;
-		const std::unordered_set<int>* iteration_over_cells;
-		// пары {номер ячейки, линеаризованный номер оператора}
-		const CellSet* source_last;
-		const std::unordered_set<int>* destination_in_lin_cells;
-		const CellSet* to_reset;
-	};
-	MFATransition(int, const TransitionConfig& config);
-
-	std::string get_actions_str() const;
-	bool operator==(const MFATransition& other) const;
-
-	struct Hasher {
-		std::size_t operator()(const MFATransition&) const;
-	};
-};
-
 class MFAState : public State {
   public:
 	using SymbolTransitions = std::unordered_set<MFATransition, MFATransition::Hasher>;
@@ -64,7 +25,6 @@ class MFAState : public State {
 	explicit MFAState(bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
-	explicit MFAState(const FAState& state);
 
 	bool operator==(const MFAState& other) const;
 	std::string to_txt() const override;
