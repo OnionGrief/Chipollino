@@ -1458,7 +1458,7 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		}
 	// проверяем action bisimilarity
 	vector<FiniteAutomaton> fas({mfa1.to_action_fa(), mfa2.to_action_fa()});
-	auto [res, fa_classes] = FiniteAutomaton::bisimilarity_checker(fas[0], fas[1]);
+	auto [res, _, fa_classes] = FiniteAutomaton::bisimilarity_checker(fas[0], fas[1]);
 	if (!res)
 		return false;
 	// проверяем совпадение раскраски эквивалентных состояний в КСС

@@ -1447,7 +1447,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	return result;
 }
 
-pair<bool, vector<vector<int>>> FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
+tuple<bool,pair<MetaInfo,MetaInfo>, vector<vector<int>>> FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
 																	  const FiniteAutomaton& fa2) {
 	// грамматики из автоматов
 	vector<RLGrammar::Item> fa1_items;
@@ -1462,11 +1462,12 @@ pair<bool, vector<vector<int>>> FiniteAutomaton::bisimilarity_checker(const Fini
 	vector<vector<vector<RLGrammar::Item*>>> fa2_rules = RLGrammar::fa_to_grammar(
 		fa2.states, fa2.language->get_alphabet(), fa2_items, fa2_nonterminals, fa2_terminals);
 
+	MetaInfo meta1, meta2;
 	if (fa1_terminals.size() != fa2_terminals.size())
-		return {false, {}};
+		return {false,{{},{}}, {}};
 	for (int i = 0; i < fa1_terminals.size(); i++)
 		if (*fa1_terminals[i] != *fa2_terminals[i])
-			return {false, {}};
+			return {false,{{},{}}, {}};
 	// сначала получаем бисимилярные грамматики из данных автоматов
 	vector<RLGrammar::Item*> fa1_bisimilar_nonterminals;
 	map<int, vector<RLGrammar::Item*>> fa1_class_to_nonterminals;
@@ -1478,7 +1479,7 @@ pair<bool, vector<vector<int>>> FiniteAutomaton::bisimilarity_checker(const Fini
 	vector<vector<vector<RLGrammar::Item*>>> fa2_bisimilar_rules = RLGrammar::get_bisimilar_grammar(
 		fa2_rules, fa2_nonterminals, fa2_bisimilar_nonterminals, fa2_class_to_nonterminals);
 	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size())
-		return {false, {}};
+		return {false,{{},{}}, {}};
 	// из объединения полученных ранее получаем итоговую
 	// ! порядок нетерминалов соответствует порядку правил
 	vector<RLGrammar::Item*> nonterminals(fa1_bisimilar_nonterminals);
@@ -1509,14 +1510,15 @@ pair<bool, vector<vector<int>>> FiniteAutomaton::bisimilarity_checker(const Fini
 		int nont_class = fa1_class_to_nonterminals.at(fa1_classes[i])[0]
 							 ->class_number; // класс нетерминала в общей грамматике,
 											 // 0й элемент попал в бисимилярную грамматику
-		class_to_nonterminals_names[nont_class].push_back("FA1:" + fa1_nonterminals[i]->name);
+		class_to_nonterminals_names[nont_class].push_back("FA1:" + std::to_string(i));
+		meta1.upd(NodeMeta{i, nont_class});
 	}
 
 	for (int i = 0; i < fa2_nonterminals.size(); i++) {
 		int nont_class = fa2_class_to_nonterminals.at(fa2_classes[i])[0]
 							 ->class_number; // класс нетерминала в общей грамматике,
 											 // 0й элемент попал в бисимилярную грамматику
-		class_to_nonterminals_names[nont_class].push_back("FA2:" + fa2_nonterminals[i]->name);
+		meta2.upd(NodeMeta{i, nont_class});
 	}
 	// log
 	stringstream ss;
@@ -1530,19 +1532,19 @@ pair<bool, vector<vector<int>>> FiniteAutomaton::bisimilarity_checker(const Fini
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
 		fa2_nonterminals[fa2.initial_state]->class_number)
-		return {false, {}};
+		return {false,{{},{}}, {}};
 	if (fa1_bisimilar_nonterminals.size() != bisimilar_nonterminals.size())
-		return {false, {}};
+		return {false,{{},{}}, {}};
 
-	return {true, {fa1_classes, fa2_classes}};
+	return {true,{meta1,meta2}, {fa1_classes, fa2_classes}};
 }
 
 bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2,
 								iLogTemplate* log) {
-	auto [result, _] = bisimilarity_checker(fa1, fa2);
+	auto [result, meta, _] = bisimilarity_checker(fa1, fa2);
 	if (log) {
-		log->set_parameter("automaton1", fa1);
-		log->set_parameter("automaton2", fa2);
+		log->set_parameter("automaton1", fa1, meta.first);
+		log->set_parameter("automaton2", fa2, meta.second);
 		log->set_parameter("result", result);
 	}
 	return result;
