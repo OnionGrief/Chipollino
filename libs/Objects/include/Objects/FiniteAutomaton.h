@@ -80,7 +80,7 @@ class FiniteAutomaton : public AbstractMachine {
 		const std::vector<int>&) const;
 	static bool equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// дополнительно возвращает в векторах номера классов состояний каждого автомата
-	static std::pair<bool, std::vector<std::vector<int>>> bisimilarity_checker(
+	static std::tuple<bool,std::pair<MetaInfo,MetaInfo>, std::vector<std::vector<int>>> bisimilarity_checker(
 		const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// принимает в качестве лимита максимальное количество цифр в
 	// числителе + знаменателе дроби, которая может встретиться при вычислениях
