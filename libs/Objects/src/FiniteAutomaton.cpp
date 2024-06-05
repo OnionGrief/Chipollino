@@ -1447,8 +1447,8 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	return result;
 }
 
-tuple<bool,pair<MetaInfo,MetaInfo>, vector<vector<int>>> FiniteAutomaton::bisimilarity_checker(const FiniteAutomaton& fa1,
-																	  const FiniteAutomaton& fa2) {
+tuple<bool, pair<MetaInfo, MetaInfo>, vector<vector<int>>> FiniteAutomaton::bisimilarity_checker(
+	const FiniteAutomaton& fa1, const FiniteAutomaton& fa2) {
 	// грамматики из автоматов
 	vector<RLGrammar::Item> fa1_items;
 	vector<RLGrammar::Item*> fa1_nonterminals;
@@ -1464,10 +1464,10 @@ tuple<bool,pair<MetaInfo,MetaInfo>, vector<vector<int>>> FiniteAutomaton::bisimi
 
 	MetaInfo meta1, meta2;
 	if (fa1_terminals.size() != fa2_terminals.size())
-		return {false,{{},{}}, {}};
+		return {false, {}, {}};
 	for (int i = 0; i < fa1_terminals.size(); i++)
 		if (*fa1_terminals[i] != *fa2_terminals[i])
-			return {false,{{},{}}, {}};
+			return {false, {}, {}};
 	// сначала получаем бисимилярные грамматики из данных автоматов
 	vector<RLGrammar::Item*> fa1_bisimilar_nonterminals;
 	map<int, vector<RLGrammar::Item*>> fa1_class_to_nonterminals;
@@ -1479,7 +1479,7 @@ tuple<bool,pair<MetaInfo,MetaInfo>, vector<vector<int>>> FiniteAutomaton::bisimi
 	vector<vector<vector<RLGrammar::Item*>>> fa2_bisimilar_rules = RLGrammar::get_bisimilar_grammar(
 		fa2_rules, fa2_nonterminals, fa2_bisimilar_nonterminals, fa2_class_to_nonterminals);
 	if (fa1_bisimilar_nonterminals.size() != fa2_bisimilar_nonterminals.size())
-		return {false,{{},{}}, {}};
+		return {false, {}, {}};
 	// из объединения полученных ранее получаем итоговую
 	// ! порядок нетерминалов соответствует порядку правил
 	vector<RLGrammar::Item*> nonterminals(fa1_bisimilar_nonterminals);
@@ -1504,13 +1504,14 @@ tuple<bool,pair<MetaInfo,MetaInfo>, vector<vector<int>>> FiniteAutomaton::bisimi
 	vector<vector<vector<RLGrammar::Item*>>> bisimilar_rules = RLGrammar::get_bisimilar_grammar(
 		rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
 
-	map<int, vector<string>> class_to_nonterminals_names;
+	//	map<int, vector<string>> class_to_nonterminals_names;
 
 	for (int i = 0; i < fa1_nonterminals.size(); i++) {
 		int nont_class = fa1_class_to_nonterminals.at(fa1_classes[i])[0]
 							 ->class_number; // класс нетерминала в общей грамматике,
 											 // 0й элемент попал в бисимилярную грамматику
 		meta1.upd(NodeMeta{i, nont_class});
+		// class_to_nonterminals_names[nont_class].push_back("FA1:" + fa1_nonterminals[i]->name);
 	}
 
 	for (int i = 0; i < fa2_nonterminals.size(); i++) {
@@ -1518,24 +1519,25 @@ tuple<bool,pair<MetaInfo,MetaInfo>, vector<vector<int>>> FiniteAutomaton::bisimi
 							 ->class_number; // класс нетерминала в общей грамматике,
 											 // 0й элемент попал в бисимилярную грамматику
 		meta2.upd(NodeMeta{i, nont_class});
+		// class_to_nonterminals_names[nont_class].push_back("FA2:" + fa2_nonterminals[i]->name);
 	}
 	// log
-	stringstream ss;
-	for (auto& elem : class_to_nonterminals_names) {
-		ss << "{";
-		for (int i = 0; i < elem.second.size() - 1; i++)
-			ss << elem.second[i] << ",";
-		ss << elem.second[elem.second.size() - 1] << "}";
-	}
+	//	stringstream ss;
+	//	for (auto& elem : class_to_nonterminals_names) {
+	//		ss << "{";
+	//		for (int i = 0; i < elem.second.size() - 1; i++)
+	//			ss << elem.second[i] << ",";
+	//		ss << elem.second[elem.second.size() - 1] << "}";
+	//	}
 
 	// проверяю равенство классов начальных состояний
 	if (fa1_nonterminals[fa1.initial_state]->class_number !=
 		fa2_nonterminals[fa2.initial_state]->class_number)
-		return {false,{{},{}}, {}};
+		return {false, {}, {}};
 	if (fa1_bisimilar_nonterminals.size() != bisimilar_nonterminals.size())
-		return {false,{{},{}}, {}};
+		return {false, {}, {}};
 
-	return {true,{meta1,meta2}, {fa1_classes, fa2_classes}};
+	return {true, {meta1, meta2}, {fa1_classes, fa2_classes}};
 }
 
 bool FiniteAutomaton::bisimilar(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2,
@@ -2748,5 +2750,6 @@ FiniteAutomaton FiniteAutomaton::get_subautomaton(const CaptureGroup& cg) {
 					sub_states[indexes.at(st.index)].add_transition(indexes.at(to), symbol);
 				}
 
+	// начальное состояние общее у всех cg.paths
 	return {indexes.at((*cg.paths.begin())[0]), sub_states, alphabet};
 }
