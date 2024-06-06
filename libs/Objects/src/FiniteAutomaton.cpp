@@ -2668,15 +2668,15 @@ void FiniteAutomaton::to_mfa_dfs(int state_index, vector<bool>& visited,
 
 	for (const auto& [symbol, symbol_transitions] : states[state_index].transitions) {
 		for (const auto& to : symbol_transitions) {
-			if (SpecialSymbols::is_special(symbol)) {
+			if (MemorySymbols::is_memory_symbol(symbol)) {
 				auto memory_actions_copy = memory_actions;
-				int cell_number = SpecialSymbols::get_cell_number(symbol);
+				int cell_number = MemorySymbols::get_cell_number(symbol);
 
-				if (SpecialSymbols::is_close(symbol))
+				if (MemorySymbols::is_close(symbol))
 					memory_actions_copy[cell_number] = MFATransition::close;
-				else if (SpecialSymbols::is_reset(symbol))
+				else if (MemorySymbols::is_reset(symbol))
 					memory_actions_copy[cell_number] = MFATransition::reset;
-				else if (SpecialSymbols::is_open(symbol))
+				else if (MemorySymbols::is_open(symbol))
 					memory_actions_copy[cell_number] = MFATransition::open;
 
 				to_mfa_dfs(

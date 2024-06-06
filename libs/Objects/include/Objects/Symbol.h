@@ -65,7 +65,7 @@ class Symbol {
 		std::size_t operator()(const Symbol&) const;
 	};
 
-	friend class SpecialSymbols;
+	friend class MemorySymbols;
 };
 
 std::ostream& operator<<(std::ostream& os, const Symbol& item);
@@ -73,13 +73,18 @@ std::ostream& operator<<(std::ostream& os, const Symbol& item);
 using Alphabet = std::set<Symbol>;
 
 // специальные символы переходов в Symbolic-NFA
-class SpecialSymbols {
+class MemorySymbols {
   public:
+	static const char CloseChar = 'C';
+	static const char ResetChar = 'R';
+	static const char OpenChar = 'O';
+
 	static Symbol Close(int number);
 	static Symbol Reset(int number);
 	static Symbol Open(int number);
 
-	static bool is_special(const Symbol& s);
+	static bool is_memory_symbol(const Symbol& s);
+	static bool is_memory_char(char c);
 	static bool is_close(const Symbol& s);
 	static bool is_reset(const Symbol& s);
 	static bool is_open(const Symbol& s);

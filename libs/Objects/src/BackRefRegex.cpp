@@ -181,27 +181,20 @@ BackRefRegex* BackRefRegex::expr(const vector<AlgExpression::Lexeme>& lexemes, i
 								 int index_end) {
 	AlgExpression* p;
 	p = scan_alt(lexemes, index_start, index_end);
-	if (!p) {
+	if (!p)
 		p = scan_conc(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_star(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_symb(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_ref(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_eps(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_par(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_square_br(lexemes, index_start, index_end);
-	}
 	return cast(p, false);
 }
 
@@ -230,7 +223,7 @@ BackRefRegex* BackRefRegex::scan_square_br(const vector<AlgExpression::Lexeme>& 
 	}
 
 	BackRefRegex* l = expr(lexemes, index_start + 1, index_end - 1);
-	if (l == nullptr || l->type == AlgExpression::eps) {
+	if (l == nullptr) {
 		delete l;
 		return p;
 	}

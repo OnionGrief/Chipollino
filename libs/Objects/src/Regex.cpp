@@ -99,27 +99,19 @@ template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs, bool not_null_
 
 Regex* Regex::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start, int index_end) {
 	AlgExpression* p;
-	p = scan_symb(lexemes, index_start, index_end);
-	if (!p) {
-		p = scan_eps(lexemes, index_start, index_end);
-	}
-
-	if (!p) {
-		p = scan_alt(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	p = scan_alt(lexemes, index_start, index_end);
+	if (!p)
 		p = scan_conc(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_star(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
+		p = scan_symb(lexemes, index_start, index_end);
+	if (!p)
+		p = scan_eps(lexemes, index_start, index_end);
+	if (!p)
 		p = scan_minus(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_par(lexemes, index_start, index_end);
-	}
-
 	return cast(p, false);
 }
 
@@ -318,11 +310,11 @@ FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
 
 Regex Regex::linearize(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
+	vector<Regex*> leafs = temp_copy.preorder_traversal();
 	Alphabet new_alphabet;
-	for (size_t i = 0; i < list.size(); i++) {
-		list[i]->symbol.linearize(i);
-		new_alphabet.insert(list[i]->symbol);
+	for (size_t i = 0; i < leafs.size(); i++) {
+		leafs[i]->symbol.linearize(i);
+		new_alphabet.insert(leafs[i]->symbol);
 	}
 	temp_copy.set_language(new_alphabet);
 	if (log) {
@@ -334,7 +326,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 
 Regex Regex::delinearize(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = cast(temp_copy.preorder_traversal());
+	vector<Regex*> list = temp_copy.preorder_traversal();
 	Alphabet new_alphabet;
 	for (auto& i : list) {
 		i->symbol.delinearize();
@@ -348,20 +340,34 @@ Regex Regex::delinearize(iLogTemplate* log) const {
 	return temp_copy;
 }
 
-vector<Regex*> Regex::preorder_traversal() {
-	vector<Regex*> res;
-	if (AlgExpression::symb == type) {
-		res.push_back(this);
-		return res;
-	}
+vector<const Regex*> Regex::preorder_traversal() const {
+	if (AlgExpression::symb == type)
+		return {this};
 
+	vector<const Regex*> res;
 	if (term_l) {
-		vector<Regex*> l = cast(term_l)->preorder_traversal();
+		auto l = cast(term_l)->preorder_traversal();
 		res.insert(res.end(), l.begin(), l.end());
 	}
-
 	if (term_r) {
-		vector<Regex*> r = cast(term_r)->preorder_traversal();
+		auto r = cast(term_r)->preorder_traversal();
+		res.insert(res.end(), r.begin(), r.end());
+	}
+
+	return res;
+}
+
+vector<Regex*> Regex::preorder_traversal() {
+	if (AlgExpression::symb == type)
+		return {this};
+
+	vector<Regex*> res;
+	if (term_l) {
+		auto l = cast(term_l)->preorder_traversal();
+		res.insert(res.end(), l.begin(), l.end());
+	}
+	if (term_r) {
+		auto r = cast(term_r)->preorder_traversal();
 		res.insert(res.end(), r.begin(), r.end());
 	}
 
@@ -1124,9 +1130,9 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 Regex Regex::deannote(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
+	vector<Regex*> leafs = Regex::cast(temp_copy.preorder_traversal());
 	Alphabet deannoted_alphabet;
-	for (auto& i : list) {
+	for (auto& i : leafs) {
 		i->symbol.deannote();
 		deannoted_alphabet.insert(i->symbol);
 	}

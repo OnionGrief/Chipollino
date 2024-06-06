@@ -1228,11 +1228,11 @@ FiniteAutomaton MemoryFiniteAutomaton::to_symbolic_fa(iLogTemplate* log) const {
 				}
 				int start = n; // для подсчета дополнительных состояний
 				for (auto ind : closes)
-					fa_states.emplace_back(n++, SpecialSymbols::Close(ind), false);
+					fa_states.emplace_back(n++, MemorySymbols::Close(ind), false);
 				for (auto ind : resets)
-					fa_states.emplace_back(n++, SpecialSymbols::Reset(ind), false);
+					fa_states.emplace_back(n++, MemorySymbols::Reset(ind), false);
 				for (auto ind : opens)
-					fa_states.emplace_back(n++, SpecialSymbols::Open(ind), false);
+					fa_states.emplace_back(n++, MemorySymbols::Open(ind), false);
 
 				if (n > start) {
 					alphabet.insert(fa_states[start].identifier);
@@ -1495,6 +1495,7 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 				colored_SCCs[i].insert(colored_SCC);
 		}
 	}
+	//	cout << fa_classes[0] << fa_classes[1];
 	//	for (int i = 0; i < N; i++) {
 	//		for (const auto& j : colored_SCCs[i]) {
 	//			cout << "(\n";
@@ -1540,7 +1541,6 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		}
 	}
 
-	//	cout << fa_classes[0] << fa_classes[1];
 	//	for (const auto& i : pairs_to_calc)
 	//		cout << i;
 

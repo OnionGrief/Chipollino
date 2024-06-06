@@ -279,7 +279,6 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 	std::stack<size_t> memory_opening_indexes;
 
 	bool regex_is_eps = true;
-	auto is_symbol = [](char c) { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'; };
 
 	for (size_t index = 0; index < str.size(); index++) {
 		char c = str[index];
@@ -312,9 +311,16 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 			brackets_are_empty = true;
 			break;
 		case ']':
-			if (brackets_are_empty || brackets_checker.empty() || brackets_checker.top() != '[')
+			if (brackets_checker.empty() || brackets_checker.top() != '[')
 				return {Lexeme::Type::error};
 			brackets_checker.pop();
+
+			if (brackets_are_empty) {
+				if (lexemes.back().type != Lexeme::Type::squareBrL)
+					return {Lexeme::Type::error};
+				lexemes.emplace_back(Lexeme::Type::eps);
+				brackets_are_empty = false;
+			}
 
 			index++;
 			if (index >= str.size() && str[index] != ':')
@@ -328,14 +334,14 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 			memory_opening_indexes.pop();
 			break;
 		case '&':
-			if (!allow_ref)
-				return {Lexeme::Type::error};
-
 			if (!read_number(str, ++index, lexeme.number))
 				return {Lexeme::Type::error};
 
-			lexeme.type = Lexeme::Type::ref;
-			// не будет входить в алфавит, нужно только для обозначения перехода в MFA
+			if (allow_ref)
+				lexeme.type = Lexeme::Type::ref;
+			else
+				lexeme.type = Lexeme::Type::symb;
+
 			lexeme.symbol = Symbol::Ref(lexeme.number);
 			regex_is_eps = false;
 			brackets_are_empty = false;
@@ -355,31 +361,41 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 			lexeme.type = Lexeme::Type::star;
 			break;
 		default:
-			if (is_symbol(c)) {
+			if (isalpha(c)) {
 				lexeme.type = Lexeme::Type::symb;
 				lexeme.symbol = c;
 				for (size_t j = index + 1; j < str.size(); j++) {
 					bool lin = false;
 					bool annote = false;
-					if (str[j] == Symbol::linearize_marker)
+
+					if (str[j] == Symbol::linearize_marker) {
 						lin = true;
-
-					if (str[j] == Symbol::annote_marker)
+						j++;
+					} else if (str[j] == Symbol::annote_marker) {
 						annote = true;
-
-					if (!lin && !annote)
+						j++;
+					} else if (!MemorySymbols::is_memory_char(c) || !isdigit(str[j])) {
 						break;
+					}
 
 					int number;
-					if (!read_number(str, ++j, number))
+					if (!read_number(str, j, number))
 						return {Lexeme::Type::error};
 					index = j;
 
-					if (lin)
+					if (lin) {
 						lexeme.symbol.linearize(number);
-
-					if (annote)
+					} else if (annote) {
 						lexeme.symbol.annote(number);
+					} else { // memory
+						if (c == MemorySymbols::CloseChar) {
+							lexeme.symbol = MemorySymbols::Close(number);
+						} else if (c == MemorySymbols::ResetChar) {
+							lexeme.symbol = MemorySymbols::Reset(number);
+						} else {
+							lexeme.symbol = MemorySymbols::Open(number);
+						}
+					}
 				}
 
 				regex_is_eps = false;
@@ -423,7 +439,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 			memory_opening_indexes.push(lexemes.size());
 		}
 
-		lexemes.push_back(lexeme);
+		lexemes.emplace_back(lexeme);
 	}
 
 	if (regex_is_eps || !brackets_checker.empty())

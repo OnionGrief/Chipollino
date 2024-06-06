@@ -141,40 +141,45 @@ std::size_t Symbol::Hasher::operator()(const Symbol& s) const {
 	return hash;
 }
 
-Symbol SpecialSymbols::Close(int number) {
-	return {"C" + std::to_string(number)};
+Symbol MemorySymbols::Close(int number) {
+	return {CloseChar + std::to_string(number)};
 }
 
-Symbol SpecialSymbols::Reset(int number) {
-	return {"R" + std::to_string(number)};
+Symbol MemorySymbols::Reset(int number) {
+	return {ResetChar + std::to_string(number)};
 }
 
-Symbol SpecialSymbols::Open(int number) {
-	return {"O" + std::to_string(number)};
+Symbol MemorySymbols::Open(int number) {
+	return {OpenChar + std::to_string(number)};
 }
 
-bool SpecialSymbols::is_special(const Symbol& s) {
-	return s.symbol.size() > 1 && (s.symbol[0] == 'C' || s.symbol[0] == 'R' || s.symbol[0] == 'O');
+bool MemorySymbols::is_memory_symbol(const Symbol& s) {
+	return s.symbol.size() > 1 &&
+		   (s.symbol[0] == CloseChar || s.symbol[0] == ResetChar || s.symbol[0] == OpenChar);
 }
 
-bool SpecialSymbols::is_close(const Symbol& s) {
-	return s.symbol.size() > 1 && s.symbol[0] == 'C';
+bool MemorySymbols::is_memory_char(char c) {
+	return c == CloseChar || c == ResetChar || c == OpenChar;
 }
 
-bool SpecialSymbols::is_reset(const Symbol& s) {
-	return s.symbol.size() > 1 && s.symbol[0] == 'R';
+bool MemorySymbols::is_close(const Symbol& s) {
+	return s.symbol.size() > 1 && s.symbol[0] == CloseChar;
 }
 
-bool SpecialSymbols::is_open(const Symbol& s) {
-	return s.symbol.size() > 1 && s.symbol[0] == 'O';
+bool MemorySymbols::is_reset(const Symbol& s) {
+	return s.symbol.size() > 1 && s.symbol[0] == ResetChar;
 }
 
-int SpecialSymbols::get_cell_number(const Symbol& s) {
+bool MemorySymbols::is_open(const Symbol& s) {
+	return s.symbol.size() > 1 && s.symbol[0] == OpenChar;
+}
+
+int MemorySymbols::get_cell_number(const Symbol& s) {
 	string number_str = s.symbol.substr(1);
 	if (number_str.empty()) {
 		return 0;
 	}
 
-	int number = std::stoi(number_str);
+	int number = stoi(number_str);
 	return number;
 }
