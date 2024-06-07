@@ -766,7 +766,8 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 	using Test = std::tuple<string, string, bool>;
 	vector<Test> tests = {
 		{"[aa*]:1a&1", "a[a*a]:1&1", true},
-		{"[a*]:1a*&1", "a*[a*]:1&1", false},
+		{"[aa*a*]:1a&1", "a[a*a*a]:1&1", true},
+		{"b[a*]:1a*&1", "ba*[a*]:1&1", false},
 		{"[ab]:2cab&2", "abc[ab]:2&2", true},
 		{"[a|b]:1c(a|b)&1", "(a|b)c[a|b]:1&1", false},
 		{"[a]:1*&1", "[a*]:1*&1", false},
