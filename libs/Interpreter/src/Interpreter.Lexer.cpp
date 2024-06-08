@@ -40,7 +40,6 @@ bool Interpreter::Lexer::scan_word(string word) {
 
 string Interpreter::Lexer::scan_until_space() {
 	string acc = "";
-	skip_spaces();
 	while (!eof() && !isspace(current_symbol()) && current_symbol() != '.' &&
 		   current_symbol() != '(' && current_symbol() != ')') {
 
@@ -57,13 +56,6 @@ string Interpreter::Lexer::scan_until(char symbol) {
 		next_symbol();
 	}
 	return acc;
-}
-
-Interpreter::Lexem Interpreter::Lexer::scan_star() {
-	if (scan_word("*")) {
-		return Lexem(Lexem::star);
-	}
-	return Lexem(Lexem::error);
 }
 
 Interpreter::Lexem Interpreter::Lexer::scan_equalSign() {
@@ -152,6 +144,23 @@ Interpreter::Lexem Interpreter::Lexer::scan_regex() {
 		string val = scan_until('}');
 		scan_word("}");
 		return Lexem(Lexem::regex, val);
+	}
+	return Lexem(Lexem::error);
+}
+
+Interpreter::Lexem Interpreter::Lexer::scan_star() {
+	if (scan_word("*")) {
+		int pos_prev = input.pos;
+		string val = scan_until_space();
+		if (!val.size()) {
+			val = "r";
+			input.pos = pos_prev;
+		}
+		if (val != "r" && val != "br" && val != "DFA" && val != "NFA" && val != "MFA") {
+			input.pos = pos_prev;
+			return Lexem(Lexem::error);
+		}
+		return Lexem(Lexem::randomObject, val);
 	}
 	return Lexem(Lexem::error);
 }

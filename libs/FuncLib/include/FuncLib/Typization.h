@@ -18,19 +18,23 @@ namespace Typization {
 
 // Перечисление типов объектов
 enum class ObjectType {
-	NFA,		 // недетерминированный КА
-	DFA,		 // детерминированный КА
-	Regex,		 // регулярное выражение
-	RandomRegex, // место для подстановки сгенерированных регулярных выражений
-	Int,		 // целое число
-	FileName,		 // имя файла для чтения
-	Boolean,	 // true/false
+	NFA,			// недетерминированный КА
+	DFA,			// детерминированный КА
+	Regex,			// регулярное выражение
+	Int,			// целое число
+	String,			// строка
+	Boolean,		// true/false
 	OptionalBool,	// optional<bool>
 	AmbiguityValue, // yes/no/ы/ь
 	PrefixGrammar,	// префиксная грамматика
 	Array,			// массив
 	BRefRegex,
 	MFA,
+	RandomRegex, // место для подстановки сгенерированных регулярных выражений
+	RandomDFA,
+	RandomNFA,
+	RandomMFA,
+	RandomBRefRegex,
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -49,7 +53,7 @@ struct ObjectNFA;
 struct ObjectDFA;
 struct ObjectRegex;
 struct ObjectInt;
-struct ObjectFileName;
+struct ObjectString;
 struct ObjectBoolean;
 struct ObjectOptionalBool;
 struct ObjectAmbiguityValue;
@@ -59,7 +63,7 @@ struct ObjectBRefRegex;
 struct ObjectMFA;
 
 // Универсальный объект
-using GeneralObject = std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectFileName,
+using GeneralObject = std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString,
 								   ObjectBoolean, ObjectOptionalBool, ObjectAmbiguityValue,
 								   ObjectPrefixGrammar, ObjectArray, ObjectBRefRegex, ObjectMFA>;
 
@@ -73,7 +77,7 @@ OBJECT_DEFINITION(NFA, FiniteAutomaton)
 OBJECT_DEFINITION(DFA, FiniteAutomaton)
 OBJECT_DEFINITION(Regex, Regex)
 OBJECT_DEFINITION(Int, int)
-OBJECT_DEFINITION(FileName, std::string)
+OBJECT_DEFINITION(String, std::string)
 OBJECT_DEFINITION(Boolean, bool)
 OBJECT_DEFINITION(OptionalBool, std::optional<bool>)
 OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
@@ -90,8 +94,12 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 	{ObjectType::Regex, "Regex"},
 	{ObjectType::BRefRegex, "BRefRegex"},
 	{ObjectType::RandomRegex, "RandomRegex"},
+	{ObjectType::RandomBRefRegex, "RandomBRefRegex"},
+	{ObjectType::RandomDFA, "RandomDFA"},
+	{ObjectType::RandomNFA, "RandomNFA"},
+	{ObjectType::RandomMFA, "RandomMFA"},
 	{ObjectType::Int, "Int"},
-	{ObjectType::FileName, "FileName"},
+	{ObjectType::String, "String"},
 	{ObjectType::Boolean, "Boolean"},
 	{ObjectType::OptionalBool, "OptionalBool"},
 	{ObjectType::AmbiguityValue, "AmbiguityValue"},
@@ -104,11 +112,24 @@ inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> type
 	{ObjectType::NFA, {ObjectType::MFA}},
 	{ObjectType::DFA, {ObjectType::NFA, ObjectType::MFA}},
 	{ObjectType::Regex, {ObjectType::BRefRegex}},
+	{ObjectType::RandomRegex, {ObjectType::Regex, ObjectType::BRefRegex}},
+	{ObjectType::RandomBRefRegex, {ObjectType::BRefRegex}},
+	{ObjectType::RandomDFA, {ObjectType::NFA, ObjectType::DFA, ObjectType::MFA}},
+	{ObjectType::RandomNFA, {ObjectType::NFA, ObjectType::MFA}},
+	{ObjectType::RandomMFA, {ObjectType::MFA}},
 };
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_children = {
-	{ObjectType::NFA, {ObjectType::DFA}},
-	{ObjectType::MFA, {ObjectType::NFA, ObjectType::DFA}},
-	{ObjectType::BRefRegex, {ObjectType::Regex}},
+	{ObjectType::NFA, {ObjectType::RandomDFA, ObjectType::DFA, ObjectType::RandomNFA}},
+	{ObjectType::DFA, {ObjectType::RandomDFA}},
+	{ObjectType::MFA,
+	 {ObjectType::RandomNFA,
+	  ObjectType::NFA,
+	  ObjectType::RandomDFA,
+	  ObjectType::DFA,
+	  ObjectType::RandomMFA}},
+	{ObjectType::Regex, {ObjectType::RandomRegex}},
+	{ObjectType::BRefRegex,
+	 {ObjectType::RandomBRefRegex, ObjectType::RandomRegex, ObjectType::Regex}},
 };
 
 // используется, чтобы получить всех возможных детей / родителей типа

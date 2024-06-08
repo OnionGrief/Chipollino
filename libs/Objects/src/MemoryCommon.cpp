@@ -36,13 +36,13 @@ bool CaptureGroup::State::operator==(const State& other) const {
 	return index == other.index && class_num == other.class_num;
 }
 
-CaptureGroup::CaptureGroup(int cell, const std::vector<std::vector<int>>& _traces,
-						   const std::vector<int>& _state_classes)
+CaptureGroup::CaptureGroup(int cell, const std::vector<std::vector<int>>& _paths,
+						   const std::vector<int>& _state_classes, bool reset)
 	: cell(cell) {
-	for (const auto& trace : _traces) {
-		traces.insert(trace);
-		for (auto st : trace) {
-			int class_num = (trace.size() > 1) ? _state_classes[st] : State::reset_class;
+	for (const auto& path : _paths) {
+		paths.insert(path);
+		for (auto st : path) {
+			int class_num = (reset) ? State::reset_class : _state_classes[st];
 			states.insert({st, class_num});
 			state_classes.insert(class_num);
 		}
@@ -60,16 +60,16 @@ std::unordered_set<int> CaptureGroup::get_states_diff(
 		if (st.class_num != State::reset_class && !other_state_classes.count(st.class_num))
 			res.insert(st.index);
 
-	for (const auto& trace : traces)
-		for (int i = trace.size() - 1; i > 0; i--)
-			if (res.count(trace[i - 1]))
-				res.insert(trace[i]);
+	for (const auto& path : paths)
+		for (int i = path.size() - 1; i > 0; i--)
+			if (res.count(path[i - 1]))
+				res.insert(path[i]);
 	return res;
 }
 
 std::ostream& operator<<(std::ostream& os, const CaptureGroup& cg) {
 	os << "{\n";
-	for (const auto& i : cg.traces)
+	for (const auto& i : cg.paths)
 		os << i;
 	os << "}\n";
 	for (const auto& i : cg.states)

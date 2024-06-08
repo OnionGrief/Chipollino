@@ -47,10 +47,12 @@ class BackRefRegex : public AlgExpression {
 	// 0-e состояние начальное
 	std::vector<MFAState> _to_mfa() const;
 
+	Cell get_cell() const;
+
 	// возвращает вектор листьев дерева
 	// устанавливает для них in_lin_cells, first_in_cells и last_in_cells
 	void preorder_traversal(
-		std::vector<BackRefRegex*>& terms,					  // NOLINT(runtime/references)
+		std::vector<BackRefRegex*>& terms,					// NOLINT(runtime/references)
 		int& lin_counter,									// NOLINT(runtime/references)
 		std::vector<std::unordered_set<int>>& in_lin_cells, // NOLINT(runtime/references)
 		std::vector<CellSet>& first_in_cells,				// NOLINT(runtime/references)

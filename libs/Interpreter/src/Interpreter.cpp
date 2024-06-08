@@ -121,7 +121,6 @@ Interpreter::InterpreterLogger Interpreter::init_log() {
 optional<GeneralObject> Interpreter::apply_function_sequence(const vector<Function>& functions,
 															 vector<GeneralObject> arguments,
 															 bool is_logged) {
-
 	for (const auto& func : functions) {
 		LogTemplate log_template;
 		const auto& f = apply_function(func, arguments, log_template);
@@ -140,7 +139,6 @@ optional<GeneralObject> Interpreter::apply_function_sequence(const vector<Functi
 optional<GeneralObject> Interpreter::apply_function(const Function& function,
 													const vector<GeneralObject>& arguments0,
 													LogTemplate& log_template) {
-
 	auto logger = init_log();
 	logger.log("running function \"" + function.name + "\"");
 
@@ -315,17 +313,17 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectBoolean(get<ObjectBRefRegex>(arguments[0]).value.is_acreg(&log_template));
 	}
 	if (function.name == "getNFA") {
-		string filename = get<ObjectFileName>(arguments[0]).value;
+		string filename = get<ObjectString>(arguments[0]).value;
 		Parser parser;
 		return ObjectNFA(parser.parse_NFA(filename));
 	}
 	if (function.name == "getMFA") {
-		string filename = get<ObjectFileName>(arguments[0]).value;
+		string filename = get<ObjectString>(arguments[0]).value;
 		Parser parser;
 		return ObjectMFA(parser.parse_MFA(filename));
 	}
 	if (function.name == "getDFA") {
-		string filename = get<ObjectFileName>(arguments[0]).value;
+		string filename = get<ObjectString>(arguments[0]).value;
 		Parser parser;
 		return ObjectDFA(parser.parse_DFA(filename));
 	}
@@ -337,8 +335,8 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectBoolean(MemoryFiniteAutomaton::action_bisimilar(
 			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
 	}
-	if (function.name == "LiterallyBisimilar") {
-		return ObjectBoolean(MemoryFiniteAutomaton::literally_bisimilar(
+	if (function.name == "SymbolicBisimilar") {
+		return ObjectBoolean(MemoryFiniteAutomaton::symbolic_bisimilar(
 			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
 	}
 	// # place for another diff types funcs
@@ -382,9 +380,6 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	}
 	if (function.name == "RemoveTrap") {
 		res = ObjectDFA(get_automaton(arguments[0]).remove_trap_states(&log_template));
-	}
-	if (function.name == "MergeBisim") {
-		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar(&log_template));
 	}
 	if (function.name == "Normalize") {
 		// Преобразуем array в массив пар
@@ -452,7 +447,13 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		// Flag::auto_remove_trap_states));
 		res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 	}
-	// # place for another same types funcs
+	if (function.name == "MergeBisim" && function.input[0] == ObjectType::NFA) {
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.merge_bisimilar(&log_template));
+	}
+	if (function.name == "MergeBisim" && function.input[0] == ObjectType::MFA) {
+		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.merge_bisimilar(&log_template));
+	}
+	// # place for another same types funcs (NOT CLEAN)
 	if (function.name == "Intersect") {
 		res = ObjectNFA(FiniteAutomaton::intersection(
 			get_automaton(arguments[0]), get_automaton(arguments[1]), &log_template));
@@ -486,6 +487,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	return nullopt;
 }
 
+// func_input_type - ожидаемая сигнатура, argument_type - типы переданных аргументов
 bool Interpreter::typecheck(vector<ObjectType> func_input_type, vector<ObjectType> argument_type) {
 
 	// несовпдаение по кол-ву аргументов
@@ -495,13 +497,11 @@ bool Interpreter::typecheck(vector<ObjectType> func_input_type, vector<ObjectTyp
 	for (int i = 0; i < argument_type.size(); i++) {
 		// тип либо одинаковый, либо аргумент явл-ся подтипом требуемого типа
 		if (!(Typization::get_types(func_input_type[i], Typization::types_children)
-					  .count(argument_type[i]) != 0 ||
+				  .count(argument_type[i]) ||
 			  // если включен флаг динамического тайпчека - принимать DFA<-NFA
-			  (flags[Flag::weak_type_comparison] && argument_type[i] == ObjectType::NFA &&
-			   func_input_type[i] == ObjectType::DFA) ||
-			  // для верификатора гипотез (на место '*' - ставить Regex)
-			  (argument_type[i] == ObjectType::RandomRegex &&
-			   func_input_type[i] == ObjectType::Regex))) {
+			  (flags[Flag::weak_type_comparison] &&
+			   Typization::get_types(func_input_type[i], Typization::types_parents)
+				   .count(argument_type[i])))) {
 			// несовпадение по типам
 			return false;
 		}
@@ -645,19 +645,6 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 	auto logger = init_log();
 	logger.log("Evaluating expression \"" + expr.to_txt() + "\"");
 
-	if (expr.type == ObjectType::RandomRegex) {
-		if (current_random_regex.has_value()) {
-			return ObjectRegex(*current_random_regex);
-		} else {
-			return nullopt;
-		}
-	}
-	if (holds_alternative<int>(expr.value)) {
-		return ObjectInt(get<int>(expr.value));
-	}
-	if (holds_alternative<string>(expr.value)) {
-		return ObjectFileName(get<string>(expr.value));
-	}
 	if (holds_alternative<Id>(expr.value)) {
 		string id = get<Id>(expr.value).name;
 		if (objects.count(id)) {
@@ -668,6 +655,58 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 		}
 		return nullopt;
 	}
+	if (expr.type == ObjectType::String) {
+		return ObjectString(get<string>(expr.value));
+	}
+
+	if (expr.type == ObjectType::RandomRegex) {
+		if (in_verification && current_random_objects.count(expr.type)) {
+			return ObjectRegex(Regex(current_random_objects[expr.type]));
+		}
+		string generated_object = regex_generator.generate_regex();
+		current_random_objects[expr.type] = generated_object;
+		return ObjectRegex(Regex(generated_object));
+	}
+	if (expr.type == ObjectType::RandomBRefRegex) {
+		if (in_verification && current_random_objects.count(expr.type)) {
+			return ObjectBRefRegex(BackRefRegex(current_random_objects[expr.type]));
+		}
+		string generated_object = regex_generator.generate_brefregex();
+		current_random_objects[expr.type] = generated_object;
+		return ObjectBRefRegex(BackRefRegex(generated_object));
+	}
+	std::string test_path =
+		"./test_data/MetamorphicTest/test" + Typization::types_to_string.at(expr.type) + ".txt";
+	Parser parser;
+	if (expr.type == ObjectType::RandomDFA) {
+		if (!(in_verification && current_random_objects.count(expr.type))) {
+			generate_automaton(test_path, FA_type::DFA);
+			current_random_objects[expr.type] = test_path;
+		}
+		GeneralObject generated_object = ObjectDFA(parser.parse_DFA(test_path));
+		return generated_object;
+	}
+	if (expr.type == ObjectType::RandomNFA) {
+		if (!(in_verification && current_random_objects.count(expr.type))) {
+			generate_automaton(test_path, FA_type::NFA);
+			current_random_objects[expr.type] = test_path;
+		}
+		GeneralObject generated_object = ObjectNFA(parser.parse_NFA(test_path));
+		return generated_object;
+	}
+	if (expr.type == ObjectType::RandomMFA) {
+		if (!(in_verification && current_random_objects.count(expr.type))) {
+			generate_automaton(test_path, FA_type::MFA);
+			current_random_objects[expr.type] = test_path;
+		}
+		GeneralObject generated_object = ObjectMFA(parser.parse_MFA(test_path));
+		return generated_object;
+	}
+
+	if (holds_alternative<int>(expr.value)) {
+		return ObjectInt(get<int>(expr.value));
+	}
+
 	if (holds_alternative<Regex>(expr.value)) {
 		return ObjectRegex(get<Regex>(expr.value));
 	}
@@ -790,9 +829,8 @@ bool Interpreter::run_verification(const Verification& verification) {
 	bool success = true;
 	int results = 0;
 	int tests_size = verification.size;
-	int tests_false_num = std::min(10, (int)ceil(verification.size * 0.1));
+	int tests_false_num = std::min(10, verification.size);
 	vector<string> regex_list;
-	RegexGenerator RG; // TODO: менять параметры
 	Expression expr = verification.predicate;
 
 	LogTemplate log_template;
@@ -805,19 +843,23 @@ bool Interpreter::run_verification(const Verification& verification) {
 		set_log_mode(LogMode::errors);
 
 	tex_logger.disable();
+	in_verification = true;
 
-	for (int i = 0; i < verification.size; i++) {
+	for (int i = 0; i < tests_size; i++) {
 		// подстановка равных Regex на место '*'
-
-		AutomatonGenerator(FA_type::NFA).write_to_file("TestData/test.txt");
-		current_random_regex = Regex(RG.generate_regex()); // хз как еще передавать
+		current_random_objects.clear();
 		auto predicate = eval_expression(expr);
 
 		if (predicate.has_value()) {
 			bool res = get<ObjectBoolean>(*predicate).value;
 			results += res;
 			if (!res && tests_false_num > 0) {
-				regex_list.push_back(current_random_regex->to_txt());
+				if (current_random_objects.count(ObjectType::RandomRegex))
+					regex_list.push_back(
+						Regex(current_random_objects[ObjectType::RandomRegex]).to_txt());
+				if (current_random_objects.count(ObjectType::RandomBRefRegex))
+					regex_list.push_back(
+						BackRefRegex(current_random_objects[ObjectType::RandomBRefRegex]).to_txt());
 				tests_false_num--;
 			}
 		} else {
@@ -827,16 +869,15 @@ bool Interpreter::run_verification(const Verification& verification) {
 		}
 	}
 
+	in_verification = false;
 	tex_logger.enable();
 	set_log_mode(prev_log_mode);
-
-	current_random_regex = nullopt;
 
 	string res = to_string(100 * results / tests_size);
 	logger.log("result: " + res + "%");
 	log_template.set_parameter("result", res + +"\\%");
 
-	/*if (results < tests_size) {
+	if (results < tests_size) {
 		logger.log("");
 		logger.log("Tests with negative result:");
 		string neg_tests = "";
@@ -845,7 +886,7 @@ bool Interpreter::run_verification(const Verification& verification) {
 			neg_tests += str + "\\\\";
 		}
 		log_template.set_parameter("neg tests", neg_tests);
-	}*/
+	}
 
 	tex_logger.add_log(log_template);
 
@@ -895,7 +936,12 @@ string Interpreter::FunctionSequence::to_txt() const {
 }
 
 string Interpreter::Expression::to_txt() const {
-	if (type == ObjectType::RandomRegex) {
+	if (const auto* pval = get_if<Id>(&value)) {
+		return pval->name;
+	}
+	if (type == ObjectType::RandomRegex || type == ObjectType::RandomBRefRegex ||
+		type == ObjectType::RandomNFA || type == ObjectType::RandomDFA ||
+		type == ObjectType::RandomMFA) {
 		return "*";
 	}
 	if (const auto* pval = get_if<FunctionSequence>(&value)) {
@@ -1097,14 +1143,24 @@ optional<Interpreter::Expression> Interpreter::scan_expression(const vector<Lexe
 	}
 	// string
 	if (end > pos && lexems[pos].type == Lexem::stringval) {
-		expr.type = ObjectType::FileName;
+		expr.type = ObjectType::String;
 		expr.value = lexems[pos].value;
 		pos++;
 		return expr;
 	}
 	// Star (RandomRegex)
-	if (end > pos && lexems[pos].type == Lexem::star) {
-		expr.type = ObjectType::RandomRegex;
+	if (end > pos && lexems[pos].type == Lexem::randomObject) {
+		string object_type = lexems[pos].value;
+		if (object_type == "r")
+			expr.type = ObjectType::RandomRegex;
+		if (object_type == "br")
+			expr.type = ObjectType::RandomBRefRegex;
+		if (object_type == "NFA")
+			expr.type = ObjectType::RandomNFA;
+		if (object_type == "MFA")
+			expr.type = ObjectType::RandomMFA;
+		if (object_type == "DFA")
+			expr.type = ObjectType::RandomDFA;
 		pos++;
 		return expr;
 	}
@@ -1249,12 +1305,16 @@ optional<Interpreter::Verification> Interpreter::scan_verification(const vector<
 
 	Verification verification;
 	// Predicate
-	if (const auto& expr = scan_expression(lexems, i, lexems.size());
-		expr.has_value() &&
-		((*expr).type == ObjectType::Boolean || (*expr).type == ObjectType::OptionalBool)) {
-		verification.predicate = *expr;
+	const auto& expr = scan_expression(lexems, i, lexems.size());
+	if (expr.has_value()) {
+		if ((*expr).type == ObjectType::Boolean || (*expr).type == ObjectType::OptionalBool) {
+			verification.predicate = *expr;
+		} else {
+			logger.throw_error("Scan verification: wrong type at position 1, predicate expected");
+			return nullopt;
+		}
 	} else {
-		logger.throw_error("Scan verification: wrong type at position 1, predicate expected");
+		logger.throw_error("Scan verification: error");
 		return nullopt;
 	}
 	// tests size
@@ -1293,6 +1353,11 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(const vector
 		return expr;
 	}
 	return nullopt;
+}
+
+void Interpreter::generate_automaton(string test_path, FA_type fa_type, int states_num) {
+	AutomatonGenerator a(fa_type, states_num);
+	a.write_to_file(test_path);
 }
 
 /*

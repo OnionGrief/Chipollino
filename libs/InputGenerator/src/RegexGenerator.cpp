@@ -143,7 +143,7 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? бу
 			if (cur_regex_length > cur_star_num)
 				star_chance +=
 					cur_star_num / star_nesting; // попытка в зависимость вероятности выпадения
-				// звезды от max звездной высоты
+			// звезды от max звездной высоты
 			else
 				star_chance += cur_regex_length / star_nesting;
 			if (star_chance < 2)
@@ -168,7 +168,7 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? бу
 
 			int ref_num = rand_num(cells_num) + 1;
 			// запрещено [[]:1]:1, но допускается [[]:2]:1
-			while (in_memory_writer.count(ref_num) != 0)
+			while (in_memory_writer.count(ref_num))
 				ref_num = rand_num(cells_num) + 1;
 			in_memory_writer.insert(ref_num);
 
@@ -198,7 +198,7 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? бу
 		if (is_backref && check_probability(ref_chance) && (cells_num > in_memory_writer.size())) {
 			int ref_num = rand_num(cells_num) + 1;
 			// запрещено [&1]:1, но допускается [&2]:1
-			while (in_memory_writer.count(ref_num) != 0)
+			while (in_memory_writer.count(ref_num))
 				ref_num = rand_num(cells_num) + 1;
 			res_str += "&" + to_string(ref_num);
 		} else {
