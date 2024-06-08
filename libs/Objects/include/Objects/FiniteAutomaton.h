@@ -6,6 +6,8 @@
 #include <set>
 #include <stack>
 #include <string>
+#include <tuple>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -70,6 +72,12 @@ class FiniteAutomaton : public AbstractMachine {
 	// поиск множества состояний НКА, достижимых из множества состояний по
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	std::set<int> closure(const std::set<int>&, bool) const;
+
+	std::vector<int> get_bisimilar_classes() const;
+	// объединение эквивалентных классов (принимает на вход вектор размера states.size())
+	// на i-й позиции номер класса i-го состояния
+	std::tuple<FiniteAutomaton, std::unordered_map<int, int>> merge_equivalent_classes(
+		const std::vector<int>&) const;
 	static bool equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// дополнительно возвращает в векторах номера классов состояний каждого автомата
 	static std::pair<bool, std::vector<std::vector<int>>> bisimilarity_checker(
@@ -99,7 +107,7 @@ class FiniteAutomaton : public AbstractMachine {
 					std::stack<int>& order						 // NOLINT(runtime/references)
 	);
 	// возвращает компоненты сильной связности
-	std::vector<std::vector<int>> get_SCCs();
+	std::vector<std::unordered_set<int>> get_SCCs();
 
 	FiniteAutomaton get_subautomaton(const CaptureGroup&);
 
@@ -157,9 +165,6 @@ class FiniteAutomaton : public AbstractMachine {
 	// снятие разметки с букв
 	FiniteAutomaton deannote(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton delinearize(iLogTemplate* log = nullptr) const;
-	// объединение эквивалентных классов (принимает на вход вектор размера
-	// states.size()) i-й элемент хранит номер класса i-го состояния
-	FiniteAutomaton merge_equivalent_classes(std::vector<int>) const;
 	// объединение эквивалентных по бисимуляции состояний
 	FiniteAutomaton merge_bisimilar(iLogTemplate* log = nullptr) const;
 	// проверка автоматов на эквивалентность

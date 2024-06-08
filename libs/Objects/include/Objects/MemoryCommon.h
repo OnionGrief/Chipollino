@@ -38,12 +38,13 @@ struct CaptureGroup {
 		};
 	};
 	int cell;
-	std::unordered_set<std::vector<int>, VectorHasher<int>> traces;
+	std::unordered_set<std::vector<int>, VectorHasher<int>> paths;
 	std::unordered_set<State, State::Hasher> states;
 	std::unordered_set<int> state_classes;
 
 	CaptureGroup() = default;
-	CaptureGroup(int, const std::vector<std::vector<int>>&, const std::vector<int>&);
+	CaptureGroup(int, const std::vector<std::vector<int>>&, const std::vector<int>&,
+				 bool reset = false);
 	bool operator==(const CaptureGroup& other) const;
 
 	std::unordered_set<int> get_states_diff(

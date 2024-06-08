@@ -313,17 +313,17 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectBoolean(get<ObjectBRefRegex>(arguments[0]).value.is_acreg(&log_template));
 	}
 	if (function.name == "getNFA") {
-		string filename = get<ObjectFileName>(arguments[0]).value;
+		string filename = get<ObjectString>(arguments[0]).value;
 		Parser parser;
 		return ObjectNFA(parser.parse_NFA(filename));
 	}
 	if (function.name == "getMFA") {
-		string filename = get<ObjectFileName>(arguments[0]).value;
+		string filename = get<ObjectString>(arguments[0]).value;
 		Parser parser;
 		return ObjectMFA(parser.parse_MFA(filename));
 	}
 	if (function.name == "getDFA") {
-		string filename = get<ObjectFileName>(arguments[0]).value;
+		string filename = get<ObjectString>(arguments[0]).value;
 		Parser parser;
 		return ObjectDFA(parser.parse_DFA(filename));
 	}
@@ -335,8 +335,8 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		return ObjectBoolean(MemoryFiniteAutomaton::action_bisimilar(
 			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
 	}
-	if (function.name == "LiterallyBisimilar") {
-		return ObjectBoolean(MemoryFiniteAutomaton::literally_bisimilar(
+	if (function.name == "SymbolicBisimilar") {
+		return ObjectBoolean(MemoryFiniteAutomaton::symbolic_bisimilar(
 			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
 	}
 	// # place for another diff types funcs
@@ -380,9 +380,6 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	}
 	if (function.name == "RemoveTrap") {
 		res = ObjectDFA(get_automaton(arguments[0]).remove_trap_states(&log_template));
-	}
-	if (function.name == "MergeBisim") {
-		res = ObjectNFA(get_automaton(arguments[0]).merge_bisimilar(&log_template));
 	}
 	if (function.name == "Normalize") {
 		// Преобразуем array в массив пар
@@ -449,6 +446,12 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		// ObjectNFA(get_automaton(arguments[0]).deannote(&log_template,
 		// Flag::auto_remove_trap_states));
 		res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
+	}
+	if (function.name == "MergeBisim" && function.input[0] == ObjectType::NFA) {
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.merge_bisimilar(&log_template));
+	}
+	if (function.name == "MergeBisim" && function.input[0] == ObjectType::MFA) {
+		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.merge_bisimilar(&log_template));
 	}
 	// # place for another same types funcs (NOT CLEAN)
 	if (function.name == "Intersect") {
@@ -652,8 +655,8 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 		}
 		return nullopt;
 	}
-	if (expr.type == ObjectType::FileName) {
-		return ObjectFileName(get<string>(expr.value));
+	if (expr.type == ObjectType::String) {
+		return ObjectString(get<string>(expr.value));
 	}
 
 	if (expr.type == ObjectType::RandomRegex) {
@@ -1140,7 +1143,7 @@ optional<Interpreter::Expression> Interpreter::scan_expression(const vector<Lexe
 	}
 	// string
 	if (end > pos && lexems[pos].type == Lexem::stringval) {
-		expr.type = ObjectType::FileName;
+		expr.type = ObjectType::String;
 		expr.value = lexems[pos].value;
 		pos++;
 		return expr;

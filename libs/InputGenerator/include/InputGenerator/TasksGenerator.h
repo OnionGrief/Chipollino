@@ -40,7 +40,7 @@ class TasksGenerator {
 								   DFA = ObjectType::DFA, INT = ObjectType::Int,
 								   VALUE = ObjectType::AmbiguityValue,
 								   BOOLEAN = ObjectType::Boolean, ARRAY = ObjectType::Array,
-								   PG = ObjectType::PrefixGrammar, FILENAME = ObjectType::FileName,
+								   PG = ObjectType::PrefixGrammar, FILENAME = ObjectType::String,
 								   MFA = ObjectType::MFA, BRefRegex = ObjectType::BRefRegex;
 
 	std::unordered_set<ObjectType> generated_types = {REGEX, INT, ARRAY, BRefRegex, NFA, MFA};
