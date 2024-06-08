@@ -75,8 +75,8 @@ std::ostream& operator<<(std::ostream& os, const CaptureGroup& cg) {
 	os << "{\n";
 	for (const auto& i : cg.paths)
 		os << i;
-	os << "}\n";
+	os << "}\n[ ";
 	for (const auto& i : cg.states)
 		os << "{" << i.index << ": " << i.class_num << "} ";
-	return os << "\n";
+	return os << "]\n";
 }

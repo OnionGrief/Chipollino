@@ -1554,15 +1554,6 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 	if (colored_SCCs[0] != colored_SCCs[1])
 		return false;
 
-	vector<FiniteAutomaton> symbolic_fas({mfas[0]->to_symbolic_fa(), mfas[1]->to_symbolic_fa()});
-	vector<vector<int>> symbolic_classes = {symbolic_fas[0].get_bisimilar_classes(),
-											symbolic_fas[1].get_bisimilar_classes()};
-#ifdef DEBUG
-	cout << ab_classes[0] << ab_classes[1];
-	cout << FiniteAutomaton::bisimilar(symbolic_fas[0], symbolic_fas[1]) << "\n";
-	cout << symbolic_classes[0] << symbolic_classes[1];
-#endif
-
 	vector<unordered_map<int, vector<int>>> class_to_states(N);
 	for (int i = 0; i < N; i++)
 		for (int st = 0; st < ab_classes[i].size(); st++)
@@ -1574,6 +1565,14 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 			for (auto j : scc)
 				in_SCCs[i].insert(j);
 
+	vector<FiniteAutomaton> symbolic_fas({mfas[0]->to_symbolic_fa(), mfas[1]->to_symbolic_fa()});
+	vector<vector<int>> symbolic_classes = {symbolic_fas[0].get_bisimilar_classes(),
+											symbolic_fas[1].get_bisimilar_classes()};
+#ifdef DEBUG
+	cout << ab_classes[0] << ab_classes[1];
+	cout << FiniteAutomaton::bisimilar(symbolic_fas[0], symbolic_fas[1]) << "\n";
+	cout << symbolic_classes[0] << symbolic_classes[1];
+#endif
 	for (const auto& [ab_class, ab_states_0] : class_to_states[0]) {
 		unordered_set<int> sb_classes_0;
 		for (auto state_index : ab_states_0)
@@ -1602,82 +1601,96 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 	// ищем пары состояний, от которых будем делать обратный расчет
 	vector<vector<FAState::Transitions>> reversed_transitions(
 		{fas[0].get_reversed_transitions(), fas[1].get_reversed_transitions()});
-	vector<unordered_map<int, unordered_set<int>>> incoming_refs(N);
+	// {класс action-бисимилярности -> {номер ячейки -> {индексы состояний}}}
+	// для каждого класса и номера ячейки ищем состояния, в которые входят переходы по ссылкам
+	vector<unordered_map<int, unordered_map<int, unordered_set<int>>>> states_with_incoming_refs(N);
 	for (int i = 0; i < N; i++)
 		for (int st = 0; st < reversed_transitions[i].size(); st++) {
 			unordered_set<int> found_refs;
 			for (const auto& [symbol, _] : reversed_transitions[i][st])
 				if (symbol.is_ref())
-					found_refs.insert(symbol.get_ref());
-			if (!found_refs.empty())
-				incoming_refs[i][st] = found_refs;
+					states_with_incoming_refs[i][ab_classes[i][st]][symbol.get_ref()].insert(st);
 		}
-
-	unordered_set<tuple<int, int, int>, TupleHasher>
-		pairs_to_calc; // {номер ячейки, состояние первого автомата, состояние второго}
-	for (const auto& [fa0_st, fa0_st_incoming_refs] : incoming_refs[0]) {
-		int fa0_st_class = ab_classes[0][fa0_st];
-		for (auto fa1_st : class_to_states[1].at(fa0_st_class)) {
-			if (!incoming_refs[1].count(fa1_st))
-				continue;
-			for (auto fa1_st_incoming_ref : incoming_refs[1].at(fa1_st))
-				if (fa0_st_incoming_refs.count(fa1_st_incoming_ref))
-					pairs_to_calc.insert({fa1_st_incoming_ref, fa0_st, fa1_st});
+	struct Ref {
+		vector<CaptureGroup> CGs;
+	};
+	vector<pair<vector<Ref>, vector<Ref>>> refs_to_compare;
+	// {номер ячейки, состояние первого автомата, состояние второго}
+	for (const auto& [ab_class, incoming_refs] : states_with_incoming_refs[0]) {
+		for (const auto& [cell, ab_states_0] : incoming_refs) {
+			pair<vector<Ref>, vector<Ref>> refs;
+			for (auto st : ab_states_0)
+				refs.first.emplace_back(
+					Ref{mfas[0]->find_capture_groups_backward(st, cell, ab_classes[0])});
+			for (auto st : states_with_incoming_refs[1][ab_class][cell])
+				refs.second.emplace_back(
+					Ref{mfas[1]->find_capture_groups_backward(st, cell, ab_classes[1])});
+			refs_to_compare.emplace_back(refs);
 		}
 	}
 
 #ifdef DEBUG
-	cout << "---------\n\n";
-	for (const auto& i : pairs_to_calc)
-		cout << i;
-#endif
-
-	vector<pair<vector<CaptureGroup>, vector<CaptureGroup>>> capture_groups_to_cmp;
-	capture_groups_to_cmp.reserve(pairs_to_calc.size());
-	for (const auto& [cell, st1, st2] : pairs_to_calc) {
-		capture_groups_to_cmp.emplace_back(
-			mfas[0]->find_capture_groups_backward(st1, cell, ab_classes[0]),
-			mfas[1]->find_capture_groups_backward(st2, cell, ab_classes[1]));
+	for (const auto& [refs_0, refs_1] : refs_to_compare) {
+		cout << "---------";
+		for (int i = 0; i < refs_0.size(); i++) {
+			cout << "\nRef" << i << " (";
+			for (const auto& CG : refs_0[i].CGs)
+				cout << "\n" << CG;
+			cout << ")\n";
+		}
+		cout << "\t\t<>";
+		for (int i = 0; i < refs_1.size(); i++) {
+			cout << "\nRef" << i << " (";
+			for (const auto& CG : refs_1[i].CGs)
+				cout << "\n" << CG;
+			cout << ")\n";
+		}
+		cout << "---------\n";
 	}
-
-	for (const auto& CGs : capture_groups_to_cmp) {
-#ifdef DEBUG
-		cout << "---------\n";
-		for (const auto& j : CGs.first)
-			cout << j;
-		cout << "<>\n";
-		for (const auto& j : CGs.second)
-			cout << j;
-		cout << "---------\n";
 #endif
 
-		const auto& CGs1 = CGs.first;
-		const auto& CGs2 = CGs.second;
+	for (const auto& [refs_0, refs_1] : refs_to_compare) {
+		// хотим найти каждой ссылке соответсвующую пару
+		unordered_set<int> refs_0_check_set, refs_1_check_set;
+		for (int ref_0_index = 0; ref_0_index < refs_0.size(); ref_0_index++)
+			for (int ref_1_index = 0; ref_1_index < refs_1.size(); ref_1_index++) {
+				// пытаемся сопоставить группы захвата текущей пары ссылок
+				const auto& CGs_0 = refs_0[ref_0_index].CGs;
+				const auto& CGs_1 = refs_1[ref_1_index].CGs;
 
-		unordered_set<int> check_set1, check_set2;
-		for (int i = 0; i < CGs1.size(); i++)
-			for (int j = 0; j < CGs2.size(); j++) {
-				const auto &cg1 = CGs1[i], cg2 = CGs2[j];
-				unordered_set<int> states_to_check_1 = cg1.get_states_diff(cg2.state_classes),
-								   states_to_check_2 = cg2.get_states_diff(cg1.state_classes);
+				// хотим найти каждой группе захвата первой ссылки пару из групп захвата второй
+				unordered_set<int> check_set_0, check_set_1;
+				for (int i = 0; i < CGs_0.size(); i++)
+					for (int j = 0; j < CGs_1.size(); j++) {
+						const auto &cg0 = CGs_0[i], cg1 = CGs_1[j];
+						unordered_set<int> states_to_check_0 =
+											   cg0.get_states_diff(cg1.state_classes),
+										   states_to_check_1 =
+											   cg1.get_states_diff(cg0.state_classes);
 
-				if (!mfa1.states_have_decisions(states_to_check_1) &&
-					!mfa2.states_have_decisions(states_to_check_2)) {
-					check_set1.insert(i);
-					check_set2.insert(j);
+						if (!mfa1.states_have_decisions(states_to_check_0) &&
+							!mfa2.states_have_decisions(states_to_check_1)) {
+							check_set_0.insert(i);
+							check_set_1.insert(j);
+						}
+					}
+
+				if (check_set_0.size() != CGs_0.size() || check_set_1.size() != CGs_1.size())
+					continue;
+
+				FiniteAutomaton CGs_0_fa(fas[0].get_subautomaton(CGs_0[0])),
+					CGs_1_fa(fas[1].get_subautomaton(CGs_1[0]));
+				for (int i = 1; i < CGs_0.size(); i++)
+					CGs_0_fa = FiniteAutomaton::uunion(CGs_0_fa, fas[0].get_subautomaton(CGs_0[i]));
+				for (int i = 1; i < CGs_1.size(); i++)
+					CGs_1_fa = FiniteAutomaton::uunion(CGs_1_fa, fas[1].get_subautomaton(CGs_1[i]));
+				if (FiniteAutomaton::equivalent(CGs_0_fa, CGs_1_fa)) {
+					refs_0_check_set.insert(ref_0_index);
+					refs_1_check_set.insert(ref_1_index);
 				}
 			}
 
-		if (check_set1.size() != CGs1.size() || check_set2.size() != CGs2.size())
-			return false;
-
-		FiniteAutomaton CGs1_fa(fas[0].get_subautomaton(CGs1[0])),
-			CGs2_fa(fas[1].get_subautomaton(CGs2[0]));
-		for (int i = 1; i < CGs1.size(); i++)
-			CGs1_fa = FiniteAutomaton::uunion(CGs1_fa, fas[0].get_subautomaton(CGs1[i]));
-		for (int i = 1; i < CGs2.size(); i++)
-			CGs2_fa = FiniteAutomaton::uunion(CGs2_fa, fas[1].get_subautomaton(CGs2[i]));
-		if (!FiniteAutomaton::equivalent(CGs1_fa, CGs2_fa))
+		if (refs_0_check_set.size() != refs_0.size() || refs_1_check_set.size() != refs_1.size())
 			return false;
 	}
 

@@ -43,7 +43,7 @@ TEST(TestArden, RandomRegexEquivalence) {
 	}
 }
 
-TEST(TestEqual, ThompsonGlushkov) {
+TEST(TestNFA, EqualThompsonGlushkov) {
 	RegexGenerator rg;
 	for (int i = 0; i < RegexNumberX10; i++) {
 		string rgx_str = rg.generate_regex();
@@ -155,7 +155,7 @@ TEST(TestMFA, Fuzzing) {
 
 TEST(TestMFA, ToTxt) {
 	RegexGenerator rg(5, 3, 3, 2);
-	for (int i = 0; i < RegexNumberX10; i++) {
+	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
 		SCOPED_TRACE("Regex: " + rgx_str);
 		BackRefRegex r = BackRefRegex(rgx_str);
@@ -190,7 +190,7 @@ TEST(TestMFA, ToFA) {
 	}
 }
 
-TEST(TestBisimilar, MFA_Bisimilar) {
+TEST(TestMFA, Bisimilar) {
 	RegexGenerator rg(5, 3, 3, 2);
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = MetamorphicTests::generate_bregex(rg, 1);
@@ -204,7 +204,7 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 	}
 }
 
-TEST(TestBisimilar, MFA_MergeBisimilar) {
+TEST(TestMFA, MergeBisimilar) {
 	RegexGenerator rg(6, 3, 3, 2);
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);

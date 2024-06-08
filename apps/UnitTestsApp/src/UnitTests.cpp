@@ -770,6 +770,8 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		{"[ab]:2cab&2", "abc[ab]:2&2", true},
 		{"[a*a*|]:1&1", "[a*]:1&1", true},
 		{"[a|a]:1*&1", "[a]:1*[a]:1*&1", true},
+		{"[a]:1*&1|[b]:1&1", "[b]:1&1|[a]:1*&1", true},
+		{"[a]:1&1(&1|[b]:1)*", "[a]:1&1(&1|[b]:1)*", true},
 		// перекрестная бисимуляция
 		{"[a*]:1a*&1", "a*[a*]:1&1", false},
 		{"b[a*]:1a*&1", "ba*[a*]:1&1", false},
@@ -826,7 +828,8 @@ TEST(TestBisimilar, MFA_MergeBisimilar) {
 			  MFAState(0,
 					   "S",
 					   false,
-					   {{"a", {MFATransition(1, {1}, {})}}, {Symbol::Ref(1), {MFATransition(2)}}}));
+					   {{"a", {MFATransition(1, {1}, {})}},
+						{Symbol::Ref(1), {MFATransition(2), MFATransition(2, {}, {}, {1})}}}));
 	ASSERT_EQ(
 		states[1],
 		MFAState(1,
@@ -838,7 +841,7 @@ TEST(TestBisimilar, MFA_MergeBisimilar) {
 
 	states =
 		BackRefRegex("(b|[&2*]:1*[a|&1]:2&2)*").to_mfa_additional().merge_bisimilar().get_states();
-	ASSERT_EQ(states.size(), 4);
+	ASSERT_EQ(states.size(), 3);
 	ASSERT_EQ(
 		states[0],
 		MFAState(0,
@@ -852,20 +855,12 @@ TEST(TestBisimilar, MFA_MergeBisimilar) {
 	ASSERT_EQ(
 		states[2],
 		MFAState(2,
-				 "b.0, &2.4",
+				 "S, b.0, &2.4",
 				 true,
 				 {{"b", {MFATransition(2)}},
 				  {Symbol::Ref(2), {MFATransition(0, {1}, {})}},
 				  {"a", {MFATransition(1, {2}, {}), MFATransition(1, {2}, {}, {1})}},
 				  {Symbol::Ref(1), {MFATransition(1, {2}, {}), MFATransition(1, {2}, {}, {1})}}}));
-	ASSERT_EQ(states[3],
-			  MFAState(3,
-					   "S",
-					   true,
-					   {{"b", {MFATransition(2)}},
-						{Symbol::Ref(2), {MFATransition(0, {1}, {})}},
-						{"a", {MFATransition(1, {2}, {})}},
-						{Symbol::Ref(1), {MFATransition(1, {2}, {})}}}));
 }
 
 TEST(TestAmbiguity, AmbiguityValues) {
