@@ -99,27 +99,19 @@ template <typename T> vector<Regex*> Regex::cast(vector<T*> ptrs, bool not_null_
 
 Regex* Regex::expr(const vector<AlgExpression::Lexeme>& lexemes, int index_start, int index_end) {
 	AlgExpression* p;
-	p = scan_symb(lexemes, index_start, index_end);
-	if (!p) {
-		p = scan_eps(lexemes, index_start, index_end);
-	}
-
-	if (!p) {
-		p = scan_alt(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	p = scan_alt(lexemes, index_start, index_end);
+	if (!p)
 		p = scan_conc(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_star(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
+		p = scan_symb(lexemes, index_start, index_end);
+	if (!p)
+		p = scan_eps(lexemes, index_start, index_end);
+	if (!p)
 		p = scan_minus(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_par(lexemes, index_start, index_end);
-	}
-
 	return cast(p, false);
 }
 
@@ -318,11 +310,11 @@ FiniteAutomaton Regex::to_thompson(iLogTemplate* log) const {
 
 Regex Regex::linearize(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
+	vector<Regex*> leafs = temp_copy.preorder_traversal();
 	Alphabet new_alphabet;
-	for (size_t i = 0; i < list.size(); i++) {
-		list[i]->symbol.linearize(i);
-		new_alphabet.insert(list[i]->symbol);
+	for (size_t i = 0; i < leafs.size(); i++) {
+		leafs[i]->symbol.linearize(i);
+		new_alphabet.insert(leafs[i]->symbol);
 	}
 	temp_copy.set_language(new_alphabet);
 	if (log) {
@@ -334,7 +326,7 @@ Regex Regex::linearize(iLogTemplate* log) const {
 
 Regex Regex::delinearize(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = cast(temp_copy.preorder_traversal());
+	vector<Regex*> list = temp_copy.preorder_traversal();
 	Alphabet new_alphabet;
 	for (auto& i : list) {
 		i->symbol.delinearize();
@@ -348,20 +340,34 @@ Regex Regex::delinearize(iLogTemplate* log) const {
 	return temp_copy;
 }
 
-vector<Regex*> Regex::preorder_traversal() {
-	vector<Regex*> res;
-	if (AlgExpression::symb == type) {
-		res.push_back(this);
-		return res;
-	}
+vector<const Regex*> Regex::preorder_traversal() const {
+	if (AlgExpression::symb == type)
+		return {this};
 
+	vector<const Regex*> res;
 	if (term_l) {
-		vector<Regex*> l = cast(term_l)->preorder_traversal();
+		auto l = cast(term_l)->preorder_traversal();
 		res.insert(res.end(), l.begin(), l.end());
 	}
-
 	if (term_r) {
-		vector<Regex*> r = cast(term_r)->preorder_traversal();
+		auto r = cast(term_r)->preorder_traversal();
+		res.insert(res.end(), r.begin(), r.end());
+	}
+
+	return res;
+}
+
+vector<Regex*> Regex::preorder_traversal() {
+	if (AlgExpression::symb == type)
+		return {this};
+
+	vector<Regex*> res;
+	if (term_l) {
+		auto l = cast(term_l)->preorder_traversal();
+		res.insert(res.end(), l.begin(), l.end());
+	}
+	if (term_r) {
+		auto r = cast(term_r)->preorder_traversal();
 		res.insert(res.end(), r.begin(), r.end());
 	}
 
@@ -441,7 +447,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	vector<AlgExpression*> last = temp_copy.get_last_nodes(); // Множество конечных состояний
 	// множество состояний, которым предшествует символ (ключ - линеаризованный номер)
 	unordered_map<int, vector<int>> following_states = temp_copy.get_follow();
-	int eps_in = this->contains_eps();
+	bool recognizes_eps = this->contains_eps();
 	vector<FAState> states; // состояния автомата
 
 	string str_first, str_last, str_follow;
@@ -456,9 +462,8 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	for (const auto& elem : last_set) {
 		str_last += elem + "\\ ";
 	}
-	if (eps_in) {
+	if (recognizes_eps)
 		str_last += Symbol::Epsilon;
-	}
 
 	for (const auto& i : following_states) {
 		for (auto& to : i.second) {
@@ -467,28 +472,18 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		}
 	}
 
-	// cout << temp_copy.to_str_log() << endl;
-	// cout << "First " << str_first << endl;
-	// cout << "End " << str_last << endl;
-	// cout << "Pairs " << str_follow << endl;
-
 	vector<Symbol> delinearized_symbols;
 	for (int i = 0; i < terms.size(); i++) {
 		delinearized_symbols.push_back(terms[i]->symbol);
 		delinearized_symbols[i].delinearize();
 	}
 
-	FAState::Transitions start_state_transitions;
+	FAState::Transitions initial_state_transitions;
 	for (auto& i : first) {
-		start_state_transitions[delinearized_symbols[i->get_symbol().last_linearization_number()]]
+		initial_state_transitions[delinearized_symbols[i->get_symbol().last_linearization_number()]]
 			.insert(i->get_symbol().last_linearization_number() + 1);
 	}
-
-	if (eps_in) {
-		states.emplace_back(0, "S", true, start_state_transitions);
-	} else {
-		states.emplace_back(0, "S", false, start_state_transitions);
-	}
+	states.emplace_back(0, "S", recognizes_eps, initial_state_transitions);
 
 	std::unordered_set<int> last_terms;
 	for (auto& i : last) {
@@ -539,7 +534,7 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 			for (auto& it1 : map1) {
 				set<int> v1 = it1.second;
 				set<int> v2 = map2[it1.first];
-				if (v1 != v2 /*equal(v1.begin(), v1.end(), v2.begin())*/) {
+				if (v1 != v2) {
 					flag = false;
 					break;
 				}
@@ -1078,8 +1073,8 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << partial_derivativ[0].to_txt() << " ";
 			// cout << partial_derivativ[1].to_txt() << " ";
 			// cout << partial_derivativ[2].to_txt() << endl;
-			deriv_log += partial_derivativ[2].to_txt() + "(" +
-						 partial_derivativ[0].to_txt() + ")" + "\\ =\\ ";
+			deriv_log += partial_derivativ[2].to_txt() + "(" + partial_derivativ[0].to_txt() + ")" +
+						 "\\ =\\ ";
 			if (partial_derivativ[1].to_txt() == "") {
 				deriv_log += "eps\\\\";
 			} else {
@@ -1088,8 +1083,8 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 			if (partial_derivativ[0].to_txt() == state) {
 				// поиск индекс состояния в которое переходим по символу из state
-				auto elem_iter = find(
-					name_states.begin(), name_states.end(), partial_derivativ[1].to_txt());
+				auto elem_iter =
+					find(name_states.begin(), name_states.end(), partial_derivativ[1].to_txt());
 				// записываем расстояние между begin и итератором, который указывает на состояние
 				transit[partial_derivativ[2].to_txt()].insert(
 					std::distance(name_states.begin(), elem_iter));
@@ -1124,9 +1119,9 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 Regex Regex::deannote(iLogTemplate* log) const {
 	Regex temp_copy(*this);
-	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
+	vector<Regex*> leafs = Regex::cast(temp_copy.preorder_traversal());
 	Alphabet deannoted_alphabet;
-	for (auto& i : list) {
+	for (auto& i : leafs) {
 		i->symbol.deannote();
 		deannoted_alphabet.insert(i->symbol);
 	}
