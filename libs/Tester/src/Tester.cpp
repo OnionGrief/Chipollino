@@ -46,7 +46,7 @@ void Tester::test(const ParseDevice& lang, const Regex& regex, int step, iLogTem
 		auto value = std::get<const BackRefRegex*>(lang);
 		machines.push_back(make_unique<MemoryFiniteAutomaton>(value->to_mfa()));
 		labels.emplace_back("MFA");
-		machines.push_back(make_unique<MemoryFiniteAutomaton>(value->to_mfa()));
+		machines.push_back(make_unique<MemoryFiniteAutomaton>(value->to_mfa_additional()));
 		labels.emplace_back("Experimental MFA");
 	} else if (std::holds_alternative<const MemoryFiniteAutomaton*>(lang)) {
 		auto value = std::get<const MemoryFiniteAutomaton*>(lang);

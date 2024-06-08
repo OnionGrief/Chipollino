@@ -84,6 +84,19 @@ string LogTemplate::get_tex_template() {
 	return template_filename;
 }
 
+string replace_for_rendering(const string& s) {
+	vector<std::pair<string, string>> substrs_to_replace = {{"\\^", "\\textasciicircum "},
+															{"&", "\\&"}};
+
+	string result = s;
+	for (const auto& [old_substr, new_substr] : substrs_to_replace) {
+		std::regex re(old_substr);
+		result = std::regex_replace(result, re, new_substr);
+	}
+
+	return result;
+}
+
 string LogTemplate::render(const std::string& user_name) const {
 	stringstream infile = expand_includes(template_fullpath);
 
@@ -116,24 +129,21 @@ string LogTemplate::render(const std::string& user_name) const {
 
 				if (std::holds_alternative<Regex>(param.value)) {
 					// Math mode is done in global renderer
-					string r0 = std::get<Regex>(param.value).to_txt();
-					string r = std::regex_replace(r0, std::regex("\\^"), "\\textasciicircum ");
-					s.insert(insert_place, r);
+					string r = std::get<Regex>(param.value).to_txt();
+					s.insert(insert_place, replace_for_rendering(r));
 				} else if (std::holds_alternative<BackRefRegex>(param.value)) {
-					string r0 = std::get<BackRefRegex>(param.value).to_txt();
-					string r = std::regex_replace(r0, std::regex("\\^"), "\\textasciicircum ");
-					s.insert(insert_place, r);
+					string r = std::get<BackRefRegex>(param.value).to_txt();
+					s.insert(insert_place, replace_for_rendering(r));
 				} else if (std::holds_alternative<FiniteAutomaton>(param.value) ||
 						   std::holds_alternative<MemoryFiniteAutomaton>(param.value)) {
 					std::hash<string> hasher;
 					string c_graph;
-					string automaton0;
+					string automaton;
 					if (std::holds_alternative<FiniteAutomaton>(param.value))
-						automaton0 = std::get<FiniteAutomaton>(param.value).to_txt();
+						automaton = std::get<FiniteAutomaton>(param.value).to_txt();
 					else
-						automaton0 = std::get<MemoryFiniteAutomaton>(param.value).to_txt();
-					string automaton =
-						std::regex_replace(automaton0, std::regex("\\^"), "\\textasciicircum ");
+						automaton = std::get<MemoryFiniteAutomaton>(param.value).to_txt();
+					automaton = replace_for_rendering(automaton);
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
@@ -144,9 +154,8 @@ string LogTemplate::render(const std::string& user_name) const {
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
 					s.insert(insert_place, "\n" + c_graph);
 				} else if (std::holds_alternative<string>(param.value)) {
-					string s0 = std::get<string>(param.value);
-					string str = std::regex_replace(s0, std::regex("\\^"), "\\textasciicircum ");
-					s.insert(insert_place, str);
+					string str = std::get<string>(param.value);
+					s.insert(insert_place, replace_for_rendering(str));
 				} else if (std::holds_alternative<int>(param.value)) {
 					s.insert(insert_place, to_string(std::get<int>(param.value)));
 				} else if (std::holds_alternative<Table>(param.value)) {

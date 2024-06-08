@@ -435,8 +435,11 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa(iLogTemplate* log) const {
 	return mfa;
 }
 
-void BackRefRegex::preorder_traversal(
-	vector<BackRefRegex*>& terms, int& lin_counter,
+Cell BackRefRegex::get_cell() const {
+	return {cell_number, lin_number};
+}
+
+void BackRefRegex::preorder_traversal(vector<BackRefRegex*>& terms, int& lin_counter,
 									  vector<unordered_set<int>>& in_lin_cells,
 									  vector<CellSet>& first_in_cells,
 									  vector<CellSet>& last_in_cells,
@@ -466,22 +469,20 @@ void BackRefRegex::preorder_traversal(
 	case conc:
 		l_contains_eps = cast(term_l)->contains_eps();
 		r_contains_eps = cast(term_r)->contains_eps();
-		cast(term_l)->preorder_traversal(
-			terms,
-			lin_counter,
-			in_lin_cells,
-			first_in_cells,
-			last_in_cells,
-			cur_in_lin_cells,
-			cur_first_in_cells,
+		cast(term_l)->preorder_traversal(terms,
+										 lin_counter,
+										 in_lin_cells,
+										 first_in_cells,
+										 last_in_cells,
+										 cur_in_lin_cells,
+										 cur_first_in_cells,
 										 r_contains_eps ? cur_last_in_cells : CellSet());
-		cast(term_r)->preorder_traversal(
-			terms,
-			lin_counter,
-			in_lin_cells,
-			first_in_cells,
-			last_in_cells,
-			cur_in_lin_cells,
+		cast(term_r)->preorder_traversal(terms,
+										 lin_counter,
+										 in_lin_cells,
+										 first_in_cells,
+										 last_in_cells,
+										 cur_in_lin_cells,
 										 l_contains_eps ? cur_first_in_cells : CellSet(),
 										 cur_last_in_cells);
 		return;
@@ -498,8 +499,8 @@ void BackRefRegex::preorder_traversal(
 	case memoryWriter:
 		lin_number = lin_counter++;
 		cur_in_lin_cells.insert(lin_number);
-		cur_first_in_cells.insert({cell_number, lin_number});
-		cur_last_in_cells.insert({cell_number, lin_number});
+		cur_first_in_cells.insert(get_cell());
+		cur_last_in_cells.insert(get_cell());
 		cast(term_l)->preorder_traversal(terms,
 										 lin_counter,
 										 in_lin_cells,
@@ -614,10 +615,15 @@ pair<bool, ToResetMap> BackRefRegex::contains_eps_tracking_resets() const {
 		l = cast(term_l)->contains_eps_tracking_resets();
 		if (l.first) {
 			CellSet depends_on;
-			for (auto& [cell, info] : l.second)
-				if (info.first)
+			for (auto& [cell, emptiness_info] : l.second) {
+				// если ячейка не может быть пропущена, добавляем в список тех,
+				// от пустоты которых зависит пустота текущей
+				if (emptiness_info.first)
 					depends_on.insert(cell);
-			l.second.insert({{cell_number, lin_number}, {true, depends_on}});
+				// вложенные ячейки не могут быть сброшены, если не сброшена внешняя
+				emptiness_info.second.insert(get_cell());
+			}
+			l.second.insert({get_cell(), {true, depends_on}});
 			return l;
 		} else {
 			return {false, {}};
@@ -730,38 +736,42 @@ vector<CellSet> merge_to_reset_maps(const vector<ToResetMap>& maps) {
 	ToResetMap merged;
 	CellSet to_reset, maybe_to_reset;
 	for (const auto& map : maps) {
-		for (const auto& [cell, info] : map) {
-			if (info.first)
+		for (const auto& [cell, emptiness_info] : map) {
+			if (emptiness_info.first)
 				to_reset.insert(cell);
 			else
 				maybe_to_reset.insert(cell);
 
 			auto it = merged.find(cell);
 			if (it != merged.end()) {
-				it->second.first &= info.first;
-				it->second.second = get_intersection(it->second.second, info.second);
+				it->second.first &= emptiness_info.first;
+				it->second.second = get_intersection(it->second.second, emptiness_info.second);
 			} else {
-				merged[cell] = info;
+				merged[cell] = emptiness_info;
 			}
 		}
 	}
 
-	unordered_map<Cell, CellSet, Cell::Hasher> must_be_equal_to;
-	for (const auto& [cell, info] : merged)
-		for (const auto& depends_on_cell : info.second) {
-			must_be_equal_to[cell].insert(depends_on_cell);
-			must_be_equal_to[depends_on_cell].insert(cell);
+	unordered_map<Cell, CellSet, Cell::Hasher> must_have_same_actions;
+	for (const auto& [cell, emptiness_info] : merged)
+		for (const auto& depends_on_cell : emptiness_info.second) {
+			must_have_same_actions[cell].insert(depends_on_cell);
 		}
 
 	vector<CellSet> res({to_reset});
 	auto t = get_all_combinations(maybe_to_reset);
 	for (const auto& i : get_all_combinations(maybe_to_reset)) {
+		// пропускаем комбинации, которые не содержат всех зависимых друг от друга ячеек
 		bool skip = std::any_of(i.begin(), i.end(), [&](const auto& cell) {
-			return must_be_equal_to.count(cell) &&
-				   std::any_of(
-					   must_be_equal_to.at(cell).begin(),
-					   must_be_equal_to.at(cell).end(),
-					   [&](const auto& must_be_equal_to) { return !i.count(must_be_equal_to); });
+			return must_have_same_actions.count(cell) &&
+				   std::any_of(must_have_same_actions.at(cell).begin(),
+							   must_have_same_actions.at(cell).end(),
+							   [&](const auto& must_have_same_actions_with) {
+								   // если в комбинации или в to_reset нет ячейки,
+								   // от которой зависит cell
+								   return !i.count(must_have_same_actions_with) &&
+										  !to_reset.count(must_have_same_actions_with);
+							   });
 		});
 		if (skip)
 			continue;
@@ -931,7 +941,8 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 
 		for (const auto& [to, iteration_over_cells, to_reset] :
 			 following_states[symb.last_linearization_number()]) {
-			transitions[delinearized_symbols[to]].insert(MFATransition(to + 1,
+			transitions[delinearized_symbols[to]].insert(
+				MFATransition(to + 1,
 							  MFATransition::TransitionConfig{&first_in_cells[to],
 															  &in_lin_cells[i],
 															  &iteration_over_cells,
