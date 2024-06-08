@@ -1192,10 +1192,12 @@ FiniteAutomaton MemoryFiniteAutomaton::to_action_fa(iLogTemplate* log) const {
 bool MemoryFiniteAutomaton::action_bisimilar(const MemoryFiniteAutomaton& mfa1,
 											 const MemoryFiniteAutomaton& mfa2, iLogTemplate* log) {
 	FiniteAutomaton fa1(mfa1.to_action_fa()), fa2(mfa2.to_action_fa());
-	bool result = FiniteAutomaton::bisimilar(fa1, fa2);
+	auto [result, meta, _] = FiniteAutomaton::bisimilarity_checker(fa1, fa2);
 	if (log) {
 		log->set_parameter("mfa1", mfa1);
+		log->set_parameter("automaton1", fa1, meta.first);
 		log->set_parameter("mfa2", mfa2);
+		log->set_parameter("automaton2", fa2, meta.second);
 		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
@@ -1273,10 +1275,12 @@ bool MemoryFiniteAutomaton::symbolic_bisimilar(const MemoryFiniteAutomaton& mfa1
 											   const MemoryFiniteAutomaton& mfa2,
 											   iLogTemplate* log) {
 	FiniteAutomaton fa1(mfa1.to_symbolic_fa()), fa2(mfa2.to_symbolic_fa());
-	bool result = FiniteAutomaton::bisimilar(fa1, fa2);
+	auto [result, meta, _] = FiniteAutomaton::bisimilarity_checker(fa1, fa2);
 	if (log) {
 		log->set_parameter("mfa1", mfa1);
+		log->set_parameter("automaton1", fa1, meta.first);
 		log->set_parameter("mfa2", mfa2);
+		log->set_parameter("automaton2", fa2, meta.second);
 		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;

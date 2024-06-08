@@ -23,7 +23,7 @@ bool operator==(const Function& l, const Function& r) {
 }
 
 Interpreter::Interpreter() {
-	for (Function f : FuncLib::functions) {
+	for (const Function& f : FuncLib::functions) {
 		names_to_functions[f.name].push_back(f);
 	}
 
@@ -337,6 +337,11 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	if (function.name == "Equal" && function.input[0] == ObjectType::MFA) {
 		return ObjectBoolean(MemoryFiniteAutomaton::equal(
 			get<ObjectMFA>(arguments[0]).value, get<ObjectMFA>(arguments[1]).value, &log_template));
+	}
+	if (function.name == "Equal" && function.input[0] == ObjectType::BRefRegex) {
+		return ObjectBoolean(BackRefRegex::equal(get<ObjectBRefRegex>(arguments[0]).value,
+												 get<ObjectBRefRegex>(arguments[1]).value,
+												 &log_template));
 	}
 	// # place for another diff types funcs
 

@@ -243,9 +243,9 @@ bool BackRefRegex::equals(const AlgExpression* other) const {
 bool BackRefRegex::equal(const BackRefRegex& r1, const BackRefRegex& r2, iLogTemplate* log) {
 	bool result = equality_checker(&r1, &r2);
 	if (log) {
-		//		log->set_parameter("regex1", r1);
-		//		log->set_parameter("regex2", r2);
-		//		log->set_parameter("result", result);
+		log->set_parameter("brefregex1", r1);
+		log->set_parameter("brefregex2", r2);
+		log->set_parameter("result", result);
 	}
 	return result;
 }
