@@ -153,14 +153,18 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	get_eps_closure(const std::set<int>& indices) const;
 	void dfs_by_eps(int, std::set<int>&, const int&, int&, // NOLINT(runtime/references)
 					MFATransition::MemoryActions&) const;  // NOLINT(runtime/references)
-
+	// раскрашивает состояния в соответствии с открытыми на момент их посещения ячейками памяти
 	void color_mem_dfs(
 		int state_index,
 		std::vector<bool>& visited, // NOLINT(runtime/references)
 		const MemoryConfiguration& opened_cells,
-		std::unordered_map<int, std::unordered_set<int>>& colors // NOLINT(runtime/references)
+		std::unordered_map<int, std::unordered_set<int>>& colors, // NOLINT(runtime/references)
+		const std::vector<int>& ab_classes,
+		std::unordered_map<int, int>& ab_class_to_first_state // NOLINT(runtime/references)
 	) const;
 
+	MemoryFiniteAutomaton get_subautomaton(const std::vector<int>& state_indexes,
+										   int sub_initial_state) const;
 	std::vector<MFAState::Transitions> get_reversed_transitions() const;
 
 	std::pair<std::vector<std::vector<int>>, std::vector<std::vector<int>>> find_cg_paths(
@@ -214,6 +218,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	// ссылки считаются символами алфавита, операции над памятью игнорируются
 	FiniteAutomaton to_action_fa(iLogTemplate* log = nullptr) const;
 	// ссылки считаются символами алфавита, операции над памятью преобразуются в переходы Oi, Ci, Ri
+	// (первые size() состояний - состояния исходного mfa)
 	FiniteAutomaton to_symbolic_fa(iLogTemplate* log = nullptr) const;
 	// проверка автоматов на равенство (буквальное + строгое равенство номеров ячеек)
 	static bool equal(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,

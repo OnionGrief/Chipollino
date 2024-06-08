@@ -1301,18 +1301,52 @@ MemoryConfiguration update_memory_configuration(const MFATransition::MemoryActio
 
 void MemoryFiniteAutomaton::color_mem_dfs(int state_index, vector<bool>& visited,
 										  const MemoryConfiguration& opened_cells,
-										  unordered_map<int, unordered_set<int>>& colors) const {
+										  unordered_map<int, unordered_set<int>>& colors,
+										  const vector<int>& ab_classes,
+										  unordered_map<int, int>& ab_class_to_first_state) const {
 	visited[state_index] = true;
 	colors[state_index] = opened_cells;
+	if (!ab_class_to_first_state.count(ab_classes[state_index]))
+		ab_class_to_first_state[ab_classes[state_index]] = state_index;
 	for (const auto& [symbol, symbol_transitions] : states[state_index].transitions) {
 		for (const auto& tr : symbol_transitions) {
 			if (!visited[tr.to])
 				color_mem_dfs(tr.to,
 							  visited,
 							  update_memory_configuration(tr.memory_actions, opened_cells),
-							  colors);
+							  colors,
+							  ab_classes,
+							  ab_class_to_first_state);
 		}
 	}
+}
+
+MemoryFiniteAutomaton MemoryFiniteAutomaton::get_subautomaton(const vector<int>& state_indexes,
+															  int sub_initial_state) const {
+	int n = state_indexes.size();
+	vector<MFAState> sub_states;
+	sub_states.reserve(state_indexes.size());
+	Alphabet alphabet;
+
+	unordered_map<int, int> indexes;
+	int idx = 0;
+	for (auto state_index : state_indexes) {
+		indexes[state_index] = idx;
+		sub_states.emplace_back(
+			idx, states[state_index].identifier, states[state_index].is_terminal);
+		idx++;
+	}
+
+	for (const auto& state_index : state_indexes)
+		for (const auto& [symbol, symbol_transitions] : states[state_index].transitions)
+			for (const auto& tr : symbol_transitions)
+				if (indexes.count(tr.to)) {
+					alphabet.insert(symbol);
+					sub_states[indexes.at(state_index)].add_transition(
+						MFATransition(indexes.at(tr.to), tr.memory_actions), symbol);
+				}
+
+	return {indexes.at(sub_initial_state), sub_states, alphabet};
 }
 
 vector<MFAState::Transitions> MemoryFiniteAutomaton::get_reversed_transitions() const {
@@ -1433,28 +1467,35 @@ bool MemoryFiniteAutomaton::states_have_decisions(
 
 optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAutomaton& mfa1,
 														   const MemoryFiniteAutomaton& mfa2) {
+	// #define DEBUG
 	const int N = 2;
 	vector<const MemoryFiniteAutomaton*> mfas({&mfa1, &mfa2});
+	// проверяем action bisimilarity
+	vector<FiniteAutomaton> fas({mfas[0]->to_action_fa(), mfas[1]->to_action_fa()});
+	auto [ab_res, _, ab_classes] = FiniteAutomaton::bisimilarity_checker(fas[0], fas[1]);
+	if (!ab_res)
+		return false;
+	vector<unordered_map<int, int>> ab_class_to_first_state(N);
 	// раскрашиваем состояния
 	vector<unordered_map<int, unordered_set<int>>> mfa_colors(N);
 	for (int i = 0; i < N; i++) {
 		vector<bool> visited(mfas[i]->size(), false);
-		mfas[i]->color_mem_dfs(mfas[i]->get_initial(), visited, {}, mfa_colors[i]);
+		mfas[i]->color_mem_dfs(mfas[i]->get_initial(),
+							   visited,
+							   {},
+							   mfa_colors[i],
+							   ab_classes[i],
+							   ab_class_to_first_state[i]);
 	}
-	//	using std::cout;
-	//	cout << mfa1.to_txt() << mfa2.to_txt();
+#ifdef DEBUG
+	using std::cout;
+	cout << mfas[0]->to_txt() << mfas[1]->to_txt();
+#endif
 	for (const auto& mfa_colors_i : mfa_colors)
 		for (const auto& j : mfa_colors_i) {
 			if (j.second.size() > 1)
 				return std::nullopt;
-			//			cout << j.first << ": ";
-			//			cout << j.second;
 		}
-	// проверяем action bisimilarity
-	vector<FiniteAutomaton> fas({mfa1.to_action_fa(), mfa2.to_action_fa()});
-	auto [res, _, fa_classes] = FiniteAutomaton::bisimilarity_checker(fas[0], fas[1]);
-	if (!res)
-		return false;
 	// проверяем совпадение раскраски эквивалентных состояний в КСС
 	vector<vector<unordered_set<int>>> SCCs({fas[0].get_SCCs(), fas[1].get_SCCs()});
 	vector<set<set<pair<int, set<int>>>>> colored_SCCs(N);
@@ -1490,32 +1531,75 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 				for (auto color : mfa_colors[i].at(j))
 					if (!colors_to_ignore.count(color))
 						j_colors.insert(color);
-				colored_SCC.insert({fa_classes[i][j], set<int>(j_colors.begin(), j_colors.end())});
+				if (!j_colors.empty())
+					colored_SCC.insert(
+						{ab_classes[i][j], set<int>(j_colors.begin(), j_colors.end())});
 			}
 			if (!colored_SCC.empty())
 				colored_SCCs[i].insert(colored_SCC);
 		}
 	}
-	//	cout << fa_classes[0] << fa_classes[1];
-	//	for (int i = 0; i < N; i++) {
-	//		for (const auto& j : colored_SCCs[i]) {
-	//			cout << "(\n";
-	//			for (auto [state_class, colors] : j)
-	//				cout << state_class << ": " << colors;
-	//			cout << ")\n";
-	//		}
-	//		cout << "----\n";
-	//	}
+#ifdef DEBUG
+	for (int i = 0; i < N; i++) {
+		for (const auto& j : colored_SCCs[i]) {
+			cout << "(\n";
+			for (auto [state_class, colors] : j)
+				cout << state_class << ": " << colors;
+			cout << ")\n";
+		}
+		cout << "----\n";
+	}
+#endif
 
 	if (colored_SCCs[0] != colored_SCCs[1])
 		return false;
 
-	// ищем пары состояний, от которых будем делать обратный расчет
+	vector<FiniteAutomaton> symbolic_fas({mfas[0]->to_symbolic_fa(), mfas[1]->to_symbolic_fa()});
+	vector<vector<int>> symbolic_classes = {symbolic_fas[0].get_bisimilar_classes(),
+											symbolic_fas[1].get_bisimilar_classes()};
+#ifdef DEBUG
+	cout << ab_classes[0] << ab_classes[1];
+	cout << FiniteAutomaton::bisimilar(symbolic_fas[0], symbolic_fas[1]) << "\n";
+	cout << symbolic_classes[0] << symbolic_classes[1];
+#endif
+
 	vector<unordered_map<int, vector<int>>> class_to_states(N);
 	for (int i = 0; i < N; i++)
-		for (int st = 0; st < fa_classes[i].size(); st++)
-			class_to_states[i][fa_classes[i][st]].emplace_back(st);
+		for (int st = 0; st < ab_classes[i].size(); st++)
+			class_to_states[i][ab_classes[i][st]].emplace_back(st);
 
+	vector<unordered_set<int>> in_SCCs(N);
+	for (int i = 0; i < N; i++)
+		for (const auto& scc : SCCs[i])
+			for (auto j : scc)
+				in_SCCs[i].insert(j);
+
+	for (const auto& [ab_class, ab_states_0] : class_to_states[0]) {
+		unordered_set<int> sb_classes_0;
+		for (auto state_index : ab_states_0)
+			if (in_SCCs[0].count(state_index))
+				sb_classes_0.insert(symbolic_classes[0][state_index]);
+
+		unordered_set<int> sb_classes_1;
+		auto ab_states_1 = class_to_states[1].at(ab_class);
+		for (auto state_index : ab_states_1)
+			if (in_SCCs[1].count(state_index))
+				sb_classes_1.insert(symbolic_classes[1][state_index]);
+		if (sb_classes_0.size() > 1 || sb_classes_1.size() > 1) {
+#ifdef DEBUG
+			cout << "\n" << sb_classes_0 << sb_classes_1 << "\n";
+			cout << mfas[0]->get_subautomaton(ab_states_0, ab_states_0[0]).to_symbolic_fa().to_txt()
+				 << mfas[1]->get_subautomaton(ab_states_1, ab_states_1[0]).to_symbolic_fa().to_txt()
+				 << "\n";
+#endif
+			if (!symbolic_bisimilar(
+					mfas[0]->get_subautomaton(ab_states_0, ab_class_to_first_state[0][ab_class]),
+					mfas[1]->get_subautomaton(ab_states_1, ab_class_to_first_state[0][ab_class])))
+				return false;
+		}
+	}
+
+	// ищем пары состояний, от которых будем делать обратный расчет
 	vector<vector<FAState::Transitions>> reversed_transitions(
 		{fas[0].get_reversed_transitions(), fas[1].get_reversed_transitions()});
 	vector<unordered_map<int, unordered_set<int>>> incoming_refs(N);
@@ -1531,36 +1615,41 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 
 	unordered_set<tuple<int, int, int>, TupleHasher>
 		pairs_to_calc; // {номер ячейки, состояние первого автомата, состояние второго}
-	for (const auto& [fa1_st, fa1_st_incoming_refs] : incoming_refs[0]) {
-		int fa1_st_class = fa_classes[0][fa1_st];
-		for (auto fa2_st : class_to_states[1].at(fa1_st_class)) {
-			if (!incoming_refs[1].count(fa2_st))
+	for (const auto& [fa0_st, fa0_st_incoming_refs] : incoming_refs[0]) {
+		int fa0_st_class = ab_classes[0][fa0_st];
+		for (auto fa1_st : class_to_states[1].at(fa0_st_class)) {
+			if (!incoming_refs[1].count(fa1_st))
 				continue;
-			for (auto fa2_st_incoming_ref : incoming_refs[1].at(fa2_st))
-				if (fa1_st_incoming_refs.count(fa2_st_incoming_ref))
-					pairs_to_calc.insert({fa2_st_incoming_ref, fa1_st, fa2_st});
+			for (auto fa1_st_incoming_ref : incoming_refs[1].at(fa1_st))
+				if (fa0_st_incoming_refs.count(fa1_st_incoming_ref))
+					pairs_to_calc.insert({fa1_st_incoming_ref, fa0_st, fa1_st});
 		}
 	}
 
-	//	for (const auto& i : pairs_to_calc)
-	//		cout << i;
+#ifdef DEBUG
+	cout << "---------\n\n";
+	for (const auto& i : pairs_to_calc)
+		cout << i;
+#endif
 
 	vector<pair<vector<CaptureGroup>, vector<CaptureGroup>>> capture_groups_to_cmp;
 	capture_groups_to_cmp.reserve(pairs_to_calc.size());
 	for (const auto& [cell, st1, st2] : pairs_to_calc) {
 		capture_groups_to_cmp.emplace_back(
-			mfa1.find_capture_groups_backward(st1, cell, fa_classes[0]),
-			mfa2.find_capture_groups_backward(st2, cell, fa_classes[1]));
+			mfas[0]->find_capture_groups_backward(st1, cell, ab_classes[0]),
+			mfas[1]->find_capture_groups_backward(st2, cell, ab_classes[1]));
 	}
 
 	for (const auto& CGs : capture_groups_to_cmp) {
-		//		cout << "---------\n";
-		//		for (const auto& j : CGs.first)
-		//			cout << j;
-		//		cout << "<>\n";
-		//		for (const auto& j : CGs.second)
-		//			cout << j;
-		//		cout << "---------\n";
+#ifdef DEBUG
+		cout << "---------\n";
+		for (const auto& j : CGs.first)
+			cout << j;
+		cout << "<>\n";
+		for (const auto& j : CGs.second)
+			cout << j;
+		cout << "---------\n";
+#endif
 
 		const auto& CGs1 = CGs.first;
 		const auto& CGs2 = CGs.second;
@@ -1652,7 +1741,7 @@ tuple<MemoryFiniteAutomaton, unordered_map<int, int>> MemoryFiniteAutomaton::
 MemoryFiniteAutomaton MemoryFiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	MetaInfo old_meta, new_meta;
 	vector<int> classes = to_symbolic_fa().get_bisimilar_classes();
-	classes.resize(size()); // в symbolic_fa первые n состояний - состояния исходного mfa
+	classes.resize(size()); // в symbolic_fa первые size() состояний - состояния исходного mfa
 	auto [result, class_to_index] = merge_equivalent_classes(classes);
 
 	for (int i = 0; i < classes.size(); i++) {

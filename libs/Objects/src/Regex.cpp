@@ -447,7 +447,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	vector<AlgExpression*> last = temp_copy.get_last_nodes(); // Множество конечных состояний
 	// множество состояний, которым предшествует символ (ключ - линеаризованный номер)
 	unordered_map<int, vector<int>> following_states = temp_copy.get_follow();
-	int eps_in = this->contains_eps();
+	bool recognizes_eps = this->contains_eps();
 	vector<FAState> states; // состояния автомата
 
 	string str_first, str_last, str_follow;
@@ -462,9 +462,8 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	for (const auto& elem : last_set) {
 		str_last += elem + "\\ ";
 	}
-	if (eps_in) {
+	if (recognizes_eps)
 		str_last += Symbol::Epsilon;
-	}
 
 	for (const auto& i : following_states) {
 		for (auto& to : i.second) {
@@ -473,28 +472,18 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		}
 	}
 
-	// cout << temp_copy.to_str_log() << endl;
-	// cout << "First " << str_first << endl;
-	// cout << "End " << str_last << endl;
-	// cout << "Pairs " << str_follow << endl;
-
 	vector<Symbol> delinearized_symbols;
 	for (int i = 0; i < terms.size(); i++) {
 		delinearized_symbols.push_back(terms[i]->symbol);
 		delinearized_symbols[i].delinearize();
 	}
 
-	FAState::Transitions start_state_transitions;
+	FAState::Transitions initial_state_transitions;
 	for (auto& i : first) {
-		start_state_transitions[delinearized_symbols[i->get_symbol().last_linearization_number()]]
+		initial_state_transitions[delinearized_symbols[i->get_symbol().last_linearization_number()]]
 			.insert(i->get_symbol().last_linearization_number() + 1);
 	}
-
-	if (eps_in) {
-		states.emplace_back(0, "S", true, start_state_transitions);
-	} else {
-		states.emplace_back(0, "S", false, start_state_transitions);
-	}
+	states.emplace_back(0, "S", recognizes_eps, initial_state_transitions);
 
 	std::unordered_set<int> last_terms;
 	for (auto& i : last) {

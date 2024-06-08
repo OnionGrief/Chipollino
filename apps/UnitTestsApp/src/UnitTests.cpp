@@ -767,14 +767,22 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 	vector<Test> tests = {
 		{"[aa*]:1a&1", "a[a*a]:1&1", true},
 		{"[aa*a*]:1a&1", "a[a*a*a]:1&1", true},
-		{"b[a*]:1a*&1", "ba*[a*]:1&1", false},
 		{"[ab]:2cab&2", "abc[ab]:2&2", true},
-		{"[a|b]:1c(a|b)&1", "(a|b)c[a|b]:1&1", false},
-		{"[a]:1*&1", "[a*]:1*&1", false},
-		{"[a*]:1&1", "[a*]:1a*&1", false},
 		{"[a*a*|]:1&1", "[a*]:1&1", true},
 		{"[a|a]:1*&1", "[a]:1*[a]:1*&1", true},
+		// перекрестная бисимуляция
+		{"[a*]:1a*&1", "a*[a*]:1&1", false},
+		{"b[a*]:1a*&1", "ba*[a*]:1&1", false},
+		{"b[a*]:1a*[a*]:1&1", "ba*[a*]:1a*&1", false},
+		{"b[a*]:1&1", "b[a*]:1a*&1", false},
+		// несовпадение раскрасок
+		{"[a]:1*&1", "[a*]:1*&1", false},
 		{"[a]:1*[a*]:1&1", "[a|]:1*&1", false},
+		// несовпадение по решающим действиям
+		{"[a|b]:1c(a|b)&1", "(a|b)c[a|b]:1&1", false},
+		// несовпадение CG
+		{"[aa]:1&1", "[|aa]:1&1", false},
+		{"[a*]:1a&1", "[a*a]:1&1", false},
 	};
 
 	for_each(tests.begin(), tests.end(), [](const Test& test) {
