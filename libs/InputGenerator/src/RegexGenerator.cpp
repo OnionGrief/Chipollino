@@ -89,10 +89,10 @@ string RegexGenerator::generate_brefregex(int cells_num_, int mem_writer_chance_
 }
 
 void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt>
-										 // <regex> | <conc-regex> | пусто
+	// <regex> | <conc-regex> | пусто
 	int v;
 	if (all_alts_are_eps) // если нет ни одного не пустого слова то оно не
-						  // допустимо
+		// допустимо
 		v = rand() % 2;
 	else
 		v = rand() % 3; // выбираем какую из 3х альтернатив использовать
@@ -112,14 +112,14 @@ void RegexGenerator::generate_regex_() { // <regex> ::= <n-alt-regex> <alt>
 }
 
 void RegexGenerator::generate_n_alt_regex() { // <n-alt-regex> ::=  <conc-regex>
-											  // | пусто
+	// | пусто
 	if (check_probability(75)) {
 		generate_conc_regex();
 	}
 }
 
 void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
-											 // | <simple-regex><conc-regex>
+	// | <simple-regex><conc-regex>
 	if (check_probability(50)) {
 		generate_simple_regex();
 	} else {
@@ -131,7 +131,7 @@ void RegexGenerator::generate_conc_regex() { // <conc-regex> ::= <simple-regex>
 }
 
 void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? буква <star>? |
-											   //        <neg>? <lbr><regex><rbr> <star>?
+	//        <neg>? <lbr><regex><rbr> <star>?
 	if (check_probability(40)) {
 		bool prev_eps_counter = all_alts_are_eps;
 		all_alts_are_eps = true; // новый контроллер эпсилонов
@@ -139,11 +139,11 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? бу
 		int v2;
 		if (cur_star_num) {
 			int star_chance = cur_regex_length / cur_star_num; // вероятность выпадения звезды при
-															   // 2 звездах на 20 букв = 1/10
+			// 2 звездах на 20 букв = 1/10
 			if (cur_regex_length > cur_star_num)
 				star_chance +=
 					cur_star_num / star_nesting; // попытка в зависимость вероятности выпадения
-												 // звезды от max звездной высоты
+			// звезды от max звездной высоты
 			else
 				star_chance += cur_regex_length / star_nesting;
 			if (star_chance < 2)
@@ -168,7 +168,7 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? бу
 
 			int ref_num = rand_num(cells_num) + 1;
 			// запрещено [[]:1]:1, но допускается [[]:2]:1
-			while (in_memory_writer.count(ref_num) != 0)
+			while (in_memory_writer.count(ref_num))
 				ref_num = rand_num(cells_num) + 1;
 			in_memory_writer.insert(ref_num);
 
@@ -198,7 +198,7 @@ void RegexGenerator::generate_simple_regex() { // <simple-regex> ::= <neg>? бу
 		if (is_backref && check_probability(ref_chance) && (cells_num > in_memory_writer.size())) {
 			int ref_num = rand_num(cells_num) + 1;
 			// запрещено [&1]:1, но допускается [&2]:1
-			while (in_memory_writer.count(ref_num) != 0)
+			while (in_memory_writer.count(ref_num))
 				ref_num = rand_num(cells_num) + 1;
 			res_str += "&" + to_string(ref_num);
 		} else {

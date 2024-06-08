@@ -82,6 +82,9 @@ inline static const std::vector<Function> functions = {
 	{"ActionBisimilar", {ObjectType::MFA, ObjectType::MFA}, ObjectType::Boolean},
 	{"SymbolicBisimilar", {ObjectType::MFA, ObjectType::MFA}, ObjectType::Boolean},
 	{"MergeBisim", {ObjectType::MFA}, ObjectType::MFA},
+	{"getNFA", {ObjectType::String}, ObjectType::NFA},
+	{"getMFA", {ObjectType::String}, ObjectType::MFA},
+	{"getDFA", {ObjectType::String}, ObjectType::DFA},
 };
 
 // вспомогательная функция для Ани и ее курсача

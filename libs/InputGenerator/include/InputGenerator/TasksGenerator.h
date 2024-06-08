@@ -1,4 +1,5 @@
 #pragma once
+
 #include <algorithm>
 #include <ctime>
 #include <fstream>
@@ -23,7 +24,6 @@ class TasksGenerator {
 		ObjectType type;
 	};
 	RegexGenerator regex_generator;
-	AutomatonGenerator automaton_generator;
 	size_t seed_it = 0; // итерация для рандома
 
 	std::string res_str = "";
@@ -40,27 +40,36 @@ class TasksGenerator {
 								   DFA = ObjectType::DFA, INT = ObjectType::Int,
 								   VALUE = ObjectType::AmbiguityValue,
 								   BOOLEAN = ObjectType::Boolean, ARRAY = ObjectType::Array,
-								   PG = ObjectType::PrefixGrammar, STRING = ObjectType::String,
+								   PG = ObjectType::PrefixGrammar, FILENAME = ObjectType::String,
 								   MFA = ObjectType::MFA, BRefRegex = ObjectType::BRefRegex;
 
 	std::unordered_set<ObjectType> generated_types = {REGEX, INT, ARRAY, BRefRegex, NFA, MFA};
 	std::map<ObjectType, std::vector<Id>> ids_by_type; // поиск идентификатора по его типу
 	// разделение функций (с единственным аргументом) по принимаемым значениям
 	std::map<ObjectType, std::vector<FuncLib::Function>> funcInput;
+
 	void distribute_functions();
 
 	// проверка на существование подходящих аргументов
 	bool arguments_exist(std::vector<ObjectType> args);
+
 	// генерация функции по входному типу данных
 	FuncLib::Function generate_next_func(ObjectType prevOutput, int funcNum);
+
 	// генерация аргументов функции
 	std::string generate_arguments(FuncLib::Function first_func);
+
 	// выбор идентификатора по типу данных
 	std::string get_random_id_by_type(ObjectType type);
+
 	FuncLib::Function rand_func();
+
 	std::string generate_regex();
+
 	std::string generate_brefregex();
+
 	void change_seed();
+
 	bool check_probability(int chance);
 
   public:
@@ -72,16 +81,21 @@ class TasksGenerator {
 	Специальная форма test */
 	std::string generate_task(int opNum, int max_num_of_func_in_seq_, bool for_static_tpchkr_,
 							  bool for_dynamic_tpchkr_);
+
 	/* генерирует объявление:
 	[идентификатор] = ([функция].)*[функция]? [объект]+ (!!)? */
 	std::string generate_declaration();
+
 	/* генерирует выражение */
 	std::string generate_expression();
+
 	/* генерирует метод:
 	test [НКА | рег. выр-е] [рег. выр-е] [шаг итерации]) */
 	std::string generate_test();
+
 	/* генерирует рандомную операцию: объявление, выражение или test*/
 	std::string generate_op();
+
 	/*запись теста в файл*/
 	void write_to_file(std::string filename);
 

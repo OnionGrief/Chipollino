@@ -972,6 +972,73 @@ pair<int, bool> MemoryFiniteAutomaton::parse_additional(const string& s) const {
 	return _parse(s, &matcher);
 }
 
+bool MemoryFiniteAutomaton::check_memory_correctness() {
+	// Ячейки, которые могут быть открыты при попадании в состояние
+	map<int, set<int>> open_cells;
+	// Ячейки, переходы из которых надо проверить
+	set<int> states_to_check;
+	for (const auto& state : get_states()) {
+		states_to_check.insert(state.index);
+	}
+
+	while (!states_to_check.empty()) {
+		int cur_state = *states_to_check.begin();
+		states_to_check.erase(cur_state);
+		auto transitions = get_states()[cur_state].transitions;
+		for (const auto& symbol_transitions : transitions) {
+			for (const auto& transition : symbol_transitions.second) {
+				for (auto cell : open_cells[cur_state]) {
+					// Если в текущем состоянии ячейка открыта для записи и переход её не закрывает
+					bool pass = !transition.memory_actions.count(cell);
+					// Если раньше в open_cells для состояния transition.to ячейка была закрыта, то
+					// это состояние надо проверить
+					if (!open_cells[transition.to].count(cell) && pass) {
+						open_cells[transition.to].insert(cell);
+						states_to_check.insert(transition.to);
+					}
+				}
+				for (auto action : transition.memory_actions) {
+					// Если переход открывает ячейку
+					bool open = (action.second == MFATransition::open);
+					// Если раньше в open_cells для состояния transition.to ячейка была закрыта, то
+					// это состояние надо проверить
+					if (!open_cells[transition.to].count(action.first) && open) {
+						open_cells[transition.to].insert(action.first);
+						states_to_check.insert(transition.to);
+					}
+				}
+			}
+		}
+	}
+
+	for (const auto& state : get_states()) {
+		auto transitions = get_states()[state.index].transitions;
+		for (const auto& symbol_transitions : transitions) {
+			// Ячейка может быть открыта и по ней существует переход
+			if (symbol_transitions.first.is_ref() &&
+				open_cells[state.index].count(symbol_transitions.first.get_ref())) {
+				return false;
+				// throw runtime_error("MFA ERROR(Reading from the open cell)");
+			}
+			for (const auto& transition : symbol_transitions.second) {
+				for (auto action : transition.memory_actions) {
+					if (action.second == MFATransition::open) {
+						if (symbol_transitions.first.is_ref() &&
+							symbol_transitions.first.get_ref() == action.first)
+							// Чтение из открывающейся для записи ячейки
+							return false;
+						if (open_cells[state.index].count(action.first)) {
+							return false;
+							// throw runtime_error("MFA ERROR(Openning the open cell)");
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return true;
+}
 string random_mutation(const string& word, int l, int r, const Alphabet& alphabet) {
 	string mutated_word = word.substr(l, r - l);
 

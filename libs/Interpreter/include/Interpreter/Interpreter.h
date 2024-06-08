@@ -10,8 +10,10 @@
 #include <variant>
 #include <vector>
 
+#include "AutomataParser/Parser.h"
 #include "FuncLib/Functions.h"
 #include "FuncLib/Typization.h"
+#include "InputGenerator/AutomatonGenerator.h"
 #include "InputGenerator/RegexGenerator.h"
 #include "Logger/Logger.h"
 #include "Objects/BackRefRegex.h"
@@ -20,7 +22,6 @@
 #include "Objects/MemoryFiniteAutomaton.h"
 #include "Objects/Regex.h"
 #include "Objects/TransformationMonoid.h"
-#include "AutomataParser/Parser.h"
 
 using Typization::GeneralObject;
 
@@ -84,10 +85,17 @@ class Interpreter {
 	InterpreterLogger init_log();
 
 	// Тут хранятся объекты по их id
-	std::map<std::string, GeneralObject> objects;
+	std::unordered_map<std::string, GeneralObject> objects;
+
+	// Выражение для подстановки на место *
+	std::unordered_map<ObjectType, std::string> current_random_objects;
+	RegexGenerator regex_generator; // TODO: менять параметры
+	void generate_automaton(std::string test_path, FA_type fa_type, int states_num = 6);
 
 	//== Элементы грамматики интерпретатора ===================================
-	using Id = std::string;
+	struct Id {
+		std::string name;
+	};
 	struct Expression;
 
 	friend bool operator==(const FuncLib::Function& l, const FuncLib::Function& r);
@@ -109,7 +117,7 @@ class Interpreter {
 	// Общий вид выражения
 	struct Expression {
 		Typization::ObjectType type;
-		std::variant<int, FunctionSequence, Regex, BackRefRegex, std::string, Array> value;
+		std::variant<int, FunctionSequence, Regex, BackRefRegex, std::string, Array, Id> value;
 		// Преобразование в текст
 		std::string to_txt() const;
 	};
@@ -118,7 +126,7 @@ class Interpreter {
 	// [идентификатор] = ([функция].)*[функция]? [объект]+ (!!)?
 	struct Declaration {
 		// Идентификатор, в который запишется объект
-		Id id;
+		std::string id;
 		// Выражение
 		Expression expr;
 	};
@@ -152,6 +160,7 @@ class Interpreter {
 	};
 
 	// Флаги:
+	bool in_verification = false;
 
 	std::unordered_map<std::string, Flag> flags_names = {
 		{"auto_remove_trap_states", Flag::auto_remove_trap_states},
@@ -214,9 +223,6 @@ class Interpreter {
 
 	//== Исполнение комманд ===================================================
 
-	// Выражение для подстановки на место *
-	std::optional<Regex> current_random_regex;
-
 	// Применение цепочки функций к набору аргументов
 	std::optional<GeneralObject> apply_function_sequence(
 		const std::vector<FuncLib::Function>& functions, std::vector<GeneralObject> arguments,
@@ -261,7 +267,7 @@ class Interpreter {
 		enum Type { // TODO добавить тип строки (для filename)
 			error,
 			equalSign,
-			star,
+			randomObject,
 			doubleExclamation,
 			parL,
 			parR,

@@ -9,7 +9,10 @@
 #include "Objects/TransformationMonoid.h"
 #include "UnitTestsApp/UnitTests.h"
 
+#include "InputGenerator/AutomatonGenerator.h"
+
 using std::cout;
+using std::string;
 
 int main(int argc, char** argv) {
 	cout << "Unit Tests\n";

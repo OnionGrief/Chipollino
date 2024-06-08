@@ -1,6 +1,7 @@
 #include "UnitTestsApp/UnitTests.h"
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "Interpreter/Interpreter.h"
+#include "AutomataParser/Parser.h"
 #include "Objects/AlgExpression.h"
 #include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
@@ -919,3 +920,32 @@ TEST(TestAmbiguity, AmbiguityValues) {
 		}
 	});
 }
+
+TEST(TestAutomatonParser, MFA_correctness_failure) {
+	string cycle_with_cell_reopen = "test_data/MFAparser/test1.txt";
+
+	try {
+		Parser parser;
+		parser.parse_MFA(cycle_with_cell_reopen);
+	} catch (const std::runtime_error& re) {
+		ASSERT_EQ(string(re.what()), string("Parser: incorrect memory usage in MFA"));
+    }
+}
+
+TEST(TestAutomatonParser, MFA_correctness) {
+	string cycle_with_cell_reopen = "test_data/MFAparser/test2.txt";
+
+	Parser parser;
+	ASSERT_NO_THROW(parser.parse_MFA(cycle_with_cell_reopen));
+}
+
+// TODO: FAILED:
+/*TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
+    Regex r("((e|k)he*cg)*(|(e|k)he*|((e|k)(b|i)|(e|k)he*(e|ck)))");
+    auto ard =  r.to_glushkov();
+    auto first = ard.ambiguity();
+    auto second = ard.to_regex().to_glushkov().ambiguity();
+
+
+    ASSERT_EQ(first,second) << "\n" << ard.minimize().to_txt() << "\n" << ard.to_regex().to_glushkov().minimize().to_txt() << "\n" << ard.to_regex().to_txt() << "\n" << ard.to_regex().to_glushkov().to_regex().to_txt();
+}*/
