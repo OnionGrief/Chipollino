@@ -30,6 +30,19 @@ TEST(TestRegex, ToTxt) {
 	}
 }
 
+TEST(TestArden, RandomRegexEquivalence) {
+	RegexGenerator rg(6, 3, 3, 2);
+	for (int i = 0; i < RegexNumber; i++) {
+		string rgx_str = rg.generate_regex();
+		SCOPED_TRACE("Regex: " + rgx_str);
+		Regex r1(rgx_str), r2(rgx_str);
+		//		ASSERT_TRUE(Regex::equivalent(r1, r2.to_thompson().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_glushkov().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_ilieyu().to_regex()));
+		ASSERT_TRUE(Regex::equivalent(r1, r2.to_antimirov().to_regex()));
+	}
+}
+
 TEST(TestEqual, ThompsonGlushkov) {
 	RegexGenerator rg;
 	for (int i = 0; i < RegexNumberX10; i++) {
@@ -200,18 +213,5 @@ TEST(TestBisimilar, MFA_MergeBisimilar) {
 		MemoryFiniteAutomaton mfa = r.to_mfa_additional();
 
 		MetamorphicTests::cmp_automatons(mfa.merge_bisimilar(), mfa);
-	}
-}
-
-TEST(TestArden, RandomRegexEquivalence) {
-	RegexGenerator rg;
-	for (int i = 0; i < RegexNumber; i++) {
-		string rgx_str = rg.generate_regex();
-		SCOPED_TRACE("Regex: " + rgx_str);
-		Regex r1(rgx_str), r2(rgx_str);
-		//		ASSERT_TRUE(Regex::equivalent(r1, r2.to_thompson().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(r1, r2.to_glushkov().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(r1, r2.to_ilieyu().to_regex()));
-		ASSERT_TRUE(Regex::equivalent(r1, r2.to_antimirov().to_regex()));
 	}
 }

@@ -33,52 +33,53 @@ MFATransition::MFATransition(int to, MemoryActions memory_actions)
 MFATransition::MFATransition(int to, const unordered_set<int>& opens,
 							 const unordered_set<int>& closes)
 	: MFATransition(to) {
-	for (auto cell_num : opens)
-		memory_actions[cell_num] = MFATransition::open;
-	for (auto cell_num : closes) {
+	for (auto cell_num : closes)
+		memory_actions[cell_num] = MFATransition::close;
+	for (auto cell_num : opens) {
 		if (memory_actions.count(cell_num))
 			std::cerr << "!!! Memory cell actions conflict !!!" << cell_num << " "
-					  << memory_actions.at(cell_num);
-		memory_actions[cell_num] = MFATransition::close;
+					  << memory_actions.at(cell_num) << "\n";
+		memory_actions[cell_num] = MFATransition::open;
 	}
 }
 
 MFATransition::MFATransition(int to, const unordered_set<int>& opens,
 							 const unordered_set<int>& closes, const unordered_set<int>& resets)
 	: MFATransition(to) {
-	for (auto cell_num : opens)
-		memory_actions[cell_num] = MFATransition::open;
-	for (auto cell_num : closes) {
-		if (memory_actions.count(cell_num))
-			std::cerr << "!!! Memory cell actions conflict !!!" << cell_num << " "
-					  << memory_actions.at(cell_num);
+	for (auto cell_num : closes)
 		memory_actions[cell_num] = MFATransition::close;
-	}
 	for (auto cell_num : resets) {
 		if (memory_actions.count(cell_num))
 			std::cerr << "!!! Memory cell actions conflict !!!" << cell_num << " "
-					  << memory_actions.at(cell_num);
+					  << memory_actions.at(cell_num) << "\n";
 		memory_actions[cell_num] = MFATransition::reset;
+	}
+	for (auto cell_num : opens) {
+		if (memory_actions.count(cell_num))
+			std::cerr << "!!! Memory cell actions conflict !!!" << cell_num << " "
+					  << memory_actions.at(cell_num) << "\n";
+		memory_actions[cell_num] = MFATransition::open;
 	}
 }
 
 MFATransition::MFATransition(int to, const TransitionConfig& config) : MFATransition(to) {
 	if (config.source_last)
-		for (auto [cell_num, lin_num] : *config.source_last) {
-			if (config.destination_in_lin_cells->count(lin_num))
+		for (const auto& [cell_num, lin_num] : *config.source_last) {
+			if (config.destination_in_lin_cells && config.destination_in_lin_cells->count(lin_num))
 				continue;
 			memory_actions[cell_num] = MFATransition::close;
 		}
 	if (config.to_reset)
-		for (auto [cell_num, lin_num] : *config.to_reset) {
-			if (config.destination_in_lin_cells->count(lin_num))
+		for (const auto& [cell_num, lin_num] : *config.to_reset) {
+			if (config.destination_in_lin_cells && config.destination_in_lin_cells->count(lin_num))
 				continue;
 			memory_actions[cell_num] = MFATransition::reset;
 		}
 	// при конфликте действий над ячейкой, открытие имеет приоритет
 	if (config.destination_first)
-		for (auto [cell_num, lin_num] : *config.destination_first) {
-			if (config.source_in_lin_cells->count(lin_num) &&
+		for (const auto& [cell_num, lin_num] : *config.destination_first) {
+			if (config.source_in_lin_cells && config.iteration_over_cells &&
+				config.source_in_lin_cells->count(lin_num) &&
 				!config.iteration_over_cells->count(lin_num))
 				continue;
 			memory_actions[cell_num] = MFATransition::open;
