@@ -22,6 +22,8 @@ enum class FA_type {
 	DFA
 };
 
+class AutomatonGeneratorBuilder;
+
 class AutomatonGenerator {
   private:
 	struct FAtransition {
@@ -78,6 +80,7 @@ class AutomatonGenerator {
 	bool coloring_MFA_transition(int beg, FAtransition& trans, // NOLINT(runtime/references)
 								 int color);
 
+	void setup_and_generate(FA_type type, const std::string& grammar_file);
 	void generate_graph();
 
 	std::queue<std::string> TERMINAL, STRING, NUMBER, LETTER, DIGIT, STACK_SYMBOLS;
@@ -196,9 +199,65 @@ class AutomatonGenerator {
 	AutomatonGenerator(FA_type type = FA_type::NFA, int n = 10,
 					   const std::string& grammar_file = GrammarPath);
 
+	explicit AutomatonGenerator(const AutomatonGeneratorBuilder& builder);
+
 	void write_to_file(const std::string& filename);
+};
 
-	void set_terminal_probability(int elem);
+class AutomatonGeneratorBuilder {
+  public:
+	int colors_ = 4;
+	int colors_tries_ = 10;
+	int terminal_probability_ = 20;
+	int epsilon_probability_ = 10;
+	int ref_probability_ = 50;
+	int seed_it_ = 0;
+	int memory_cells_number_ = 0;
 
-	void set_states_number(int n);
+	FA_type type_ = FA_type::NFA;
+	int states_number_ = 10;
+	std::string grammar_file_ = GrammarPath;
+
+	AutomatonGeneratorBuilder& setColors(int colors) {
+		colors_ = colors;
+		return *this;
+	}
+
+	AutomatonGeneratorBuilder& setColorsTries(int colors_tries) {
+		colors_tries_ = colors_tries;
+		return *this;
+	}
+
+	AutomatonGeneratorBuilder& setTerminalProbability(int terminal_probability) {
+		terminal_probability_ = terminal_probability;
+		return *this;
+	}
+
+	AutomatonGeneratorBuilder& setEpsilonProbability(int epsilon_probability) {
+		epsilon_probability_ = epsilon_probability;
+		return *this;
+	}
+
+	AutomatonGeneratorBuilder& setRefProbability(int ref_probability) {
+		ref_probability_ = ref_probability;
+		return *this;
+	}
+
+	AutomatonGeneratorBuilder& setSeedIt(int seed_it) {
+		seed_it_ = seed_it;
+		return *this;
+	}
+
+	AutomatonGeneratorBuilder& setMemoryCellsNumber(int memory_cells_number) {
+		memory_cells_number_ = memory_cells_number;
+		return *this;
+	}
+
+	AutomatonGenerator build(FA_type type = FA_type::NFA, int states_number = 10,
+							 const std::string& grammar_file = GrammarPath) {
+		type_ = type;
+		states_number_ = states_number;
+		grammar_file_ = grammar_file;
+		return AutomatonGenerator(*this);
+	}
 };

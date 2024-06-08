@@ -977,7 +977,7 @@ bool MemoryFiniteAutomaton::check_memory_correctness() {
 	map<int, set<int>> open_cells;
 	// Ячейки, переходы из которых надо проверить
 	set<int> states_to_check;
-	for (auto state : get_states()) {
+	for (const auto& state : get_states()) {
 		states_to_check.insert(state.index);
 	}
 
@@ -985,8 +985,8 @@ bool MemoryFiniteAutomaton::check_memory_correctness() {
 		int cur_state = *states_to_check.begin();
 		states_to_check.erase(cur_state);
 		auto transitions = get_states()[cur_state].transitions;
-		for (auto symbol_transitions : transitions) {
-			for (auto transition : symbol_transitions.second) {
+		for (const auto& symbol_transitions : transitions) {
+			for (const auto& transition : symbol_transitions.second) {
 				for (auto cell : open_cells[cur_state]) {
 					// Если в текущем состоянии ячейка открыта для записи и переход её не закрывает
 					bool pass = !transition.memory_actions.count(cell);
@@ -1011,16 +1011,16 @@ bool MemoryFiniteAutomaton::check_memory_correctness() {
 		}
 	}
 
-	for (auto state : get_states()) {
+	for (const auto& state : get_states()) {
 		auto transitions = get_states()[state.index].transitions;
-		for (auto symbol_transitions : transitions) {
+		for (const auto& symbol_transitions : transitions) {
 			// Ячейка может быть открыта и по ней существует переход
 			if (symbol_transitions.first.is_ref() &&
 				open_cells[state.index].count(symbol_transitions.first.get_ref())) {
 				return false;
 				// throw runtime_error("MFA ERROR(Reading from the open cell)");
 			}
-			for (auto transition : symbol_transitions.second) {
+			for (const auto& transition : symbol_transitions.second) {
 				for (auto action : transition.memory_actions) {
 					if (action.second == MFATransition::open) {
 						if (symbol_transitions.first.is_ref() &&
