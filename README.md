@@ -59,7 +59,7 @@ TG.generate_task(3, 5, false, false);
 * BRefRegex - расширенные регулярные выражения с обратными ссылками
 * MFA - конечный автомат с памятью
 * Int
-* FileName
+* String
 * Boolean
 * OptionalBool
 * AmbiguityValue - мера неоднозначности  
@@ -75,8 +75,8 @@ TG.generate_task(3, 5, false, false);
 * **Function**. Название и список аргументов через пробел. Пример: `Glushkov {ab|a}`
 * **Function sequence**. Последовательное применение функций справа-налево. Пример: `Annote.Glushkov.DeAnnote {a}`
 * **Int**. Целое число. Пример: `8`
-* **FileName**. Путь к файлу. Пример: `"test.txt"`
-* **Varaible** - переменная. Примеры: `A`, `N1`, `N2`
+* **String**. Строковый тип данных. Пример: `"test.txt"`
+* **Variable**. Переменная. Примеры: `A`, `N1`, `N2`
 * **Expression**. Function sequence, Int, Regex или Varaible
 
 Для функций и последовательностей функций должны выполняться соответствия типов. Больше про типы фунцкий - ниже в

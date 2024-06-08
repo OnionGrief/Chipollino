@@ -22,7 +22,7 @@ enum class ObjectType {
 	DFA,			// детерминированный КА
 	Regex,			// регулярное выражение
 	Int,			// целое число
-	FileName,		// имя файла для чтения
+	String,			// строка
 	Boolean,		// true/false
 	OptionalBool,	// optional<bool>
 	AmbiguityValue, // yes/no/ы/ь
@@ -53,7 +53,7 @@ struct ObjectNFA;
 struct ObjectDFA;
 struct ObjectRegex;
 struct ObjectInt;
-struct ObjectFileName;
+struct ObjectString;
 struct ObjectBoolean;
 struct ObjectOptionalBool;
 struct ObjectAmbiguityValue;
@@ -63,7 +63,7 @@ struct ObjectBRefRegex;
 struct ObjectMFA;
 
 // Универсальный объект
-using GeneralObject = std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectFileName,
+using GeneralObject = std::variant<ObjectNFA, ObjectDFA, ObjectRegex, ObjectInt, ObjectString,
 								   ObjectBoolean, ObjectOptionalBool, ObjectAmbiguityValue,
 								   ObjectPrefixGrammar, ObjectArray, ObjectBRefRegex, ObjectMFA>;
 
@@ -77,7 +77,7 @@ OBJECT_DEFINITION(NFA, FiniteAutomaton)
 OBJECT_DEFINITION(DFA, FiniteAutomaton)
 OBJECT_DEFINITION(Regex, Regex)
 OBJECT_DEFINITION(Int, int)
-OBJECT_DEFINITION(FileName, std::string)
+OBJECT_DEFINITION(String, std::string)
 OBJECT_DEFINITION(Boolean, bool)
 OBJECT_DEFINITION(OptionalBool, std::optional<bool>)
 OBJECT_DEFINITION(AmbiguityValue, FiniteAutomaton::AmbiguityValue)
@@ -99,7 +99,7 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 	{ObjectType::RandomNFA, "RandomNFA"},
 	{ObjectType::RandomMFA, "RandomMFA"},
 	{ObjectType::Int, "Int"},
-	{ObjectType::FileName, "FileName"},
+	{ObjectType::String, "String"},
 	{ObjectType::Boolean, "Boolean"},
 	{ObjectType::OptionalBool, "OptionalBool"},
 	{ObjectType::AmbiguityValue, "AmbiguityValue"},
