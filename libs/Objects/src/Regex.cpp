@@ -16,9 +16,9 @@ using std::to_string;
 using std::unordered_map;
 using std::vector;
 
-Regex::Regex(const string& str) : Regex() {
+Regex::Regex(const string& str) {
 	try {
-		bool res = from_string(str);
+		bool res = from_string(str, false, true);
 		if (!res) {
 			throw std::runtime_error("Regex::from_string() ERROR");
 		}
@@ -27,6 +27,8 @@ Regex::Regex(const string& str) : Regex() {
 		exit(EXIT_FAILURE);
 	}
 }
+
+Regex::Regex(const Symbol& symbol) : Regex(symbol.is_epsilon() ? "" : string(symbol)) {}
 
 Regex::Regex(const string& str, const std::shared_ptr<Language>& new_language) : Regex(str) {
 	language = new_language;
@@ -457,7 +459,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		str_last += elem + "\\ ";
 	}
 	if (eps_in) {
-		str_last += Symbol::Epsilon;
+		str_last += string(Symbol::Epsilon);
 	}
 
 	for (const auto& i : following_states) {
@@ -506,7 +508,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 		// В last_terms номера конечных лексем => last_terms.count проверяет есть ли
 		// номер лексемы в списке конечных лексем (является ли состояние конечным)
 		states.emplace_back(
-			i + 1, symb, last_terms.count(symb.last_linearization_number()), transitions);
+			i + 1, string(symb), last_terms.count(symb.last_linearization_number()), transitions);
 	}
 
 	FiniteAutomaton fa(0, states, language);
@@ -614,9 +616,7 @@ void Regex::get_prefix(int len, set<string>& prefs) const {
 		return;
 	case Type::symb:
 		if (len == 1) {
-			string res;
-			res += symbol;
-			prefs.insert(res);
+			prefs.insert(string(symbol));
 		}
 		return;
 	case Type::alt:
@@ -1078,8 +1078,8 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << partial_derivativ[0].to_txt() << " ";
 			// cout << partial_derivativ[1].to_txt() << " ";
 			// cout << partial_derivativ[2].to_txt() << endl;
-			deriv_log += partial_derivativ[2].to_txt() + "(" +
-						 partial_derivativ[0].to_txt() + ")" + "\\ =\\ ";
+			deriv_log += partial_derivativ[2].to_txt() + "(" + partial_derivativ[0].to_txt() + ")" +
+						 "\\ =\\ ";
 			if (partial_derivativ[1].to_txt() == "") {
 				deriv_log += "eps\\\\";
 			} else {
@@ -1088,10 +1088,10 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 			if (partial_derivativ[0].to_txt() == state) {
 				// поиск индекс состояния в которое переходим по символу из state
-				auto elem_iter = find(
-					name_states.begin(), name_states.end(), partial_derivativ[1].to_txt());
+				auto elem_iter =
+					find(name_states.begin(), name_states.end(), partial_derivativ[1].to_txt());
 				// записываем расстояние между begin и итератором, который указывает на состояние
-				transit[partial_derivativ[2].to_txt()].insert(
+				transit[Symbol(partial_derivativ[2].to_txt())].insert(
 					std::distance(name_states.begin(), elem_iter));
 			}
 		}
@@ -1099,7 +1099,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 		if (state.empty() || fa_states[i].contains_eps()) {
 
 			if (state.empty()) {
-				state = Symbol::Epsilon;
+				state = string(Symbol::Epsilon);
 			}
 			automat_state.emplace_back(int(i), state, true, transit);
 		} else {

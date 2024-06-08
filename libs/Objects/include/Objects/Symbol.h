@@ -21,31 +21,34 @@ class Symbol {
   public:
 	static const char linearize_marker = '.';
 	static const char annote_marker = ',';
-	inline static const std::string Epsilon = "eps";
-	inline static const std::string EmptySet = "-empty-";
+	static const Symbol Epsilon;
+	static const Symbol EmptySet;
 
 	Symbol() = default;
-	Symbol(const std::string& s); // NOLINT(runtime/explicit)
-	Symbol(const char* c);		  // NOLINT(runtime/explicit)
-	Symbol(char c);				  // NOLINT(runtime/explicit)
+	explicit Symbol(const std::string& s);
+	explicit Symbol(const char* cstr);
+	explicit Symbol(char c);
 
 	Symbol(const Symbol& other) = default;
 
 	static Symbol Ref(int number);
 
 	Symbol& operator=(const std::string& s);
-	Symbol& operator=(const char* c);
+	Symbol& operator=(const char* cstr);
 	Symbol& operator=(char c);
 	Symbol& operator=(const Symbol& other) = default;
 	// многие функции все еще работают с символами алфавита, как со строками
 	// для них добавлено преобразование типов
-	operator std::string() const;
+	explicit operator std::string() const;
+
+	size_t size() const;
 
 	bool operator==(const Symbol& other) const;
+	bool operator==(const char* cstr) const;
 	bool operator==(char c) const;
 	bool operator!=(const Symbol& other) const;
 	bool operator<(const Symbol& other) const;
-	
+
 	bool is_epsilon() const;
 	// преобразовывает вектор символов в одну строку
 	static std::string vector_to_str(const std::vector<Symbol>&);

@@ -8,8 +8,11 @@ using std::to_string;
 using std::vector;
 
 Symbol::Symbol(const string& s) : symbol(s), value(s) {}
-Symbol::Symbol(const char* c) : symbol(c), value(c) {}
+Symbol::Symbol(const char* cstr) : symbol(cstr), value(cstr) {}
 Symbol::Symbol(char c) : symbol(string(1, c)), value(string(1, c)) {}
+
+const Symbol Symbol::Epsilon("eps");
+const Symbol Symbol::EmptySet("-empty-");
 
 Symbol Symbol::Ref(int number) {
 	Symbol s;
@@ -40,8 +43,8 @@ Symbol& Symbol::operator=(const string& s) {
 	return *this;
 }
 
-Symbol& Symbol::operator=(const char* c) {
-	symbol = c;
+Symbol& Symbol::operator=(const char* cstr) {
+	symbol = cstr;
 	value = symbol;
 	return *this;
 }
@@ -52,13 +55,21 @@ Symbol& Symbol::operator=(char c) {
 	return *this;
 }
 
-bool Symbol::is_epsilon() const {
-	return *this == Symbol::Epsilon;
+Symbol::operator string() const {
+	return value;
+}
+
+size_t Symbol::size() const {
+	return value.size();
 }
 
 bool Symbol::operator==(const Symbol& other) const {
 	return symbol == other.symbol && annote_numbers == other.annote_numbers &&
 		   linearize_numbers == other.linearize_numbers;
+}
+
+bool Symbol::operator==(const char* cstr) const {
+	return symbol == cstr;
 }
 
 bool Symbol::operator==(char c) const {
@@ -73,14 +84,14 @@ bool Symbol::operator<(const Symbol& other) const {
 	return value < other.value;
 }
 
-Symbol::operator string() const {
-	return value;
+bool Symbol::is_epsilon() const {
+	return *this == Symbol::Epsilon;
 }
 
 string Symbol::vector_to_str(const vector<Symbol>& in) {
 	string out;
 	for (const auto& i : in)
-		out += i;
+		out += string(i);
 	return out;
 }
 

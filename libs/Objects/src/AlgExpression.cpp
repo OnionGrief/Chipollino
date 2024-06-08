@@ -7,6 +7,7 @@
 #include "Objects/AlgExpression.h"
 #include "Objects/Language.h"
 
+using std::cerr;
 using std::cout;
 using std::endl;
 using std::make_shared;
@@ -139,7 +140,7 @@ string AlgExpression::to_txt() const {
 		}
 		break;
 	case Type::symb:
-		symb = symbol;
+		symb = string(symbol);
 		break;
 	case Type::eps:
 		break;
@@ -172,7 +173,7 @@ void AlgExpression::print_subtree(AlgExpression* expr, int level) const {
 		for (int i = 0; i < level; i++)
 			cout << "   ";
 		Symbol r_v;
-		if (expr->symbol != "")
+		if (expr->symbol.size() != 0)
 			r_v = expr->symbol;
 		else
 			r_v = to_string(expr->type);
@@ -186,7 +187,7 @@ void AlgExpression::print_tree() const {
 	for (int i = 0; i < 0; i++)
 		cout << "   ";
 	Symbol r_v;
-	if (symbol != "")
+	if (symbol.size() != 0)
 		r_v = symbol;
 	else
 		r_v = to_string(type);
@@ -195,8 +196,8 @@ void AlgExpression::print_tree() const {
 }
 
 string AlgExpression::type_to_str() const {
-	if (symbol != "")
-		return symbol;
+	if (symbol.size() != 0)
+		return string(symbol);
 	switch (type) {
 	case Type::eps:
 		return "ε";
@@ -660,8 +661,8 @@ string AlgExpression::get_iterated_word(int n) const {
 	if (term_r && type != Type::alt) {
 		str += term_r->get_iterated_word(n);
 	}
-	if (symbol != "") {
-		str += symbol;
+	if (symbol.size() != 0) {
+		str += string(symbol);
 	}
 	return str;
 }

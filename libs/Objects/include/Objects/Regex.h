@@ -52,6 +52,7 @@ class Regex : public AlgExpression {
   public:
 	Regex() = default;
 	explicit Regex(const std::string&);
+	explicit Regex(const Symbol& symbol);
 	Regex(const std::string&, const std::shared_ptr<Language>&);
 	explicit Regex(Type type, AlgExpression* = nullptr, AlgExpression* = nullptr);
 

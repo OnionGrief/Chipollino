@@ -132,12 +132,12 @@ vector<vector<vector<RLGrammar::Item*>>> RLGrammar::fa_to_grammar(const vector<F
 		item_ind++;
 	}
 	map<Symbol, int> terminal_indexes;
-	fa_items[item_ind] = Item(Item::terminal, Symbol::Epsilon);
+	fa_items[item_ind] = Item(Item::terminal, string(Symbol::Epsilon));
 	terminals.push_back(&fa_items[item_ind]);
 	terminal_indexes[Symbol::Epsilon] = 0;
 	item_ind++;
 	for (const Symbol& symbol : alphabet) {
-		fa_items[item_ind] = Item(Item::terminal, symbol);
+		fa_items[item_ind] = Item(Item::terminal, string(symbol));
 		terminals.push_back(&fa_items[item_ind]);
 		terminal_indexes[symbol] = item_ind - nonterminals.size();
 		item_ind++;
@@ -322,10 +322,10 @@ void PrefixGrammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate
 	}
 
 	for (const auto& elem : st0.transitions) {
-		Symbol alpha = elem.first;
+		Symbol symbol = elem.first;
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state == ind) {
-				g->equivalence_class.insert(alpha);
+				g->equivalence_class.insert(string(symbol));
 				g->equivalence_class.erase("");
 			}
 		}
@@ -377,7 +377,7 @@ string PrefixGrammar::pg_to_txt() const {
 	for (const auto& item : prefix_grammar) {
 		for (const auto& w : item.equivalence_class) {
 			for (const auto& elem : item.rules) {
-				Symbol a = elem.first;
+				Symbol symbol = elem.first;
 				// int index = elem.second;
 				for (const auto& w_back : elem.second) {
 					for (const auto& eq_back : prefix_grammar[w_back].equivalence_class) {
@@ -389,8 +389,8 @@ string PrefixGrammar::pg_to_txt() const {
 						if (wt == "") {
 							wt = "eps";
 						}
-						if (a == "") {
-							a = "eps";
+						if (symbol.size() == 0) {
+							symbol = Symbol::Epsilon;
 						}
 						if (!item.is_started && prefix_grammar[w_back].is_started) {
 							eq = "eps";
@@ -399,12 +399,12 @@ string PrefixGrammar::pg_to_txt() const {
 							continue;
 						}
 						if (/*m_r.find(wt) == m_r.end() &&*/
-							!(wt == eq && a == "eps")) {
+							!(wt == eq && symbol.is_epsilon())) {
 							string test = wt;
 							test += " -> ";
 							test += eq + " ";
-							test += a;
-							out.insert(test); // wt + " -> " + eq + " " + a);
+							test += string(symbol);
+							out.insert(test); // wt + " -> " + eq + " " + symbol);
 						}
 					}
 				}
@@ -462,14 +462,14 @@ FiniteAutomaton PrefixGrammar::prefix_grammar_to_automaton(iLogTemplate* log) co
 		const Item& gr = prefix_grammar[i];
 
 		for (const auto& elem : gr.rules) {
-			Symbol alpha = elem.first;
+			Symbol symbol = elem.first;
 			for (const auto& trans : elem.second) {
-				states[trans].transitions[alpha].insert(i);
+				states[trans].transitions[symbol].insert(i);
 			}
-			if (alpha == "") {
-				alpha = Symbol::Epsilon;
+			if (symbol.size() == 0) {
+				symbol = Symbol::Epsilon;
 			} else {
-				symbols.insert(alpha);
+				symbols.insert(symbol);
 			}
 		}
 	}
@@ -486,23 +486,23 @@ int PrefixGrammar::fa_to_g_TM(const FiniteAutomaton& fa, string w, int index, in
 	const FAState& st = fa.states[index];
 	Item* g = grammar_items[index];
 
-	g->rules[w].insert(index_back);
+	g->rules[Symbol(w)].insert(index_back);
 	if (g->is_visit) {
 		return 0;
 	}
 	g->is_visit = true;
 	for (const auto& elem : st.transitions) {
-		Symbol alpha = elem.first;
+		Symbol symbol = elem.first;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : elem.second) {
-			if (alpha.is_epsilon()) {
-				alpha = "";
+			if (symbol.is_epsilon()) {
+				symbol = "";
 			}
 			if (index != ind) {
-				fa_to_g_TM(fa, alpha, ind, index, grammar_items, monoid_rules, word + w);
+				fa_to_g_TM(fa, string(symbol), ind, index, grammar_items, monoid_rules, word + w);
 
 			} else {
-				g->rules[alpha].insert(index);
+				g->rules[symbol].insert(index);
 			}
 		}
 	}
@@ -584,14 +584,14 @@ void PrefixGrammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTempl
 		}
 	}
 	for (const auto& elem : st0.transitions) {
-		Symbol alpha = elem.first;
+		Symbol symbol = elem.first;
 		// if st.is_terminal то учитываем только переходы в себя
 		for (const auto& ind : elem.second) {
 			if (fa.initial_state != ind) {
-				if (alpha.is_epsilon()) {
-					alpha = "";
+				if (symbol.is_epsilon()) {
+					symbol = "";
 				}
-				fa_to_g_TM(fa, alpha, ind, fa.initial_state, grammar_items, m_r, "");
+				fa_to_g_TM(fa, string(symbol), ind, fa.initial_state, grammar_items, m_r, "");
 			}
 		}
 	}

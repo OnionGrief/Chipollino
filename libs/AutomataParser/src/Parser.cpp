@@ -102,7 +102,7 @@ void Parser::parse_FA_transitions(lexy_ascii_tree& tree, vector<FATransition_inf
 			throw runtime_error("AutomataParser::Parser::parse_FA ERROR(MFA transition found)");
 		}
 
-		trans.emplace_back(beg, end, symb);
+		trans.emplace_back(beg, end, Symbol(symb));
 	}
 }
 
@@ -117,17 +117,18 @@ void Parser::parse_MFA_transitions(lexy_ascii_tree& tree,
 		it++;
 		string end = first_child(*it);
 		it++;
-		Symbol symb = first_child(*it);
+		string symb_str = first_child(*it);
+		Symbol symb;
 
-		if (symb == "&") {
+		if (symb_str == "&") {
 			for (auto symb_child : it->children()) {
 				if (string(symb_child.kind().name()) == AutomataParser::cell_id) {
 					symb = Symbol::Ref(stoi(first_child(symb_child)));
 				}
 			}
-		}
-		if (symb == AutomataParser::epsilon)
+		} else if (symb_str == AutomataParser::epsilon) {
 			symb = Symbol::Epsilon;
+		}
 
 		unordered_set<int> open;
 		unordered_set<int> close;

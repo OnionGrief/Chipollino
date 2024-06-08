@@ -82,7 +82,7 @@ class AlgExpression : public BaseObject {
 	// Turns string into lexeme vector
 	static std::vector<Lexeme> parse_string(std::string, bool allow_ref = false,
 											bool allow_negation = true);
-	bool from_string(const std::string&, bool allow_ref = false, bool allow_negation = true);
+	bool from_string(const std::string&, bool allow_ref, bool allow_negation);
 
 	// возвращаемый тип нижеперечисленных методов зависит от типа объекта (Regex/BackRefRegex)
 	// внутреннее состояние не имеет значения
@@ -129,8 +129,7 @@ class AlgExpression : public BaseObject {
 	AlgExpression(Type, const Symbol&);
 	explicit AlgExpression(Alphabet);
 	// переданные term_l и term_l копируются с помощью make_copy
-	explicit AlgExpression(Type type, AlgExpression* = nullptr,
-				  AlgExpression* = nullptr);
+	explicit AlgExpression(Type type, AlgExpression* = nullptr, AlgExpression* = nullptr);
 
 	virtual ~AlgExpression();
 

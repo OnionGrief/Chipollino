@@ -12,7 +12,7 @@ using std::unordered_map;
 using std::unordered_set;
 using std::vector;
 
-BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
+BackRefRegex::BackRefRegex(const string& str) {
 	try {
 		bool res = from_string(str, true, false);
 		if (!res) {
@@ -23,6 +23,9 @@ BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
 		exit(EXIT_FAILURE);
 	}
 }
+
+BackRefRegex::BackRefRegex(const Symbol& symbol)
+	: BackRefRegex(symbol.is_epsilon() ? "" : string(symbol)) {}
 
 BackRefRegex::BackRefRegex(const BackRefRegex& other) : AlgExpression(other) {
 	cell_number = other.cell_number;
@@ -146,7 +149,7 @@ string BackRefRegex::to_txt() const {
 		break;
 	case Type::symb:
 	case Type::ref:
-		symb = symbol;
+		symb = string(symbol);
 		break;
 	}
 
@@ -154,8 +157,8 @@ string BackRefRegex::to_txt() const {
 }
 
 string BackRefRegex::type_to_str() const {
-	if (symbol != "")
-		return symbol;
+	if (symbol.size() != 0)
+		return string(symbol);
 	switch (type) {
 	case Type::eps:
 		return "ε";
@@ -898,7 +901,7 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 		str_last += elem + "\\ ";
 	}
 	if (eps_in) {
-		str_last += Symbol::Epsilon;
+		str_last += string(Symbol::Epsilon);
 	}
 
 	for (int i = 0; i < following_states.size(); i++) {
@@ -954,7 +957,7 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 		// В last_terms номера конечных лексем => last_terms.count проверяет есть ли
 		// номер лексемы в списке конечных лексем (является ли состояние конечным)
 		states.emplace_back(
-			i + 1, symb, last_terms.count(symb.last_linearization_number()), transitions);
+			i + 1, string(symb), last_terms.count(symb.last_linearization_number()), transitions);
 	}
 
 	MemoryFiniteAutomaton mfa(0, states, language);

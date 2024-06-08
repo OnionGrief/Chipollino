@@ -97,6 +97,7 @@ class BackRefRegex : public AlgExpression {
   public:
 	BackRefRegex() = default;
 	explicit BackRefRegex(const std::string&);
+	explicit BackRefRegex(const Symbol& symbol);
 	BackRefRegex(const Regex* regex, const Alphabet& _alphabet);
 	explicit BackRefRegex(const Regex* regex);
 

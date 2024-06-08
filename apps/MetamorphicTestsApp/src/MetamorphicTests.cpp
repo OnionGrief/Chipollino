@@ -31,7 +31,7 @@ TEST(TestRegex, ToTxt) {
 }
 
 TEST(TestArden, RandomRegexEquivalence) {
-	RegexGenerator rg;
+	RegexGenerator rg(6, 3, 3, 2);
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = rg.generate_regex();
 		SCOPED_TRACE("Regex: " + rgx_str);

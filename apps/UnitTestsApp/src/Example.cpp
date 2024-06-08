@@ -13,23 +13,23 @@ void Example::determinize() {
 		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states[0].add_transition(5, "x");
-	states[0].add_transition(5, "y");
-	states[0].add_transition(1, "eps");
-	states[1].add_transition(2, "eps");
-	states[1].add_transition(3, "eps");
-	states[1].add_transition(4, "eps");
-	states[3].add_transition(3, "x");
-	states[4].add_transition(4, "y");
-	states[4].add_transition(4, "y");
-	states[5].add_transition(5, "z");
-	states[5].add_transition(1, "eps");
+	states[0].add_transition(5, Symbol('x'));
+	states[0].add_transition(5, Symbol('y'));
+	states[0].add_transition(1, Symbol::Epsilon);
+	states[1].add_transition(2, Symbol::Epsilon);
+	states[1].add_transition(3, Symbol::Epsilon);
+	states[1].add_transition(4, Symbol::Epsilon);
+	states[3].add_transition(3, Symbol('x'));
+	states[4].add_transition(4, Symbol('y'));
+	states[4].add_transition(4, Symbol('y'));
+	states[5].add_transition(5, Symbol('z'));
+	states[5].add_transition(1, Symbol::Epsilon);
 
 	states[2].is_terminal = true;
 	states[3].is_terminal = true;
 	states[4].is_terminal = true;
 
-	FiniteAutomaton nfa(0, states, {"x", "y", "z"});
+	FiniteAutomaton nfa(0, states, {Symbol('x'), Symbol('y'), Symbol('z')});
 	cout << nfa.determinize().to_txt();
 }
 
@@ -39,16 +39,16 @@ void Example::remove_eps() {
 		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states[0].add_transition(0, "0");
-	states[0].add_transition(1, "eps");
-	states[1].add_transition(1, "1");
-	states[1].add_transition(2, "eps");
-	states[2].add_transition(2, "0");
-	states[2].add_transition(2, "1");
+	states[0].add_transition(0, Symbol('0'));
+	states[0].add_transition(1, Symbol::Epsilon);
+	states[1].add_transition(1, Symbol('1'));
+	states[1].add_transition(2, Symbol::Epsilon);
+	states[2].add_transition(2, Symbol('0'));
+	states[2].add_transition(2, Symbol('1'));
 
 	states[2].is_terminal = true;
 
-	FiniteAutomaton nfa(0, states, {"0", "1"});
+	FiniteAutomaton nfa(0, states, {Symbol('0'), Symbol('1')});
 	cout << nfa.remove_eps().to_txt();
 }
 
@@ -58,27 +58,27 @@ void Example::minimize() {
 		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states[0].add_transition(7, "0");
-	states[0].add_transition(1, "1");
-	states[1].add_transition(0, "1");
-	states[1].add_transition(7, "0");
-	states[2].add_transition(4, "0");
-	states[2].add_transition(5, "1");
-	states[3].add_transition(4, "0");
-	states[3].add_transition(5, "1");
-	states[4].add_transition(5, "0");
-	states[4].add_transition(6, "1");
-	states[5].add_transition(5, "0");
-	states[5].add_transition(5, "1");
-	states[6].add_transition(6, "0");
-	states[6].add_transition(5, "1");
-	states[7].add_transition(2, "0");
-	states[7].add_transition(2, "1");
+	states[0].add_transition(7, Symbol('0'));
+	states[0].add_transition(1, Symbol('1'));
+	states[1].add_transition(0, Symbol('1'));
+	states[1].add_transition(7, Symbol('0'));
+	states[2].add_transition(4, Symbol('0'));
+	states[2].add_transition(5, Symbol('1'));
+	states[3].add_transition(4, Symbol('0'));
+	states[3].add_transition(5, Symbol('1'));
+	states[4].add_transition(5, Symbol('0'));
+	states[4].add_transition(6, Symbol('1'));
+	states[5].add_transition(5, Symbol('0'));
+	states[5].add_transition(5, Symbol('1'));
+	states[6].add_transition(6, Symbol('0'));
+	states[6].add_transition(5, Symbol('1'));
+	states[7].add_transition(2, Symbol('0'));
+	states[7].add_transition(2, Symbol('1'));
 
 	states[5].is_terminal = true;
 	states[6].is_terminal = true;
 
-	FiniteAutomaton nfa(0, states, {"0", "1"});
+	FiniteAutomaton nfa(0, states, {Symbol('0'), Symbol('1')});
 	cout << nfa.minimize().to_txt();
 }
 
@@ -92,26 +92,26 @@ void Example::intersection() {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states1[0].add_transition(0, "b");
-	states1[0].add_transition(1, "a");
-	states1[1].add_transition(1, "b");
-	states1[1].add_transition(2, "a");
-	states1[2].add_transition(2, "a");
-	states1[2].add_transition(2, "b");
+	states1[0].add_transition(0, Symbol('b'));
+	states1[0].add_transition(1, Symbol('a'));
+	states1[1].add_transition(1, Symbol('b'));
+	states1[1].add_transition(2, Symbol('a'));
+	states1[2].add_transition(2, Symbol('a'));
+	states1[2].add_transition(2, Symbol('b'));
 
 	states1[1].is_terminal = true;
 
-	states2[0].add_transition(0, "a");
-	states2[0].add_transition(1, "b");
-	states2[1].add_transition(1, "a");
-	states2[1].add_transition(2, "b");
-	states2[2].add_transition(2, "a");
-	states2[2].add_transition(2, "b");
+	states2[0].add_transition(0, Symbol('a'));
+	states2[0].add_transition(1, Symbol('b'));
+	states2[1].add_transition(1, Symbol('a'));
+	states2[1].add_transition(2, Symbol('b'));
+	states2[2].add_transition(2, Symbol('a'));
+	states2[2].add_transition(2, Symbol('b'));
 
 	states2[1].is_terminal = true;
 
-	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b"});
-	FiniteAutomaton dfa2 = FiniteAutomaton(0, states2, {"a", "b"});
+	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {Symbol('a'), Symbol('b')});
+	FiniteAutomaton dfa2 = FiniteAutomaton(0, states2, {Symbol('a'), Symbol('b')});
 
 	cout << FiniteAutomaton::intersection(dfa1, dfa2).to_txt();
 }
@@ -201,15 +201,15 @@ void Example::transformation_monoid_example() {
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	// states1[0].add_transition(0, "b");
-	states1[0].add_transition(1, "a");
-	states1[1].add_transition(0, "b");
-	states1[0].add_transition(1, "c");
-	states1[1].add_transition(2, "c");
+	// states1[0].add_transition(0, Symbol('b'));
+	states1[0].add_transition(1, Symbol('a'));
+	states1[1].add_transition(0, Symbol('b'));
+	states1[0].add_transition(1, Symbol('c'));
+	states1[1].add_transition(2, Symbol('c'));
 	states1[2].is_terminal = true;
-	// states1[2].add_transition(2, "a");
-	// states1[2].add_transition(2, "b");
-	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b", "c"});
+	// states1[2].add_transition(2, Symbol('a'));
+	// states1[2].add_transition(2, Symbol('b'));
+	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {Symbol('a'), Symbol('b'), Symbol('c')});
 	cout << "-----\n";
 	cout << dfa1.to_txt();
 	cout << "-----\n";
@@ -227,22 +227,22 @@ void Example::fa_subset_check() {
 	for (int i = 0; i < 4; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states1[0].add_transition(1, "a");
-	states1[0].add_transition(1, "b");
-	states1[0].add_transition(2, "a");
-	states1[1].add_transition(3, "b");
-	states1[2].add_transition(3, "c");
+	states1[0].add_transition(1, Symbol('a'));
+	states1[0].add_transition(1, Symbol('b'));
+	states1[0].add_transition(2, Symbol('a'));
+	states1[1].add_transition(3, Symbol('b'));
+	states1[2].add_transition(3, Symbol('c'));
 	states1[3].is_terminal = true;
-	FiniteAutomaton fa1(0, states1, {"a", "b", "c"});
+	FiniteAutomaton fa1(0, states1, {Symbol('a'), Symbol('b'), Symbol('c')});
 
 	vector<FAState> states2;
 	for (int i = 0; i < 3; i++) {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states2[0].add_transition(1, "b");
-	states2[1].add_transition(2, "b");
+	states2[0].add_transition(1, Symbol('b'));
+	states2[1].add_transition(2, Symbol('b'));
 	states2[2].is_terminal = true;
-	FiniteAutomaton fa2(0, states2, {"a", "b", "c"});
+	FiniteAutomaton fa2(0, states2, {Symbol('a'), Symbol('b'), Symbol('c')});
 
 	cout << fa1.subset(fa2) << endl;
 }
@@ -255,7 +255,7 @@ void Example::normalize_regex() {
 	Regex r(regl);
 
 	cout << "\nNormalize\nBefore: " << r.to_txt() << "\n";
-	r.normalize_regex({{Regex("a"), Regex("b")}});
+	r.normalize_regex({{Regex(Symbol('a')), Regex(Symbol('b'))}});
 	cout << "After: " << r.to_txt() << "\n";
 }
 void Example::to_image() {
@@ -263,17 +263,17 @@ void Example::to_image() {
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states1[0].add_transition(1, "a");
-	states1[0].add_transition(1, "eps");
-	states1[0].add_transition(2, "b");
-	states1[1].add_transition(2, "a");
-	states1[1].add_transition(1, "b");
-	states1[2].add_transition(1, "a");
-	states1[2].add_transition(1, "eps");
-	states1[2].add_transition(0, "b");
+	states1[0].add_transition(1, Symbol('a'));
+	states1[0].add_transition(1, Symbol::Epsilon);
+	states1[0].add_transition(2, Symbol('b'));
+	states1[1].add_transition(2, Symbol('a'));
+	states1[1].add_transition(1, Symbol('b'));
+	states1[2].add_transition(1, Symbol('a'));
+	states1[2].add_transition(1, Symbol::Epsilon);
+	states1[2].add_transition(0, Symbol('b'));
 	states1[0].is_terminal = true;
 	states1[2].is_terminal = true;
-	FiniteAutomaton fa1(1, states1, {"a", "b"});
+	FiniteAutomaton fa1(1, states1, {Symbol('a'), Symbol('b')});
 
 	string s1 = fa1.to_txt();
 
@@ -290,17 +290,17 @@ void Example::step() {
 	for (int i = 0; i < 3; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states1[0].add_transition(1, "a");
-	states1[0].add_transition(1, "eps");
-	states1[0].add_transition(2, "b");
-	states1[1].add_transition(2, "a");
-	states1[1].add_transition(1, "b");
-	states1[2].add_transition(1, "a");
-	states1[2].add_transition(1, "eps");
-	states1[2].add_transition(0, "b");
+	states1[0].add_transition(1, Symbol('a'));
+	states1[0].add_transition(1, Symbol::Epsilon);
+	states1[0].add_transition(2, Symbol('b'));
+	states1[1].add_transition(2, Symbol('a'));
+	states1[1].add_transition(1, Symbol('b'));
+	states1[2].add_transition(1, Symbol('a'));
+	states1[2].add_transition(1, Symbol::Epsilon);
+	states1[2].add_transition(0, Symbol('b'));
 	states1[0].is_terminal = true;
 	states1[2].is_terminal = true;
-	FiniteAutomaton fa1(1, states1, {"a", "b"});
+	FiniteAutomaton fa1(1, states1, {Symbol('a'), Symbol('b')});
 
 	// string f1 = fa1.to_txt();
 
@@ -334,26 +334,26 @@ void Example::step_interection() {
 		states2.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
 
-	states1[0].add_transition(0, "b");
-	states1[0].add_transition(1, "a");
-	states1[1].add_transition(1, "b");
-	states1[1].add_transition(2, "a");
-	states1[2].add_transition(2, "a");
-	states1[2].add_transition(2, "b");
+	states1[0].add_transition(0, Symbol('b'));
+	states1[0].add_transition(1, Symbol('a'));
+	states1[1].add_transition(1, Symbol('b'));
+	states1[1].add_transition(2, Symbol('a'));
+	states1[2].add_transition(2, Symbol('a'));
+	states1[2].add_transition(2, Symbol('b'));
 
 	states1[1].is_terminal = true;
 
-	states2[0].add_transition(0, "a");
-	states2[0].add_transition(1, "b");
-	states2[1].add_transition(1, "a");
-	states2[1].add_transition(2, "b");
-	states2[2].add_transition(2, "a");
-	states2[2].add_transition(2, "b");
+	states2[0].add_transition(0, Symbol('a'));
+	states2[0].add_transition(1, Symbol('b'));
+	states2[1].add_transition(1, Symbol('a'));
+	states2[1].add_transition(2, Symbol('b'));
+	states2[2].add_transition(2, Symbol('a'));
+	states2[2].add_transition(2, Symbol('b'));
 
 	states2[1].is_terminal = true;
 
-	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {"a", "b"});
-	FiniteAutomaton dfa2 = FiniteAutomaton(0, states2, {"a", "b"});
+	FiniteAutomaton dfa1 = FiniteAutomaton(0, states1, {Symbol('a'), Symbol('b')});
+	FiniteAutomaton dfa2 = FiniteAutomaton(0, states2, {Symbol('a'), Symbol('b')});
 
 	// string f1 = dfa1.to_txt();
 	// string f2 = dfa2.to_txt();
@@ -398,18 +398,18 @@ void Example::fa_semdet_check() {
 	for (int i = 0; i < 4; i++) {
 		states.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	states[0].add_transition(1, "a");
-	states[1].add_transition(1, "a");
-	states[1].add_transition(2, "b");
-	states[2].add_transition(1, "a");
-	states[2].add_transition(3, "b");
-	states[3].add_transition(1, "a");
-	states[3].add_transition(3, "b");
+	states[0].add_transition(1, Symbol('a'));
+	states[1].add_transition(1, Symbol('a'));
+	states[1].add_transition(2, Symbol('b'));
+	states[2].add_transition(1, Symbol('a'));
+	states[2].add_transition(3, Symbol('b'));
+	states[3].add_transition(1, Symbol('a'));
+	states[3].add_transition(3, Symbol('b'));
 	states[0].is_terminal = true;
 	states[1].is_terminal = true;
 	states[2].is_terminal = true;
 
-	FiniteAutomaton NDM(0, states, {"a", "b"});
+	FiniteAutomaton NDM(0, states, {Symbol('a'), Symbol('b')});
 
 	auto sdet = NDM.semdet();
 
@@ -524,22 +524,22 @@ void Example::fa_to_pgrammar() {
 	for (int i = 0; i < 5; i++) {
 		states1.emplace_back(i, set<int>({i}), std::to_string(i), false, FAState::Transitions());
 	}
-	// states1[0].add_transition(0, "b");
-	states1[4].add_transition(1, "a");
-	// states1[0].add_transition(1, "c");
-	//  states1[1].add_transition(1, "a");
-	//  states1[1].add_transition(1, "c");
-	states1[1].add_transition(2, "b");
-	states1[1].add_transition(4, "c");
-	// states1[2].add_transition(2, "c");
-	states1[2].add_transition(2, "b");
-	states1[2].add_transition(2, "c");
+	// states1[0].add_transition(0, Symbol('b'));
+	states1[4].add_transition(1, Symbol('a'));
+	// states1[0].add_transition(1, Symbol('c'));
+	//  states1[1].add_transition(1, Symbol('a'));
+	//  states1[1].add_transition(1, Symbol('c'));
+	states1[1].add_transition(2, Symbol('b'));
+	states1[1].add_transition(4, Symbol('c'));
+	// states1[2].add_transition(2, Symbol('c'));
+	states1[2].add_transition(2, Symbol('b'));
+	states1[2].add_transition(2, Symbol('c'));
 	states1[2].is_terminal = true;
-	states1[0].add_transition(4, "c");
-	states1[3].add_transition(0, "a");
-	states1[3].add_transition(0, "b");
+	states1[0].add_transition(4, Symbol('c'));
+	states1[3].add_transition(0, Symbol('a'));
+	states1[3].add_transition(0, Symbol('b'));
 	states1[4].is_terminal = true;
-	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {"a", "b", "c"});
+	FiniteAutomaton dfa1 = FiniteAutomaton(3, states1, {Symbol('a'), Symbol('b'), Symbol('c')});
 
 	PrefixGrammar g;
 	FiniteAutomaton test = a1.annote();

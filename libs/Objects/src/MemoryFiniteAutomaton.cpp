@@ -983,12 +983,12 @@ string random_mutation(const string& word, int l, int r, const Alphabet& alphabe
 		// вставка
 		int insertionPoint = uniform_int_distribution<int>(0, mutated_word.size() - 1)(gen);
 		int fragmentLength = uniform_int_distribution<int>(0, (mutated_word.size() + 1) / 2)(gen);
-		string randomFragment;
+		stringstream random_fragment;
 		for (int i = 0; i < fragmentLength; ++i) {
 			Symbol random_symb = *next(begin(alphabet), gen() % alphabet.size());
-			randomFragment += random_symb;
+			random_fragment << string(random_symb);
 		}
-		mutated_word.insert(insertionPoint, randomFragment);
+		mutated_word.insert(insertionPoint, random_fragment.str());
 	} else {
 		// удаление
 		int numDeletions = uniform_int_distribution<int>(1, mutated_word.size() / 2)(gen);
@@ -1236,11 +1236,11 @@ FiniteAutomaton MemoryFiniteAutomaton::to_symbolic_fa() const {
 					fa_states.emplace_back(n++, "O" + std::to_string(ind), false);
 
 				if (n > start) {
-					alphabet.insert(fa_states[start].identifier);
-					fa_states[i].transitions[fa_states[start].identifier].insert(start);
+					alphabet.insert(Symbol(fa_states[start].identifier));
+					fa_states[i].transitions[Symbol(fa_states[start].identifier)].insert(start);
 					for (int j = start; j < n - 1; j++) {
-						alphabet.insert(fa_states[j + 1].identifier);
-						fa_states[j].transitions[fa_states[j + 1].identifier].insert(j + 1);
+						alphabet.insert(Symbol(fa_states[j + 1].identifier));
+						fa_states[j].transitions[Symbol(fa_states[j + 1].identifier)].insert(j + 1);
 					}
 					fa_states[fa_states.size() - 1].transitions[symbol].insert(tr.to);
 				} else {
