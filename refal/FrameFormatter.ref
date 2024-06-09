@@ -128,7 +128,14 @@ FindSeparator {
 TakePrefix {
   0 e.Rest = (e.Rest);
  s.Size = ();
- s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight (e.Rest) s.Sym>> e.Rest>;
+ s.Length s.Sym e.Rest
+ , <ASCIIStandard> :
+  { e.A1 s.Sym e.A2  = s.Sym <TakePrefix <SafeSub s.Length <Weight (e.Rest) s.Sym>> e.Rest>;
+   e.A
+   , e.Rest : s.S1 e.Rest1
+     = s.Sym s.S1 <TakePrefix <SafeSub s.Length <Mul 2 <Weight (e.Rest) s.Sym>>> e.Rest1>;
+   e.A = s.Sym ();
+  };
 }
 
 Weight {
@@ -378,9 +385,14 @@ s.DefaultWidth ((e.Line))
 }
 
 TableMathMode {
- e.x'\\\\'e.y = <TableMathMode e.x>'\\\\'<TableMathMode e.y>;
- e.x'&'e.y = <DropTagsMM (<TableTags>) e.x>'&'<TableMathMode e.y>;
- e.Z = <DropTagsMM (<TableTags>) e.Z>;
+ () e.x'\\\\'e.y = <TableMathMode () e.x>'\\\\'<TableMathMode () e.y>;
+ (e.Prev)e.x'&'e.y
+ , e.x :
+ {e.x0'\\' 
+   = <TableMathMode (e.Prev e.x'&') e.y>;
+  e.xx = <DropTagsMM (<TableTags>) e.Prev e.x>'&'<TableMathMode () e.y>;
+ };
+ (e.Prev)e.Z = <DropTagsMM (<TableTags>) e.Prev e.Z>;
 }
 
 DropTagsMM {
@@ -424,29 +436,30 @@ FormTableAux {
  {'-'
   , <SplitLongCells s.ExH s.DefaultWidth s.ExSize e.Line> : e.Data s.Height
        = (<GenZebra s.Oddity> e.Data)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add s.Lines <Div s.Height s.ExH>> e.InnerTable>;
-  s.Any = (<GenZebra s.Oddity><TableMathMode e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
+  s.Any = (<GenZebra s.Oddity><TableMathMode ()e.Line>)<FormTableAux <SwitchOddity s.Oddity> s.DefaultWidth s.ExSize <Add 1 s.Lines> e.InnerTable>;
  };
  }
 
 SplitLongCells {
  s.MaxHeight s.DefaultWidth s.ExSize e.L1'&'e.L2
- , <Compare <String_Length e.L1> 20> :
- {'+', <FormFormula <Div s.DefaultWidth 3> s.ExSize e.L1> : (e.Form)e.Rubbish(s.Height)
-      = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n&\n'
+ , <Prout 'Default Width: ' s.DefaultWidth> : e.Trash
+ , <Compare <List_Length e.L1> 20> :
+ {'+', <FormFormula <Div <Mul s.DefaultWidth 2> 3> s.ExSize e.L1> : (e.Form)e.Rubbish(s.Height)
+      = '\\begin{array}{l}\n'<TableMathMode ()<Flatten e.Form>>'\\end{array}\n&\n'
         <SplitLongCells <Max s.MaxHeight s.Height> s.DefaultWidth s.ExSize e.L2>;
-  s.Any = <TableMathMode e.L1>'&'<SplitLongCells s.MaxHeight s.DefaultWidth s.ExSize e.L2>; 
+  s.Any = <TableMathMode ()e.L1>'&'<SplitLongCells s.MaxHeight s.DefaultWidth s.ExSize e.L2>; 
  };
  s.MaxHeight s.DefaultWidth s.ExSize e.Last'\\\\'e.Smth
- , <Compare <String_Length e.Last> 20> :
+ , <Compare <List_Length e.Last> 20> :
  {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
-      = '\\begin{array}{l}\n'<TableMathMode <Flatten e.Form>>'\\end{array}\n\\\\'e.Smth'\n'<Max s.MaxHeight s.Height>;
-  s.Any = <TableMathMode e.Last>'\\\\'e.Smth s.MaxHeight; 
+      = '\\begin{array}{l}\n'<TableMathMode ()<Flatten e.Form>>'\\end{array}\n\\\\'e.Smth'\n'<Max s.MaxHeight s.Height>;
+  s.Any = <TableMathMode ()e.Last>'\\\\'e.Smth s.MaxHeight; 
  };
  s.MaxHeight s.DefaultWidth s.ExSize e.Last
- , <Compare <String_Length e.Last> 20> :
+ , <Compare <List_Length e.Last> 20> :
  {'+', <FormFormula <Div <Mul s.DefaultWidth 4> 5> s.ExSize e.Last> : (e.Form)e.Rubbish(s.Height)
-      = '\\begin{array}{l}\n'<TableMathMode e.Form>'\\end{array}\n'<Max s.MaxHeight s.Height>;
-  s.Any = <TableMathMode e.Last> s.MaxHeight; 
+      = '\\begin{array}{l}\n'<TableMathMode ()e.Form>'\\end{array}\n'<Max s.MaxHeight s.Height>;
+  s.Any = <TableMathMode ()e.Last> s.MaxHeight; 
  };
 }
 
@@ -707,7 +720,7 @@ InsertNewPageIfNeeded {
 
 PutByLines {
  s.Mode  = ;
- Math (e.Line) e.Rest = <Putout 2 <TableMathMode e.Line>><PutByLines Math e.Rest>;
+ Math (e.Line) e.Rest = <Putout 2 <TableMathMode () e.Line>><PutByLines Math e.Rest>;
  Raw (e.Line) e.Rest = <Putout 2 e.Line><PutByLines Raw e.Rest>;
 }
 
