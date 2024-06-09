@@ -2185,105 +2185,152 @@ bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 	return result;
 }
 
-std::optional<string> FiniteAutomaton::get_prefix(int state_beg, int state_end,
-												  map<int, bool>& was) const {
-	std::optional<string> ans = std::nullopt;
+std::optional<std::vector<Regex>> FiniteAutomaton::get_prefix(int state_beg, int state_end,
+													   map<int, bool>& was) const {
+	std::optional<std::vector<Regex>> ans = std::nullopt;
 	if (state_beg == state_end) {
-		ans = "";
+		ans = {Regex(Symbol::Epsilon)};
 		return ans;
 	}
-	auto trans = &states[state_beg].transitions;
-	for (auto it = trans->begin(); it != trans->end(); it++) {
-		for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
-			if (!was[*it2]) {
-				was[*it2] = true;
-				auto res = get_prefix(*it2, state_end, was);
-				if (res) {
-					ans = (string)it->first + (string)*res;
+	auto trans = states[state_beg].transitions;
+	for (auto it : trans) {
+		for (auto it2 : it.second) {
+			if (!was[it2]) {
+				was[it2] = true;
+				auto res = get_prefix(it2, state_end, was);
+				if (res.has_value()) {
+					ans = {Regex(it.first)};
+					cout << Regex(it.first).to_txt() << "\n";
+					ans.value().insert(ans.value().end(), res.value().begin(), res.value().end());
+					return ans;
 				}
-				return ans;
 			}
 		}
 	}
 	return ans;
 }
 
-bool FiniteAutomaton::semdet_entry(bool annoted, iLogTemplate* log) const {
-	if (!annoted) {
-		return annote().semdet_entry(true);
-	}
+bool FiniteAutomaton::semdet(iLogTemplate* log) const {
+	/* if (!annoted) {
+		return annote().semdet_entry(true, log);
+	}*/
 	map<int, bool> was;
-	vector<int> final_states;
-	for (int i = 0; i < states.size(); i++) {
-		if (states[i].is_terminal)
-			final_states.push_back(i);
-	}
+	int trans_id = 1;
+	bool reliability;
+
+	auto make_string_transition = [=](string from, Symbol through, string to) {
+		string arrow = ">->>[[" + string(through) + "]]";
+		return from + arrow + to;
+	};
+
 	vector<Regex> state_languages;
+	FiniteAutomaton dfaa = annote();
+	Regex reg = dfaa.to_regex();
+	MetaInfo meta;
+	iLogTemplate::Table t;
+	string local_ambig = "";
+	if (log) {
+		  t.columns.push_back("Неоднозначные переходы");
+	          t.columns.push_back("Безопасные переходы");
+		}
 	state_languages.resize(states.size());
 	for (int i = 0; i < states.size(); i++) {
-		auto prefix = get_prefix(initial_state, i, was);
-		was.clear();
-		// cout << "Try " << i << "\n";
+		auto prefix = dfaa.get_prefix(initial_state, i, was);
 		if (!prefix.has_value())
 			continue;
-		Regex reg;
-		// Получение языка из производной регулярки автомата по префиксу:
-		//		this -> reg (arden?)
-		reg = to_regex();
-		//  cout << "State: " << i << "\n";
-		//  cout << "Prefix: " << prefix.value() << "\n";
-		//  cout << "Regex: " << reg.to_txt() << "\n";
+		was.clear();
+		cout << "Try " << states[i].identifier << ""  << "\n";
+		for (int i = 0; i < prefix.value().size(); i++)
+			cout << prefix.value()[i].to_txt() << " ";
+		cout << "\n";
 		auto derivative = reg.prefix_derivative(prefix.value());
 		if (!derivative.has_value())
 			continue;
 		state_languages[i] = derivative.value();
-		// cout << "Derevative: " << state_languages[i].to_txt() << "\n";
+		//if (annoted)
+			state_languages[i] = state_languages[i].deannote();
+		cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 
 		// TODO: logs
-		if (log) {
+/*		if (log) {
 			log->set_parameter("state", i);
 			log->set_parameter("prefix", prefix.value());
 			log->set_parameter("regex", reg);
 			log->set_parameter("derivative", state_languages[i]);
-		}
+		}*/
 		state_languages[i].make_language();
 	}
 	for (int i = 0; i < states.size(); i++) {
-		for (const auto& state : states) {
-			for (auto transition = state.transitions.begin(); transition != state.transitions.end();
-				 transition++) {
+			for (auto transition : states[i].transitions) {
 				bool verified_ambiguity = false;
-				for (auto it = transition->second.begin(); it != transition->second.end(); it++) {
-					bool reliability = true;
-					for (auto it2 = transition->second.begin(); it2 != transition->second.end();
-						 it2++) {
-						if (!state_languages[*it].subset(state_languages[*it2])) {
-							reliability = false;
-							break;
+				int target;
+				for (auto it : transition.second) {
+					reliability = true;
+					target = it;
+					set<int> checked;
+					checked.insert(target);		
+					for (auto it2 : transition.second) {
+						if (it2 <= it) continue;
+						cout << "Checking lang subset: " << states[target].identifier << " "
+							 << states[it2].identifier << "\n";
+						cout << state_languages[target].to_txt() << " " << state_languages[it2].to_txt()
+							 << "\n";
+						if (!state_languages[target].subset(state_languages[it2])) {
+							if (!state_languages[it2].subset(state_languages[target])) {
+								reliability = false;
+								break;
+							} else {
+								target = it2;
+								checked.insert(target);	
+							}
 						}
 					}
 					verified_ambiguity |= reliability;
+					if (transition.second.size() > 1)  {
+						local_ambig="";
+						t.rows.push_back("<"+ states[i].identifier+","+ string(transition.first)+ ">");
+						for (auto v : transition.second)
+							{if ((!reliability)||(v >= it)) 
+							meta.upd(EdgeMeta{i, v, transition.first, trans_id});
+							local_ambig +=", " + states[v].identifier;
+						}
+						local_ambig = local_ambig.substr(1);
+						trans_id++;
+						t.data.push_back(local_ambig);
+						if (reliability) {meta.upd(EdgeMeta{i,target,transition.first,0});
+							t.data.push_back(make_string_transition(states[i].identifier, transition.first, states[target].identifier));
+							cout << "Meta UPD"
+							<< "\n";
+						} else
+							t.data.push_back("Отсутствуют");  
+						}
+					if (!verified_ambiguity) {
+						// Logger::log("Результат SemDet", "false");
+						// Logger::finish_step();
+						cout << "Break false"
+						<< "\n";
+						if (log) {
+							log->set_parameter("oldautomaton", *this, meta);
+							log->set_parameter("result", "false\\\\");
+							if (trans_id > 1) {
+								log->set_parameter("trans_table", t);
+							}
+						}
+						return false;
+						}
+					if (target == it)
+						break;
 				}
-				if (!verified_ambiguity) {
-					return false;
-				}
-			}
 		}
-	}
+	}  
+	if (log) {
+		log->set_parameter("oldautomaton", *this, meta);
+		if (trans_id>1)
+			{log->set_parameter("trans_table", t); }
+		log->set_parameter("result", "true\\\\");
+	}	
 	return true;
 }
-
-bool FiniteAutomaton::semdet(iLogTemplate* log) const {
-	if (log) {
-		log->set_parameter("oldautomaton", *this);
-	}
-	bool result = semdet_entry(log);
-	if (log) {
-		log->set_parameter("result", result);
-	}
-	return result;
-}
-
 // bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {
 //	FAState state = states[index_state];
 //

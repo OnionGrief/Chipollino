@@ -91,11 +91,8 @@ class FiniteAutomaton : public AbstractMachine {
 	std::optional<bool> get_nfa_minimality_value() const;
 
 	// поиск префикса из состояния state_beg в состояние state_end
-	std::optional<std::string> get_prefix(
+	std::optional<std::vector<Regex>> get_prefix(
 		int state_beg, int state_end, std::map<int, bool>& was) const; // NOLINT(runtime/references)
-
-	// функция проверки на семантическую детерминированность
-	bool semdet_entry(bool annoted = false, iLogTemplate* log = nullptr) const;
 
 	// меняет местами состояние под индексом 0 с начальным
 	// используется в томпсоне

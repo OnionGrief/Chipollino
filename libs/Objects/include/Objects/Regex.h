@@ -25,7 +25,7 @@ class Regex : public AlgExpression {
 	bool equals(const AlgExpression* other) const override;
 
 	// Множество префиксов длины len
-	void get_prefix(int len, std::set<std::string>& prefs) const; // NOLINT(runtime/references)
+	void get_prefix(int len, std::vector<std::vector<Regex>>& prefs) const; // NOLINT(runtime/references)
 	// Производная по символу
 	bool derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
@@ -33,7 +33,7 @@ class Regex : public AlgExpression {
 		Regex* respected_sym, const Regex* reg_e,
 		std::vector<Regex>& result) const; // NOLINT(runtime/references)
 	// Производная по префиксу
-	bool derivative_with_respect_to_str(std::string str, const Regex* reg_e,
+	bool derivative_with_respect_to_str(const std::vector<Regex>& str, const Regex* reg_e,
 										Regex& result) const; // NOLINT(runtime/references)
 
 	// возвращает вектор состояний нового автомата, построенного из регулярного выражения
@@ -83,7 +83,7 @@ class Regex : public AlgExpression {
 	void partial_symbol_derivative(const Regex& respected_sym,
 								   std::vector<Regex>& result) const; // NOLINT(runtime/references)
 	// производная по префиксу
-	std::optional<Regex> prefix_derivative(std::string respected_str) const;
+	std::optional<Regex> prefix_derivative(const std::vector<Regex>& respected_str) const;
 	// поиск длины накачки
 	int pump_length(iLogTemplate* log = nullptr) const;
 	Regex linearize(iLogTemplate* log = nullptr) const;

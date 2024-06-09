@@ -603,39 +603,39 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 	return fa;
 }
 
-void Regex::get_prefix(int len, set<string>& prefs) const {
-	set<string> prefs1, prefs2;
+void Regex::get_prefix(int len, vector<vector<Regex>>& prefs) const {
+	vector<vector<Regex>> prefs1, prefs2;
 	if (len == 0) {
-		prefs.insert("");
+		prefs.push_back({Regex(Symbol::Epsilon)});
 		return;
 	}
 	switch (type) {
 	case Type::eps:
 		if (len == 0)
-			prefs.insert("");
+			prefs.push_back({Regex(Symbol::Epsilon)});
 		return;
 	case Type::symb:
-		if (len == 1) {
-			prefs.insert(string(symbol));
-		}
+		prefs.push_back({*this});
 		return;
 	case Type::alt:
 		Regex::cast(term_l)->get_prefix(len, prefs1);
 		Regex::cast(term_r)->get_prefix(len, prefs2);
-		for (auto i = prefs1.begin(); i != prefs1.end(); i++) {
-			prefs.insert(*i);
+		for (int i = 0; i < prefs1.size(); i++) {
+			prefs.push_back(prefs1[i]);
 		}
-		for (auto i = prefs2.begin(); i != prefs2.end(); i++) {
-			prefs.insert(*i);
+		for (int i = 0; i < prefs2.size(); i++) {
+			prefs.push_back(prefs2[i]);
 		}
 		return;
 	case Type::conc:
 		for (int k = 0; k <= len; k++) {
 			Regex::cast(term_l)->get_prefix(k, prefs1);
 			Regex::cast(term_r)->get_prefix(len - k, prefs2);
-			for (auto i = prefs1.begin(); i != prefs1.end(); i++) {
-				for (auto j = prefs2.begin(); j != prefs2.end(); j++) {
-					prefs.insert(*i + *j);
+			for (int i = 0; i < prefs1.size();  i++) {
+				for (int j = 0; j < prefs2.size(); j++) {
+					vector<Regex> auxpref = prefs1[i];
+					auxpref.insert(auxpref.end(), prefs2[j].begin(), prefs2[j].end());
+					prefs.push_back(auxpref);
 				}
 			}
 			prefs1.clear();
@@ -644,15 +644,17 @@ void Regex::get_prefix(int len, set<string>& prefs) const {
 		return;
 	case Type::star:
 		if (len == 0) {
-			prefs.insert("");
+			prefs.push_back({Regex(Symbol::Epsilon)});
 			return;
 		}
 		for (int k = 1; k <= len; k++) {
 			Regex::cast(term_l)->get_prefix(k, prefs1);
 			get_prefix(len - k, prefs2);
-			for (auto i = prefs1.begin(); i != prefs1.end(); i++) {
-				for (auto j = prefs2.begin(); j != prefs2.end(); j++) {
-					prefs.insert(*i + *j);
+			for (int i = 0; i < prefs1.size(); i++) {
+				for (int j = 0; j < prefs2.size(); j++) {
+					vector<Regex> auxpref = prefs1[i];
+					auxpref.insert(auxpref.end(), prefs2[j].begin(), prefs2[j].end());
+					prefs.push_back(auxpref);
 				}
 			}
 			prefs1.clear();
@@ -872,15 +874,13 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 	}
 }
 
-bool Regex::derivative_with_respect_to_str(string str, const Regex* reg_e, Regex& result) const {
+bool Regex::derivative_with_respect_to_str(const vector<Regex>& str, const Regex* reg_e, Regex& result) const {
 	bool success = true;
 	Regex cur = *reg_e;
 	Regex next = *reg_e;
-	for (char i : str) {
-		Regex sym;
-		sym.type = Type::symb;
-		sym.symbol = i;
+	for (auto sym : str) {
 		next.clear();
+		cout << "Take derivative: " << sym.to_txt() << "\n";
 		success &= derivative_with_respect_to_sym(&sym, &cur, next);
 		if (!success) {
 			return false;
@@ -910,7 +910,7 @@ void Regex::partial_symbol_derivative(const Regex& respected_sym, vector<Regex>&
 	delete rs;
 }
 
-std::optional<Regex> Regex::prefix_derivative(string respected_str) const {
+std::optional<Regex> Regex::prefix_derivative(const vector<Regex>& respected_str) const {
 	Regex result;
 	std::optional<Regex> ans;
 	if (derivative_with_respect_to_str(respected_str, this, result))
@@ -921,49 +921,59 @@ std::optional<Regex> Regex::prefix_derivative(string respected_str) const {
 }
 
 int Regex::pump_length(iLogTemplate* log) const {
+	if (log)
+		log->set_parameter("oldregex", *this);
 	if (language->is_pump_length_cached()) {
 		if (log) {
-			log->set_parameter("pumplength", language->get_pump_length());
+			log->set_parameter("pumplength1", language->get_pump_length());
 			log->set_parameter("cach", "(!) результат получен из кэша");
 		}
 		return language->get_pump_length();
 	}
-	map<string, bool> checked_prefixes;
+	std::unordered_map<string, bool> checked_prefixes;
+	auto word_to_str = [=](std::vector<Regex>& from) {
+		std::string s = "";
+		for (auto f : from)
+			s = s + f.to_txt();
+		return s;
+	};
 	for (int i = 1;; i++) {
-		set<string> prefs;
+		std::vector<vector<Regex>> prefs;
 		get_prefix(i, prefs);
 		if (prefs.empty()) {
 			language->set_pump_length(i);
 			if (log) {
-				log->set_parameter("pumplength", i);
+				log->set_parameter("pumplength1", i);
 			}
 			return i;
 		}
-		for (auto it = prefs.begin(); it != prefs.end(); it++) {
+		for (auto it : prefs) {
 			bool was = false;
-			for (int j = 0; j < it->size(); j++) {
-				if (checked_prefixes[it->substr(0, j)]) {
+			for (int j = 0; j < it.size(); j++) {
+				if (checked_prefixes[word_to_str(vector(it.begin(), it.begin() + j))]) {
 					was = true;
 					break;
 				}
 			}
 			if (was)
 				continue;
-			for (int j = 0; j < it->size(); j++) {
-				for (int k = j + 1; k <= it->size(); k++) {
-					string pumped_prefix;
-					pumped_prefix += it->substr(0, j);
-					pumped_prefix += "(" + it->substr(j, k - j) + ")*";
-					pumped_prefix += it->substr(k, it->size() - k + j);
-					Regex a(pumped_prefix);
+			for (int j = 0; j < it.size(); j++) {
+				Regex pumped_prefix = it[0];
+				Regex suff = Regex(Symbol::Epsilon);
+				for (int k = 0; k < j; k++)
+					pumped_prefix = Regex(Type::conc, &pumped_prefix, &it[k]);
+				for (int k = j + 1; k < it.size(); k++)
+					suff = Regex(Type::conc, &suff, &it[k]);
+				for (int k = j + 1; k <= it.size(); k++) {
+					Regex a(Type::conc, &Regex(Type::star, &pumped_prefix), &suff);
 					Regex b;
 					Regex pumping(Type::conc, &a, &b);
-					if (!derivative_with_respect_to_str(*it, this, *Regex::cast(pumping.term_r)))
+					if (!derivative_with_respect_to_str(it, this, *Regex::cast(pumping.term_r)))
 						continue;
 					pumping.make_language();
 					// cout << pumped_prefix << " " << pumping.term_r->to_txt();
 					if (subset(pumping)) {
-						checked_prefixes[*it] = true;
+						checked_prefixes[word_to_str(it)] = true;
 						language->set_pump_length(i);
 						/*cout << *it << "\n";
 						cout << pumping.to_txt() << "\n";
