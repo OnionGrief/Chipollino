@@ -966,7 +966,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 		return language->get_pump_length();
 	}
 	std::unordered_map<string, bool> checked_prefixes;
-	auto word_to_str = [=](std::vector<Regex>& from) {
+	auto word_to_str = [=](std::vector<Regex> from) {
 		std::string s = "";
 		for (auto f : from)
 			s = s + f.to_txt();
@@ -985,7 +985,7 @@ int Regex::pump_length(iLogTemplate* log) const {
 		for (auto it : prefs) {
 			bool was = false;
 			for (int j = 0; j < it.size(); j++) {
-				if (checked_prefixes[word_to_str(vector(it.begin(), it.begin() + j))]) {
+				if (checked_prefixes[word_to_str(std::vector(it.begin(), it.begin() + j))]) {
 					was = true;
 					break;
 				}
@@ -1000,7 +1000,8 @@ int Regex::pump_length(iLogTemplate* log) const {
 				for (int k = j + 1; k < it.size(); k++)
 					suff = Regex(Type::conc, &suff, &it[k]);
 				for (int k = j + 1; k <= it.size(); k++) {
-					Regex a(Type::conc, &Regex(Type::star, &pumped_prefix), &suff);
+					Regex aux = Regex(Type::star, &pumped_prefix);
+					Regex a(Type::conc, &aux, &suff);
 					Regex b;
 					Regex pumping(Type::conc, &a, &b);
 					if (!derivative_with_respect_to_str(it, this, *Regex::cast(pumping.term_r)))
@@ -1186,12 +1187,12 @@ Regex Regex::update_epsilons() const {
 					break;
 				}
 			default:
-				Regex r1 = *Regex::cast(term_l);
+				Regex r1 = (*Regex::cast(term_l)).update_epsilons();
 				if (term_r!=nullptr) {
-					Regex r2 = *Regex::cast(term_r);
-					result = Regex(type, &r1.update_epsilons(), &r2.update_epsilons()); 
+					Regex r2 = (*Regex::cast(term_r)).update_epsilons();
+					result = Regex(type, &r1, &r2); 
 				} else
-					result = Regex(type, &r1.update_epsilons(), nullptr);
+					result = Regex(type, &r1, nullptr);
 
 		}
 		return result;
