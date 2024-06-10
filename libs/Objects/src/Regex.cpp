@@ -29,14 +29,14 @@ Regex::Regex(const string& str) {
 }
 
 Regex::Regex(const Symbol& s) {
-if (s.is_epsilon())
- {type = Type::eps;
- }
-else
- {type = Type::symb;
-  symbol = s;
-  alphabet = {s};
- }
+	if (s.is_epsilon()) {
+		type = Type::eps;
+	}
+	else {
+		type = Type::symb;
+	 	symbol = s;
+		alphabet = {s};
+	}
 }
 
 Regex::Regex(const string& str, const std::shared_ptr<Language>& new_language) : Regex(str) {
@@ -1167,6 +1167,37 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 	return fa;
 }
 
+Regex Regex::update_epsilons() const {
+   Regex result;
+   Symbol s;
+   switch (type) {
+			case Type::eps:
+				result.type = Type::eps;
+				break;
+			case Type::symb:
+				s = Symbol(symbol);
+				s.delinearize();
+				if (s.is_epsilon()) {
+					result.type = Type::eps;
+					break;
+				}
+				else {
+					result = Regex(symbol);
+					break;
+				}
+			default:
+				Regex r1 = *Regex::cast(term_l);
+				if (term_r!=nullptr) {
+					Regex r2 = *Regex::cast(term_r);
+					result = Regex(type, &r1.update_epsilons(), &r2.update_epsilons()); 
+				} else
+					result = Regex(type, &r1.update_epsilons(), nullptr);
+
+		}
+		return result;
+	}
+
+
 Regex Regex::deannote(iLogTemplate* log) const {
 	Regex temp_copy(*this);
 	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
@@ -1177,11 +1208,12 @@ Regex Regex::deannote(iLogTemplate* log) const {
 			deannoted_alphabet.insert(i->symbol);
 	}
 	temp_copy.set_language(deannoted_alphabet);
+	Regex ttt = temp_copy.update_epsilons();
 	if (log) {
 		log->set_parameter("oldregex", *this);
-		log->set_parameter("result", temp_copy);
+		log->set_parameter("result", ttt);
 	}
-	return temp_copy;
+	return ttt;
 }
 
 bool Regex::is_one_unambiguous(iLogTemplate* log) const {
