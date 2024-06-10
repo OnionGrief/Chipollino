@@ -2216,7 +2216,7 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 	}*/
 	map<int, bool> was;
 	int trans_id = 1;
-	bool reliability;
+	bool reliability,strict_ordering;
 
 	auto make_string_transition = [=](string from, Symbol through, string to) {
 		string arrow = ">->>[[" + string(through) + "]]";
@@ -2247,8 +2247,9 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 		if (!derivative.has_value())
 			continue;
 		state_languages[i] = derivative.value();
+		cout << "Derevative1: " << state_languages[i].to_txt() << "\n";
 		//if (annoted)
-			state_languages[i] = state_languages[i].deannote();
+		state_languages[i] = state_languages[i].deannote();
 		cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 
 		// TODO: logs
@@ -2263,34 +2264,37 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 	for (int i = 0; i < states.size(); i++) {
 			for (auto transition : states[i].transitions) {
 				bool verified_ambiguity = false;
-				int target;
-				for (auto it : transition.second) {
+				int target = *(transition.second.begin());
+				set<int> accumulator;
+					strict_ordering = true;
 					reliability = true;
-					target = it;
-					set<int> checked;
-					checked.insert(target);		
+					accumulator.insert(target);
 					for (auto it2 : transition.second) {
-						if (it2 <= it) continue;
 						cout << "Checking lang subset: " << states[target].identifier << " "
 							 << states[it2].identifier << "\n";
 						cout << state_languages[target].to_txt() << " " << state_languages[it2].to_txt()
 							 << "\n";
 						if (!state_languages[target].subset(state_languages[it2])) {
 							if (!state_languages[it2].subset(state_languages[target])) {
-								reliability = false;
-								break;
+								accumulator.insert(it2); 
+								strict_ordering = false;
 							} else {
 								target = it2;
-								checked.insert(target);	
 							}
 						}
 					}
+					if (!strict_ordering) {
+						for (auto v : accumulator)
+							if (!state_languages[target].subset(state_languages[v]))
+								{ reliability = false;
+								 break; }
+					}					
 					verified_ambiguity |= reliability;
 					if (transition.second.size() > 1)  {
 						local_ambig="";
 						t.rows.push_back("<"+ states[i].identifier+","+ string(transition.first)+ ">");
 						for (auto v : transition.second)
-							{if ((!reliability)||(v >= it)) 
+							{if ((!reliability)||(v != target)) 
 							meta.upd(EdgeMeta{i, v, transition.first, trans_id});
 							local_ambig +=", " + states[v].identifier;
 						}
@@ -2317,9 +2321,7 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 							}
 						}
 						return false;
-						}
-					if (target == it)
-						break;
+						
 				}
 		}
 	}  
