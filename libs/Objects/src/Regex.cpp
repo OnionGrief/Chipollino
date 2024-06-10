@@ -1168,7 +1168,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 	return fa;
 }
 
-Regex Regex::update_epsilons() const {
+Regex Regex::update_epsilons(Alphabet& a) const {
    Regex result;
    Symbol s;
    switch (type) {
@@ -1177,20 +1177,26 @@ Regex Regex::update_epsilons() const {
 				break;
 			case Type::symb:
 				s = Symbol(symbol);
+				s.deannote();
 				s.delinearize();
 				if (s.is_epsilon()) {
 					result.type = Type::eps;
 					break;
 				}
 				else {
+					s = Symbol(symbol);
+					s.deannote();
 					result = Regex(symbol);
+					a.insert(symbol);
 					break;
 				}
 			default:
-				Regex r1 = (*Regex::cast(term_l)).update_epsilons();
-				if (term_r!=nullptr) {
-					Regex r2 = (*Regex::cast(term_r)).update_epsilons();
-					result = Regex(type, &r1, &r2); 
+				Regex r1 = (*Regex::cast(term_l)).update_epsilons(a);
+				if (term_r != nullptr) {
+					Alphabet d;
+					Regex r2 = (*Regex::cast(term_r)).update_epsilons(d);
+					result = Regex(type, &r1, &r2);
+					a.merge(d);  
 				} else
 					result = Regex(type, &r1, nullptr);
 
@@ -1200,16 +1206,9 @@ Regex Regex::update_epsilons() const {
 
 
 Regex Regex::deannote(iLogTemplate* log) const {
-	Regex temp_copy(*this);
-	vector<Regex*> list = Regex::cast(temp_copy.preorder_traversal());
-	Alphabet deannoted_alphabet;
-	for (auto& i : list) {
-		i->symbol.deannote();
-		if (!i->symbol.is_epsilon()) 
-			deannoted_alphabet.insert(i->symbol);
-	}
-	temp_copy.set_language(deannoted_alphabet);
-	Regex ttt = temp_copy.update_epsilons();
+	Alphabet deannoted_alphabet = Alphabet{};
+	Regex ttt = update_epsilons(deannoted_alphabet);
+	ttt.set_language(deannoted_alphabet);
 	if (log) {
 		log->set_parameter("oldregex", *this);
 		log->set_parameter("result", ttt);

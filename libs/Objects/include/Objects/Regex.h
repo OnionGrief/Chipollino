@@ -22,7 +22,7 @@ class Regex : public AlgExpression {
 	Regex* expr(const std::vector<Lexeme>&, int, int) override;
 	Regex* scan_minus(const std::vector<Lexeme>&, int, int);
 
-	Regex update_epsilons() const;
+	Regex update_epsilons(Alphabet& a) const;
 	bool equals(const AlgExpression* other) const override;
 
 	// Множество префиксов длины len
