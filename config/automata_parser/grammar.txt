@@ -13,7 +13,7 @@ transition --> stmt (MFA? memory_lists : EPS) (PDA? stack_actions : EPS) ';' ;
 stmt --> node_id node_id symbol ;
 memory_lists --> memory_cell memory_lists | EPS ;
 memory_cell --> cell_id memory_state ;
-memory_state --> 'o' | 'c' ;
+memory_state --> 'o' | 'c' | 'r' ;
 stack_actions --> stack_symbol '/' stack_pushes ;
 stack_symbol --> '$' | node_id ;
 stack_pushes --> stack_symbol stack_pushes | EPS ;

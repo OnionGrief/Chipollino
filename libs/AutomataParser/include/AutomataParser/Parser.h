@@ -33,6 +33,7 @@ class Parser {
 		// MFA fields
 		std::unordered_set<int> close;
 		std::unordered_set<int> open;
+		std::unordered_set<int> reset;
 
 		// PDA fields
 		Symbol pop;
@@ -98,7 +99,7 @@ class Parser {
 			 auto transition = rewriting_rules["final"];
 			 bool res = parse_alternative(*transition);
 			 if (res && TERMINAL == "final")
-			 	term = true;
+				 term = true;
 			 return res;
 		 }},
 		{"transition",
@@ -170,6 +171,9 @@ class Parser {
 			 }
 			 if (TERMINAL == "c") {
 				 FAtransitions.back().close.insert(NUMBER);
+			 }
+			 if (TERMINAL == "r") {
+				 FAtransitions.back().reset.insert(NUMBER);
 			 }
 			 return res;
 		 }},

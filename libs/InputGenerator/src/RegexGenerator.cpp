@@ -236,10 +236,6 @@ GRAMMAR:
 <regex> ::= <n-alt-regex> <alt> <regex> | <conc-regex> | пусто
 <n-alt-regex> ::=  <conc-regex> | пусто
 <conc-regex> ::= <simple-regex> | <simple-regex><conc-regex>
-<simple-regex> ::= <neg>? ( <lbr><regex><rbr> | буква | [ <regex> ] : <num> |  & <num> ) <star>?
-<alt> ::= '|'
-<lbr> ::= '('
-<rbr> ::= ')'
-<star> ::= '*'
-<neg> ::= '^'
+<simple-regex> ::= <neg>? ( <lbr><regex><rbr> | буква | '[' <regex> ']' : <num> |  '&' <num> ) <star>?
+<alt> ::= '|'   <lbr> ::= '('  <rbr> ::= ')'  <star> ::= '*'  <neg> ::= '^'
 */

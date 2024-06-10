@@ -41,4 +41,6 @@ class AbstractMachine : public BaseObject {
 	virtual bool is_deterministic(iLogTemplate* log) const = 0;
 	// проверяет, распознаёт ли автомат слово
 	virtual std::pair<int, bool> parse(const std::string&) const = 0;
+	// перевод в текстовое представление автомата (DSL)
+	virtual std::string to_dsl() const = 0;
 };

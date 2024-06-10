@@ -114,15 +114,32 @@ string FiniteAutomaton::to_txt() const {
 		ss << "dummy -> " << states[initial_state].index << "\n";
 
 	for (const auto& state : states) {
-		for (const auto& elem : state.transitions) {
-			for (int transition_to : elem.second) {
+		for (const auto& [symbol, states_to] : state.transitions) {
+			for (int transition_to : states_to) {
 				ss << "\t" << state.index << " -> " << transition_to << " [label = \""
-				   << string(elem.first) << "\"]\n";
+				   << string(symbol) << "\"]\n";
 			}
 		}
 	}
 
 	ss << "}\n";
+	return ss.str();
+}
+
+string FiniteAutomaton::to_dsl() const {
+	stringstream ss;
+	ss << "NFA\n";
+	for (const auto& state : states) {
+		ss << state.index << " label=" << state.identifier;
+		ss << (state.is_terminal ? " final" : "");
+		ss << (state == states[initial_state] ? " initial_state" : "");
+		ss << " ;\n";
+	}
+	ss << "...\n";
+	for (const auto& state : states)
+		for (const auto& [symbol, states_to] : state.transitions)
+			for (int transition_to : states_to)
+				ss << state.index << " " << transition_to << " " << string(symbol) << " ;\n";
 	return ss.str();
 }
 

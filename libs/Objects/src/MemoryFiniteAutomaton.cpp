@@ -239,6 +239,38 @@ string MemoryFiniteAutomaton::to_txt() const {
 	return ss.str();
 }
 
+string MemoryFiniteAutomaton::to_dsl() const {
+	stringstream ss;
+	ss << "MFA\n";
+	for (int i = 0; i < states.size(); i++) {
+		ss << i << " label=" << states[i].identifier;
+		ss << (states[i].is_terminal ? " final" : "");
+		ss << (states[i] == states[initial_state] ? " initial_state" : "");
+		ss << " ;\n";
+	}
+
+	for (const auto& state : states)
+		for (const auto& [symbol, symbol_transitions] : state.transitions)
+			for (const auto& tr : symbol_transitions) {
+				ss << state.index << " " << tr.to << " " << string(symbol);
+				for (const auto& [num, action] : tr.memory_actions) {
+					switch (action) {
+					case MFATransition::open:
+						ss << " " << num << " o";
+						break;
+					case MFATransition::close:
+						ss << " " << num << " c";
+						break;
+					case MFATransition::reset:
+						ss << " " << num << " r";
+						break;
+					}
+				}
+				ss << " ;\n";
+			}
+	return ss.str();
+}
+
 size_t MemoryFiniteAutomaton::size(iLogTemplate* log) const {
 	return states.size();
 }

@@ -229,8 +229,9 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 
 	// dynamic_cast unique_ptr к типу MemoryFiniteAutomaton*
 	template <typename T> MemoryFiniteAutomaton* cast(std::unique_ptr<T>&& uptr);
-	// визуализация автомата
+	// текстовое представление автомата
 	std::string to_txt() const override;
+	std::string to_dsl() const override;
 
 	std::vector<MFAState> get_states() const;
 	size_t size(iLogTemplate* log = nullptr) const override;

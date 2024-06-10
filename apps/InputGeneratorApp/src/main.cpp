@@ -26,10 +26,9 @@ int main(int argc, char* argv[]) {
 
 	if (argc > 1)
 		task = argv[1];
-	if (argc > 2)
-		run = argv[2];
+	if (argc > 2 && std::string(argv[2]) == "false")
+		run = false;
 
-	
 	TasksGenerator TG;
 	if (task == "Test") {
 		std::string res = TG.generate_task(3, 5, false, false);

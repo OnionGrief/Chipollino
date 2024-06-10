@@ -120,10 +120,10 @@ string LogTemplate::render(const std::string& user_name) const {
 		// Отображаем строчку
 		if (show) {
 			for (const auto& [key, param] : parameters) {
-				string template_kw = "%template_";
-				size_t insert_place = s.find(template_kw + key);
+				string template_mark = "%template_" + key;
+				size_t insert_place = s.find(template_mark);
 				// Если имя шаблона не заканчивает строку, то это может быть и другой шаблон
-				if ((insert_place != s.length() - template_kw.length() - key.length()) || (insert_place == -1)) {
+				if ((insert_place != s.length() - template_mark.length()) || (insert_place == -1)) {
 					continue;
 				}
 
@@ -139,10 +139,12 @@ string LogTemplate::render(const std::string& user_name) const {
 					std::hash<string> hasher;
 					string c_graph;
 					string automaton;
-					if (std::holds_alternative<FiniteAutomaton>(param.value))
-						automaton = std::get<FiniteAutomaton>(param.value).to_txt();
-					else
+					if (std::holds_alternative<FiniteAutomaton>(param.value)) {
+						FiniteAutomaton fa = std::get<FiniteAutomaton>(param.value);
+						automaton = fa.to_txt();
+					} else {
 						automaton = std::get<MemoryFiniteAutomaton>(param.value).to_txt();
+					}
 					automaton = replace_for_rendering(automaton);
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {

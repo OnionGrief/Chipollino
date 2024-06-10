@@ -258,7 +258,7 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 
 		for (const auto& transition : FAtransitions) {
 			MFAstates[name_to_ind[transition.beg]].add_transition(
-				MFATransition(name_to_ind[transition.end], transition.open, transition.close),
+				MFATransition(name_to_ind[transition.end], transition.open, transition.close, transition.reset),
 				transition.symbol);
 			if (!transition.symbol.is_epsilon() && !transition.symbol.is_ref())
 				alphabet.insert(transition.symbol);
