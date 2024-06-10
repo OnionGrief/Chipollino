@@ -31,8 +31,7 @@ Regex::Regex(const string& str) {
 Regex::Regex(const Symbol& s) {
 	if (s.is_epsilon()) {
 		type = Type::eps;
-	}
-	else {
+	} else {
 		type = Type::symb;
 	 	symbol = s;
 		alphabet = {s};
@@ -1183,8 +1182,7 @@ Regex Regex::update_epsilons(Alphabet& a) const {
 				if (s0.is_epsilon()) {
 					result.type = Type::eps;
 					break;
-				}
-				else {
+				} else {
 					result = Regex(s);
 					a.insert(s);
 					break;
@@ -1196,8 +1194,8 @@ Regex Regex::update_epsilons(Alphabet& a) const {
 					Regex r2 = (*Regex::cast(term_r)).update_epsilons(d);
 					result = Regex(type, &r1, &r2);
 					a.merge(d);  
-				} else
-					result = Regex(type, &r1, nullptr);
+				} else {
+					result = Regex(type, &r1, nullptr); }
 
 		}
 		return result;

@@ -2291,8 +2291,7 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 									cout << "Accumulated values: >=2\n";
 									break;      
 								}
-						} 
-						else {
+						} else {
 							int v = *(accumulator.begin());
 							cout << "Accumulated state: "<< states[v].identifier <<"\n";
 							if (!state_languages[v].subset(state_languages[target]))
@@ -2303,8 +2302,8 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 					if (transition.second.size() > 1)  {
 						local_ambig="";
 						t.rows.push_back("<"+ states[i].identifier+","+ string(transition.first)+ ">");
-						for (auto v : transition.second)
-							{if ((!reliability)||(v != target)) 
+						for (auto v : transition.second) {
+							if ((!reliability)||(v != target)) 
 							meta.upd(EdgeMeta{i, v, transition.first, trans_id});
 							local_ambig +=", " + states[v].identifier;
 						}
@@ -2315,8 +2314,8 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 							t.data.push_back(make_string_transition(states[i].identifier, transition.first, states[target].identifier));
 							cout << "Meta UPD"
 							<< "\n";
-						} else
-							t.data.push_back("Отсутствуют");  
+						} else { 
+							t.data.push_back("Отсутствуют"); } 
 						}
 					if (!verified_ambiguity) {
 						// Logger::log("Результат SemDet", "false");
