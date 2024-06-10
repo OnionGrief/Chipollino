@@ -28,7 +28,15 @@ Regex::Regex(const string& str) {
 	}
 }
 
-Regex::Regex(const Symbol& symbol) : Regex(symbol.is_epsilon() ? "" : string(symbol)) {}
+Regex::Regex(const Symbol& s) {
+if (s.is_epsilon())
+ {type = Type::eps;
+ }
+else
+ {type = Type::symb;
+  symbol = s;
+ }
+}
 
 Regex::Regex(const string& str, const std::shared_ptr<Language>& new_language) : Regex(str) {
 	language = new_language;
@@ -667,7 +675,20 @@ void Regex::get_prefix(int len, vector<vector<Regex>>& prefs) const {
 bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 										   Regex& result) const {
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
-		cout << "Invalid input: unexpected regex instead of symbol\n";
+		cout << "Invalid input: unexpected regex instead of symbol "<< respected_sym->to_txt();
+		switch (respected_sym->type) {
+		case Type::alt:
+			cout << ": Type = alt\n";
+			break;
+		case Type::conc:
+			cout << ": Type = conc\n";
+			break;
+		case Type::star:
+			cout << ": Type = star\n";
+			break;
+		default:
+			cout << ": Unknown type\n";
+		}
 		return false;
 	}
 	if (respected_sym->type == Type::eps) {
@@ -768,7 +789,20 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 												   vector<Regex>& result) const {
 	Regex cur_result;
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
-		cout << "Invalid input: unexpected regex instead of symbol\n";
+		cout << "Invalid input: unexpected regex instead of symbol "<< respected_sym->to_txt();
+		switch (respected_sym->type) {
+		case Type::alt:
+			cout << ": Type = alt\n";
+			break;
+		case Type::conc:
+			cout << ": Type = conc\n";
+			break;
+		case Type::star:
+			cout << ": Type = star\n";
+			break;
+		default:
+			cout << ": Unknown type\n";
+		}
 		return false;
 	}
 	if (respected_sym->type == Type::eps) {
@@ -1138,7 +1172,8 @@ Regex Regex::deannote(iLogTemplate* log) const {
 	Alphabet deannoted_alphabet;
 	for (auto& i : list) {
 		i->symbol.deannote();
-		deannoted_alphabet.insert(i->symbol);
+		if (!i->symbol.is_epsilon()) 
+			deannoted_alphabet.insert(i->symbol);
 	}
 	temp_copy.set_language(deannoted_alphabet);
 	if (log) {
