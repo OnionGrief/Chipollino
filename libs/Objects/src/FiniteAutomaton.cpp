@@ -2277,9 +2277,9 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 									} 
 								cout << states[target].identifier <<"is incomparable\n";
 								strict_ordering = false;
-							} else 
+							} else {
 								cout << states[target].identifier <<"is less\n";
-								target = it2;
+								target = it2; }
 						}
 					}
 					cout << "Maximal state: "<< states[target].identifier <<"\n";
