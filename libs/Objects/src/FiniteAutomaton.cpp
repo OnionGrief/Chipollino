@@ -2250,7 +2250,6 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 
 		state_languages[i].make_language();
 	}
-	set<std::pair<int,int>> checked;
 	for (int i = 0; i < states.size(); i++) {
 			for (auto transition : states[i].transitions) {
 				bool verified_ambiguity = false;
