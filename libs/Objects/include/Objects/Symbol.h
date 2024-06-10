@@ -45,7 +45,7 @@ class Symbol {
 	bool operator==(char c) const;
 	bool operator!=(const Symbol& other) const;
 	bool operator<(const Symbol& other) const;
-	
+
 	bool is_epsilon() const;
 	// преобразовывает вектор символов в одну строку
 	static std::string vector_to_str(const std::vector<Symbol>&);
@@ -64,8 +64,30 @@ class Symbol {
 	struct Hasher {
 		std::size_t operator()(const Symbol&) const;
 	};
+
+	friend class MemorySymbols;
 };
 
 std::ostream& operator<<(std::ostream& os, const Symbol& item);
 
 using Alphabet = std::set<Symbol>;
+
+// специальные символы переходов в Symbolic-NFA
+class MemorySymbols {
+  public:
+	static const char CloseChar = 'C';
+	static const char ResetChar = 'R';
+	static const char OpenChar = 'O';
+
+	static Symbol Close(int number);
+	static Symbol Reset(int number);
+	static Symbol Open(int number);
+
+	static bool is_memory_symbol(const Symbol& s);
+	static bool is_memory_char(char c);
+	static bool is_close(const Symbol& s);
+	static bool is_reset(const Symbol& s);
+	static bool is_open(const Symbol& s);
+
+	static int get_cell_number(const Symbol& s);
+};

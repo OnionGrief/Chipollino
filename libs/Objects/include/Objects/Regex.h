@@ -40,6 +40,7 @@ class Regex : public AlgExpression {
 	std::vector<FAState> _to_thompson(const Alphabet&) const;
 
 	// возвращает вектор листьев дерева
+	std::vector<const Regex*> preorder_traversal() const;
 	std::vector<Regex*> preorder_traversal();
 	bool contains_eps() const override;
 	// для каждой ноды возвращает множество номеров нод, которым она может предшествовать

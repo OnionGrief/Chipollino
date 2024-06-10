@@ -181,27 +181,20 @@ BackRefRegex* BackRefRegex::expr(const vector<AlgExpression::Lexeme>& lexemes, i
 								 int index_end) {
 	AlgExpression* p;
 	p = scan_alt(lexemes, index_start, index_end);
-	if (!p) {
+	if (!p)
 		p = scan_conc(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_star(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_symb(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_ref(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_eps(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_par(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_square_br(lexemes, index_start, index_end);
-	}
 	return cast(p, false);
 }
 
@@ -230,7 +223,7 @@ BackRefRegex* BackRefRegex::scan_square_br(const vector<AlgExpression::Lexeme>& 
 	}
 
 	BackRefRegex* l = expr(lexemes, index_start + 1, index_end - 1);
-	if (l == nullptr || l->type == AlgExpression::eps) {
+	if (l == nullptr) {
 		delete l;
 		return p;
 	}
@@ -250,9 +243,9 @@ bool BackRefRegex::equals(const AlgExpression* other) const {
 bool BackRefRegex::equal(const BackRefRegex& r1, const BackRefRegex& r2, iLogTemplate* log) {
 	bool result = equality_checker(&r1, &r2);
 	if (log) {
-		//		log->set_parameter("regex1", r1);
-		//		log->set_parameter("regex2", r2);
-		//		log->set_parameter("result", result);
+		log->set_parameter("brefregex1", r1);
+		log->set_parameter("brefregex2", r2);
+		log->set_parameter("result", result);
 	}
 	return result;
 }
@@ -742,8 +735,7 @@ vector<CellSet> merge_to_reset_maps(const vector<ToResetMap>& maps) {
 			else
 				maybe_to_reset.insert(cell);
 
-			auto it = merged.find(cell);
-			if (it != merged.end()) {
+			if (auto it = merged.find(cell); it != merged.end()) {
 				it->second.first &= emptiness_info.first;
 				it->second.second = get_intersection(it->second.second, emptiness_info.second);
 			} else {
@@ -826,8 +818,6 @@ void BackRefRegex::get_follow(
 		first = cast(term_r)->get_first_nodes_tracking_resets();
 		for (auto& [i, last_to_reset] : last) {
 			for (auto& [j, first_to_reset] : first) {
-				//				string t1 = i->get_symbol();
-				//				string t2 = j->get_symbol();
 				for (const auto& k : merge_to_reset_maps({last_to_reset, first_to_reset}))
 					following_states[i->get_symbol().last_linearization_number()].emplace_back(
 						j->get_symbol().last_linearization_number(), unordered_set<int>(), k);
@@ -842,8 +832,6 @@ void BackRefRegex::get_follow(
 		get_cells_under_iteration(iteration_over_cells);
 		for (auto& [i, last_to_reset] : last) {
 			for (auto& [j, first_to_reset] : first) {
-				//				string t1 = i->get_symbol();
-				//				string t2 = j->get_symbol();
 				vector<CellSet> to_reset;
 				if (i != j)
 					to_reset = merge_to_reset_maps({last_to_reset, first_to_reset, is_eps.second});
@@ -876,17 +864,17 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 	temp_copy.preorder_traversal(
 		terms, lin_counter, in_lin_cells, first_in_cells, last_in_cells, {}, {}, {});
 	// множество начальных состояний
-	vector<BackRefRegex*> first = cast(temp_copy.get_first_nodes());
+	vector<pair<AlgExpression*, ToResetMap>> first = temp_copy.get_first_nodes_tracking_resets();
 	// множество конечных состояний
 	vector<BackRefRegex*> last = cast(temp_copy.get_last_nodes());
 	// множество состояний, которым предшествует символ (ключ - линеаризованный номер)
 	vector<vector<tuple<int, unordered_set<int>, CellSet>>> following_states(terms.size());
 	temp_copy.get_follow(following_states);
-	int eps_in = this->contains_eps();
+	bool recognizes_eps = this->contains_eps();
 	vector<MFAState> states; // состояния автомата
 
 	string str_first, str_last, str_follow;
-	for (auto& i : first) {
+	for (const auto& [i, _] : first) {
 		str_first += string(i->get_symbol()) + "\\ ";
 	}
 
@@ -897,9 +885,8 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 	for (const auto& elem : last_set) {
 		str_last += elem + "\\ ";
 	}
-	if (eps_in) {
+	if (recognizes_eps)
 		str_last += Symbol::Epsilon;
-	}
 
 	for (int i = 0; i < following_states.size(); i++) {
 		for (const auto& [to, _, __] : following_states[i]) {
@@ -914,21 +901,25 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 		delinearized_symbols[i].delinearize();
 	}
 
-	MFAState::Transitions start_state_transitions;
-	for (auto& i : first) {
-		unordered_set<int> cells_to_open;
-		for (auto [cell_num, lin_num] : first_in_cells[i->symbol.last_linearization_number()])
-			cells_to_open.insert(cell_num);
-		// можно не сбрасывать память, так как начальная конфигурация и так пустая
-		start_state_transitions[delinearized_symbols[i->symbol.last_linearization_number()]].insert(
-			MFATransition(i->symbol.last_linearization_number() + 1, cells_to_open, {}));
-	}
+	MFAState::Transitions initial_state_transitions;
+	for (const auto& [i, to_reset_map] : first) {
+		int to = i->get_symbol().last_linearization_number();
+		const CellSet* destination_first = &first_in_cells[to];
+		const unordered_set<int>* destination_in_lin_cells = &in_lin_cells[to];
 
-	if (eps_in) {
-		states.emplace_back(0, "S", true, start_state_transitions);
-	} else {
-		states.emplace_back(0, "S", false, start_state_transitions);
+		for (const auto& to_reset : merge_to_reset_maps({to_reset_map})) {
+			initial_state_transitions
+				[delinearized_symbols[i->get_symbol().last_linearization_number()]]
+					.insert(MFATransition(to + 1,
+										  MFATransition::TransitionConfig{destination_first,
+																		  nullptr,
+																		  nullptr,
+																		  nullptr,
+																		  destination_in_lin_cells,
+																		  &to_reset}));
+		}
 	}
+	states.emplace_back(0, "S", recognizes_eps, initial_state_transitions);
 
 	unordered_set<int> last_terms;
 	for (auto& i : last) {

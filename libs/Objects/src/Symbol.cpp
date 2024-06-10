@@ -140,3 +140,46 @@ std::size_t Symbol::Hasher::operator()(const Symbol& s) const {
 	std::size_t hash = string_hash(s.value);
 	return hash;
 }
+
+Symbol MemorySymbols::Close(int number) {
+	return {CloseChar + std::to_string(number)};
+}
+
+Symbol MemorySymbols::Reset(int number) {
+	return {ResetChar + std::to_string(number)};
+}
+
+Symbol MemorySymbols::Open(int number) {
+	return {OpenChar + std::to_string(number)};
+}
+
+bool MemorySymbols::is_memory_symbol(const Symbol& s) {
+	return s.symbol.size() > 1 &&
+		   (s.symbol[0] == CloseChar || s.symbol[0] == ResetChar || s.symbol[0] == OpenChar);
+}
+
+bool MemorySymbols::is_memory_char(char c) {
+	return c == CloseChar || c == ResetChar || c == OpenChar;
+}
+
+bool MemorySymbols::is_close(const Symbol& s) {
+	return s.symbol.size() > 1 && s.symbol[0] == CloseChar;
+}
+
+bool MemorySymbols::is_reset(const Symbol& s) {
+	return s.symbol.size() > 1 && s.symbol[0] == ResetChar;
+}
+
+bool MemorySymbols::is_open(const Symbol& s) {
+	return s.symbol.size() > 1 && s.symbol[0] == OpenChar;
+}
+
+int MemorySymbols::get_cell_number(const Symbol& s) {
+	string number_str = s.symbol.substr(1);
+	if (number_str.empty()) {
+		return 0;
+	}
+
+	int number = stoi(number_str);
+	return number;
+}

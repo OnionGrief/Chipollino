@@ -1,5 +1,8 @@
 #include "Objects/MemoryCommon.h"
 
+using std::unordered_set;
+using std::vector;
+
 Cell::Cell(int number, int lin_number) : number(number), lin_number(lin_number) {}
 
 bool Cell::operator==(const Cell& other) const {
@@ -36,8 +39,8 @@ bool CaptureGroup::State::operator==(const State& other) const {
 	return index == other.index && class_num == other.class_num;
 }
 
-CaptureGroup::CaptureGroup(int cell, const std::vector<std::vector<int>>& _paths,
-						   const std::vector<int>& _state_classes, bool reset)
+CaptureGroup::CaptureGroup(int cell, const vector<vector<int>>& _paths,
+						   const vector<int>& _state_classes, bool reset)
 	: cell(cell) {
 	for (const auto& path : _paths) {
 		paths.insert(path);
@@ -53,16 +56,17 @@ bool CaptureGroup::operator==(const CaptureGroup& other) const {
 	return cell == other.cell && states == other.states;
 }
 
-std::unordered_set<int> CaptureGroup::get_states_diff(
-	const std::unordered_set<int>& other_state_classes) const {
-	std::unordered_set<int> res;
+unordered_set<int> CaptureGroup::get_states_diff(
+	const unordered_set<int>& other_state_classes) const {
+	unordered_set<int> diff;
 	for (auto st : states)
 		if (st.class_num != State::reset_class && !other_state_classes.count(st.class_num))
-			res.insert(st.index);
+			diff.insert(st.index);
 
+	unordered_set<int> res(diff);
 	for (const auto& path : paths)
-		for (int i = path.size() - 1; i > 0; i--)
-			if (res.count(path[i - 1]))
+		for (size_t i = path.size() - 1; i > 0; i--)
+			if (diff.count(path[i - 1]))
 				res.insert(path[i]);
 	return res;
 }
@@ -71,8 +75,8 @@ std::ostream& operator<<(std::ostream& os, const CaptureGroup& cg) {
 	os << "{\n";
 	for (const auto& i : cg.paths)
 		os << i;
-	os << "}\n";
+	os << "}\n[ ";
 	for (const auto& i : cg.states)
 		os << "{" << i.index << ": " << i.class_num << "} ";
-	return os << "\n";
+	return os << "]\n";
 }

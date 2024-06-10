@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <optional>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -24,6 +26,45 @@ using CellSet = std::unordered_set<Cell, Cell::Hasher>;
 CellSet get_union(const CellSet& set1, const CellSet& set2);
 
 CellSet get_intersection(const CellSet& set1, const CellSet& set2);
+
+struct MFATransition {
+	enum MemoryAction {
+		// idle, ◇
+		open,  // o
+		close, // c
+		reset, // r
+	};
+
+	using MemoryActions = std::unordered_map<int, MemoryAction>;
+
+	int to;
+	MemoryActions memory_actions;
+
+	explicit MFATransition(int to);
+	MFATransition(int, MemoryActions);
+	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&);
+	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&,
+				  const std::unordered_set<int>&);
+
+	struct TransitionConfig {
+		// пары {номер ячейки, линеаризованный номер оператора}
+		const CellSet* destination_first;
+		const std::unordered_set<int>* source_in_lin_cells;
+		const std::unordered_set<int>* iteration_over_cells;
+		// пары {номер ячейки, линеаризованный номер оператора}
+		const CellSet* source_last;
+		const std::unordered_set<int>* destination_in_lin_cells;
+		const CellSet* to_reset;
+	};
+	MFATransition(int, const TransitionConfig& config);
+
+	std::string get_actions_str() const;
+	bool operator==(const MFATransition& other) const;
+
+	struct Hasher {
+		std::size_t operator()(const MFATransition&) const;
+	};
+};
 
 struct CaptureGroup {
 	struct State {
