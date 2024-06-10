@@ -35,6 +35,7 @@ if (s.is_epsilon())
 else
  {type = Type::symb;
   symbol = s;
+  alphabet = {s};
  }
 }
 
