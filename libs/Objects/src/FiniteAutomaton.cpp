@@ -2211,9 +2211,6 @@ std::optional<std::vector<Regex>> FiniteAutomaton::get_prefix(int state_beg, int
 }
 
 bool FiniteAutomaton::semdet(iLogTemplate* log) const {
-	/* if (!annoted) {
-		return annote().semdet_entry(true, log);
-	}*/
 	map<int, bool> was;
 	int trans_id = 1;
 	bool reliability,strict_ordering;
@@ -2248,19 +2245,12 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 			continue;
 		state_languages[i] = derivative.value();
 		cout << "Derevative1: " << state_languages[i].to_txt() << "\n";
-		//if (annoted)
 		state_languages[i] = state_languages[i].deannote();
 		cout << "Derevative: " << state_languages[i].to_txt() << "\n";
 
-		// TODO: logs
-/*		if (log) {
-			log->set_parameter("state", i);
-			log->set_parameter("prefix", prefix.value());
-			log->set_parameter("regex", reg);
-			log->set_parameter("derivative", state_languages[i]);
-		}*/
 		state_languages[i].make_language();
 	}
+	set<std::pair<int,int>> checked;
 	for (int i = 0; i < states.size(); i++) {
 			for (auto transition : states[i].transitions) {
 				bool verified_ambiguity = false;
@@ -2270,24 +2260,44 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 					reliability = true;
 					accumulator.insert(target);
 					for (auto it2 : transition.second) {
+						if (it2 == target) continue;
 						cout << "Checking lang subset: " << states[target].identifier << " "
 							 << states[it2].identifier << "\n";
 						cout << state_languages[target].to_txt() << " " << state_languages[it2].to_txt()
 							 << "\n";
 						if (!state_languages[target].subset(state_languages[it2])) {
 							if (!state_languages[it2].subset(state_languages[target])) {
-								accumulator.insert(it2); 
+								accumulator.insert(it2);
+								for (auto v1 : accumulator) { 
+									if ((v1 != it2) && (state_languages[v1].subset(state_languages[it2]))) {
+										accumulator.erase(it2);
+										break; }
+									if ((v1 != it2) && (state_languages[it2].subset(state_languages[v1]))) 
+										accumulator.erase(v1);
+									} 
+								cout << states[target].identifier <<"is incomparable\n";
 								strict_ordering = false;
-							} else {
+							} else 
+								cout << states[target].identifier <<"is less\n";
 								target = it2;
-							}
 						}
 					}
+					cout << "Maximal state: "<< states[target].identifier <<"\n";
 					if (!strict_ordering) {
-						for (auto v : accumulator)
-							if (!state_languages[target].subset(state_languages[v]))
-								{ reliability = false;
-								 break; }
+						if (accumulator.size() >= 2) {
+							for (auto v : accumulator)
+								if (!state_languages[target].subset(state_languages[v])) {
+									reliability = false;
+									cout << "Accumulated values: >=2\n";
+									break;      
+								}
+						} 
+						else {
+							int v = *(accumulator.begin());
+							cout << "Accumulated state: "<< states[v].identifier <<"\n";
+							if (!state_languages[v].subset(state_languages[target]))
+									reliability = false;
+						} 
 					}					
 					verified_ambiguity |= reliability;
 					if (transition.second.size() > 1)  {

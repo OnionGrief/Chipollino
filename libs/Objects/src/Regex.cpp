@@ -1170,7 +1170,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 
 Regex Regex::update_epsilons(Alphabet& a) const {
    Regex result;
-   Symbol s;
+   Symbol s,s0;
    switch (type) {
 			case Type::eps:
 				result.type = Type::eps;
@@ -1178,16 +1178,15 @@ Regex Regex::update_epsilons(Alphabet& a) const {
 			case Type::symb:
 				s = Symbol(symbol);
 				s.deannote();
-				s.delinearize();
-				if (s.is_epsilon()) {
+				s0 = Symbol(s);
+				s0.delinearize();
+				if (s0.is_epsilon()) {
 					result.type = Type::eps;
 					break;
 				}
 				else {
-					s = Symbol(symbol);
-					s.deannote();
-					result = Regex(symbol);
-					a.insert(symbol);
+					result = Regex(s);
+					a.insert(s);
 					break;
 				}
 			default:
