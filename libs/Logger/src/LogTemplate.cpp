@@ -18,6 +18,19 @@ using std::stringstream;
 using std::to_string;
 using std::vector;
 
+string write_to_file(int file_num, string content) {
+	if (user_name != "") {
+		ofstream out;
+		string filename = user_name + "/" + to_string(file_num) + ".txt";
+		out.open(filename, ofstream::trunc);
+		if (out.is_open())
+			out << content;
+		out.close();
+		return "\n%%" + filename;
+	}
+	return "";
+}
+
 void LogTemplate::add_parameter(string parameter_name) {
 	ifstream infile(template_fullpath);
 
@@ -139,11 +152,15 @@ string LogTemplate::render() const {
 					std::hash<string> hasher;
 					string c_graph;
 					string automaton;
+					string graph_name;
 					if (std::holds_alternative<FiniteAutomaton>(param.value)) {
 						FiniteAutomaton fa = std::get<FiniteAutomaton>(param.value);
+						graph_name = write_to_file(image_number++, fa.to_dsl());
 						automaton = fa.to_txt();
 					} else {
-						automaton = std::get<MemoryFiniteAutomaton>(param.value).to_txt();
+						MemoryFiniteAutomaton mfa = std::get<MemoryFiniteAutomaton>(param.value);
+						graph_name = write_to_file(image_number++, mfa.to_dsl());
+						automaton = mfa.to_txt();
 					}
 					automaton = replace_for_rendering(automaton);
 					size_t hash = hasher(automaton);
@@ -154,7 +171,7 @@ string LogTemplate::render() const {
 						cache_automatons[hash] = c_graph;
 					}
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
-					s.insert(insert_place, "\n" + c_graph);
+					s.insert(insert_place, graph_name + "\n" + c_graph);
 				} else if (std::holds_alternative<string>(param.value)) {
 					string str = std::get<string>(param.value);
 					s.insert(insert_place, replace_for_rendering(str));
