@@ -29,7 +29,7 @@ void remove_file(string dir, string file, bool guarded = false) {
 	system(command.str().c_str());
 }
 
-string AutomatonToImage::to_image(string automaton, string user_name) {
+string AutomatonToImage::to_image(string automaton) {
 	remove_file("refal", "Meta_log.raux", true);
 	remove_file("refal", "Aux_input.raux", true);
 	FILE* fo;
@@ -65,7 +65,7 @@ string AutomatonToImage::to_image(string automaton, string user_name) {
 	return graph.str();
 }
 
-string AutomatonToImage::colorize(string automaton, string metadata, string user_name) {
+string AutomatonToImage::colorize(string automaton, string metadata) {
 
 	FILE* fo;
 	FILE* md;

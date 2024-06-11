@@ -37,7 +37,6 @@ class Interpreter {
 	bool run_line(const std::string& line);
 	// Интерпретация файла построчно
 	bool run_file(const std::string& path, const std::string& user_name="");
-	std::string user_name = "";
 	// Установит режим логгирования в консоль
 	void set_log_mode(LogMode mode);
 	// Выгружает лог в файл

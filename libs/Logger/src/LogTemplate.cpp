@@ -97,7 +97,7 @@ string replace_for_rendering(const string& s) {
 	return result;
 }
 
-string LogTemplate::render(const std::string& user_name) const {
+string LogTemplate::render() const {
 	stringstream infile = expand_includes(template_fullpath);
 
 	// Строка-аккумулятор
@@ -150,7 +150,7 @@ string LogTemplate::render(const std::string& user_name) const {
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
 					} else {
-						c_graph = AutomatonToImage::to_image(automaton, user_name);
+						c_graph = AutomatonToImage::to_image(automaton);
 						cache_automatons[hash] = c_graph;
 					}
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());

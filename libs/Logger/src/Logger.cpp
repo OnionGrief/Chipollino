@@ -15,7 +15,7 @@ void Logger::add_log(const LogTemplate& log) {
 	}
 }
 
-void Logger::render_to_file(const string& filename, const string& user_name) {
+void Logger::render_to_file(const string& filename) {
 	ifstream infile("./resources/template/head.tex");
 	ofstream outfile(filename);
 
@@ -32,7 +32,7 @@ void Logger::render_to_file(const string& filename, const string& user_name) {
 	size_t logs_size = logs.size();
 	// Генерация каждого лога
 	for (size_t i = 0; i < logs_size; i++) {
-		outfile << logs[i].render(user_name) << "\n";
+		outfile << logs[i].render() << "\n";
 		cout << 100 * (i + 1) / logs_size << "% (template \"" << logs[i].get_tex_template()
 			 << "\" is completed)\n";
 	}

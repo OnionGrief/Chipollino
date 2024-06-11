@@ -77,7 +77,7 @@ void Interpreter::set_log_mode(LogMode mode) {
 }
 
 void Interpreter::generate_log(const string& filename) {
-	tex_logger.render_to_file(filename, user_name);
+	tex_logger.render_to_file(filename);
 }
 
 bool Interpreter::set_flag(Flag key, bool value) {
