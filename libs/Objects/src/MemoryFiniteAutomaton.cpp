@@ -1516,12 +1516,12 @@ FiniteAutomaton MemoryFiniteAutomaton::get_cg_fa(const CaptureGroup& cg) const {
 				// не просто false, чтобы обработать ниже переходы без открытия памяти из стартового
 				bool skip = st.index == cg_opening_state_index;
 				for (const auto& [_, action] : tr.memory_actions) {
-					if (st.index == cg_opening_state_index & action == MFATransition::open)
+					if (st.index == cg_opening_state_index & action == MFATransition::open) {
 						skip = false;
-					else if ((action == MFATransition::open &&
-							  st.index != cg_opening_state_index) ||
-							 (action == MFATransition::close && !terminal_states.count(tr.to)) ||
-							 action == MFATransition::reset) {
+					} else if ((action == MFATransition::open &&
+								st.index != cg_opening_state_index) ||
+							   (action == MFATransition::close && !terminal_states.count(tr.to)) ||
+							   action == MFATransition::reset) {
 						skip = true;
 						break;
 					}
@@ -1581,26 +1581,29 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		for (const auto& SCC : SCCs[i]) {
 			unordered_set<int> colors_to_ignore;
 			for (auto state : SCC) {
-				unordered_set<int> state_colors_to_ignore;
-				bool has_transitions_without_actions = false;
+				unordered_set<int> cur_colors_to_ignore;
+				unordered_set<int> colors_of_internal_transitions;
 				for (const auto& [symbol, symbol_transitions] :
 					 mfas[i]->states[state].transitions) {
 					for (const auto& tr : symbol_transitions) {
 						if (SCC.count(tr.to)) {
 							if (tr.memory_actions.empty()) {
-								state_colors_to_ignore.clear();
-								has_transitions_without_actions = true;
-								break;
+								for (auto color : mfa_colors[i][state]) {
+									if (mfa_colors[i][tr.to].find(color) !=
+										mfa_colors[i][tr.to].end()) {
+										colors_of_internal_transitions.insert(color);
+									}
+								}
 							}
 							for (const auto& [cell, action] : tr.memory_actions)
-								state_colors_to_ignore.insert(cell);
+								if (mfa_colors[i][state].count(cell))
+									cur_colors_to_ignore.insert(cell);
 						}
 					}
-					if (has_transitions_without_actions)
-						break;
 				}
-				colors_to_ignore.insert(state_colors_to_ignore.begin(),
-										state_colors_to_ignore.end());
+				for (const auto& color : colors_of_internal_transitions)
+					cur_colors_to_ignore.erase(color);
+				colors_to_ignore.insert(cur_colors_to_ignore.begin(), cur_colors_to_ignore.end());
 			}
 
 			set<pair<int, set<int>>> colored_SCC;

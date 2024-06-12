@@ -781,12 +781,12 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		// несовпадение раскрасок
 		{"[a]:1*&1", "[a*]:1*&1", false},
 		{"[a]:1*[a*]:1&1", "[a|]:1*&1", false},
+		{"([a|]:1*&1)*", "([aa*|]:1&1)*", false},
 		// несовпадение по решающим действиям
 		{"[a|b]:1c(a|b)&1", "(a|b)c[a|b]:1&1", false},
 		// несовпадение CG
 		{"[aa]:1&1", "[|aa]:1&1", false},
 		{"[a*]:1a&1", "[a*a]:1&1", false},
-		{"([a|]:1*&1)*", "([aa*|]:1&1)*", false},
 	};
 
 	for_each(tests.begin(), tests.end(), [](const Test& test) {
