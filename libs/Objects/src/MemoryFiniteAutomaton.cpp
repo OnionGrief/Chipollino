@@ -1421,8 +1421,8 @@ pair<vector<vector<int>>, vector<vector<int>>> MemoryFiniteAutomaton::find_cg_pa
 }
 
 vector<CaptureGroup> MemoryFiniteAutomaton::find_capture_groups_backward(
-	int ref_incoming_state, int cell, const std::vector<int>& fa_classes) const {
-	vector<MFAState::Transitions> reversed_transitions = get_reversed_transitions();
+	int ref_incoming_state, int cell, const vector<MFAState::Transitions>& reversed_transitions,
+	const std::vector<int>& fa_classes) const {
 	unordered_set<int> opening_states;
 	vector<bool> visited(size(), false);
 	find_opening_states_dfs(
@@ -1680,8 +1680,8 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 	}
 
 	// ищем пары состояний, от которых будем делать обратный расчет
-	vector<vector<FAState::Transitions>> reversed_transitions(
-		{fas[0].get_reversed_transitions(), fas[1].get_reversed_transitions()});
+	vector<vector<MFAState::Transitions>> reversed_transitions(
+		{mfas[0]->get_reversed_transitions(), mfas[1]->get_reversed_transitions()});
 	// {класс action-бисимилярности -> {номер ячейки -> {индексы состояний}}}
 	// для каждого класса и номера ячейки ищем состояния, в которые входят переходы по ссылкам
 	vector<unordered_map<int, unordered_map<int, unordered_set<int>>>> states_with_incoming_refs(N);
@@ -1701,11 +1701,11 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 		for (const auto& [cell, ab_states_0] : incoming_refs) {
 			pair<vector<Ref>, vector<Ref>> refs;
 			for (auto st : ab_states_0)
-				refs.first.emplace_back(
-					Ref{mfas[0]->find_capture_groups_backward(st, cell, ab_classes[0])});
+				refs.first.emplace_back(Ref{mfas[0]->find_capture_groups_backward(
+					st, cell, reversed_transitions[0], ab_classes[0])});
 			for (auto st : states_with_incoming_refs[1][ab_class][cell])
-				refs.second.emplace_back(
-					Ref{mfas[1]->find_capture_groups_backward(st, cell, ab_classes[1])});
+				refs.second.emplace_back(Ref{mfas[1]->find_capture_groups_backward(
+					st, cell, reversed_transitions[1], ab_classes[1])});
 			refs_to_compare.emplace_back(refs);
 		}
 	}

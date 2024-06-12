@@ -170,7 +170,9 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<std::vector<std::vector<int>>, std::vector<std::vector<int>>> find_cg_paths(
 		int state_index, std::unordered_set<int> visited, int cell, int opening_state) const;
 	std::vector<CaptureGroup> find_capture_groups_backward(
-		int ref_incoming_state, int cell, const std::vector<int>& fa_classes) const;
+		int ref_incoming_state, int cell,
+		const std::vector<MFAState::Transitions>& reversed_transitions,
+		const std::vector<int>& fa_classes) const;
 
 	bool find_decisions(int state_index,
 						std::vector<int>& visited, // NOLINT(runtime/references)
