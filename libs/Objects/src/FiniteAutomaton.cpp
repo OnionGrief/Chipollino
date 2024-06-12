@@ -2769,33 +2769,3 @@ std::vector<std::unordered_set<int>> FiniteAutomaton::get_SCCs() {
 
 	return SCCs;
 }
-
-FiniteAutomaton FiniteAutomaton::get_subautomaton(const CaptureGroup& cg) {
-	int n = cg.states.size();
-	vector<FAState> sub_states;
-	sub_states.reserve(cg.states.size());
-	Alphabet alphabet;
-
-	unordered_set<int> terminal_states;
-	for (const auto& path : cg.paths)
-		terminal_states.insert(path[path.size() - 1]);
-
-	unordered_map<int, int> indexes;
-	int idx = 0;
-	for (auto st : cg.states) {
-		indexes[st.index] = idx;
-		sub_states.emplace_back(idx, states[st.index].identifier, terminal_states.count(st.index));
-		idx++;
-	}
-
-	for (const auto& st : cg.states)
-		for (const auto& [symbol, symbol_transitions] : states[st.index].transitions)
-			for (const auto& to : symbol_transitions)
-				if (indexes.count(to)) {
-					alphabet.insert(symbol);
-					sub_states[indexes.at(st.index)].add_transition(indexes.at(to), symbol);
-				}
-
-	// начальное состояние общее у всех cg.paths
-	return {indexes.at((*cg.paths.begin())[0]), sub_states, alphabet};
-}

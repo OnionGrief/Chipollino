@@ -1216,16 +1216,16 @@ FiniteAutomaton MemoryFiniteAutomaton::to_symbolic_fa(iLogTemplate* log) const {
 				set<int> opens;
 				set<int> closes;
 				set<int> resets;
-				for (const auto& [num, action] : tr.memory_actions) {
+				for (const auto& [cell, action] : tr.memory_actions) {
 					switch (action) {
 					case MFATransition::open:
-						opens.insert(num);
+						opens.insert(cell);
 						break;
 					case MFATransition::close:
-						closes.insert(num);
+						closes.insert(cell);
 						break;
 					case MFATransition::reset:
-						resets.insert(num);
+						resets.insert(cell);
 						break;
 					}
 				}
@@ -1305,11 +1305,11 @@ MemoryConfiguration update_memory_configuration(const MFATransition::MemoryActio
 
 void MemoryFiniteAutomaton::color_mem_dfs(int state_index, vector<bool>& visited,
 										  const MemoryConfiguration& opened_cells,
-										  unordered_map<int, unordered_set<int>>& colors,
+										  vector<unordered_set<int>>& state_colors,
 										  const vector<int>& ab_classes,
 										  unordered_map<int, int>& ab_class_to_first_state) const {
 	visited[state_index] = true;
-	colors[state_index] = opened_cells;
+	state_colors[state_index] = opened_cells;
 	if (!ab_class_to_first_state.count(ab_classes[state_index]))
 		ab_class_to_first_state[ab_classes[state_index]] = state_index;
 	for (const auto& [symbol, symbol_transitions] : states[state_index].transitions) {
@@ -1318,7 +1318,7 @@ void MemoryFiniteAutomaton::color_mem_dfs(int state_index, vector<bool>& visited
 				color_mem_dfs(tr.to,
 							  visited,
 							  update_memory_configuration(tr.memory_actions, opened_cells),
-							  colors,
+							  state_colors,
 							  ab_classes,
 							  ab_class_to_first_state);
 		}
@@ -1398,12 +1398,21 @@ pair<vector<vector<int>>, vector<vector<int>>> MemoryFiniteAutomaton::find_cg_pa
 				paths.push_back({state_index});
 			} else if (action && action == MFATransition::reset) {
 				reset_paths.push_back({state_index});
-			} else if (!visited.count(tr.to) && !(state_index == opening_state &&
-												  (!action || action != MFATransition::open))) {
-				auto [t, _] = find_cg_paths(tr.to, visited, cell, opening_state);
-				for (auto i : t) {
-					i.insert(i.begin(), state_index);
-					paths.emplace_back(i);
+			} else {
+				bool is_open_action = action && action == MFATransition::open;
+				bool is_opening_state = state_index == opening_state;
+				bool should_process = !visited.count(tr.to) ||
+									  // чтобы обработать случай, когда открывающее совпадает с
+									  // закрывающим, e.g. [a*a]:1*&1
+									  (!is_opening_state && tr.to == opening_state);
+				bool is_valid_transition =
+					is_opening_state ? action && is_open_action : !is_open_action;
+				if (should_process && is_valid_transition) {
+					auto [t, _] = find_cg_paths(tr.to, visited, cell, opening_state);
+					for (auto& i : t) {
+						i.insert(i.begin(), state_index);
+						paths.emplace_back(i);
+					}
 				}
 			}
 		}
@@ -1469,19 +1478,88 @@ bool MemoryFiniteAutomaton::states_have_decisions(
 	return false;
 }
 
+FiniteAutomaton MemoryFiniteAutomaton::get_cg_fa(const CaptureGroup& cg) const {
+	int n = cg.get_states().size();
+	vector<FAState> sub_states;
+	sub_states.reserve(cg.get_states().size());
+	Alphabet alphabet;
+
+	int cg_opening_state_index = cg.get_opening_state_index();
+
+	if (cg.get_is_reset()) {
+		sub_states.emplace_back(0, states[cg_opening_state_index].identifier, true);
+		return {0, sub_states, alphabet};
+	}
+
+	bool additional_state = false;
+	unordered_set<int> terminal_states;
+	for (const auto& path : cg.get_paths())
+		if (path.size() != 1)
+			terminal_states.insert(path[path.size() - 1]);
+		else
+			additional_state = true;
+
+	unordered_map<int, int> indexes;
+	int idx = 0;
+	for (auto st : cg.get_states()) {
+		indexes[st.index] = idx;
+		sub_states.emplace_back(idx, states[st.index].identifier, terminal_states.count(st.index));
+		idx++;
+	}
+	if (additional_state)
+		sub_states.emplace_back(idx, "", true);
+
+	int initial_index = indexes.at(cg_opening_state_index);
+	for (const auto& st : cg.get_states())
+		for (const auto& [symbol, symbol_transitions] : states[st.index].transitions)
+			for (const auto& tr : symbol_transitions) {
+				// не просто false, чтобы обработать ниже переходы без открытия памяти из стартового
+				bool skip = st.index == cg_opening_state_index;
+				for (const auto& [_, action] : tr.memory_actions) {
+					if (st.index == cg_opening_state_index & action == MFATransition::open)
+						skip = false;
+					else if ((action == MFATransition::open &&
+							  st.index != cg_opening_state_index) ||
+							 (action == MFATransition::close && !terminal_states.count(tr.to)) ||
+							 action == MFATransition::reset) {
+						skip = true;
+						break;
+					}
+				}
+				if (skip)
+					continue;
+				if (st.index == cg_opening_state_index && tr.to == cg_opening_state_index) {
+					// используем финальное additional_state
+					alphabet.insert(symbol);
+					sub_states[indexes.at(st.index)].add_transition(sub_states.size() - 1, symbol);
+				} else if (indexes.count(tr.to)) {
+					alphabet.insert(symbol);
+					sub_states[indexes.at(st.index)].add_transition(indexes.at(tr.to), symbol);
+				}
+			}
+
+	// начальное состояние общее у всех cg.paths
+	return {initial_index, sub_states, alphabet};
+}
+
 optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAutomaton& mfa1,
 														   const MemoryFiniteAutomaton& mfa2) {
 	// #define DEBUG
 	const int N = 2;
 	vector<const MemoryFiniteAutomaton*> mfas({&mfa1, &mfa2});
+#ifdef DEBUG
+	using std::cout;
+	cout << mfas[0]->to_txt() << mfas[1]->to_txt();
+#endif
 	// проверяем action bisimilarity
 	vector<FiniteAutomaton> fas({mfas[0]->to_action_fa(), mfas[1]->to_action_fa()});
 	auto [ab_res, _, ab_classes] = FiniteAutomaton::bisimilarity_checker(fas[0], fas[1]);
 	if (!ab_res)
 		return false;
-	vector<unordered_map<int, int>> ab_class_to_first_state(N);
+	vector<unordered_map<int, int>> first_state_in_ab_class(N);
 	// раскрашиваем состояния
-	vector<unordered_map<int, unordered_set<int>>> mfa_colors(N);
+	vector<vector<unordered_set<int>>> mfa_colors = {vector<unordered_set<int>>(mfas[0]->size()),
+													 vector<unordered_set<int>>(mfas[1]->size())};
 	for (int i = 0; i < N; i++) {
 		vector<bool> visited(mfas[i]->size(), false);
 		mfas[i]->color_mem_dfs(mfas[i]->get_initial(),
@@ -1489,15 +1567,11 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 							   {},
 							   mfa_colors[i],
 							   ab_classes[i],
-							   ab_class_to_first_state[i]);
+							   first_state_in_ab_class[i]);
 	}
-#ifdef DEBUG
-	using std::cout;
-	cout << mfas[0]->to_txt() << mfas[1]->to_txt();
-#endif
 	for (const auto& mfa_colors_i : mfa_colors)
-		for (const auto& j : mfa_colors_i) {
-			if (j.second.size() > 1)
+		for (const auto& colors_of_state : mfa_colors_i) {
+			if (colors_of_state.size() > 1)
 				return std::nullopt;
 		}
 	// проверяем совпадение раскраски эквивалентных состояний в КСС
@@ -1532,7 +1606,7 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 			set<pair<int, set<int>>> colored_SCC;
 			for (auto j : SCC) {
 				unordered_set<int> j_colors;
-				for (auto color : mfa_colors[i].at(j))
+				for (auto color : mfa_colors[i][j])
 					if (!colors_to_ignore.count(color))
 						j_colors.insert(color);
 				if (!j_colors.empty())
@@ -1596,8 +1670,8 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 				 << "\n";
 #endif
 			if (!symbolic_bisimilar(
-					mfas[0]->get_subautomaton(ab_states_0, ab_class_to_first_state[0][ab_class]),
-					mfas[1]->get_subautomaton(ab_states_1, ab_class_to_first_state[0][ab_class])))
+					mfas[0]->get_subautomaton(ab_states_0, first_state_in_ab_class[0][ab_class]),
+					mfas[1]->get_subautomaton(ab_states_1, first_state_in_ab_class[0][ab_class])))
 				return false;
 		}
 	}
@@ -1667,10 +1741,8 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 				for (int i = 0; i < CGs_0.size(); i++)
 					for (int j = 0; j < CGs_1.size(); j++) {
 						const auto &cg0 = CGs_0[i], cg1 = CGs_1[j];
-						unordered_set<int> states_to_check_0 =
-											   cg0.get_states_diff(cg1.state_classes),
-										   states_to_check_1 =
-											   cg1.get_states_diff(cg0.state_classes);
+						unordered_set<int> states_to_check_0 = cg0.get_states_diff(cg1),
+										   states_to_check_1 = cg1.get_states_diff(cg0);
 
 						if (!mfa1.states_have_decisions(states_to_check_0) &&
 							!mfa2.states_have_decisions(states_to_check_1)) {
@@ -1682,12 +1754,12 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 				if (check_set_0.size() != CGs_0.size() || check_set_1.size() != CGs_1.size())
 					continue;
 
-				FiniteAutomaton CGs_0_fa(fas[0].get_subautomaton(CGs_0[0])),
-					CGs_1_fa(fas[1].get_subautomaton(CGs_1[0]));
+				FiniteAutomaton CGs_0_fa(mfas[0]->get_cg_fa(CGs_0[0])),
+					CGs_1_fa(mfas[1]->get_cg_fa(CGs_1[0]));
 				for (int i = 1; i < CGs_0.size(); i++)
-					CGs_0_fa = FiniteAutomaton::uunion(CGs_0_fa, fas[0].get_subautomaton(CGs_0[i]));
+					CGs_0_fa = FiniteAutomaton::uunion(CGs_0_fa, mfas[0]->get_cg_fa(CGs_0[i]));
 				for (int i = 1; i < CGs_1.size(); i++)
-					CGs_1_fa = FiniteAutomaton::uunion(CGs_1_fa, fas[1].get_subautomaton(CGs_1[i]));
+					CGs_1_fa = FiniteAutomaton::uunion(CGs_1_fa, mfas[1]->get_cg_fa(CGs_1[i]));
 				if (FiniteAutomaton::equivalent(CGs_0_fa, CGs_1_fa)) {
 					refs_0_check_set.insert(ref_0_index);
 					refs_1_check_set.insert(ref_1_index);

@@ -118,8 +118,6 @@ class FiniteAutomaton : public AbstractMachine {
 					std::unordered_map<int, int>& states_mapping, // NOLINT(runtime/references)
 					MFATransition::MemoryActions memory_actions, int from_mfa_state) const;
 
-	FiniteAutomaton get_subautomaton(const CaptureGroup&);
-
   public:
 	FiniteAutomaton();
 	FiniteAutomaton(int initial_state, std::vector<FAState> states,

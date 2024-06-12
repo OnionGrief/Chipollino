@@ -772,6 +772,7 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		{"[a|a]:1*&1", "[a]:1*[a]:1*&1", true},
 		{"[a]:1*&1|[b]:1&1", "[b]:1&1|[a]:1*&1", true},
 		{"[a]:1&1(&1|[b]:1)*", "[a]:1&1(&1|[b]:1)*", true},
+		{"[a|b]:1*&1", "(|[a|b]:1(a|b)*)&1", true},
 		// перекрестная бисимуляция
 		{"[a*]:1a*&1", "a*[a*]:1&1", false},
 		{"b[a*]:1a*&1", "ba*[a*]:1&1", false},
@@ -785,6 +786,7 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		// несовпадение CG
 		{"[aa]:1&1", "[|aa]:1&1", false},
 		{"[a*]:1a&1", "[a*a]:1&1", false},
+		{"([a|]:1*&1)*", "([aa*|]:1&1)*", false},
 	};
 
 	for_each(tests.begin(), tests.end(), [](const Test& test) {

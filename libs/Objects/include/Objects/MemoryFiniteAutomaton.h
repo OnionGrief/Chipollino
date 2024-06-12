@@ -158,7 +158,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 		int state_index,
 		std::vector<bool>& visited, // NOLINT(runtime/references)
 		const MemoryConfiguration& opened_cells,
-		std::unordered_map<int, std::unordered_set<int>>& colors, // NOLINT(runtime/references)
+		std::vector<std::unordered_set<int>>& state_colors, // NOLINT(runtime/references)
 		const std::vector<int>& ab_classes,
 		std::unordered_map<int, int>& ab_class_to_first_state // NOLINT(runtime/references)
 	) const;
@@ -176,6 +176,8 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 						std::vector<int>& visited, // NOLINT(runtime/references)
 						const std::unordered_set<int>& states_to_check) const;
 	bool states_have_decisions(const std::unordered_set<int>& states_to_check) const;
+
+	FiniteAutomaton get_cg_fa(const CaptureGroup&) const;
 
 	static std::optional<bool> bisimilarity_checker(const MemoryFiniteAutomaton&,
 													const MemoryFiniteAutomaton&);
