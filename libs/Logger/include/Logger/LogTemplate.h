@@ -89,6 +89,7 @@ class LogTemplate : public iLogTemplate {
 	inline static int image_number = 0;
 	// таблицы в общем виде
 	static std::string log_table(Table t);
+	static std::string table_to_csv(Table t);
 	// графики
 	static std::string log_plot(Plot p);
 	// Рекурсивно раскрывает include-выражения в файле

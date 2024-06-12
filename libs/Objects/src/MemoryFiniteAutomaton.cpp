@@ -242,6 +242,7 @@ string MemoryFiniteAutomaton::to_dsl() const {
 		ss << (states[i] == states[initial_state] ? " initial_state" : "");
 		ss << " ;\n";
 	}
+	ss<<"...\n";
 
 	for (const auto& state : states)
 		for (const auto& [symbol, symbol_transitions] : state.transitions)

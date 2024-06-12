@@ -178,7 +178,9 @@ string LogTemplate::render() const {
 				} else if (std::holds_alternative<int>(param.value)) {
 					s.insert(insert_place, to_string(std::get<int>(param.value)));
 				} else if (std::holds_alternative<Table>(param.value)) {
-					s.insert(insert_place, log_table(std::get<Table>(param.value)));
+					Table table = std::get<Table>(param.value);
+					string table_name = write_to_file(image_number++, table_to_csv(table));
+					s.insert(insert_place, table_name + "\n" + log_table(table));
 				} else if (std::holds_alternative<Plot>(param.value)) {
 					s.insert(insert_place, log_plot(std::get<Plot>(param.value)));
 				} else {
@@ -266,18 +268,31 @@ string LogTemplate::log_table(Table t) {
 	table += cols + "\\hline\n";
 	for (int i = 0; i < t.rows.size(); i++) {
 		string r = t.rows[i] == " " ? "eps" : t.rows[i];
-		row = r + " & ";
+		row = r;
 		for (int j = 0; j < t.columns.size(); j++) {
-			if (j != t.columns.size() - 1) {
-				row = row + t.data[i * t.columns.size() + j] + " &";
-			} else {
-				row = row + t.data[i * t.columns.size() + j] + "\\\\";
-			}
+			row += " & " + t.data[i * t.columns.size() + j];
 		}
-		table += row + "\n";
+		table += row + "\\\\\n";
 	}
 	table += "\\end{array}$\n";
 	return table;
+}
+
+string LogTemplate::table_to_csv(Table t) {
+	string table_str;
+	for (int i = 0; i < t.columns.size(); i++) {
+		table_str += ",";
+		table_str += t.columns[i] == " " ? "eps" : t.columns[i];
+	}
+	for (int i = 0; i < t.rows.size(); i++) {
+		string r = t.rows[i] == " " ? "eps" : t.rows[i];
+		string row = r;
+		for (int j = 0; j < t.columns.size(); j++) {
+			row += "," + t.data[i * t.columns.size() + j];
+		}
+		table_str += "\n" + row;
+	}
+	return table_str;
 }
 
 stringstream LogTemplate::expand_includes(string filename) const {
