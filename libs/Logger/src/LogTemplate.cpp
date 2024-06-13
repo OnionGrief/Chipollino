@@ -26,7 +26,7 @@ string write_to_file(int file_num, string content) {
 		if (out.is_open())
 			out << content;
 		out.close();
-		return "\n%%" + filename;
+		return "\n%@" + filename;
 	}
 	return "";
 }

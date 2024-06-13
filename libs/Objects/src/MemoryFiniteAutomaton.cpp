@@ -1878,7 +1878,7 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::merge_bisimilar(iLogTemplate* log) 
 		ss << "\\{";
 		for (int i = 0; i < indexes.size() - 1; i++)
 			ss << states[indexes[i]].identifier << ",\\ ";
-		ss << states[indexes[indexes.size() - 1]].identifier << "\\};";
+		ss << states[indexes[indexes.size() - 1]].identifier << "\\}; ";
 	}
 
 	if (log) {

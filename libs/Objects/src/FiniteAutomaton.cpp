@@ -411,7 +411,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 
 	stringstream ss;
 	for (const auto& state : minimized_dfa.states) {
-		ss << "\\{" << state.identifier << "\\};";
+		ss << "\\{" << state.identifier << "\\}; ";
 	}
 	MetaInfo old_meta, new_meta;
 	for (int i = 0; i < dfa.size(); i++) {
@@ -1455,7 +1455,7 @@ FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 		ss << "\\{";
 		for (int i = 0; i < indexes.size() - 1; i++)
 			ss << states[indexes[i]].identifier << ",\\ ";
-		ss << states[indexes[indexes.size() - 1]].identifier << "\\};";
+		ss << states[indexes[indexes.size() - 1]].identifier << "\\}; ";
 	}
 
 	if (log) {

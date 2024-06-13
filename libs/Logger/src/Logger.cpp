@@ -39,20 +39,24 @@ void Logger::render_to_file(const string& filename) {
 	outfile << "\\end{document}\n";
 	outfile.close();
 
-	cout << "\nConverting to PDF 1...\n";
-	string cmd_command = "pdflatex " + filename + " > " + user_name + "pdflatex.log";
-	system(cmd_command.c_str());
+	if (user_name == "") {
+		cout << "\nConverting to PDF 1...\n";
+		string cmd_command = "pdflatex " + filename + " > " + user_name + "pdflatex.log";
+		system(cmd_command.c_str());
+	}
 
 	cout << "\nFrameFormatter + MathMode...\n";
 
-	cmd_command = "cd refal && refgo RunFormatter+FrameFormatter+MathMode " + user_name +
-				  " 2>error_FrameFormatter.raux";
+	string cmd_command = "cd refal && refgo RunFormatter+FrameFormatter+MathMode " + user_name +
+						 " 2>error_FrameFormatter.raux";
 	system(cmd_command.c_str());
 
-	cout << "\nConverting to PDF 2...\n";
-	cmd_command = "pdflatex ./resources/" + user_name + "rendered_report.tex > " + user_name +
-				  "pdflatex2.log";
-	system(cmd_command.c_str());
+	if (user_name == "") {
+		cout << "\nConverting to PDF 2...\n";
+		cmd_command = "pdflatex ./resources/" + user_name + "rendered_report.tex > " + user_name +
+					  "pdflatex2.log";
+		system(cmd_command.c_str());
+	}
 
 	cout << "successfully created report\n";
 }
