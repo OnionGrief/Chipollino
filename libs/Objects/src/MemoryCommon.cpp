@@ -1,5 +1,6 @@
 #include "Objects/MemoryCommon.h"
 
+using std::tuple;
 using std::unordered_set;
 using std::vector;
 
@@ -60,6 +61,10 @@ bool CaptureGroup::get_is_reset() const {
 	return is_reset;
 }
 
+bool CaptureGroup::get_cell_number() const {
+	return cell;
+}
+
 int CaptureGroup::get_opening_state_index() const {
 	return (*paths.begin())[0];
 }
@@ -73,18 +78,19 @@ const unordered_set<CaptureGroup::State, CaptureGroup::State::Hasher>& CaptureGr
 	return states;
 }
 
-unordered_set<int> CaptureGroup::get_states_diff(const CaptureGroup& other) const {
+tuple<unordered_set<int>, unordered_set<int>> CaptureGroup::get_states_diff(
+	const CaptureGroup& other) const {
 	unordered_set<int> diff;
 	for (auto st : states)
 		if (st.class_num != State::reset_class && !other.state_classes.count(st.class_num))
 			diff.insert(st.index);
 
-	unordered_set<int> res(diff);
+	unordered_set<int> following(diff);
 	for (const auto& path : paths)
 		for (size_t i = path.size() - 1; i > 0; i--)
 			if (diff.count(path[i - 1]))
-				res.insert(path[i]);
-	return res;
+				following.insert(path[i]);
+	return {diff, following};
 }
 
 std::ostream& operator<<(std::ostream& os, const CaptureGroup& cg) {

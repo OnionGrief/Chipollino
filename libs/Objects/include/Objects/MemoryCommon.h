@@ -91,12 +91,14 @@ class CaptureGroup {
 	bool operator==(const CaptureGroup& other) const;
 
 	bool get_is_reset() const;
+	bool get_cell_number() const;
 	int get_opening_state_index() const;
 
 	const std::unordered_set<std::vector<int>, VectorHasher<int>>& get_paths() const;
 	const std::unordered_set<State, State::Hasher>& get_states() const;
 
-	std::unordered_set<int> get_states_diff(const CaptureGroup& other) const;
+	std::tuple<std::unordered_set<int>, std::unordered_set<int>> get_states_diff(
+		const CaptureGroup& other) const;
 
 	friend std::ostream& operator<<(std::ostream& os, const CaptureGroup& cg);
 };

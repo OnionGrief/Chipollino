@@ -176,17 +176,21 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 
 	bool find_decisions(int state_index,
 						std::vector<int>& visited, // NOLINT(runtime/references)
-						const std::unordered_set<int>& states_to_check) const;
-	bool states_have_decisions(const std::unordered_set<int>& states_to_check) const;
+						const std::unordered_set<int>& states_to_check,
+						const std::unordered_set<int>& following_states,
+						const CaptureGroup& cg) const;
+	bool states_have_decisions(const std::unordered_set<int>& states_to_check,
+							   const std::unordered_set<int>& following_states,
+							   const CaptureGroup& cg) const;
 
-	FiniteAutomaton get_cg_fa(const CaptureGroup&) const;
+	FiniteAutomaton get_cg_fa(const CaptureGroup& cg) const;
 
 	static std::optional<bool> bisimilarity_checker(const MemoryFiniteAutomaton&,
 													const MemoryFiniteAutomaton&);
 
 	// объединение эквивалентных классов (принимает на вход вектор размера states.size())
 	// на i-й позиции номер класса i-го состояния
-	std::tuple<MemoryFiniteAutomaton, std::unordered_map<int, int>> merge_equivalent_classes(
+	std::tuple<MemoryFiniteAutomaton, std::unordered_map<int, int>> merge_classes(
 		const std::vector<int>&) const;
 
   public:
