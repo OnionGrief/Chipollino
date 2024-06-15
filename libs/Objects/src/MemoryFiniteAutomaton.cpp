@@ -1592,7 +1592,8 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 	vector<set<set<pair<int, set<int>>>>> colored_SCCs(N);
 	for (int i = 0; i < N; i++) {
 		for (const auto& SCC : SCCs[i]) {
-			unordered_set<int> colors_to_ignore;
+			unordered_set<int> colors_to_ignore_mandatory;
+			unordered_set<int> colors_to_ignore_optional;
 			for (auto state : SCC) {
 				unordered_set<int> cur_colors_to_ignore;
 				unordered_set<int> colors_of_internal_transitions;
@@ -1614,18 +1615,26 @@ optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAut
 						}
 					}
 				}
+				colors_to_ignore_optional.insert(cur_colors_to_ignore.begin(),
+												 cur_colors_to_ignore.end());
 				for (const auto& color : colors_of_internal_transitions)
 					cur_colors_to_ignore.erase(color);
-				colors_to_ignore.insert(cur_colors_to_ignore.begin(), cur_colors_to_ignore.end());
+				colors_to_ignore_mandatory.insert(cur_colors_to_ignore.begin(),
+												  cur_colors_to_ignore.end());
 			}
 
 			set<pair<int, set<int>>> colored_SCC;
 			for (auto j : SCC) {
-				unordered_set<int> j_colors;
-				for (auto color : mfa_colors[i][j])
-					if (!colors_to_ignore.count(color))
-						j_colors.insert(color);
-				colored_SCC.insert({ab_classes[i][j], set<int>(j_colors.begin(), j_colors.end())});
+				vector<unordered_set<int>> colors_to_ignore = {colors_to_ignore_mandatory};
+				if (!colors_to_ignore_optional.empty())
+					colors_to_ignore.emplace_back(colors_to_ignore_optional);
+				for (const auto& ignore : colors_to_ignore) {
+					unordered_set<int> j_colors;
+					for (auto color : mfa_colors[i][j])
+						if (!ignore.count(color))
+							j_colors.insert(color);
+					colored_SCC.insert({ab_classes[i][j], {j_colors.begin(), j_colors.end()}});
+				}
 			}
 			if (!colored_SCC.empty())
 				colored_SCCs[i].insert(colored_SCC);
