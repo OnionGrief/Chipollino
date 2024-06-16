@@ -104,6 +104,13 @@ class PrefixGrammar {
 				   std::string); // вспомогательная функции для
 								 //  получения префиксной грамматики через ТМ
 
+	// вывод правил
+	std::string rules_to_txt() const;
+	// вывод базисных слов
+	std::string bw_to_txt() const;
+	// для логов
+	std::string pg_log() const;
+
   public:
 	// создание пр грамматики по НКА
 	void fa_to_prefix_grammar(const FiniteAutomaton&, iLogTemplate* log = nullptr);

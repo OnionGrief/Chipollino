@@ -130,10 +130,9 @@ string FiniteAutomaton::to_dsl() const {
 	stringstream ss;
 	ss << "NFA\n";
 	for (const auto& state : states) {
-		ss << state.index << " label=" << state.identifier;
-		ss << (state.is_terminal ? " final" : "");
+		ss << state.index << (state.is_terminal ? " final" : "");
 		ss << (state == states[initial_state] ? " initial_state" : "");
-		ss << " ;\n";
+		ss << " label=" << state.identifier << " ;\n";
 	}
 	ss << "...\n";
 	for (const auto& state : states)
@@ -141,6 +140,26 @@ string FiniteAutomaton::to_dsl() const {
 			for (int transition_to : states_to)
 				ss << state.index << " " << transition_to << " " << string(symbol) << " ;\n";
 	return ss.str();
+}
+
+pair<FiniteAutomaton, iLogTemplate::Table> FiniteAutomaton::short_labels() const {
+	iLogTemplate::Table table;
+	table.columns = {"Подробная метка состояния"};
+	vector<FAState> new_states;
+	int shorted_num = 0;
+	for (FAState s : states) {
+		FAState state = FAState(s.index, s.identifier, s.is_terminal, s.transitions);
+		// TODO: многострочные метки
+		if (state.identifier.size() > 5) {
+			shorted_num++;
+			string new_name = 'L' + to_string(shorted_num);
+			table.rows.push_back(new_name);
+			table.data.push_back(state.identifier);
+			state.identifier = new_name;
+		}
+		new_states.push_back(state);
+	}
+	return {{initial_state, new_states, language}, table};
 }
 
 vector<FAState> FiniteAutomaton::get_states() const {

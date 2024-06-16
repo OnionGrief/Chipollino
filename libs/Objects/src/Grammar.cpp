@@ -346,7 +346,7 @@ void PrefixGrammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate
 		if (log) {
 			log->set_parameter("text1", "Неопределенность");
 			log->set_parameter("text2", "Детерминизируем");
-			log->set_parameter("result", pg_to_txt());
+			log->set_parameter("result", pg_log());
 		}
 		return;
 	}
@@ -365,12 +365,12 @@ void PrefixGrammar::fa_to_prefix_grammar(const FiniteAutomaton& fa, iLogTemplate
 		}
 	}
 	if (log) {
-		log->set_parameter("result", pg_to_txt());
+		log->set_parameter("result", pg_log());
 	}
 	return;
 }
 
-string PrefixGrammar::pg_to_txt() const {
+string PrefixGrammar::rules_to_txt() const {
 	set<string> out;
 	stringstream ss;
 	// vector<Item> prefix_grammar = prefix_grammar;
@@ -414,16 +414,19 @@ string PrefixGrammar::pg_to_txt() const {
 	for (const auto& elem : out) {
 		ss << elem << "\\\\";
 	}
-	ss << "Базисные слова: "
-	   << "\\\\";
+	return ss.str();
+}
+
+string PrefixGrammar::bw_to_txt() const {
+	stringstream ss;
+	ss << "Базисные слова: " << "\\\\";
 
 	for (const auto& item : prefix_grammar) {
 		if (item.is_terminal) {
 			const Item& g = item;
 			for (const auto& w : g.equivalence_class) {
 				if (w == "") {
-					ss << "eps"
-					   << "; ";
+					ss << "eps" << "; ";
 				} else {
 					ss << w << "; ";
 				}
@@ -434,10 +437,19 @@ string PrefixGrammar::pg_to_txt() const {
 	return ss.str();
 }
 
+string PrefixGrammar::pg_to_txt() const {
+	return rules_to_txt() + bw_to_txt();	
+}
+
+string PrefixGrammar::pg_log() const {
+	// немного хардкода для рефала
+	return rules_to_txt() + "%template_bw\n\n\t" + bw_to_txt();	
+}
+
 FiniteAutomaton PrefixGrammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
 	// TODO:
 	if (log) {
-		log->set_parameter("grammar", pg_to_txt());
+		log->set_parameter("grammar", pg_log());
 	}
 	Alphabet symbols;
 	vector<FAState> states;
@@ -564,7 +576,7 @@ void PrefixGrammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTempl
 		if (log) {
 			log->set_parameter("text1", "Неопределенность");
 			log->set_parameter("text2", "Детерминизируем");
-			log->set_parameter("result", pg_to_txt());
+			log->set_parameter("result", pg_log());
 		}
 		return;
 	}
@@ -604,7 +616,7 @@ void PrefixGrammar::fa_to_prefix_grammar_TM(const FiniteAutomaton& fa, iLogTempl
 		}
 	}
 	if (log) {
-		log->set_parameter("result", pg_to_txt());
+		log->set_parameter("result", pg_log());
 	}
 	return;
 }

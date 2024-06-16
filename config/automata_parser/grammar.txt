@@ -4,7 +4,7 @@ automaton --> states transitions;
 states --> state_descriptions '...' ;
 state_descriptions --> state_description state_descriptions | EPS ;
 state_description --> node_id variants ';' ;
-variants --> label final (initial_set ? EPS : initial_state) ;
+variants --> final (initial_set ? EPS : initial_state) label ;
 label --> 'label' '=' node_id | EPS ;
 final --> 'final' | EPS ;
 initial_state --> 'initial_state' !initial_set | EPS ;

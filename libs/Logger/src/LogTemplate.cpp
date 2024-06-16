@@ -26,7 +26,7 @@ string write_to_file(int file_num, string content) {
 		if (out.is_open())
 			out << content;
 		out.close();
-		return "\n%@" + filename;
+		return "\n%@" + filename + "\n";
 	}
 	return "";
 }
@@ -153,12 +153,15 @@ string LogTemplate::render() const {
 					string c_graph;
 					string automaton;
 					string graph_name;
+					iLogTemplate::Table table;
 					if (std::holds_alternative<FiniteAutomaton>(param.value)) {
 						FiniteAutomaton fa = std::get<FiniteAutomaton>(param.value);
+						std::tie(fa, table) = fa.short_labels();
 						graph_name = write_to_file(image_number++, fa.to_dsl());
 						automaton = fa.to_txt();
 					} else {
 						MemoryFiniteAutomaton mfa = std::get<MemoryFiniteAutomaton>(param.value);
+						std::tie(mfa, table) = mfa.short_labels();
 						graph_name = write_to_file(image_number++, mfa.to_dsl());
 						automaton = mfa.to_txt();
 					}
@@ -168,10 +171,14 @@ string LogTemplate::render() const {
 						c_graph = cache_automatons[hash];
 					} else {
 						c_graph = AutomatonToImage::to_image(automaton);
+						if (!table.is_empty()) {
+							string table_name = write_to_file(image_number++, table.to_csv());
+							c_graph += table_name + log_table(table);
+						}
 						cache_automatons[hash] = c_graph;
 					}
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
-					s.insert(insert_place, graph_name + "\n" + c_graph);
+					s.insert(insert_place, graph_name + c_graph);
 				} else if (std::holds_alternative<string>(param.value)) {
 					string str = std::get<string>(param.value);
 					s.insert(insert_place, replace_for_rendering(str));
@@ -179,8 +186,8 @@ string LogTemplate::render() const {
 					s.insert(insert_place, to_string(std::get<int>(param.value)));
 				} else if (std::holds_alternative<Table>(param.value)) {
 					Table table = std::get<Table>(param.value);
-					string table_name = write_to_file(image_number++, table_to_csv(table));
-					s.insert(insert_place, table_name + "\n" + log_table(table));
+					string table_name = write_to_file(image_number++, table.to_csv());
+					s.insert(insert_place, table_name + log_table(table));
 				} else if (std::holds_alternative<Plot>(param.value)) {
 					s.insert(insert_place, log_plot(std::get<Plot>(param.value)));
 				} else {
@@ -253,46 +260,25 @@ string LogTemplate::log_table(Table t) {
 	if (!(!t.columns.empty() && !t.rows.empty()))
 		return table;
 	string format = "c!{\\color{black!80}\\vline width .65pt}";
-	string cols = "  &";
+	string cols = " ";
 	string row;
 	for (int i = 0; i < t.columns.size(); i++) {
 		format += "c";
 		string c = t.columns[i] == " " ? "eps" : t.columns[i];
-		if (i != t.columns.size() - 1) {
-			cols += c + " &";
-		} else {
-			cols += c + "\\\\";
-		}
+		cols += " & " + c;
 	}
 	table += "$\\begin{array}{" + format + "}\\rowcolor{HeaderColor}\n";
-	table += cols + "\\hline\n";
+	table += cols + "\\\\\n\\hline\n";
 	for (int i = 0; i < t.rows.size(); i++) {
 		string r = t.rows[i] == " " ? "eps" : t.rows[i];
 		row = r;
 		for (int j = 0; j < t.columns.size(); j++) {
 			row += " & " + t.data[i * t.columns.size() + j];
 		}
-		table += row + "\\\\\n";
+		table += row + " \\\\\n";
 	}
 	table += "\\end{array}$\n";
 	return table;
-}
-
-string LogTemplate::table_to_csv(Table t) {
-	string table_str;
-	for (int i = 0; i < t.columns.size(); i++) {
-		table_str += ",";
-		table_str += t.columns[i] == " " ? "eps" : t.columns[i];
-	}
-	for (int i = 0; i < t.rows.size(); i++) {
-		string r = t.rows[i] == " " ? "eps" : t.rows[i];
-		string row = r;
-		for (int j = 0; j < t.columns.size(); j++) {
-			row += "," + t.data[i * t.columns.size() + j];
-		}
-		table_str += "\n" + row;
-	}
-	return table_str;
 }
 
 stringstream LogTemplate::expand_includes(string filename) const {

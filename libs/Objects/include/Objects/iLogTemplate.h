@@ -16,6 +16,26 @@ class iLogTemplate {
 		std::vector<std::string> rows;	  // названия строк
 		std::vector<std::string> columns; // названия столбцов
 		std::vector<std::string> data;	  // данные
+
+		std::string to_csv() {
+			std::string table_str;
+			for (int i = 0; i < columns.size(); i++) {
+				table_str += ";";
+				table_str += columns[i] == " " ? "eps" : columns[i];
+			}
+			for (int i = 0; i < rows.size(); i++) {
+				std::string r = rows[i] == " " ? "eps" : rows[i];
+				std::string row = r;
+				for (int j = 0; j < columns.size(); j++) {
+					row += ";" + data[i * columns.size() + j];
+				}
+				table_str += "\n" + row;
+			}
+			return table_str;
+		}
+		bool is_empty() {
+			return data.size() + rows.size() == 0;
+		}
 	};
 
 	struct Point {

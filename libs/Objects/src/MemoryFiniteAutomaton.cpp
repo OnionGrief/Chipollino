@@ -237,12 +237,11 @@ string MemoryFiniteAutomaton::to_dsl() const {
 	stringstream ss;
 	ss << "MFA\n";
 	for (int i = 0; i < states.size(); i++) {
-		ss << i << " label=" << states[i].identifier;
-		ss << (states[i].is_terminal ? " final" : "");
+		ss << i << (states[i].is_terminal ? " final" : "");
 		ss << (states[i] == states[initial_state] ? " initial_state" : "");
-		ss << " ;\n";
+		ss << " label=" << states[i].identifier << " ;\n";
 	}
-	ss<<"...\n";
+	ss << "...\n";
 
 	for (const auto& state : states)
 		for (const auto& [symbol, symbol_transitions] : state.transitions)
@@ -264,6 +263,26 @@ string MemoryFiniteAutomaton::to_dsl() const {
 				ss << " ;\n";
 			}
 	return ss.str();
+}
+
+std::pair<MemoryFiniteAutomaton, iLogTemplate::Table> MemoryFiniteAutomaton::short_labels() const {
+	iLogTemplate::Table table;
+	table.columns = {"Подробная метка состояния"};
+	vector<MFAState> new_states;
+	int shorted_num = 0;
+	for (MFAState s : states) {
+		MFAState state = MFAState(s.index, s.identifier, s.is_terminal, s.transitions);
+		// TODO: многострочные метки
+		if (state.identifier.size() > 5) {
+			shorted_num++;
+			string new_name = 'L' + std::to_string(shorted_num);
+			table.rows.push_back(new_name);
+			table.data.push_back(state.identifier);
+			state.identifier = new_name;
+		}
+		new_states.push_back(state);
+	}
+	return {{initial_state, new_states, language}, table};
 }
 
 size_t MemoryFiniteAutomaton::size(iLogTemplate* log) const {

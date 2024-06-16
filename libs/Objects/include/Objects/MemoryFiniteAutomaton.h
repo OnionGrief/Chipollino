@@ -196,6 +196,8 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	// текстовое представление автомата
 	std::string to_txt() const override;
 	std::string to_dsl() const override;
+	// сокращает метки и создает таблицу меток
+	std::pair<MemoryFiniteAutomaton, iLogTemplate::Table> short_labels() const;
 
 	std::vector<MFAState> get_states() const;
 	size_t size(iLogTemplate* log = nullptr) const override;
