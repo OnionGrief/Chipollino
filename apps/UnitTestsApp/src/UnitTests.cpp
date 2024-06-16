@@ -49,6 +49,10 @@ TEST(TestParseString, FromString) {
 		{"a|(c^)", false, false, 8}, // a | ( c . ^ eps )
 		{"[b[a]:1&1]:2&2^a", true, true},
 		{"[b[a]:1&1]:2&2^a", true, false},
+		{"[a]:1[]:1&1", false, true, 9},
+		{"[a]:1[(|)]:1&1", true, true},
+		{"O1aC1R1&1", false, false, 9},
+		{"O1aC1X1&1", true, false},
 	};
 
 	for (const auto& t : tests) {

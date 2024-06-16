@@ -198,6 +198,9 @@ MemoryFiniteAutomaton::MemoryFiniteAutomaton(int initial_state, std::vector<MFAS
 			throw std::logic_error(
 				"State.index must correspond to its ordinal number in the states vector");
 	}
+	for (const auto& symbol : language->get_alphabet())
+		if (is_special_symbol(symbol))
+			throw std::logic_error("alphabet of MFA mustn't contain special symbols");
 }
 
 template <typename T>
@@ -1345,7 +1348,8 @@ MemoryFiniteAutomaton MemoryFiniteAutomaton::get_subautomaton(const vector<int>&
 		for (const auto& [symbol, symbol_transitions] : states[state_index].transitions)
 			for (const auto& tr : symbol_transitions)
 				if (indexes.count(tr.to)) {
-					alphabet.insert(symbol);
+					if (!is_special_symbol(symbol))
+						alphabet.insert(symbol);
 					sub_states[indexes.at(state_index)].add_transition(
 						MFATransition(indexes.at(tr.to), tr.memory_actions), symbol);
 				}

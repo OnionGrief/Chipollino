@@ -2702,11 +2702,15 @@ void FiniteAutomaton::to_mfa_dfs(int state_index, vector<bool>& visited,
 
 MemoryFiniteAutomaton FiniteAutomaton::to_mfa() const {
 	vector<MFAState> mfa_states;
+	Alphabet alphabet;
 	mfa_states.emplace_back(0, states[initial_state].identifier, states[initial_state].is_terminal);
 	vector<bool> visited(size(), false);
 	unordered_map<int, int> states_mapping;
 	to_mfa_dfs(initial_state, visited, mfa_states, states_mapping, {}, 0);
-	return {initial_state, mfa_states, language->get_alphabet()};
+	for (const auto& symbol : language->get_alphabet())
+		if (!is_special_symbol(symbol))
+			alphabet.insert(symbol);
+	return {initial_state, mfa_states, alphabet};
 }
 
 void FiniteAutomaton::fill_order(int state_index, vector<bool>& visited, stack<int>& order) {

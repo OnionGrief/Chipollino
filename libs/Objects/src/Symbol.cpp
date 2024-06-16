@@ -183,3 +183,7 @@ int MemorySymbols::get_cell_number(const Symbol& s) {
 	int number = stoi(number_str);
 	return number;
 }
+
+bool is_special_symbol(const Symbol& s) {
+	return s.is_ref() || MemorySymbols::is_memory_symbol(s);
+}
