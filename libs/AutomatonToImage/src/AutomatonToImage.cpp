@@ -1,16 +1,34 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <vector>
+#include <regex>
 
 #include "AutomatonToImage/AutomatonToImage.h"
 
 using std::ifstream;
 using std::string;
 using std::stringstream;
+using std::cout;
+using std::ofstream;
+using std::vector;
 
 AutomatonToImage::AutomatonToImage() {}
 
 AutomatonToImage::~AutomatonToImage() {}
+
+string replace_for_rendering2(const string& s) {
+	vector<std::pair<string, string>> substrs_to_replace = {{"\\^", "#^ "},
+															{"&", "#&"}};
+
+	string result = s;
+	for (const auto& [old_substr, new_substr] : substrs_to_replace) {
+		std::regex re(old_substr);
+		result = std::regex_replace(result, re, new_substr);
+	}
+
+	return result;
+}
 
 void remove_file(string dir, string file, bool guarded = false) {
 	stringstream command;
@@ -32,13 +50,16 @@ void remove_file(string dir, string file, bool guarded = false) {
 string AutomatonToImage::to_image(string automaton) {
 	remove_file("refal", "Meta_log.raux", true);
 	remove_file("refal", "Aux_input.raux", true);
-	FILE* fo;
-	fo = fopen("./refal/input.dot", "wt");
-	fprintf(fo, "%s", automaton.c_str());
-	fclose(fo);
+	ofstream fo;
+	fo.open("./refal/input.dot", ofstream::trunc);
+	if (fo.is_open())
+		fo << replace_for_rendering2(automaton);
+	fo.close();
 	system("cd refal && refgo Preprocess+MathMode+FrameFormatter input.dot > "
 		   "error_Preprocess.raux");
+	
 	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
+
 	system("cd refal && refgo Postprocess+MathMode+FrameFormatter input.tex > "
 		   "error_Postprocess.raux "
 		   "2>&1");
