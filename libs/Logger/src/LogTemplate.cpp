@@ -145,7 +145,7 @@ string LogTemplate::render() const {
 						automaton = std::get<FiniteAutomaton>(param.value).to_txt();
 					else
 						automaton = std::get<MemoryFiniteAutomaton>(param.value).to_txt();
-					automaton = replace_for_rendering(automaton);
+					// automaton = replace_for_rendering(automaton);
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
@@ -245,14 +245,9 @@ string LogTemplate::log_table(Table t) {
 	table += "$\\begin{array}{" + format + "}\\rowcolor{HeaderColor}\n";
 	table += cols + "\\hline\n";
 	for (int i = 0; i < t.rows.size(); i++) {
-		string r = t.rows[i] == " " ? "eps" : t.rows[i];
-		row = r + " & ";
+		row = t.rows[i] == " " ? "eps" : t.rows[i];
 		for (int j = 0; j < t.columns.size(); j++) {
-			if (j != t.columns.size() - 1) {
-				row = row + t.data[i * t.columns.size() + j] + " &";
-			} else {
-				row = row + t.data[i * t.columns.size() + j] + "\\\\";
-			}
+			row += " & " + replace_for_rendering(t.data[i * t.columns.size() + j]);
 		}
 		table += row + "\n";
 	}
