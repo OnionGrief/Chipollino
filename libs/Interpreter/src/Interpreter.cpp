@@ -1139,7 +1139,8 @@ optional<Interpreter::Expression> Interpreter::scan_expression(const vector<Lexe
 	if (end > pos && lexems[pos].type == Lexem::regex) {
 		string str = lexems[pos].value;
 		// выбор между backref и regex
-		if (str.find("&") != string::npos || str.find(":") != string::npos) {
+		// TODO: костыль
+		if (str.find('&') != string::npos || str.find("]:") != string::npos) {
 			expr.type = ObjectType::BRefRegex;
 			expr.value = BackRefRegex(str);
 		} else {

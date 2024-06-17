@@ -33,7 +33,7 @@ struct TupleHasher {
 	size_t operator()(const std::tuple<int, int, int>& p) const;
 };
 
-using IntPairSet = std::unordered_set<std::pair<int, int>, IntPairHasher>;
+using IntPairsSet = std::unordered_set<std::pair<int, int>, IntPairHasher>;
 
 std::ostream& operator<<(std::ostream& os, const std::vector<int>& vec);
 

@@ -6,7 +6,7 @@
 #include <vector>
 
 // Символ, по которому осуществляются переходы в автомате.
-// Может быть символом-буквой (и входить в алфавит) или ссылкой (&i)
+// Может быть символом-буквой (и входить ТОЛЬКО в алфавит FA) или ссылкой (&i)
 class Symbol {
   private:
 	std::vector<int> annote_numbers;
@@ -91,3 +91,5 @@ class MemorySymbols {
 
 	static int get_cell_number(const Symbol& s);
 };
+
+bool is_special_symbol(const Symbol& s);
