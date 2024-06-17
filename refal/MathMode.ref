@@ -82,6 +82,7 @@ SeparateModes {
 }
 
 WrapInRegexpstr {
+ e.x' & 'e.y = <WrapInRegexpstr e.x>' & '<WrapInRegexpstr e.y>;
  e.x'\\\\'e.y = '\\regexpstr{'e.x' }\\\\'<WrapInRegexpstr e.y>;
   = ;
  e.y = '\\regexpstr{'e.y' }';
