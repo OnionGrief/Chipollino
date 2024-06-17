@@ -2,6 +2,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -66,7 +67,7 @@ struct MFATransition {
 	};
 };
 
-struct CaptureGroup {
+class CaptureGroup {
 	struct State {
 		int index;
 		int class_num;
@@ -82,14 +83,25 @@ struct CaptureGroup {
 	std::unordered_set<std::vector<int>, VectorHasher<int>> paths;
 	std::unordered_set<State, State::Hasher> states;
 	std::unordered_set<int> state_classes;
+	bool is_reset;
 
+  public:
 	CaptureGroup() = default;
 	CaptureGroup(int, const std::vector<std::vector<int>>&, const std::vector<int>&,
-				 bool reset = false);
+				 bool is_reset = false);
 	bool operator==(const CaptureGroup& other) const;
 
-	std::unordered_set<int> get_states_diff(
-		const std::unordered_set<int>& other_state_classes) const;
+	bool get_is_reset() const;
+	bool get_cell_number() const;
+	int get_opening_state_index() const;
+
+	const std::unordered_set<std::vector<int>, VectorHasher<int>>& get_paths() const;
+	const std::unordered_set<State, State::Hasher>& get_states() const;
+
+	std::tuple<std::unordered_set<int>, std::unordered_set<int>> get_states_diff(
+		const CaptureGroup& other) const;
+
+	friend std::ostream& operator<<(std::ostream& os, const CaptureGroup& cg);
 };
 
 std::ostream& operator<<(std::ostream& os, const CaptureGroup& cg);

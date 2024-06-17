@@ -660,7 +660,7 @@ void Regex::get_prefix(int len, set<string>& prefs) const {
 bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 										   Regex& result) const {
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
-		cout << "Invalid input: unexpected regex instead of symbol\n";
+		cerr << "Invalid input: unexpected regex instead of symbol\n";
 		return false;
 	}
 	if (respected_sym->type == Type::eps) {
@@ -761,7 +761,7 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 												   vector<Regex>& result) const {
 	Regex cur_result;
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
-		cout << "Invalid input: unexpected regex instead of symbol\n";
+		cerr << "Invalid input: unexpected regex instead of symbol\n";
 		return false;
 	}
 	if (respected_sym->type == Type::eps) {
