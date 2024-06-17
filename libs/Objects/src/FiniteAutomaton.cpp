@@ -383,7 +383,7 @@ FiniteAutomaton FiniteAutomaton::minimize(bool is_trim, iLogTemplate* log) const
 			classes[groups[i][j]] = i;
 		}
 	}
-	auto [minimized_dfa, class_to_index] = dfa.merge_equivalent_classes(classes);
+	auto [minimized_dfa, class_to_index] = dfa.merge_classes(classes);
 
 	// кэширование
 	language->set_min_dfa(minimized_dfa);
@@ -1361,7 +1361,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	return true;
 }
 
-tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_equivalent_classes(
+tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_classes(
 	const vector<int>& classes) const {
 	map<int, vector<int>> class_to_indexes;
 	for (int i = 0; i < classes.size(); i++)
@@ -1398,7 +1398,7 @@ tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_equivalen
 	return {{class_to_index.at(classes[initial_state]), new_states, language}, class_to_index};
 }
 
-vector<int> FiniteAutomaton::get_bisimilar_classes() const {
+vector<int> FiniteAutomaton::get_bisimulation_classes() const {
 	vector<RLGrammar::Item> fa_items;
 	vector<RLGrammar::Item*> nonterminals;
 	vector<RLGrammar::Item*> terminals;
@@ -1418,8 +1418,8 @@ vector<int> FiniteAutomaton::get_bisimilar_classes() const {
 
 FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
 	MetaInfo old_meta, new_meta;
-	vector<int> classes = get_bisimilar_classes();
-	auto [result, class_to_index] = merge_equivalent_classes(classes);
+	vector<int> classes = get_bisimulation_classes();
+	auto [result, class_to_index] = merge_classes(classes);
 
 	for (int i = 0; i < classes.size(); i++) {
 		for (int j = 0; j < classes.size(); j++)
@@ -1602,9 +1602,9 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 		if (t != 0)
 			return false;
 
-	vector<int> bisimilar_classes(nonterminals.size());
+	vector<int> bisimulation_classes(nonterminals.size());
 	for (int i = 0; i < nonterminals.size(); i++)
-		bisimilar_classes[i] = nonterminals[i]->class_number;
+		bisimulation_classes[i] = nonterminals[i]->class_number;
 
 	// биективная бисимуляция обратных грамматик
 	vector<vector<vector<RLGrammar::Item*>>> fa1_reverse_rules = RLGrammar::get_reverse_grammar(
@@ -1623,22 +1623,22 @@ bool FiniteAutomaton::equality_checker(const FiniteAutomaton& fa1, const FiniteA
 		RLGrammar::get_bisimilar_grammar(
 			reverse_rules, nonterminals, reverse_bisimilar_nonterminals, class_to_nonterminals);
 	// сопоставление состояний 1 к 1
-	vector<int> reverse_bisimilar_classes;
+	vector<int> reverse_bisimulation_classes;
 	for (RLGrammar::Item* nont : nonterminals) {
-		reverse_bisimilar_classes.push_back(nont->class_number);
+		reverse_bisimulation_classes.push_back(nont->class_number);
 		nont->class_number = -1;
 	}
 
 	// устанавливаем классы нетерминалов-состояний (1 к 1), чтобы после сопоставить переходы
 	int new_class = 0;
-	for (int i = 0; i < bisimilar_classes.size(); i++) {
+	for (int i = 0; i < bisimulation_classes.size(); i++) {
 		if (nonterminals[i]->class_number != -1)
 			continue;
 		nonterminals[i]->class_number = new_class;
 		// поиск нетерминалов с классом, как у i-го
-		for (int j = i + 1; j < bisimilar_classes.size(); j++) {
-			if (bisimilar_classes[j] == bisimilar_classes[i])
-				if (reverse_bisimilar_classes[j] == reverse_bisimilar_classes[i])
+		for (int j = i + 1; j < bisimulation_classes.size(); j++) {
+			if (bisimulation_classes[j] == bisimulation_classes[i])
+				if (reverse_bisimulation_classes[j] == reverse_bisimulation_classes[i])
 					nonterminals[j]->class_number = new_class;
 		}
 		new_class++;
@@ -2702,11 +2702,15 @@ void FiniteAutomaton::to_mfa_dfs(int state_index, vector<bool>& visited,
 
 MemoryFiniteAutomaton FiniteAutomaton::to_mfa() const {
 	vector<MFAState> mfa_states;
+	Alphabet alphabet;
 	mfa_states.emplace_back(0, states[initial_state].identifier, states[initial_state].is_terminal);
 	vector<bool> visited(size(), false);
 	unordered_map<int, int> states_mapping;
 	to_mfa_dfs(initial_state, visited, mfa_states, states_mapping, {}, 0);
-	return {initial_state, mfa_states, language->get_alphabet()};
+	for (const auto& symbol : language->get_alphabet())
+		if (!is_special_symbol(symbol))
+			alphabet.insert(symbol);
+	return {initial_state, mfa_states, alphabet};
 }
 
 void FiniteAutomaton::fill_order(int state_index, vector<bool>& visited, stack<int>& order) {
@@ -2768,34 +2772,4 @@ std::vector<std::unordered_set<int>> FiniteAutomaton::get_SCCs() {
 	}
 
 	return SCCs;
-}
-
-FiniteAutomaton FiniteAutomaton::get_subautomaton(const CaptureGroup& cg) {
-	int n = cg.states.size();
-	vector<FAState> sub_states;
-	sub_states.reserve(cg.states.size());
-	Alphabet alphabet;
-
-	unordered_set<int> terminal_states;
-	for (const auto& path : cg.paths)
-		terminal_states.insert(path[path.size() - 1]);
-
-	unordered_map<int, int> indexes;
-	int idx = 0;
-	for (auto st : cg.states) {
-		indexes[st.index] = idx;
-		sub_states.emplace_back(idx, states[st.index].identifier, terminal_states.count(st.index));
-		idx++;
-	}
-
-	for (const auto& st : cg.states)
-		for (const auto& [symbol, symbol_transitions] : states[st.index].transitions)
-			for (const auto& to : symbol_transitions)
-				if (indexes.count(to)) {
-					alphabet.insert(symbol);
-					sub_states[indexes.at(st.index)].add_transition(indexes.at(to), symbol);
-				}
-
-	// начальное состояние общее у всех cg.paths
-	return {indexes.at((*cg.paths.begin())[0]), sub_states, alphabet};
 }

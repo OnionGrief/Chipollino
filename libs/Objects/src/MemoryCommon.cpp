@@ -1,5 +1,6 @@
 #include "Objects/MemoryCommon.h"
 
+using std::tuple;
 using std::unordered_set;
 using std::vector;
 
@@ -40,12 +41,12 @@ bool CaptureGroup::State::operator==(const State& other) const {
 }
 
 CaptureGroup::CaptureGroup(int cell, const vector<vector<int>>& _paths,
-						   const vector<int>& _state_classes, bool reset)
-	: cell(cell) {
+						   const vector<int>& _state_classes, bool is_reset)
+	: cell(cell), is_reset(is_reset) {
 	for (const auto& path : _paths) {
 		paths.insert(path);
 		for (auto st : path) {
-			int class_num = (reset) ? State::reset_class : _state_classes[st];
+			int class_num = (is_reset) ? State::reset_class : _state_classes[st];
 			states.insert({st, class_num});
 			state_classes.insert(class_num);
 		}
@@ -56,19 +57,40 @@ bool CaptureGroup::operator==(const CaptureGroup& other) const {
 	return cell == other.cell && states == other.states;
 }
 
-unordered_set<int> CaptureGroup::get_states_diff(
-	const unordered_set<int>& other_state_classes) const {
+bool CaptureGroup::get_is_reset() const {
+	return is_reset;
+}
+
+bool CaptureGroup::get_cell_number() const {
+	return cell;
+}
+
+int CaptureGroup::get_opening_state_index() const {
+	return (*paths.begin())[0];
+}
+
+const std::unordered_set<std::vector<int>, VectorHasher<int>>& CaptureGroup::get_paths() const {
+	return paths;
+}
+
+const unordered_set<CaptureGroup::State, CaptureGroup::State::Hasher>& CaptureGroup::get_states()
+	const {
+	return states;
+}
+
+tuple<unordered_set<int>, unordered_set<int>> CaptureGroup::get_states_diff(
+	const CaptureGroup& other) const {
 	unordered_set<int> diff;
 	for (auto st : states)
-		if (st.class_num != State::reset_class && !other_state_classes.count(st.class_num))
+		if (st.class_num != State::reset_class && !other.state_classes.count(st.class_num))
 			diff.insert(st.index);
 
-	unordered_set<int> res(diff);
+	unordered_set<int> following(diff);
 	for (const auto& path : paths)
 		for (size_t i = path.size() - 1; i > 0; i--)
 			if (diff.count(path[i - 1]))
-				res.insert(path[i]);
-	return res;
+				following.insert(path[i]);
+	return {diff, following};
 }
 
 std::ostream& operator<<(std::ostream& os, const CaptureGroup& cg) {
