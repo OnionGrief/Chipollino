@@ -145,7 +145,6 @@ string LogTemplate::render() const {
 						automaton = std::get<FiniteAutomaton>(param.value).to_txt();
 					else
 						automaton = std::get<MemoryFiniteAutomaton>(param.value).to_txt();
-					// automaton = replace_for_rendering(automaton);
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];

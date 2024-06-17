@@ -1,25 +1,24 @@
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <sstream>
 #include <vector>
-#include <regex>
 
 #include "AutomatonToImage/AutomatonToImage.h"
 
+using std::cout;
 using std::ifstream;
+using std::ofstream;
 using std::string;
 using std::stringstream;
-using std::cout;
-using std::ofstream;
 using std::vector;
 
 AutomatonToImage::AutomatonToImage() {}
 
 AutomatonToImage::~AutomatonToImage() {}
 
-string replace_for_rendering2(const string& s) {
-	vector<std::pair<string, string>> substrs_to_replace = {{"\\^", "#^ "},
-															{"&", "#&"}};
+string replace_before_dot2tex(const string& s) {
+	vector<std::pair<string, string>> substrs_to_replace = {{"\\^", "#^ "}, {"&", "#&"}};
 
 	string result = s;
 	for (const auto& [old_substr, new_substr] : substrs_to_replace) {
@@ -28,6 +27,14 @@ string replace_for_rendering2(const string& s) {
 	}
 
 	return result;
+}
+
+void write_to_file(const string& file_name, const string& content) {
+	ofstream file;
+	file.open(file_name, ofstream::trunc);
+	if (file.is_open())
+		file << replace_before_dot2tex(content);
+	file.close();
 }
 
 void remove_file(string dir, string file, bool guarded = false) {
@@ -51,13 +58,10 @@ string AutomatonToImage::to_image(string automaton) {
 	remove_file("refal", "Meta_log.raux", true);
 	remove_file("refal", "Aux_input.raux", true);
 	ofstream fo;
-	fo.open("./refal/input.dot", ofstream::trunc);
-	if (fo.is_open())
-		fo << replace_for_rendering2(automaton);
-	fo.close();
+	write_to_file("./refal/input.dot", replace_before_dot2tex(automaton));
 	system("cd refal && refgo Preprocess+MathMode+FrameFormatter input.dot > "
 		   "error_Preprocess.raux");
-	
+
 	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
 
 	system("cd refal && refgo Postprocess+MathMode+FrameFormatter input.tex > "
@@ -88,16 +92,10 @@ string AutomatonToImage::to_image(string automaton) {
 
 string AutomatonToImage::colorize(string automaton, string metadata) {
 
-	FILE* fo;
-	FILE* md;
 	ifstream infile_for_Final;
-	fo = fopen("./refal/Col_input.tex", "wt");
-	fprintf(fo, "%s", automaton.c_str());
-	fclose(fo);
+	write_to_file("./refal/Col_input.tex", automaton);
 	if (metadata != "") {
-		md = fopen("./refal/Meta_input.raux", "wt");
-		fprintf(md, "%s", metadata.c_str());
-		fclose(md);
+		write_to_file("./refal/Meta_input.raux", metadata);
 		system("cd refal && refgo Colorize+MathMode Col_input.tex > "
 			   "error_Colorize.raux");
 		infile_for_Final.open("./refal/Final_input.tex");
