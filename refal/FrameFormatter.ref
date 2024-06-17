@@ -128,7 +128,14 @@ FindSeparator {
 TakePrefix {
   0 e.Rest = (e.Rest);
  s.Size = ();
- s.Length s.Sym e.Rest = s.Sym <TakePrefix <SafeSub s.Length <Weight (e.Rest) s.Sym>> e.Rest>;
+ s.Length s.Sym e.Rest
+ , <ASCIIStandard> :
+  { e.A1 s.Sym e.A2  = s.Sym <TakePrefix <SafeSub s.Length <Weight (e.Rest) s.Sym>> e.Rest>;
+   e.A
+   , e.Rest : s.S1 e.Rest1
+     = s.Sym s.S1 <TakePrefix <SafeSub s.Length <Mul 2 <Weight (e.Rest) s.Sym>>> e.Rest1>;
+   e.A = s.Sym ();
+  };
 }
 
 Weight {

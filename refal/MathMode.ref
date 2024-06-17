@@ -14,7 +14,7 @@ $ENTRY Trim {
 /* Hacked derivatives. TODO: parameterize by indices activation */
 SpecialSymbolList {
  = (NOREGEX ('eps')('\\empt'))(NOREGEX ('DERIV')('\\delta_'))(OK ('FIRST')('\\First'))(OK ('FOLLOW')('\\Follow'))(OK ('LAST')('\\Last'))
-   (OK ('UNION')('\\cup'))(OK ('\\{')('\\{'))(OK ('\\}')('\\}'))(OK ('{')('\\{'))(OK ('}')('\\}'))(OK ('[')('['))(OK (']')(']'))
+   (OK ('UNION')('\\cup'))(OK ('\\{')('\\{'))(OK ('\\}')('\\}'))(OK ('{')('\\{'))(OK ('}')('\\}'))(OK ('[[')('{'))(OK (']]')('}'))
    (NOREGEX ('LANG')('\\Lang'))(OK ('\\&')('\\memref'))(NOREGEX ('\\textasciicircum')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
    (OK ('>->>')('\\transit'))(MEM ('MEMLOPEN')
    ('\\langle o:\\,'))(MEM ('MEMR')('\\rangle'))(MEM ('MEMLCLOSE')('\\langle c:\\,'));
@@ -250,7 +250,7 @@ $ENTRY NonASCII {
 }
 
 $ENTRY ASCIIStandard {
-  = <Numbers><Letters>'$%&*()-_=+`~!@#;:\'\"<>,./?[]{}\\|^ \t\n';
+  = <Numbers><Letters>'$%&*()-_=+`~!@#;:\'\"<>,./?[]{}\\|^ \t\n\r';
 }
 
 $ENTRY Nempty {
@@ -273,4 +273,3 @@ $ENTRY Max {
   s.Rest = s.2;
  };
 }
-
