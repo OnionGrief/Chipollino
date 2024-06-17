@@ -249,7 +249,7 @@ string LogTemplate::log_table(Table t) {
 		for (int j = 0; j < t.columns.size(); j++) {
 			row += " & " + replace_for_rendering(t.data[i * t.columns.size() + j]);
 		}
-		table += row + "\n";
+		table += row + "\\\\\n";
 	}
 	table += "\\end{array}$\n";
 	return table;

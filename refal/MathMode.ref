@@ -15,7 +15,10 @@ $ENTRY Trim {
 SpecialSymbolList {
  = (NOREGEX ('eps')('\\empt'))(NOREGEX ('DERIV')('\\delta_'))(OK ('FIRST')('\\First'))(OK ('FOLLOW')('\\Follow'))(OK ('LAST')('\\Last'))
    (OK ('UNION')('\\cup'))(OK ('\\{')('\\{'))(OK ('\\}')('\\}'))(OK ('{')('\\{'))(OK ('}')('\\}'))(OK ('[[')('{'))(OK (']]')('}'))
-   (NOREGEX ('LANG')('\\Lang'))(OK ('\\&')('\\memref'))(NOREGEX ('\\textasciicircum')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
+   (NOREGEX ('LANG')('\\Lang'))
+   (OK ('#&')('\\memref'))(OK ('\\&')('\\memref'))
+   (NOREGEX ('#^')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
+   (NOREGEX ('\\textasciicircum')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
    (OK ('>->>')('\\transit'))(MEM ('MEMLOPEN')
    ('\\langle o:\\,'))(MEM ('MEMR')('\\rangle'))(MEM ('MEMLCLOSE')('\\langle c:\\,'));
 }
@@ -43,10 +46,10 @@ SeparateModes {
   , <InSet (<AnnoteSym><LinearizeSym>)(s.1)><InSet (<Numbers>)s.2> :
  {True True
  	= <SeparateModes (e.SymbList) Normal (e.Prefix 'E') e.Rest>;
-  e.OtherValues = '\\regexpstr{'<MathMode e.Nempt>' }' e.Image<SeparateModes (e.SymbList) Normal () e.Rest>; 
+  e.OtherValues = <WrapInRegexpstr <MathMode e.Nempt>> e.Image<SeparateModes (e.SymbList) Normal () e.Rest>; 
   }; 
    = e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
-  e.Nempt = '\\regexpstr{'<MathMode e.Nempt>' }' e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
+  e.Nempt = <WrapInRegexpstr <MathMode e.Nempt>> e.Image<SeparateModes (e.SymbList) Normal () e.Rest>;
  };
  MEM = <SeparateModes (e.SymbList) Memory (e.Prefix e.Image) e.Rest>;
  OK = <SeparateModes (e.SymbList) Normal (e.Prefix e.Image) e.Rest>;
@@ -57,7 +60,7 @@ SeparateModes {
    False
   , <Trim e.Prefix> :
    { = <SeparateModes (e.Spec) Text (s.Sym) e.Rest>;
-    e.Nempty = '\\regexpstr{'<MathMode e.Nempty>' }'<SeparateModes (e.Spec) Text (s.Sym) e.Rest>;
+    e.Nempty = <WrapInRegexpstr <MathMode e.Nempty>><SeparateModes (e.Spec) Text (s.Sym) e.Rest>;
    };
  };
  (e.Spec) Text (e.Prefix) s.Sym e.Rest
@@ -75,7 +78,13 @@ SeparateModes {
  };
  (e.Spec) Text (e.Prefix) = '\\text{'e.Prefix' }';
  (e.Spec) Normal ( ) = ;
- (e.Spec) Normal (e.Prefix) = '\\regexpstr{'<MathMode e.Prefix>' }';
+ (e.Spec) Normal (e.Prefix) = <WrapInRegexpstr <MathMode e.Prefix>>;
+}
+
+WrapInRegexpstr {
+ e.x'\\\\'e.y = '\\regexpstr{'e.x' }\\\\'<WrapInRegexpstr e.y>;
+  = ;
+ e.y = '\\regexpstr{'e.y' }';
 }
 
 AdjustSpaceBeforeStar {
@@ -273,3 +282,4 @@ $ENTRY Max {
   s.Rest = s.2;
  };
 }
+
