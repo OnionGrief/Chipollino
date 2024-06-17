@@ -83,9 +83,13 @@ bool Parser::parse_reserved(const std::string& res_case) {
 	}
 	int beg_pos = cur_pos;
 	if (res_case == "STRING") {
-		while (cur_pos < file.size() && ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
-										 (file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') ||
-										 (file[cur_pos] >= '0' && file[cur_pos] <= '9'))) {
+		while (cur_pos < file.size() &&
+			   ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
+				(file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') ||
+				(file[cur_pos] >= '0' && file[cur_pos] <= '9') ||
+				(file[cur_pos] >= '(' && file[cur_pos] <= '.') || file[cur_pos] == '|' ||
+				file[cur_pos] == '^' || file[cur_pos] == '&' || file[cur_pos] == ':' ||
+				file[cur_pos] == '[' || file[cur_pos] == ']')) {
 			cur_pos++;
 		}
 		if (beg_pos != cur_pos)
@@ -258,7 +262,10 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 
 		for (const auto& transition : FAtransitions) {
 			MFAstates[name_to_ind[transition.beg]].add_transition(
-				MFATransition(name_to_ind[transition.end], transition.open, transition.close, transition.reset),
+				MFATransition(name_to_ind[transition.end],
+							  transition.open,
+							  transition.close,
+							  transition.reset),
 				transition.symbol);
 			if (!transition.symbol.is_epsilon() && !transition.symbol.is_ref())
 				alphabet.insert(transition.symbol);
