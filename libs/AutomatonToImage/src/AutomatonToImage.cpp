@@ -57,12 +57,9 @@ void remove_file(string dir, string file, bool guarded = false) {
 string AutomatonToImage::to_image(string automaton) {
 	remove_file("refal", "Meta_log.raux", true);
 	remove_file("refal", "Aux_input.raux", true);
-	ofstream fo;
 	write_to_file("./refal/input.dot", replace_before_dot2tex(automaton));
-	system("cd refal && refgo Preprocess+MathMode+FrameFormatter input.dot > "
-		   "error_Preprocess.raux");
 
-	system("cd refal && dot2tex -ftikz -tmath \"Mod_input.dot\" > input.tex");
+	system("cd refal && dot2tex -ftikz -tmath \"input.dot\" > input.tex");
 
 	system("cd refal && refgo Postprocess+MathMode+FrameFormatter input.tex > "
 		   "error_Postprocess.raux "
@@ -84,7 +81,7 @@ string AutomatonToImage::to_image(string automaton) {
 
 	remove_file("refal", "input.dot");
 	remove_file("refal", "input.tex");
-	remove_file("refal", "Mod_input.dot");
+	// remove_file("refal", "Mod_input.dot");
 	remove_file("refal", "R_input.tex");
 
 	return graph.str();

@@ -170,13 +170,14 @@ string LogTemplate::render() const {
 						c_graph = cache_automatons[hash];
 					} else {
 						c_graph = AutomatonToImage::to_image(automaton);
-						if (!table.is_empty()) {
-							string table_name = write_to_file(image_number++, table.to_csv());
-							c_graph += table_name + log_table(table);
-						}
 						cache_automatons[hash] = c_graph;
 					}
 					c_graph = AutomatonToImage::colorize(c_graph, param.meta.to_output());
+
+					if (!table.is_empty()) {
+						string table_name = write_to_file(image_number++, table.to_csv());
+						c_graph += table_name + log_table(table);
+					}
 					s.insert(insert_place, graph_name + c_graph);
 				} else if (std::holds_alternative<string>(param.value)) {
 					string str = std::get<string>(param.value);
@@ -237,7 +238,7 @@ string LogTemplate::log_plot(Plot p) {
 			max_y = p.data[i].y_coord;
 	}
 	visualization =
-		"\\begin{tikzpicture}\\scriptsize \%begin_plot\n " // NOLINT(build/printf_format)
+		"\\begin{tikzpicture}\\scriptsize %begin_plot\n "
 		"\\datavisualization[scientific axes=clean, visualize as line/.list={" +
 		styling +
 		"},\n x axis={ticks={step=" + to_string(step_size(max_x, styles.size(), p.data.size())) +
@@ -250,7 +251,7 @@ string LogTemplate::log_plot(Plot p) {
 		visualization +=
 			to_string(i.x_coord) + ", " + to_string(i.y_coord) + ", " + i.plot_label + "\n";
 	}
-	visualization += "};\n \\end{tikzpicture} \%end_plot\n\n"; // NOLINT(build/printf_format)
+	visualization += "};\n \\end{tikzpicture} %end_plot\n\n";
 	return visualization;
 }
 
@@ -261,14 +262,14 @@ string LogTemplate::log_table(Table t) {
 	string format = "c!{\\color{black!80}\\vline width .65pt}";
 	string cols = " ";
 	string row;
-	for (int i = 0; i < t.columns.size(); i++) {
+	for (size_t i = 0; i < t.columns.size(); i++) {
 		format += "c";
 		string c = t.columns[i] == " " ? "eps" : t.columns[i];
 		cols += " & " + c;
 	}
 	table += "$\\begin{array}{" + format + "}\\rowcolor{HeaderColor}\n";
 	table += cols + "\\\\\n\\hline\n";
-	for (int i = 0; i < t.rows.size(); i++) {
+	for (size_t i = 0; i < t.rows.size(); i++) {
 		row = t.rows[i] == " " ? "eps" : t.rows[i];
 		for (size_t j = 0; j < t.columns.size(); j++) {
 			row += " & " + replace_for_rendering(t.data[i * t.columns.size() + j]);
