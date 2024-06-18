@@ -759,6 +759,27 @@ TEST(TestParsing, MFA_equivalence) {
 	});
 }
 
+TEST(TestBrgexChecker, CheckRefsAndMWs) {
+	using Test = std::tuple<string, bool>;
+	vector<Test> tests = {
+		{"[a]:1&1", true},
+		{"&1[a]:1", false},
+		{"(&1[a]:1)*", true},
+		{"&1[a]:1&1", false},
+		{"[a]:1&1[a]:2", false},
+		{"&2[a]:1&1[a]:2", false},
+		{"(&2[a]:1&1[a]:2)*", true},
+		{"(&1[a]:1[a]:1&1[a]:2)*", false},
+		{"(&2[a]:1&1[a]:2)*[a]:3*", false},
+		{"(&2[a]:1&1[a]:2)*[a]:3*&3", true},
+	};
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [rgx, expected_res] = test;
+		SCOPED_TRACE(rgx);
+		ASSERT_EQ(BackRefRegex(rgx).check_refs_and_memory_writers_usefulness(), expected_res);
+	});
+}
+
 TEST(TestReverse, BRegex_Reverse) {
 	ASSERT_TRUE(BackRefRegex::equal(BackRefRegex("([a*b]:1&1|b&1)").reverse(),
 									BackRefRegex("[ba*]:1&1|&1b")));

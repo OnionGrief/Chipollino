@@ -145,9 +145,6 @@ vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 	vector<FAState> fa_left;
 	// список состояний и макс индекс состояния для правого автомата относительно операции
 	vector<FAState> fa_right;
-	// автомат для отрицания, строится обычный томпсон и берется дополнение
-	FiniteAutomaton fa_negative;
-	vector<FAState> fa_negative_states;
 
 	switch (type) {
 	case Type::eps:
@@ -262,11 +259,11 @@ vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 
 		fa_states.emplace_back(int(fa_left.size()) + 1, true);
 		return fa_states;
-	case Type::negative:
+	case Type::negative: {
 		// строим автомат для отрицания
-		fa_negative_states = Regex::cast(term_l)->_to_thompson(root_alphabet);
-
-		fa_negative = FiniteAutomaton(0, fa_negative_states, root_alphabet);
+		vector<FAState> fa_negative_states = Regex::cast(term_l)->_to_thompson(root_alphabet);
+		// автомат для отрицания, строится обычный томпсон и берется дополнение
+		FiniteAutomaton fa_negative = FiniteAutomaton(0, fa_negative_states, root_alphabet);
 		fa_negative = fa_negative.minimize();
 		// берем дополнение автомата
 		fa_negative = fa_negative.complement();
@@ -287,6 +284,7 @@ vector<FAState> Regex::_to_thompson(const Alphabet& root_alphabet) const {
 
 		// возвращаем состояния и макс индекс
 		return fa_negative.states;
+	}
 	default:
 		break;
 	}
@@ -750,7 +748,7 @@ bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* re
 		result.type = Type::conc;
 		if (result.term_l == nullptr)
 			result.term_l = new Regex();
-		bool answer = derivative_with_respect_to_sym(
+		answer = derivative_with_respect_to_sym(
 			respected_sym, Regex::cast(reg_e->term_l), *Regex::cast(result.term_l));
 		result.term_r = reg_e->make_copy();
 		return answer;

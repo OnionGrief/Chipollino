@@ -1073,11 +1073,10 @@ pair<unordered_set<string>, unordered_set<string>> MemoryFiniteAutomaton::genera
 	unordered_set<TraversalState, TraversalState::Hasher> visited_states;
 	while (!current_states.empty()) {
 		unordered_set<TraversalState, TraversalState::Hasher> following_states;
-		for (const auto& state_to_process : current_states) {
-			if (visited_states.count(state_to_process))
+		for (auto cur_state : current_states) {
+			if (visited_states.count(cur_state))
 				continue;
 
-			auto cur_state = state_to_process;
 			cur_state.process_mutations();
 			const MFAState* state = cur_state.state;
 			if (state->is_terminal) {
