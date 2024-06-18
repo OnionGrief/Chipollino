@@ -147,7 +147,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<int, bool> _parse_slow(const std::string&, Matcher*) const;
 	std::pair<int, bool> _parse(const std::string&, Matcher*) const;
 
-	// поиск множества состояний НКА,
+	// поиск множества состояний MFA,
 	// достижимых из множества состояний по eps-переходам
 	std::tuple<std::set<int>, std::unordered_set<int>, MFATransition::MemoryActions>
 	get_eps_closure(const std::set<int>& indices) const;

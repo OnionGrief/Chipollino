@@ -92,7 +92,7 @@ std::string MetamorphicTests::generate_bregex(RegexGenerator& rg, int cells_num)
 				condition = false;
 			}
 		if (condition)
-			condition &= r.check_refs();
+			condition &= r.check_refs_and_memory_writers_usefulness();
 	} while (!condition);
 
 	return rgx_str;

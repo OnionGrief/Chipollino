@@ -33,7 +33,7 @@ void write_to_file(const string& file_name, const string& content) {
 	ofstream file;
 	file.open(file_name, ofstream::trunc);
 	if (file.is_open())
-		file << replace_before_dot2tex(content);
+		file << content;
 	file.close();
 }
 

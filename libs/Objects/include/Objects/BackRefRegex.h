@@ -51,6 +51,7 @@ class BackRefRegex : public AlgExpression {
 
 	// возвращает вектор листьев дерева
 	// устанавливает для них in_lin_cells, first_in_cells и last_in_cells
+	// линеаризует memoryWriters
 	void preorder_traversal(
 		std::vector<BackRefRegex*>& terms,					// NOLINT(runtime/references)
 		int& lin_counter,									// NOLINT(runtime/references)
@@ -79,7 +80,7 @@ class BackRefRegex : public AlgExpression {
 													   CellSet>>>& // NOLINT(runtime/references)
 	) const;
 
-	// преобразует star в conc (раскрывает каждую итерацию один раз) и линеаризует memoryWriter
+	// преобразует star в conc (раскрывает каждую итерацию один раз) и линеаризует memoryWriters
 	void unfold_iterations(int& number); // NOLINT(runtime/references)
 	// рекурсивно проверяет, является ли регулярное выражение ацикличным
 	bool _is_acreg(
@@ -87,7 +88,9 @@ class BackRefRegex : public AlgExpression {
 		std::unordered_map<int, std::unordered_set<int>>&) const; // NOLINT(runtime/references)
 
 	void linearize_refs(int& number); // NOLINT(runtime/references)
-	void _check_refs(std::unordered_set<int>&, std::unordered_set<int>&) const;
+	void _check_memory_writers(std::unordered_map<int, std::unordered_set<int>>&,
+							   std::unordered_set<int>&,		// NOLINT(runtime/references)
+							   std::unordered_set<int>&) const; // NOLINT(runtime/references)
 
 	// меняет порядок конкатенаций в дереве (swap term_l и term_r)
 	void _reverse(std::unordered_map<int, BackRefRegex*>&); // NOLINT(runtime/references)
@@ -123,6 +126,8 @@ class BackRefRegex : public AlgExpression {
 	// обращение выражения (для СНФ)
 	BackRefRegex reverse(iLogTemplate* log = nullptr) const;
 	// проверяет, что каждая ссылка может следовать за записью в память (соответствующую ячейку)
-	bool check_refs() const;
+	// и что каждый memoryWriter не будет однозначно переинициализирован без возможности
+	// сослаться на него (существует хотя бы один путь, в котором присутствует ссылка на него)
+	bool check_refs_and_memory_writers_usefulness() const;
 	BackRefRegex rewrite_aci() const;
 };
