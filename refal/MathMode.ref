@@ -17,7 +17,8 @@ SpecialSymbolList {
    (OK ('UNION')('\\cup'))(OK ('\\{')('\\{'))(OK ('\\}')('\\}'))(OK ('{')('\\{'))(OK ('}')('\\}'))(OK ('[[')('{'))(OK (']]')('}'))
    (NOREGEX ('LANG')('\\Lang'))
    (OK ('#&')('\\memref'))(OK ('\\&')('\\memref'))
-   (NOREGEX ('#^')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))(NOREGEX ('#~')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
+   (NOREGEX ('#^')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
+   (NOREGEX ('\\textasciicircum')('\\mathbf{\\textasciicircum}\\hspace{-0.2ex}'))
    (OK ('>->>')('\\transit'))(MEM ('MEMLOPEN')
    ('\\langle o:\\,'))(MEM ('MEMR')('\\rangle'))(MEM ('MEMLCLOSE')('\\langle c:\\,'));
 }

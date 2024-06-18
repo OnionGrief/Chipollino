@@ -165,7 +165,6 @@ string LogTemplate::render() const {
 						graph_name = write_to_file(image_number++, mfa.to_dsl());
 						automaton = mfa.to_txt();
 					}
-					// automaton = replace_for_rendering(automaton);
 					size_t hash = hasher(automaton);
 					if (cache_automatons.count(hash) != 0) {
 						c_graph = cache_automatons[hash];
@@ -270,12 +269,11 @@ string LogTemplate::log_table(Table t) {
 	table += "$\\begin{array}{" + format + "}\\rowcolor{HeaderColor}\n";
 	table += cols + "\\\\\n\\hline\n";
 	for (int i = 0; i < t.rows.size(); i++) {
-		string r = t.rows[i] == " " ? "eps" : t.rows[i];
-		row = r;
-		for (int j = 0; j < t.columns.size(); j++) {
+		row = t.rows[i] == " " ? "eps" : t.rows[i];
+		for (size_t j = 0; j < t.columns.size(); j++) {
 			row += " & " + replace_for_rendering(t.data[i * t.columns.size() + j]);
 		}
-		table += row + " \\\\\n";
+		table += row + "\\\\\n";
 	}
 	table += "\\end{array}$\n";
 	return table;
