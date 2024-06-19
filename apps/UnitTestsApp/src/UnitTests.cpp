@@ -49,6 +49,10 @@ TEST(TestParseString, FromString) {
 		{"a|(c^)", false, false, 8}, // a | ( c . ^ eps )
 		{"[b[a]:1&1]:2&2^a", true, true},
 		{"[b[a]:1&1]:2&2^a", true, false},
+		{"[a]:1[]:1&1", false, true, 9},
+		{"[a]:1[(|)]:1&1", true, true},
+		{"O1aC1R1&1", false, false, 9},
+		{"O1aC1X1&1", true, false},
 	};
 
 	for (const auto& t : tests) {
@@ -755,6 +759,27 @@ TEST(TestParsing, MFA_equivalence) {
 	});
 }
 
+TEST(TestBrgexChecker, CheckRefsAndMWs) {
+	using Test = std::tuple<string, bool>;
+	vector<Test> tests = {
+		{"[a]:1&1", true},
+		{"&1[a]:1", false},
+		{"(&1[a]:1)*", true},
+		{"&1[a]:1&1", false},
+		{"[a]:1&1[a]:2", false},
+		{"&2[a]:1&1[a]:2", false},
+		{"(&2[a]:1&1[a]:2)*", true},
+		{"(&1[a]:1[a]:1&1[a]:2)*", false},
+		{"(&2[a]:1&1[a]:2)*[a]:3*", false},
+		{"(&2[a]:1&1[a]:2)*[a]:3*&3", true},
+	};
+	for_each(tests.begin(), tests.end(), [](const Test& test) {
+		auto [rgx, expected_res] = test;
+		SCOPED_TRACE(rgx);
+		ASSERT_EQ(BackRefRegex(rgx).check_refs_and_memory_writers_usefulness(), expected_res);
+	});
+}
+
 TEST(TestReverse, BRegex_Reverse) {
 	ASSERT_TRUE(BackRefRegex::equal(BackRefRegex("([a*b]:1&1|b&1)").reverse(),
 									BackRefRegex("[ba*]:1&1|&1b")));
@@ -772,6 +797,8 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		{"[a|a]:1*&1", "[a]:1*[a]:1*&1", true},
 		{"[a]:1*&1|[b]:1&1", "[b]:1&1|[a]:1*&1", true},
 		{"[a]:1&1(&1|[b]:1)*", "[a]:1&1(&1|[b]:1)*", true},
+		{"[a|b]:1*&1", "(|[a|b]:1(a|b)*)&1", true},
+		{"[ab*]:1*&1", "[ab*b*]:1*&1", true},
 		// перекрестная бисимуляция
 		{"[a*]:1a*&1", "a*[a*]:1&1", false},
 		{"b[a*]:1a*&1", "ba*[a*]:1&1", false},
@@ -780,6 +807,8 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 		// несовпадение раскрасок
 		{"[a]:1*&1", "[a*]:1*&1", false},
 		{"[a]:1*[a*]:1&1", "[a|]:1*&1", false},
+		{"([a|]:1*&1)*", "([aa*|]:1&1)*", false},
+		{"b*[a*]:1*&1", "b*[a*]:1&1", false},
 		// несовпадение по решающим действиям
 		{"[a|b]:1c(a|b)&1", "(a|b)c[a|b]:1&1", false},
 		// несовпадение CG

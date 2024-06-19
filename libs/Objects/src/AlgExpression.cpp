@@ -338,6 +338,7 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 				return {Lexeme::Type::error};
 
 			if (allow_ref)
+				// не будет входить в алфавит, только для обозначения перехода в MFA
 				lexeme.type = Lexeme::Type::ref;
 			else
 				lexeme.type = Lexeme::Type::symb;

@@ -147,7 +147,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<int, bool> _parse_slow(const std::string&, Matcher*) const;
 	std::pair<int, bool> _parse(const std::string&, Matcher*) const;
 
-	// поиск множества состояний НКА,
+	// поиск множества состояний MFA,
 	// достижимых из множества состояний по eps-переходам
 	std::tuple<std::set<int>, std::unordered_set<int>, MFATransition::MemoryActions>
 	get_eps_closure(const std::set<int>& indices) const;
@@ -158,7 +158,7 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 		int state_index,
 		std::vector<bool>& visited, // NOLINT(runtime/references)
 		const MemoryConfiguration& opened_cells,
-		std::unordered_map<int, std::unordered_set<int>>& colors, // NOLINT(runtime/references)
+		std::vector<std::unordered_set<int>>& state_colors, // NOLINT(runtime/references)
 		const std::vector<int>& ab_classes,
 		std::unordered_map<int, int>& ab_class_to_first_state // NOLINT(runtime/references)
 	) const;
@@ -168,21 +168,30 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::vector<MFAState::Transitions> get_reversed_transitions() const;
 
 	std::pair<std::vector<std::vector<int>>, std::vector<std::vector<int>>> find_cg_paths(
-		int state_index, std::unordered_set<int> visited, int cell, int opening_state) const;
+		int state_index, std::unordered_set<int> visited, int cell, int opening_state,
+		bool was_in_opening_state) const;
 	std::vector<CaptureGroup> find_capture_groups_backward(
-		int ref_incoming_state, int cell, const std::vector<int>& fa_classes) const;
+		int ref_incoming_state, int cell,
+		const std::vector<MFAState::Transitions>& reversed_transitions,
+		const std::vector<int>& fa_classes) const;
 
 	bool find_decisions(int state_index,
 						std::vector<int>& visited, // NOLINT(runtime/references)
-						const std::unordered_set<int>& states_to_check) const;
-	bool states_have_decisions(const std::unordered_set<int>& states_to_check) const;
+						const std::unordered_set<int>& states_to_check,
+						const std::unordered_set<int>& following_states,
+						const CaptureGroup& cg) const;
+	bool states_have_decisions(const std::unordered_set<int>& states_to_check,
+							   const std::unordered_set<int>& following_states,
+							   const CaptureGroup& cg) const;
+
+	FiniteAutomaton get_cg_fa(const CaptureGroup& cg) const;
 
 	static std::optional<bool> bisimilarity_checker(const MemoryFiniteAutomaton&,
 													const MemoryFiniteAutomaton&);
 
 	// объединение эквивалентных классов (принимает на вход вектор размера states.size())
 	// на i-й позиции номер класса i-го состояния
-	std::tuple<MemoryFiniteAutomaton, std::unordered_map<int, int>> merge_equivalent_classes(
+	std::tuple<MemoryFiniteAutomaton, std::unordered_map<int, int>> merge_classes(
 		const std::vector<int>&) const;
 
   public:
