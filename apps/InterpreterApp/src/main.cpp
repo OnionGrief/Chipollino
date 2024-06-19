@@ -14,7 +14,13 @@ int main(int argc, char* argv[]) {
 	std::string load_file = "test.txt";
 	if (argc > 1)
 		load_file = argv[1];
-	if (interpreter.run_file(load_file)) {
-		interpreter.generate_log("./resources/report.tex");
+	try {
+		if (interpreter.run_file(load_file)) {
+			interpreter.generate_log("./resources/report.tex");
+		} else {
+			exit(1);
+		}
+	} catch (const std::exception& e) {
+		std::cerr << "Run error: " << e.what() << "\n";
 	}
 }
