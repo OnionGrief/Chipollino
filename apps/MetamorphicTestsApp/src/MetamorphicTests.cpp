@@ -144,14 +144,23 @@ TEST(TestMFA, Fuzzing) {
 }
 
 // TEST(TestMFA, Fuzz) {
-//	string rgx_str = "(a[[b|]:1|]:2*[[c|]:1|]:2*&1&2)*";
-//	MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
-//	MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
+//	BackRefRegex rgx("");
+//	MemoryFiniteAutomaton mfa1 = rgx.to_mfa();
+//	MemoryFiniteAutomaton mfa2 = rgx.to_mfa_additional();
 //
 //	std::cout << mfa1.to_txt() << mfa2.to_txt();
 //
 //	MetamorphicTests::cmp_automatons(mfa1, mfa2);
-//}
+// }
+
+// TEST(TestMFA, Cmp) {
+//	MemoryFiniteAutomaton mfa1 = BackRefRegex().to_mfa_additional();
+//	MemoryFiniteAutomaton mfa2 = BackRefRegex().to_mfa_additional();
+//
+//	std::cout << mfa1.to_txt() << mfa2.to_txt();
+//
+//	MetamorphicTests::cmp_automatons(mfa1, mfa2);
+// }
 
 TEST(TestMFA, ToTxt) {
 	RegexGenerator rg(5, 3, 3, 2);
