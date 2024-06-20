@@ -826,9 +826,9 @@ pair<int, bool> MemoryFiniteAutomaton::_parse(const string& s, Matcher* matcher)
 			}
 
 			visited_states.insert(cur_state);
+			counter++;
 		}
 		current_states = following_states;
-		counter++;
 	}
 
 	return {counter, false};
@@ -1496,8 +1496,8 @@ void find_opening_states_dfs(int state_index,
 	for (const auto& [symbol, symbol_transitions] : reversed_transitions[state_index])
 		for (const auto& tr : symbol_transitions) {
 			optional<MFATransition::MemoryAction> action;
-			if (tr.memory_actions.count(cell))
-				action = tr.memory_actions.at(cell);
+			if (auto it = tr.memory_actions.find(cell); it != tr.memory_actions.end())
+				action = it->second;
 			if (action && (action == MFATransition::open || action == MFATransition::reset))
 				opening_states.insert(tr.to);
 			else if (!visited[tr.to])
@@ -1505,36 +1505,56 @@ void find_opening_states_dfs(int state_index,
 		}
 }
 
-bool is_valid_transition(bool is_opening_state, optional<MFATransition::MemoryAction> action) {
+bool opening_action_only_from_opening_state(bool is_opening_state,
+											optional<MFATransition::MemoryAction> action) {
 	bool is_open_action = action && action == MFATransition::open;
 	return is_opening_state == is_open_action;
 }
 
 pair<vector<vector<int>>, vector<vector<int>>> MemoryFiniteAutomaton::find_cg_paths(
-	int state_index, std::unordered_set<int> visited, int cell, int opening_state) const {
+	int state_index, std::unordered_set<int> visited, int cell, int opening_state,
+	bool was_in_opening_state) const {
 	vector<vector<int>> paths;
 	vector<vector<int>> reset_paths;
 	visited.insert(state_index);
 
+	bool is_opening_state = state_index == opening_state;
 	for (const auto& [symbol, symbol_transitions] : states[state_index].transitions)
 		for (const auto& tr : symbol_transitions) {
 			optional<MFATransition::MemoryAction> action;
 			if (auto it = tr.memory_actions.find(cell); it != tr.memory_actions.end())
 				action = it->second;
 			if (action && action == MFATransition::close) {
-				paths.push_back({state_index});
+				if (!(is_opening_state && !was_in_opening_state))
+					paths.push_back({state_index});
 			} else if (action && action == MFATransition::reset) {
 				reset_paths.push_back({state_index});
 			} else {
-				bool is_opening_state = state_index == opening_state;
-				bool should_process = !visited.count(tr.to) ||
-									  // чтобы обработать случай, когда открывающее совпадает с
-									  // закрывающим, e.g. [a*a]:1*&1
-									  (!is_opening_state && tr.to == opening_state);
-				if (should_process && is_valid_transition(is_opening_state, action)) {
-					auto [t, _] = find_cg_paths(tr.to, visited, cell, opening_state);
+				bool should_process = !visited.count(tr.to);
+				if (is_opening_state) {
+					// чтобы обработать случай, когда открывающее совпадает с
+					// закрывающим, e.g. [a*a]:1*&1
+					should_process |= tr.to == opening_state && !was_in_opening_state;
+					should_process &= opening_action_only_from_opening_state(true, action) ||
+									  (was_in_opening_state && !action);
+				} else {
+					// чтобы обработать случай, когда открывающее совпадает с
+					// закрывающим, e.g. [a*a]:1*&1
+					should_process |= tr.to == opening_state;
+					should_process &= opening_action_only_from_opening_state(false, action);
+				}
+
+				if (should_process) {
+					auto [t, _] = find_cg_paths(tr.to,
+												visited,
+												cell,
+												opening_state,
+												is_opening_state || was_in_opening_state);
 					for (auto& i : t) {
-						i.insert(i.begin(), state_index);
+						if (!(is_opening_state && !was_in_opening_state &&
+							  tr.to == opening_state)) {
+							i.insert(i.begin(), state_index);
+						}
 						paths.emplace_back(i);
 					}
 				}
@@ -1555,7 +1575,7 @@ vector<CaptureGroup> MemoryFiniteAutomaton::find_capture_groups_backward(
 	vector<CaptureGroup> res;
 
 	for (auto opening_st : opening_states) {
-		auto [paths, reset_paths] = find_cg_paths(opening_st, {}, cell, opening_st);
+		auto [paths, reset_paths] = find_cg_paths(opening_st, {}, cell, opening_st, false);
 		for (const auto& reset_path : reset_paths)
 			res.push_back(CaptureGroup(cell, {reset_path}, fa_classes, true));
 		if (!paths.empty())
@@ -1579,7 +1599,8 @@ bool MemoryFiniteAutomaton::find_decisions(int state_index, vector<int>& visited
 				it != tr.memory_actions.end())
 				action = it->second;
 
-			if (is_valid_transition(state_index == cg.get_opening_state_index(), action) &&
+			if (opening_action_only_from_opening_state(state_index == cg.get_opening_state_index(),
+													   action) &&
 				(states_to_check.count(tr.to) || following_states.count(tr.to)) &&
 				!(following_states.count(state_index) && !states_to_check.count(tr.to))) {
 				if (visited[tr.to] == 0) {
@@ -1629,9 +1650,9 @@ FiniteAutomaton MemoryFiniteAutomaton::get_cg_fa(const CaptureGroup& cg) const {
 	bool additional_state = false;
 	unordered_set<int> terminal_states;
 	for (const auto& path : cg.get_paths())
-		if (path.size() != 1)
+		if (path[path.size() - 1] != cg_opening_state_index)
 			terminal_states.insert(path[path.size() - 1]);
-		else
+		else // если у стартового состояния есть открывающий переход в самого себя
 			additional_state = true;
 
 	unordered_map<int, int> indexes;
@@ -1644,18 +1665,19 @@ FiniteAutomaton MemoryFiniteAutomaton::get_cg_fa(const CaptureGroup& cg) const {
 	if (additional_state)
 		sub_states.emplace_back(idx, "", true);
 
-	int initial_index = indexes.at(cg_opening_state_index);
-	for (const auto& st : cg.get_states())
+	for (const auto& st : cg.get_states()) {
+		bool is_opening_state = st.index == cg_opening_state_index;
 		for (const auto& [symbol, symbol_transitions] : states[st.index].transitions)
 			for (const auto& tr : symbol_transitions) {
 				// не просто false, чтобы обработать ниже переходы без открытия памяти из стартового
-				bool skip = st.index == cg_opening_state_index;
+				bool skip = is_opening_state && !additional_state;
+				bool is_opening_transition = false;
 				for (const auto& [_, action] : tr.memory_actions) {
-					if (st.index == cg_opening_state_index & action == MFATransition::open) {
+					if (is_opening_state && action == MFATransition::open) {
 						skip = false;
-					} else if ((action == MFATransition::open &&
-								st.index != cg_opening_state_index) ||
-							   (action == MFATransition::close && !terminal_states.count(tr.to)) ||
+						is_opening_transition = true;
+					} else if (action == MFATransition::open && !is_opening_state ||
+							   action == MFATransition::close && !terminal_states.count(tr.to) ||
 							   action == MFATransition::reset) {
 						skip = true;
 						break;
@@ -1663,18 +1685,20 @@ FiniteAutomaton MemoryFiniteAutomaton::get_cg_fa(const CaptureGroup& cg) const {
 				}
 				if (skip)
 					continue;
-				if (st.index == cg_opening_state_index && tr.to == cg_opening_state_index) {
-					// используем финальное additional_state
-					alphabet.insert(symbol);
-					sub_states[indexes.at(st.index)].add_transition(sub_states.size() - 1, symbol);
-				} else if (indexes.count(tr.to)) {
-					alphabet.insert(symbol);
-					sub_states[indexes.at(st.index)].add_transition(indexes.at(tr.to), symbol);
+				alphabet.insert(symbol);
+				int target_index =
+					(tr.to == cg_opening_state_index) ? sub_states.size() - 1 : indexes.at(tr.to);
+
+				if (is_opening_state && additional_state && !is_opening_transition) {
+					sub_states[sub_states.size() - 1].add_transition(target_index, symbol);
+				} else {
+					sub_states[indexes.at(st.index)].add_transition(target_index, symbol);
 				}
 			}
+	}
 
 	// начальное состояние общее у всех cg.paths
-	return {initial_index, sub_states, alphabet};
+	return {indexes.at(cg_opening_state_index), sub_states, alphabet};
 }
 
 optional<bool> MemoryFiniteAutomaton::bisimilarity_checker(const MemoryFiniteAutomaton& mfa1,

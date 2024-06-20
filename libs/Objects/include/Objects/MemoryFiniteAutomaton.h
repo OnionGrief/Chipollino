@@ -168,7 +168,8 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::vector<MFAState::Transitions> get_reversed_transitions() const;
 
 	std::pair<std::vector<std::vector<int>>, std::vector<std::vector<int>>> find_cg_paths(
-		int state_index, std::unordered_set<int> visited, int cell, int opening_state) const;
+		int state_index, std::unordered_set<int> visited, int cell, int opening_state,
+		bool was_in_opening_state) const;
 	std::vector<CaptureGroup> find_capture_groups_backward(
 		int ref_incoming_state, int cell,
 		const std::vector<MFAState::Transitions>& reversed_transitions,
