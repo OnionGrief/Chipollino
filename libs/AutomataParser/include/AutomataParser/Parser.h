@@ -17,6 +17,7 @@
 #define lexy_ascii_child lexy::_pt_node<lexy::_bra, void>
 
 #include "Lexer.h"
+#include "Objects/Symbol.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MemoryFiniteAutomaton.h"
 
@@ -54,7 +55,7 @@ class Parser {
 	int NUMBER;
 	std::string TERMINAL;
 	char DIGIT;
-	char LETTER;
+	std::string LETTER;
 
 	std::map<std::string, std::function<bool()>> parse_func = {
 		{"state_description",
@@ -133,7 +134,7 @@ class Parser {
 		{"symbol",
 		 [=, this]() {
 			 DIGIT = 0;
-			 LETTER = 0;
+			 LETTER = "";
 			 TERMINAL = "";
 			 NUMBER = -1;
 			 auto transition = rewriting_rules["symbol"];
@@ -144,9 +145,9 @@ class Parser {
 					 r.push_back(DIGIT);
 					 *symbols.front() = r;
 				 }
-				 if (LETTER != 0) {
+				 if (LETTER != "") {
 					 std::string r;
-					 r.push_back(LETTER);
+					 r += LETTER;
 					 *symbols.front() = r;
 				 }
 				 if (TERMINAL == "eps") {
