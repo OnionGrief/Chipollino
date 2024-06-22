@@ -62,17 +62,26 @@ bool Parser::parse_reserved(const std::string& res_case) {
 	if (cur_pos == file.size())
 		return false;
 
+	// if (res_case == "LETTER") {
+	// 	if ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') || (file[cur_pos] >= 'A' && file[cur_pos] <= 'Z')) {
+	// 		LETTER = file[cur_pos];
+	// 		read_symbols(1);
+	// 		return true;
+	// 	}
+	// }
+	int beg_pos = cur_pos;
 	if (res_case == "LETTER") {
-		if (file[cur_pos] >= 'a' && file[cur_pos] <= 'z') {
-			LETTER = file[cur_pos];
-			read_symbols(1);
-			return true;
+		while (cur_pos < file.size() &&
+			   ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
+				(file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') ||
+				(file[cur_pos] >= '0' && file[cur_pos] <= '9') ||
+				file[cur_pos] == '.' || file[cur_pos] == ',')) {
+			cur_pos++;
 		}
-		if (file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') {
-			LETTER = file[cur_pos];
-			read_symbols(1);
-			return true;
-		}
+		if (beg_pos != cur_pos)
+			LETTER = Symbol(file.substr(beg_pos, cur_pos - beg_pos));
+		read_symbols(0);
+		return (beg_pos != cur_pos);
 	}
 	if (res_case == "DIGIT") {
 		if (file[cur_pos] >= '0' && file[cur_pos] <= '9') {
@@ -81,7 +90,6 @@ bool Parser::parse_reserved(const std::string& res_case) {
 			return true;
 		}
 	}
-	int beg_pos = cur_pos;
 	if (res_case == "STRING") {
 		while (cur_pos < file.size() &&
 			   ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
