@@ -20,4 +20,4 @@ stack_pushes --> stack_symbol stack_pushes | EPS ;
 node_id --> STRING ;
 cell_id --> NUMBER ;
 symbol --> (MFA ? '&' cell_id | eps_symbol : eps_symbol) ;
-eps_symbol --> (DFA ? LETTER | DIGIT : 'eps' | LETTER | DIGIT) 
+eps_symbol --> (DFA ? LETTER : 'eps' | LETTER) 

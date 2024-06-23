@@ -167,13 +167,15 @@ string TasksGenerator::generate_arguments(Function first_func) {
 			args_str += " N" + get_random_id_by_type(input_type);
 			/* генерируемые типы: */
 		} else if (input_type == NFA) {
-			std::string filename = std::to_string(automata_id++) + ".txt";
-			AutomatonGenerator(FA_type::NFA).write_to_file(filename);
-			args_str += " (getNFA \"" + filename + "\")";
+			args_str += " *NFA";
+			// std::string filename = std::to_string(automata_id++) + ".txt";
+			// AutomatonGenerator(FA_type::NFA).write_to_file(filename);
+			// args_str += " (getNFA \"" + filename + "\")";
 		} else if (input_type == MFA) {
-			std::string filename = std::to_string(automata_id++) + ".txt";
-			AutomatonGenerator(FA_type::MFA).write_to_file(filename);
-			args_str += " (getMFA \"" + filename + "\")";
+			args_str += " *MFA";
+			// std::string filename = std::to_string(automata_id++) + ".txt";
+			// AutomatonGenerator(FA_type::MFA).write_to_file(filename);
+			// args_str += " (getMFA \"" + filename + "\")";
 		} else if (input_type == REGEX) {
 			args_str += " " + generate_regex();
 		} else if (input_type == BRefRegex) {

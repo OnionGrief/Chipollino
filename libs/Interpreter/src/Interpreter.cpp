@@ -690,8 +690,12 @@ optional<GeneralObject> Interpreter::eval_expression(const Expression& expr) {
 		current_random_objects[expr.type] = generated_object;
 		return ObjectBRefRegex(BackRefRegex(generated_object));
 	}
-	std::string test_path =
-		"./test_data/MetamorphicTest/test" + Typization::types_to_string.at(expr.type) + ".txt";
+	std::string test_path;
+	if (user_name == "")
+		test_path = "./test_data/MetamorphicTest";
+	else
+		test_path = user_name;
+	test_path += "/" + Typization::types_to_string.at(expr.type) + ".txt";
 	Parser parser;
 	if (expr.type == ObjectType::RandomDFA) {
 		if (!(in_verification && current_random_objects.count(expr.type))) {
