@@ -6,7 +6,7 @@ project(chipollino)
 # Add sub directories
 add_subdirectory(libs/Fraction)
 add_subdirectory(libs/AutomatonToImage)
-add_subdirectory(libs/AutomataParser)
+add_subdirectory(libs/AutomatonParser)
 add_subdirectory(libs/Objects)
 add_subdirectory(libs/Tester)
 add_subdirectory(libs/Logger)

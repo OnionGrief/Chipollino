@@ -1,7 +1,7 @@
 #include "UnitTestsApp/UnitTests.h"
+#include "AutomatonParser/Parser.h"
 #include "AutomatonToImage/AutomatonToImage.h"
 #include "Interpreter/Interpreter.h"
-#include "AutomataParser/Parser.h"
 #include "Objects/AlgExpression.h"
 #include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
@@ -439,11 +439,11 @@ TEST(TestGetOneUnambigous, GetOneUnambigousWorks) {
 TEST(TestInterpreter, RunLineTest) {
 	Interpreter interpreter;
 	interpreter.set_log_mode(Interpreter::LogMode::nothing);
-	ASSERT_TRUE(!interpreter.run_line("A =	 Annote (Glushkova {a})"));
+	ASSERT_FALSE(interpreter.run_line("A =	 Annote (Glushkova {a})"));
 	ASSERT_TRUE(interpreter.run_line("  N1 =	(   (   Glushkov ({ab|a})    ))      "));
 	ASSERT_TRUE(interpreter.run_line(" N2 =  (Annote N1)"));
-	ASSERT_TRUE(!interpreter.run_line("N2 =  (Glushkov N1)"));
-	ASSERT_TRUE(!interpreter.run_line("Equiv N1 N3"));
+	ASSERT_FALSE(interpreter.run_line("N2 =  (Glushkov N1)"));
+	ASSERT_FALSE(interpreter.run_line("Equiv N1 N3"));
 	ASSERT_TRUE(interpreter.run_line("  Equiv ((  N1)) (   (Reverse   .Reverse (N2) !!		))"));
 	ASSERT_TRUE(interpreter.run_line("Test (Glushkov {a*}) {a*} 1"));
 
@@ -461,14 +461,14 @@ TEST(TestInterpreter, RunLineTest) {
 	ASSERT_TRUE(interpreter.run_line("A = [[] []]"));
 	ASSERT_TRUE(interpreter.run_line("A = [{a} {b}]"));
 	ASSERT_TRUE(interpreter.run_line("A = [[(([{a}]))] [{a} []]]"));
-	ASSERT_TRUE(!interpreter.run_line("A = [[(([{a}])] [{a} []]]"));
-	ASSERT_TRUE(!interpreter.run_line("A = [[([{a}]))] [{a} []]]"));
-	ASSERT_TRUE(!interpreter.run_line("A = [[(([{a}]))] [{a} []]"));
-	ASSERT_TRUE(!interpreter.run_line("A = [[(([a}]))] [{a} (Glushkov(DeAnnote {a} !!) !!) []]]"));
+	ASSERT_FALSE(interpreter.run_line("A = [[(([{a}])] [{a} []]]"));
+	ASSERT_FALSE(interpreter.run_line("A = [[([{a}]))] [{a} []]]"));
+	ASSERT_FALSE(interpreter.run_line("A = [[(([{a}]))] [{a} []]"));
+	ASSERT_FALSE(interpreter.run_line("A = [[(([a}]))] [{a} (Glushkov(DeAnnote {a} !!) !!) []]]"));
 
 	// Normalize
 	ASSERT_TRUE(interpreter.run_line("A = Normalize {abc} [[{a} {b}]]"));
-	ASSERT_TRUE(!interpreter.run_line("A = Normalize {abc} [[{a} []]]"));
+	ASSERT_FALSE(interpreter.run_line("A = Normalize {abc} [[{a} []]]"));
 }
 
 TEST(TestTransformationMonoid, IsMinimal) {
@@ -960,9 +960,9 @@ TEST(TestAutomatonParser, MFA_correctness_failure) {
 	try {
 		Parser parser;
 		parser.parse_MFA(cycle_with_cell_reopen);
-	} catch (const std::runtime_error& re) {
-		ASSERT_EQ(string(re.what()), string("Parser: incorrect memory usage in MFA"));
-    }
+	} catch (const std::logic_error& re) {
+		ASSERT_EQ(string(re.what()), "AutomatonParser: incorrect memory usage in MFA");
+	}
 }
 
 TEST(TestAutomatonParser, MFA_correctness) {
@@ -974,11 +974,13 @@ TEST(TestAutomatonParser, MFA_correctness) {
 
 // TODO: FAILED:
 /*TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
-    Regex r("((e|k)he*cg)*(|(e|k)he*|((e|k)(b|i)|(e|k)he*(e|ck)))");
-    auto ard =  r.to_glushkov();
-    auto first = ard.ambiguity();
-    auto second = ard.to_regex().to_glushkov().ambiguity();
+	Regex r("((e|k)he*cg)*(|(e|k)he*|((e|k)(b|i)|(e|k)he*(e|ck)))");
+	auto ard =  r.to_glushkov();
+	auto first = ard.ambiguity();
+	auto second = ard.to_regex().to_glushkov().ambiguity();
 
 
-    ASSERT_EQ(first,second) << "\n" << ard.minimize().to_txt() << "\n" << ard.to_regex().to_glushkov().minimize().to_txt() << "\n" << ard.to_regex().to_txt() << "\n" << ard.to_regex().to_glushkov().to_regex().to_txt();
+	ASSERT_EQ(first,second) << "\n" << ard.minimize().to_txt() << "\n" <<
+ard.to_regex().to_glushkov().minimize().to_txt() << "\n" << ard.to_regex().to_txt() << "\n" <<
+ard.to_regex().to_glushkov().to_regex().to_txt();
 }*/

@@ -109,13 +109,12 @@ Interpreter::Lexem Interpreter::Lexer::scan_dot() {
 
 Interpreter::Lexem Interpreter::Lexer::scan_number() {
 	int pos_prev = input.pos;
-	auto is_digit = [](char c) { return c >= '0' && c <= '9'; };
-	string acc = "";
-	while (!eof() && is_digit(current_symbol())) {
+	string acc;
+	while (!eof() && isdigit(current_symbol())) {
 		acc += current_symbol();
 		next_symbol();
 	}
-	if (acc == "") {
+	if (acc.empty()) {
 		input.pos = pos_prev;
 		return Lexem(Lexem::error);
 	}

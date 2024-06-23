@@ -3,10 +3,10 @@
 #include <string>
 #include <unordered_set>
 
-#include "MetamorphicTestsApp/MetamorphicTests.h"
-#include "AutomataParser/Parser.h"
+#include "AutomatonParser/Parser.h"
 #include "InputGenerator/AutomatonGenerator.h"
 #include "InputGenerator/RegexGenerator.h"
+#include "MetamorphicTestsApp/MetamorphicTests.h"
 #include "Objects/BackRefRegex.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MemoryFiniteAutomaton.h"
@@ -178,175 +178,6 @@ TEST(TestMFA, ToTxt) {
 	}
 }
 
-TEST(IsDeterministic, Test_is_deterministic) {
-	string test_path = "./test_data/MetamorphicTest/test1.txt";
-	for (int i = 0; i < RegexNumber; i++) {
-		AutomatonGenerator a(FA_type::NFA);
-		a.write_to_file(test_path);
-		Parser parser;
-		auto FA = parser.parse_NFA(test_path);
-		auto FAd = FA.determinize();
-		ASSERT_TRUE(FAd.is_deterministic());
-	}
-}
-
-TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
-	string test_path = "./test_data/MetamorphicTest/test1.txt";
-	for (int i = 0; i < RegexNumber; i++) {
-		AutomatonGenerator a(FA_type::NFA, 5);
-		a.write_to_file(test_path);
-		Parser parser1, parse2;
-		FiniteAutomaton FA, second;
-		FA = parser1.parse_NFA(test_path);
-		auto first = FA.merge_bisimilar();
-		second = parse2.parse_NFA(test_path);
-
-		std::ifstream t(test_path);
-		std::stringstream buffer;
-		buffer << t.rdbuf();
-		string file = buffer.str();
-
-		auto equality = FiniteAutomaton::equivalent(first, second);
-		ASSERT_TRUE(equality) << file << "\n"
-							  << first.to_txt() << "\n"
-							  << second.to_txt() << "\n"
-							  << FA.to_regex().to_txt();
-	}
-}
-
-/*
- TEST(Statistics, Test_statistics) {
-     string test_path = "./TestData/MetamorphicTest/test1.txt";
-     std::vector<int> OX;
-     std::vector<float> OY;
-     AutomatonGenerator::set_initial_state_not_terminal(true);
-     for (int term = 5; term <= 100; term = term + 5) {
-         AutomatonGenerator::set_final_probability(term);
-         int count = 0;
-         int ALL = 10000;
-         for (int i = 0; i < ALL; i++) {
-             AutomatonGenerator a(FA_type::NFA);
-             a.write_to_file(test_path);
-             Parser parser;
-             FiniteAutomaton FA;
-             try {
-                 FA = parser.parse_NFA(test_path);
-             } catch (const std::runtime_error& re) {
-                 std::ifstream t(test_path);
-                 stringstream buffer;
-                 buffer << t.rdbuf();
-                 string file = buffer.str();
-                 throw(std::runtime_error(file));
-             }
-             if (FA.is_finite()) {
-                 count++;
-             }
-         }
-         std::cout << "final_probability = " << term << " : " << float(count) / float(ALL) <<
-         "%" << std::endl; OX.push_back(term); OY.push_back(float(count) / float(ALL));
-     }
-     std::cout << "OX = [";
-     for (int i = 0; i < OX.size() - 1; i++) {
-         std::cout << OX[i] << ",";
-     }
-     std::cout << OX[OX.size() - 1] << "]\n";
-
-     std::cout << "OY = [";
-     for (int i = 0; i < OY.size() - 1; i++) {
-         std::cout << OY[i] << ",";
-     }
-     std::cout << OY[OY.size() - 1] << "]\n";
- }
-
-
-TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
-	int ALL = 50;
-	for (int i = 0; i < ALL; i++) {
-		string test_path = "./TestData/MetamorphicTest/test1.txt";
-		AutomatonGenerator a(FA_type::NFA, 5);
-		a.write_to_file(test_path);
-		Parser parser;
-		FiniteAutomaton FA;
-		FA = parser.parse_NFA(test_path);
-		auto ard =  FA.to_regex().to_glushkov();
-		auto first = ard;
-		auto second = parser.parse_NFA(test_path);
-
-		std::ifstream t(test_path);
-		stringstream buffer;
-		buffer << t.rdbuf();
-		string file = buffer.str();
-
-		auto equality = FiniteAutomaton::equivalent(first, second);
-		ASSERT_TRUE(equality) << file << "\n" << FA.minimize().to_txt() << "\n" <<
-ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
-	}
-}
-
-TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
-	int ALL = 50;
-	for (int i = 0; i < ALL; i++) {
-		string test_path = "./TestData/MetamorphicTest/test1.txt";
-		AutomatonGenerator a(FA_type::NFA, 5);
-		a.write_to_file(test_path);
-		Parser parser;
-		FiniteAutomaton FA;
-		FA = parser.parse_NFA(test_path);
-		auto ard =  FA.to_regex().to_glushkov();
-		auto first = ard.ambiguity();
-		auto second = ard.to_regex().to_glushkov().ambiguity();
-
-		std::ifstream t(test_path);
-		stringstream buffer;
-		buffer << t.rdbuf();
-		string file = buffer.str();
-
-		ASSERT_EQ(first,second) << file << "\n" << FA.minimize().to_txt() << "\n" <<
-ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
-	}
-}
-
- TEST(Statistics, Test_dfa) {
- 	for (int term = 5; term <= 50; term = term + 5) {
- 		AutomatonGenerator::set_final_probability(20);
- 		int count = 0;
- 		int ALL = 10000;
- 		for (int i = 0; i < ALL; i++) {
- 			AutomatonGenerator a(FA_type::DFA);
- 			a.write_to_file("./TestData/tmp/test.txt");
- 			auto FA = Parser::parse_DFA("./TestData/tmp/test.txt");
- 			if (FA.is_deterministic() && FA.is_finite()) {
- 				count++;
- 			}
- 		}
- 		std::cout << "final_probability = " << term << " : " << float(count) / float(ALL) * 100<<
- "%" << std::endl;
- 	}
- }
-
- TEST(Statistics, Test_fa) {
- 	std::cout << "TEST\n";
- 	for (int term = 5; term <= 50; term = term + 5) {
- 		AutomatonGenerator::set_final_probability(20);
- 		int count = 0;
- 		int ALL = 10000;
- 		for (int i = 0; i < ALL; i++) {
- 			AutomatonGenerator a(FA_type::FA);
- 			std::cout << "write_to_file START\n";
- 			a.write_to_file("./TestData/tmp/test.txt");
- 			std::cout << "write_to_file DONE\n";
- 			auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
- 			std::cout << i << " " << std::endl;
- 			if (FA.is_deterministic() && FA.is_finite()) {
- 				count++;
- 			}
- 			std::cout << i << " " << std::endl;
- 		}
- 		std::cout << "final_probability = " << term << " : " << float(count) / float(ALL) * 100
- << "%" << std::endl;
- 	}
- }*/
- 
 TEST(TestNFA, ToMFA) {
 	RegexGenerator rg(5, 3, 3, 2);
 	for (int i = 0; i < RegexNumber; i++) {
@@ -396,3 +227,172 @@ TEST(TestMFA, MergeBisimilar) {
 		MetamorphicTests::cmp_automatons(mfa.merge_bisimilar(), mfa);
 	}
 }
+
+TEST(IsDeterministic, Test_is_deterministic) {
+	string test_path = "./test_data/MetamorphicTest/test1.txt";
+	for (int i = 0; i < RegexNumber; i++) {
+		AutomatonGenerator a(FA_type::NFA);
+		a.write_to_file(test_path);
+		Parser parser;
+		auto FA = parser.parse_NFA(test_path);
+		auto FAd = FA.determinize();
+		ASSERT_TRUE(FAd.is_deterministic());
+	}
+}
+
+TEST(AutomatonGenerator, Test_MergeBisim_equivalent) {
+	string test_path = "./test_data/MetamorphicTest/test1.txt";
+	for (int i = 0; i < RegexNumber; i++) {
+		AutomatonGenerator a(FA_type::NFA, 5);
+		a.write_to_file(test_path);
+		Parser parser1, parse2;
+		FiniteAutomaton FA, second;
+		FA = parser1.parse_NFA(test_path);
+		auto first = FA.merge_bisimilar();
+		second = parse2.parse_NFA(test_path);
+
+		std::ifstream t(test_path);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		string file = buffer.str();
+
+		auto equality = FiniteAutomaton::equivalent(first, second);
+		ASSERT_TRUE(equality) << file << "\n"
+							  << first.to_txt() << "\n"
+							  << second.to_txt() << "\n"
+							  << FA.to_regex().to_txt();
+	}
+}
+
+/*
+ TEST(Statistics, Test_statistics) {
+	 string test_path = "./TestData/MetamorphicTest/test.txt";
+	 std::vector<int> OX;
+	 std::vector<float> OY;
+	 AutomatonGenerator::set_initial_state_not_terminal(true);
+	 for (int term = 5; term <= 100; term = term + 5) {
+		 AutomatonGenerator::set_final_probability(term);
+		 int count = 0;
+		 int ALL = 10000;
+		 for (int i = 0; i < ALL; i++) {
+			 AutomatonGenerator a(FA_type::NFA);
+			 a.write_to_file(test_path);
+			 Parser parser;
+			 FiniteAutomaton FA;
+			 try {
+				 FA = parser.parse_NFA(test_path);
+			 } catch (const std::runtime_error& re) {
+				 std::ifstream t(test_path);
+				 stringstream buffer;
+				 buffer << t.rdbuf();
+				 string file = buffer.str();
+				 throw(std::runtime_error(file));
+			 }
+			 if (FA.is_finite()) {
+				 count++;
+			 }
+		 }
+		 std::cout << "final_probability = " << term << " : " << float(count) / float(ALL) <<
+		 "%" << std::endl; OX.push_back(term); OY.push_back(float(count) / float(ALL));
+	 }
+	 std::cout << "OX = [";
+	 for (int i = 0; i < OX.size() - 1; i++) {
+		 std::cout << OX[i] << ",";
+	 }
+	 std::cout << OX[OX.size() - 1] << "]\n";
+
+	 std::cout << "OY = [";
+	 for (int i = 0; i < OY.size() - 1; i++) {
+		 std::cout << OY[i] << ",";
+	 }
+	 std::cout << OY[OY.size() - 1] << "]\n";
+ }
+
+
+TEST(AutomatonGenerator, Test_Arden_Glushkov_equivalent) {
+	int ALL = 50;
+	for (int i = 0; i < ALL; i++) {
+		string test_path = "./TestData/MetamorphicTest/test.txt";
+		AutomatonGenerator a(FA_type::NFA, 5);
+		a.write_to_file(test_path);
+		Parser parser;
+		FiniteAutomaton FA;
+		FA = parser.parse_NFA(test_path);
+		auto ard =  FA.to_regex().to_glushkov();
+		auto first = ard;
+		auto second = parser.parse_NFA(test_path);
+
+		std::ifstream t(test_path);
+		stringstream buffer;
+		buffer << t.rdbuf();
+		string file = buffer.str();
+
+		auto equality = FiniteAutomaton::equivalent(first, second);
+		ASSERT_TRUE(equality) << file << "\n" << FA.minimize().to_txt() << "\n" <<
+ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
+	}
+}
+
+TEST(AutomatonGenerator, Test_Arden_Glushkov_Ambiguity_equivalent) {
+	int ALL = 50;
+	for (int i = 0; i < ALL; i++) {
+		string test_path = "./TestData/MetamorphicTest/test.txt";
+		AutomatonGenerator a(FA_type::NFA, 5);
+		a.write_to_file(test_path);
+		Parser parser;
+		FiniteAutomaton FA;
+		FA = parser.parse_NFA(test_path);
+		auto ard =  FA.to_regex().to_glushkov();
+		auto first = ard.ambiguity();
+		auto second = ard.to_regex().to_glushkov().ambiguity();
+
+		std::ifstream t(test_path);
+		stringstream buffer;
+		buffer << t.rdbuf();
+		string file = buffer.str();
+
+		ASSERT_EQ(first,second) << file << "\n" << FA.minimize().to_txt() << "\n" <<
+ard.minimize().to_txt() << "\n" << FA.to_regex().to_txt();
+	}
+}
+
+ TEST(Statistics, Test_dfa) {
+	for (int term = 5; term <= 50; term = term + 5) {
+		AutomatonGenerator::set_final_probability(20);
+		int count = 0;
+		int ALL = 10000;
+		for (int i = 0; i < ALL; i++) {
+			AutomatonGenerator a(FA_type::DFA);
+			a.write_to_file("./TestData/tmp/test.txt");
+			auto FA = Parser::parse_DFA("./TestData/tmp/test.txt");
+			if (FA.is_deterministic() && FA.is_finite()) {
+				count++;
+			}
+		}
+		std::cout << "final_probability = " << term << " : " << float(count) / float(ALL) * 100<<
+ "%" << std::endl;
+	}
+ }
+
+ TEST(Statistics, Test_fa) {
+	std::cout << "TEST\n";
+	for (int term = 5; term <= 50; term = term + 5) {
+		AutomatonGenerator::set_final_probability(20);
+		int count = 0;
+		int ALL = 10000;
+		for (int i = 0; i < ALL; i++) {
+			AutomatonGenerator a(FA_type::FA);
+			std::cout << "write_to_file START\n";
+			a.write_to_file("./TestData/tmp/test.txt");
+			std::cout << "write_to_file DONE\n";
+			auto FA = Parser::parse_FA("./TestData/tmp/test.txt");
+			std::cout << i << " " << std::endl;
+			if (FA.is_deterministic() && FA.is_finite()) {
+				count++;
+			}
+			std::cout << i << " " << std::endl;
+		}
+		std::cout << "final_probability = " << term << " : " << float(count) / float(ALL) * 100
+ << "%" << std::endl;
+	}
+ }*/

@@ -1,5 +1,5 @@
 # Set the project name
-project(AutomataParser)
+project(AutomatonParser)
 
 # Lexy implementing
 include(FetchContent)

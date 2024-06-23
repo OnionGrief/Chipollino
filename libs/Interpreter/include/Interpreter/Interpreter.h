@@ -10,7 +10,7 @@
 #include <variant>
 #include <vector>
 
-#include "AutomataParser/Parser.h"
+#include "AutomatonParser/Parser.h"
 #include "FuncLib/Functions.h"
 #include "FuncLib/Typization.h"
 #include "InputGenerator/AutomatonGenerator.h"
@@ -36,7 +36,7 @@ class Interpreter {
 	// Интерпретация строчки, возвращает true в случае успеха
 	bool run_line(const std::string& line);
 	// Интерпретация файла построчно
-	bool run_file(const std::string& path, const std::string& user_name="");
+	bool run_file(const std::string& path, const std::string& user_name = "");
 	// Установит режим логгирования в консоль
 	void set_log_mode(LogMode mode);
 	// Выгружает лог в файл

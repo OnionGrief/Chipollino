@@ -1,7 +1,7 @@
-#include <AutomataParser/Parser.h>
+#include <AutomatonParser/Parser.h>
 
+using std::logic_error;
 using std::map;
-using std::runtime_error;
 using std::set;
 using std::string;
 using std::unordered_set;
@@ -62,20 +62,12 @@ bool Parser::parse_reserved(const std::string& res_case) {
 	if (cur_pos == file.size())
 		return false;
 
-	// if (res_case == "LETTER") {
-	// 	if ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') || (file[cur_pos] >= 'A' && file[cur_pos] <= 'Z')) {
-	// 		LETTER = file[cur_pos];
-	// 		read_symbols(1);
-	// 		return true;
-	// 	}
-	// }
 	int beg_pos = cur_pos;
 	if (res_case == "LETTER") {
-		while (cur_pos < file.size() &&
-			   ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
-				(file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') ||
-				(file[cur_pos] >= '0' && file[cur_pos] <= '9') ||
-				file[cur_pos] == '.' || file[cur_pos] == ',')) {
+		while (cur_pos < file.size() && ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
+										 (file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') ||
+										 (file[cur_pos] >= '0' && file[cur_pos] <= '9') ||
+										 file[cur_pos] == '.' || file[cur_pos] == ',')) {
 			cur_pos++;
 		}
 		if (beg_pos != cur_pos)
@@ -242,11 +234,11 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 	read_symbols(0);
 
 	if (!parse_transition("production")) {
-		throw(std::runtime_error("Parser: error occurred while parsing FA"));
+		throw logic_error("AutomatonParser: error occurred while parsing FA");
 	}
 
 	if (!attributes.count("initial_set")) {
-		throw(std::runtime_error("Parser: initial state is not set"));
+		throw logic_error("AutomatonParser: initial state is not set");
 	}
 
 	for (const auto& transition : FAtransitions) {
@@ -282,7 +274,7 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 		auto mfa = MemoryFiniteAutomaton(name_to_ind[initial], MFAstates, alphabet);
 
 		if (!mfa.check_memory_correctness()) {
-			throw(std::runtime_error("Parser: incorrect memory usage in MFA"));
+			throw logic_error("AutomatonParser: incorrect memory usage in MFA");
 		}
 
 		return mfa;
@@ -312,7 +304,7 @@ std::variant<FiniteAutomaton, MemoryFiniteAutomaton> Parser::parse(lexy_ascii_tr
 		auto fa = FiniteAutomaton(name_to_ind[initial], FAstates, alphabet);
 
 		if (attributes.count("DFA") && !fa.is_deterministic()) {
-			throw(std::runtime_error("Parser: FA expected to be deterministic"));
+			throw logic_error("AutomatonParser: FA expected to be deterministic");
 		}
 
 		return fa;
@@ -330,7 +322,7 @@ FiniteAutomaton Parser::parse_NFA(const std::string& automaton_file,
 
 	if (attributes.count("DFA") || attributes.count("NFA"))
 		return std::get<FiniteAutomaton>(res);
-	throw(std::runtime_error("Parse: parsed automaton is not NFA"));
+	throw logic_error("Parse: parsed automaton is not NFA");
 }
 
 FiniteAutomaton Parser::parse_DFA(const std::string& automaton_file,
@@ -345,7 +337,7 @@ FiniteAutomaton Parser::parse_DFA(const std::string& automaton_file,
 
 	if (attributes.count("DFA"))
 		return std::get<FiniteAutomaton>(res);
-	throw(std::runtime_error("Parse: parsed automaton is not DFA"));
+	throw logic_error("Parse: parsed automaton is not DFA");
 }
 
 MemoryFiniteAutomaton Parser::parse_MFA(const std::string& automaton_file,
@@ -360,5 +352,5 @@ MemoryFiniteAutomaton Parser::parse_MFA(const std::string& automaton_file,
 
 	if (attributes.count("MFA"))
 		return std::get<MemoryFiniteAutomaton>(res);
-	throw(std::runtime_error("Parse: parsed automaton is not MFA"));
+	throw logic_error("Parse: parsed automaton is not MFA");
 }

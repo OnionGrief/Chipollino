@@ -131,7 +131,7 @@ void AutomatonGenerator::generate_graph() {
 			included_states.push_back(excluded_states[ind]);
 			excluded_states.erase(excluded_states.begin() + ind);
 		}
-		cur.pop = "$";
+		//		cur.pop = "$";
 
 		graph[beg].push_back(cur);
 	}
@@ -358,7 +358,8 @@ void AutomatonGenerator::setup_and_generate(FA_type type, const std::string& gra
 
 	generate_graph();
 	if (!parse_transition("production"))
-		throw(std::runtime_error("Generator: can not apply grammar for generated automaton"));
+		throw std::runtime_error(
+			"AutomatonGenerator: can not apply grammar for generated automaton");
 }
 
 AutomatonGenerator::AutomatonGenerator(FA_type type, int n, const std::string& grammar_file)

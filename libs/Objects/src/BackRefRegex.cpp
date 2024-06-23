@@ -16,7 +16,7 @@ BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
 	try {
 		bool res = from_string(str, true, false);
 		if (!res) {
-			throw std::runtime_error("BackRefRegex::from_string() ERROR");
+			throw std::logic_error("BackRefRegex::from_string() ERROR");
 		}
 	} catch (const std::runtime_error& re) {
 		cerr << re.what() << "\n";

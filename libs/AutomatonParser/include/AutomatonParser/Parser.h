@@ -17,11 +17,11 @@
 #define lexy_ascii_child lexy::_pt_node<lexy::_bra, void>
 
 #include "Lexer.h"
-#include "Objects/Symbol.h"
 #include "Objects/FiniteAutomaton.h"
 #include "Objects/MemoryFiniteAutomaton.h"
+#include "Objects/Symbol.h"
 
-const char GrammarPath[] = "./config/automata_parser/grammar.txt";
+const char GrammarPath[] = "./config/automaton_parser/grammar.txt";
 
 class Parser {
   private:

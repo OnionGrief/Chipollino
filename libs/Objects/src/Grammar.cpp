@@ -419,14 +419,16 @@ string PrefixGrammar::rules_to_txt() const {
 
 string PrefixGrammar::bw_to_txt() const {
 	stringstream ss;
-	ss << "Базисные слова: " << "\\\\";
+	ss << "Базисные слова: "
+	   << "\\\\";
 
 	for (const auto& item : prefix_grammar) {
 		if (item.is_terminal) {
 			const Item& g = item;
 			for (const auto& w : g.equivalence_class) {
 				if (w == "") {
-					ss << "eps" << "; ";
+					ss << "eps"
+					   << "; ";
 				} else {
 					ss << w << "; ";
 				}
@@ -438,12 +440,12 @@ string PrefixGrammar::bw_to_txt() const {
 }
 
 string PrefixGrammar::pg_to_txt() const {
-	return rules_to_txt() + bw_to_txt();	
+	return rules_to_txt() + bw_to_txt();
 }
 
 string PrefixGrammar::pg_log() const {
 	// немного хардкода для рефала
-	return rules_to_txt() + "%template_bw\n\n\t" + bw_to_txt();	
+	return rules_to_txt() + "%template_bw\n\n\t" + bw_to_txt();
 }
 
 FiniteAutomaton PrefixGrammar::prefix_grammar_to_automaton(iLogTemplate* log) const {
@@ -478,7 +480,7 @@ FiniteAutomaton PrefixGrammar::prefix_grammar_to_automaton(iLogTemplate* log) co
 			for (const auto& trans : elem.second) {
 				states[trans].transitions[alpha].insert(i);
 			}
-			if (alpha == "") {
+			if (alpha.empty()) {
 				alpha = Symbol::Epsilon;
 			} else {
 				symbols.insert(alpha);

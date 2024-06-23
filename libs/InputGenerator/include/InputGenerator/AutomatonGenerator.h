@@ -13,8 +13,8 @@
 #include <utility>
 #include <vector>
 
-#include "AutomataParser/Lexer.h"
-#include "AutomataParser/Parser.h"
+#include "AutomatonParser/Lexer.h"
+#include "AutomatonParser/Parser.h"
 
 enum class FA_type {
 	MFA,

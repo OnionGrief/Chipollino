@@ -5,6 +5,15 @@
 #include <string>
 #include <vector>
 
+namespace SymbolErrors {
+static constexpr const char* EmptyString = "Invalid Symbol format: string cannot be empty";
+static constexpr const char* NullString = "Invalid Symbol format: null string";
+static constexpr const char* InvalidFormat =
+	"Invalid Symbol format: must start with a single letter, 'eps', or '-empty-'";
+static constexpr const char* ExpectedNumber = "Invalid Symbol format: number expected after marker";
+static constexpr const char* UnexpectedCharacters = "Invalid Symbol format: unexpected characters";
+} // namespace SymbolErrors
+
 // Символ, по которому осуществляются переходы в автомате.
 // Может быть символом-буквой (и входить ТОЛЬКО в алфавит FA) или ссылкой (&i)
 class Symbol {
@@ -16,13 +25,17 @@ class Symbol {
 	// symbol + разметка
 	std::string value;
 
+	void initialize(const std::string& s);
+	void parse_markup(const std::string& s, size_t pos);
 	void update_value();
 
   public:
 	static const char linearize_marker = '.';
 	static const char annote_marker = ',';
-	inline static const std::string Epsilon = "eps";
-	inline static const std::string EmptySet = "-empty-";
+
+	// нужно добавлять в prefixes в Symbol::initialize
+	static constexpr const char* Epsilon = "eps";
+	static constexpr const char* EmptySet = "-empty-";
 
 	Symbol() = default;
 	Symbol(const std::string& s); // NOLINT(runtime/explicit)
@@ -46,6 +59,7 @@ class Symbol {
 	bool operator!=(const Symbol& other) const;
 	bool operator<(const Symbol& other) const;
 
+	bool empty() const;
 	bool is_epsilon() const;
 	// преобразовывает вектор символов в одну строку
 	static std::string vector_to_str(const std::vector<Symbol>&);
@@ -83,8 +97,8 @@ class MemorySymbols {
 	static Symbol Reset(int number);
 	static Symbol Open(int number);
 
+	static std::optional<std::string> is_memory_string(const std::string& s);
 	static bool is_memory_symbol(const Symbol& s);
-	static bool is_memory_char(char c);
 	static bool is_close(const Symbol& s);
 	static bool is_reset(const Symbol& s);
 	static bool is_open(const Symbol& s);

@@ -172,7 +172,7 @@ void AlgExpression::print_subtree(AlgExpression* expr, int level) const {
 		for (int i = 0; i < level; i++)
 			cout << "   ";
 		Symbol r_v;
-		if (expr->symbol != "")
+		if (!expr->symbol.empty())
 			r_v = expr->symbol;
 		else
 			r_v = to_string(expr->type);
@@ -186,7 +186,7 @@ void AlgExpression::print_tree() const {
 	for (int i = 0; i < 0; i++)
 		cout << "   ";
 	Symbol r_v;
-	if (symbol != "")
+	if (!symbol.empty())
 		r_v = symbol;
 	else
 		r_v = to_string(type);
@@ -195,7 +195,7 @@ void AlgExpression::print_tree() const {
 }
 
 string AlgExpression::type_to_str() const {
-	if (symbol != "")
+	if (!symbol.empty())
 		return symbol;
 	switch (type) {
 	case Type::eps:
@@ -362,46 +362,23 @@ vector<AlgExpression::Lexeme> AlgExpression::parse_string(string str, bool allow
 			lexeme.type = Lexeme::Type::star;
 			break;
 		default:
-			if (isalpha(c)) {
-				lexeme.type = Lexeme::Type::symb;
-				lexeme.symbol = c;
-				for (size_t j = index + 1; j < str.size(); j++) {
-					bool lin = false;
-					bool annote = false;
-
-					if (str[j] == Symbol::linearize_marker) {
-						lin = true;
-						j++;
-					} else if (str[j] == Symbol::annote_marker) {
-						annote = true;
-						j++;
-					} else if (!MemorySymbols::is_memory_char(c) || !isdigit(str[j])) {
+			try {
+				string s(1, c);
+				for (index++; index < str.size();) {
+					if (str[index] == Symbol::linearize_marker ||
+						str[index] == Symbol::annote_marker || isdigit(str[index])) {
+						s += str[index];
+						index++;
+					} else {
+						index--;
 						break;
 					}
-
-					int number;
-					if (!read_number(str, j, number))
-						return {Lexeme::Type::error};
-					index = j;
-
-					if (lin) {
-						lexeme.symbol.linearize(number);
-					} else if (annote) {
-						lexeme.symbol.annote(number);
-					} else { // memory
-						if (c == MemorySymbols::CloseChar) {
-							lexeme.symbol = MemorySymbols::Close(number);
-						} else if (c == MemorySymbols::ResetChar) {
-							lexeme.symbol = MemorySymbols::Reset(number);
-						} else {
-							lexeme.symbol = MemorySymbols::Open(number);
-						}
-					}
 				}
-
+				lexeme.type = Lexeme::Type::symb;
+				lexeme.symbol = Symbol(s);
 				regex_is_eps = false;
 				brackets_are_empty = false;
-			} else {
+			} catch (...) {
 				return {Lexeme::Type::error};
 			}
 			break;
@@ -676,7 +653,7 @@ string AlgExpression::get_iterated_word(int n) const {
 	if (term_r && type != Type::alt) {
 		str += term_r->get_iterated_word(n);
 	}
-	if (symbol != "") {
+	if (!symbol.empty()) {
 		str += symbol;
 	}
 	return str;
