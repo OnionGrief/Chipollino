@@ -64,9 +64,7 @@ bool Parser::parse_reserved(const std::string& res_case) {
 
 	int beg_pos = cur_pos;
 	if (res_case == "LETTER") {
-		while (cur_pos < file.size() && ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
-										 (file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') ||
-										 (file[cur_pos] >= '0' && file[cur_pos] <= '9') ||
+		while (cur_pos < file.size() && (isalpha(file[cur_pos]) || isdigit(file[cur_pos]) ||
 										 file[cur_pos] == '.' || file[cur_pos] == ',')) {
 			cur_pos++;
 		}
@@ -76,7 +74,7 @@ bool Parser::parse_reserved(const std::string& res_case) {
 		return (beg_pos != cur_pos);
 	}
 	if (res_case == "DIGIT") {
-		if (file[cur_pos] >= '0' && file[cur_pos] <= '9') {
+		if (isdigit(file[cur_pos])) {
 			NUMBER = int(file[cur_pos] - '0');
 			read_symbols(1);
 			return true;
@@ -84,9 +82,7 @@ bool Parser::parse_reserved(const std::string& res_case) {
 	}
 	if (res_case == "STRING") {
 		while (cur_pos < file.size() &&
-			   ((file[cur_pos] >= 'a' && file[cur_pos] <= 'z') ||
-				(file[cur_pos] >= 'A' && file[cur_pos] <= 'Z') ||
-				(file[cur_pos] >= '0' && file[cur_pos] <= '9') ||
+			   (isalpha(file[cur_pos]) || isdigit(file[cur_pos]) ||
 				(file[cur_pos] >= '(' && file[cur_pos] <= '.') || file[cur_pos] == '|' ||
 				file[cur_pos] == '^' || file[cur_pos] == '&' || file[cur_pos] == ':' ||
 				file[cur_pos] == '[' || file[cur_pos] == ']')) {
@@ -103,7 +99,7 @@ bool Parser::parse_reserved(const std::string& res_case) {
 			read_symbols(1);
 			return true;
 		}
-		while (cur_pos < file.size() && (file[cur_pos] >= '0' && file[cur_pos] <= '9')) {
+		while (cur_pos < file.size() && isdigit(file[cur_pos])) {
 			cur_pos++;
 		}
 		if (beg_pos != cur_pos)
