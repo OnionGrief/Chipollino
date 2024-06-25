@@ -948,6 +948,10 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 	MemoryFiniteAutomaton mfa(0, states, language);
 	if (log) {
 		log->set_parameter("brefregex", *this);
+		log->set_parameter("linearised bregex", temp_copy);
+		log->set_parameter("first", str_first);
+		log->set_parameter("last", str_last);
+		log->set_parameter("follow", str_follow);
 		log->set_parameter("result", mfa);
 	}
 	return mfa;
