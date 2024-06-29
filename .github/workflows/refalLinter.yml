@@ -1,0 +1,26 @@
+# Эта джоба предназначена для проверки рефал кода, она использует latest версию AlliumLinter
+name: refalLinter
+
+on: [ push ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.20'
+
+    - name: Build
+      run: go install github.com/OnionGrief/AlliumLinter@latest
+
+    - name: Test
+      run: AlliumLinter lint -d . -p ./refal/config.yaml
