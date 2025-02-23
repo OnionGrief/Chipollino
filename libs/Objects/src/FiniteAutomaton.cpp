@@ -2389,23 +2389,33 @@ pair<int, bool> FiniteAutomaton::parse(const string& s) const {
 }
 
 bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
-	if (log) {
-		log->set_parameter("oldautomaton", *this);
-	}
 	bool result = true;
+	MetaInfo meta;
+	int counter = 0;
 	for (const auto& state : states) {
 		for (const auto& [symbol, states_to] : state.transitions) {
 			if (symbol.is_epsilon()) {
 				result = false;
-				break;
+				if (log)
+				{for (auto to: states_to)
+					meta.upd(EdgeMeta{state.index, to, symbol, counter});
+				 counter++;
+				}
+				else break;
 			}
-			if (states_to.size() > 1) {
+			else if (states_to.size() > 1) {
 				result = false;
-				break;
+				if (log)
+				{for (auto to: states_to)
+					meta.upd(EdgeMeta{state.index, to, symbol, counter});
+				 counter++;
+				}
+				else break;
 			}
 		}
 	}
 	if (log) {
+		log->set_parameter("oldautomaton", *this, meta);
 		log->set_parameter("result", result ? "True" : "False");
 	}
 	return result;
