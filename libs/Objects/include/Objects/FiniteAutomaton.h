@@ -144,6 +144,7 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton remove_eps_additional(iLogTemplate* log = nullptr) const;
 	// минимизация ДКА (по Майхиллу-Нероуда)
 	FiniteAutomaton minimize(bool is_trim = false, iLogTemplate* log = nullptr) const;
+	FiniteAutomaton canonic_renaming(iLogTemplate* log = nullptr) const;
 	// пересечение НКА (на выходе - автомат, распознающий слова пересечения
 	// языков L1 и L2)
 	static FiniteAutomaton intersection(const FiniteAutomaton&, const FiniteAutomaton&,

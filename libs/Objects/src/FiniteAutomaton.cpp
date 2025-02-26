@@ -1363,7 +1363,9 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 
 tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_classes(
 	const vector<int>& classes, bool fixed_language) const {
+	auto norm = [](int threshold, FiniteAutomaton fa) { return ((threshold > MetaInfo::Long_Ids) ? fa.canonic_renaming() : fa); };
 	map<int, vector<int>> class_to_indexes;
+	int canon = 0;
 	for (int i = 0; i < classes.size(); i++)
 		class_to_indexes[classes[i]].push_back(i);
 	// класс эквивалентности -> индекс состояния в новом автомате
@@ -1376,6 +1378,8 @@ tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_classes(
 				(new_identifier.empty() || states[index].identifier.empty() ? "" : ", ") +
 				states[index].identifier;
 		}
+		if (new_identifier.length() >= MetaInfo::Id_Length_Threshold)
+			canon+= new_identifier.length() / MetaInfo::Id_Length_Threshold;
 		int idx = new_states.size();
 		class_to_index[class_num] = idx;
 		new_states.emplace_back(idx, set<int>({idx}), new_identifier, false);
@@ -1396,8 +1400,8 @@ tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_classes(
 			new_states[class_to_index.at(class_num)].is_terminal = true;
 
 	if (fixed_language)
-		return {{class_to_index.at(classes[initial_state]), new_states, language}, class_to_index};
-	return {{class_to_index.at(classes[initial_state]), new_states, language->get_alphabet()}, class_to_index};
+		return {norm(canon, {class_to_index.at(classes[initial_state]), new_states, language}), class_to_index};
+	return {norm(canon, {class_to_index.at(classes[initial_state]), new_states, language->get_alphabet()}), class_to_index};
 }
 
 vector<int> FiniteAutomaton::get_bisimulation_classes(int k) const {
@@ -1416,6 +1420,13 @@ vector<int> FiniteAutomaton::get_bisimulation_classes(int k) const {
 		classes.push_back(nont->class_number);
 
 	return classes;
+}
+
+FiniteAutomaton FiniteAutomaton::canonic_renaming(iLogTemplate* log) const {
+	vector<FAState> renamed_states = get_states();
+	for (int i = 0; i < renamed_states.size(); i++)
+		renamed_states[i].identifier = to_string(i);
+	return {get_initial(), renamed_states, get_language()};
 }
 
 FiniteAutomaton FiniteAutomaton::merge_bisimilar(int k, iLogTemplate* log) const {
