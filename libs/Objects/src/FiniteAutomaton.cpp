@@ -1397,8 +1397,7 @@ tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_classes(
 
 	if (fixed_language)
 		return {{class_to_index.at(classes[initial_state]), new_states, language}, class_to_index};
-        else
-		return {{class_to_index.at(classes[initial_state]), new_states, language->get_alphabet()}, class_to_index};
+	return {{class_to_index.at(classes[initial_state]), new_states, language->get_alphabet()}, class_to_index};
 }
 
 vector<int> FiniteAutomaton::get_bisimulation_classes(int k) const {
