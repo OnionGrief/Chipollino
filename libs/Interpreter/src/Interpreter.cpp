@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include <algorithm>
 
 #include "Interpreter/Interpreter.h"
@@ -453,7 +452,7 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 		res = ObjectNFA(get_automaton(arguments[0]).deannote(&log_template));
 	}
 	if (function.name == "MergeBisim" && function.input[0] == ObjectType::NFA) {
-		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.merge_bisimilar(&log_template));
+		res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.merge_bisimilar(-1, &log_template));
 	}
 	if (function.name == "MergeBisim" && function.input[0] == ObjectType::MFA) {
 		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.merge_bisimilar(&log_template));

@@ -1361,7 +1361,7 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	return true;
 }
 
-tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_equivalent_classes(
+tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_classes(
 	const vector<int>& classes, bool fixed_language) const {
 	map<int, vector<int>> class_to_indexes;
 	for (int i = 0; i < classes.size(); i++)
