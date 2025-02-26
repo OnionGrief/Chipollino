@@ -3,10 +3,7 @@ build/
 
 .idea/
 
-cmake-build-debug/
-cmake-build-debug-visual-studio/
-cmake-build-release-visual-studio/
-cmake-build-debug-wsl/
+cmake-build-*
 
 .vs/
 /CMakeSettings.json

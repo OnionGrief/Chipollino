@@ -33,7 +33,7 @@ Regex::Regex(const Symbol& s) {
 		type = Type::eps;
 	} else {
 		type = Type::symb;
-	 	symbol = s;
+		symbol = s;
 		alphabet = {s};
 	}
 }
@@ -338,7 +338,8 @@ Regex Regex::delinearize(iLogTemplate* log) const {
 	Alphabet new_alphabet;
 	for (auto& i : list) {
 		i->symbol.delinearize();
-		new_alphabet.insert(i->symbol);
+		if (!i->symbol.is_epsilon())
+			new_alphabet.insert(i->symbol);
 	}
 	temp_copy.set_language(new_alphabet);
 	if (log) {
@@ -452,7 +453,7 @@ FiniteAutomaton Regex::to_glushkov(iLogTemplate* log) const {
 	}
 
 	vector<AlgExpression*> first = temp_copy.get_first_nodes(); // Множество начальных состояний
-	vector<AlgExpression*> last = temp_copy.get_last_nodes(); // Множество конечных состояний
+	vector<AlgExpression*> last = temp_copy.get_last_nodes();	// Множество конечных состояний
 	// множество состояний, которым предшествует символ (ключ - линеаризованный номер)
 	unordered_map<int, vector<int>> following_states = temp_copy.get_follow();
 	bool recognizes_eps = this->contains_eps();
@@ -565,11 +566,11 @@ FiniteAutomaton Regex::to_ilieyu(iLogTemplate* log) const {
 	string str_follow;
 	for (auto& new_state : new_states) {
 		int state_ind = new_state.index;
-		str_follow = str_follow + states[state_ind].identifier + ":\\ ";
+		str_follow += states[state_ind].identifier + ":\\ ";
 		for (auto j = states[state_ind].label.begin(); j != states[state_ind].label.end(); j++) {
-			str_follow = str_follow + states[*j].identifier + "\\ ";
+			str_follow += states[*j].identifier + "\\ ";
 		}
-		str_follow = str_follow + ";\\\\";
+		str_follow += ";\\\\";
 	}
 
 	// cout << str_follow;
@@ -633,7 +634,7 @@ void Regex::get_prefix(int len, vector<vector<Regex>>& prefs) const {
 		for (int k = 0; k <= len; k++) {
 			Regex::cast(term_l)->get_prefix(k, prefs1);
 			Regex::cast(term_r)->get_prefix(len - k, prefs2);
-			for (int i = 0; i < prefs1.size();  i++) {
+			for (int i = 0; i < prefs1.size(); i++) {
 				for (int j = 0; j < prefs2.size(); j++) {
 					vector<Regex> auxpref = prefs1[i];
 					auxpref.insert(auxpref.end(), prefs2[j].begin(), prefs2[j].end());
@@ -669,7 +670,7 @@ void Regex::get_prefix(int len, vector<vector<Regex>>& prefs) const {
 bool Regex::derivative_with_respect_to_sym(Regex* respected_sym, const Regex* reg_e,
 										   Regex& result) const {
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
-		cerr << "Invalid input: unexpected regex instead of symbol "<< respected_sym->to_txt();
+		cerr << "Invalid input: unexpected regex instead of symbol " << respected_sym->to_txt();
 		switch (respected_sym->type) {
 		case Type::alt:
 			cerr << ": Type = alt\n";
@@ -783,7 +784,7 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 												   vector<Regex>& result) const {
 	Regex cur_result;
 	if (respected_sym->type != Type::eps && respected_sym->type != Type::symb) {
-		cerr << "Invalid input: unexpected regex instead of symbol "<< respected_sym->to_txt();
+		cerr << "Invalid input: unexpected regex instead of symbol " << respected_sym->to_txt();
 		switch (respected_sym->type) {
 		case Type::alt:
 			cerr << ": Type = alt\n";
@@ -902,7 +903,8 @@ bool Regex::partial_derivative_with_respect_to_sym(Regex* respected_sym, const R
 	}
 }
 
-bool Regex::derivative_with_respect_to_str(const vector<Regex>& str, const Regex* reg_e, Regex& result) const {
+bool Regex::derivative_with_respect_to_str(const vector<Regex>& str, const Regex* reg_e,
+										   Regex& result) const {
 	bool success = true;
 	Regex cur = *reg_e;
 	Regex next = *reg_e;
@@ -959,10 +961,10 @@ int Regex::pump_length(iLogTemplate* log) const {
 		return language->get_pump_length();
 	}
 	std::unordered_map<string, bool> checked_prefixes;
-	auto word_to_str = [=](std::vector<Regex> from) {
-		std::string s = "";
-		for (auto f : from)
-			s = s + f.to_txt();
+	auto word_to_str = [=](const std::vector<Regex>& from) {
+		std::string s;
+		for (const auto& f : from)
+			s += f.to_txt();
 		return s;
 	};
 	for (int i = 1;; i++) {
@@ -1119,7 +1121,7 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 			// cout << partial_derivativ[2].to_txt() << endl;
 			deriv_log += partial_derivativ[2].to_txt() + "(" + partial_derivativ[0].to_txt() + ")" +
 						 "\\ =\\ ";
-			if (partial_derivativ[1].to_txt() == "") {
+			if (partial_derivativ[1].to_txt().empty()) {
 				deriv_log += "eps\\\\";
 			} else {
 				deriv_log += partial_derivativ[1].to_txt() + "\\\\";
@@ -1162,39 +1164,38 @@ FiniteAutomaton Regex::to_antimirov(iLogTemplate* log) const {
 }
 
 Regex Regex::update_epsilons(Alphabet& a) const {
-   Regex result;
-   Symbol s,s0;
-   switch (type) {
-			case Type::eps:
-				result.type = Type::eps;
-				break;
-			case Type::symb:
-				s = Symbol(symbol);
-				s.deannote();
-				s0 = Symbol(s);
-				s0.delinearize();
-				if (s0.is_epsilon()) {
-					result.type = Type::eps;
-					break;
-				} else {
-					result = Regex(s);
-					a.insert(s);
-					break;
-				}
-			default:
-				Regex r1 = (*Regex::cast(term_l)).update_epsilons(a);
-				if (term_r != nullptr) {
-					Alphabet d;
-					Regex r2 = (*Regex::cast(term_r)).update_epsilons(d);
-					result = Regex(type, &r1, &r2);
-					a.merge(d);
-				} else {
-					result = Regex(type, &r1, nullptr); }
-
+	Regex result;
+	Symbol s, s0;
+	switch (type) {
+	case Type::eps:
+		result.type = Type::eps;
+		break;
+	case Type::symb:
+		s = Symbol(symbol);
+		s.deannote();
+		s0 = Symbol(s);
+		s0.delinearize();
+		if (s0.is_epsilon()) {
+			result.type = Type::eps;
+			break;
+		} else {
+			result = Regex(s);
+			a.insert(s);
+			break;
 		}
-		return result;
+	default:
+		Regex r1 = (*Regex::cast(term_l)).update_epsilons(a);
+		if (term_r != nullptr) {
+			Alphabet d;
+			Regex r2 = (*Regex::cast(term_r)).update_epsilons(d);
+			result = Regex(type, &r1, &r2);
+			a.merge(d);
+		} else {
+			result = Regex(type, &r1, nullptr);
+		}
 	}
-
+	return result;
+}
 
 Regex Regex::deannote(iLogTemplate* log) const {
 	Alphabet deannoted_alphabet = Alphabet{};
@@ -1262,10 +1263,10 @@ Regex Regex::get_one_unambiguous_regex(iLogTemplate* log) const {
 		set<int> reachable_by_symb;
 		bool is_symb_min_fa_consistent = true;
 		for (int i = 0; i < min_fa.size(); i++) {
-			for (const auto& transition : min_fa.states[i].transitions) {
-				if (transition.first == symb) {
-					for (int elem : transition.second) {
-						reachable_by_symb.insert(elem);
+			for (const auto& [symbol, symbol_transitions] : min_fa.states[i].transitions) {
+				if (symbol == symb) {
+					for (int to : symbol_transitions) {
+						reachable_by_symb.insert(to);
 					}
 				}
 			}

@@ -153,15 +153,15 @@ std::size_t Symbol::Hasher::operator()(const Symbol& s) const {
 }
 
 Symbol MemorySymbols::Close(int number) {
-	return {CloseChar + std::to_string(number)};
+	return Symbol(CloseChar + std::to_string(number));
 }
 
 Symbol MemorySymbols::Reset(int number) {
-	return {ResetChar + std::to_string(number)};
+	return Symbol(ResetChar + std::to_string(number));
 }
 
 Symbol MemorySymbols::Open(int number) {
-	return {OpenChar + std::to_string(number)};
+	return Symbol(OpenChar + std::to_string(number));
 }
 
 bool MemorySymbols::is_memory_symbol(const Symbol& s) {

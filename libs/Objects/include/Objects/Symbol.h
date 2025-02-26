@@ -37,8 +37,7 @@ class Symbol {
 	Symbol& operator=(const char* cstr);
 	Symbol& operator=(char c);
 	Symbol& operator=(const Symbol& other) = default;
-	// многие функции все еще работают с символами алфавита, как со строками
-	// для них добавлено преобразование типов
+
 	explicit operator std::string() const;
 
 	size_t size() const;

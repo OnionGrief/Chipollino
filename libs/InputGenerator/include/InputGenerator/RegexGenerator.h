@@ -32,7 +32,7 @@ class RegexGenerator {
 
 	// для проверки на отсутствие (|||)
 	bool all_alts_are_eps = true;
-	std::string res_str = "";
+	std::string res_str;
 	void generate_regex_();
 	void generate_n_alt_regex();
 	void generate_conc_regex();

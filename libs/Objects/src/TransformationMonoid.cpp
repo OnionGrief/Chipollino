@@ -357,10 +357,10 @@ vector<TransformationMonoid::Term> TransformationMonoid::get_equalence_classes_w
 	return out;
 }
 
-bool TransformationMonoid::was_transition(const set<TransformationMonoid::Transition>& mas,
-										  const TransformationMonoid::Transition& b) {
-	for (const TransformationMonoid::Transition& maselem : mas) { // TODO: переделать плохой нейминг
-		if (((maselem).first == b.first) && ((maselem).second == b.second)) {
+bool TransformationMonoid::was_transition(const set<TransformationMonoid::Transition>& transitions,
+										  const TransformationMonoid::Transition& new_transition) {
+	for (const TransformationMonoid::Transition& i : transitions) {
+		if ((i.first == new_transition.first) && (i.second == new_transition.second)) {
 			return true;
 		}
 	}

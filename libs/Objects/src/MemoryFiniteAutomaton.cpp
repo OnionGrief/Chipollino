@@ -982,8 +982,8 @@ string random_mutation(const string& word, int l, int r, const Alphabet& alphabe
 		int fragment_length = uniform_int_distribution<int>(0, (mutated_word.size() + 1) / 2)(gen);
 		stringstream random_fragment;
 		for (int i = 0; i < fragment_length; ++i) {
-			Symbol random_symb = *next(begin(alphabet), gen() % alphabet.size());
-			random_fragment << string(random_symb);
+			string random_symb = string(*next(begin(alphabet), gen() % alphabet.size()));
+			random_fragment << random_symb;
 		}
 		mutated_word.insert(insertion_point, random_fragment.str());
 	} else {
@@ -1233,11 +1233,11 @@ FiniteAutomaton MemoryFiniteAutomaton::to_symbolic_fa(iLogTemplate* log) const {
 				}
 				int start = n; // для подсчета дополнительных состояний
 				for (auto ind : closes)
-					fa_states.emplace_back(n++, MemorySymbols::Close(ind), false);
+					fa_states.emplace_back(n++, string(MemorySymbols::Close(ind)), false);
 				for (auto ind : resets)
-					fa_states.emplace_back(n++, MemorySymbols::Reset(ind), false);
+					fa_states.emplace_back(n++, string(MemorySymbols::Reset(ind)), false);
 				for (auto ind : opens)
-					fa_states.emplace_back(n++, MemorySymbols::Open(ind), false);
+					fa_states.emplace_back(n++, string(MemorySymbols::Open(ind)), false);
 
 				if (n > start) {
 					alphabet.insert(Symbol(fa_states[start].identifier));

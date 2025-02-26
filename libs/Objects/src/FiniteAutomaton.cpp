@@ -114,10 +114,10 @@ string FiniteAutomaton::to_txt() const {
 		ss << "dummy -> " << states[initial_state].index << "\n";
 
 	for (const auto& state : states) {
-		for (const auto& elem : state.transitions) {
-			for (int transition_to : elem.second) {
-				ss << "\t" << state.index << " -> " << transition_to << " [label = \""
-				   << string(elem.first) << "\"]\n";
+		for (const auto& [symbol, symbol_transitions] : state.transitions) {
+			for (int to : symbol_transitions) {
+				ss << "\t" << state.index << " -> " << to << " [label = \"" << string(symbol)
+				   << "\"]\n";
 			}
 		}
 	}
@@ -960,22 +960,22 @@ FiniteAutomaton FiniteAutomaton::annote(iLogTemplate* log) const {
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
 	vector<FAState::Transitions> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
-		for (const auto& elem : new_fa.states[i].transitions) {
-			if (elem.second.size() > 1) {
-				meta.mark_transitions(*this, {i}, elem.second, elem.first, group_id);
+		for (const auto& [symbol, symbol_transitions] : new_fa.states[i].transitions) {
+			if (symbol_transitions.size() > 1) {
+				meta.mark_transitions(*this, {i}, symbol_transitions, symbol, group_id);
 				group_id++;
 				int counter = 1;
-				for (int transition_to : elem.second) {
-					Symbol new_symb = elem.first;
+				for (int to : symbol_transitions) {
+					Symbol new_symb = symbol;
 					new_symb.annote(counter);
-					new_transitions[i][new_symb].insert(transition_to);
+					new_transitions[i][new_symb].insert(to);
 					new_alphabet.insert(new_symb);
 					counter++;
 				}
 			} else {
-				new_transitions[i][elem.first] = elem.second;
-				if (!elem.first.is_epsilon()) {
-					new_alphabet.insert(elem.first);
+				new_transitions[i][symbol] = symbol_transitions;
+				if (!symbol.is_epsilon()) {
+					new_alphabet.insert(symbol);
 				}
 			}
 		}
@@ -996,15 +996,15 @@ FiniteAutomaton FiniteAutomaton::deannote(iLogTemplate* log) const {
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
 	vector<FAState::Transitions> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
-		for (const auto& elem : new_fa.states[i].transitions) {
-			Symbol new_symb = elem.first;
-			if (elem.first.is_annotated()) {
+		for (const auto& [symbol, symbol_transitions] : new_fa.states[i].transitions) {
+			Symbol new_symb = symbol;
+			if (symbol.is_annotated()) {
 				new_symb.deannote();
-				for (int transition_to : elem.second) {
-					new_transitions[i][new_symb].insert(transition_to);
+				for (int to : symbol_transitions) {
+					new_transitions[i][new_symb].insert(to);
 				}
 			} else {
-				new_transitions[i][new_symb] = elem.second;
+				new_transitions[i][new_symb] = symbol_transitions;
 			}
 			if (!new_symb.is_epsilon())
 				new_alphabet.insert(new_symb);
@@ -1027,15 +1027,15 @@ FiniteAutomaton FiniteAutomaton::delinearize(iLogTemplate* log) const {
 	FiniteAutomaton new_fa = FiniteAutomaton(initial_state, states, make_shared<Language>());
 	vector<FAState::Transitions> new_transitions(new_fa.size());
 	for (int i = 0; i < new_fa.size(); i++) {
-		for (const auto& elem : new_fa.states[i].transitions) {
-			Symbol new_symb = elem.first;
-			if (elem.first.is_linearized()) {
+		for (const auto& [symbol, symbol_transitions] : new_fa.states[i].transitions) {
+			Symbol new_symb = symbol;
+			if (symbol.is_linearized()) {
 				new_symb.delinearize();
-				for (int transition_to : elem.second) {
-					new_transitions[i][new_symb].insert(transition_to);
+				for (int to : symbol_transitions) {
+					new_transitions[i][new_symb].insert(to);
 				}
 			} else {
-				new_transitions[i][new_symb] = elem.second;
+				new_transitions[i][new_symb] = symbol_transitions;
 			}
 			if (!new_symb.is_epsilon())
 				new_alphabet.insert(new_symb);
@@ -1084,10 +1084,10 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 		set<int> reachable_by_symb;
 		bool is_symb_min_fa_consistent = true;
 		for (int i = 0; i < min_fa.size(); i++) {
-			for (const auto& transition : min_fa.states[i].transitions) {
-				if (transition.first == symb) {
-					for (int elem : transition.second) {
-						reachable_by_symb.insert(elem);
+			for (const auto& [symbol, symbol_transitions] : min_fa.states[i].transitions) {
+				if (symbol == symb) {
+					for (int to : symbol_transitions) {
+						reachable_by_symb.insert(to);
 					}
 				}
 			}
@@ -1124,9 +1124,9 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 			}
 		}
 		bool is_state_has_transitions_to_itself = false;
-		for (const auto& transition : min_fa.states[i].transitions) {
-			for (int elem : transition.second) {
-				if (elem == i)
+		for (const auto& [symbol, symbol_transitions] : min_fa.states[i].transitions) {
+			for (int to : symbol_transitions) {
+				if (to == i)
 					is_state_has_transitions_to_itself = true;
 			}
 		}
@@ -1785,12 +1785,12 @@ FiniteAutomaton::AmbiguityValue FiniteAutomaton::get_ambiguity_value(
 	d[0][fa.initial_state] = 1;
 	min_d[0][min_fa.initial_state] = 1;
 	for (int i = 0; i < s; i++)
-		for (const auto& elem : fa.states[i].transitions)
-			for (int transition : elem.second)
+		for (const auto& [symbol, symbol_transitions] : fa.states[i].transitions)
+			for (int transition : symbol_transitions)
 				adjacency_matrix[i][transition]++;
 	for (int i = 0; i < min_s; i++)
-		for (const auto& elem : min_fa.states[i].transitions)
-			for (int transition : elem.second)
+		for (const auto& [symbol, symbol_transitions] : min_fa.states[i].transitions)
+			for (int transition : symbol_transitions)
 				min_adjacency_matrix[i][transition]++;
 	vector<Fraction> f1;
 	Fraction max_checker; // максимальное значение для проверки
@@ -2191,7 +2191,7 @@ bool FiniteAutomaton::is_dfa_minimal(iLogTemplate* log) const {
 }
 
 std::optional<std::vector<Regex>> FiniteAutomaton::get_prefix(int state_beg, int state_end,
-													   map<int, bool>& was) const {
+															  map<int, bool>& was) const {
 	std::optional<std::vector<Regex>> ans = std::nullopt;
 	if (state_beg == state_end) {
 		ans = {Regex(Symbol::Epsilon)};
@@ -2218,7 +2218,7 @@ std::optional<std::vector<Regex>> FiniteAutomaton::get_prefix(int state_beg, int
 bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 	map<int, bool> was;
 	int trans_id = 1;
-	bool reliability,strict_ordering;
+	bool reliability, strict_ordering;
 
 	auto make_string_transition = [=](string from, Symbol through, string to) {
 		string arrow = ">->>[[" + string(through) + "]]";
@@ -2232,16 +2232,16 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 	iLogTemplate::Table t;
 	string local_ambig = "";
 	if (log) {
-		  t.columns.push_back("Неоднозначные переходы");
-	          t.columns.push_back("Безопасные переходы");
-		}
+		t.columns.push_back("Неоднозначные переходы");
+		t.columns.push_back("Безопасные переходы");
+	}
 	state_languages.resize(states.size());
 	for (int i = 0; i < states.size(); i++) {
 		auto prefix = dfaa.get_prefix(initial_state, i, was);
 		if (!prefix.has_value())
 			continue;
 		was.clear();
-		cout << "Try " << states[i].identifier << ""  << "\n";
+		cout << "Try " << states[i].identifier << "" << "\n";
 		for (int i = 0; i < prefix.value().size(); i++)
 			cout << prefix.value()[i].to_txt() << " ";
 		cout << "\n";
@@ -2256,94 +2256,100 @@ bool FiniteAutomaton::semdet(iLogTemplate* log) const {
 		state_languages[i].make_language();
 	}
 	for (int i = 0; i < states.size(); i++) {
-			for (auto transition : states[i].transitions) {
-				bool verified_ambiguity = false;
-				int target = *(transition.second.begin());
-				set<int> accumulator;
-					strict_ordering = true;
-					reliability = true;
-					accumulator.insert(target);
-					for (auto it2 : transition.second) {
-						if (it2 == target) continue;
-						cout << "Checking lang subset: " << states[target].identifier << " "
-							 << states[it2].identifier << "\n";
-						cout << state_languages[target].to_txt() << " " << state_languages[it2].to_txt()
-							 << "\n";
-						if (!state_languages[target].subset(state_languages[it2])) {
-							if (!state_languages[it2].subset(state_languages[target])) {
-								accumulator.insert(it2);
-								for (auto v1 : accumulator) { 
-									if ((v1 != it2) && (state_languages[v1].subset(state_languages[it2]))) {
-										accumulator.erase(it2);
-										break; }
-									if ((v1 != it2) && (state_languages[it2].subset(state_languages[v1]))) 
-										accumulator.erase(v1);
-									} 
-								cout << states[target].identifier <<"is incomparable\n";
-								strict_ordering = false;
-							} else {
-								cout << states[target].identifier <<"is less\n";
-								target = it2; }
-						}
-					}
-					cout << "Maximal state: "<< states[target].identifier <<"\n";
-					if (!strict_ordering) {
-						if (accumulator.size() >= 2) {
-							for (auto v : accumulator)
-								if (!state_languages[target].subset(state_languages[v])) {
-									reliability = false;
-									cout << "Accumulated values: >=2\n";
-									break;      
-								}
-						} else {
-							int v = *(accumulator.begin());
-							cout << "Accumulated state: "<< states[v].identifier <<"\n";
-							if (!state_languages[v].subset(state_languages[target]))
-									reliability = false;
-						} 
-					}					
-					verified_ambiguity |= reliability;
-					if (transition.second.size() > 1)  {
-						local_ambig="";
-						t.rows.push_back("<"+ states[i].identifier+","+ string(transition.first)+ ">");
-						for (auto v : transition.second) {
-							if ((!reliability)||(v != target)) 
-							meta.upd(EdgeMeta{i, v, transition.first, trans_id});
-							local_ambig +=", " + states[v].identifier;
-						}
-						local_ambig = local_ambig.substr(1);
-						trans_id++;
-						t.data.push_back(local_ambig);
-						if (reliability) {meta.upd(EdgeMeta{i,target,transition.first,0});
-							t.data.push_back(make_string_transition(states[i].identifier, transition.first, states[target].identifier));
-							cout << "Meta UPD"
-							<< "\n";
-						} else { 
-							t.data.push_back("Отсутствуют"); } 
-						}
-					if (!verified_ambiguity) {
-						// Logger::log("Результат SemDet", "false");
-						// Logger::finish_step();
-						cout << "Break false"
-						<< "\n";
-						if (log) {
-							log->set_parameter("oldautomaton", *this, meta);
-							log->set_parameter("result", "false\\\\");
-							if (trans_id > 1) {
-								log->set_parameter("trans_table", t);
+		for (auto transition : states[i].transitions) {
+			bool verified_ambiguity = false;
+			int target = *(transition.second.begin());
+			set<int> accumulator;
+			strict_ordering = true;
+			reliability = true;
+			accumulator.insert(target);
+			for (auto it2 : transition.second) {
+				if (it2 == target)
+					continue;
+				cout << "Checking lang subset: " << states[target].identifier << " "
+					 << states[it2].identifier << "\n";
+				cout << state_languages[target].to_txt() << " " << state_languages[it2].to_txt()
+					 << "\n";
+				if (!state_languages[target].subset(state_languages[it2])) {
+					if (!state_languages[it2].subset(state_languages[target])) {
+						accumulator.insert(it2);
+						for (auto v1 : accumulator) {
+							if ((v1 != it2) && (state_languages[v1].subset(state_languages[it2]))) {
+								accumulator.erase(it2);
+								break;
 							}
+							if ((v1 != it2) && (state_languages[it2].subset(state_languages[v1])))
+								accumulator.erase(v1);
 						}
-						return false;
-						
+						cout << states[target].identifier << "is incomparable\n";
+						strict_ordering = false;
+					} else {
+						cout << states[target].identifier << "is less\n";
+						target = it2;
+					}
 				}
+			}
+			cout << "Maximal state: " << states[target].identifier << "\n";
+			if (!strict_ordering) {
+				if (accumulator.size() >= 2) {
+					for (auto v : accumulator)
+						if (!state_languages[target].subset(state_languages[v])) {
+							reliability = false;
+							cout << "Accumulated values: >=2\n";
+							break;
+						}
+				} else {
+					int v = *(accumulator.begin());
+					cout << "Accumulated state: " << states[v].identifier << "\n";
+					if (!state_languages[v].subset(state_languages[target]))
+						reliability = false;
+				}
+			}
+			verified_ambiguity |= reliability;
+			if (transition.second.size() > 1) {
+				local_ambig = "";
+				t.rows.push_back("<" + states[i].identifier + "," + string(transition.first) + ">");
+				for (auto v : transition.second) {
+					if ((!reliability) || (v != target))
+						meta.upd(EdgeMeta{i, v, transition.first, trans_id});
+					local_ambig += ", " + states[v].identifier;
+				}
+				local_ambig = local_ambig.substr(1);
+				trans_id++;
+				t.data.push_back(local_ambig);
+				if (reliability) {
+					meta.upd(EdgeMeta{i, target, transition.first, 0});
+					t.data.push_back(make_string_transition(
+						states[i].identifier, transition.first, states[target].identifier));
+					cout << "Meta UPD"
+						 << "\n";
+				} else {
+					t.data.push_back("Отсутствуют");
+				}
+			}
+			if (!verified_ambiguity) {
+				// Logger::log("Результат SemDet", "false");
+				// Logger::finish_step();
+				cout << "Break false"
+					 << "\n";
+				if (log) {
+					log->set_parameter("oldautomaton", *this, meta);
+					log->set_parameter("result", "false\\\\");
+					if (trans_id > 1) {
+						log->set_parameter("trans_table", t);
+					}
+				}
+				return false;
+			}
 		}
-	}  
+	}
 	if (log) {
 		log->set_parameter("oldautomaton", *this, meta);
-		if (trans_id>1)
-			{log->set_parameter("trans_table", t); }
+		if (trans_id > 1) {
+			log->set_parameter("trans_table", t);
+		}
 		log->set_parameter("result", "true\\\\");
-	}	
+	}
 	return true;
 }
 // bool FiniteAutomaton::parsing_nfa(const string& s, int index_state) const {

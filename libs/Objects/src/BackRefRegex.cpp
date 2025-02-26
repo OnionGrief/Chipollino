@@ -12,7 +12,7 @@ using std::unordered_map;
 using std::unordered_set;
 using std::vector;
 
-BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
+BackRefRegex::BackRefRegex(const string& str){
 	try {
 		bool res = from_string(str, true, false);
 		if (!res) {
@@ -23,8 +23,6 @@ BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
 		exit(EXIT_FAILURE);
 	}
 }
-
-!!!
 
 BackRefRegex::BackRefRegex(const BackRefRegex& other) : AlgExpression(other) {
 	cell_number = other.cell_number;

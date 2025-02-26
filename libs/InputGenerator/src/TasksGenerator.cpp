@@ -50,7 +50,7 @@ string TasksGenerator::generate_task(int op_num, int max_num_of_func_in_seq_,
 	return res_str;
 }
 
-void TasksGenerator::write_to_file(string filename) {
+void TasksGenerator::write_to_file(const string& filename) {
 	ofstream out;
 	out.open(filename, ofstream::trunc);
 	if (out.is_open())
@@ -59,7 +59,7 @@ void TasksGenerator::write_to_file(string filename) {
 }
 
 string TasksGenerator::generate_op() {
-	string str = "";
+	string str;
 	int op = rand() % 5; // на объявление - вероятность 3 / 5;
 						 // на test и выражение 1 / 5
 
@@ -151,8 +151,8 @@ string TasksGenerator::generate_test() {
 	return str;
 }
 
-string TasksGenerator::generate_arguments(Function first_func) {
-	string args_str = "";
+string TasksGenerator::generate_arguments(const Function& first_func) {
+	string args_str;
 	for (auto input_type : first_func.input) {
 		// сгенерировать идентификатор
 		if (ids_by_type.count(input_type) &&

@@ -26,7 +26,7 @@ class TasksGenerator {
 	AutomatonGenerator automaton_generator;
 	size_t seed_it = 0; // итерация для рандома
 
-	std::string res_str = "";
+	std::string res_str;
 	int max_num_of_func_in_seq = 5; // максимальное кол-во функций в посл-ти
 	int id_num = 0; // кол-во объявленных идентификаторов
 	int automata_id = 0; // кол-во объявленных имён файлов (с автоматами)
@@ -54,7 +54,7 @@ class TasksGenerator {
 	// генерация функции по входному типу данных
 	FuncLib::Function generate_next_func(ObjectType prevOutput, int funcNum);
 	// генерация аргументов функции
-	std::string generate_arguments(FuncLib::Function first_func);
+	std::string generate_arguments(const FuncLib::Function& first_func);
 	// выбор идентификатора по типу данных
 	std::string get_random_id_by_type(ObjectType type);
 	FuncLib::Function rand_func();
@@ -83,7 +83,7 @@ class TasksGenerator {
 	/* генерирует рандомную операцию: объявление, выражение или test*/
 	std::string generate_op();
 	/*запись теста в файл*/
-	void write_to_file(std::string filename);
+	void write_to_file(const std::string& filename);
 
 	// генерация теста для всех функций
 	void generate_test_for_all_functions();
