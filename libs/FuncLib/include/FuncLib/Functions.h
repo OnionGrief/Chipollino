@@ -47,6 +47,7 @@ inline static const std::vector<Function> functions = {
 	{"DeAnnote", {ObjectType::Regex}, ObjectType::Regex},
 	{"DeAnnote", {ObjectType::NFA}, ObjectType::NFA},
 	{"MergeBisim", {ObjectType::NFA}, ObjectType::NFA},
+	{"MergeBisimK", {ObjectType::NFA, ObjectType::Int}, ObjectType::NFA},
 	{"Disambiguate", {ObjectType::Regex}, ObjectType::Regex},
 	{"Intersect", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA},
 	{"Union", {ObjectType::NFA, ObjectType::NFA}, ObjectType::NFA},
@@ -86,6 +87,9 @@ inline static const std::vector<Function> functions = {
 	{"MergeBisim", {ObjectType::MFA}, ObjectType::MFA},
 	{"Action", {ObjectType::MFA}, ObjectType::NFA},
 	{"Symbolic", {ObjectType::MFA}, ObjectType::NFA},
+	{"getNFA", {ObjectType::String}, ObjectType::NFA},
+	{"getMFA", {ObjectType::String}, ObjectType::MFA},
+	{"getDFA", {ObjectType::String}, ObjectType::DFA},
 };
 
 // вспомогательная функция для Ани и ее курсача

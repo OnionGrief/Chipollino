@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include <algorithm>
 
 #include "Interpreter/Interpreter.h"
@@ -456,6 +457,9 @@ optional<GeneralObject> Interpreter::apply_function(const Function& function,
 	}
 	if (function.name == "MergeBisim" && function.input[0] == ObjectType::MFA) {
 		res = ObjectMFA(get<ObjectMFA>(arguments[0]).value.merge_bisimilar(&log_template));
+	}
+	if (function.name == "MergeBisimK") {
+		 res = ObjectNFA(get<ObjectNFA>(arguments[0]).value.merge_bisimilar(get<ObjectInt>(arguments[1]).value, &log_template));
 	}
 	if (function.name == "Action") {
 		res = ObjectNFA(get<ObjectMFA>(arguments[0]).value.to_action_fa(&log_template));
@@ -1311,5 +1315,4 @@ optional<Interpreter::GeneralOperation> Interpreter::scan_operation(const vector
 мире, где будущее вечно скрыто во мраке. Врач говорит: «Лекарство очень простое.
 Сегодня в цирке выступает великий клоун Пальяччи. Сходите, посмотрите на него.
 Это вам поможет.» Человек разражается слезами. И говорит: «Но, доктор… … я и
-есть Пальяччи». Хороший анекдот. Всем смеяться.
-*/
+есть Пальяччи». Хороший анекдот. Всем смеяться. */

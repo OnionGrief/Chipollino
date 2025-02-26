@@ -79,13 +79,13 @@ void RLGrammar::check_classes(const vector<vector<vector<Item*>>>& rules,
 
 vector<vector<vector<RLGrammar::Item*>>> RLGrammar::get_bisimilar_grammar(
 	vector<vector<vector<Item*>>>& rules, vector<Item*>& nonterminals,
-	vector<Item*>& bisimilar_nonterminals, map<int, vector<Item*>>& class_to_nonterminals) {
+	vector<Item*>& bisimilar_nonterminals, map<int, vector<Item*>>& class_to_nonterminals, int k) {
 	reset_nonterminals_numbering(nonterminals);
 	class_to_nonterminals.clear();
 	map<set<string>, vector<Item*>> classes_check_map;
 	set<int> checker;
 	// checker
-	while (true) {
+	while (k--!=0) {
 		set<int> temp = checker;
 		check_classes(rules, classes_check_map, nonterminals);
 		update_classes(checker, classes_check_map);

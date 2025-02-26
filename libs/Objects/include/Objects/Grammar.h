@@ -49,7 +49,8 @@ class RLGrammar {
 		std::vector<std::vector<std::vector<Item*>>>& rules,	   // NOLINT(runtime/references)
 		std::vector<Item*>& nonterminals,						   // NOLINT(runtime/references)
 		std::vector<Item*>& bisimilar_nonterminals,				   // NOLINT(runtime/references)
-		std::map<int, std::vector<Item*>>& class_to_nonterminals); // NOLINT(runtime/references)
+		std::map<int, std::vector<Item*>>& class_to_nonterminals,
+                int k=-1); // NOLINT(runtime/references)
 	// преобразование конечного автомата в грамматику
 	// в векторе терминалов по 0му индексу лежит epsilon
 	static std::vector<std::vector<std::vector<Item*>>> fa_to_grammar(

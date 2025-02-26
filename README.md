@@ -253,6 +253,10 @@ TG.generate_task(3, 5, false, false);
 - `Equal: (MFA, MFA) -> Boolean`
 - `MergeBisim: MFA -> MFA`
 - `Equal: (BRefRegex, BRefRegex) -> Boolean`
+- `MergeBisimK: (NFA, Int) -> NFA`
+- `getNFA: String -> NFA`
+- `getMFA: String -> MFA`
+- `getDFA: String -> DFA`
 
 **Метод Test**
 

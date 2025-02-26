@@ -31,6 +31,10 @@ enum class ObjectType {
 	Array,			// массив
 	BRefRegex,
 	MFA,
+	RandomBRefRegex,
+	RandomDFA,
+	RandomNFA,
+	RandomMFA,
 };
 
 // Структуры объектов для хранения в интерпретаторе
@@ -90,6 +94,10 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 	{ObjectType::Regex, "Regex"},
 	{ObjectType::BRefRegex, "BRefRegex"},
 	{ObjectType::RandomRegex, "RandomRegex"},
+	{ObjectType::RandomBRefRegex, "RandomBRefRegex"},
+	{ObjectType::RandomDFA, "RandomDFA"},
+	{ObjectType::RandomNFA, "RandomNFA"},
+	{ObjectType::RandomMFA, "RandomMFA"},
 	{ObjectType::Int, "Int"},
 	{ObjectType::String, "String"},
 	{ObjectType::Boolean, "Boolean"},
@@ -102,13 +110,20 @@ inline static const std::unordered_map<ObjectType, std::string> types_to_string 
 // вложенные типы данных:
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_parents = {
 	{ObjectType::NFA, {ObjectType::MFA}},
-	{ObjectType::DFA, {ObjectType::NFA, ObjectType::MFA}},
+	{ObjectType::DFA, {ObjectType::MFA, ObjectType::NFA}},
 	{ObjectType::Regex, {ObjectType::BRefRegex}},
+	{ObjectType::RandomRegex, {ObjectType::BRefRegex, ObjectType::Regex}},
+	{ObjectType::RandomBRefRegex, {ObjectType::BRefRegex}},
+	{ObjectType::RandomDFA, {ObjectType::MFA, ObjectType::DFA, ObjectType::NFA}},
+	{ObjectType::RandomNFA, {ObjectType::MFA, ObjectType::NFA}},
+	{ObjectType::RandomMFA, {ObjectType::MFA}},
 };
 inline static const std::unordered_map<ObjectType, std::vector<ObjectType>> types_children = {
-	{ObjectType::NFA, {ObjectType::DFA}},
-	{ObjectType::MFA, {ObjectType::NFA, ObjectType::DFA}},
-	{ObjectType::BRefRegex, {ObjectType::Regex}},
+	{ObjectType::NFA, {ObjectType::RandomDFA, ObjectType::DFA, ObjectType::RandomNFA}},
+	{ObjectType::DFA, {ObjectType::RandomDFA}},
+	{ObjectType::MFA, {ObjectType::RandomDFA, ObjectType::RandomNFA, ObjectType::DFA, ObjectType::RandomMFA, ObjectType::NFA}},
+	{ObjectType::Regex, {ObjectType::RandomRegex}},
+	{ObjectType::BRefRegex, {ObjectType::RandomBRefRegex, ObjectType::RandomRegex, ObjectType::Regex}},
 };
 
 // используется, чтобы получить всех возможных детей / родителей типа

@@ -1361,8 +1361,8 @@ bool FiniteAutomaton::is_one_unambiguous(iLogTemplate* log) const {
 	return true;
 }
 
-tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_classes(
-	const vector<int>& classes) const {
+tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_equivalent_classes(
+	const vector<int>& classes, bool fixed_language) const {
 	map<int, vector<int>> class_to_indexes;
 	for (int i = 0; i < classes.size(); i++)
 		class_to_indexes[classes[i]].push_back(i);
@@ -1395,10 +1395,13 @@ tuple<FiniteAutomaton, unordered_map<int, int>> FiniteAutomaton::merge_classes(
 		if (states[indexes[0]].is_terminal)
 			new_states[class_to_index.at(class_num)].is_terminal = true;
 
-	return {{class_to_index.at(classes[initial_state]), new_states, language}, class_to_index};
+	if (fixed_language)
+		return {{class_to_index.at(classes[initial_state]), new_states, language}, class_to_index};
+        else
+		return {{class_to_index.at(classes[initial_state]), new_states, language->get_alphabet()}, class_to_index};
 }
 
-vector<int> FiniteAutomaton::get_bisimulation_classes() const {
+vector<int> FiniteAutomaton::get_bisimulation_classes(int k) const {
 	vector<RLGrammar::Item> fa_items;
 	vector<RLGrammar::Item*> nonterminals;
 	vector<RLGrammar::Item*> terminals;
@@ -1407,7 +1410,7 @@ vector<int> FiniteAutomaton::get_bisimulation_classes() const {
 	vector<RLGrammar::Item*> bisimilar_nonterminals;
 	map<int, vector<RLGrammar::Item*>> class_to_nonterminals;
 	vector<vector<vector<RLGrammar::Item*>>> bisimilar_rules = RLGrammar::get_bisimilar_grammar(
-		rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals);
+		rules, nonterminals, bisimilar_nonterminals, class_to_nonterminals, k);
 
 	vector<int> classes;
 	for (const auto& nont : nonterminals)
@@ -1416,10 +1419,10 @@ vector<int> FiniteAutomaton::get_bisimulation_classes() const {
 	return classes;
 }
 
-FiniteAutomaton FiniteAutomaton::merge_bisimilar(iLogTemplate* log) const {
+FiniteAutomaton FiniteAutomaton::merge_bisimilar(int k, iLogTemplate* log) const {
 	MetaInfo old_meta, new_meta;
-	vector<int> classes = get_bisimulation_classes();
-	auto [result, class_to_index] = merge_classes(classes);
+	vector<int> classes = get_bisimulation_classes(k);
+	auto [result, class_to_index] = merge_classes(classes, k<0);
 
 	for (int i = 0; i < classes.size(); i++) {
 		for (int j = 0; j < classes.size(); j++)
@@ -2396,20 +2399,19 @@ bool FiniteAutomaton::is_deterministic(iLogTemplate* log) const {
 		for (const auto& [symbol, states_to] : state.transitions) {
 			if (symbol.is_epsilon()) {
 				result = false;
-				if (log)
-				{for (auto to: states_to)
-					meta.upd(EdgeMeta{state.index, to, symbol, counter});
-				 counter++;
-				}
+				if (log) {
+					for (auto to: states_to)
+						meta.upd(EdgeMeta{state.index, to, symbol, counter});
+				 	counter++;
+					}
 				else break;
-			}
-			else if (states_to.size() > 1) {
+			} else if (states_to.size() > 1) {
 				result = false;
-				if (log)
-				{for (auto to: states_to)
-					meta.upd(EdgeMeta{state.index, to, symbol, counter});
-				 counter++;
-				}
+				if (log) {
+					for (auto to: states_to)
+						meta.upd(EdgeMeta{state.index, to, symbol, counter});
+					 counter++;
+					}
 				else break;
 			}
 		}

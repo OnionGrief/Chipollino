@@ -73,11 +73,11 @@ class FiniteAutomaton : public AbstractMachine {
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	std::set<int> closure(const std::set<int>&, bool) const;
 
-	std::vector<int> get_bisimulation_classes() const;
+	std::vector<int> get_bisimulation_classes(int k=-1) const;
 	// объединение эквивалентных классов (принимает на вход вектор размера states.size())
 	// на i-й позиции номер класса i-го состояния
 	std::tuple<FiniteAutomaton, std::unordered_map<int, int>> merge_classes(
-		const std::vector<int>&) const;
+		const std::vector<int>&, bool fixed_language = true) const;
 	static bool equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// дополнительно возвращает в векторах номера классов состояний каждого автомата
 	static std::tuple<bool, std::pair<MetaInfo, MetaInfo>, std::vector<std::vector<int>>>
@@ -173,7 +173,7 @@ class FiniteAutomaton : public AbstractMachine {
 	FiniteAutomaton deannote(iLogTemplate* log = nullptr) const;
 	FiniteAutomaton delinearize(iLogTemplate* log = nullptr) const;
 	// объединение эквивалентных по бисимуляции состояний
-	FiniteAutomaton merge_bisimilar(iLogTemplate* log = nullptr) const;
+	FiniteAutomaton merge_bisimilar(int k=-1, iLogTemplate* log = nullptr) const;
 	// проверка автоматов на эквивалентность
 	static bool equivalent(const FiniteAutomaton&, const FiniteAutomaton&,
 						   iLogTemplate* log = nullptr);
