@@ -16,45 +16,6 @@ class Language;
 class FAState;
 class FiniteAutomaton;
 
-struct MFATransition {
-	enum MemoryAction {
-		// idle, ◇
-		open,  // o
-		close, // c
-		reset, // r
-	};
-
-	using MemoryActions = std::unordered_map<int, MemoryAction>;
-
-	int to;
-	MemoryActions memory_actions;
-
-	explicit MFATransition(int to);
-	MFATransition(int, MemoryActions);
-	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&);
-	MFATransition(int, const std::unordered_set<int>&, const std::unordered_set<int>&,
-				  const std::unordered_set<int>&);
-
-	struct TransitionConfig {
-		// пары {номер ячейки, линеаризованный номер оператора}
-		const CellSet* destination_first;
-		const std::unordered_set<int>* source_in_lin_cells;
-		const std::unordered_set<int>* iteration_over_cells;
-		// пары {номер ячейки, линеаризованный номер оператора}
-		const CellSet* source_last;
-		const std::unordered_set<int>* destination_in_lin_cells;
-		const CellSet* to_reset;
-	};
-	MFATransition(int, const TransitionConfig& config);
-
-	std::string get_actions_str() const;
-	bool operator==(const MFATransition& other) const;
-
-	struct Hasher {
-		std::size_t operator()(const MFATransition&) const;
-	};
-};
-
 class MFAState : public State {
   public:
 	using SymbolTransitions = std::unordered_set<MFATransition, MFATransition::Hasher>;
@@ -64,7 +25,6 @@ class MFAState : public State {
 	explicit MFAState(bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal);
 	MFAState(int index, std::string identifier, bool is_terminal, Transitions transitions);
-	explicit MFAState(const FAState& state);
 
 	bool operator==(const MFAState& other) const;
 	std::string to_txt() const override;
@@ -187,38 +147,51 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<int, bool> _parse_slow(const std::string&, Matcher*) const;
 	std::pair<int, bool> _parse(const std::string&, Matcher*) const;
 
-	// поиск множества состояний НКА,
+	// поиск множества состояний MFA,
 	// достижимых из множества состояний по eps-переходам
 	std::tuple<std::set<int>, std::unordered_set<int>, MFATransition::MemoryActions>
 	get_eps_closure(const std::set<int>& indices) const;
 	void dfs_by_eps(int, std::set<int>&, const int&, int&, // NOLINT(runtime/references)
 					MFATransition::MemoryActions&) const;  // NOLINT(runtime/references)
-
+	// раскрашивает состояния в соответствии с открытыми на момент их посещения ячейками памяти
 	void color_mem_dfs(
 		int state_index,
 		std::vector<bool>& visited, // NOLINT(runtime/references)
 		const MemoryConfiguration& opened_cells,
-		std::unordered_map<int, std::unordered_set<int>>& colors // NOLINT(runtime/references)
+		std::vector<std::unordered_set<int>>& state_colors, // NOLINT(runtime/references)
+		const std::vector<int>& ab_classes,
+		std::unordered_map<int, int>& ab_class_to_first_state // NOLINT(runtime/references)
 	) const;
 
+	MemoryFiniteAutomaton get_subautomaton(const std::vector<int>& state_indexes,
+										   int sub_initial_state) const;
 	std::vector<MFAState::Transitions> get_reversed_transitions() const;
 
 	std::pair<std::vector<std::vector<int>>, std::vector<std::vector<int>>> find_cg_paths(
-		int state_index, std::unordered_set<int> visited, int cell, int opening_state) const;
+		int state_index, std::unordered_set<int> visited, int cell, int opening_state,
+		bool was_in_opening_state) const;
 	std::vector<CaptureGroup> find_capture_groups_backward(
-		int ref_incoming_state, int cell, const std::vector<int>& fa_classes) const;
+		int ref_incoming_state, int cell,
+		const std::vector<MFAState::Transitions>& reversed_transitions,
+		const std::vector<int>& fa_classes) const;
 
 	bool find_decisions(int state_index,
 						std::vector<int>& visited, // NOLINT(runtime/references)
-						const std::unordered_set<int>& states_to_check) const;
-	bool states_have_decisions(const std::unordered_set<int>& states_to_check) const;
+						const std::unordered_set<int>& states_to_check,
+						const std::unordered_set<int>& following_states,
+						const CaptureGroup& cg) const;
+	bool states_have_decisions(const std::unordered_set<int>& states_to_check,
+							   const std::unordered_set<int>& following_states,
+							   const CaptureGroup& cg) const;
+
+	FiniteAutomaton get_cg_fa(const CaptureGroup& cg) const;
 
 	static std::optional<bool> bisimilarity_checker(const MemoryFiniteAutomaton&,
 													const MemoryFiniteAutomaton&);
 
 	// объединение эквивалентных классов (принимает на вход вектор размера states.size())
 	// на i-й позиции номер класса i-го состояния
-	std::tuple<MemoryFiniteAutomaton, std::unordered_map<int, int>> merge_equivalent_classes(
+	std::tuple<MemoryFiniteAutomaton, std::unordered_map<int, int>> merge_classes(
 		const std::vector<int>&) const;
 
   public:
@@ -252,9 +225,13 @@ class MemoryFiniteAutomaton : public AbstractMachine {
 	std::pair<std::unordered_set<std::string>, std::unordered_set<std::string>> generate_test_set(
 		int max_len) const;
 	// ссылки считаются символами алфавита, операции над памятью игнорируются
-	FiniteAutomaton to_action_fa() const;
+	FiniteAutomaton to_action_fa(iLogTemplate* log = nullptr) const;
 	// ссылки считаются символами алфавита, операции над памятью преобразуются в переходы Oi, Ci, Ri
-	FiniteAutomaton to_symbolic_fa() const;
+	// (первые size() состояний - состояния исходного mfa)
+	FiniteAutomaton to_symbolic_fa(iLogTemplate* log = nullptr) const;
+	// проверка автоматов на равенство (буквальное + строгое равенство номеров ячеек)
+	static bool equal(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
+					  iLogTemplate* log = nullptr);
 	// проверка автоматов на бисимилярность
 	static std::optional<bool> bisimilar(const MemoryFiniteAutomaton&, const MemoryFiniteAutomaton&,
 										 iLogTemplate* log = nullptr);

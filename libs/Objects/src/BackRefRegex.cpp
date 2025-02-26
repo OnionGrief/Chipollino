@@ -12,7 +12,7 @@ using std::unordered_map;
 using std::unordered_set;
 using std::vector;
 
-BackRefRegex::BackRefRegex(const string& str) {
+BackRefRegex::BackRefRegex(const string& str) : BackRefRegex() {
 	try {
 		bool res = from_string(str, true, false);
 		if (!res) {
@@ -24,8 +24,7 @@ BackRefRegex::BackRefRegex(const string& str) {
 	}
 }
 
-BackRefRegex::BackRefRegex(const Symbol& symbol)
-	: BackRefRegex(symbol.is_epsilon() ? "" : string(symbol)) {}
+!!!
 
 BackRefRegex::BackRefRegex(const BackRefRegex& other) : AlgExpression(other) {
 	cell_number = other.cell_number;
@@ -184,27 +183,20 @@ BackRefRegex* BackRefRegex::expr(const vector<AlgExpression::Lexeme>& lexemes, i
 								 int index_end) {
 	AlgExpression* p;
 	p = scan_alt(lexemes, index_start, index_end);
-	if (!p) {
+	if (!p)
 		p = scan_conc(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_star(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_symb(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_ref(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_eps(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_par(lexemes, index_start, index_end);
-	}
-	if (!p) {
+	if (!p)
 		p = scan_square_br(lexemes, index_start, index_end);
-	}
 	return cast(p, false);
 }
 
@@ -233,7 +225,7 @@ BackRefRegex* BackRefRegex::scan_square_br(const vector<AlgExpression::Lexeme>& 
 	}
 
 	BackRefRegex* l = expr(lexemes, index_start + 1, index_end - 1);
-	if (l == nullptr || l->type == AlgExpression::eps) {
+	if (l == nullptr) {
 		delete l;
 		return p;
 	}
@@ -253,9 +245,9 @@ bool BackRefRegex::equals(const AlgExpression* other) const {
 bool BackRefRegex::equal(const BackRefRegex& r1, const BackRefRegex& r2, iLogTemplate* log) {
 	bool result = equality_checker(&r1, &r2);
 	if (log) {
-		//		log->set_parameter("regex1", r1);
-		//		log->set_parameter("regex2", r2);
-		//		log->set_parameter("result", result);
+		log->set_parameter("brefregex1", r1);
+		log->set_parameter("brefregex2", r2);
+		log->set_parameter("result", result);
 	}
 	return result;
 }
@@ -448,8 +440,6 @@ void BackRefRegex::preorder_traversal(vector<BackRefRegex*>& terms, int& lin_cou
 									  vector<CellSet>& last_in_cells,
 									  unordered_set<int> cur_in_lin_cells,
 									  CellSet cur_first_in_cells, CellSet cur_last_in_cells) {
-	bool l_contains_eps, r_contains_eps;
-
 	switch (type) {
 	case alt:
 		cast(term_l)->preorder_traversal(terms,
@@ -469,9 +459,9 @@ void BackRefRegex::preorder_traversal(vector<BackRefRegex*>& terms, int& lin_cou
 										 cur_first_in_cells,
 										 cur_last_in_cells);
 		return;
-	case conc:
-		l_contains_eps = cast(term_l)->contains_eps();
-		r_contains_eps = cast(term_r)->contains_eps();
+	case conc: {
+		bool l_contains_eps = cast(term_l)->contains_eps();
+		bool r_contains_eps = cast(term_r)->contains_eps();
 		cast(term_l)->preorder_traversal(terms,
 										 lin_counter,
 										 in_lin_cells,
@@ -489,6 +479,7 @@ void BackRefRegex::preorder_traversal(vector<BackRefRegex*>& terms, int& lin_cou
 										 l_contains_eps ? cur_first_in_cells : CellSet(),
 										 cur_last_in_cells);
 		return;
+	}
 	case star:
 		cast(term_l)->preorder_traversal(terms,
 										 lin_counter,
@@ -527,17 +518,16 @@ void BackRefRegex::preorder_traversal(vector<BackRefRegex*>& terms, int& lin_cou
 }
 
 void BackRefRegex::calculate_may_be_eps(unordered_map<int, vector<BackRefRegex*>>& memory_writers) {
-	unordered_map<int, vector<BackRefRegex*>> memory_writers_copy;
-	unordered_map<int, vector<BackRefRegex*>>::iterator it_ref_to;
 	switch (type) {
-	case alt:
-		memory_writers_copy = memory_writers;
+	case alt: {
+		auto memory_writers_copy = memory_writers;
 		cast(term_l)->calculate_may_be_eps(memory_writers);
 		cast(term_r)->calculate_may_be_eps(memory_writers_copy);
 		for (const auto& [num, refs_to] : memory_writers_copy)
 			for (const auto& memory_writer : refs_to)
 				memory_writers[num].push_back(memory_writer);
 		return;
+	}
 	case conc:
 		cast(term_l)->calculate_may_be_eps(memory_writers);
 		cast(term_r)->calculate_may_be_eps(memory_writers);
@@ -550,14 +540,14 @@ void BackRefRegex::calculate_may_be_eps(unordered_map<int, vector<BackRefRegex*>
 		memory_writers[cell_number] = {this};
 		cast(term_l)->calculate_may_be_eps(memory_writers);
 		return;
-	case ref:
-		it_ref_to = memory_writers.find(cell_number);
-		if (it_ref_to != memory_writers.end())
+	case ref: {
+		if (auto it_ref_to = memory_writers.find(cell_number); it_ref_to != memory_writers.end())
 			for (const auto& memory_writer : it_ref_to->second)
 				may_be_eps |= memory_writer->contains_eps();
 		else
 			may_be_eps = true;
 		return;
+	}
 	default:
 		return;
 	}
@@ -745,8 +735,7 @@ vector<CellSet> merge_to_reset_maps(const vector<ToResetMap>& maps) {
 			else
 				maybe_to_reset.insert(cell);
 
-			auto it = merged.find(cell);
-			if (it != merged.end()) {
+			if (auto it = merged.find(cell); it != merged.end()) {
 				it->second.first &= emptiness_info.first;
 				it->second.second = get_intersection(it->second.second, emptiness_info.second);
 			} else {
@@ -813,9 +802,6 @@ void BackRefRegex::get_cells_under_iteration(unordered_set<int>& iteration_over_
 void BackRefRegex::get_follow(
 	vector<vector<tuple<int, unordered_set<int>, CellSet>>>& following_states) const {
 	vector<pair<AlgExpression*, ToResetMap>> first, last;
-	unordered_set<int> iteration_over_cells;
-	CellSet iteration_over_empty_cells;
-	pair<bool, ToResetMap> is_eps;
 	switch (type) {
 	case Type::alt:
 		cast(term_l)->get_follow(following_states);
@@ -829,24 +815,21 @@ void BackRefRegex::get_follow(
 		first = cast(term_r)->get_first_nodes_tracking_resets();
 		for (auto& [i, last_to_reset] : last) {
 			for (auto& [j, first_to_reset] : first) {
-				//				string t1 = i->get_symbol();
-				//				string t2 = j->get_symbol();
 				for (const auto& k : merge_to_reset_maps({last_to_reset, first_to_reset}))
 					following_states[i->get_symbol().last_linearization_number()].emplace_back(
 						j->get_symbol().last_linearization_number(), unordered_set<int>(), k);
 			}
 		}
 		return;
-	case Type::star:
+	case Type::star: {
 		cast(term_l)->get_follow(following_states);
-		is_eps = contains_eps_tracking_resets();
+		pair<bool, ToResetMap> is_eps = contains_eps_tracking_resets();
 		last = cast(term_l)->get_last_nodes_tracking_resets();
 		first = cast(term_l)->get_first_nodes_tracking_resets();
+		unordered_set<int> iteration_over_cells;
 		get_cells_under_iteration(iteration_over_cells);
 		for (auto& [i, last_to_reset] : last) {
 			for (auto& [j, first_to_reset] : first) {
-				//				string t1 = i->get_symbol();
-				//				string t2 = j->get_symbol();
 				vector<CellSet> to_reset;
 				if (i != j)
 					to_reset = merge_to_reset_maps({last_to_reset, first_to_reset, is_eps.second});
@@ -858,6 +841,7 @@ void BackRefRegex::get_follow(
 			}
 		}
 		return;
+	}
 	case Type::memoryWriter:
 		return cast(term_l)->get_follow(following_states);
 	default:
@@ -879,17 +863,17 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 	temp_copy.preorder_traversal(
 		terms, lin_counter, in_lin_cells, first_in_cells, last_in_cells, {}, {}, {});
 	// множество начальных состояний
-	vector<BackRefRegex*> first = cast(temp_copy.get_first_nodes());
+	vector<pair<AlgExpression*, ToResetMap>> first = temp_copy.get_first_nodes_tracking_resets();
 	// множество конечных состояний
 	vector<BackRefRegex*> last = cast(temp_copy.get_last_nodes());
 	// множество состояний, которым предшествует символ (ключ - линеаризованный номер)
 	vector<vector<tuple<int, unordered_set<int>, CellSet>>> following_states(terms.size());
 	temp_copy.get_follow(following_states);
-	int eps_in = this->contains_eps();
+	bool recognizes_eps = this->contains_eps();
 	vector<MFAState> states; // состояния автомата
 
 	string str_first, str_last, str_follow;
-	for (auto& i : first) {
+	for (const auto& [i, _] : first) {
 		str_first += string(i->get_symbol()) + "\\ ";
 	}
 
@@ -900,9 +884,8 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 	for (const auto& elem : last_set) {
 		str_last += elem + "\\ ";
 	}
-	if (eps_in) {
+	if (recognizes_eps)
 		str_last += string(Symbol::Epsilon);
-	}
 
 	for (int i = 0; i < following_states.size(); i++) {
 		for (const auto& [to, _, __] : following_states[i]) {
@@ -917,21 +900,25 @@ MemoryFiniteAutomaton BackRefRegex::to_mfa_additional(iLogTemplate* log) const {
 		delinearized_symbols[i].delinearize();
 	}
 
-	MFAState::Transitions start_state_transitions;
-	for (auto& i : first) {
-		unordered_set<int> cells_to_open;
-		for (auto [cell_num, lin_num] : first_in_cells[i->symbol.last_linearization_number()])
-			cells_to_open.insert(cell_num);
-		// можно не сбрасывать память, так как начальная конфигурация и так пустая
-		start_state_transitions[delinearized_symbols[i->symbol.last_linearization_number()]].insert(
-			MFATransition(i->symbol.last_linearization_number() + 1, cells_to_open, {}));
-	}
+	MFAState::Transitions initial_state_transitions;
+	for (const auto& [i, to_reset_map] : first) {
+		int to = i->get_symbol().last_linearization_number();
+		const CellSet* destination_first = &first_in_cells[to];
+		const unordered_set<int>* destination_in_lin_cells = &in_lin_cells[to];
 
-	if (eps_in) {
-		states.emplace_back(0, "S", true, start_state_transitions);
-	} else {
-		states.emplace_back(0, "S", false, start_state_transitions);
+		for (const auto& to_reset : merge_to_reset_maps({to_reset_map})) {
+			initial_state_transitions
+				[delinearized_symbols[i->get_symbol().last_linearization_number()]]
+					.insert(MFATransition(to + 1,
+										  MFATransition::TransitionConfig{destination_first,
+																		  nullptr,
+																		  nullptr,
+																		  nullptr,
+																		  destination_in_lin_cells,
+																		  &to_reset}));
+		}
 	}
+	states.emplace_back(0, "S", recognizes_eps, initial_state_transitions);
 
 	unordered_set<int> last_terms;
 	for (auto& i : last) {
@@ -991,11 +978,9 @@ void BackRefRegex::unfold_iterations(int& number) {
 
 bool BackRefRegex::_is_acreg(unordered_set<int> in_cells, unordered_set<int> in_lin_cells,
 							 unordered_map<int, unordered_set<int>>& refs_in_cells) const {
-	unordered_map<int, unordered_set<int>>::iterator refs_in_cell;
-	unordered_map<int, unordered_set<int>> refs_in_cells_copy;
 	switch (type) {
-	case alt:
-		refs_in_cells_copy = refs_in_cells;
+	case alt: {
+		auto refs_in_cells_copy = refs_in_cells;
 		if (!cast(term_l)->_is_acreg(in_cells, in_lin_cells, refs_in_cells))
 			return false;
 		if (!cast(term_r)->_is_acreg(in_cells, in_lin_cells, refs_in_cells_copy))
@@ -1003,6 +988,7 @@ bool BackRefRegex::_is_acreg(unordered_set<int> in_cells, unordered_set<int> in_
 		for (const auto& [num, refs] : refs_in_cells_copy)
 			refs_in_cells[num].insert(refs.begin(), refs.end());
 		return true;
+	}
 	case conc:
 		if (!cast(term_l)->_is_acreg(in_cells, in_lin_cells, refs_in_cells))
 			return false;
@@ -1013,8 +999,8 @@ bool BackRefRegex::_is_acreg(unordered_set<int> in_cells, unordered_set<int> in_
 		refs_in_cells[cell_number] = {lin_number};
 		return cast(term_l)->_is_acreg(in_cells, in_lin_cells, refs_in_cells);
 	case ref:
-		refs_in_cell = refs_in_cells.find(cell_number);
-		if (refs_in_cell != refs_in_cells.end()) {
+		if (auto refs_in_cell = refs_in_cells.find(cell_number);
+			refs_in_cell != refs_in_cells.end()) {
 			for (auto cell_lin_num : in_lin_cells)
 				// если ссылается на те же линеаризованные memoryWriter, в которых находится сама
 				if (refs_in_cell->second.count(cell_lin_num))
@@ -1063,54 +1049,67 @@ void BackRefRegex::linearize_refs(int& number) {
 		cast(term_l)->linearize_refs(number);
 		break;
 	case ref:
-		symbol.linearize(number);
-		number++;
+		symbol.linearize(number++);
 		break;
 	default:
 		break;
 	}
 }
 
-void BackRefRegex::_check_refs(unordered_set<int>& found, unordered_set<int>& found_for_lin) const {
-	unordered_set<int> found_copy;
+void BackRefRegex::_check_memory_writers(
+	unordered_map<int, unordered_set<int>>& found_memory_writers,
+	unordered_set<int>& refs_check_set, unordered_set<int>& memory_writers_check_set) const {
 	switch (type) {
-	case alt:
-		found_copy = found;
-		cast(term_l)->_check_refs(found, found_for_lin);
-		cast(term_r)->_check_refs(found_copy, found_for_lin);
-		found.insert(found_copy.begin(), found_copy.end());
+	case alt: {
+		auto found_copy = found_memory_writers;
+		cast(term_l)->_check_memory_writers(
+			found_memory_writers, refs_check_set, memory_writers_check_set);
+		cast(term_r)->_check_memory_writers(found_copy, refs_check_set, memory_writers_check_set);
+		for (const auto& [memory_writer_cell_number, memory_writer_lin_numbers] : found_copy) {
+			found_memory_writers[memory_writer_cell_number].insert(
+				memory_writer_lin_numbers.begin(), memory_writer_lin_numbers.end());
+		}
 		break;
+	}
 	case conc:
-		cast(term_l)->_check_refs(found, found_for_lin);
-		cast(term_r)->_check_refs(found, found_for_lin);
+		cast(term_l)->_check_memory_writers(
+			found_memory_writers, refs_check_set, memory_writers_check_set);
+		cast(term_r)->_check_memory_writers(
+			found_memory_writers, refs_check_set, memory_writers_check_set);
 		break;
 	case memoryWriter:
-		found.insert(cell_number);
-		cast(term_l)->_check_refs(found, found_for_lin);
+		found_memory_writers[cell_number] = {lin_number};
+		cast(term_l)->_check_memory_writers(
+			found_memory_writers, refs_check_set, memory_writers_check_set);
 		break;
 	case ref:
-		if (found.count(cell_number))
-			found_for_lin.insert(symbol.last_linearization_number());
+		if (auto it = found_memory_writers.find(cell_number); it != found_memory_writers.end()) {
+			refs_check_set.insert(symbol.last_linearization_number());
+			for (const auto& memory_writer_lin_num : it->second)
+				memory_writers_check_set.insert(memory_writer_lin_num);
+		}
 		break;
 	default:
 		break;
 	}
 }
 
-bool BackRefRegex::check_refs() const {
+bool BackRefRegex::check_refs_and_memory_writers_usefulness() const {
 	BackRefRegex temp(*this);
 
-	int lin_counter = 0;
-	temp.linearize_refs(lin_counter);
+	int refs_lin_counter = 0;
+	temp.linearize_refs(refs_lin_counter);
 
-	int n = 0;
-	temp.unfold_iterations(n);
+	int memory_writers_lin_counter = 0;
+	temp.unfold_iterations(memory_writers_lin_counter);
 
-	unordered_set<int> found;
-	unordered_set<int> found_for_lin;
-	temp._check_refs(found, found_for_lin);
+	unordered_map<int, unordered_set<int>> found_memory_writers;
+	unordered_set<int> refs_check_set;
+	unordered_set<int> memory_writers_check_set;
+	temp._check_memory_writers(found_memory_writers, refs_check_set, memory_writers_check_set);
 
-	return found_for_lin.size() == lin_counter;
+	return refs_check_set.size() == refs_lin_counter &&
+		   memory_writers_check_set.size() == memory_writers_lin_counter;
 }
 
 void BackRefRegex::_reverse(unordered_map<int, BackRefRegex*>& memory_writers) {

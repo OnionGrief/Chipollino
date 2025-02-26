@@ -1,7 +1,7 @@
 MIT License
 
-Copyright (c) 2022 Andrei Ilin, Alexander Delman, Kirill Shevchenko, Mikhail Teriukha, Anna Terentyeva, Danila
-Knyazihin, Alina Chibizova, Edgar Makarov
+Copyright (c) 2024 Aleksandr Delman, Anna Terentyeva, Danila Knyazihin, Antonina Nepeivoda, Mikhail Teriukha, Edgar
+Makarov, Andrei Ilin, Kirill Shevchenko, Alina Chibizova, Lysenko Vasiliy, Sergey Dmitrievich
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

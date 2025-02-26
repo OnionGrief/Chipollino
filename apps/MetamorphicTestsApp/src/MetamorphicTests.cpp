@@ -43,7 +43,7 @@ TEST(TestArden, RandomRegexEquivalence) {
 	}
 }
 
-TEST(TestEqual, ThompsonGlushkov) {
+TEST(TestNFA, EqualThompsonGlushkov) {
 	RegexGenerator rg;
 	for (int i = 0; i < RegexNumberX10; i++) {
 		string rgx_str = rg.generate_regex();
@@ -89,7 +89,7 @@ std::string MetamorphicTests::generate_bregex(RegexGenerator& rg, int cells_num)
 				condition = false;
 			}
 		if (condition)
-			condition &= r.check_refs();
+			condition &= r.check_refs_and_memory_writers_usefulness();
 	} while (!condition);
 
 	return rgx_str;
@@ -135,28 +135,37 @@ TEST(TestMFA, Fuzzing) {
 	for (int i = 0; i < RegexNumberX10; i++) {
 		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
 		SCOPED_TRACE("Regex: " + rgx_str);
-		MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
-		MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
+		BackRefRegex r = BackRefRegex(rgx_str);
+		MemoryFiniteAutomaton mfa1 = r.to_mfa();
+		MemoryFiniteAutomaton mfa2 = r.to_mfa_additional();
 
 		MetamorphicTests::cmp_automatons(mfa1, mfa2);
 	}
 }
 
 // TEST(TestMFA, Fuzz) {
-//	string rgx_str = "(a[[b|]:1|]:2*[[c|]:1|]:2*&1&2)*";
-//	MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
-//	MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
+//	BackRefRegex rgx("");
+//	MemoryFiniteAutomaton mfa1 = rgx.to_mfa();
+//	MemoryFiniteAutomaton mfa2 = rgx.to_mfa_additional();
 //
 //	std::cout << mfa1.to_txt() << mfa2.to_txt();
 //
 //	MetamorphicTests::cmp_automatons(mfa1, mfa2);
-//}
+// }
+
+// TEST(TestMFA, Cmp) {
+//	MemoryFiniteAutomaton mfa1 = BackRefRegex().to_mfa_additional();
+//	MemoryFiniteAutomaton mfa2 = BackRefRegex().to_mfa_additional();
+//
+//	std::cout << mfa1.to_txt() << mfa2.to_txt();
+//
+//	MetamorphicTests::cmp_automatons(mfa1, mfa2);
+// }
 
 TEST(TestMFA, ToTxt) {
 	RegexGenerator rg(5, 3, 3, 2);
-	for (int i = 0; i < RegexNumberX10; i++) {
+	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
-		//		std::cout << i << " " << rgx_str << "\n";
 		SCOPED_TRACE("Regex: " + rgx_str);
 		BackRefRegex r = BackRefRegex(rgx_str);
 		MemoryFiniteAutomaton mfa1 = r.to_mfa_additional();
@@ -166,7 +175,31 @@ TEST(TestMFA, ToTxt) {
 	}
 }
 
-TEST(TestBisimilar, MFA_Bisimilar) {
+TEST(TestNFA, ToMFA) {
+	RegexGenerator rg(5, 3, 3, 2);
+	for (int i = 0; i < RegexNumber; i++) {
+		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);
+		SCOPED_TRACE("Regex: " + rgx_str);
+		MemoryFiniteAutomaton mfa1 = BackRefRegex(rgx_str).to_mfa();
+		ASSERT_TRUE(MemoryFiniteAutomaton::equal(mfa1, mfa1.to_symbolic_fa().to_mfa()));
+		MemoryFiniteAutomaton mfa2 = BackRefRegex(rgx_str).to_mfa_additional();
+		ASSERT_TRUE(MemoryFiniteAutomaton::equal(mfa2, mfa2.to_symbolic_fa().to_mfa()));
+	}
+}
+
+TEST(TestMFA, ToFA) {
+	RegexGenerator rg(5, 3, 3, 2);
+	for (int i = 0; i < RegexNumber; i++) {
+		string rgx_str = rg.generate_regex();
+		SCOPED_TRACE("Regex: " + rgx_str);
+		Regex r = Regex(rgx_str);
+		FiniteAutomaton fa = r.to_glushkov();
+		ASSERT_TRUE(FiniteAutomaton::equal(fa, fa.to_mfa().to_action_fa()));
+		ASSERT_TRUE(FiniteAutomaton::equal(fa, fa.to_mfa().to_symbolic_fa()));
+	}
+}
+
+TEST(TestMFA, Bisimilar) {
 	RegexGenerator rg(5, 3, 3, 2);
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = MetamorphicTests::generate_bregex(rg, 1);
@@ -180,7 +213,7 @@ TEST(TestBisimilar, MFA_Bisimilar) {
 	}
 }
 
-TEST(TestBisimilar, MFA_MergeBisimilar) {
+TEST(TestMFA, MergeBisimilar) {
 	RegexGenerator rg(6, 3, 3, 2);
 	for (int i = 0; i < RegexNumber; i++) {
 		string rgx_str = MetamorphicTests::generate_bregex(rg, 2);

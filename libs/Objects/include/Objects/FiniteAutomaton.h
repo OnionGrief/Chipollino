@@ -73,15 +73,15 @@ class FiniteAutomaton : public AbstractMachine {
 	// eps-переходам (если флаг установлен в 0 - по всем переходам)
 	std::set<int> closure(const std::set<int>&, bool) const;
 
-	std::vector<int> get_bisimilar_classes() const;
+	std::vector<int> get_bisimulation_classes() const;
 	// объединение эквивалентных классов (принимает на вход вектор размера states.size())
 	// на i-й позиции номер класса i-го состояния
-	std::tuple<FiniteAutomaton, std::unordered_map<int, int>> merge_equivalent_classes(
+	std::tuple<FiniteAutomaton, std::unordered_map<int, int>> merge_classes(
 		const std::vector<int>&) const;
 	static bool equality_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// дополнительно возвращает в векторах номера классов состояний каждого автомата
-	static std::pair<bool, std::vector<std::vector<int>>> bisimilarity_checker(
-		const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
+	static std::tuple<bool, std::pair<MetaInfo, MetaInfo>, std::vector<std::vector<int>>>
+	bisimilarity_checker(const FiniteAutomaton& fa1, const FiniteAutomaton& fa2);
 	// принимает в качестве лимита максимальное количество цифр в
 	// числителе + знаменателе дроби, которая может встретиться при вычислениях
 	AmbiguityValue get_ambiguity_value(
@@ -100,13 +100,20 @@ class FiniteAutomaton : public AbstractMachine {
 
 	std::vector<FAState::Transitions> get_reversed_transitions() const;
 
+	// заполняет стек состояниями в порядке выхода из них при обходе dfs,
+	// что необходимо для последующего построения SCC
 	void fill_order(int state_index, std::vector<bool>& visited, // NOLINT(runtime/references)
 					std::stack<int>& order						 // NOLINT(runtime/references)
 	);
-	// возвращает компоненты сильной связности
+	// возвращает компоненты сильной связности, алгоритм Косарайю
 	std::vector<std::unordered_set<int>> get_SCCs();
 
-	FiniteAutomaton get_subautomaton(const CaptureGroup&);
+	// отображает вспомогательные состояния Symbolic-NFA в действия над памятью
+	void to_mfa_dfs(int state_index,
+					std::vector<bool>& visited,					  // NOLINT(runtime/references)
+					std::vector<MFAState>& mfa_states,			  // NOLINT(runtime/references)
+					std::unordered_map<int, int>& states_mapping, // NOLINT(runtime/references)
+					MFATransition::MemoryActions memory_actions, int from_mfa_state) const;
 
   public:
 	FiniteAutomaton();

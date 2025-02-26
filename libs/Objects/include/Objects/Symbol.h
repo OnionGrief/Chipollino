@@ -6,7 +6,7 @@
 #include <vector>
 
 // Символ, по которому осуществляются переходы в автомате.
-// Может быть символом-буквой (и входить в алфавит) или ссылкой (&i)
+// Может быть символом-буквой (и входить ТОЛЬКО в алфавит FA) или ссылкой (&i)
 class Symbol {
   private:
 	std::vector<int> annote_numbers;
@@ -67,8 +67,32 @@ class Symbol {
 	struct Hasher {
 		std::size_t operator()(const Symbol&) const;
 	};
+
+	friend class MemorySymbols;
 };
 
 std::ostream& operator<<(std::ostream& os, const Symbol& item);
 
 using Alphabet = std::set<Symbol>;
+
+// специальные символы переходов в Symbolic-NFA
+class MemorySymbols {
+  public:
+	static const char CloseChar = 'C';
+	static const char ResetChar = 'R';
+	static const char OpenChar = 'O';
+
+	static Symbol Close(int number);
+	static Symbol Reset(int number);
+	static Symbol Open(int number);
+
+	static bool is_memory_symbol(const Symbol& s);
+	static bool is_memory_char(char c);
+	static bool is_close(const Symbol& s);
+	static bool is_reset(const Symbol& s);
+	static bool is_open(const Symbol& s);
+
+	static int get_cell_number(const Symbol& s);
+};
+
+bool is_special_symbol(const Symbol& s);
